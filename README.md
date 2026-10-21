@@ -4,6 +4,8 @@ A Mongolian-inspired nomadic civilization builder × mounted bullet heaven. **Ty
 
 This playable prototype implements the brief’s smaller development scope: five buildings with two exclusive specializations each, abstracted population and workers, three resources, four regional arenas, five standard enemies, two elites, and one boss. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and permanent civilization unlocks remain future work.
 
+Read [the world lore](lore.md) for the Tengri-inspired setting: Eternal Heaven, Etügen and the living land, the Last Court's Iron Vow, the unreturned, and the Blue Banner clan's search for refuge. Research notes separate the religious and cultural inspiration from the game's invented mythology.
+
 ## Play and develop
 
 Use **Node.js 22.12+** and npm.
