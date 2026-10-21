@@ -1,5 +1,6 @@
 import { GAME } from '../config';
 import { createClan } from './clan';
+import { createStory } from './story';
 import type { RunState, UpgradeDefinition } from '../types';
 
 export function xpForLevel(level: number): number {
@@ -18,6 +19,7 @@ export function createRun(): RunState {
     pendingUpgrades: 0,
     upgrades: {},
     clan: createClan(),
+    story: createStory(),
     stats: {
       maxHealth: GAME.player.health,
       speed: GAME.player.speed,

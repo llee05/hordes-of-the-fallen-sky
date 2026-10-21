@@ -1,3 +1,5 @@
+import type { StoryState } from './story/types';
+
 export type RunPhase =
   | 'intro'
   | 'ready'
@@ -62,6 +64,7 @@ export interface RunState {
   upgrades: Record<string, number>;
   stats: PlayerStats;
   clan: ClanState;
+  story: StoryState;
 }
 
 export interface UpgradeDefinition {

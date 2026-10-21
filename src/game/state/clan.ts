@@ -132,6 +132,7 @@ export function damageClan(run: RunState, amount: number): void {
   const previous = clan.integrity;
   clan.integrity = Math.max(0, previous - amount * protection);
   if (Math.floor((100 - previous) / 20) < Math.floor((100 - clan.integrity) / 20)) {
+    if (clan.population > 0) run.story.peopleLost += 1;
     clan.population = Math.max(0, clan.population - 1);
     clan.herd = Math.max(0, clan.herd - 1);
     clan.message = 'The clan has suffered losses. Bring your riders back to guard.';
@@ -172,6 +173,7 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
     Math.floor(previousTime / GAME.clan.starvationInterval) <
       Math.floor(clan.stageTime / GAME.clan.starvationInterval)
   ) {
+    if (clan.population > 0) run.story.peopleLost += 1;
     clan.population = Math.max(0, clan.population - 1);
     clan.herd = Math.max(0, clan.herd - 1);
     damageClan(run, 8);
@@ -187,6 +189,7 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
     if (route.id === 'refuge') clan.rescuedRiders += 2;
     clan.herd = Math.min(GAME.clan.maxHerd, clan.herd + route.herd);
     clan.region += 1;
+    run.story.crossings.push({ route: route.id, region: clan.region, population: clan.population });
     clan.stage = clan.region === 3 ? 'final' : 'camp';
     clan.stageTime = 0;
     clan.pasture = 100;

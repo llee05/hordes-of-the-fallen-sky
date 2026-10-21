@@ -11,6 +11,12 @@ export const GAME = {
   projectile: { speed: 440, lifetime: 1.6, range: 440 },
   dash: { speed: 570, duration: 0.3, cooldown: 3 },
   invulnerability: 0.65,
+  story: {
+    campBeatDelay: 15,
+    finalBeatTime: 90,
+    gifts: { food: 8, materials: 6, spirit: 4, resolve: 5 },
+    identityPerChoice: 1,
+  },
   clan: {
     minimumCamp: 45,
     pastureLifetime: 210,
