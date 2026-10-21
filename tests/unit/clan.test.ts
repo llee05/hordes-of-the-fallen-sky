@@ -39,6 +39,10 @@ describe('a civilization that moves', () => {
   it('freezes every journey and economy clock in non-playing phases', () => {
     for (const phase of [
       'ready',
+      'intro',
+      'story',
+      'epilogue',
+      'story-log',
       'paused',
       'upgrade',
       'building',

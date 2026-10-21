@@ -7,6 +7,7 @@ export class SteppeLandscape {
   private readonly regional: Phaser.GameObjects.Container;
   private readonly atmosphere: Phaser.GameObjects.Graphics;
   private readonly wind: Phaser.GameObjects.Graphics;
+  private passage: Phaser.GameObjects.Image[] = [];
 
   constructor(private readonly scene: Phaser.Scene) {
     const size = GAME.worldSize;
@@ -58,6 +59,7 @@ export class SteppeLandscape {
 
   setRegion(region: number): void {
     this.regional.removeAll(true);
+    this.passage = [];
     const center = GAME.worldSize / 2;
     const river = this.scene.add.graphics();
     const points = new Phaser.Curves.Spline([
@@ -108,6 +110,17 @@ export class SteppeLandscape {
         }
     }
     if (region === 3) {
+      for (let i = 0; i < 5; i++) {
+        const rock = paintedImage(
+          this.scene,
+          center - 72 + i * 36,
+          center - 190 + (i % 2) * 12,
+          'rock',
+          72,
+        );
+        this.passage.push(rock);
+        this.regional.add(rock);
+      }
       for (let i = 0; i < 7; i += 1)
         this.regional.add(
           paintedImage(
@@ -121,7 +134,18 @@ export class SteppeLandscape {
     }
   }
 
-  update(elapsed: number, region: number, camera: Phaser.Cameras.Scene2D.Camera): void {
+  update(
+    elapsed: number,
+    region: number,
+    camera: Phaser.Cameras.Scene2D.Camera,
+    passageProgress = 0,
+  ): void {
+    for (let i = 0; i < this.passage.length; i++) {
+      const progress = Phaser.Math.Clamp(passageProgress, 0, 1);
+      this.passage[i]!.setX(
+        GAME.worldSize / 2 - 72 + i * 36 + (i < 2 ? -1 : 1) * progress * 110,
+      ).setAlpha(1 - progress * 0.65);
+    }
     const view = camera.worldView;
     this.wind.clear().lineStyle(1, region === 1 ? 0xe5eee2 : 0xf6e4b3, region === 1 ? 0.2 : 0.11);
     // Broad, sparse curves suggest wind passing across the painted grass.

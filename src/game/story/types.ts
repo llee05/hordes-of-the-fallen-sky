@@ -2,7 +2,7 @@ import type { Doctrine } from '../types';
 
 export type StoryBeat =
   'fire' | 'departure' | 'river' | 'promise' | 'earth' | 'court' | 'opening' | 'road';
-export type Speaker = 'saran' | 'boro' | 'erden' | 'nara';
+export type Speaker = 'saran' | 'boro' | 'erden' | 'nara' | 'clan';
 export type StoryBenefit = 'food' | 'materials' | 'spirit' | 'resolve';
 
 export interface StoryLine {

@@ -87,6 +87,9 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     });
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+    await expect(page.getByRole('heading', { name: 'A place beside the fire.' })).toBeVisible();
+    await page.screenshot({ path: 'test-results/native-story.png' });
+    await page.getByRole('button', { name: /Share the work/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await page.keyboard.press('b');
     await expect(page.getByRole('heading', { name: 'Build a people.' })).toBeVisible();

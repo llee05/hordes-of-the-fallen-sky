@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle } from './helpers';
+import { openTitle, tapController } from './helpers';
 
 test('controller starts a run, moves, dashes, pauses, and navigates menus', async ({ page }) => {
   await page.addInitScript(() => {
@@ -12,16 +12,7 @@ test('controller starts a run, moves, dashes, pauses, and navigates menus', asyn
     Object.assign(window, { testController: state });
     Object.defineProperty(navigator, 'getGamepads', { value: () => [state] });
   });
-  const press = async (index: number): Promise<void> => {
-    await page.evaluate((button) => {
-      (window as any).testController.buttons[button].pressed = true;
-    }, index);
-    await page.waitForTimeout(90);
-    await page.evaluate((button) => {
-      (window as any).testController.buttons[button].pressed = false;
-    }, index);
-    await page.waitForTimeout(60);
-  };
+  const press = (index: number): Promise<void> => tapController(page, index);
   await openTitle(page);
   await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
   await press(0);
@@ -63,11 +54,13 @@ test('starts, moves, dashes, pauses, resumes, and resets a run', async ({ page }
   await expect(page.getByRole('dialog')).toBeHidden();
   const before = await page.evaluate(() => (window as any).__gloam.scene.player.x);
   await page.keyboard.down('d');
-  await page.waitForTimeout(600);
-  await page.keyboard.up('d');
-  expect(await page.evaluate(() => (window as any).__gloam.scene.player.x)).toBeGreaterThan(
-    before + 30,
-  );
+  try {
+    await expect
+      .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.x))
+      .toBeGreaterThan(before + 30);
+  } finally {
+    await page.keyboard.up('d');
+  }
   await page.keyboard.press('Space');
   await expect(page.locator('#dash-label')).toContainText('RECHARGING');
   await page.keyboard.press('Escape');

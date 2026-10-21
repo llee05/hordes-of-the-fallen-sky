@@ -6,6 +6,7 @@ import './style.css';
 import './tapestry.css';
 import './motion.css';
 import './intro.css';
+import './story.css';
 import { createGame } from './game/createGame';
 import { ArenaScene } from './game/scenes/ArenaScene';
 import { GameUI } from './ui/GameUI';

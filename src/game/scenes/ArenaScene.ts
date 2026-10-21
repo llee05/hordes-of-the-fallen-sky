@@ -14,6 +14,7 @@ import { GAME } from '../config';
 import { chooseEnemy, SKYBREAKER, spawnInterval } from '../data/enemies';
 import { FORMATIONS, ROUTES } from '../data/clan';
 import { INTRO_SLIDES } from '../data/intro';
+import { openNextStory, resolveStory } from '../state/story';
 import {
   advanceClan,
   availableFormations,
@@ -99,6 +100,8 @@ export class ArenaScene extends Phaser.Scene {
   private utilityReturnPhase: 'ready' | 'paused' = 'ready';
   private introShown = false;
   private introSlide = 0;
+  private storiesEnabled = true;
+  private storyLogReturn: 'paused' | 'won' | 'dead' = 'paused';
   private facing = new Phaser.Math.Vector2(0, 1);
   private touchMove = new Phaser.Math.Vector2();
   private dragOrigin?: Phaser.Math.Vector2;
@@ -120,6 +123,8 @@ export class ArenaScene extends Phaser.Scene {
 
   create(): void {
     this.run = createRun();
+    this.run.story.enabled = this.storiesEnabled;
+    this.storyLogReturn = 'paused';
     this.introSlide = 0;
     if (!this.introShown) {
       this.introShown = true;
@@ -286,6 +291,44 @@ export class ArenaScene extends Phaser.Scene {
     this.audio.unlock();
     this.cameras.main.setFollowOffset(0, 0);
     this.setPhase('playing');
+    this.presentStory();
+  }
+
+  toggleStoryMode(): void {
+    if (this.run.phase !== 'ready') return;
+    this.storiesEnabled = !this.storiesEnabled;
+    this.run.story.enabled = this.storiesEnabled;
+    this.publishPhase();
+  }
+
+  private presentStory(): boolean {
+    if (!openNextStory(this.run)) return false;
+    this.setPhase('story');
+    return true;
+  }
+
+  chooseStory(choice?: string): void {
+    if (this.run.phase !== 'story' || !resolveStory(this.run, choice)) return;
+    // Check for a queued arrival beat before resuming any simulation.
+    this.run.phase = 'playing';
+    if (this.presentStory()) return;
+    if (this.run.pendingUpgrades > 0) this.offerUpgrade();
+    else this.setPhase('playing');
+  }
+
+  showEpilogue(): void {
+    if (this.run.phase === 'won') this.setPhase('epilogue');
+  }
+
+  closeEpilogue(): void {
+    if (this.run.phase === 'epilogue') this.setPhase('won');
+  }
+
+  openStoryLog(): void {
+    const phase = this.run.phase;
+    if (phase !== 'paused' && phase !== 'won' && phase !== 'dead') return;
+    this.storyLogReturn = phase;
+    this.setPhase('story-log');
   }
 
   replayIntro(): void {
@@ -314,6 +357,9 @@ export class ArenaScene extends Phaser.Scene {
 
   togglePause(): void {
     if (this.run.phase === 'intro') this.skipIntro();
+    else if (this.run.phase === 'story') this.chooseStory();
+    else if (this.run.phase === 'epilogue') this.closeEpilogue();
+    else if (this.run.phase === 'story-log') this.closePlanning();
     else if (this.run.phase === 'playing') this.setPhase('paused');
     else if (this.run.phase === 'paused') this.setPhase('playing');
     else if (['building', 'route', 'journal', 'settings', 'help'].includes(this.run.phase))
@@ -327,12 +373,22 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   openRoutes(): void {
+    if (
+      ['playing', 'journal'].includes(this.run.phase) &&
+      canMigrate(this.run) &&
+      this.presentStory()
+    )
+      return;
     if (['playing', 'journal'].includes(this.run.phase) && canMigrate(this.run))
       this.setPhase('route');
     else if (this.run.phase === 'route') this.closePlanning();
   }
 
   closePlanning(): void {
+    if (this.run.phase === 'story-log') {
+      this.setPhase(this.storyLogReturn);
+      return;
+    }
     if (['building', 'route', 'journal'].includes(this.run.phase)) this.setPhase('playing');
     else if (['settings', 'help'].includes(this.run.phase)) this.setPhase(this.utilityReturnPhase);
   }
@@ -409,9 +465,18 @@ export class ArenaScene extends Phaser.Scene {
     if (
       controller.pause ||
       (controller.back &&
-        ['playing', 'paused', 'building', 'route', 'journal', 'settings', 'help'].includes(
-          this.run.phase,
-        ))
+        [
+          'playing',
+          'paused',
+          'building',
+          'route',
+          'journal',
+          'settings',
+          'help',
+          'story',
+          'epilogue',
+          'story-log',
+        ].includes(this.run.phase))
     )
       this.togglePause();
     else if (this.run.phase === 'playing') {
@@ -428,6 +493,7 @@ export class ArenaScene extends Phaser.Scene {
     }
     if (this.run.phase !== phaseBeforeInput) return;
     if (this.run.phase !== 'playing') return;
+    if (this.presentStory()) return;
     const dt = Math.min(delta / 1000, 0.05);
     this.run.elapsed += dt;
     this.dashTimer = Math.max(0, this.dashTimer - dt);
@@ -443,6 +509,7 @@ export class ArenaScene extends Phaser.Scene {
       return;
     }
     if (outcome === 'arrived') this.arrive();
+    if (this.run.phase !== 'playing') return;
     this.updateCamp(dt);
     if (this.run.phase !== 'playing') return;
     this.movePlayer(dt);
@@ -482,6 +549,7 @@ export class ArenaScene extends Phaser.Scene {
       this.run.clan.finalBossSpawned = true;
       this.spawnEnemy(SKYBREAKER);
     }
+    this.presentStory();
   }
 
   private movePlayer(dt: number): void {
@@ -889,7 +957,7 @@ export class ArenaScene extends Phaser.Scene {
   private finish(phase: 'won' | 'dead'): void {
     this.best = Math.max(this.best, Math.floor(this.run.elapsed));
     void this.platform.saveBest(this.best).catch(() => this.callbacks?.onSaveError());
-    this.setPhase(phase);
+    this.setPhase(phase === 'won' && this.run.story.enabled ? 'epilogue' : phase);
   }
 
   private setPhase(phase: RunState['phase']): void {
@@ -1050,7 +1118,12 @@ export class ArenaScene extends Phaser.Scene {
       rider.setDepth(100 + rider.y);
       this.riderShadows[i]!.setPosition(rider.x + 7, rider.y + 4).setDepth(99 + rider.y);
     }
-    this.landscape.update(this.run.elapsed, clan.region, this.cameras.main);
+    this.landscape.update(
+      this.run.elapsed,
+      clan.region,
+      this.cameras.main,
+      clan.stage === 'final' ? clan.stageTime / GAME.clan.finalDuration : 0,
+    );
     this.updateHazards(dt);
   }
 
@@ -1192,6 +1265,6 @@ export class ArenaScene extends Phaser.Scene {
     this.landscape.setRegion(this.run.clan.region);
     this.refreshCamp();
     this.cameras.main.flash(500, 225, 215, 180);
-    this.publishPhase();
+    if (!this.presentStory()) this.publishPhase();
   }
 }

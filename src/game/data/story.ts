@@ -22,6 +22,7 @@ export const COMPANIONS: Record<
   boro: { name: 'Boro', role: 'Herder', mark: 'horse' },
   erden: { name: 'Erden', role: 'Keeper of the tally', mark: 'journal' },
   nara: { name: 'Nara', role: 'Youngest survivor', mark: 'banner' },
+  clan: { name: 'The remembered road', role: 'Survivor’s account', mark: 'journal' },
 };
 
 export function storyAct(region: number): { number: 1 | 2; title: string } {
@@ -344,28 +345,74 @@ export function storyEncounter(run: RunState, id: StoryBeat): StoryEncounter {
       ],
     },
   };
-  return { id, ...scenes[id] };
+  const scene = { id, ...scenes[id] };
+  // Population is abstract. A tiny remnant cannot stage a conversation among four
+  // named people, and the game never claims which individual casualties occurred.
+  if (run.clan.population < 5) {
+    const remembrance: Record<StoryBeat, string> = {
+      fire: 'The carried embers become a small fire. A place beside it is still a promise.',
+      departure: 'The gers can be packed. The remaining hands must choose what to carry east.',
+      river: 'A familiar voice calls beyond the ice. The tested bank offers a way through.',
+      promise:
+        'Scraps of cloth are tied into the blue banner. Those who remain keep the promise to count before leaving.',
+      earth: 'The ground warns before it breaks. The wheels and harness need patient work.',
+      court:
+        'A folded tally from the Last Court records what happened in the courtyard. Its witness left questions that the road has not answered.',
+      opening: 'Beyond the fallen stone lies the valley. The passage will take time to clear.',
+      road: 'The gap is widening. The carried embers need a road through, and the defenders must hold it.',
+    };
+    return {
+      ...scene,
+      setting: `${run.clan.population} ${run.clan.population === 1 ? 'survivor remains' : 'survivors remain'} beneath the blue banner. The road is remembered in fewer voices.`,
+      lines: [line('clan', remembrance[id])],
+      choices: scene.choices.map((option) => ({
+        ...option,
+        label: {
+          food: 'Gather what provisions remain',
+          materials: 'Keep the travelling tools',
+          spirit: 'Carry the names forward',
+          resolve: 'Steady the next watch',
+        }[option.benefit],
+        description: {
+          food: 'Gather the remaining stores for the next part of the journey.',
+          materials: 'Put reusable timber and harness to work.',
+          spirit: 'Carry a remembered song into the next camp.',
+          resolve: 'Take time to recover before the next watch.',
+        }[option.benefit],
+        response:
+          run.clan.population === 1
+            ? 'The survivor records the decision and puts it into practice.'
+            : 'Those who remain record the decision and put it into practice.',
+      })),
+    };
+  }
+  return scene;
 }
 
 export function epilogueText(run: RunState): readonly string[] {
   const clan = run.clan;
   const identity = clanDoctrine(run);
+  const single = clan.population === 1;
   const sharedTally = run.story.records.some((record) => record.choice?.id === 'trust-erden');
   return [
-    `${clan.population} people and ${clan.herd} animals reach the sheltered valley. ${clan.finalBossDefeated ? 'The Skybreaker has fallen behind them.' : 'The Skybreaker still walks beyond the mountain.'} The passage has given the living a road through.`,
+    `${clan.population} ${single ? 'person' : 'people'} and ${clan.herd} ${clan.herd === 1 ? 'animal' : 'animals'} reach the sheltered valley. ${clan.finalBossDefeated ? 'The Skybreaker has fallen behind them.' : 'The Skybreaker still walks beyond the mountain.'} The passage has given the living a road through.`,
     run.story.peopleLost > 0
-      ? `Saran speaks for the ${run.story.peopleLost} ${run.story.peopleLost === 1 ? 'person' : 'people'} lost along the road. The families keep a place for their names beside the fire.`
+      ? `The ${single ? 'last survivor remembers' : 'survivors remember'} the ${run.story.peopleLost} ${run.story.peopleLost === 1 ? 'person' : 'people'} lost along the road. Their names have a place beside the fire.`
       : 'Saran sets the spare bowl beside the new hearth. The carried embers catch in fresh kindling.',
-    identity === 'The Iron Horde'
-      ? 'The Iron Horde posts riders above the approach, then sends tired guards back to eat with their families.'
-      : identity === 'Children of the Eternal Sky'
-        ? 'The Children of the Eternal Sky begin a song in several voices. Each household finds its own place in the answer.'
-        : identity === 'The Wandering Nation'
-          ? 'The Wandering Nation leaves room between its gers for more arrivals. Boro begins counting how many the pasture can support.'
-          : 'The households raise their gers around a common fire. Their people are still taking shape.',
-    sharedTally
-      ? 'Erden reads the tally aloud, and the families answer for themselves. Nara brings another bowl.'
-      : 'Nara sets down the covered ember vessel and asks who will be coming next.',
+    single
+      ? `The tally carries the clan’s name: ${identity}. Its promise belongs to the next camp as well.`
+      : identity === 'The Iron Horde'
+        ? 'The Iron Horde posts riders above the approach, then sends tired guards back to eat with their families.'
+        : identity === 'Children of the Eternal Sky'
+          ? 'The Children of the Eternal Sky begin a song in several voices. Each household finds its own place in the answer.'
+          : identity === 'The Wandering Nation'
+            ? 'The Wandering Nation leaves room between its gers for more arrivals. The next task is learning how many the pasture can support.'
+            : 'The households raise their gers around a common fire. Their people are still taking shape.',
+    run.story.peopleLost > 0 || clan.population < 5
+      ? `${single ? 'The last survivor lights' : 'The remaining hands light'} a hearth from the carried embers. A spare bowl waits beside it.`
+      : sharedTally
+        ? 'Erden reads the tally aloud, and the families answer for themselves. Nara brings another bowl.'
+        : 'Nara sets down the covered ember vessel and asks who will be coming next.',
     'Keep a place beside the fire. Someone is still coming home.',
   ];
 }

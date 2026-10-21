@@ -1,0 +1,233 @@
+/* Camp conversations are manuscript pages laid beside the clan's painted memories. */
+#app:is([data-phase='story'], [data-phase='epilogue'], [data-phase='story-log']) .game-hud {
+  visibility: hidden;
+  opacity: 0;
+}
+.story-preference {
+  margin-top: 12px;
+  padding: 7px 12px;
+  border: 1px dashed #c3a56c99;
+  background: #102b3466;
+  color: #e8d7b3;
+  cursor: pointer;
+  font-size: 12px;
+}
+.act-heading {
+  font: 8px / 1.5 var(--mono);
+  letter-spacing: 0.08em;
+  color: #e1be7f;
+  margin: 9px 0 4px;
+}
+.game-panel.story-panel {
+  width: min(1160px, 100%);
+}
+.story-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(340px, 1.2fr);
+  gap: 28px;
+}
+.story-picture {
+  position: relative;
+  min-height: 370px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #82643f;
+  background: #203b43;
+  box-shadow: inset 0 0 0 4px #d8bc85;
+}
+.story-picture img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 48% center;
+}
+.story-picture::after {
+  content: '';
+  position: absolute;
+  inset: 50% 0 0;
+  background: linear-gradient(transparent, #152e3af2);
+  pointer-events: none;
+}
+.story-picture figcaption {
+  position: absolute;
+  z-index: 1;
+  inset: auto 20px 22px;
+  font: 10px / 1.6 var(--mono);
+  letter-spacing: 0.12em;
+  color: #f0d5a6;
+}
+.story-setting {
+  font:
+    italic 15px / 1.65 Georgia,
+    serif;
+  color: var(--paper-muted);
+  margin: 0 0 20px;
+}
+.story-dialogue {
+  display: grid;
+  gap: 15px;
+}
+.story-speech {
+  display: flex;
+  gap: 12px;
+}
+.speaker-seal {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  height: 32px;
+  border: 1px solid #ac895866;
+  border-radius: 50%;
+  color: #80572e;
+  background: #d6be8c55;
+}
+.speaker-seal svg {
+  width: 23px;
+  height: 23px;
+}
+.story-speech h3 {
+  margin: 0 0 4px;
+  font:
+    600 14px 'DM Sans',
+    sans-serif;
+  color: #38483f;
+}
+.story-speech h3 small {
+  display: inline;
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 400;
+  color: #75654b;
+}
+.story-speech p {
+  margin: 0;
+  font:
+    16px / 1.55 Georgia,
+    serif;
+  color: #39453d;
+}
+.story-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 23px;
+  padding-top: 18px;
+  border-top: 1px dashed #a7885c77;
+}
+.story-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 15px;
+  text-align: left;
+  border: 1px solid #8a704a99;
+  border-radius: 3px;
+  background: #d9c49b66;
+  color: #34483f;
+  cursor: pointer;
+}
+.story-choice strong {
+  font-size: 13px;
+}
+.story-choice strong > span {
+  float: right;
+  color: #906139;
+}
+.story-choice > span {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.story-choice small {
+  margin-top: auto;
+  font: 10px / 1.5 var(--mono);
+  color: #75532f;
+}
+.story-choice:hover {
+  background: #c6b38077;
+  border-color: #79532c;
+}
+.story-record-heading h3 {
+  font:
+    29px Georgia,
+    serif;
+  margin: 10px 0;
+}
+.story-record-heading > p:last-child {
+  font-size: 12px;
+  color: var(--paper-muted);
+  margin-bottom: 22px;
+}
+.story-memory {
+  border: 1px solid #9f815144;
+  border-left: 3px solid #a76b41;
+  background: #d7bf8b33;
+  margin-bottom: 12px;
+}
+.story-memory summary {
+  padding: 16px;
+  cursor: pointer;
+  color: #35443d;
+  font-weight: 600;
+}
+.story-memory summary small {
+  display: block;
+  margin: 7px 0 0 17px;
+  font: 10px var(--mono);
+  color: var(--paper-muted);
+}
+.story-memory-body {
+  padding: 6px 20px 18px;
+  display: grid;
+  gap: 13px;
+}
+.story-memory-choice {
+  border-top: 1px dashed #a58a5955;
+  padding-top: 14px;
+  font:
+    14px / 1.7 Georgia,
+    serif;
+  color: #574d37;
+}
+.epilogue-copy > p {
+  font:
+    17px / 1.7 Georgia,
+    serif;
+  margin: 0 0 20px;
+  color: #3c493f;
+}
+.epilogue-copy blockquote {
+  margin: 25px 0 0;
+  padding: 18px 0 0;
+  border-top: 1px dashed #a7885c77;
+  font:
+    italic 24px / 1.5 Georgia,
+    serif;
+  color: #76512f;
+}
+@media (max-width: 900px) {
+  .story-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .story-picture {
+    min-height: 190px;
+  }
+  .story-picture img {
+    object-position: center 55%;
+  }
+}
+@media (max-width: 520px) {
+  .story-choices {
+    grid-template-columns: 1fr;
+  }
+  .story-panel .panel-footer {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .story-speech h3 small {
+    display: block;
+    margin: 4px 0;
+  }
+}

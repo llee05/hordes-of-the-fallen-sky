@@ -1,11 +1,32 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
 import { epilogueText, STORY_ORDER } from '../../src/game/data/story';
+import { storyEncounter } from '../../src/game/data/story';
 import { advanceClan, beginMigration, damageClan } from '../../src/game/state/clan';
 import { createRun } from '../../src/game/state/run';
 import { openNextStory, resolveStory } from '../../src/game/state/story';
 
 describe('the two-act expedition', () => {
+  it('uses a remnant account when too few survivors remain for the named cast', () => {
+    const run = createRun();
+    run.clan.population = 1;
+    run.story.peopleLost = 7;
+    const scene = storyEncounter(run, 'court');
+    expect(scene.lines).toHaveLength(1);
+    expect(scene.lines[0]!.speaker).toBe('clan');
+    for (const beat of STORY_ORDER) {
+      const remnant = storyEncounter(run, beat);
+      const text = [
+        remnant.setting,
+        ...remnant.lines.map((line) => line.text),
+        ...remnant.choices.flatMap((choice) => [choice.label, choice.description, choice.response]),
+      ].join(' ');
+      expect(text).not.toMatch(/Saran|Nara|Erden|Boro/);
+    }
+    const ending = epilogueText(run).join(' ');
+    expect(ending).toContain('last survivor');
+    expect(ending).not.toMatch(/Saran|Nara|Erden|Boro/);
+  });
   it('offers each beat once, freezes its transcript, validates choices, and prevents duplicate rewards', () => {
     const run = createRun();
     expect(openNextStory(run)).toBe(false);

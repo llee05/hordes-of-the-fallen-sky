@@ -2,6 +2,9 @@ import type { StoryState } from './story/types';
 
 export type RunPhase =
   | 'intro'
+  | 'story'
+  | 'epilogue'
+  | 'story-log'
   | 'ready'
   | 'playing'
   | 'paused'

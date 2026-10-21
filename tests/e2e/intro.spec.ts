@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { tapController } from './helpers';
 
 test('intro reads at the player’s pace with frozen simulation, back, completion, and replay', async ({
   page,
@@ -83,6 +84,7 @@ test('intro reads at the player’s pace with frozen simulation, back, completio
   await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeFocused();
+  await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.keyboard.press('Escape');
@@ -128,22 +130,14 @@ test('controller advances, skips, replays, and never leaks a held confirm into g
     Object.assign(window, { testController: state });
     Object.defineProperty(navigator, 'getGamepads', { value: () => [state] });
   });
-  const press = async (index: number): Promise<void> => {
-    await page.evaluate((i) => {
-      (window as any).testController.buttons[i].pressed = true;
-    }, index);
-    await page.waitForTimeout(100);
-    await page.evaluate((i) => {
-      (window as any).testController.buttons[i].pressed = false;
-    }, index);
-    await page.waitForTimeout(80);
-  };
+  const press = (index: number): Promise<void> => tapController(page, index);
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
   await press(0);
   await expect(page.getByRole('heading', { name: 'A vow that broke the world.' })).toBeVisible();
   await press(1);
   await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeFocused();
+  await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await press(13);
   await expect(page.getByRole('button', { name: 'Replay introduction' })).toBeFocused();
   await press(0);
@@ -159,7 +153,9 @@ test('controller advances, skips, replays, and never leaks a held confirm into g
   await page.evaluate(() => {
     (window as any).testController.buttons[0].pressed = false;
   });
-  await page.waitForTimeout(100);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.controller.previousButtons & 1))
+    .toBe(0);
   await press(0);
   await expect(page.getByRole('dialog')).toBeHidden();
 });
