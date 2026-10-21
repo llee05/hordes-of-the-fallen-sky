@@ -6,6 +6,8 @@ This playable prototype implements the brief’s smaller development scope: five
 
 Read [the world lore](lore.md) for the Tengri-inspired setting: Eternal Heaven, Etügen and the living land, the Last Court's Iron Vow, the unreturned, and the Blue Banner clan's search for refuge. Research notes separate the religious and cultural inspiration from the game's invented mythology.
 
+See [the story architecture](story-architecture.md) for a proposed two-act expedition: Gather the Scattered, then Carry the Living, with turning points, character arcs, and a clear distinction between existing gameplay and future story scenes.
+
 ## Play and develop
 
 Use **Node.js 22.12+** and npm.
