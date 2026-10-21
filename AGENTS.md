@@ -18,6 +18,17 @@ Hordes of the Fallen Sky is a nomadic civilization builder and desktop TypeScrip
 - Keep each commit coherent and reviewable, with its related code, tests, and documentation together. Use clear commit messages that describe the change.
 - Run the checks appropriate to each change before committing. Stage only work belonging to that commit; preserve unrelated user changes.
 
+## Art style: The Living Steppe Tapestry
+
+- Follow a stylized, painterly 2.5D direction: the readable miniature scale of Thronefall, the illustrated silhouettes of The Banner Saga, and the materials and geometric ornament of traditional Mongolian and Central Asian art. Create original designs with matte painted surfaces, restrained brush grain, and clear silhouettes.
+- Build the living steppe around golden ochre and sage grasslands, miniature chestnut horses, ivory felt gers, decorated wooden carts, and turquoise and vermilion banners. Use lapis, rust, olive, umber, and warm brass as supporting colors. Give supernatural creatures unsettling ash, bone, stone, and indigo forms with restrained turquoise light.
+- Keep a consistent high three-quarter view, warm light from the upper left, and soft olive ground shadows. Sort sprites by ground position and keep terrain quiet enough for enemies, projectiles, and danger warnings to remain readable.
+- Match the interface to the world: indigo felt, warm manuscript paper, brass symbols, rust-red woven trim, stitched borders, and serif chapter titles. Reuse painted world assets in camp and chronicle illustrations. Preserve text contrast, visible focus, and a clear battlefield; decorative art must not obstruct controls.
+- Animate characters with grounded gaits, subtle idle movement, readable attacks, and brief hit and defeat feedback. Keep proportions, shared frame registration, and ground anchors stable. Character animation follows active gameplay time; interface motion stays subtle, respects reduced-motion preferences, and never delays an action or displayed value.
+- Keep painted PNGs and atlas metadata in `public/art/`. Use `src/game/assets/painterlyArt.ts` for loading and visual sizing, `src/ui/artwork.ts` for interface illustrations, and `src/tapestry.css` and `src/motion.css` for UI materials and motion. Preserve transparent gutters and frame metadata when extending atlases, and inspect new poses in the game.
+- Keep antialiasing, linear texture filtering, and fractional sprite positions enabled for the painted artwork. Bundle all images and fonts locally; do not fetch assets at runtime.
+- Read [the visual direction and asset prompts](docs/living-steppe-tapestry.md) and [the character animation guide](docs/character-animation.md) before changing artwork or animation sheets.
+
 ## Code conventions
 
 - Prefer focused typed modules and plain content definitions over editor-only configuration.
@@ -29,7 +40,6 @@ Hordes of the Fallen Sky is a nomadic civilization builder and desktop TypeScrip
 - Actors are pooled. Reset mutable properties on reuse and disable bodies in collision callbacks.
 - Drive character frames and defeat copies from active gameplay seconds through `animation/CharacterMotion.ts` and `animation/CharacterVisuals.ts`. Preserve the shared logical canvas and ground registration, visual scale, and collision offsets when changing frames; do not use automatic animation clocks that continue in menus.
 - Preserve XP at pool capacity, upgrade stack limits, excess XP, and every earned upgrade choice.
-- Follow The Living Steppe Tapestry art direction: painterly 2.5D sprites, warm golden terrain, textile-inspired ornament, soft shadows, and ground-position depth sorting. Painted assets and atlas metadata live in `public/art/`; loading, visual sizing, and effects live in `assets/painterlyArt.ts`. Keep antialiasing and linear filtering enabled. Bundle all images and fonts locally; do not fetch them at runtime.
 - Use `GamePlatform` for saves and OS capabilities. Native files are validated/serialized/atomically renamed through `ProfileStore`. Do not write to the install directory or use localStorage for desktop persistence.
 - Preserve the sandbox, context isolation, disabled renderer Node integration, trusted sender checks, and typed preload bridge. Never expose raw IPC, filesystem paths, arbitrary file access, or process execution to the renderer.
 - Node ESM imports in desktop/shared modules use `.js` extensions. The sandboxed preload is `.cts` compiled to `.cjs`.
