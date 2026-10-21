@@ -1,6 +1,6 @@
 import type { EnemyDefinition } from '../types';
 
-/** Add an entry and a matching pixel sprite to introduce another enemy. */
+/** Add an entry and a matching painted character clip to introduce another enemy. */
 export const ENEMIES: readonly EnemyDefinition[] = [
   {
     id: 'wisp',

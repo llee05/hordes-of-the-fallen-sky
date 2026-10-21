@@ -34,6 +34,8 @@ The title and pause menus contain **Settings** and **How to play**. Sound prefer
 
 The game now uses a stylized painterly 2.5D presentation: golden brushwork grasslands, miniature mounted warriors, decorated ivory gers, turquoise and vermilion banners, and cold, unsettling calamity creatures. Soft shadows, ground-position depth sorting, drifting wind and snow, and parchment panels carry the direction through gameplay. All artwork ships locally. See [the art direction and generation prompts](docs/living-steppe-tapestry.md).
 
+The commander, allied archers, and all six creature designs have painted sprite animation: four gait or hovering frames and two attack poses each. Riding speed drives the gait, galloping quickens it, and actual volleys, charges, and strikes trigger release poses. Hits briefly tint the character; defeated enemies fade through a small visual pool after their collision bodies leave immediately. Character animation and these effects freeze in every paused run phase. See [the sprite sheets, registration, and generation prompts](docs/character-animation.md).
+
 ## Build, defend, migrate
 
 Start with eight people, three horses, two gers, supplies, and a mounted commander with one accompanying rider. Attacks are automatic. Ride to collect spirit shards and learn clan traditions. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through.

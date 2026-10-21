@@ -18,7 +18,7 @@ The interface uses indigo felt, warm manuscript paper, brass edging, rust-red wo
 
 ## Local assets and rendering
 
-The three world-art PNGs and the UI felt texture were generated with the **built-in image_gen tool** and copied into the project. There are no AI calls or image downloads at runtime. Source PNGs retain the generated image data and transparency. Atlas JSON describes the individual silhouettes without editing or slicing the PNGs into separate files. `public/art/ui-felt.png` is a neutral material swatch, tinted with CSS multiply blending for indigo and rust cloth. `public/art/ui-braid.svg` supplies a repeating geometric woven trim.
+The original world-art PNGs, two character animation sheets, and the UI felt texture were generated with the **built-in image_gen tool** and copied into the project. There are no AI calls or image downloads at runtime. Source PNGs retain the generated image data and transparency. Atlas JSON describes the individual silhouettes without editing or slicing the PNGs into separate files. `public/art/ui-felt.png` is a neutral material swatch, tinted with CSS multiply blending for indigo and rust cloth. `public/art/ui-braid.svg` supplies a repeating geometric woven trim. See [the character animation guide](character-animation.md) for the motion sheets, registration, playback, and generation prompts.
 
 | Asset                     | Path                                                            | Role                                                                          |
 | ------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------- |
@@ -27,9 +27,9 @@ The three world-art PNGs and the UI felt texture were generated with the **built
 | Camp and terrain props    | `public/art/steppe-props.png`                                   | Ger, cart, two-color banners, sheep, stone outcrop, ribbon cairn              |
 | Atlas metadata            | `public/art/steppe-actors.json`, `public/art/steppe-props.json` | Named frames tightly bounded from the generated alpha                         |
 
-`src/game/assets/painterlyArt.ts` loads the two shared atlases, defines visual sizes, and configures collision circles in world units independently of image resolution. It also creates small deterministic brush, arrow, shard, dust, and shadow textures. `src/game/assets/SteppeLandscape.ts` owns decorative terrain and atmosphere. `ArenaScene` owns the simulation, depth ordering, and pooled actors. The Phaser renderer uses antialiasing and linear texture filtering. Painted sprites use fractional coordinates; the game does not round them into a pixel grid.
+`src/game/assets/painterlyArt.ts` loads two shared character motion atlases and one prop atlas, defines visual sizes, and configures collision circles in world units independently of image resolution. It also creates small deterministic brush, arrow, shard, dust, and shadow textures. `src/game/assets/SteppeLandscape.ts` owns decorative terrain and atmosphere. `ArenaScene` owns the simulation, depth ordering, and pooled actors. The Phaser renderer uses antialiasing and linear texture filtering. Painted sprites use fractional coordinates; the game does not round them into a pixel grid.
 
-Existing movement, formations, attacks, collision radii, progression, construction, route rewards, native saves, and sandboxing are preserved. Decorative terrain remains walkable. The view is 2.5D presentation over a 2D simulation; these are painted sprite poses rather than rigged 3D models or complete directional animation sheets.
+Existing movement, formations, attack timing, collision radii, progression, construction, route rewards, native saves, and sandboxing are preserved. Decorative terrain remains walkable. The view is 2.5D presentation over a 2D simulation. Characters have four painted locomotion frames and two attack poses each, with left-facing mirroring and frame registration that keeps ground anchors stable. Gameplay time drives every character frame and defeat copy, so menus freeze their playback.
 
 ## UI material generation prompt
 

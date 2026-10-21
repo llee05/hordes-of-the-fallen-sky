@@ -1,16 +1,7 @@
 import Phaser from 'phaser';
+import { characterTexture, isCharacterKind, MOTION_SHEETS } from '../animation/CharacterMotion';
 
-/** Shared atlases keep hundreds of painted actors on two GPU textures. */
-const ACTORS = new Set([
-  'player',
-  'rider',
-  'wolf',
-  'shade',
-  'earth',
-  'ghost',
-  'seer',
-  'skybreaker',
-]);
+/** Two motion atlases and one prop atlas keep painted actors on shared textures. */
 const PROPS = new Set(['ger', 'cart', 'banner', 'sheep', 'rock', 'pillar']);
 export const ART_WIDTH: Readonly<Record<string, number>> = {
   player: 62,
@@ -30,7 +21,7 @@ export const ART_WIDTH: Readonly<Record<string, number>> = {
 };
 
 export function artTexture(name: string): [string, string?] {
-  if (ACTORS.has(name)) return ['steppe-actors', name];
+  if (isCharacterKind(name)) return characterTexture(name);
   if (PROPS.has(name)) return ['steppe-props', name];
   return [name];
 }
@@ -38,7 +29,10 @@ export function artTexture(name: string): [string, string?] {
 export function preloadPainterlyArt(scene: Phaser.Scene): void {
   const root = `${import.meta.env.BASE_URL}art/`;
   scene.load.image('ground', `${root}steppe-ground.png`);
-  scene.load.atlas('steppe-actors', `${root}steppe-actors.png`, `${root}steppe-actors.json`);
+  for (const sheet of MOTION_SHEETS) {
+    const key = `steppe-${sheet}-motion`;
+    scene.load.atlas(key, `${root}${key}.png`, `${root}${key}.json`);
+  }
   scene.load.atlas('steppe-props', `${root}steppe-props.png`, `${root}steppe-props.json`);
 }
 
@@ -64,6 +58,9 @@ export function styleActor(
   sprite.setScale(width / sprite.width);
   const localRadius = radius / sprite.scaleX;
   sprite.setCircle(localRadius, sprite.width / 2 - localRadius, sprite.height * 0.9 - localRadius);
+  // setCircle uses the body's cached scale. Synchronize immediately so a newly
+  // spawned or reused actor has the right world radius before the next step.
+  sprite.body!.updateFromGameObject();
   sprite.setDepth(100 + sprite.y);
 }
 

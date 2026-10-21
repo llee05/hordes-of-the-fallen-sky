@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import type { EnemyDefinition } from '../types';
+import { CharacterMotion } from '../animation/CharacterMotion';
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
   definition!: EnemyDefinition;
   health = 0;
-  /** Visual motion uses a stable offset instead of allocating individual tweens. */
-  bobOffset = 0;
+  readonly motion = new CharacterMotion('wolf');
+  preparingAttack = false;
   attackTimer = 0;
   clanAttackTimer = 0;
   chargeTimer = 0;

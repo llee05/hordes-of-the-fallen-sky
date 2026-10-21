@@ -8,6 +8,8 @@ import {
   styleActor,
 } from '../assets/painterlyArt';
 import { SteppeLandscape } from '../assets/SteppeLandscape';
+import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
+import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
 import { GAME } from '../config';
 import { chooseEnemy, SKYBREAKER, spawnInterval } from '../data/enemies';
 import { FORMATIONS, ROUTES } from '../data/clan';
@@ -57,6 +59,10 @@ export class ArenaScene extends Phaser.Scene {
   private campLabel!: Phaser.GameObjects.Text;
   private landscape!: SteppeLandscape;
   private riderShadows: Phaser.GameObjects.Image[] = [];
+  private readonly playerMotion = new CharacterMotion('player');
+  private riderMotions: CharacterMotion[] = [];
+  private riderSpeeds: number[] = [];
+  private defeats!: DefeatSprites;
   private enemyShadows = new Map<Enemy, Phaser.GameObjects.Image>();
   private dustTimer = 0;
   private supportTimer = 0;
@@ -124,6 +130,9 @@ export class ArenaScene extends Phaser.Scene {
     this.wardTimer = 0;
     this.riders = [];
     this.riderShadows = [];
+    this.riderMotions = [];
+    this.riderSpeeds = [];
+    this.playerMotion.reset('player');
     this.enemyShadows.clear();
     this.dustTimer = 0;
     this.boss = undefined;
@@ -135,6 +144,7 @@ export class ArenaScene extends Phaser.Scene {
     this.best = this.platform.profile.bestSeconds;
 
     createPainterlyEffects(this);
+    this.defeats = new DefeatSprites(this);
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.landscape = new SteppeLandscape(this);
     const center = GAME.worldSize / 2;
@@ -152,6 +162,8 @@ export class ArenaScene extends Phaser.Scene {
       .setDepth(9500);
     for (let i = 0; i < 16; i += 1) {
       this.riders.push(paintedImage(this, center, center, 'rider').setVisible(false));
+      this.riderMotions.push(new CharacterMotion('rider', i * 0.137));
+      this.riderSpeeds.push(0);
       this.riderShadows.push(
         this.add.image(center, center, 'shadow').setDisplaySize(48, 18).setVisible(false),
       );
@@ -257,6 +269,7 @@ export class ArenaScene extends Phaser.Scene {
       this.clearTouch();
     });
     this.physics.pause();
+    this.tweens.pauseAll();
     this.publishPhase();
   }
 
@@ -417,6 +430,7 @@ export class ArenaScene extends Phaser.Scene {
     this.updateProjectiles(dt);
     this.collectGems(dt);
     if (this.run.phase !== 'playing') return;
+    this.updateCharacterAnimations(dt);
     this.hudTimer -= dt;
     if (this.hudTimer <= 0) {
       this.hudTimer = 0.08;
@@ -457,7 +471,6 @@ export class ArenaScene extends Phaser.Scene {
     this.player.setAlpha(
       this.invulnerable > 0 ? (Math.floor(this.run.elapsed * 20) % 2 ? 0.5 : 0.85) : 1,
     );
-    this.player.setAngle(movement.lengthSq() > 0 ? Math.sin(this.run.elapsed * 16) * 3 : 0);
     this.player.setDepth(100 + this.player.y);
     this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
     this.dustTimer -= dt;
@@ -529,7 +542,10 @@ export class ArenaScene extends Phaser.Scene {
       this.run.clan.message =
         'THE SKYBREAKER — hold the line. Your people are the victory condition.';
     }
-    enemy.bobOffset = Math.random() * Math.PI * 2;
+    if (!isCharacterKind(definition.texture))
+      throw new Error(`Missing character animation: ${definition.texture}`);
+    enemy.motion.reset(definition.texture, Math.random());
+    enemy.preparingAttack = false;
   }
 
   private updateEnemies(dt: number): void {
@@ -561,6 +577,7 @@ export class ArenaScene extends Phaser.Scene {
       if ((behavior === 'ranged' || behavior === 'boss') && distance < 260) speed = 0;
       if (behavior === 'charger' && enemy.chargeTimer <= 0) {
         enemy.chargeTimer = 3;
+        enemy.motion.attack();
         const angle = Math.atan2(target.y - enemy.y, target.x - enemy.x);
         enemy.setData('chargeAngle', angle);
       }
@@ -569,11 +586,15 @@ export class ArenaScene extends Phaser.Scene {
         enemy.setVelocity(Math.cos(angle) * speed * 2.2, Math.sin(angle) * speed * 2.2);
       } else this.physics.moveToObject(enemy, target, speed);
       enemy.setFlipX(enemy.x > target.x);
-      enemy.setAngle(Math.sin(this.run.elapsed * 7 + enemy.bobOffset) * 4);
-      enemy.setTint(
-        enemy.burning > 0 ? 0xffad67 : enemy.definition.id === 'frost-mare' ? 0xb1efff : 0xffffff,
-      );
+      enemy.preparingAttack =
+        ((behavior === 'ranged' || behavior === 'boss') &&
+          distance < 650 &&
+          enemy.attackTimer > 0 &&
+          enemy.attackTimer < 0.25) ||
+        (campDistance < 90 && enemy.clanAttackTimer > 0 && enemy.clanAttackTimer < 0.2) ||
+        (behavior === 'charger' && enemy.chargeTimer > 0 && enemy.chargeTimer < 0.2);
       if (campDistance < 68 && enemy.clanAttackTimer <= 0) {
+        enemy.motion.attack();
         damageClan(this.run, enemy.definition.damage * 0.45);
         enemy.clanAttackTimer = 1.5;
         this.burst(this.camp.x, this.camp.y, 0xc56c4e, 3);
@@ -585,6 +606,7 @@ export class ArenaScene extends Phaser.Scene {
       ) {
         const angle = Math.atan2(target.y - enemy.y, target.x - enemy.x);
         const count = behavior === 'boss' ? 12 : 1;
+        enemy.motion.attack();
         for (let i = 0; i < count; i += 1)
           this.fireHostile(enemy, angle + (i * Math.PI * 2) / count);
         enemy.attackTimer = behavior === 'boss' ? 2.5 : 3.5;
@@ -610,7 +632,9 @@ export class ArenaScene extends Phaser.Scene {
       this.player.y,
       GAME.projectile.range + momentum * 120,
     );
-    if (target)
+    if (target) {
+      this.playerMotion.attack();
+      if (this.player.body!.velocity.lengthSq() < 4) this.player.setFlipX(target.x < this.player.x);
       this.shootVolley(
         this.player.x,
         this.player.y,
@@ -618,11 +642,14 @@ export class ArenaScene extends Phaser.Scene {
         this.run.stats.projectiles,
         1 + momentum * 0.3,
       );
+    }
     const count = riderCount(this.run);
     for (let i = 0; i < count; i += 1) {
       const rider = this.riders[i]!;
       const riderTarget = this.spatial.nearest(rider.x, rider.y, GAME.projectile.range);
-      if (riderTarget)
+      if (riderTarget) {
+        this.riderMotions[i]!.attack();
+        if (this.riderSpeeds[i]! < 2) rider.setFlipX(riderTarget.x < rider.x);
         this.shootVolley(
           rider.x,
           rider.y,
@@ -630,6 +657,7 @@ export class ArenaScene extends Phaser.Scene {
           1,
           0.6 + (this.run.clan.paths.archery === 1 ? 0.3 : 0),
         );
+      }
     }
     this.attackTimer =
       this.run.stats.attackInterval *
@@ -732,10 +760,12 @@ export class ArenaScene extends Phaser.Scene {
 
   private damageEnemy(enemy: Enemy, amount: number): void {
     if (!enemy.active) return;
+    if (amount >= 1) enemy.motion.hit();
     enemy.health -= amount;
     if (enemy.health > 0) return;
     const { x, y } = enemy;
     const value = enemy.definition.xp;
+    this.defeats.show(enemy);
     enemy.disableBody(true, true);
     this.enemyShadows.get(enemy)?.setVisible(false);
     this.run.kills += 1;
@@ -787,12 +817,14 @@ export class ArenaScene extends Phaser.Scene {
 
   private hurtPlayer(enemy: Enemy): void {
     if (this.run.phase !== 'playing' || !enemy.active || this.invulnerable > 0) return;
+    enemy.motion.attack();
     this.takeDamage(enemy.definition.damage);
   }
 
   private takeDamage(amount: number): void {
     if (this.run.phase !== 'playing' || this.invulnerable > 0) return;
     this.run.health = Math.max(0, this.run.health - amount);
+    this.playerMotion.hit();
     this.invulnerable = GAME.invulnerability;
     this.cameras.main.shake(90, 0.003);
     this.audio.play('hit');
@@ -828,10 +860,12 @@ export class ArenaScene extends Phaser.Scene {
     if (phase === 'playing') {
       this.input.keyboard!.addCapture(['SPACE', 'TAB']);
       this.physics.resume();
+      this.tweens.resumeAll();
     } else {
       // Let focused menu buttons retain their native Space activation.
       this.input.keyboard!.removeCapture(['SPACE', 'TAB']);
       this.physics.pause();
+      this.tweens.pauseAll();
     }
     this.publishPhase();
   }
@@ -940,6 +974,7 @@ export class ArenaScene extends Phaser.Scene {
     const count = riderCount(this.run);
     for (let i = 0; i < this.riders.length; i += 1) {
       const rider = this.riders[i]!;
+      if (!rider.visible && i < count) this.riderMotions[i]!.reset('rider', i * 0.137);
       rider.setVisible(i < count);
       this.riderShadows[i]!.setVisible(i < count);
       if (i >= count) continue;
@@ -963,17 +998,59 @@ export class ArenaScene extends Phaser.Scene {
           this.facing.y * (45 + Math.floor(i / 2) * 28) -
           this.facing.x * (i % 2 ? 26 : -26);
       }
-      rider
-        .setPosition(
-          Phaser.Math.Linear(rider.x, x, Math.min(1, dt * 5)),
-          Phaser.Math.Linear(rider.y, y, Math.min(1, dt * 5)),
-        )
-        .setFlipX(this.facing.x < 0);
-      rider.setDepth(100 + rider.y).setAngle(Math.sin(this.run.elapsed * 12 + i) * 1.2);
+      const previousX = rider.x;
+      const previousY = rider.y;
+      rider.setPosition(
+        Phaser.Math.Linear(rider.x, x, Math.min(1, dt * 5)),
+        Phaser.Math.Linear(rider.y, y, Math.min(1, dt * 5)),
+      );
+      const dx = rider.x - previousX;
+      const dy = rider.y - previousY;
+      this.riderSpeeds[i] = dt > 0 ? Math.hypot(dx, dy) / dt : 0;
+      if (Math.abs(dx) > 0.1) rider.setFlipX(dx < 0);
+      rider.setDepth(100 + rider.y);
       this.riderShadows[i]!.setPosition(rider.x + 7, rider.y + 4).setDepth(99 + rider.y);
     }
     this.landscape.update(this.run.elapsed, clan.region, this.cameras.main);
     this.updateHazards(dt);
+  }
+
+  private updateCharacterAnimations(dt: number): void {
+    const preparingVolley = this.attackTimer > 0 && this.attackTimer < 0.12;
+    this.playerMotion.advance(
+      dt,
+      this.player.body!.velocity.length(),
+      preparingVolley &&
+        Boolean(this.spatial.nearest(this.player.x, this.player.y, GAME.projectile.range)),
+    );
+    renderCharacter(this.player, this.playerMotion);
+    this.player.setTint(this.playerMotion.hurt ? 0xffd3b2 : 0xffffff);
+    for (let i = 0; i < this.riders.length; i++) {
+      const rider = this.riders[i]!;
+      if (!rider.visible) continue;
+      const motion = this.riderMotions[i]!;
+      motion.advance(
+        dt,
+        this.riderSpeeds[i]!,
+        preparingVolley && Boolean(this.spatial.nearest(rider.x, rider.y, GAME.projectile.range)),
+      );
+      renderCharacter(rider, motion);
+    }
+    for (const enemy of this.enemies.getChildren() as Enemy[]) {
+      if (!enemy.active) continue;
+      enemy.motion.advance(dt, enemy.body!.velocity.length(), enemy.preparingAttack);
+      renderCharacter(enemy, enemy.motion);
+      enemy.setTint(
+        enemy.motion.hurt
+          ? 0xffd3b2
+          : enemy.burning > 0
+            ? 0xffad67
+            : enemy.definition.id === 'frost-mare'
+              ? 0xb1efff
+              : 0xffffff,
+      );
+    }
+    this.defeats.update(dt);
   }
 
   private updateHazards(dt: number): void {

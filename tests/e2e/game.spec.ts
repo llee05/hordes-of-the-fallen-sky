@@ -321,11 +321,14 @@ test('painted atlases keep world-space collision sizes and sort miniatures by th
   const art = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     return {
-      actors: scene.textures.exists('steppe-actors'),
+      mounted: scene.textures.exists('steppe-mounted-motion'),
+      creatures: scene.textures.exists('steppe-creature-motion'),
       props: scene.textures.exists('steppe-props'),
       texture: scene.player.texture.key,
       frame: scene.player.frame.name,
       sourceWidth: scene.player.frame.width,
+      canvasWidth: scene.player.frame.realWidth,
+      canvasHeight: scene.player.frame.realHeight,
       displayWidth: scene.player.displayWidth,
       collisionWidth: scene.player.body.width,
       roundPixels: scene.cameras.main.roundPixels,
@@ -333,16 +336,19 @@ test('painted atlases keep world-space collision sizes and sort miniatures by th
     };
   });
   expect(art).toMatchObject({
-    actors: true,
+    mounted: true,
+    creatures: true,
     props: true,
-    texture: 'steppe-actors',
-    frame: 'player',
+    texture: 'steppe-mounted-motion',
+    canvasWidth: 256,
+    canvasHeight: 360,
     displayWidth: 62,
     collisionWidth: 20,
     roundPixels: false,
     imageRendering: 'auto',
   });
-  expect(art.sourceWidth).toBeGreaterThan(300);
+  expect(art.frame).toMatch(/^player-(move|attack)-\d$/);
+  expect(art.sourceWidth).toBeGreaterThan(200);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.player.setPosition(scene.camp.x, scene.camp.y - 65);
