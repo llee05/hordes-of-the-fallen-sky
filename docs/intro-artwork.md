@@ -1,8 +1,28 @@
 # Intro story paintings
 
-The three prologue illustrations were generated with the built-in `image_gen` tool. The selected PNGs are bundled unchanged in `public/art/`, at 1536 × 1024 each. There are no runtime image downloads or AI calls. `src/game/data/intro.ts` pairs each painting with its chapter and caption.
+The five prologue illustrations were generated with the built-in `image_gen` tool. The selected PNGs are bundled unchanged in `public/art/`, at 1536 × 1024 each. There are no runtime image downloads or AI calls. `src/game/data/intro.ts` pairs each painting with the canonical short telling in [the world lore](../lore.md#opening-slideshow).
 
-## Prompt set
+The prologue follows the clan's account of Tengri and Etügen, the Last Court's Iron Vow, the unreturned, the surviving hearth, and the search for refuge. The iron standard and hearth scenes were added for this telling; the original three landscape paintings remain its opening, calamity, and journey scenes. The new paintings depict invented events, without personifying Tengri or Etügen or presenting the court's act as a historical ceremony.
+
+| Chapter                     | Painting                          |
+| --------------------------- | --------------------------------- |
+| I · Heaven and Earth        | `public/art/intro-steppe.png`     |
+| II · The Iron Vow           | `public/art/intro-iron-vow.png`   |
+| III · The Unreturned        | `public/art/intro-fallen-sky.png` |
+| IV · The Living Hearth      | `public/art/intro-hearth.png`     |
+| V · The Heart of the Steppe | `public/art/intro-caravan.png`    |
+
+## Lore expansion prompts
+
+### The Iron Vow — `public/art/intro-iron-vow.png`
+
+> Use case: illustration-story. Asset type: full-bleed landscape prologue painting for the desktop fantasy game Hordes of the Fallen Sky. Scene: 'The Iron Vow', an explicitly invented fantasy event, not a real Mongolian ceremony. In the open stone courtyard of the fictional Last Court, tiny cloaked rulers stand beneath a towering dark iron standard with rigid iron pennants, rust-red bindings, and long chains anchored to an empty stone throne. Above it the blue sky is just beginning to fracture into sweeping indigo clouds with a thin cold turquoise fissure. Beyond the palace walls lies a vast ochre steppe. The standard is a symbol of rulers attempting to monopolize Heaven's favor. Show human ambition and ominous scale; no personified deity, no Tengri figure, no historical ruler, no real religious text or symbols copied. Composition: wide landscape exactly 1536 by 1024, high three-quarter landscape view, main throne and standard in central upper two thirds; quiet dark stone and grass in lower quarter for a caption added by game code. Art direction: The Living Steppe Tapestry, matte hand-painted gouache, restrained brush grain, simplified miniature silhouettes, Thronefall's miniature readability, The Banner Saga's illustrated surfaces, Mongolian and Central Asian woven geometric ornament and painted wood. Original fantasy designs. Palette ochre gold, warm ivory, muted lapis, rust, umber, olive shadows, restrained turquoise supernatural light. No text, letters, captions, frame, logo, watermark, photorealism, glossy 3D, or pixel art.
+
+### The Living Hearth — `public/art/intro-hearth.png`
+
+> Use case: illustration-story. Asset type: full-bleed landscape prologue painting for the desktop game Hordes of the Fallen Sky. Scene: 'The Living Hearth'. Eight surviving members of a Mongolian-inspired fantasy clan gather quietly around a small warm hearth outside two ivory felt gers at blue hour on the golden steppe. An elderly hearthkeeper kneels tending glowing embers in a covered earthen vessel; a mounted banner-bearer in lapis-blue deel and simple lamellar armor waits beside a chestnut horse with a turquoise cloth banner. Other survivors include a child, herders, and a person loading blankets onto a wooden supply cart. Three horses total. Show close human solidarity at miniature landscape scale, tired people preparing to leave, no grand war army. In the middle distance a small weathered stone cairn with blue cloth ribbons stands against rolling ochre hills; indigo storm clouds loom far behind. This is an invented household scene, not a depiction of a prescribed historical ritual. No visible deity, no glowing ancestor ghosts, no magical emblems. Composition: landscape exactly 1536 by 1024, high three-quarter view, camp and people in central upper two thirds; calm dark grass in lower quarter for a caption added by game code. Art direction: The Living Steppe Tapestry, matte hand-painted gouache, restrained brush grain, readable simplified miniature silhouettes, Thronefall's miniature scale, The Banner Saga's illustrated surfaces, traditional Mongolian and Central Asian felt, woven geometric ornament, decorated wood. Palette ochre gold, warm ivory, muted lapis turquoise, rust red, umber, soft olive shadows and warm amber embers against blue dusk. Original fantasy designs. No text, letters, captions, frame, logo, watermark, photorealism, glossy 3D, or pixel art.
+
+## Original landscape prompt set
 
 Each request used this shared direction:
 

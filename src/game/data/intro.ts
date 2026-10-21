@@ -1,21 +1,33 @@
-/** Local, full-bleed story paintings; BASE_URL also resolves in offline Electron. */
+/** Canonical short telling from lore.md; paintings resolve locally in offline Electron. */
 export const INTRO_SLIDES = [
   {
-    chapter: 'I · THE LIVING STEPPE',
-    title: 'When the grass was gold.',
-    text: 'We measured our wealth in horses, our home in the circle of our gers. Beneath the endless blue sky, the grass always grew again.',
+    chapter: 'I · HEAVEN AND EARTH',
+    title: 'Beneath Eternal Heaven.',
+    text: 'Above us was Tengri, Eternal Heaven. Beneath our hooves, Etügen, Mother Earth. We lived between them: tending the herds, honoring the land, remembering those who rode before us.',
     image: 'intro-steppe.png',
   },
   {
-    chapter: 'II · THE FALLEN SKY',
-    title: 'Then heaven fell silent.',
-    text: 'The cities fell. A cold light split the clouds, and things without breath rode out of the dark. No wall could keep the calamity away.',
+    chapter: 'II · THE IRON VOW',
+    title: 'A vow that broke the world.',
+    text: "The rulers of the Last Court raised an iron standard to bind Heaven's favor to their throne. When their vow was spoken, the sky split. We named that night the Sundering.",
+    image: 'intro-iron-vow.png',
+  },
+  {
+    chapter: 'III · THE UNRETURNED',
+    title: 'The unreturned ride.',
+    text: 'Through the wound came riders without breath, wolves without warmth, and voices wearing the names of our dead. Winter crossed into summer. Cities fell. The roads between the living and the ancestors were lost.',
     image: 'intro-fallen-sky.png',
   },
   {
-    chapter: 'III · THE BLUE BANNER',
-    title: 'Carry your people home.',
-    text: 'Now a small clan rides toward the sacred mountain, where a passage may yet open. Gather your people. Guard the wagons. Carry the blue banner into another dawn.',
+    chapter: 'IV · THE LIVING HEARTH',
+    title: 'Keep the hearth alive.',
+    text: 'Eight of us remained beneath a blue banner. Our hearthkeeper carried the last embers; you took up the bow. We would gather the scattered families and carry our hearth where the darkness could not follow.',
+    image: 'intro-hearth.png',
+  },
+  {
+    chapter: 'V · THE HEART OF THE STEPPE',
+    title: 'A road beneath the sky.',
+    text: 'East, at the Heart of the Steppe, the elders remember a sheltered valley beneath an unbroken sky. Lead us to the sacred mountain. Guard the wagons until the passage opens. Let our children see another dawn.',
     image: 'intro-caravan.png',
   },
 ] as const;

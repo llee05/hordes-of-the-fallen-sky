@@ -23,13 +23,28 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     let page = await app.firstWindow();
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
-    await expect(page.getByRole('heading', { name: 'When the grass was gold.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
     await expect
       .poll(() =>
         page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth),
       )
       .toBe(1536);
     await page.screenshot({ path: 'test-results/native-intro.png' });
+    // Check every story painting through file://, including the two lore additions.
+    for (const heading of [
+      'A vow that broke the world.',
+      'The unreturned ride.',
+      'Keep the hearth alive.',
+      'A road beneath the sky.',
+    ]) {
+      await page.keyboard.press('ArrowRight');
+      await expect(page.getByRole('heading', { name: heading })).toBeVisible();
+      await expect
+        .poll(() =>
+          page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth),
+        )
+        .toBe(1536);
+    }
     await page.keyboard.press('Escape');
     await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();

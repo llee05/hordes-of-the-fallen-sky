@@ -10,7 +10,7 @@ export function introMenu(index: number): string {
     <footer class="intro-footer">
       <button class="intro-back" data-action="intro-back" ${index === 0 ? 'disabled' : ''}>← Back</button>
       <div class="intro-pages" aria-label="Chapter ${index + 1} of ${INTRO_SLIDES.length}">${INTRO_SLIDES.map((_, i) => `<span class="intro-page${i === index ? ' current' : ''}" aria-hidden="true"></span>`).join('')}<span class="intro-count">${String(index + 1).padStart(2, '0')} / ${String(INTRO_SLIDES.length).padStart(2, '0')}</span></div>
-      <button class="intro-next" data-action="intro-next" data-primary>${last ? 'To the steppe' : 'Continue'} <span aria-hidden="true">→</span></button>
+      <button class="intro-next" data-action="intro-next" data-primary>${last ? 'Raise the blue banner' : 'Continue'} <span aria-hidden="true">→</span></button>
     </footer>
     <p class="intro-hint">Read at your pace · Enter / A to continue · ← → to turn pages</p>
   </section>`;
