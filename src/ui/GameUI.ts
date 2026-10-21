@@ -1,5 +1,6 @@
 import { GAME } from '../game/config';
 import { clanMark } from './artwork';
+import { UIMotion } from './Motion';
 import { FORMATIONS, REGIONS } from '../game/data/clan';
 import type { ArenaScene } from '../game/scenes/ArenaScene';
 import {
@@ -28,6 +29,7 @@ const emblem = `<span class="clan-seal">${clanMark('spirit')}</span>`;
 export class GameUI {
   readonly canvasParent: HTMLElement;
   private readonly overlay: HTMLElement;
+  private readonly motion: UIMotion;
   private phase: RunPhase = 'ready';
   private fullscreen = false;
   private journalTab: JournalTab = 'journey';
@@ -80,6 +82,7 @@ export class GameUI {
     </main>`;
     this.canvasParent = this.get('game-canvas');
     this.overlay = this.get('overlay');
+    this.motion = new UIMotion(root);
     this.get('pause').addEventListener('click', () => scene.togglePause());
     this.get('journal').addEventListener('click', () => scene.toggleJournal());
     this.get('dash').addEventListener('click', () => scene.dash());
@@ -113,7 +116,18 @@ export class GameUI {
     return this.root.querySelector<HTMLElement>(`#${id}`)!;
   }
   private text(id: string, value: string | number): void {
-    this.get(id).textContent = String(value);
+    const element = this.get(id);
+    if (element.textContent !== String(value)) element.textContent = String(value);
+  }
+  private number(id: string, value: number, label = String(value)): void {
+    const element = this.get(id);
+    const previous = Number.parseFloat(element.textContent ?? '');
+    this.text(id, label);
+    if (Number.isFinite(previous) && previous !== value) {
+      this.motion.change(element, value > previous);
+      if (value < previous && (id === 'health' || id === 'integrity'))
+        this.motion.damage(this.get('health').closest<HTMLElement>('.vitals-hud')!);
+    }
   }
   private meter(id: string, value: number): void {
     this.get(id).style.width = `${Math.max(0, Math.min(100, value))}%`;
@@ -122,17 +136,27 @@ export class GameUI {
   private update(snapshot: HudSnapshot): void {
     this.lastSnapshot = snapshot;
     const { run, dashReady, best, bossHealth, clanBearing } = snapshot;
+    this.motion.setPlaying(run.phase === 'playing');
     const clan = run.clan;
     const region = REGIONS[clan.region]!;
     this.text('timer', formatTime(run.elapsed));
     this.text('level', run.level.toString().padStart(2, '0'));
     this.text('kills', run.kills);
     this.text('clan-bearing', clanBearing);
-    this.text('health', `${Math.ceil(run.health)} / ${run.stats.maxHealth}`);
+    this.number(
+      'health',
+      Math.ceil(run.health),
+      `${Math.ceil(run.health)} / ${run.stats.maxHealth}`,
+    );
     this.meter('health-fill', (run.health / run.stats.maxHealth) * 100);
     this.get('health-fill').classList.toggle('low', run.health < run.stats.maxHealth * 0.3);
     this.meter('xp-fill', (run.xp / run.nextLevelXp) * 100);
     this.meter('dash-charge', dashReady * 100);
+    const dash = this.get('dash');
+    const dashAvailable = dashReady >= 1;
+    if (dashAvailable && dash.dataset.ready === 'false')
+      this.motion.notice(dash.querySelector<HTMLElement>('.dash-symbol')!);
+    dash.dataset.ready = String(dashAvailable);
     this.text(
       'dash-label',
       dashReady >= 1
@@ -141,13 +165,13 @@ export class GameUI {
     );
     this.text('momentum', `MOMENTUM ${Math.round(clan.momentum * 100)}%`);
     for (const id of ['population', 'herd', 'food', 'materials', 'spirit'] as const)
-      this.text(id, Math.floor(clan[id]));
+      this.number(id, Math.floor(clan[id]));
     this.get('food').classList.toggle('danger', clan.food < 15);
     this.text('doctrine', clanDoctrine(run));
     this.text('riders', riderCount(run));
     this.text('workers', `${assignedWorkers(run)} / ${clan.population}`);
     this.text('power', Math.round(run.stats.damage));
-    this.text('integrity', `${Math.ceil(clan.integrity)}%`);
+    this.number('integrity', Math.ceil(clan.integrity), `${Math.ceil(clan.integrity)}%`);
     this.meter('integrity-fill', clan.integrity);
     this.text('pasture', `${Math.ceil(clan.pasture)}%`);
     this.meter('pasture-fill', clan.pasture);
@@ -191,11 +215,18 @@ export class GameUI {
             ? 'Fresh pastures await. Pack up with M.'
             : `New routes in ${Math.ceil(GAME.clan.minimumCamp - clan.stageTime)}s. Develop the camp with B.`,
     );
-    this.text('formation-name', FORMATIONS[clan.formation].title);
+    if (this.get('formation-name').textContent !== FORMATIONS[clan.formation].title) {
+      this.text('formation-name', FORMATIONS[clan.formation].title);
+      this.motion.notice(this.get('formation').querySelector<HTMLElement>('.command-icon')!);
+    }
     (this.get('build') as HTMLButtonElement).disabled =
       run.phase !== 'playing' || clan.stage === 'migration';
-    (this.get('migrate') as HTMLButtonElement).disabled =
-      run.phase !== 'playing' || !canMigrate(run);
+    const migrate = this.get('migrate') as HTMLButtonElement;
+    const routeAvailable = canMigrate(run);
+    if (routeAvailable && migrate.dataset.available === 'false')
+      this.motion.notice(migrate.querySelector<HTMLElement>('.command-icon')!);
+    migrate.dataset.available = String(routeAvailable);
+    migrate.disabled = run.phase !== 'playing' || !routeAvailable;
     (this.get('formation') as HTMLButtonElement).disabled =
       run.phase !== 'playing' || availableFormations(run).length < 2;
     this.get('synergy').hidden = !burningTempest(run);
@@ -222,10 +253,16 @@ export class GameUI {
     );
   }
 
+  destroy(): void {
+    window.clearTimeout(this.toastTimer);
+    this.motion.destroy();
+  }
+
   private renderPhase(snapshot: HudSnapshot, choices: readonly UpgradeDefinition[]): void {
     const { run } = snapshot;
     this.overlay.dataset.entry =
       run.phase !== this.phase || !this.overlay.firstElementChild ? 'phase' : 'content';
+    if (run.phase !== this.phase) this.motion.cancel();
     if (run.phase === 'playing' && this.phase === 'ready') this.showMessage();
     this.phase = run.phase;
     this.root.dataset.phase = run.phase;

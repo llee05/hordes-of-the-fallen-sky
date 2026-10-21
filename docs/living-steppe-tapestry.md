@@ -14,6 +14,8 @@ The interface uses indigo felt, warm manuscript paper, brass edging, rust-red wo
 
 `src/motion.css` gives the hanging title cloth a slow breathing motion, opens manuscript panels in 240ms, and lightly staggers their illustrations. River currents and banner cloth animate inside the migration vignettes. Hover and keyboard focus lift illustrations while keeping their controls in place. Buying a structure or changing chronicle tabs refreshes content without replaying the whole panel entrance. Actions never wait for animation completion. A single reduced-motion rule disables all interface keyframes and transitions, including the older meters and notifications.
 
+`src/ui/Motion.ts` adds short feedback animations to displayed resource and health changes, damage, gallop readiness, formation changes, and unlocked migration. It uses the Web Animations API with at most one transient effect per element; it never stores simulation values or schedules gameplay. Feedback cancels on pause, document hiding, live reduced-motion changes, and renderer destruction. UI values always update immediately to the current scene snapshot.
+
 ## Local assets and rendering
 
 The three world-art PNGs and the UI felt texture were generated with the **built-in image_gen tool** and copied into the project. There are no AI calls or image downloads at runtime. Source PNGs retain the generated image data and transparency. Atlas JSON describes the individual silhouettes without editing or slicing the PNGs into separate files. `public/art/ui-felt.png` is a neutral material swatch, tinted with CSS multiply blending for indigo and rust cloth. `public/art/ui-braid.svg` supplies a repeating geometric woven trim.

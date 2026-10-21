@@ -15,6 +15,7 @@ async function bootstrap(): Promise<void> {
   const scene = new ArenaScene(platform);
   const ui = new GameUI(document.querySelector<HTMLElement>('#app')!, scene, platform);
   const game = createGame(ui.canvasParent, scene);
+  game.events.once('destroy', () => ui.destroy());
 
   // Local inspection and browser tests; this reference is removed from production.
   if (import.meta.env.DEV) Object.assign(window, { __gloam: { game, scene } });

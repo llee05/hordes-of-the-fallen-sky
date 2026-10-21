@@ -24,6 +24,8 @@ The game opens with its title embroidered across an indigo felt banner over the 
 
 The battlefield fills the entire game window. Compact resources and objectives sit at the top, with commander health, clan resolve, gallop, and a keyboard command dock near the bottom. Brief clan messages appear as notifications.
 
+The title cloth breathes gently, parchment menus settle into place, and illustrations respond to mouse or keyboard focus. Resource changes, damage, gallop readiness, and newly available migration routes have brief visual feedback. Controls respond immediately throughout. The operating system's reduced-motion preference disables interface animations and transitions, including when changed while the game is open.
+
 Press **Tab** or **J** (controller **View**) to open the clan chronicle. It pauses combat, physics, economy, and migration while you inspect the journey, buildings, workforce, formations, and learned traditions. Arrow keys switch its tabs; Escape or J returns to the battlefield. You can open camp development or choose an available migration route directly from the chronicle.
 
 The title and pause menus contain **Settings** and **How to play**. Sound preference saves automatically. Fullscreen is available in Settings or with F11 / Alt+Enter. Escape backs out to the menu you came from; closing Settings during a paused expedition keeps that expedition paused. Native Quit game is available in the main and pause menus. Keyboard, mouse, controller, and touch-preview actions use the same scene-owned run state.
