@@ -98,8 +98,8 @@ export class ArenaScene extends Phaser.Scene {
   private best = 0;
   private choices: readonly UpgradeDefinition[] = [];
   private utilityReturnPhase: 'ready' | 'paused' = 'ready';
-  private introShown = false;
   private introSlide = 0;
+  private introStartsRun = false;
   private storiesEnabled = true;
   private storyLogReturn: 'paused' | 'won' | 'dead' = 'paused';
   private facing = new Phaser.Math.Vector2(0, 1);
@@ -126,10 +126,7 @@ export class ArenaScene extends Phaser.Scene {
     this.run.story.enabled = this.storiesEnabled;
     this.storyLogReturn = 'paused';
     this.introSlide = 0;
-    if (!this.introShown) {
-      this.introShown = true;
-      this.run.phase = 'intro';
-    }
+    this.introStartsRun = false;
     this.spawnTimer = 0;
     this.attackTimer = 0;
     this.dashTimer = 0;
@@ -289,6 +286,12 @@ export class ArenaScene extends Phaser.Scene {
   startRun(): void {
     if (this.run.phase !== 'ready') return;
     this.audio.unlock();
+    this.introSlide = 0;
+    this.introStartsRun = true;
+    this.setPhase('intro');
+  }
+
+  private beginExpedition(): void {
     this.cameras.main.setFollowOffset(0, 0);
     this.setPhase('playing');
     this.presentStory();
@@ -334,6 +337,7 @@ export class ArenaScene extends Phaser.Scene {
   replayIntro(): void {
     if (this.run.phase !== 'ready') return;
     this.introSlide = 0;
+    this.introStartsRun = false;
     this.setPhase('intro');
   }
 
@@ -348,7 +352,11 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   skipIntro(): void {
-    if (this.run.phase === 'intro') this.setPhase('ready');
+    if (this.run.phase !== 'intro') return;
+    const startsRun = this.introStartsRun;
+    this.introStartsRun = false;
+    if (startsRun) this.beginExpedition();
+    else this.setPhase('ready');
   }
 
   restart(): void {

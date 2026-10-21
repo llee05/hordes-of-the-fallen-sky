@@ -23,6 +23,9 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     let page = await app.firstWindow();
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
+    await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();
+    await expect(page.locator('.intro-story')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Replay introduction' }).click();
     await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
     await expect
       .poll(() =>
@@ -46,7 +49,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
         .toBe(1536);
     }
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();
     await expect(page).toHaveTitle('Hordes of the Fallen Sky · A people, not a place.');
     expect(await app.evaluate(({ app: desktopApp }) => desktopApp.getName())).toBe(
@@ -86,7 +89,9 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
       await desktop.saveProfile({ ...profile, bestSeconds: 88 });
     });
     await page.keyboard.press('Escape');
-    await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+    await page.getByRole('button', { name: /NEW GAME/ }).click();
+    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
+    await page.getByRole('button', { name: /Skip intro/ }).click();
     await expect(page.getByRole('heading', { name: 'A place beside the fire.' })).toBeVisible();
     await page.screenshot({ path: 'test-results/native-story.png' });
     await page.getByRole('button', { name: /Share the work/ }).click();
@@ -127,7 +132,8 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     });
     app = await launch();
     page = await app.firstWindow();
-    await page.getByRole('button', { name: /Skip intro/ }).click();
+    await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
+    await expect(page.locator('.intro-story')).toHaveCount(0);
     await expect(page.locator('#best')).toHaveText('01:28');
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();

@@ -274,7 +274,8 @@ export class GameUI {
     this.overlay.dataset.entry =
       run.phase !== this.phase || !this.overlay.firstElementChild ? 'phase' : 'content';
     if (run.phase !== this.phase) this.motion.cancel();
-    if (run.phase === 'playing' && this.phase === 'ready') this.showMessage();
+    if (run.phase === 'playing' && (this.phase === 'ready' || this.phase === 'intro'))
+      this.showMessage();
     this.phase = run.phase;
     this.root.dataset.phase = run.phase;
     this.get('game-hud').inert = run.phase !== 'playing';
@@ -323,7 +324,7 @@ export class GameUI {
     else if (run.phase === 'epilogue') this.overlay.innerHTML = epilogueMenu(run);
     else if (run.phase === 'story-log') this.overlay.innerHTML = storyLogMenu(run);
     else if (run.phase === 'ready') {
-      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu"><button class="menu-button featured" data-action="begin" data-primary>LEAD YOUR PEOPLE <span>→</span></button><button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${quit}</nav><button class="story-preference" data-action="story-mode" aria-pressed="${run.story.enabled}">Camp scenes: ${run.story.enabled ? 'On' : 'Off'}</button><p class="title-caption">Two acts. Four pastures. One people to carry through.</p></section>`;
+      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu"><button class="menu-button featured" data-action="begin" data-primary>NEW GAME <span>→</span></button><button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${quit}</nav><button class="story-preference" data-action="story-mode" aria-pressed="${run.story.enabled}">Camp scenes: ${run.story.enabled ? 'On' : 'Off'}</button><p class="title-caption">Two acts. Four pastures. One people to carry through.</p></section>`;
     } else if (run.phase === 'paused') {
       this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">Your people will be here when you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="restart">Start a new run</button><button class="menu-button" data-action="story-log">Our remembered road</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${quit}</nav></section>`;
     } else if (run.phase === 'building') this.overlay.innerHTML = buildingMenu(run);
@@ -419,7 +420,7 @@ export class GameUI {
     return [...this.overlay.querySelectorAll<HTMLElement>('button:not(:disabled), summary')];
   }
   private handleMenuKey(event: KeyboardEvent): void {
-    // Holding Confirm must not race through chapters or start a run on arrival.
+    // Holding Confirm must not race through chapters or activate the next screen.
     if (event.repeat && ['Enter', ' '].includes(event.key)) {
       event.preventDefault();
       return;

@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { openTitle } from './helpers';
+import { startExpedition, openTitle } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await openTitle(page);
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.attackTimer = 999;

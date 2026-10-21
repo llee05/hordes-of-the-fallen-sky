@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, tapController } from './helpers';
+import { startExpedition, openTitle, tapController } from './helpers';
 
 test('controller starts a run, moves, dashes, pauses, and navigates menus', async ({ page }) => {
   await page.addInitScript(() => {
@@ -14,8 +14,10 @@ test('controller starts a run, moves, dashes, pauses, and navigates menus', asyn
   });
   const press = (index: number): Promise<void> => tapController(page, index);
   await openTitle(page);
-  await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await press(0);
+  await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
+  await press(1);
   await expect(page.getByRole('dialog')).toBeHidden();
   const initialX = await page.evaluate(() => (window as any).__gloam.scene.player.x);
   await page.evaluate(() => {
@@ -39,7 +41,7 @@ test('controller starts a run, moves, dashes, pauses, and navigates menus', asyn
   await press(13);
   await expect(page.getByRole('button', { name: 'Start a new run' })).toBeFocused();
   await press(0);
-  await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
 });
 
 test('starts, moves, dashes, pauses, resumes, and resets a run', async ({ page }) => {
@@ -49,8 +51,10 @@ test('starts, moves, dashes, pauses, resumes, and resets a run', async ({ page }
   await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();
   await expect(page).toHaveTitle('Hordes of the Fallen Sky · A people, not a place.');
   await page.screenshot({ path: 'test-results/desktop-ready.png', fullPage: true });
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).focus();
+  await page.getByRole('button', { name: /NEW GAME/ }).focus();
   await page.keyboard.press('Space');
+  await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
+  await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
   const before = await page.evaluate(() => (window as any).__gloam.scene.player.x);
   await page.keyboard.down('d');
@@ -72,7 +76,7 @@ test('starts, moves, dashes, pauses, resumes, and resets a run', async ({ page }
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Start a new run' }).click();
-  await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await expect(page.locator('#timer')).toHaveText('00:00');
   await expect(page.locator('#blessing-count')).toHaveText('0');
   expect(errors).toEqual([]);
@@ -82,7 +86,7 @@ test('automatic attacks defeat enemies and collected XP opens a working upgrade 
   page,
 }) => {
   await openTitle(page);
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   // Put a real pooled enemy in firing range, rather than waiting for it to cross the world.
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -112,7 +116,7 @@ test('automatic attacks defeat enemies and collected XP opens a working upgrade 
 
 test('death, victory, best time, and replay complete the run lifecycle', async ({ page }) => {
   await openTitle(page);
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.run.elapsed = 42;
@@ -123,7 +127,7 @@ test('death, victory, best time, and replay complete the run lifecycle', async (
   await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
   await expect(page.locator('#best')).toHaveText('00:42');
   await page.getByRole('button', { name: /RAISE THE BANNERS AGAIN/ }).click();
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.run.elapsed = 900;
@@ -134,7 +138,7 @@ test('death, victory, best time, and replay complete the run lifecycle', async (
   await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
   await expect(page.locator('#best')).toHaveText('15:00');
   await page.reload();
-  await page.getByRole('button', { name: /Skip intro/ }).click();
+  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await expect(page.locator('#best')).toHaveText('15:00');
 });
 
@@ -146,7 +150,7 @@ test('mobile layout fits and touch movement works', async ({ browser }) => {
   });
   const page = await context.newPage();
   await openTitle(page);
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
@@ -175,7 +179,7 @@ test('camp planning spends resources, unlocks riders and builds the Burning Temp
   page,
 }) => {
   await openTitle(page);
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   await page.evaluate(() => {
     const clan = (window as any).__gloam.scene.run.clan;
     clan.materials = 300;
@@ -206,7 +210,7 @@ test('migration moves a vulnerable caravan, preserves the build and awards survi
   page,
 }) => {
   await openTitle(page);
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   await expect(page.locator('#migrate')).toBeDisabled();
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -253,7 +257,7 @@ test('migration moves a vulnerable caravan, preserves the build and awards survi
 
 test('guard riders fire at camp threats while the commander scouts away', async ({ page }) => {
   await openTitle(page);
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.player.setPosition(scene.camp.x + 850, scene.camp.y);
@@ -272,7 +276,7 @@ test('three crossings lead to a final stand whose victory saves the clan with th
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await openTitle(page);
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   for (let region = 1; region <= 3; region += 1) {
     await page.evaluate(() => {
       (window as any).__gloam.scene.run.clan.stageTime = 45;
@@ -312,7 +316,7 @@ test('painted atlases keep world-space collision sizes and sort miniatures by th
       external.push(request.url());
   });
   await openTitle(page);
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   const art = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     return {
@@ -375,7 +379,7 @@ test('desktop menus keep the battlefield edge to edge and return settings and he
   page,
 }) => {
   await openTitle(page);
-  await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await expect(page.locator('#game-hud')).toBeHidden();
   const frame = (await page.locator('canvas').boundingBox())!;
   const viewport = page.viewportSize()!;
@@ -390,13 +394,13 @@ test('desktop menus keep the battlefield edge to edge and return settings and he
   await expect(page.getByRole('heading', { name: 'How to play', exact: true })).toBeVisible();
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('help');
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await expect(page.locator('#timer')).toHaveText('00:00');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
@@ -413,7 +417,7 @@ test('the clan chronicle pauses the expedition, supports keyboard tabs, and open
   page,
 }) => {
   await openTitle(page);
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   await page.keyboard.press('Tab');
   await expect(page.getByRole('heading', { name: 'A people on the move.' })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'The journey' })).toBeFocused();

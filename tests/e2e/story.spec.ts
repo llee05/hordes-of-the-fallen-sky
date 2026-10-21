@@ -1,10 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
-import { tapController } from './helpers';
+import { startExpedition, tapController } from './helpers';
 
 async function beginStory(page: Page): Promise<void> {
   await page.goto('/');
-  await page.getByRole('button', { name: /Skip intro/ }).click();
-  await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+  await startExpedition(page);
   await expect(page.getByRole('heading', { name: 'A place beside the fire.' })).toBeVisible();
 }
 
@@ -114,7 +113,7 @@ test('complete the two acts, all eight choices, three crossings, and a survivor-
   await page.getByRole('button', { name: 'Read the epilogue' }).click();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: /RAISE THE BANNERS AGAIN/ }).click();
-  await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.story.records.length)).toBe(0);
   expect(errors).toEqual([]);
 });

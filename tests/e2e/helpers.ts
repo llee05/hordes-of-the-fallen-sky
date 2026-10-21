@@ -2,8 +2,13 @@ import { expect, type Page } from '@playwright/test';
 
 export async function openTitle(page: Page): Promise<void> {
   await page.goto('/');
-  await page.getByRole('button', { name: /Skip intro/ }).click();
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
+}
+
+/** Start through the real New Game and prologue actions, leaving camp-scene preferences intact. */
+export async function startExpedition(page: Page): Promise<void> {
+  await page.getByRole('button', { name: /NEW GAME/ }).click();
+  await page.getByRole('button', { name: /Skip intro/ }).click();
 }
 
 /** A synthetic tap must span a sampled press and release, even on a slow render frame. */
