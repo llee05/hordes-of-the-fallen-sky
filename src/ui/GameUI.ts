@@ -224,6 +224,8 @@ export class GameUI {
 
   private renderPhase(snapshot: HudSnapshot, choices: readonly UpgradeDefinition[]): void {
     const { run } = snapshot;
+    this.overlay.dataset.entry =
+      run.phase !== this.phase || !this.overlay.firstElementChild ? 'phase' : 'content';
     if (run.phase === 'playing' && this.phase === 'ready') this.showMessage();
     this.phase = run.phase;
     this.root.dataset.phase = run.phase;

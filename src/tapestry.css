@@ -347,15 +347,6 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .chronicle-toast,
-  .menu-button,
-  .track > div,
-  #xp-fill {
-    transition: none;
-  }
-}
-
 /* Brass-cut clan marks and painted atlas miniatures use the same visual language
    at different scales: symbols during combat, illustrations in paused pages. */
 .clan-mark {

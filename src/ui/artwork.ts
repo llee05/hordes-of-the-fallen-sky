@@ -91,11 +91,11 @@ export function campIllustration(name: BuildingId | 'banner'): string {
 export function routeIllustration(name: 'river' | 'ridge' | 'refuge'): string {
   const landscape = {
     river:
-      '<path d="M0 60 50 42l35 9 55-20 60 20 40-10v55H0Z" fill="#b3b58b"/><path d="m0 76 52-18 36 12 38-12 55 13 59-14v39H0Z" fill="#828e72"/><path d="M144 34c-68 32 72 19-6 39L72 96h56l37-18c72-34-54-17-12-44Z" fill="#89b6b5"/><path d="M150 39c-33 17 47 20-4 34l-47 17" stroke="#dbd7b8" stroke-width="2" fill="none"/>',
+      '<path d="M0 60 50 42l35 9 55-20 60 20 40-10v55H0Z" fill="#b3b58b"/><path d="m0 76 52-18 36 12 38-12 55 13 59-14v39H0Z" fill="#828e72"/><path d="M144 34c-68 32 72 19-6 39L72 96h56l37-18c72-34-54-17-12-44Z" fill="#89b6b5"/><path class="route-current" d="M150 39c-33 17 47 20-4 34l-47 17" stroke="#dbd7b8" stroke-width="2" fill="none"/>',
     ridge:
       '<path d="m0 87 57-62 35 32L143 7l86 80Z" fill="#667c77"/><path d="m57 25 10 50 25-18-18-15Zm86-18 4 54 29-22-18-10Z" fill="#d2c8a8"/><path d="m143 7-38 66 42-12Zm33 32-29 22 45 8Z" fill="#415e64"/><path d="m0 85 60-14 55 14 73-17 52 15v13H0Z" fill="#a09d72"/>',
     refuge:
-      '<path d="m0 77 46-22 40 12 53-23 45 13 56-11v50H0Z" fill="#a7ac7d"/><path d="m0 91 52-17 56 11 58-17 74 10v18H0Z" fill="#7c9077"/><path d="M89 77V15m47 53V7" stroke="#635c42" stroke-width="3"/><path d="M91 17c15-10 19 10 37 0v25c-18 10-22-10-37 0Z" fill="#3b7c82"/><path d="M138 10c16-10 20 10 37 0v29c-17 10-21-10-37 0Z" fill="#a25b40"/><path d="m108 23 4 6-4 5-4-5Zm45-5 4 6-4 5-4-5Z" fill="#e4bf78"/>',
+      '<path d="m0 77 46-22 40 12 53-23 45 13 56-11v50H0Z" fill="#a7ac7d"/><path d="m0 91 52-17 56 11 58-17 74 10v18H0Z" fill="#7c9077"/><path d="M89 77V15m47 53V7" stroke="#635c42" stroke-width="3"/><g class="route-flags"><path d="M91 17c15-10 19 10 37 0v25c-18 10-22-10-37 0Z" fill="#3b7c82"/><path d="M138 10c16-10 20 10 37 0v29c-17 10-21-10-37 0Z" fill="#a25b40"/><path d="m108 23 4 6-4 5-4-5Zm45-5 4 6-4 5-4-5Z" fill="#e4bf78"/></g>',
   };
   return `<svg class="route-illustration" viewBox="0 0 240 96" aria-hidden="true" focusable="false"><circle cx="188" cy="23" r="13" fill="#d4aa65" opacity=".65"/>${landscape[name]}<path d="M0 95h240" stroke="#9b7546" stroke-width="2"/></svg>`;
 }

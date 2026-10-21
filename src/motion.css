@@ -1,0 +1,175 @@
+/* Motion belongs to the cloth and illustrations. Text, hit areas, and the
+   simulation never wait for an animation to finish. */
+:root {
+  --steppe-ease: cubic-bezier(0.22, 0.75, 0.25, 1);
+}
+
+@keyframes cloth-arrive {
+  from {
+    opacity: 0.45;
+    transform: translateY(-14px) rotate(-0.5deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes page-arrive {
+  from {
+    opacity: 0.55;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes ink-arrive {
+  from {
+    opacity: 0.45;
+    translate: 0 7px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes cloth-breathe {
+  0%,
+  100% {
+    transform: skewY(-0.12deg) scaleX(1);
+  }
+  50% {
+    transform: skewY(0.15deg) scaleX(1.004);
+  }
+}
+@keyframes seal-breathe {
+  0%,
+  100% {
+    opacity: 0.78;
+    scale: 0.97;
+  }
+  50% {
+    opacity: 1;
+    scale: 1.035;
+  }
+}
+@keyframes river-flow {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+@keyframes banner-wind {
+  0%,
+  100% {
+    transform: skewY(-1deg) scaleX(0.98);
+  }
+  50% {
+    transform: skewY(1.5deg) scaleX(1.015);
+  }
+}
+
+.overlay[data-entry='phase'] > .title-menu {
+  animation: cloth-arrive 520ms var(--steppe-ease);
+  transform-origin: top center;
+}
+.overlay[data-entry='phase'] > :is(.game-panel, .pause-menu, .end-menu) {
+  animation: page-arrive 240ms var(--steppe-ease);
+}
+.overlay[data-entry='phase'] :is(.building-card, .upgrade-card, .help-loop article) {
+  animation: ink-arrive 300ms var(--steppe-ease) backwards;
+}
+.overlay[data-entry='phase'] :is(.building-card, .upgrade-card, .help-loop article):nth-child(2) {
+  animation-delay: 45ms;
+}
+.overlay[data-entry='phase'] :is(.building-card, .upgrade-card, .help-loop article):nth-child(3) {
+  animation-delay: 90ms;
+}
+.overlay[data-entry='phase'] .building-card:nth-child(n + 4) {
+  animation-delay: 120ms;
+}
+.overlay[data-entry='content'] .journal-chapter {
+  animation: ink-arrive 180ms var(--steppe-ease);
+}
+.title-menu::before,
+.title-menu::after {
+  animation: cloth-breathe 9s ease-in-out infinite;
+  transform-origin: top center;
+  pointer-events: none;
+}
+.title-menu .clan-seal .clan-mark {
+  animation: seal-breathe 6s ease-in-out infinite;
+}
+.route-current {
+  stroke-dasharray: 18 10;
+  animation: river-flow 3s linear infinite;
+}
+.route-flags {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: banner-wind 4s ease-in-out infinite;
+}
+
+.menu-button,
+.command-button,
+.hud-menu-button,
+.dash-button,
+.panel-close,
+.path-button,
+.primary-button,
+.secondary-button,
+.setting-button,
+.journal-tabs button,
+.upgrade-card {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.menu-button > span,
+.card-bottom > span,
+.command-icon,
+.dash-symbol,
+.building-portrait .camp-illustration,
+.upgrade-icon {
+  transition:
+    transform 220ms var(--steppe-ease),
+    color 180ms ease;
+}
+.menu-button:is(:hover, :focus-visible) > span,
+.upgrade-card:is(:hover, :focus-visible) .card-bottom > span {
+  transform: translateX(4px);
+}
+.command-button:not(:disabled):is(:hover, :focus-visible) .command-icon,
+.dash-button:not(:disabled):is(:hover, :focus-visible) .dash-symbol {
+  transform: translateY(-2px) rotate(-3deg);
+}
+.building-card:focus-within .camp-illustration,
+.building-card:hover .camp-illustration {
+  transform: translateY(-3px);
+}
+.upgrade-card:is(:hover, :focus-visible) .upgrade-icon {
+  transform: translateY(-3px) rotate(-3deg);
+}
+button:not(:disabled):active :is(.command-icon, .dash-symbol, .upgrade-icon) {
+  transform: translateY(1px) scale(0.96);
+}
+.resource strong {
+  display: inline-block;
+}
+.track > div,
+#xp-fill,
+.dash-charge {
+  transition: width 160ms linear;
+}
+
+/* A single policy covers entrances, ambient loops, feedback, and the older HUD
+   meter/toast transitions. Live preference changes also take effect immediately. */
+@media (prefers-reduced-motion: reduce) {
+  #app *,
+  #app *::before,
+  #app *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
