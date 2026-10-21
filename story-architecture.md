@@ -2,7 +2,7 @@
 
 ## Scope and dramatic spine
 
-This document maps one expedition into **two acts**, framed by the existing prologue and a proposed epilogue. [World lore](lore.md) supplies the setting and writing boundaries; [the game loop](README.md#build-defend-migrate) supplies the playable structure. New scenes, supporting characters, revelations, and ending variations below are proposals for future implementation. This document adds no runtime content or mechanics.
+This document maps one expedition into **two acts**, framed by the prologue and epilogue. [World lore](lore.md) supplies the setting and writing boundaries; [the game loop](README.md#build-defend-migrate) supplies the playable structure. The playable prototype now adapts all eight beats into illustrated camp conversations, choices, a chronicle, and an epilogue. The scene descriptions below remain the writing blueprint; fully acted character scenes are future presentation work. See [the implementation guide](docs/story-prototype.md) for the exact current triggers and adaptations.
 
 **Premise:** After the Iron Vow tears the sky, eight survivors gather beneath a blue banner and travel toward a mountain refuge. Their camp grows into a people through the decisions required to keep it moving.
 
@@ -122,7 +122,7 @@ The Sundering remains beyond the mountain. The clan has gained a place to begin 
 
 ## Character and motif payoffs
 
-These are writing roles; named supporting characters and their scenes are not currently implemented. The herder, clerk, and younger survivor may be combined or reduced if the short expedition needs a smaller cast.
+The prototype implements these roles as Saran, Boro, Erden, and Nara in camp conversations. Erden travels among the original eight survivors, so his presence does not depend on choosing a refugee route. The cast is represented through dialogue and brass symbols; individual companion movement and casualty identities are not simulated. A small remnant receives collective narration. The herder, clerk, and younger survivor may be combined or reduced in future revisions if the short expedition needs a smaller cast.
 
 | Role or motif      | Act I setup                                     | Act II payoff                                                              |
 | ------------------ | ----------------------------------------------- | -------------------------------------------------------------------------- |

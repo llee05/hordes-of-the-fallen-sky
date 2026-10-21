@@ -2,11 +2,11 @@
 
 A Mongolian-inspired nomadic civilization builder × mounted bullet heaven. **TypeScript + Phaser 3 + Electron + Vite.** The cities have fallen, the sky is going dark, and a small clan survives by moving. Build a people, defend their temporary home, and protect the caravan on its journey to the sacred heart of the steppe.
 
-This playable prototype implements the brief’s smaller development scope: five buildings with two exclusive specializations each, abstracted population and workers, three resources, four regional arenas, five standard enemies, two elites, and one boss. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and permanent civilization unlocks remain future work.
+This playable prototype includes a complete two-act expedition: eight illustrated camp encounters with choices, four companions, three defended crossings, a final mountain stand, and an epilogue reflecting the people who arrive. Its civilization systems include five buildings with two exclusive specializations each, abstracted population and workers, three resources, four regional arenas, five standard enemies, two elites, and one boss. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and permanent civilization unlocks remain future work.
 
 Read [the world lore](lore.md) for the Tengri-inspired setting: Eternal Heaven, Etügen and the living land, the Last Court's Iron Vow, the unreturned, and the Blue Banner clan's search for refuge. Research notes separate the religious and cultural inspiration from the game's invented mythology.
 
-See [the story architecture](story-architecture.md) for a proposed two-act expedition: Gather the Scattered, then Carry the Living, with turning points, character arcs, and a clear distinction between existing gameplay and future story scenes.
+See [the story architecture](story-architecture.md) for the two-act blueprint: Gather the Scattered, then Carry the Living. [The story prototype guide](docs/story-prototype.md) describes the playable adaptation, encounter triggers, choices, and current scope.
 
 ## Play and develop
 
@@ -44,6 +44,10 @@ The commander, allied archers, and all six creature designs have painted sprite 
 
 ## Build, defend, migrate
 
+Camp scenes are **On** by default. Saran the hearthkeeper, Boro the herder, Erden the tally keeper, and Nara the youngest survivor travel through the story with the Blue Banner clan. Conversations pause the world and offer two responses, each with a displayed resource benefit. Escape / controller B continues without choosing. Turn **Camp scenes: Off** at the title for uninterrupted combat; this preference lasts through run restarts in the current app session.
+
+Act I crosses Golden Pasture and Silent River. Arrival at Broken Pass begins Act II, followed by the Heart of the Steppe. The chronicle's **Our story** tab keeps the actual conversations and decisions from the current expedition. Pause, victory, and defeat menus also offer **Our remembered road**. Read-only memories never restart simulation or grant a choice again.
+
 Start with eight people, three horses, two gers, supplies, and a mounted commander with one accompanying rider. Attacks are automatic. Ride to collect spirit shards and learn clan traditions. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through.
 
 Press **B** to develop your camp. Planning pauses the simulation, including food consumption, pasture depletion, enemies, and migration. Structures cost materials, sometimes spirit, and available workers. A constructed building can take one of two exclusive specializations. Your buildings travel with the clan.
@@ -63,6 +67,8 @@ Pastures deplete and spawn pressure increases while you stay. After 45 active se
 Choose a river crossing for food and horses, an exposed ridge for materials and spirit, or blue banners for refugees and veteran riders. **Rewards arrive only after a successful crossing.** The caravan travels east automatically; ride alongside it and defend the supply carts. Structures cannot be developed while packed. Arrival restores some resolve and commander health, refreshes the pasture, and preserves your build and uncollected XP.
 
 The journey crosses the Golden Pasture, Silent River, Broken Pass, and Sacred Mountain. The White Silence reduces grazing and caravan speed. Ground eruptions in the pass warn before striking. The Red Eclipse weakens rituals and brings the Skybreaker. At the mountain, protect your people for three minutes until the passage opens. **Victory depends on saving the clan; killing the boss is optional.** Defeating it restores resolve.
+
+In a story expedition, victory opens **A place beside the fire**, a skippable epilogue reflecting survivors, recorded losses, clan identity, the clerk's shared tally, and the Skybreaker's fate. Journey results follow, with the epilogue available to read again. Story choices and memories reset with each new expedition; they do not add permanent unlocks or a resumable save.
 
 An expedition is intended to take about 15 minutes with roughly three minutes of growth per camp. Earlier departures shorten the journey; longer stays increase danger. This is a prototype balance, not a fixed time limit.
 

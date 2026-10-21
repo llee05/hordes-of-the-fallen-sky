@@ -51,6 +51,8 @@ Defeated creatures leave **spirit shards**: remnants of the world's scattered vi
 
 Eight people survive the flight from their home pasture. They have three horses, two gers, a little food, and a length of blue cloth. They call themselves **the Blue Banner clan** because their old households are too few to travel separately.
 
+The playable story names four of these original survivors: **Saran**, the hearthkeeper; **Boro**, a herder; **Erden**, who keeps the tally and conceals his former service to the Last Court; and **Nara**, the youngest survivor. Their voices give the abstract clan a human scale. When only a small remnant remains, the story uses a collective remembrance rather than staging a conversation among more people than survived.
+
 The **hearthkeeper** wraps embers from their last camp in a covered vessel. At every halt, someone coaxes those embers into flame. The hearthkeeper remembers routes, blessings, and family histories, but listens when a shepherd knows a better ford. Spiritual knowledge belongs within the work of keeping the camp alive.
 
 The player is the **banner-bearer**, a mounted archer entrusted with the road ahead. The role was given by survivors who needed someone to ride between danger and the wagons. It grants responsibility before authority. No prophecy guarantees that this rider will succeed.
