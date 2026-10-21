@@ -43,8 +43,8 @@ try {
   );
   const paths = await packager({
     dir: staging,
-    name: 'TheLastBlueSky',
-    executableName: 'TheLastBlueSky',
+    name: 'HordesOfTheFallenSky',
+    executableName: 'HordesOfTheFallenSky',
     platform,
     arch,
     out: resolve(root, 'release'),

@@ -623,7 +623,15 @@ canvas {
   color: #f6eaca;
   margin: 19px 0 23px;
 }
+.title-menu h1 .title-prefix {
+  display: block;
+  font-size: 0.55em;
+  line-height: 1.25;
+  letter-spacing: -1px;
+  margin-bottom: 0.1em;
+}
 .title-menu h1 em {
+  display: block;
   color: #b7d6ca;
   font-weight: 400;
 }
@@ -1680,7 +1688,7 @@ canvas {
     padding-right: 20px;
   }
   .title-menu h1 {
-    font-size: 72px;
+    font-size: clamp(52px, 18vw, 72px);
   }
   .title-tagline {
     font-size: 17px;

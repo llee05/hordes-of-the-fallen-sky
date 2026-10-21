@@ -14,7 +14,7 @@ if (devUrl) {
     throw new Error('Development server must use localhost');
 }
 
-app.setName('The Last Blue Sky');
+app.setName('Hordes of the Fallen Sky');
 // Standard Chromium switch gives tests their own profile without touching real saves.
 const userData = app.commandLine.getSwitchValue('user-data-dir');
 app.setPath('userData', userData ? resolve(userData) : join(app.getPath('appData'), 'Gloam'));
@@ -47,7 +47,7 @@ async function createWindow(): Promise<void> {
   const initialWidth = Math.min(1280, width);
   const initialHeight = Math.min(800, height);
   window = new BrowserWindow({
-    title: 'The Last Blue Sky',
+    title: 'Hordes of the Fallen Sky',
     width: initialWidth,
     height: initialHeight,
     minWidth: Math.min(800, width),
@@ -130,6 +130,6 @@ app
   .whenReady()
   .then(createWindow)
   .catch((error: unknown) => {
-    dialog.showErrorBox('The Last Blue Sky could not start', String(error));
+    dialog.showErrorBox('Hordes of the Fallen Sky could not start', String(error));
     app.quit();
   });

@@ -1,17 +1,17 @@
 # Steam build preparation
 
-The Last Blue Sky runs as an offline desktop executable. This folder describes the Steam side; it does not upload or publish anything.
+Hordes of the Fallen Sky runs as an offline desktop executable. This folder describes the Steam side; it does not upload or publish anything.
 
 ## Build and stage content
 
-Run `npm run package:win` and/or `npm run package:linux`. The generated `release/TheLastBlueSky-<platform>-x64/` folder is the complete content for that platform's depot. It includes the executable, runtime libraries, locales, and `resources/app.asar`. Upload the whole folder, not an installer and not only the executable.
+Run `npm run package:win` and/or `npm run package:linux`. The generated `release/HordesOfTheFallenSky-<platform>-x64/` folder is the complete content for that platform's depot. It includes the executable, runtime libraries, locales, and `resources/app.asar`. Upload the whole folder, not an installer and not only the executable.
 
 Create an application and OS-specific depots in Steamworks. Use the IDs assigned to your application; this project does not assume Spacewar's test ID. Set each depot's OS restriction and make sure your developer package includes it. Configure launch options:
 
 | Platform    | Executable relative to depot root | Working directory |
 | ----------- | --------------------------------- | ----------------- |
-| Windows x64 | `TheLastBlueSky.exe`              | `.`               |
-| Linux x64   | `TheLastBlueSky`                  | `.`               |
+| Windows x64 | `HordesOfTheFallenSky.exe`        | `.`               |
+| Linux x64   | `HordesOfTheFallenSky`            | `.`               |
 
 Build and test the target platform before marking it supported on your store page. The Linux package must retain executable permissions. The project makes no Steam Deck verification claim.
 

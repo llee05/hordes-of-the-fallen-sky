@@ -1,6 +1,6 @@
-# Working on The Last Blue Sky
+# Working on Hordes of the Fallen Sky
 
-The Last Blue Sky is a nomadic civilization builder and desktop TypeScript/Phaser 3 bullet heaven, rendered with Vite and packaged with Electron for a future Steam release. Read `README.md` and `steam/README.md` for setup and file locations.
+Hordes of the Fallen Sky is a nomadic civilization builder and desktop TypeScript/Phaser 3 bullet heaven, rendered with Vite and packaged with Electron for a future Steam release. Read `README.md` and `steam/README.md` for setup and file locations.
 
 ## Development loop
 

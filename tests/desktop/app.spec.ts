@@ -24,6 +24,11 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();
+    await expect(page).toHaveTitle('Hordes of the Fallen Sky · A people, not a place.');
+    expect(await app.evaluate(({ app: desktopApp }) => desktopApp.getName())).toBe(
+      'Hordes of the Fallen Sky',
+    );
     expect(page.url()).toMatch(/^file:/);
     expect(await page.evaluate(() => typeof (window as any).require)).toBe('undefined');
     expect(await page.evaluate(() => typeof (window as any).__gloam)).toBe('undefined');

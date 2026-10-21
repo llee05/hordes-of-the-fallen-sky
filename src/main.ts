@@ -21,10 +21,10 @@ async function bootstrap(): Promise<void> {
 }
 
 void bootstrap().catch((error: unknown) => {
-  console.error('Unable to start The Last Blue Sky', error);
+  console.error('Unable to start Hordes of the Fallen Sky', error);
   const message = document.createElement('p');
   message.className = 'startup-error';
   message.textContent =
-    'The Last Blue Sky could not load your profile. Check that the save folder is accessible, then restart the game.';
+    'Hordes of the Fallen Sky could not load your profile. Check that the save folder is accessible, then restart the game.';
   document.querySelector('#app')!.replaceChildren(message);
 });

@@ -41,7 +41,7 @@ export class GameUI {
     private readonly platform: GamePlatform,
   ) {
     root.dataset.phase = 'ready';
-    root.innerHTML = `<main class="game-shell" aria-label="The Last Blue Sky game">
+    root.innerHTML = `<main class="game-shell" aria-label="Hordes of the Fallen Sky game">
       <div class="arena-wrap" id="arena-wrap" tabindex="0" aria-label="Game arena. WASD to ride. Space to gallop. B to build. M to migrate. F for formation. Tab or J for the clan chronicle. Escape to pause.">
         <div id="game-canvas"></div>
         <div class="screen-shade" aria-hidden="true"></div>
@@ -259,7 +259,7 @@ export class GameUI {
       ? '<button class="menu-button menu-quit" data-action="quit">Quit game</button>'
       : '';
     if (run.phase === 'ready') {
-      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title">The last<br><em>blue sky.</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu"><button class="menu-button featured" data-action="begin" data-primary>LEAD YOUR PEOPLE <span>→</span></button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${quit}</nav><p class="title-caption">A journey across the living steppe.</p></section>`;
+      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu"><button class="menu-button featured" data-action="begin" data-primary>LEAD YOUR PEOPLE <span>→</span></button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${quit}</nav><p class="title-caption">A journey across the living steppe.</p></section>`;
     } else if (run.phase === 'paused') {
       this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">Your people will be here when you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="restart">Start a new run</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${quit}</nav></section>`;
     } else if (run.phase === 'building') this.overlay.innerHTML = buildingMenu(run);

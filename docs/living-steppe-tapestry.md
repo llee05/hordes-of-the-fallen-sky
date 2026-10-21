@@ -1,6 +1,6 @@
 # The Living Steppe Tapestry
 
-The Last Blue Sky’s art direction combines the readable miniature scale of Thronefall, the illustrated silhouettes and painted surfaces of The Banner Saga, and the warm materials and geometric ornament of Mongolian and Central Asian textiles. The assets are original fantasy designs. The game keeps its top-down simulation and presents it with painted three-quarter-view sprites and ground-position depth sorting.
+Hordes of the Fallen Sky’s art direction combines the readable miniature scale of Thronefall, the illustrated silhouettes and painted surfaces of The Banner Saga, and the warm materials and geometric ornament of Mongolian and Central Asian textiles. The assets are original fantasy designs. The game keeps its top-down simulation and presents it with painted three-quarter-view sprites and ground-position depth sorting.
 
 ## Visual language
 

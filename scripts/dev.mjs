@@ -5,7 +5,7 @@ import { createServer } from 'vite';
 const server = await createServer({ server: { host: '127.0.0.1', port: 5173 } });
 await server.listen();
 const url = server.resolvedUrls.local[0];
-console.log(`The Last Blue Sky · renderer at ${url}`);
+console.log(`Hordes of the Fallen Sky · renderer at ${url}`);
 const environment = { ...process.env, GLOAM_DEV_SERVER_URL: url };
 delete environment.ELECTRON_RUN_AS_NODE;
 const child = spawn(electron, ['.'], { stdio: 'inherit', env: environment });

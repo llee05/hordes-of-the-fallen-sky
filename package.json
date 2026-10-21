@@ -1,5 +1,5 @@
 {
-  "name": "gloam-bullet-heaven",
+  "name": "hordes-of-the-fallen-sky",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -41,7 +41,7 @@
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
   },
-  "productName": "The Last Blue Sky",
+  "productName": "Hordes of the Fallen Sky",
   "description": "A nomadic civilization builder and mounted bullet heaven",
   "main": "dist-desktop/desktop/main.js"
 }
