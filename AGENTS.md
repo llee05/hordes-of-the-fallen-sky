@@ -12,6 +12,12 @@ The Last Blue Sky is a nomadic civilization builder and desktop TypeScript/Phase
 - `npm run test:desktop`: actual Electron smoke test with isolated saves; requires a display or Xvfb on Linux.
 - `npm run test:e2e`: browser regression tests. Install Chromium or set `PLAYWRIGHT_CHROMIUM_EXECUTABLE`.
 
+## Commit workflow
+
+- Split every task into appropriately sized, focused commits. Plan the logical pieces before editing, and commit each completed piece separately.
+- Keep each commit coherent and reviewable, with its related code, tests, and documentation together. Use clear commit messages that describe the change.
+- Run the checks appropriate to each change before committing. Stage only work belonging to that commit; preserve unrelated user changes.
+
 ## Code conventions
 
 - Prefer focused typed modules and plain content definitions over editor-only configuration.
