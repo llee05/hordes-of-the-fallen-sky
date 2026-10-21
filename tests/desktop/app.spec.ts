@@ -1,0 +1,111 @@
+import { _electron as electron, expect, test } from '@playwright/test';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+
+test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, and quits', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'gloam-desktop-'));
+  const environment = { ...process.env };
+  delete environment.ELECTRON_RUN_AS_NODE;
+  delete environment.GLOAM_DEV_SERVER_URL;
+  const launch = () =>
+    electron.launch({
+      ...(process.env.GLOAM_TEST_EXECUTABLE
+        ? {
+            executablePath: process.env.GLOAM_TEST_EXECUTABLE,
+            args: [`--user-data-dir=${directory}`],
+          }
+        : { args: [resolve('dist-desktop/desktop/main.js'), `--user-data-dir=${directory}`] }),
+      env: environment,
+    });
+  let app = await launch();
+  try {
+    let page = await app.firstWindow();
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
+    expect(page.url()).toMatch(/^file:/);
+    expect(await page.evaluate(() => typeof (window as any).require)).toBe('undefined');
+    expect(await page.evaluate(() => typeof (window as any).__gloam)).toBe('undefined');
+    expect(await page.evaluate(() => Boolean((window as any).desktop))).toBe(true);
+    expect(
+      await app.evaluate(({ BrowserWindow }) => {
+        const preferences = BrowserWindow.getAllWindows()[0]!.webContents.getLastWebPreferences();
+        return {
+          sandbox: preferences.sandbox,
+          contextIsolation: preferences.contextIsolation,
+          nodeIntegration: preferences.nodeIntegration,
+        };
+      }),
+    ).toEqual({ sandbox: true, contextIsolation: true, nodeIntegration: false });
+    await page.screenshot({ path: 'test-results/native-desktop.png' });
+    const arena = (await page.locator('#arena-wrap').boundingBox())!;
+    const canvas = (await page.locator('canvas').boundingBox())!;
+    const viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
+    expect(arena.x).toBe(0);
+    expect(arena.y).toBe(0);
+    expect(Math.abs(arena.width - viewport.width)).toBeLessThan(2);
+    expect(Math.abs(arena.height - viewport.height)).toBeLessThan(2);
+    expect(Math.abs(arena.width - canvas.width)).toBeLessThan(2);
+    expect(Math.abs(arena.height - canvas.height)).toBeLessThan(2);
+    await expect(page.getByRole('button', { name: 'Quit game', exact: true })).toHaveCount(1);
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
+    await page.evaluate(async () => {
+      const desktop = (window as any).desktop;
+      const profile = await desktop.loadProfile();
+      await desktop.saveProfile({ ...profile, bestSeconds: 88 });
+    });
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await page.keyboard.press('b');
+    await expect(page.getByRole('heading', { name: 'Build a people.' })).toBeVisible();
+    await page.getByRole('button', { name: /Establish archery grounds/ }).click();
+    await expect(page.locator('#riders')).toHaveText('4');
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await page.screenshot({ path: 'test-results/native-playing.png' });
+    await page.keyboard.down('d');
+    await page.waitForTimeout(250);
+    await page.keyboard.up('d');
+    await page.keyboard.press('Space');
+    await expect(page.locator('#dash-label')).toContainText('RECHARGING');
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
+    // CDP keyboard events do not reach Electron's native before-input-event hook.
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.getByRole('button', { name: 'Enter fullscreen', exact: true }).click();
+    await expect
+      .poll(() =>
+        app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.isFullScreen()),
+      )
+      .toBe(true);
+    await page.getByRole('button', { name: 'Exit fullscreen', exact: true }).click();
+    await expect
+      .poll(() =>
+        app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.isFullScreen()),
+      )
+      .toBe(false);
+    await app.close();
+    expect(JSON.parse(await readFile(join(directory, 'saves/profile.json'), 'utf8'))).toEqual({
+      version: 1,
+      bestSeconds: 88,
+      muted: true,
+    });
+    app = await launch();
+    page = await app.firstWindow();
+    await expect(page.locator('#best')).toHaveText('01:28');
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
+    await page.keyboard.press('Escape');
+    const closed = app.waitForEvent('close');
+    await page.locator('#overlay').getByRole('button', { name: 'Quit game', exact: true }).click();
+    await closed;
+    expect(errors).toEqual([]);
+  } finally {
+    await app.close().catch(() => undefined);
+    await rm(directory, { recursive: true, force: true });
+  }
+});

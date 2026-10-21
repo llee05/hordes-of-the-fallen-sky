@@ -1,0 +1,47 @@
+{
+  "name": "gloam-bullet-heaven",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "npm run build:desktop && node scripts/dev.mjs",
+    "build": "npm run typecheck && vite build && npm run build:desktop",
+    "preview": "vite preview --host 127.0.0.1",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.desktop.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run typecheck && npm test && npm run build",
+    "dev:web": "vite --host 127.0.0.1",
+    "start": "electron .",
+    "build:desktop": "tsc -p tsconfig.desktop.json && node scripts/generate-icon.mjs",
+    "package": "npm run build && node scripts/package.mjs",
+    "package:linux": "npm run package -- --platform=linux --arch=x64",
+    "package:win": "npm run package -- --platform=win32 --arch=x64",
+    "steam:prepare": "node scripts/prepare-steam.mjs",
+    "test:desktop": "npm run build && playwright test --config playwright.desktop.config.ts"
+  },
+  "dependencies": {
+    "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
+    "electron": "^44.9.2",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  },
+  "productName": "The Last Blue Sky",
+  "description": "A nomadic civilization builder and mounted bullet heaven",
+  "main": "dist-desktop/desktop/main.js"
+}

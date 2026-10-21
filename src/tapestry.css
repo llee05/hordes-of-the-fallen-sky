@@ -1,0 +1,62 @@
+/* Felt, lapis, painted wood, and paper stay inside the game's HUD and menus. */
+.hud-surface,
+.command-dock {
+  background-image:
+    repeating-linear-gradient(0deg, #d5ca9803 0 1px, transparent 1px 4px),
+    linear-gradient(130deg, #26443be8, #243e37e8);
+}
+.game-panel {
+  background-image:
+    repeating-linear-gradient(0deg, #70603604 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, #fff2c608 0 1px, transparent 1px 5px),
+    linear-gradient(110deg, #eee1c2, #dfceaa);
+  border-top: 3px solid #a87d4b;
+}
+.panel-heading {
+  position: relative;
+}
+.panel-heading::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ab8552 0 6px,
+    transparent 6px 12px,
+    #ab8552 12px 14px,
+    transparent 14px 20px
+  );
+  opacity: 0.2;
+  pointer-events: none;
+}
+.title-menu h1 {
+  text-shadow: 0 3px 24px #1a333a55;
+}
+.title-emblem {
+  filter: drop-shadow(0 2px 8px #132e3644);
+}
+.menu-button.featured {
+  box-shadow: inset 0 0 0 3px #e0d19a04;
+}
+.menu-button.featured::before {
+  content: '◇';
+  color: #cbb57c;
+  margin-right: -13px;
+}
+.menu-button.featured span {
+  margin-left: auto;
+}
+.overlay.pause-screen {
+  background: radial-gradient(ellipse at center, #25443bd9, #173139ec);
+}
+.overlay.planning {
+  background: #18333a9c;
+}
+@media (max-width: 600px) {
+  .overlay.ready-screen {
+    background: linear-gradient(90deg, #17323bdc, #1b393ac9 50%, #28453a7c);
+  }
+}

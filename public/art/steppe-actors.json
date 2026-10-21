@@ -1,0 +1,173 @@
+{
+  "frames": {
+    "player": {
+      "frame": {
+        "x": 23,
+        "y": 13,
+        "w": 399,
+        "h": 416
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 399,
+        "h": 416
+      },
+      "sourceSize": {
+        "w": 399,
+        "h": 416
+      }
+    },
+    "rider": {
+      "frame": {
+        "x": 457,
+        "y": 23,
+        "w": 392,
+        "h": 396
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 392,
+        "h": 396
+      },
+      "sourceSize": {
+        "w": 392,
+        "h": 396
+      }
+    },
+    "wolf": {
+      "frame": {
+        "x": 889,
+        "y": 112,
+        "w": 419,
+        "h": 308
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 419,
+        "h": 308
+      },
+      "sourceSize": {
+        "w": 419,
+        "h": 308
+      }
+    },
+    "shade": {
+      "frame": {
+        "x": 1341,
+        "y": 18,
+        "w": 414,
+        "h": 415
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 414,
+        "h": 415
+      },
+      "sourceSize": {
+        "w": 414,
+        "h": 415
+      }
+    },
+    "earth": {
+      "frame": {
+        "x": 23,
+        "y": 449,
+        "w": 420,
+        "h": 420
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 420,
+        "h": 420
+      },
+      "sourceSize": {
+        "w": 420,
+        "h": 420
+      }
+    },
+    "ghost": {
+      "frame": {
+        "x": 447,
+        "y": 456,
+        "w": 448,
+        "h": 415
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 448,
+        "h": 415
+      },
+      "sourceSize": {
+        "w": 448,
+        "h": 415
+      }
+    },
+    "seer": {
+      "frame": {
+        "x": 934,
+        "y": 444,
+        "w": 294,
+        "h": 426
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 294,
+        "h": 426
+      },
+      "sourceSize": {
+        "w": 294,
+        "h": 426
+      }
+    },
+    "skybreaker": {
+      "frame": {
+        "x": 1317,
+        "y": 451,
+        "w": 439,
+        "h": 423
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 439,
+        "h": 423
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 423
+      }
+    }
+  },
+  "meta": {
+    "app": "The Last Blue Sky — Living Steppe Tapestry",
+    "image": "steppe-actors.png",
+    "size": {
+      "w": 1774,
+      "h": 887
+    },
+    "scale": "1"
+  }
+}

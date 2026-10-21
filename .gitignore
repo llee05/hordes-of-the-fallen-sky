@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dist-desktop/
+release/
+steam/generated/
+steam/output/
+build/icon.png
+build/icon.ico
+test-results/
+playwright-report/
+*.local
+.DS_Store

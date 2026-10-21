@@ -1,0 +1,133 @@
+{
+  "frames": {
+    "ger": {
+      "frame": {
+        "x": 25,
+        "y": 114,
+        "w": 527,
+        "h": 405
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 527,
+        "h": 405
+      },
+      "sourceSize": {
+        "w": 527,
+        "h": 405
+      }
+    },
+    "cart": {
+      "frame": {
+        "x": 581,
+        "y": 156,
+        "w": 539,
+        "h": 354
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 539,
+        "h": 354
+      },
+      "sourceSize": {
+        "w": 539,
+        "h": 354
+      }
+    },
+    "banner": {
+      "frame": {
+        "x": 1198,
+        "y": 18,
+        "w": 324,
+        "h": 490
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 324,
+        "h": 490
+      },
+      "sourceSize": {
+        "w": 324,
+        "h": 490
+      }
+    },
+    "sheep": {
+      "frame": {
+        "x": 123,
+        "y": 669,
+        "w": 290,
+        "h": 244
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 290,
+        "h": 244
+      },
+      "sourceSize": {
+        "w": 290,
+        "h": 244
+      }
+    },
+    "rock": {
+      "frame": {
+        "x": 502,
+        "y": 597,
+        "w": 568,
+        "h": 355
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 568,
+        "h": 355
+      },
+      "sourceSize": {
+        "w": 568,
+        "h": 355
+      }
+    },
+    "pillar": {
+      "frame": {
+        "x": 1070,
+        "y": 510,
+        "w": 446,
+        "h": 479
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 446,
+        "h": 479
+      },
+      "sourceSize": {
+        "w": 446,
+        "h": 479
+      }
+    }
+  },
+  "meta": {
+    "app": "The Last Blue Sky — Living Steppe Tapestry",
+    "image": "steppe-props.png",
+    "size": {
+      "w": 1536,
+      "h": 1024
+    },
+    "scale": "1"
+  }
+}

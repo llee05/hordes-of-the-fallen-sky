@@ -1,0 +1,25 @@
+/** World units are pixels. Time inside gameplay is seconds. */
+export const GAME = {
+  width: 960,
+  height: 540,
+  worldSize: 5200,
+  duration: 900,
+  maxEnemies: 350,
+  maxProjectiles: 250,
+  maxGems: 500,
+  player: { health: 100, speed: 190, damage: 16, attackInterval: 0.6, pickupRadius: 85 },
+  projectile: { speed: 440, lifetime: 1.6, range: 440 },
+  dash: { speed: 570, duration: 0.3, cooldown: 3 },
+  invulnerability: 0.65,
+  clan: {
+    minimumCamp: 45,
+    pastureLifetime: 210,
+    migrationDuration: 60,
+    finalDuration: 180,
+    caravanSpeed: 22,
+    foodPerPerson: 0.025,
+    starvationInterval: 12,
+    maxPopulation: 120,
+    maxHerd: 40,
+  },
+} as const;

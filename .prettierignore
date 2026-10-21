@@ -1,0 +1,12 @@
+dist/
+dist-desktop/
+release/
+steam/generated/
+steam/output/
+node_modules/
+test-results/
+playwright-report/
+package-lock.json
+.agents/
+.aws/
+.codex/
