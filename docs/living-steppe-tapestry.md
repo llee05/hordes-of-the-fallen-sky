@@ -8,11 +8,11 @@ Golden, sage, and ochre grasses form a quiet field beneath ivory felt gers, turq
 
 The four regions share the same painting language. Rounded riverbanks and ice distinguish the Silent River, layered stone outcrops define the Broken Pass, and cool violet atmosphere and a red eclipse mark the sacred mountain. Wind strokes, drifting snow, hoof dust, and gently moving banners add motion without obscuring attacks or danger warnings.
 
-The interface uses parchment, lapis-colored wood, rust-red trim, restrained geometric borders, and serif chapter titles. The title menu leaves the actual painted camp visible behind its title. During play, the battlefield fills the game window; compact HUD panels and a bottom command dock float above the world. Detailed parchment pages live in the paused clan chronicle and management menus.
+The interface uses indigo felt, warm manuscript paper, brass edging, rust-red woven trim, and serif chapter titles. A stitched hanging cloth carries the title menu while leaving the painted camp visible beside it. During play, compact textile HUD panels and a bottom command dock float above the full-window battlefield. Detailed manuscript pages live in the paused clan chronicle and management menus. Keep material contrast quiet beneath text, and keep decorative stitches and borders out of pointer and keyboard navigation.
 
 ## Local assets and rendering
 
-All three selected PNGs were generated with the **built-in image_gen tool** and copied into the project. There are no AI calls or image downloads at runtime. Source PNGs retain the generated image data and transparency. Atlas JSON describes the individual silhouettes without editing or slicing the PNGs into separate files.
+The three world-art PNGs and the UI felt texture were generated with the **built-in image_gen tool** and copied into the project. There are no AI calls or image downloads at runtime. Source PNGs retain the generated image data and transparency. Atlas JSON describes the individual silhouettes without editing or slicing the PNGs into separate files. `public/art/ui-felt.png` is a neutral material swatch, tinted with CSS multiply blending for indigo and rust cloth. `public/art/ui-braid.svg` supplies a repeating geometric woven trim.
 
 | Asset                     | Path                                                            | Role                                                                          |
 | ------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------- |
@@ -24,6 +24,12 @@ All three selected PNGs were generated with the **built-in image_gen tool** and 
 `src/game/assets/painterlyArt.ts` loads the two shared atlases, defines visual sizes, and configures collision circles in world units independently of image resolution. It also creates small deterministic brush, arrow, shard, dust, and shadow textures. `src/game/assets/SteppeLandscape.ts` owns decorative terrain and atmosphere. `ArenaScene` owns the simulation, depth ordering, and pooled actors. The Phaser renderer uses antialiasing and linear texture filtering. Painted sprites use fractional coordinates; the game does not round them into a pixel grid.
 
 Existing movement, formations, attacks, collision radii, progression, construction, route rewards, native saves, and sandboxing are preserved. Decorative terrain remains walkable. The view is 2.5D presentation over a 2D simulation; these are painted sprite poses rather than rigged 3D models or complete directional animation sheets.
+
+## UI material generation prompt
+
+The built-in image_gen tool produced `public/art/ui-felt.png` with this prompt:
+
+> Use case: stylized-concept. Asset type: seamless square UI material texture for Hordes of the Fallen Sky, a painterly Mongolian-inspired nomadic fantasy game with The Living Steppe Tapestry art direction. Fill the entire square with a single uninterrupted piece of warm undyed ivory wool felt over fine linen, illustrated in matte gouache with very subtle soft brushwork. Low-contrast warm oatmeal and cream, fine irregular natural fibers, a gently worn tactile surface. Uniform illumination and even color across the whole square. Quiet and readable enough for dark text overlaid by game code. This texture will also be multiplied with indigo and vermilion colors for cloth game HUD panels. Absolutely NO objects, no frames, no ornamental borders, no fringe, no seams, no text, no letters, no icons, no vignette, no strong stains, no folds, no shadows, no gradients, no scene or mockup. Seamless on all four edges, flat front view. Produce a production-ready material swatch, not a UI screenshot.
 
 ## Generation prompts
 

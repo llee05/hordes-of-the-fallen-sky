@@ -1,62 +1,357 @@
-/* Felt, lapis, painted wood, and paper stay inside the game's HUD and menus. */
+/* The clan carries its interface: indigo felt, woven trim, brass, and manuscript paper. */
+:root {
+  --gold: #e5bd72;
+  --blue: #9bc6bf;
+  --paper: #e9d8b5;
+  --paper-ink: #343e39;
+  --paper-muted: #675d4c;
+  --paper-line: #8e6a3d4d;
+  --felt: #203e46;
+  --rust: #984d37;
+  --brass: #b98b4d;
+  --cloth-texture: url('/art/ui-felt.png');
+  --braid: url('/art/ui-braid.svg');
+}
+
 .hud-surface,
-.command-dock {
-  background-image:
-    repeating-linear-gradient(0deg, #d5ca9803 0 1px, transparent 1px 4px),
-    linear-gradient(130deg, #26443be8, #243e37e8);
+.command-dock,
+.hud-menu-button,
+.chronicle-toast {
+  background-color: var(--felt);
+  background-image: var(--cloth-texture);
+  background-size: 420px;
+  background-blend-mode: multiply;
+  border-color: #b99159;
+  box-shadow:
+    0 5px 12px #17252240,
+    inset 0 0 0 3px #111f2533,
+    inset 0 0 0 4px #d0b48136;
 }
-.game-panel {
-  background-image:
-    repeating-linear-gradient(0deg, #70603604 0 1px, transparent 1px 4px),
-    repeating-linear-gradient(90deg, #fff2c608 0 1px, transparent 1px 5px),
-    linear-gradient(110deg, #eee1c2, #dfceaa);
-  border-top: 3px solid #a87d4b;
-}
-.panel-heading {
-  position: relative;
-}
-.panel-heading::after {
+.hud-surface::before,
+.command-dock::before {
   content: '';
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: repeating-linear-gradient(
-    90deg,
-    #ab8552 0 6px,
-    transparent 6px 12px,
-    #ab8552 12px 14px,
-    transparent 14px 20px
-  );
-  opacity: 0.2;
+  inset: 5px;
+  border: 1px dashed #c5b08455;
   pointer-events: none;
 }
-.title-menu h1 {
-  text-shadow: 0 3px 24px #1a333a55;
+.resource-hud,
+.objective-hud {
+  border-top: 4px solid var(--rust);
+}
+.resource div > span,
+.host-summary,
+.health-heading,
+.vital-stats,
+.pressure-row,
+.objective-heading > span,
+.objective-hint {
+  color: #d0c9af;
+}
+.resource strong {
+  color: #f9e8be;
+  font-variant-numeric: tabular-nums;
+}
+.resource-icon {
+  color: #e6ba76;
+  filter: drop-shadow(0 1px 1px #071e2b);
+}
+.host-summary {
+  border-top-style: dashed;
+  border-color: #d9b77755;
+}
+.expedition-clock strong {
+  font-variant-numeric: tabular-nums;
+  color: #ffedc3;
+}
+.expedition-clock > span {
+  color: #f0dba7;
+}
+.hud-menu-button {
+  border-radius: 3px 3px 10px 10px;
+}
+.hud-menu-button:hover,
+.dash-button:hover {
+  background-color: #315860;
+}
+.track,
+.xp-track {
+  background: #0e2328;
+  box-shadow: 0 1px #d4ba7c55;
+}
+.track > div,
+#xp-fill,
+.dash-charge {
+  background-image: repeating-linear-gradient(110deg, #fff3c31a 0 2px, transparent 2px 5px);
+  box-shadow: inset 0 1px #ffefb759;
+}
+.health-track > div {
+  background-color: #be9b57;
+}
+.health-track > .low {
+  background-color: #d38468;
+}
+.resolve-track > div,
+#xp-fill {
+  background-color: #8fb8b1;
+}
+.vitals-hud {
+  border-left: 4px solid var(--rust);
+}
+.command-dock {
+  border-bottom: 4px solid var(--rust);
+}
+.command-button {
+  border-color: #caa36866;
+  background: #0d2a3233;
+  color: #f2e1bc;
+}
+.command-button:hover:not(:disabled) {
+  background: #b48e4a3b;
+  border-color: #e5c285;
+}
+.command-button > kbd,
+.hud-menu-button kbd {
+  border: 1px solid #d2b98666;
+  background: #071d253b;
+  border-radius: 2px;
+  padding: 2px 3px;
+  color: #efdfb9;
+}
+.migrate-button {
+  background: #af7f3e30;
+  border-color: #d4a354;
+}
+.chronicle-toast {
+  border: 1px solid #b48d54;
+  border-left: 4px solid var(--rust);
+}
+.chronicle-toast p {
+  color: #f2e2c2;
+}
+.synergy {
+  background: #7b3d2eef;
+  border-color: #deb46a;
+}
+
+.overlay.ready-screen {
+  background: linear-gradient(90deg, #162d38a1, #1a353b52 42%, transparent 76%);
+}
+.title-menu {
+  position: relative;
+  isolation: isolate;
+}
+.title-menu::before {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  inset: -38px -32px -34px;
+  background-color: #1d3c47f5;
+  background-image: var(--cloth-texture);
+  background-size: 520px;
+  background-blend-mode: multiply;
+  clip-path: polygon(0 0, 100% 0, 100% 98%, 91% 100%, 50% 98%, 8% 100%, 0 98%);
+  box-shadow: inset 0 0 55px #10243055;
+}
+.title-menu::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -25px -19px -18px;
+  border: 1px dashed #c8ac7470;
+  border-top: 12px solid transparent;
+  background: var(--braid) repeat-x top / 96px 12px;
+  pointer-events: none;
 }
 .title-emblem {
-  filter: drop-shadow(0 2px 8px #132e3644);
+  color: #dfb570;
+  filter: drop-shadow(0 2px 1px #0c2736);
+}
+.title-menu h1 {
+  color: #f8e7c4;
+  text-shadow: 1px 3px #10293466;
+}
+.title-menu h1 em {
+  color: #a8c9bc;
+}
+.title-menu h1 .title-prefix {
+  color: #edc889;
+}
+.eyebrow {
+  color: #dcba79;
+}
+.title-tagline {
+  color: #ecdbb7;
+}
+.title-caption,
+.menu-quit {
+  color: #c7c1a9;
+}
+.menu-button {
+  color: #f0e0bd;
+  border-bottom: 1px solid #c7a97524;
+}
+.menu-button:hover {
+  background: #d6b87f18;
+  color: #ffedc5;
 }
 .menu-button.featured {
-  box-shadow: inset 0 0 0 3px #e0d19a04;
+  color: #fbe7b8;
+  background: #874532;
+  background-image: var(--cloth-texture);
+  background-size: 340px;
+  background-blend-mode: multiply;
+  border: 1px solid #d2a365;
+  box-shadow:
+    inset 0 0 0 3px #4e2e2859,
+    inset 0 0 0 4px #e2b77666,
+    0 3px 8px #13222e33;
 }
 .menu-button.featured::before {
-  content: '◇';
-  color: #cbb57c;
+  content: '◆';
+  color: #e8bf77;
   margin-right: -13px;
+  font-size: 10px;
 }
 .menu-button.featured span {
   margin-left: auto;
 }
+.menu-button.featured:hover {
+  background-color: #a35b3e;
+  border-color: #f5d397;
+}
 .overlay.pause-screen {
-  background: radial-gradient(ellipse at center, #25443bd9, #173139ec);
+  background: radial-gradient(ellipse at center, #182f3a99, #102330d9);
+}
+.pause-menu,
+.end-menu {
+  position: relative;
+  padding: 34px;
+  background-color: var(--felt);
+  background-image: var(--cloth-texture);
+  background-size: 520px;
+  background-blend-mode: multiply;
+  border: 1px solid #bb945d;
+  border-top: 10px solid var(--rust);
+  box-shadow:
+    inset 0 0 0 5px #0f283366,
+    inset 0 0 0 6px #c2a56f55,
+    0 12px 60px #0e232d66;
+}
+.pause-menu .panel-intro,
+.end-menu .panel-intro {
+  color: #d7d0b4;
 }
 .overlay.planning {
-  background: #18333a9c;
+  background: #142e3ac2;
 }
+
+/* Manuscript pages are warm, opaque, and quiet beneath the ink. */
+.game-panel {
+  background-color: #eddfc3;
+  background-image:
+    linear-gradient(90deg, #baa07822, #fff6db55 10%, #fff6db44 90%, #baa07822), var(--cloth-texture);
+  background-size: auto, 620px;
+  background-blend-mode: multiply;
+  border: 1px solid #b18b53;
+  border-top: 9px solid var(--rust);
+  box-shadow:
+    0 12px 70px #091b2c80,
+    0 0 0 4px #243c42,
+    0 0 0 5px #ac884f,
+    inset 0 0 0 4px #986e3d26;
+}
+.panel-heading {
+  position: relative;
+  background: #d9b9801c;
+}
+.panel-heading::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 7px;
+  background: var(--braid) repeat-x center / 72px 9px;
+  opacity: 0.8;
+  pointer-events: none;
+}
+.panel-heading .eyebrow {
+  color: #87482f;
+  font-size: 9px;
+}
+.panel-heading h2 {
+  color: #2c4d52;
+}
+.panel-close {
+  background: #254b50;
+  color: #f3dbad;
+  border: 1px solid #b68f56;
+  box-shadow: inset 0 0 0 3px #c9aa6b33;
+}
+.panel-close:hover {
+  background: #3c6263;
+}
+.panel-footer {
+  background: #ab7d3e12;
+  border-top-style: dashed;
+}
+.panel-intro,
+.building-card p,
+.upgrade-card p,
+.path-button span,
+.journal-chapter > p,
+.tradition-entry p,
+.setting-row p,
+.help-loop p,
+.clan-building p,
+.settings-note {
+  color: var(--paper-muted);
+}
+.paused-note,
+.input-hint {
+  color: #705c3d;
+}
+.primary-button,
+.setting-button {
+  color: #f6e4bd;
+  background: #28545a;
+  border-color: #a67d42;
+  box-shadow: inset 0 0 0 3px #e6d29a22;
+}
+.primary-button:hover,
+.setting-button:hover {
+  background: #3d6c6c;
+}
+.game-panel button:focus-visible {
+  outline: 2px solid #87452f;
+  outline-offset: 3px;
+}
+
 @media (max-width: 600px) {
   .overlay.ready-screen {
-    background: linear-gradient(90deg, #17323bdc, #1b393ac9 50%, #28453a7c);
+    background: #172d394d;
+  }
+  .title-menu::before {
+    inset: -24px -12px;
+  }
+  .title-menu::after {
+    inset: -12px -2px;
+  }
+  .pause-menu,
+  .end-menu {
+    padding: 23px;
+  }
+  .panel-heading .eyebrow {
+    font-size: 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chronicle-toast,
+  .menu-button,
+  .track > div,
+  #xp-fill {
+    transition: none;
   }
 }
