@@ -10,6 +10,8 @@ The four regions share the same painting language. Rounded riverbanks and ice di
 
 The interface uses indigo felt, warm manuscript paper, brass edging, rust-red woven trim, and serif chapter titles. A stitched hanging cloth carries the title menu while leaving the painted camp visible beside it. During play, compact textile HUD panels and a bottom command dock float above the full-window battlefield. Detailed manuscript pages live in the paused clan chronicle and management menus. Keep material contrast quiet beneath text, and keep decorative stitches and borders out of pointer and keyboard navigation.
 
+`src/tapestry.css` defines the material treatment. `src/ui/artwork.ts` defines decorative brass-cut SVG symbols and route landscape vignettes. Camp and chronicle illustrations crop the existing painted atlases using their shared JSON frame metadata, so structures look the same in the world and in management pages. Symbols and illustrations are hidden from assistive technology; the containing controls retain their text labels, keyboard focus, and controller navigation. Reduced-motion preferences disable decorative transitions.
+
 ## Local assets and rendering
 
 The three world-art PNGs and the UI felt texture were generated with the **built-in image_gen tool** and copied into the project. There are no AI calls or image downloads at runtime. Source PNGs retain the generated image data and transparency. Atlas JSON describes the individual silhouettes without editing or slicing the PNGs into separate files. `public/art/ui-felt.png` is a neutral material swatch, tinted with CSS multiply blending for indigo and rust cloth. `public/art/ui-braid.svg` supplies a repeating geometric woven trim.

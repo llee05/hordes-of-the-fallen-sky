@@ -249,10 +249,9 @@
 /* Manuscript pages are warm, opaque, and quiet beneath the ink. */
 .game-panel {
   background-color: #eddfc3;
-  background-image:
-    linear-gradient(90deg, #baa07822, #fff6db55 10%, #fff6db44 90%, #baa07822), var(--cloth-texture);
+  background-image: linear-gradient(#f0e3cac9, #f0e3cac9), var(--cloth-texture);
   background-size: auto, 620px;
-  background-blend-mode: multiply;
+  background-blend-mode: normal;
   border: 1px solid #b18b53;
   border-top: 9px solid var(--rust);
   box-shadow:
@@ -311,6 +310,7 @@
 .paused-note,
 .input-hint {
   color: #705c3d;
+  font-size: 9px;
 }
 .primary-button,
 .setting-button {
@@ -353,5 +353,432 @@
   .track > div,
   #xp-fill {
     transition: none;
+  }
+}
+
+/* Brass-cut clan marks and painted atlas miniatures use the same visual language
+   at different scales: symbols during combat, illustrations in paused pages. */
+.clan-mark {
+  display: block;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+.resource-icon,
+.command-icon,
+.dash-symbol,
+.building-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.resource-icon {
+  font-size: 26px;
+}
+.command-icon {
+  font-size: 30px;
+}
+.dash-symbol {
+  font-size: 38px;
+}
+.hud-menu-button span {
+  font-size: 25px;
+}
+.clan-seal {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border: 1px solid #b98e50;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 3px #0e293333,
+    inset 0 0 0 4px #b98e5066;
+  background: #102d3655;
+  padding: 6px;
+}
+.clan-seal .clan-mark {
+  width: 100%;
+  height: 100%;
+}
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+.panel-emblem {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  color: #ebce96;
+  font-size: 37px;
+  background-color: #2e5358;
+  background-image: var(--cloth-texture);
+  background-size: 260px;
+  background-blend-mode: multiply;
+  border: 1px solid #a37c43;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 4px #dfc28a33,
+    0 2px 3px #72532c20;
+}
+.building-card {
+  position: relative;
+  background: #f7eccd55;
+  border-color: #aa885b80;
+  border-bottom: 3px solid #a67b4f;
+  box-shadow:
+    0 2px 4px #765c3720,
+    inset 0 0 0 3px #b28b4b14;
+}
+.building-portrait {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  height: 95px;
+  margin: -10px -6px 13px;
+  border-bottom: 1px solid #ac8b5c55;
+}
+.building-portrait::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 8px 5px 0;
+  background: url('/art/steppe-ground.png') center / 280px;
+  opacity: 0.3;
+  mask-image: radial-gradient(ellipse, #000 15%, transparent 70%);
+}
+.camp-illustration {
+  display: block;
+  width: 125px;
+  height: 85px;
+  overflow: hidden;
+  filter: drop-shadow(1px 3px 1px #67593730);
+  pointer-events: none;
+}
+.building-heading {
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.building-icon {
+  color: #925137;
+  font-size: 25px;
+}
+.building-heading h3 {
+  color: #334e4e;
+}
+.building-heading small {
+  font:
+    8px/1.5 'DM Sans',
+    sans-serif;
+  letter-spacing: 0.4px;
+  padding: 2px 5px;
+  border: 1px solid #ab8b5b55;
+  color: #78603e;
+}
+.building-card.is-built {
+  border-bottom-color: #426d69;
+}
+.building-card p {
+  font-size: 12px;
+}
+.building-card.is-built .building-heading small {
+  background: #36635a12;
+  color: #3f6257;
+  border-color: #6a826555;
+}
+.building-cost {
+  color: #7f4d30;
+  font-size: 9px;
+  letter-spacing: 0.2px;
+}
+.path-button {
+  color: #314e4e;
+  background: #c8bd9326;
+  border-color: #a88c6066;
+  border-left: 3px solid #ae8050;
+}
+.path-button:hover:not(:disabled) {
+  background: #b8c0a940;
+  border-color: #4e7771;
+}
+.path-button strong {
+  font-family: Georgia, serif;
+  font-size: 15px;
+}
+.path-button span {
+  font-size: 11px;
+}
+.blocker {
+  color: #875639;
+}
+.upgrade-card {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(145deg, #fff3d65e, #bca06d17);
+  border: 1px solid #a8895a;
+  border-top: 5px solid #984d37;
+  box-shadow:
+    0 3px 5px #69513224,
+    inset 0 0 0 4px #c9af7d33;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.upgrade-card:hover {
+  background: #fff0c499;
+  border-color: #4d7770;
+}
+.upgrade-card-top {
+  justify-content: center;
+  position: relative;
+  margin: 0 0 20px;
+}
+.upgrade-icon {
+  display: grid;
+  place-items: center;
+  width: 86px;
+  height: 86px;
+  color: #ac663e;
+  font-size: 55px;
+  background: radial-gradient(circle, #b6995d1a 58%, transparent 60%);
+  border: 1px solid #a5865455;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 4px #b3996622;
+}
+.upgrade-card kbd {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 25px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  background: #31595b;
+  color: #f2d6a2;
+  border: 1px solid #ae864b;
+}
+.upgrade-subtitle {
+  color: #6f5035;
+  font:
+    9px/1.6 'DM Sans',
+    sans-serif;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.upgrade-card h3 {
+  color: #2e5355;
+}
+.card-bottom {
+  color: #81472f;
+  font-size: 9px;
+}
+.card-bottom > span {
+  color: #3b6667;
+  font-size: 19px;
+}
+.route-illustration {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 0 18px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+.route-map {
+  border-block-style: dashed;
+  color: #395c5b;
+}
+.route-map i {
+  color: #915231;
+}
+.journal-tabs {
+  gap: 8px;
+  padding-top: 17px;
+  background: #b8996210;
+}
+.journal-tabs button {
+  color: #6b624e;
+  border: 1px solid #aa8a5955;
+  border-bottom: 0;
+  font-family: Georgia, serif;
+  font-size: 16px;
+  background: #c6af7f1a;
+}
+.journal-tabs button[aria-selected='true'] {
+  color: #f3dfb7;
+  background-color: #30575c;
+  background-image: var(--cloth-texture);
+  background-size: 250px;
+  background-blend-mode: multiply;
+  border-color: #9f7e4b;
+}
+.journal-tabs button:hover:not([aria-selected='true']) {
+  background: #c5b08444;
+  color: #2f5657;
+}
+.journal-chapter > h3 {
+  color: #315658;
+}
+.journey-map::before {
+  border-top: 1px dashed #997a4c;
+  background: transparent;
+}
+.journey-stop > span {
+  width: 56px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ac8d5d55;
+  background-color: #e6d5b0;
+  background-image: var(--cloth-texture);
+  background-size: 280px;
+  background-blend-mode: multiply;
+  border-radius: 50%;
+  font-size: 31px;
+  padding: 5px;
+}
+.journey-stop.current > span {
+  color: #f2d7a3;
+  background-color: #874c36;
+  border-color: #a67c45;
+  box-shadow: 0 0 0 3px #9e713532;
+}
+.journey-stop {
+  color: #756a53;
+}
+.journey-stop small {
+  font-size: 8px;
+}
+.journey-stop.passed {
+  color: #44695c;
+}
+.journey-stop.current {
+  color: #8c4a32;
+}
+.journal-callout {
+  background: #be9e6521;
+  border-left: 4px solid #9e5639;
+  color: #64543e;
+}
+.clan-facts {
+  padding: 18px 0;
+  border-block: 1px dashed #9c7b4b66;
+}
+.clan-facts strong {
+  color: #335b5a;
+}
+.clan-facts span {
+  color: #715b3d;
+}
+.clan-building {
+  background: #f8e9c636;
+  border-color: #a1845355;
+}
+.clan-building-art {
+  display: block;
+  width: 74px;
+  flex-shrink: 0;
+}
+.clan-building-art .camp-illustration {
+  width: 74px;
+  height: 62px;
+}
+.tradition-entry > span {
+  font-size: 40px;
+  color: #9e5e3c;
+}
+.tradition-entry h4 {
+  color: #345856;
+}
+.help-loop article > .help-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  color: #9a593a;
+  border-bottom: 1px solid #ad8e5b66;
+  padding-bottom: 10px;
+}
+.help-step .clan-mark {
+  width: 48px;
+  height: 48px;
+}
+.help-step b {
+  font:
+    italic 24px Georgia,
+    serif;
+  color: #9c7c4b;
+}
+.control-table kbd {
+  color: #5d5847;
+}
+
+@media (max-width: 1100px) {
+  .resource-icon {
+    font-size: 23px;
+  }
+}
+@media (max-width: 600px) {
+  .resource-icon {
+    font-size: 20px;
+  }
+  .command-icon {
+    font-size: 23px;
+  }
+  .dash-symbol {
+    font-size: 29px;
+  }
+  .hud-menu-button span {
+    font-size: 21px;
+  }
+  .panel-title {
+    gap: 10px;
+  }
+  .panel-emblem {
+    width: 39px;
+    height: 39px;
+    font-size: 27px;
+  }
+  .panel-heading h2 {
+    font-size: 26px;
+  }
+  .panel-footer {
+    flex-wrap: wrap;
+  }
+  .paused-note,
+  .input-hint {
+    font-size: 7px;
+    letter-spacing: 0.3px;
+  }
+  .journal-tabs {
+    gap: 4px;
+  }
+  .journal-tabs button {
+    font-size: 13px;
+    padding: 10px;
+  }
+  .journey-map::before {
+    border-top: 0;
+    border-left: 1px dashed #997a4c;
+  }
+  .journey-stop > span {
+    width: 36px;
+    height: 36px;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+  .journey-map::before {
+    left: 18px;
+  }
+  .building-portrait {
+    height: 83px;
+  }
+  .building-portrait .camp-illustration {
+    height: 77px;
   }
 }

@@ -1,4 +1,5 @@
 import { GAME } from '../game/config';
+import { clanMark } from './artwork';
 import { FORMATIONS, REGIONS } from '../game/data/clan';
 import type { ArenaScene } from '../game/scenes/ArenaScene';
 import {
@@ -22,8 +23,7 @@ import {
 } from './menuContent';
 import type { JournalTab } from './menuContent';
 
-const emblem =
-  '<svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 3v8m0 18v8M6 11l6 5m16 8 6 5M6 29l6-5m16-8 6-5" stroke="currentColor" stroke-width="2"/><path d="m20 11 9 9-9 9-9-9 9-9Z" stroke="currentColor" stroke-width="2"/><circle cx="20" cy="20" r="3" fill="currentColor"/></svg>';
+const emblem = `<span class="clan-seal">${clanMark('spirit')}</span>`;
 
 export class GameUI {
   readonly canvasParent: HTMLElement;
@@ -48,11 +48,11 @@ export class GameUI {
         <div class="game-hud" id="game-hud" inert>
           <section class="resource-hud hud-surface" aria-label="Clan resources">
             <div class="resource-row">${[
-              ['population', '⚑', 'People', '8'],
-              ['herd', '♧', 'Herd', '3'],
-              ['food', '◒', 'Food', '70'],
-              ['materials', '▱', 'Materials', '50'],
-              ['spirit', '✧', 'Spirit', '0'],
+              ['population', clanMark('people'), 'People', '8'],
+              ['herd', clanMark('horse'), 'Herd', '3'],
+              ['food', clanMark('grain'), 'Food', '70'],
+              ['materials', clanMark('materials'), 'Materials', '50'],
+              ['spirit', clanMark('spirit'), 'Spirit', '0'],
             ]
               .map(
                 ([id, icon, label, value]) =>
@@ -62,15 +62,15 @@ export class GameUI {
             <div class="host-summary"><span id="doctrine">A people taking shape</span><span><b id="riders">1</b> RIDERS &nbsp; <b id="workers">0 / 8</b> WORKERS</span></div>
           </section>
           <div class="expedition-clock"><strong id="timer">00:00</strong><span id="stage-label">ENCAMPMENT</span></div>
-          <nav class="hud-menu" aria-label="Game menus"><button id="journal" class="hud-menu-button" title="Clan chronicle (Tab / J)" aria-label="Open clan chronicle" aria-keyshortcuts="Tab J"><span>◇</span><kbd>TAB</kbd></button><button id="pause" class="hud-menu-button" aria-label="Pause" title="Pause (Escape)"><span>Ⅱ</span><kbd>ESC</kbd></button></nav>
+          <nav class="hud-menu" aria-label="Game menus"><button id="journal" class="hud-menu-button" title="Clan chronicle (Tab / J)" aria-label="Open clan chronicle" aria-keyshortcuts="Tab J"><span>${clanMark('journal')}</span><kbd>TAB</kbd></button><button id="pause" class="hud-menu-button" aria-label="Pause" title="Pause (Escape)"><span>${clanMark('pause')}</span><kbd>ESC</kbd></button></nav>
           <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p id="objective">Build the camp. Protect your people.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Crossing</span><b id="crossing">0%</b></div><div class="track"><div id="crossing-fill"></div></div></div><p class="objective-hint" id="migration-hint">New routes in 45s.</p></section>
           <div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
           <div id="boss-bar" class="boss-bar" hidden><span>THE SKYBREAKER</span><div class="track"><div id="boss-fill"></div></div></div>
           <section class="vitals-hud hud-surface" aria-label="Commander and clan health"><div class="health-heading"><span>COMMANDER</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span>BOW <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
           <section class="tradition-hud" aria-label="Run progression"><span>TRADITION <b id="level">01</b> <small>· <span id="blessing-count">0</span> LEARNED</small></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small></section>
-          <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">»</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
-          <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">⌂</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">➶</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">⚑</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
-          <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">✧</span><p id="clan-message"></p></div>
+          <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
+          <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">${clanMark('bow')}</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
+          <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><p id="clan-message"></p></div>
         </div>
         <div id="overlay" class="overlay ready-screen" role="dialog" aria-modal="true" aria-labelledby="overlay-title" tabindex="-1"></div>
         <div id="menu-record" class="menu-record"><span>LONGEST JOURNEY</span><strong id="best">— — : — —</strong></div>

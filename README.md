@@ -20,7 +20,9 @@ The packaged game includes its runtime, painted art, fonts, and synthesized soun
 
 ## Desktop presentation
 
-The game opens into a title menu over the painted steppe. The battlefield fills the entire game window. Compact resources and objectives sit at the top, with commander health, clan resolve, gallop, and a keyboard command dock near the bottom. Brief clan messages appear as notifications.
+The game opens with its title embroidered across an indigo felt banner over the painted steppe. Woven rust-red trim, brass clan symbols, and warm manuscript pages carry the world's art into the interface. Camp cards reuse the painted gers, riders, and wagons from the battlefield; migration choices have illustrated landscape vignettes. All UI materials and artwork ship locally.
+
+The battlefield fills the entire game window. Compact resources and objectives sit at the top, with commander health, clan resolve, gallop, and a keyboard command dock near the bottom. Brief clan messages appear as notifications.
 
 Press **Tab** or **J** (controller **View**) to open the clan chronicle. It pauses combat, physics, economy, and migration while you inspect the journey, buildings, workforce, formations, and learned traditions. Arrow keys switch its tabs; Escape or J returns to the battlefield. You can open camp development or choose an available migration route directly from the chronicle.
 
