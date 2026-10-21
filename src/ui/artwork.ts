@@ -1,6 +1,11 @@
-import props from '../../public/art/steppe-props.json';
-import actors from '../../public/art/steppe-actors.json';
+import propsSource from '/art/steppe-props.json?raw';
+import actorsSource from '/art/steppe-actors.json?raw';
 import type { BuildingId } from '../game/types';
+
+// Public assets use root URLs in Vite. Bundle the metadata as text so both the
+// browser preview and file-based desktop build share the same atlas definitions.
+const props = JSON.parse(propsSource) as typeof import('../../public/art/steppe-props.json');
+const actors = JSON.parse(actorsSource) as typeof import('../../public/art/steppe-actors.json');
 
 // Small brass-cut silhouettes stay legible at HUD scale. Decorative SVGs never add
 // accessible names or focus targets to the buttons and labels that contain them.
