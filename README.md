@@ -72,6 +72,8 @@ In a story expedition, victory opens **A place beside the fire**, a skippable ep
 
 An expedition is intended to take about 15 minutes with roughly three minutes of growth per camp. Earlier departures shorten the journey; longer stays increase danger. This is a prototype balance, not a fixed time limit.
 
+For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md).
+
 ## Controls
 
 | Action                          | Keyboard / mouse                    | Standard controller           |

@@ -1,0 +1,312 @@
+# Hordes of the Fallen Sky — game mechanics brief
+
+This is a reference for the **implemented prototype**, checked against the game code on 22 October 2026. It covers the expedition, resources, combat, spirit progression, camp upgrade tree, migration, enemies, story, and persistence. Values are current balance, not promises for the final release. All times below are active gameplay seconds; menus freeze the world.
+
+## 1. The expedition
+
+The player commands a mounted archer protecting the Blue Banner clan. Ride, dodge, collect spirit shards, develop a travelling camp, and defend three caravan crossings before holding a mountain passage for 180 seconds. The people are the objective: killing the final boss is optional.
+
+The intended rhythm is **build → defend → choose when to leave → escort → rebuild**. A typical expedition targets roughly 15 minutes, but the first three camps have no forced departure time. Leaving early shortens the journey; waiting provides gathering time at the cost of pasture and increasing enemy pressure. There is no global 15-minute victory timer.
+
+| Stage               | Region / event                            | Rules                                                                                                                                                                   |
+| ------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Act I, camp 1       | The Golden Pasture / The Sundering        | Starting camp. Routes open after 45 seconds. Introductory spawn pacing for the first 18 seconds.                                                                        |
+| Crossing 1          | Choose river, ridge, or blue banners      | Automatically moving caravan; no gathering or construction.                                                                                                             |
+| Act I, camp 2       | The Silent River / The White Silence      | Food production ×0.7. Migration mobility ×0.8 when leaving this region. Routes open after 45 seconds.                                                                   |
+| Crossing 2          | Choose any of the same three routes       | Your build and traditions travel with you.                                                                                                                              |
+| Act II, camp 3      | The Broken Pass / The Earth That Walks    | Ground eruptions. Routes open after 45 seconds.                                                                                                                         |
+| Crossing 3          | Choose any of the same three routes       | Eruptions continue while travelling through the pass.                                                                                                                   |
+| Act II, final stand | The Heart of the Steppe / The Red Eclipse | Hold for 180 seconds. More frequent eruptions; lightning cooldown ×1.5. Skybreaker appears after 20 seconds. No further migration. Camp construction remains available. |
+
+**Victory:** survive the final stand with commander health, clan population, and clan resolve above zero. **Defeat:** commander health reaches zero, population reaches zero, or resolve reaches zero. No individual companion must be kept alive through a separate character-health system.
+
+## 2. Starting state and resources
+
+| Resource / measure | Start                   | Sources                                                                                                          | Uses and consequences                                                                                                                                                                                                      |
+| ------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Food               | 70                      | Grazing, herding grounds, winter stores, river crossings, story choices, rewards after mastering every tradition | Consumed by people, including during migration. Blue-banner rescue costs 18 food on arrival. Zero food triggers starvation checks.                                                                                         |
+| Materials          | 50                      | Passive camp gathering, more population, ridge crossings, story choices, rewards after mastering every tradition | Construct and specialize camp buildings. No ongoing building maintenance cost.                                                                                                                                             |
+| Spirit             | 0                       | Every enemy kill immediately grants `enemy XP × 0.4`; ridge arrival grants 10; some story choices grant 4        | Pay for the spirit sanctuary and its specialization. Stored Spirit does not buy tradition ranks. It is not consumed by lightning, wards, arrows, or migration.                                                             |
+| Spirit shards / XP | Level 1, 0 XP           | Collect drops from defeated enemies                                                                              | Fill the current level's XP threshold and earn tradition choices. Collection does not deduct stored Spirit.                                                                                                                |
+| People             | 8                       | Family-ger development; blue-banner arrivals                                                                     | Produce materials, consume food, provide worker capacity. Losses come from starvation and resolve damage. Population gains are capped at 120.                                                                              |
+| Workers            | 0 assigned of 8         | Existing population                                                                                              | Construction requires sufficient total population for assigned jobs. Workers are reserved by established buildings, not spent. No manual job reassignment or worker production penalty is simulated.                       |
+| Herd / horses      | 3                       | Establish herding grounds (+4); river arrival (+2)                                                               | Each horse increases migration mobility by 1.2% of the base. Starvation and clan losses remove livestock. Route rewards cap herd at 40. Herd size does not independently change grazing income or limit rider recruitment. |
+| Clan resolve       | 100 / 100               | Hearthkeepers, felt armor, arrivals (+12), boss defeat (+20), story choices (+5)                                 | Clan-wide survival meter, internally called integrity. Attacks and starvation reduce it; crossing damage thresholds can also cost people and livestock.                                                                    |
+| Commander health   | 100 / 100               | The healer's craft, arrivals (+25), full recovery after all traditions are mastered                              | Separate survival meter for the player. Enemy contact, hostile shots, and eruptions damage it.                                                                                                                             |
+| Pasture            | 100%                    | Refreshed on each regional arrival                                                                               | Scales food and material production. Depletes to zero over 210 seconds while stationary, including the final stand. Does not deplete during crossings.                                                                     |
+| Momentum           | 0–100%                  | Riding builds it; stopping drains it                                                                             | Improves commander arrow damage and targeting range; activates moving formation bonuses.                                                                                                                                   |
+| Threat             | 0–100%                  | Region and time in the current stage                                                                             | A pressure indicator. Spawn intervals use their own stage/region formula; the displayed threat value is not an additional damage multiplier.                                                                               |
+| Identity           | Iron 0, Sky 0, Wander 0 | Construction, specialization, route choices, story choices                                                       | Determines the clan's descriptive identity and epilogue. Grants no additional stat modifiers or technology locks.                                                                                                          |
+
+The opening camp already has **Family gers at level 1**, represented by two tents. These tents are one logical building entry. The commander begins with one accompanying rider, one arrow per personal volley, and no learned traditions.
+
+### Economy and scarcity
+
+Let `P = pasture / 100`, `N = population`, and `W = 0.7` at Silent River or `1` elsewhere:
+
+```text
+Food consumed / second = N × 0.025 × (0.5 with Winter stores, otherwise 1)
+Food produced / second while stationary = (0.65 + 0.65 if Herding grounds exist) × P × W
+Materials produced / second while stationary = (0.28 + N × 0.018) × P
+Pasture lost / second while stationary = 100 / 210 percentage points
+```
+
+At the starting camp, full pasture produces 0.65 food/second against consumption of 0.2, for a net gain of 0.45. Materials initially grow by 0.424/second. Production declines with pasture; consumption does not. There is no passive Spirit income, trading, crafting inventory, housing capacity, or individually simulated gathering unit.
+
+During migration, food is consumed but food/material production stops. When food is zero at a 12-second stage-time boundary, starvation removes one person and one horse, records a casualty, and deals 8 raw resolve damage. This can cause an additional resolve-threshold casualty. Checks follow the stage clock rather than a fresh 12-second grace period after food runs out.
+
+Resolve damage multiplies all applicable protection:
+
+```text
+Final resolve damage = raw damage
+                     × 0.7 with Caravan guard
+                     × 0.5 with Felt armor
+                     × 0.8 with Ancestral ward
+```
+
+All three together leave 28% of the raw damage. Crossing a downward 20-point damage band removes one person and one horse per damage event, even if that event crosses several bands. Repairs can restore resolve, but do not resurrect casualties.
+
+## 3. Spirit-stone / tradition progression tree
+
+The current game calls collectible stones **spirit shards**. They carry XP. **Spirit** is a separate camp currency earned automatically on kills. Neither system is permanent progression, and the current tradition tree has six independent, repeatable branches rather than prerequisite chains.
+
+```mermaid
+flowchart TD
+    Enemy[Defeat an enemy] --> Shard[Spirit shard carrying enemy XP]
+    Enemy --> Spirit[Stored Spirit: enemy XP x 0.4]
+    Shard --> Collect[Ride close enough to collect]
+    Collect --> Level[Fill XP threshold and gain a level]
+    Level --> Choice[Choose 1 of up to 3 random eligible traditions]
+    Choice --> Power[Horn-and-sinew bows: 8 ranks]
+    Choice --> Haste[The endless volley: 6 ranks]
+    Choice --> Riders[Sworn riders: 4 ranks]
+    Choice --> Speed[Steppe-bred horses: 5 ranks]
+    Choice --> Pickup[Ancestral memory: 5 ranks]
+    Choice --> Health[The healer's craft: 8 ranks]
+    Spirit --> Sanctuary[Spirit sanctuary and its chosen specialization]
+```
+
+The XP threshold for advancing from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and so on. Excess XP carries over; one pickup can earn several levels and every earned choice remains queued. The game pauses for each selection, offering up to three distinct traditions below their stack limits. There is no reroll, purchase price, rank prerequisite, or dependency between these six traditions. Repeated percentage effects multiply.
+
+| Tradition           | Each rank                                              | Max ranks | At maximum, before other bonuses                                                                                       |
+| ------------------- | ------------------------------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Horn-and-sinew bows | All attacks using the shared damage stat ×1.25         | 8         | Damage stat ≈95.37, from 16 (`16 × 1.25⁸`). Also strengthens burn, lightning, wards, and wedge damage.                 |
+| The endless volley  | Host firing interval ×0.85                             | 6         | Interval ≈0.226 seconds, from 0.6; about 4.42 volleys/second. Does not change independent sanctuary/wagon/ward timers. |
+| Sworn riders        | +1 commander projectile and +1 accompanying rider      | 4         | 5 commander arrows per volley; 5 accompanying riders before camp/rescue bonuses.                                       |
+| Steppe-bred horses  | Commander movement speed ×1.12                         | 5         | Speed ≈334.84 world units/second, from 190. Does not change fixed gallop speed.                                        |
+| Ancestral memory    | Shard attraction radius ×1.4                           | 5         | Radius ≈457.16, from 85. Feigned retreat can further multiply it by 1.7.                                               |
+| The healer's craft  | +20 maximum health; heal 35, capped at the new maximum | 8         | Maximum commander health 260. Each rank heals immediately.                                                             |
+
+There are 36 total ranks. Once every tradition is mastered, subsequent earned choices grant **20 food and 15 materials each**, and the commander is fully healed when those choices are processed. Extra XP remains meaningful.
+
+Each enemy drops its defined XP value, independent of its scaled health. Shards begin following the commander inside the attraction radius and collect within 18 world units. Once attracted, they keep following. At the 500-shard pool limit, new XP merges into an existing active shard. Uncollected XP travels to the next camp on arrival.
+
+## 4. Camp development and upgrade tree
+
+Press **B** to open development. Purchases are immediate while simulation is paused. Each of the five logical buildings has just two levels: **established → one exclusive specialization**. You cannot buy duplicate copies, take both paths, switch paths, or develop beyond level 2. Family gers begin established; all other buildings begin absent. All buildings persist through migration.
+
+You may establish other buildings in any order, subject to materials, Spirit, and worker capacity. Specializing costs **1.5× the base resource cost, rounded up**, with no additional workers. All four worker-using buildings need eight workers in total, so the starting eight people can staff the complete base camp if no one has been lost. Existing buildings remain functional after population losses; worker availability is checked when establishing a new building. Construction is unavailable while packed for migration.
+
+```mermaid
+flowchart TD
+    Camp[Travelling camp: materials and available workers]
+    Camp --> Ger[Family gers: already established]
+    Ger --> Hearth[Hearthkeepers: 27 materials]
+    Ger --> Beacon[Refugee beacons: 27 materials]
+    Camp --> Archery[Archery grounds: 24 materials, 3 workers]
+    Archery --> Fire[Fire arrows: 36 materials]
+    Archery --> Veterans[Veteran riders: 36 materials]
+    Camp --> Herd[Herding grounds: 20 materials, 2 workers]
+    Herd --> Remount[Remount herds: 30 materials]
+    Herd --> Winter[Winter stores: 30 materials]
+    Camp --> Sanctuary[Spirit sanctuary: 20 materials, 12 Spirit, 2 workers]
+    Sanctuary --> Wind[Wind shamans: 30 materials, 18 Spirit]
+    Sanctuary --> Ward[Ancestral ward: 30 materials, 18 Spirit]
+    Camp --> Wagon[Wagon circle: 26 materials, 1 worker]
+    Wagon --> War[War carts: 39 materials]
+    Wagon --> Felt[Felt armor: 39 materials]
+    Fire --> Tempest[Burning Tempest: requires BOTH specializations]
+    Wind --> Tempest
+```
+
+Each pair of child nodes is an **either/or** choice. Arrows into Burning Tempest are a combination requirement, not further purchases. Diagram prices are the cost of that individual step; establishing and specializing a sanctuary costs **50 materials + 30 Spirit total**.
+
+| Building         | Establishment                                                                                                                                               | Exclusive specialization A                                                                                                                                            | Exclusive specialization B                                                                                                                                       |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Family gers      | Base definition: 18 materials, 0 workers, +6 people. Already level 1 at run start; this purchase is therefore unavailable in a normal run.                  | **Hearthkeepers:** 27 materials; +6 people immediately and +0.25 resolve/second while stationary, including the final stand.                                          | **Refugee beacons:** 27 materials; +10 people immediately. No recurring refugee arrivals.                                                                        |
+| Archery grounds  | 24 materials, 3 workers; +3 riders; unlock Encirclement and Charging wedge.                                                                                 | **Fire arrows:** 36 materials; arrows ignite for 2 seconds, dealing `damage stat × 0.45` per second. Hits refresh the burn duration rather than stack separate burns. | **Veteran riders:** 36 materials; +3 riders, and every accompanying rider's arrow multiplier rises from 0.6 to 0.9 of the damage stat.                           |
+| Herding grounds  | 20 materials, 2 workers; +4 horses; add 0.65 food/second before pasture/winter scaling; unlock Feigned retreat.                                             | **Remount herds:** 30 materials; commander movement ×1.12 and migration mobility ×1.2.                                                                                | **Winter stores:** 30 materials; +45 food immediately and food consumption ×0.5 thereafter.                                                                      |
+| Spirit sanctuary | 20 materials + 12 Spirit, 2 workers; area lightning for `damage stat ×3`, with a 70-unit search radius around the target, every 3.5 seconds.                | **Wind shamans:** 30 materials + 18 Spirit; lightning interval becomes 1.8 seconds; combines with Fire arrows for Burning Tempest.                                    | **Ancestral ward:** 30 materials + 18 Spirit; camp-area damage of `damage stat ×1.5` every 1.2 seconds, with a 125-unit spatial search radius; clan damage ×0.8. |
+| Wagon circle     | 26 materials, 1 worker; fires one arrow every 0.9 seconds at targets within 520 units of camp. Damage multiplier 1.5 while stationary, 0.7 while migrating. | **War carts:** 39 materials; three arrows per volley and retains the 1.5 damage multiplier while migrating.                                                           | **Felt armor:** 39 materials; clan damage ×0.5 and immediately restore 30 resolve, up to 100.                                                                    |
+
+Lightning first looks for a target within 520 units of the commander, then within 520 of camp. It and the ancestral ward continue working during migration. The Red Eclipse lengthens lightning intervals to 5.25 seconds normally or 2.7 with Wind shamans. Wards and wagon timers keep their usual intervals. Area attacks affect active enemies within their circular search radii.
+
+**Burning Tempest** activates automatically when Fire arrows and Wind shamans are both selected. Every friendly arrow volley gains two additional arrows, a wider fan, and alternating curvature of ±0.65 radians/second. This applies to the commander, accompanying riders, and wagon volleys. The arrows retain Fire arrows' burn. There is no extra payment, button, or separate rank. Choosing Veteran riders or Ancestral ward rules out this combination for that expedition.
+
+Completing every building and one specialization each costs **252 materials and 30 Spirit from the starting camp**. This excludes the already provided family gers and any other resource gains/spends. Worker reservation stays at eight.
+
+## 5. Mounted combat and formations
+
+### Commander, riders, and arrows
+
+The commander starts with 100 health, 190 movement speed, 16 damage, a 0.6-second firing interval, 85 shard attraction radius, and one arrow per volley. Attacks automatically choose the nearest available enemy within targeting range; there is no manual aim or attack input.
+
+Momentum rises by 0.72/second while moving and falls by 1.5/second while stopped, clamped to 0–1. Full momentum takes about 1.39 seconds. Commander targeting range is `440 + 120 × momentum`; personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum gives 560 targeting range and +30% personal damage.
+
+Accompanying riders each fire one arrow per host volley, at 60% of the shared damage stat, or 90% with Veteran riders. Their targeting range is 440. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
+
+```text
+min(16, 1 starting rider
+        + 3 with Archery grounds
+        + 3 with Veteran riders
+        + Sworn riders ranks
+        + 2 per completed blue-banner crossing)
+```
+
+Arrows travel at 440 world units/second for 1.6 seconds and disappear on their first hit. They do not pierce or critically hit. Targeting range determines when a volley is fired, rather than its entire travel distance. The shared projectile pool holds 250 friendly arrows, which can limit very large simultaneous volleys.
+
+### Gallop
+
+**Space / controller A** gallops in the current or last facing direction at speed 570 for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop.
+
+### Formation tree
+
+| Formation       | Unlock                    | Positioning and benefit                                                                                                                                             |
+| --------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Caravan guard   | Starting formation        | Riders stay around camp/caravan. All clan damage ×0.7, regardless of commander distance.                                                                            |
+| Encirclement    | Establish Archery grounds | Riders circle an enemy near the commander, or the commander if none is nearby. At momentum above 0.5, friendly arrow damage ×1.3, including wagon arrows.           |
+| Charging wedge  | Establish Archery grounds | Riders line up behind the commander. While galloping, enemies within 64 units take `damage stat ×18` per second. This is continuous damage, not one hit per gallop. |
+| Feigned retreat | Establish Herding grounds | Riders spread around the commander. At momentum above 0.4, host firing interval ×0.7 and shard attraction radius ×1.7.                                              |
+
+Press **F / right bumper** to cycle unlocked formations during play. Effects replace the previous formation's benefit; changing formation has no resource cost or cooldown. Momentum's personal damage bonus and Encirclement's arrow bonus multiply together.
+
+## 6. Migration and arrival rewards
+
+After **45 seconds in each of the first three camps**, press **M** and choose a route. You can close the route panel to stay longer. Every crossing offers the same three routes; routes change rewards, duration, danger, and identity rather than the region order.
+
+| Route                   | Base duration          | Spawn-rate divisor during crossing | Reward / cost on successful arrival                     | Identity  |
+| ----------------------- | ---------------------- | ---------------------------------- | ------------------------------------------------------- | --------- |
+| Follow the river        | 72 seconds (`60 ×1.2`) | 0.9; fewer spawns                  | +35 food, +2 horses                                     | +2 Wander |
+| Ride the high ridge     | 48 seconds (`60 ×0.8`) | 1.5; more spawns                   | +28 materials, +10 Spirit                               | +2 Sky    |
+| Answer the blue banners | 60 seconds             | 1.2; more spawns                   | +8 people, +2 rescued riders, −18 food, floored at zero | +2 Iron   |
+
+Actual crossing progress is:
+
+```text
+Mobility = (1 + herd × 0.012)
+         × (1.2 with Remount herds, otherwise 1)
+         × (0.8 when leaving Silent River, otherwise 1)
+Progress = stage time × Mobility / route base duration
+```
+
+Three starting horses make a nominal 60-second crossing take about 57.9 seconds outside winter. Population does not directly slow the caravan, but increases provisions needed. Herd losses can reduce calculated progress because mobility uses the current herd.
+
+The caravan moves east automatically across 1,150 world units as progress reaches 100%. It does not wait for the commander or depend on remaining within an escort radius. Defend it because nearby enemies and hostile shots damage the clan. You can fight, gallop, change formations, collect shards, and learn traditions during travel; construction waits for unpacking.
+
+Rewards are not paid when choosing the route. On successful arrival, route rewards apply, the next region begins, pasture resets to 100%, resolve recovers by 12, and commander health recovers by 25, each capped at its maximum. Buildings, specializations, resources, traditions, and riders carry over. Enemies, projectiles, and eruption warnings are cleared; uncollected shards move to the new camp. Arrivals reset the stage clock, not total active journey time.
+
+## 7. Enemies, pressure, and hazards
+
+Enemies choose between commander and clan: they favor camp when its distance is less than 1.25 times their distance to the commander. Camp threats remain simulated when the player rides away. Regular enemies far beyond both player and clan can be removed; the Skybreaker persists.
+
+| Enemy                | Internal ID     | Base health | Speed | Damage | XP / Spirit per kill | Unlock score            | Behavior                   |
+| -------------------- | --------------- | ----------- | ----- | ------ | -------------------- | ----------------------- | -------------------------- |
+| Hollow wolf          | `wisp`          | 25          | 49    | 10     | 3 / 1.2              | 0                       | Melee pursuit              |
+| Winged shade         | `bat`           | 18          | 90    | 8      | 4 / 1.6              | 22                      | Fast melee pursuit         |
+| Earthbound hulk      | `brute`         | 100         | 35    | 18     | 12 / 4.8             | 55                      | Slow, durable melee        |
+| Ghost rider          | `ghost-rider`   | 48          | 112   | 12     | 5 / 2                | 90                      | Charges                    |
+| Hollow seer          | `hollow-seer`   | 65          | 45    | 9      | 7 / 2.8              | 150                     | Ranged                     |
+| Frost mare, elite    | `frost-mare`    | 250         | 82    | 20     | 22 / 8.8             | 210                     | Charges                    |
+| Eclipse giant, elite | `eclipse-giant` | 400         | 34    | 24     | 30 / 12              | 330                     | Ranged                     |
+| Skybreaker, boss     | `skybreaker`    | 3,600       | 42    | 26     | 160 / 64             | Final stand +20 seconds | Twelve-shot radial volleys |
+
+Enemy unlock score is `total elapsed seconds + region index ×80`, with region indices 0–3. Unlocks are not fixed real-time timestamps across all runs. Eligible normal enemies are drawn with weights 6, 3, 2, 3, 2, 1, 1 in the table order. Elites join that random pool rather than appear as unique scheduled encounters.
+
+Normal enemy health is multiplied by `1 + total elapsed / 1200`. Boss health stays at 3,600. Movement speed is multiplied by `1 + region index ×0.1`. Spawn interval is `max(0.14, 0.85 − 0.004 × (stage time + region index ×65))`, divided by route danger during migration. The first 18 seconds in Golden Pasture override the interval to 2 seconds. Up to 350 enemies may be active; 45% of spawn attempts anchor around camp and the rest around the commander.
+
+Chargers commit to a direction every 3 seconds and move at 2.2× speed for 0.7 seconds. Ranged creatures stop closing within 260 units and fire within 650: one projectile every 3.5 seconds, or a 12-projectile ring every 2.5 seconds for the boss, after an initial attack delay. Hostile projectiles move at 125 units/second, last 5 seconds, and damage the commander for the listed damage or clan for half that raw damage. Enemy contact damages the commander for the listed value. Within 68 units of camp, enemies deal `listed damage ×0.45` raw resolve damage every 1.5 seconds.
+
+**Ground eruptions:** begin in Broken Pass and persist at the mountain. A warning is placed at the commander's position with 2 seconds to escape. An eruption deals 20 commander damage within 70 units and 8 raw clan damage if camp is within 95. The first warning follows an 8-second hazard timer; subsequent warnings occur every 10 seconds in the pass or 6 at the mountain. Gallop invulnerability can protect the commander, while clan protection follows its usual multipliers.
+
+Defeating the Skybreaker restores **20 resolve** and changes the epilogue, but neither ends the stand nor is required for victory.
+
+## 8. Story, clan identity, and chronicle
+
+The five-chapter prologue presents the fictional Sundering and the clan's flight. It appears after **New Game**; completing or skipping it enters the expedition. Replaying the introduction from the title is read-only and returns to the title. With camp scenes enabled, the first encounter opens before combat begins.
+
+Camp scenes are enabled by default and can be toggled at the title. Each encounter pauses combat, physics, economy, and journey clocks, with two choices. Any chosen benefit is granted once: **food +8, materials +6, Spirit +4, or resolve +5**. Each choice also grants **+1** to its associated identity. Escape / controller B skips without a reward. Disabled encounters pass without rewards; disabling camp scenes does not skip the prologue.
+
+| Encounter                 | Trigger                              | Choice A: gift / identity                            | Choice B: gift / identity                      |
+| ------------------------- | ------------------------------------ | ---------------------------------------------------- | ---------------------------------------------- |
+| A place beside the fire   | Expedition begins                    | Share the work: +6 materials / Wander                | Share the watch: +5 resolve / Iron             |
+| More mouths, more hands   | First camp reaches 45 seconds        | Prepare the provisions: +8 food / Wander             | Prepare the wagons: +6 materials / Iron        |
+| Voices across the ice     | Arrive at Silent River               | Trust the ground: +8 food / Wander                   | Keep the names together: +4 Spirit / Sky       |
+| A promise chosen          | Arrive at Broken Pass; Act II begins | We will watch for one another: +5 resolve / Iron     | We will carry every name: +4 Spirit / Sky      |
+| When the earth moves      | Broken Pass reaches 15 seconds       | Mend the wheels together: +6 materials / Iron        | Let the tired hands rest: +5 resolve / Wander  |
+| The court's empty promise | Broken Pass reaches 45 seconds       | Put the tally in shared hands: +6 materials / Wander | Hear the whole account: +4 Spirit / Sky        |
+| The narrow opening        | Arrive at Heart of the Steppe        | Organize the last watch: +5 resolve / Iron           | Share a meal before the work: +8 food / Wander |
+| Hold the road             | Final stand reaches 90 seconds       | Hold together: +5 resolve / Iron                     | Carry the song forward: +4 Spirit / Sky        |
+
+Dialogue responds to earlier decisions, rescue routes, population, losses, and boss fate. Below five people, encounters use a remnant's collective remembrance instead of a conversation among four named survivors. These are changes to presentation; the same underlying resource and identity choices remain.
+
+Establishing or specializing a building adds **+2 identity**: gers/herding → Wander, archery/wagon → Iron, sanctuary → Sky. Selecting a route adds +2 of its identity at departure, independently of the delayed arrival rewards. The starting gers grant no identity points.
+
+The strongest identity becomes the clan's name once any score reaches 4:
+
+| Score               | Identity                    | Mechanical effect                      |
+| ------------------- | --------------------------- | -------------------------------------- |
+| Iron highest        | The Iron Horde              | Descriptive identity and epilogue text |
+| Sky highest         | Children of the Eternal Sky | Descriptive identity and epilogue text |
+| Wander highest      | The Wandering Nation        | Descriptive identity and epilogue text |
+| Every score below 4 | A people taking shape       | No identity declared yet               |
+
+Ties favor Iron, then Sky, then Wander. Identities do not make other buildings or routes unavailable.
+
+**Tab / J** opens the paused clan chronicle: journey, clan/workforce/buildings, traditions, and recorded story. The story tab retains the actual resolved dialogue, selected choice or skip, outcome, time, and population. Pause and result menus also offer **Our remembered road**. Reading records never grants rewards again and returns to the previous paused or ended screen. Story completion preserves queued tradition choices.
+
+With camp scenes enabled, victory first opens a skippable epilogue reflecting survivors, recorded casualties, identity, the shared tally decision, and the Skybreaker's fate, followed by journey results. The epilogue can be read again. The Last Court, Iron Vow, Sundering, creatures, and refuge are original fantasy; spirit shards represent scattered vitality, not purchased ancestral souls. See [the lore](../lore.md) for writing boundaries.
+
+## 9. Controls, pauses, and persistence
+
+| Action                                     | Keyboard / mouse                               | Standard controller               |
+| ------------------------------------------ | ---------------------------------------------- | --------------------------------- |
+| Ride                                       | WASD / arrow keys                              | Left stick / D-pad                |
+| Attack                                     | Automatic                                      | Automatic                         |
+| Gallop                                     | Space / HUD button                             | A                                 |
+| Develop camp                               | B / HUD button                                 | X                                 |
+| Choose migration route                     | M / HUD button                                 | Y                                 |
+| Cycle formations                           | F / HUD button                                 | Right bumper                      |
+| Chronicle                                  | Tab / J / HUD button                           | View                              |
+| Pause, resume, close a panel, skip a scene | Escape / P                                     | Start / B                         |
+| Menu navigation / confirmation             | Tab, Shift+Tab / Enter, Space, click           | Stick or D-pad / A                |
+| Tradition choice                           | 1, 2, 3 / click                                | Navigate, then A                  |
+| Prologue pages                             | Continue, Back / Enter / left and right arrows | Navigate, then A; B / Start skips |
+| Fullscreen                                 | F11 / Alt+Enter / Settings                     | Navigate Settings                 |
+| Quit desktop game                          | Quit game / window close                       | Navigate Quit game                |
+
+Touch preview supports dragging the battlefield to ride and tapping command buttons. Keyboard, controller, mouse, and touch use the same scene-owned state.
+
+Simulation, physics, economy, migration, combat animations, cooldowns, and the run timer advance only during active play. Title, prologue, story, epilogue, records, pause, traditions, camp development, routes, chronicle, settings, help, defeat, and victory stop them. Losing window focus pauses active combat. UI motion respects the operating system's reduced-motion preference; menus and values respond without waiting for animation.
+
+Only **longest journey time** and **sound preference** persist to the profile. A run cannot be resumed after quitting. New expeditions reset resources, buildings, traditions, identity, story records, casualties, and crossings. The camp-scene preference survives run restarts within the app session. There is no permanent spirit-stone wallet, meta-tech tree, achievement system, Steamworks progression, or campaign save in this prototype.
+
+The desktop game runs offline with local assets and native, validated, atomic saves. Browser preview has separate saves. The technology stack is TypeScript, Phaser 3, Vite, and Electron; there is no runtime AI service or backend.
+
+## 10. Source map for maintaining this brief
+
+| Area                                                           | Implementation                                                                      |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Starting stats and balance constants                           | [config.ts](../src/game/config.ts)                                                  |
+| Starting run, XP thresholds, upgrade application               | [state/run.ts](../src/game/state/run.ts)                                            |
+| Tradition definitions and random choice pool                   | [data/upgrades.ts](../src/game/data/upgrades.ts)                                    |
+| Building costs, paths, formations, routes, regions             | [data/clan.ts](../src/game/data/clan.ts)                                            |
+| Economy, staffing, purchases, protection, migration, identity  | [state/clan.ts](../src/game/state/clan.ts)                                          |
+| Enemy definitions and spawn interval                           | [data/enemies.ts](../src/game/data/enemies.ts)                                      |
+| Combat, targeting, support attacks, hazards, phase transitions | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                   |
+| Encounter content, choices, epilogue                           | [data/story.ts](../src/game/data/story.ts)                                          |
+| Encounter triggers and once-only rewards                       | [state/story.ts](../src/game/state/story.ts)                                        |
+| Prologue chapters                                              | [data/intro.ts](../src/game/data/intro.ts)                                          |
+| Menus, chronicle, help, input                                  | [GameUI.ts](../src/ui/GameUI.ts), [menuContent.ts](../src/ui/menuContent.ts)        |
+| Save and packaging details                                     | [README](../README.md#packaging-and-saves), [Steam preparation](../steam/README.md) |
+
+Update this reference with balance or progression changes. A longer historical campaign, permanent civilization unlocks, and thousands of individually simulated people remain future work rather than hidden mechanics.
