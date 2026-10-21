@@ -5,6 +5,7 @@ import '@fontsource/ibm-plex-mono/latin-400.css';
 import './style.css';
 import './tapestry.css';
 import './motion.css';
+import './intro.css';
 import { createGame } from './game/createGame';
 import { ArenaScene } from './game/scenes/ArenaScene';
 import { GameUI } from './ui/GameUI';

@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { openTitle } from './helpers';
 
 test.use({ reducedMotion: 'no-preference' });
 
 test('animated menus accept actions immediately and do not replay their entrance on purchase', async ({
   page,
 }) => {
-  await page.goto('/');
+  await openTitle(page);
   await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
   // Exercise input in the same task that creates the entrance, before its first
   // rendered frame. Actions and simulation phases must never wait for motion.
@@ -49,7 +50,7 @@ test('animated menus accept actions immediately and do not replay their entrance
 test('HUD feedback stays bounded, cancels on pause, and responds to live reduced-motion changes', async ({
   page,
 }) => {
-  await page.goto('/');
+  await openTitle(page);
   await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
   const feedback = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;

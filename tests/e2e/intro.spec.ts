@@ -1,0 +1,187 @@
+import { expect, test } from '@playwright/test';
+
+test('intro reads at the player’s pace with frozen simulation, back, completion, and replay', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'When the grass was gold.' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
+  await expect(page.getByRole('button', { name: '← Back' })).toBeDisabled();
+  await expect(page.locator('#game-hud')).toHaveAttribute('inert', '');
+  await expect(page.locator('#menu-record')).toBeHidden();
+  await expect
+    .poll(() =>
+      page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth),
+    )
+    .toBe(1536);
+  const before = await page.evaluate(() => {
+    const scene = (window as any).__gloam.scene;
+    scene.startRun(); // Cannot bypass the intro's paused phase.
+    return {
+      elapsed: scene.run.elapsed,
+      food: scene.run.clan.food,
+      x: scene.player.x,
+      frame: scene.player.frame.name,
+    };
+  });
+  await page.keyboard.press('b');
+  await page.keyboard.press('m');
+  await page.keyboard.press('j');
+  await page.waitForTimeout(600);
+  expect(
+    await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      return {
+        elapsed: scene.run.elapsed,
+        food: scene.run.clan.food,
+        x: scene.player.x,
+        frame: scene.player.frame.name,
+      };
+    }),
+  ).toEqual(before);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
+    true,
+  );
+  await page.screenshot({ path: 'test-results/intro-steppe.png' });
+  // Focus stays inside the story. Disabled Back is omitted from Tab navigation.
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: /Skip intro/ })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Then heaven fell silent.' })).toBeVisible();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.getByRole('heading', { name: 'When the grass was gold.' })).toBeVisible();
+  await page.keyboard.press('ArrowRight');
+  await page.screenshot({ path: 'test-results/intro-fallen-sky.png' });
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByRole('heading', { name: 'Carry your people home.' })).toBeVisible();
+  await page.getByRole('button', { name: '← Back' }).click();
+  await expect(page.getByRole('heading', { name: 'Then heaven fell silent.' })).toBeVisible();
+  await page.keyboard.press('ArrowRight');
+  await page.screenshot({ path: 'test-results/intro-caravan.png' });
+  await page.keyboard.press('Space');
+  await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeFocused();
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('ready');
+  await page.getByRole('button', { name: 'Replay introduction' }).click();
+  await expect(page.getByRole('heading', { name: 'When the grass was gold.' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Start a new run' }).click();
+  await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'When the grass was gold.' })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+for (const chapter of [0, 1, 2]) {
+  test(`skip chapter ${chapter + 1} immediately without starting an expedition`, async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
+    for (let i = 0; i < chapter; i++) await page.keyboard.press('ArrowRight');
+    if (chapter === 1) await page.keyboard.press('Escape');
+    else await page.getByRole('button', { name: /Skip intro/ }).click();
+    await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeFocused();
+    expect(
+      await page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        return {
+          phase: scene.run.phase,
+          elapsed: scene.run.elapsed,
+          paused: scene.physics.world.isPaused,
+        };
+      }),
+    ).toEqual({ phase: 'ready', elapsed: 0, paused: true });
+  });
+}
+
+test('controller advances, skips, replays, and never leaks a held confirm into gameplay', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const state = {
+      connected: true,
+      mapping: 'standard',
+      axes: [0, 0],
+      buttons: Array.from({ length: 16 }, () => ({ pressed: false, touched: false, value: 0 })),
+    };
+    Object.assign(window, { testController: state });
+    Object.defineProperty(navigator, 'getGamepads', { value: () => [state] });
+  });
+  const press = async (index: number): Promise<void> => {
+    await page.evaluate((i) => {
+      (window as any).testController.buttons[i].pressed = true;
+    }, index);
+    await page.waitForTimeout(100);
+    await page.evaluate((i) => {
+      (window as any).testController.buttons[i].pressed = false;
+    }, index);
+    await page.waitForTimeout(80);
+  };
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
+  await press(0);
+  await expect(page.getByRole('heading', { name: 'Then heaven fell silent.' })).toBeVisible();
+  await press(1);
+  await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeFocused();
+  await press(13);
+  await expect(page.getByRole('button', { name: 'Replay introduction' })).toBeFocused();
+  await press(0);
+  await expect(page.getByRole('heading', { name: 'When the grass was gold.' })).toBeVisible();
+  await press(0);
+  await press(0);
+  await page.evaluate(() => {
+    (window as any).testController.buttons[0].pressed = true;
+  });
+  await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeFocused();
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('ready');
+  await page.evaluate(() => {
+    (window as any).testController.buttons[0].pressed = false;
+  });
+  await page.waitForTimeout(100);
+  await press(0);
+  await expect(page.getByRole('dialog')).toBeHidden();
+});
+
+test('story works at Steam Deck size and disables painting motion on a live preference change', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+  await expect
+    .poll(() => page.locator('.intro-painting').evaluate((image) => image.getAnimations().length))
+    .toBe(1);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect
+    .poll(() =>
+      page
+        .locator('.intro-story')
+        .evaluate((story) => story.getAnimations({ subtree: true }).length),
+    )
+    .toBe(0);
+  for (const viewport of [
+    { width: 1280, height: 800 },
+    { width: 960, height: 600 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const selector of ['.intro-skip', '.intro-next', '.intro-caption']) {
+      const box = (await page.locator(selector).boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
+      expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
+    }
+  }
+  await page.getByRole('button', { name: /Skip intro/ }).click();
+  await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
+});

@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { openTitle } from './helpers';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await openTitle(page);
   await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;

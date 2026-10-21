@@ -2,6 +2,8 @@ import { GAME } from '../game/config';
 import { clanMark } from './artwork';
 import { UIMotion } from './Motion';
 import { FORMATIONS, REGIONS } from '../game/data/clan';
+import { INTRO_SLIDES, introImageUrl } from '../game/data/intro';
+import { introMenu } from './introContent';
 import type { ArenaScene } from '../game/scenes/ArenaScene';
 import {
   assignedWorkers,
@@ -42,6 +44,11 @@ export class GameUI {
     private readonly scene: ArenaScene,
     private readonly platform: GamePlatform,
   ) {
+    // Warm the remaining local paintings without blocking the first chapter or Skip.
+    for (const slide of INTRO_SLIDES) {
+      const image = new Image();
+      image.src = introImageUrl(slide.image);
+    }
     root.dataset.phase = 'ready';
     root.innerHTML = `<main class="game-shell" aria-label="Hordes of the Fallen Sky game">
       <div class="arena-wrap" id="arena-wrap" tabindex="0" aria-label="Game arena. WASD to ride. Space to gallop. B to build. M to migrate. F for formation. Tab or J for the clan chronicle. Escape to pause.">
@@ -269,14 +276,17 @@ export class GameUI {
     this.get('game-hud').inert = run.phase !== 'playing';
     this.get('game-hud').setAttribute(
       'aria-hidden',
-      String(run.phase === 'ready' || run.phase === 'settings' || run.phase === 'help'),
+      String(['intro', 'ready', 'settings', 'help'].includes(run.phase)),
     );
     this.get('menu-record').hidden = !['ready', 'paused', 'dead', 'won'].includes(run.phase);
     // Transfer focus before hiding or removing the focused menu control.
     if (run.phase === 'playing') this.get('arena-wrap').focus({ preventScroll: true });
     this.overlay.hidden = run.phase === 'playing';
-    this.overlay.className = `overlay ${run.phase === 'ready' ? 'ready-screen' : ['building', 'route', 'journal', 'upgrade', 'settings', 'help'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
+    this.overlay.className = `overlay ${run.phase === 'intro' ? 'intro-screen' : run.phase === 'ready' ? 'ready-screen' : ['building', 'route', 'journal', 'upgrade', 'settings', 'help'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
+    if (run.phase === 'intro') this.overlay.setAttribute('aria-describedby', 'intro-caption');
+    else this.overlay.removeAttribute('aria-describedby');
     const labels: Record<RunPhase, string> = {
+      intro: `CHAPTER ${snapshot.introSlide + 1} OF ${INTRO_SLIDES.length}. ${INTRO_SLIDES[snapshot.introSlide]!.title} ${INTRO_SLIDES[snapshot.introSlide]!.text}`,
       ready: 'THE SKY IS WAITING',
       playing: 'THE CLAN ENDURES',
       paused: 'EXPEDITION PAUSED',
@@ -297,8 +307,9 @@ export class GameUI {
     const quit = this.platform.desktop
       ? '<button class="menu-button menu-quit" data-action="quit">Quit game</button>'
       : '';
-    if (run.phase === 'ready') {
-      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu"><button class="menu-button featured" data-action="begin" data-primary>LEAD YOUR PEOPLE <span>→</span></button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${quit}</nav><p class="title-caption">A journey across the living steppe.</p></section>`;
+    if (run.phase === 'intro') this.overlay.innerHTML = introMenu(snapshot.introSlide);
+    else if (run.phase === 'ready') {
+      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu"><button class="menu-button featured" data-action="begin" data-primary>LEAD YOUR PEOPLE <span>→</span></button><button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${quit}</nav><p class="title-caption">A journey across the living steppe.</p></section>`;
     } else if (run.phase === 'paused') {
       this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">Your people will be here when you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="restart">Start a new run</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${quit}</nav></section>`;
     } else if (run.phase === 'building') this.overlay.innerHTML = buildingMenu(run);
@@ -328,7 +339,11 @@ export class GameUI {
     const button = (event.target as Element).closest<HTMLButtonElement>('button');
     if (!button || button.disabled) return;
     const action = button.dataset.action;
-    if (action === 'begin') this.scene.startRun();
+    if (action === 'intro') this.scene.replayIntro();
+    else if (action === 'intro-next') this.scene.advanceIntro(1);
+    else if (action === 'intro-back') this.scene.advanceIntro(-1);
+    else if (action === 'intro-skip') this.scene.skipIntro();
+    else if (action === 'begin') this.scene.startRun();
     else if (action === 'resume') this.scene.togglePause();
     else if (action === 'restart') this.scene.restart();
     else if (action === 'settings' || action === 'help') this.scene.openUtilityMenu(action);
@@ -384,6 +399,17 @@ export class GameUI {
     return [...this.overlay.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
   }
   private handleMenuKey(event: KeyboardEvent): void {
+    // Holding Confirm must not race through chapters or start a run on arrival.
+    if (event.repeat && ['Enter', ' '].includes(event.key)) {
+      event.preventDefault();
+      return;
+    }
+    if (this.phase === 'intro' && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!event.repeat) this.scene.advanceIntro(event.key === 'ArrowRight' ? 1 : -1);
+      return;
+    }
     const button = (event.target as Element).closest<HTMLButtonElement>('[role="tab"]');
     if (button && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
       event.preventDefault();

@@ -1,4 +1,5 @@
 export type RunPhase =
+  | 'intro'
   | 'ready'
   | 'playing'
   | 'paused'
@@ -88,6 +89,7 @@ export interface EnemyDefinition {
 
 export interface HudSnapshot {
   run: RunState;
+  introSlide: number;
   dashReady: number;
   best: number;
   bossHealth?: number;

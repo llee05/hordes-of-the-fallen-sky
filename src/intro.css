@@ -1,0 +1,216 @@
+/* Full-bleed paintings with the clan's brass, manuscript, and woven materials. */
+#app[data-phase='intro'] .game-hud {
+  opacity: 0;
+  visibility: hidden;
+}
+.overlay.intro-screen {
+  display: block;
+  padding: 0;
+  background: #162a31;
+  overflow: auto;
+}
+.intro-story {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: clamp(20px, 3.5vh, 40px) clamp(24px, 5vw, 100px) 18px;
+  color: #f4e6c8;
+}
+.intro-art {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  background: #162a31;
+}
+.intro-painting {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 42%;
+  animation: intro-drift 22s ease-out both;
+}
+.intro-story::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    #0d242bdd,
+    #11272a00 25%,
+    #11272a22 38%,
+    #10252be8 73%,
+    #10252b 100%
+  );
+}
+.intro-story::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: var(--rust) var(--braid) repeat-x center / auto 8px;
+}
+.intro-header,
+.intro-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.intro-header {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-shadow: 0 2px 8px #0a1b21;
+}
+.intro-prologue {
+  color: #e1b878;
+  white-space: nowrap;
+}
+.intro-skip,
+.intro-back,
+.intro-next {
+  min-height: 44px;
+  border: 1px solid #c4a47577;
+  border-radius: 3px;
+  padding: 11px 18px;
+  background: #18333ce8;
+  color: #f4e6c8;
+  cursor: pointer;
+}
+.intro-skip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+.intro-skip kbd {
+  color: #dec795;
+  font-size: 10px;
+}
+.intro-caption {
+  width: min(760px, 100%);
+  margin: auto auto 26px;
+  padding-top: clamp(140px, 34vh, 390px);
+  text-align: center;
+  text-shadow: 0 2px 12px #091a22;
+  animation: ink-arrive 350ms var(--steppe-ease);
+}
+.intro-caption .eyebrow {
+  color: #e9bd7b;
+  margin: 0 0 12px;
+}
+.intro-caption h1 {
+  margin: 0 0 16px;
+  font:
+    400 clamp(30px, 3.5vw, 56px) / 1.12 Georgia,
+    serif;
+  letter-spacing: -0.025em;
+  color: #fff0ce;
+}
+.intro-caption > p:last-child {
+  max-width: 630px;
+  margin: 0 auto;
+  font:
+    400 clamp(16px, 1.4vw, 20px) / 1.6 Georgia,
+    serif;
+  color: #eddfc3;
+}
+.intro-footer {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding-top: 20px;
+  border-top: 1px solid #c7a37266;
+}
+.intro-back {
+  min-width: 105px;
+  background: transparent;
+}
+.intro-back:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.intro-next {
+  min-width: 155px;
+  background: #dcc091;
+  color: #213c40;
+  border-color: #efcf99;
+  font-weight: 600;
+}
+.intro-next > span {
+  margin-left: 16px;
+}
+.intro-pages {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.intro-page {
+  width: 7px;
+  height: 7px;
+  rotate: 45deg;
+  border: 1px solid #c4a475;
+}
+.intro-page.current {
+  background: #e8c080;
+  box-shadow: 0 0 8px #e8c08044;
+}
+.intro-count {
+  margin-left: 8px;
+  font:
+    11px 'IBM Plex Mono',
+    monospace;
+  color: #c8b893;
+}
+.intro-hint {
+  margin: 16px 0 0;
+  text-align: center;
+  color: #c3bbab;
+  font-size: 11px;
+}
+.intro-story button:not(:disabled):hover {
+  border-color: #ffe3af;
+  box-shadow: 0 0 0 2px #d1ab7133;
+}
+@keyframes intro-drift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.035);
+  }
+}
+@media (max-height: 650px) {
+  .intro-caption {
+    padding-top: 100px;
+    margin-bottom: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .intro-header > span {
+    max-width: 180px;
+    font-size: 9px;
+    line-height: 1.6;
+  }
+  .intro-prologue,
+  .intro-skip kbd,
+  .intro-count {
+    display: none;
+  }
+  .intro-footer {
+    gap: 10px;
+  }
+  .intro-back,
+  .intro-next {
+    min-width: 0;
+    padding: 11px 12px;
+  }
+  .intro-hint {
+    line-height: 1.6;
+  }
+}

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openTitle } from './helpers';
 
 test('controller starts a run, moves, dashes, pauses, and navigates menus', async ({ page }) => {
   await page.addInitScript(() => {
@@ -21,7 +22,7 @@ test('controller starts a run, moves, dashes, pauses, and navigates menus', asyn
     }, index);
     await page.waitForTimeout(60);
   };
-  await page.goto('/');
+  await openTitle(page);
   await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
   await press(0);
   await expect(page.getByRole('dialog')).toBeHidden();
@@ -53,7 +54,7 @@ test('controller starts a run, moves, dashes, pauses, and navigates menus', asyn
 test('starts, moves, dashes, pauses, resumes, and resets a run', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
+  await openTitle(page);
   await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();
   await expect(page).toHaveTitle('Hordes of the Fallen Sky · A people, not a place.');
   await page.screenshot({ path: 'test-results/desktop-ready.png', fullPage: true });
@@ -87,7 +88,7 @@ test('starts, moves, dashes, pauses, resumes, and resets a run', async ({ page }
 test('automatic attacks defeat enemies and collected XP opens a working upgrade choice', async ({
   page,
 }) => {
-  await page.goto('/');
+  await openTitle(page);
   await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
   // Put a real pooled enemy in firing range, rather than waiting for it to cross the world.
   await page.evaluate(() => {
@@ -117,7 +118,7 @@ test('automatic attacks defeat enemies and collected XP opens a working upgrade 
 });
 
 test('death, victory, best time, and replay complete the run lifecycle', async ({ page }) => {
-  await page.goto('/');
+  await openTitle(page);
   await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -140,6 +141,7 @@ test('death, victory, best time, and replay complete the run lifecycle', async (
   await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
   await expect(page.locator('#best')).toHaveText('15:00');
   await page.reload();
+  await page.getByRole('button', { name: /Skip intro/ }).click();
   await expect(page.locator('#best')).toHaveText('15:00');
 });
 
@@ -150,7 +152,7 @@ test('mobile layout fits and touch movement works', async ({ browser }) => {
     isMobile: true,
   });
   const page = await context.newPage();
-  await page.goto('/');
+  await openTitle(page);
   await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
@@ -179,7 +181,7 @@ test('mobile layout fits and touch movement works', async ({ browser }) => {
 test('camp planning spends resources, unlocks riders and builds the Burning Tempest', async ({
   page,
 }) => {
-  await page.goto('/');
+  await openTitle(page);
   await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
   await page.evaluate(() => {
     const clan = (window as any).__gloam.scene.run.clan;
@@ -210,7 +212,7 @@ test('camp planning spends resources, unlocks riders and builds the Burning Temp
 test('migration moves a vulnerable caravan, preserves the build and awards survivors at arrival', async ({
   page,
 }) => {
-  await page.goto('/');
+  await openTitle(page);
   await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
   await expect(page.locator('#migrate')).toBeDisabled();
   await page.evaluate(() => {
@@ -257,7 +259,7 @@ test('migration moves a vulnerable caravan, preserves the build and awards survi
 });
 
 test('guard riders fire at camp threats while the commander scouts away', async ({ page }) => {
-  await page.goto('/');
+  await openTitle(page);
   await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -276,7 +278,7 @@ test('three crossings lead to a final stand whose victory saves the clan with th
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
+  await openTitle(page);
   await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
   for (let region = 1; region <= 3; region += 1) {
     await page.evaluate(() => {
@@ -316,7 +318,7 @@ test('painted atlases keep world-space collision sizes and sort miniatures by th
     if (/^https?:/.test(request.url()) && new URL(request.url()).hostname !== '127.0.0.1')
       external.push(request.url());
   });
-  await page.goto('/');
+  await openTitle(page);
   await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
   const art = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -379,7 +381,7 @@ test('painted atlases keep world-space collision sizes and sort miniatures by th
 test('desktop menus keep the battlefield edge to edge and return settings and help to their parent menu', async ({
   page,
 }) => {
-  await page.goto('/');
+  await openTitle(page);
   await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
   await expect(page.locator('#game-hud')).toBeHidden();
   const frame = (await page.locator('canvas').boundingBox())!;
@@ -417,7 +419,7 @@ test('desktop menus keep the battlefield edge to edge and return settings and he
 test('the clan chronicle pauses the expedition, supports keyboard tabs, and opens camp management', async ({
   page,
 }) => {
-  await page.goto('/');
+  await openTitle(page);
   await page.getByRole('button', { name: /LEAD YOUR PEOPLE/ }).click();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('heading', { name: 'A people on the move.' })).toBeVisible();

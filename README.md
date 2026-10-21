@@ -20,7 +20,9 @@ The packaged game includes its runtime, painted art, fonts, and synthesized soun
 
 ## Desktop presentation
 
-The game opens with its title embroidered across an indigo felt banner over the painted steppe. Woven rust-red trim, brass clan symbols, and warm manuscript pages carry the world's art into the interface. Camp cards reuse the painted gers, riders, and wagons from the battlefield; migration choices have illustrated landscape vignettes. All UI materials and artwork ship locally.
+The game opens with a skippable, three-chapter painted prologue: the living steppe, the fallen sky, and the clan's journey toward the sacred mountain. Read at your own pace with Continue / Enter / controller A; use Back or the left/right arrow keys to turn pages. Skip intro, Escape, or controller B / Start returns directly to the title menu. The intro appears once per app launch, can be replayed from the title menu, and stays out of run restarts. Gameplay remains frozen throughout; reduced-motion preferences disable the gentle painting movement. See [the bundled paintings and generation prompts](docs/intro-artwork.md).
+
+The title is embroidered across an indigo felt banner over the painted steppe. Woven rust-red trim, brass clan symbols, and warm manuscript pages carry the world's art into the interface. Camp cards reuse the painted gers, riders, and wagons from the battlefield; migration choices have illustrated landscape vignettes. All UI materials and artwork ship locally.
 
 The battlefield fills the entire game window. Compact resources and objectives sit at the top, with commander health, clan resolve, gallop, and a keyboard command dock near the bottom. Brief clan messages appear as notifications.
 

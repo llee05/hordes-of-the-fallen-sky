@@ -36,7 +36,7 @@ Hordes of the Fallen Sky is a nomadic civilization builder and desktop TypeScrip
 - Keep balance values in `src/game/config.ts`, enemies in `data/enemies.ts`, traditions in `data/upgrades.ts`, and clan content in `data/clan.ts`.
 - Keep renderer-independent progression in `state/run.ts` and `state/clan.ts` for fast unit testing.
 - `ArenaScene` owns simulation. `GameUI` receives snapshots and sends user actions; do not duplicate game state in the DOM.
-- Respect run phases: simulation and physics stop during ready, pause, upgrades, planning, chronicle, settings, help, death, and victory. Keep menu transitions in ArenaScene; use ActionKeys to consume each one-shot native key event once, including when Phaser replays its event queue.
+- Respect run phases: simulation and physics stop during intro, ready, pause, upgrades, planning, chronicle, settings, help, death, and victory. Keep menu transitions in ArenaScene; use ActionKeys to consume each one-shot native key event once, including when Phaser replays its event queue. Keep intro chapter state in the scene; skipping or completing the intro returns to the title without starting gameplay.
 - Actors are pooled. Reset mutable properties on reuse and disable bodies in collision callbacks.
 - Drive character frames and defeat copies from active gameplay seconds through `animation/CharacterMotion.ts` and `animation/CharacterVisuals.ts`. Preserve the shared logical canvas and ground registration, visual scale, and collision offsets when changing frames; do not use automatic animation clocks that continue in menus.
 - Preserve XP at pool capacity, upgrade stack limits, excess XP, and every earned upgrade choice.

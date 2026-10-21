@@ -13,6 +13,7 @@ import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
 import { GAME } from '../config';
 import { chooseEnemy, SKYBREAKER, spawnInterval } from '../data/enemies';
 import { FORMATIONS, ROUTES } from '../data/clan';
+import { INTRO_SLIDES } from '../data/intro';
 import {
   advanceClan,
   availableFormations,
@@ -96,6 +97,8 @@ export class ArenaScene extends Phaser.Scene {
   private best = 0;
   private choices: readonly UpgradeDefinition[] = [];
   private utilityReturnPhase: 'ready' | 'paused' = 'ready';
+  private introShown = false;
+  private introSlide = 0;
   private facing = new Phaser.Math.Vector2(0, 1);
   private touchMove = new Phaser.Math.Vector2();
   private dragOrigin?: Phaser.Math.Vector2;
@@ -117,6 +120,11 @@ export class ArenaScene extends Phaser.Scene {
 
   create(): void {
     this.run = createRun();
+    this.introSlide = 0;
+    if (!this.introShown) {
+      this.introShown = true;
+      this.run.phase = 'intro';
+    }
     this.spawnTimer = 0;
     this.attackTimer = 0;
     this.dashTimer = 0;
@@ -280,12 +288,33 @@ export class ArenaScene extends Phaser.Scene {
     this.setPhase('playing');
   }
 
+  replayIntro(): void {
+    if (this.run.phase !== 'ready') return;
+    this.introSlide = 0;
+    this.setPhase('intro');
+  }
+
+  advanceIntro(direction: -1 | 1): void {
+    if (this.run.phase !== 'intro') return;
+    const next = Math.max(0, this.introSlide + direction);
+    if (next >= INTRO_SLIDES.length) this.skipIntro();
+    else if (next !== this.introSlide) {
+      this.introSlide = next;
+      this.publishPhase();
+    }
+  }
+
+  skipIntro(): void {
+    if (this.run.phase === 'intro') this.setPhase('ready');
+  }
+
   restart(): void {
     this.scene.restart();
   }
 
   togglePause(): void {
-    if (this.run.phase === 'playing') this.setPhase('paused');
+    if (this.run.phase === 'intro') this.skipIntro();
+    else if (this.run.phase === 'playing') this.setPhase('paused');
     else if (this.run.phase === 'paused') this.setPhase('playing');
     else if (['building', 'route', 'journal', 'settings', 'help'].includes(this.run.phase))
       this.closePlanning();
@@ -367,6 +396,15 @@ export class ArenaScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     const controller = this.controller.poll();
     this.controllerMove.set(controller.x, controller.y);
+    if (this.run.phase === 'intro') {
+      if (controller.back || controller.pause) this.skipIntro();
+      else {
+        if (controller.next) this.callbacks?.onMenuInput('next');
+        if (controller.previous) this.callbacks?.onMenuInput('previous');
+        if (controller.confirm) this.callbacks?.onMenuInput('confirm');
+      }
+      return;
+    }
     const phaseBeforeInput = this.run.phase;
     if (
       controller.pause ||
@@ -878,6 +916,7 @@ export class ArenaScene extends Phaser.Scene {
     ]!;
     return {
       run: this.run,
+      introSlide: this.introSlide,
       dashReady: 1 - this.dashTimer / GAME.dash.cooldown,
       best: this.best,
       bossHealth: this.boss?.active ? this.boss.health / SKYBREAKER.health : undefined,

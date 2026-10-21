@@ -23,6 +23,14 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     let page = await app.firstWindow();
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
+    await expect(page.getByRole('heading', { name: 'When the grass was gold.' })).toBeVisible();
+    await expect
+      .poll(() =>
+        page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth),
+      )
+      .toBe(1536);
+    await page.screenshot({ path: 'test-results/native-intro.png' });
+    await page.keyboard.press('Escape');
     await expect(page.getByRole('button', { name: /LEAD YOUR PEOPLE/ })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();
     await expect(page).toHaveTitle('Hordes of the Fallen Sky · A people, not a place.');
@@ -101,6 +109,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     });
     app = await launch();
     page = await app.firstWindow();
+    await page.getByRole('button', { name: /Skip intro/ }).click();
     await expect(page.locator('#best')).toHaveText('01:28');
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
