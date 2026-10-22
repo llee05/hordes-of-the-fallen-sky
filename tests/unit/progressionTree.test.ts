@@ -8,6 +8,9 @@ import {
 import { researchBranches } from '../../src/ui/researchContent';
 import { createRun } from '../../src/game/state/run';
 import { UPGRADES } from '../../src/game/data/upgrades';
+import { BUILDINGS, type BuildingDefinition } from '../../src/game/data/clan';
+import { campBranches } from '../../src/ui/campContent';
+import { buildStructure } from '../../src/game/state/clan';
 
 function node(id: string, requires: string[] = []): TreeNode {
   return {
@@ -23,6 +26,43 @@ function node(id: string, requires: string[] = []): TreeNode {
 }
 
 describe('expandable progression views', () => {
+  it('derives camp tiers and exclusion states from added development definitions', () => {
+    const definitions = BUILDINGS as BuildingDefinition[];
+    const index = definitions.findIndex((entry) => entry.id === 'ger');
+    const original = definitions[index]!;
+    definitions[index] = {
+      ...original,
+      paths: [
+        ...original.paths,
+        {
+          id: 'third-path',
+          title: 'A third path',
+          description: 'An alternative.',
+          exclusiveGroup: 'specialization',
+        },
+        {
+          id: 'next-tier',
+          title: 'A deeper tier',
+          description: 'An extension.',
+          requires: ['hearthkeepers'],
+        },
+      ],
+    };
+    try {
+      const run = createRun();
+      run.phase = 'building';
+      run.clan.materials = 500;
+      const ger = campBranches(run).find((branch) => branch.id === 'ger')!;
+      expect(treeLevels(ger.nodes).map((level) => level.length)).toEqual([1, 3, 1]);
+      expect(ger.nodes.find((entry) => entry.id === 'ger-next-tier')?.status).toBe('locked');
+      buildStructure(run, 'ger', 'hearthkeepers');
+      const learned = campBranches(run).find((branch) => branch.id === 'ger')!;
+      expect(learned.nodes.find((entry) => entry.id === 'ger-third-path')?.status).toBe('excluded');
+      expect(learned.nodes.find((entry) => entry.id === 'ger-next-tier')?.status).toBe('available');
+    } finally {
+      definitions[index] = original;
+    }
+  });
   it('lays out unordered nodes with multiple parents and arbitrary depth', () => {
     const nodes = [
       node('final', ['left', 'right']),

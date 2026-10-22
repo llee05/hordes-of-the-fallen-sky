@@ -106,9 +106,9 @@ Each enemy drops its defined XP value, independent of its scaled health. Shards 
 
 ## 4. Camp development and upgrade tree
 
-Press **B** to open development. Purchases are immediate while simulation is paused. Each of the five logical buildings has just two levels: **established → one exclusive specialization**. You cannot buy duplicate copies, take both paths, switch paths, or develop beyond level 2. Family gers begin established; all other buildings begin absent. All buildings persist through migration.
+Press **B** to open the camp upgrade tree. Purchases are immediate while simulation is paused. The interface previews all buildings and developments with costs, prerequisites, and learned, available, locked, or excluded states; categories and search support larger trees. Purchases preserve focus and scroll. The current content follows the tree below; the renderer and purchase rules also accept more sibling choices and deeper tiers from content definitions. Each of the five logical buildings has just two levels: **established → one exclusive specialization**. In the current content, you cannot buy duplicate copies, take both paths, switch paths, or develop beyond level 2. Family gers begin established; all other buildings begin absent. All buildings persist through migration.
 
-You may establish other buildings in any order, subject to materials, Spirit, and worker capacity. Specializing costs **1.5× the base resource cost, rounded up**, with no additional workers. All four worker-using buildings need eight workers in total, so the starting eight people can staff the complete base camp if no one has been lost. Existing buildings remain functional after population losses; worker availability is checked when establishing a new building. Construction is unavailable while packed for migration.
+You may establish other buildings in any order, subject to materials, Spirit, and worker capacity. Current specializations cost **1.5× the base resource cost, rounded up**, with no additional workers. Definitions can provide explicit costs and prerequisites for future developments. All four worker-using buildings need eight workers in total, so the starting eight people can staff the complete base camp if no one has been lost. Existing buildings remain functional after population losses; worker availability is checked when establishing a new building. Construction is unavailable while packed for migration.
 
 ```mermaid
 flowchart TD
@@ -298,19 +298,19 @@ The desktop game runs offline with local assets and native, validated, atomic sa
 
 ## 10. Source map for maintaining this brief
 
-| Area                                                           | Implementation                                                                      |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Starting stats and balance constants                           | [config.ts](../src/game/config.ts)                                                  |
-| Starting run, XP thresholds, upgrade application               | [state/run.ts](../src/game/state/run.ts)                                            |
-| Tradition definitions and random choice pool                   | [data/upgrades.ts](../src/game/data/upgrades.ts)                                    |
-| Building costs, paths, formations, routes, regions             | [data/clan.ts](../src/game/data/clan.ts)                                            |
-| Economy, staffing, purchases, protection, migration, identity  | [state/clan.ts](../src/game/state/clan.ts)                                          |
-| Enemy definitions and spawn interval                           | [data/enemies.ts](../src/game/data/enemies.ts)                                      |
-| Combat, targeting, support attacks, hazards, phase transitions | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                   |
-| Encounter content, choices, epilogue                           | [data/story.ts](../src/game/data/story.ts)                                          |
-| Encounter triggers and once-only rewards                       | [state/story.ts](../src/game/state/story.ts)                                        |
-| Prologue chapters                                              | [data/intro.ts](../src/game/data/intro.ts)                                          |
-| Menus, chronicle, help, input                                  | [GameUI.ts](../src/ui/GameUI.ts), [menuContent.ts](../src/ui/menuContent.ts)        |
-| Save and packaging details                                     | [README](../README.md#packaging-and-saves), [Steam preparation](../steam/README.md) |
+| Area                                                                                 | Implementation                                                                      |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Starting stats and balance constants                                                 | [config.ts](../src/game/config.ts)                                                  |
+| Starting run, XP thresholds, upgrade application                                     | [state/run.ts](../src/game/state/run.ts)                                            |
+| Tradition definitions and random choice pool                                         | [data/upgrades.ts](../src/game/data/upgrades.ts)                                    |
+| Building costs, stable path IDs, prerequisites, effects, formations, routes, regions | [data/clan.ts](../src/game/data/clan.ts)                                            |
+| Economy, staffing, purchases, protection, migration, identity                        | [state/clan.ts](../src/game/state/clan.ts)                                          |
+| Enemy definitions and spawn interval                                                 | [data/enemies.ts](../src/game/data/enemies.ts)                                      |
+| Combat, targeting, support attacks, hazards, phase transitions                       | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                   |
+| Encounter content, choices, epilogue                                                 | [data/story.ts](../src/game/data/story.ts)                                          |
+| Encounter triggers and once-only rewards                                             | [state/story.ts](../src/game/state/story.ts)                                        |
+| Prologue chapters                                                                    | [data/intro.ts](../src/game/data/intro.ts)                                          |
+| Menus, chronicle, help, input                                                        | [GameUI.ts](../src/ui/GameUI.ts), [menuContent.ts](../src/ui/menuContent.ts)        |
+| Save and packaging details                                                           | [README](../README.md#packaging-and-saves), [Steam preparation](../steam/README.md) |
 
-Update this reference with balance or progression changes. A longer historical campaign, permanent civilization unlocks, and thousands of individually simulated people remain future work rather than hidden mechanics.
+See [the progression UI guide](progression-ui.md) for adding technologies, buildings, and development nodes without rewriting the shared layout. Update this reference with balance or progression changes. A longer historical campaign, permanent civilization unlocks, and thousands of individually simulated people remain future work rather than hidden mechanics.

@@ -1,36 +1,14 @@
 import { BUILDINGS, FORMATIONS, REGIONS, ROUTES } from '../game/data/clan';
 import { UPGRADES } from '../game/data/upgrades';
-import {
-  assignedWorkers,
-  buildingBlocker,
-  buildingCost,
-  canMigrate,
-  clanDoctrine,
-  riderCount,
-} from '../game/state/clan';
+import { assignedWorkers, canMigrate, clanDoctrine, riderCount } from '../game/state/clan';
 import type { RunState } from '../game/types';
-import {
-  BUILDING_MARKS,
-  TRADITION_MARKS,
-  campIllustration,
-  clanMark,
-  routeIllustration,
-} from './artwork';
+import { TRADITION_MARKS, campIllustration, clanMark, routeIllustration } from './artwork';
 import { heading, footer } from './panelContent';
 import { storyRecords } from './storyContent';
 
 export type JournalTab = 'journey' | 'clan' | 'traditions' | 'story';
 
-export function buildingMenu(run: RunState): string {
-  return `<section class="game-panel planning-dialog">${heading('THE ENCAMPMENT', 'Build a people.', true, 'ger')}<div class="panel-body"><p class="panel-intro">Assign your families. Every structure travels with you.</p><div class="building-grid">${BUILDINGS.map(
-    (b) => {
-      const level = run.clan.buildings[b.id];
-      const blocker = buildingBlocker(run, b.id);
-      const cost = buildingCost(run, b.id);
-      return `<article class="building-card ${level ? 'is-built' : ''}"><div class="building-portrait">${campIllustration(b.id)}</div><div class="building-heading"><span class="building-icon">${clanMark(BUILDING_MARKS[b.id])}</span><h3>${b.title}</h3><small>${level ? (level === 2 ? 'DEVELOPED' : 'BUILT') : `${b.workers} WORKERS`}</small></div><p>${b.description}</p>${level === 2 ? `<div class="built-path">◇ ${b.paths[run.clan.paths[b.id]!]!.title}<p>${b.paths[run.clan.paths[b.id]!]!.description}</p></div>` : `<span class="building-cost">${cost.materials} MATERIALS${cost.spirit ? ` · ${cost.spirit} SPIRIT` : ''}</span>${level ? b.paths.map((path, index) => `<button class="path-button" data-building="${b.id}" data-path="${index}" ${blocker ? 'disabled' : ''}><strong>${path.title} ↗</strong><span>${path.description}</span></button>`).join('') : `<button class="path-button" data-building="${b.id}" ${blocker ? 'disabled' : ''}><strong>Establish ${b.title.toLowerCase()} ↗</strong></button>`}${blocker ? `<small class="blocker">${blocker}</small>` : ''}`}</article>`;
-    },
-  ).join('')}</div></div>${footer()}</section>`;
-}
+export { buildingMenu } from './campContent';
 
 export function routeMenu(run: RunState): string {
   return `<section class="game-panel route-dialog">${heading(`CAMP ${run.clan.region + 1} / THE ROAD EAST`, 'Where the grass still grows.', true, 'banner')}<div class="panel-body"><p class="panel-intro">Pack the gers. Protect the moving caravan. Rewards await at the far end.</p><div class="route-map"><span>${REGIONS[run.clan.region]!.short}</span><i>◇ ─ ─ ─ → ◇</i><span>${REGIONS[run.clan.region + 1]!.short}</span></div><div class="upgrade-cards">${ROUTES.map((r) => `<button class="upgrade-card route-card" data-route="${r.id}">${routeIllustration(r.id)}<span class="upgrade-subtitle">${r.subtitle}</span><h3>${r.title}</h3><p>${r.description}</p><span class="card-bottom">PACK & DEPART <span>→</span></span></button>`).join('')}</div></div>${footer('Stay a little longer')}</section>`;
@@ -43,7 +21,21 @@ export function journalMenu(run: RunState, tab: JournalTab): string {
   if (tab === 'journey') {
     content = `<div class="journal-chapter"><span class="eyebrow">PASTURE ${clan.region + 1} OF 4</span><h3>${region.name}</h3><p>${region.description}</p><div class="journey-map" aria-label="Journey progress">${REGIONS.map((r, i) => `<div class="journey-stop ${i === clan.region ? 'current' : i < clan.region ? 'passed' : ''}"><span>${clanMark(i === 3 ? 'mountain' : i === 1 ? 'river' : i === 2 ? 'sanctuary' : 'ger')}</span><div><strong>${r.name}</strong><small>${i < clan.region ? 'CROSSED' : i === clan.region ? 'YOUR CLAN IS HERE' : r.event.toUpperCase()}</small></div></div>`).join('')}</div><div class="journal-callout">${clan.stage === 'migration' ? 'The caravan is moving east. Stay alongside your people until the crossing is complete.' : clan.stage === 'final' ? 'Protect the clan until the mountain passage opens. Saving your people is the victory condition.' : 'Pasture runs out and the calamity grows. Choose when to pack up and leave.'}</div>${canMigrate(run) ? '<button class="primary-button" data-action="routes">Choose a migration route <span>→</span></button>' : ''}</div>`;
   } else if (tab === 'clan') {
-    content = `<div class="journal-chapter"><span class="eyebrow">YOUR LIVING CIVILIZATION</span><h3>${clanDoctrine(run)}</h3><div class="clan-facts"><div><strong>${clan.population}</strong><span>People</span></div><div><strong>${riderCount(run)}</strong><span>Mounted riders</span></div><div><strong>${assignedWorkers(run)} / ${clan.population}</strong><span>Assigned workers</span></div><div><strong>${clan.herd}</strong><span>Livestock</span></div></div><p class="formation-detail"><strong>${FORMATIONS[clan.formation].title}</strong><br>${FORMATIONS[clan.formation].description}</p><div class="clan-buildings">${BUILDINGS.map((b) => `<div class="clan-building"><span class="clan-building-art">${campIllustration(b.id)}</span><div><strong>${b.title}</strong><p>${clan.buildings[b.id] === 2 ? b.paths[clan.paths[b.id]!]!.title : clan.buildings[b.id] ? 'Established' : 'Not yet established'}</p></div></div>`).join('')}</div>${clan.stage !== 'migration' ? '<button class="primary-button" data-action="build">Develop the camp <span>↗</span></button>' : '<p class="journal-callout">Unpack at the next pasture to develop your buildings.</p>'}</div>`;
+    content = `<div class="journal-chapter"><span class="eyebrow">YOUR LIVING CIVILIZATION</span><h3>${clanDoctrine(run)}</h3><div class="clan-facts"><div><strong>${clan.population}</strong><span>People</span></div><div><strong>${riderCount(run)}</strong><span>Mounted riders</span></div><div><strong>${assignedWorkers(run)} / ${clan.population}</strong><span>Assigned workers</span></div><div><strong>${clan.herd}</strong><span>Livestock</span></div></div><p class="formation-detail"><strong>${FORMATIONS[clan.formation].title}</strong><br>${FORMATIONS[clan.formation].description}</p><div class="clan-buildings">${BUILDINGS.map(
+      (b) =>
+        `<div class="clan-building"><span class="clan-building-art">${campIllustration(b.illustration ?? 'ger')}</span><div><strong>${b.title}</strong><p>${
+          (clan.paths[b.id]?.length ?? 0) > 0
+            ? b.paths
+                .filter((path) => clan.paths[b.id]?.includes(path.id))
+                .map((path) => path.title)
+                .join(' · ')
+            : clan.buildings[b.id]
+              ? 'Established'
+              : 'Not yet established'
+        }</p></div></div>`,
+    ).join(
+      '',
+    )}</div>${clan.stage !== 'migration' ? '<button class="primary-button" data-action="build">Develop the camp <span>↗</span></button>' : '<p class="journal-callout">Unpack at the next pasture to develop your buildings.</p>'}</div>`;
   } else if (tab === 'story') {
     content = storyRecords(run);
   } else {

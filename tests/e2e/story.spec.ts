@@ -62,7 +62,7 @@ test('complete the two acts, all eight choices, three crossings, and a survivor-
   await choose(page, 'share-work');
   // Actual construction and specialization remain available throughout the campaign.
   await page.keyboard.press('b');
-  await page.locator('[data-building="archery"]').click();
+  await page.locator('[data-node="archery-base"]').click();
   await page.keyboard.press('Escape');
   await campTime(page, 45);
   await expect(page.getByRole('heading', { name: 'More mouths, more hands.' })).toBeVisible();

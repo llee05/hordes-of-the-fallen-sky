@@ -1,4 +1,16 @@
-import type { BuildingId, Doctrine, Formation } from '../types';
+import { GAME } from '../config';
+import type { BuildingId, Doctrine, Formation, RunState } from '../types';
+
+export interface BuildingPathDefinition {
+  id: string;
+  title: string;
+  description: string;
+  requires?: readonly string[];
+  exclusiveGroup?: string;
+  materials?: number;
+  spirit?: number;
+  apply?: (run: RunState) => void;
+}
 
 export interface BuildingDefinition {
   id: BuildingId;
@@ -9,12 +21,24 @@ export interface BuildingDefinition {
   spirit: number;
   workers: number;
   doctrine: Doctrine;
-  paths: readonly { title: string; description: string }[];
+  category: string;
+  startsBuilt?: boolean;
+  illustration?: 'ger' | 'archery' | 'herd' | 'sanctuary' | 'wagon' | 'banner';
+  onBuild?: (run: RunState) => void;
+  paths: readonly BuildingPathDefinition[];
+}
+
+function welcomePeople(run: RunState, amount: number): void {
+  run.clan.population = Math.min(GAME.clan.maxPopulation, run.clan.population + amount);
 }
 
 export const BUILDINGS: readonly BuildingDefinition[] = [
   {
     id: 'ger',
+    category: 'Survival',
+    illustration: 'ger',
+    startsBuilt: true,
+    onBuild: (run) => welcomePeople(run, 6),
     title: 'Family gers',
     icon: '⌂',
     description: 'Welcome 6 survivors. More hands gather materials faster.',
@@ -23,8 +47,17 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
     workers: 0,
     doctrine: 'wander',
     paths: [
-      { title: 'Hearthkeepers', description: 'Restore the clan’s resolve while encamped.' },
       {
+        id: 'hearthkeepers',
+        exclusiveGroup: 'specialization',
+        title: 'Hearthkeepers',
+        description: 'Welcome 6 survivors and restore clan resolve while encamped.',
+        apply: (run) => welcomePeople(run, 6),
+      },
+      {
+        apply: (run) => welcomePeople(run, 10),
+        id: 'refugee-beacons',
+        exclusiveGroup: 'specialization',
         title: 'Refugee beacons',
         description: 'Welcome 10 more survivors; unlock larger work crews.',
       },
@@ -32,6 +65,8 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
   },
   {
     id: 'archery',
+    category: 'Warfare',
+    illustration: 'archery',
     title: 'Archery grounds',
     icon: '➶',
     description: 'Train 3 horse archers. Unlock encirclement and charging wedge.',
@@ -41,10 +76,14 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
     doctrine: 'iron',
     paths: [
       {
+        id: 'fire-arrows',
+        exclusiveGroup: 'specialization',
         title: 'Fire arrows',
         description: 'Arrows ignite. With wind shamans, unlock the Burning Tempest.',
       },
       {
+        id: 'veteran-riders',
+        exclusiveGroup: 'specialization',
         title: 'Veteran riders',
         description: 'Recruit 3 elite archers; their volleys deal more damage.',
       },
@@ -52,6 +91,11 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
   },
   {
     id: 'herd',
+    category: 'Wayfinding',
+    illustration: 'herd',
+    onBuild: (run) => {
+      run.clan.herd += 4;
+    },
     title: 'Herding grounds',
     icon: '♧',
     description: 'Gain 4 horses, gather more food, and unlock feigned retreat.',
@@ -60,8 +104,21 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
     workers: 2,
     doctrine: 'wander',
     paths: [
-      { title: 'Remount herds', description: 'Faster migration and faster mounted movement.' },
       {
+        apply: (run) => {
+          run.stats.speed *= 1.12;
+        },
+        id: 'remount-herds',
+        exclusiveGroup: 'specialization',
+        title: 'Remount herds',
+        description: 'Faster migration and faster mounted movement.',
+      },
+      {
+        apply: (run) => {
+          run.clan.food += 45;
+        },
+        id: 'winter-stores',
+        exclusiveGroup: 'specialization',
         title: 'Winter stores',
         description: 'Gain 45 food and halve the clan’s food consumption.',
       },
@@ -69,6 +126,8 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
   },
   {
     id: 'sanctuary',
+    category: 'Spirit',
+    illustration: 'sanctuary',
     title: 'Spirit sanctuary',
     icon: 'ϟ',
     description: 'A shaman calls lightning down on nearby enemies.',
@@ -78,10 +137,14 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
     doctrine: 'sky',
     paths: [
       {
+        id: 'wind-shamans',
+        exclusiveGroup: 'specialization',
         title: 'Wind shamans',
         description: 'Storms strike more often and bend flaming volleys into sweeping arcs.',
       },
       {
+        id: 'ancestral-ward',
+        exclusiveGroup: 'specialization',
         title: 'Ancestral ward',
         description: 'A guardian damages enemies approaching the camp and protects the clan.',
       },
@@ -89,6 +152,8 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
   },
   {
     id: 'wagon',
+    category: 'Warfare',
+    illustration: 'wagon',
     title: 'Wagon circle',
     icon: '▣',
     description: 'Carts fire defensive arrows. They keep firing during migration.',
@@ -98,10 +163,20 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
     doctrine: 'iron',
     paths: [
       {
+        id: 'war-carts',
+        exclusiveGroup: 'specialization',
         title: 'War carts',
         description: 'Carts fire triple volleys and retain full damage while moving.',
       },
-      { title: 'Felt armor', description: 'Halve damage to the caravan and repair 30 resolve.' },
+      {
+        apply: (run) => {
+          run.clan.integrity = Math.min(100, run.clan.integrity + 30);
+        },
+        id: 'felt-armor',
+        exclusiveGroup: 'specialization',
+        title: 'Felt armor',
+        description: 'Halve damage to the caravan and repair 30 resolve.',
+      },
     ],
   },
 ];

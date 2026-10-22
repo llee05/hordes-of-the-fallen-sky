@@ -36,7 +36,7 @@ export interface ClanState {
   migrationProgress: number;
   routeId: string;
   buildings: Record<BuildingId, number>;
-  paths: Partial<Record<BuildingId, number>>;
+  paths: Partial<Record<BuildingId, string[]>>;
   identity: Record<Doctrine, number>;
   formation: Formation;
   momentum: number;

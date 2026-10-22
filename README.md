@@ -50,7 +50,7 @@ Act I crosses Golden Pasture and Silent River. Arrival at Broken Pass begins Act
 
 Start with eight people, three horses, two gers, supplies, and a mounted commander with one accompanying rider. Attacks are automatic. Ride to collect spirit shards. Each level banks a knowledge point without interrupting combat. Press **T** (controller **LB**) or use the HUD to open the paused **Tradition tech tree**, inspect every branch, and spend points on the ranks you choose. You can leave with unspent points and return later. Categories and search help you find branches. The tree is also accessible from Pause and the chronicle’s Traditions tab. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through.
 
-Press **B** to develop your camp. Planning pauses the simulation, including food consumption, pasture depletion, enemies, and migration. Structures cost materials, sometimes spirit, and available workers. A constructed building can take one of two exclusive specializations. Your buildings travel with the clan.
+Press **B** to open the **camp upgrade tree**. Planning pauses the simulation, including food consumption, pasture depletion, enemies, and migration. Preview every building and development, including costs, worker requirements, prerequisites, and exclusive choices. Search or filter by category, then purchase a highlighted node. The five current buildings each have two exclusive specializations; the interface and purchase rules support additional choices and deeper tiers through content definitions. Your buildings travel with the clan.
 
 | Building         | What it adds                                        | Specializations                                                        |
 | ---------------- | --------------------------------------------------- | ---------------------------------------------------------------------- |
@@ -136,6 +136,7 @@ src/ui/GameUI.ts               Full-window HUD, title/pause menus, focus and inp
 src/ui/menuContent.ts          Camp, route, chronicle, settings, and help panels
 src/ui/progressionTree.ts      Shared data-driven progression tree renderer
 src/ui/researchContent.ts      Tradition branches, ranks, and research state
+src/ui/campContent.ts          Camp nodes, prerequisites, costs, and exclusive paths
 src/platform/                 Narrow native capability bridge and browser fallback
 desktop/                      Secure Electron lifecycle and atomic profile storage
 scripts/                      Build staging, packaging, icon, SteamPipe preparation

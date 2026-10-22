@@ -17,7 +17,9 @@ export function createClan(): ClanState {
     integrity: 100,
     migrationProgress: 0,
     routeId: '',
-    buildings: { ger: 1, archery: 0, herd: 0, sanctuary: 0, wagon: 0 },
+    buildings: Object.fromEntries(
+      BUILDINGS.map((building) => [building.id, building.startsBuilt ? 1 : 0]),
+    ) as Record<BuildingId, number>,
     paths: {},
     identity: { iron: 0, sky: 0, wander: 0 },
     formation: 'guard',
@@ -33,20 +35,27 @@ export function assignedWorkers(run: RunState): number {
   return BUILDINGS.reduce((sum, b) => sum + (run.clan.buildings[b.id] ? b.workers : 0), 0);
 }
 
+export function hasDevelopment(run: RunState, id: BuildingId, path: string): boolean {
+  return run.clan.paths[id]?.includes(path) ?? false;
+}
+
 export function riderCount(run: RunState): number {
   const clan = run.clan;
   return Math.min(
     16,
     1 +
       (clan.buildings.archery ? 3 : 0) +
-      (clan.paths.archery === 1 ? 3 : 0) +
+      (hasDevelopment(run, 'archery', 'veteran-riders') ? 3 : 0) +
       (run.upgrades.multishot ?? 0) +
       clan.rescuedRiders,
   );
 }
 
 export function burningTempest(run: RunState): boolean {
-  return run.clan.paths.archery === 0 && run.clan.paths.sanctuary === 0;
+  return (
+    hasDevelopment(run, 'archery', 'fire-arrows') &&
+    hasDevelopment(run, 'sanctuary', 'wind-shamans')
+  );
 }
 
 export function availableFormations(run: RunState): Formation[] {
@@ -57,50 +66,69 @@ export function availableFormations(run: RunState): Formation[] {
   ];
 }
 
-export function buildingCost(run: RunState, id: BuildingId): { materials: number; spirit: number } {
+export function buildingCost(id: BuildingId, path?: string): { materials: number; spirit: number } {
   const definition = BUILDINGS.find((building) => building.id === id)!;
-  const multiplier = run.clan.buildings[id] ? 1.5 : 1;
+  const development = definition.paths.find((entry) => entry.id === path);
   return {
-    materials: Math.ceil(definition.materials * multiplier),
-    spirit: Math.ceil(definition.spirit * multiplier),
+    materials:
+      path === undefined
+        ? definition.materials
+        : (development?.materials ?? Math.ceil(definition.materials * 1.5)),
+    spirit:
+      path === undefined
+        ? definition.spirit
+        : (development?.spirit ?? Math.ceil(definition.spirit * 1.5)),
   };
 }
 
-export function buildingBlocker(run: RunState, id: BuildingId): string | undefined {
+export function buildingBlocker(run: RunState, id: BuildingId, path?: string): string | undefined {
+  const definition = BUILDINGS.find((building) => building.id === id);
+  if (!definition) return 'Unknown structure';
   const clan = run.clan;
   if (clan.stage === 'migration') return 'Unpack at the next pasture';
-  if (clan.buildings[id] >= 2) return 'Fully developed';
-  const cost = buildingCost(run, id);
+  if (path === undefined) {
+    if (clan.buildings[id]) return 'Already established';
+    if (assignedWorkers(run) + definition.workers > clan.population) return 'More families needed';
+  } else {
+    const development = definition.paths.find((entry) => entry.id === path);
+    if (!development) return 'Unknown development';
+    if (!clan.buildings[id]) return `Establish ${definition.title} first`;
+    if (hasDevelopment(run, id, path)) return 'Already learned';
+    if (
+      development.exclusiveGroup &&
+      definition.paths.some(
+        (other) =>
+          other.exclusiveGroup === development.exclusiveGroup && hasDevelopment(run, id, other.id),
+      )
+    )
+      return 'Another path chosen';
+    for (const parent of development.requires ?? []) {
+      if (!hasDevelopment(run, id, parent))
+        return `Requires ${definition.paths.find((entry) => entry.id === parent)?.title ?? parent}`;
+    }
+  }
+  const cost = buildingCost(id, path);
   if (clan.materials < cost.materials || clan.spirit < cost.spirit) return 'Gather more resources';
-  const definition = BUILDINGS.find((building) => building.id === id)!;
-  if (!clan.buildings[id] && assignedWorkers(run) + definition.workers > clan.population)
-    return 'More families needed';
   return undefined;
 }
 
-export function buildStructure(run: RunState, id: BuildingId, path?: number): boolean {
-  if (run.phase !== 'building' || !BUILDINGS.some((b) => b.id === id) || buildingBlocker(run, id))
-    return false;
+export function buildStructure(run: RunState, id: BuildingId, path?: string): boolean {
+  if (run.phase !== 'building' || buildingBlocker(run, id, path)) return false;
   const clan = run.clan;
-  const upgrading = clan.buildings[id] === 1;
-  if (upgrading && path !== 0 && path !== 1) return false;
-  if (!upgrading && path !== undefined) return false;
   const definition = BUILDINGS.find((building) => building.id === id)!;
-  const cost = buildingCost(run, id);
+  const development = definition.paths.find((entry) => entry.id === path);
+  const cost = buildingCost(id, path);
   clan.materials -= cost.materials;
   clan.spirit -= cost.spirit;
   clan.buildings[id] += 1;
   clan.identity[definition.doctrine] += 2;
-  if (upgrading) clan.paths[id] = path!;
-  if (id === 'ger')
-    clan.population = Math.min(GAME.clan.maxPopulation, clan.population + (path === 1 ? 10 : 6));
-  if (id === 'herd' && !upgrading) clan.herd += 4;
-  if (id === 'herd' && path === 0) run.stats.speed *= 1.12;
-  if (id === 'herd' && path === 1) clan.food += 45;
-  if (id === 'wagon' && path === 1) clan.integrity = Math.min(100, clan.integrity + 30);
+  if (development) {
+    clan.paths[id] = [...(clan.paths[id] ?? []), development.id];
+    development.apply?.(run);
+  } else definition.onBuild?.(run);
   clan.message = burningTempest(run)
     ? 'THE BURNING TEMPEST — fire arrows meet the wind shamans.'
-    : `${upgrading ? definition.paths[path!]!.title : definition.title} joins your living civilization.`;
+    : `${development?.title ?? definition.title} joins your living civilization.`;
   return true;
 }
 
@@ -127,8 +155,8 @@ export function damageClan(run: RunState, amount: number): void {
   const clan = run.clan;
   const protection =
     (clan.formation === 'guard' ? 0.7 : 1) *
-    (clan.paths.wagon === 1 ? 0.5 : 1) *
-    (clan.paths.sanctuary === 1 ? 0.8 : 1);
+    (hasDevelopment(run, 'wagon', 'felt-armor') ? 0.5 : 1) *
+    (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? 0.8 : 1);
   const previous = clan.integrity;
   clan.integrity = Math.max(0, previous - amount * protection);
   if (Math.floor((100 - previous) / 20) < Math.floor((100 - clan.integrity) / 20)) {
@@ -145,19 +173,25 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
   const clan = run.clan;
   const previousTime = clan.stageTime;
   clan.stageTime += dt;
-  const consumption = clan.population * GAME.clan.foodPerPerson * (clan.paths.herd === 1 ? 0.5 : 1);
+  const consumption =
+    clan.population *
+    GAME.clan.foodPerPerson *
+    (hasDevelopment(run, 'herd', 'winter-stores') ? 0.5 : 1);
   if (clan.stage !== 'migration') {
     clan.pasture = Math.max(0, clan.pasture - (dt * 100) / GAME.clan.pastureLifetime);
     const pasture = clan.pasture / 100;
     const winter = clan.region === 1 ? 0.7 : 1;
     clan.food += dt * ((0.65 + (clan.buildings.herd ? 0.65 : 0)) * pasture * winter - consumption);
     clan.materials += dt * (0.28 + clan.population * 0.018) * pasture;
-    if (clan.paths.ger === 0) clan.integrity = Math.min(100, clan.integrity + dt * 0.25);
+    if (hasDevelopment(run, 'ger', 'hearthkeepers'))
+      clan.integrity = Math.min(100, clan.integrity + dt * 0.25);
   } else {
     clan.food -= dt * consumption;
     const route = ROUTES.find((r) => r.id === clan.routeId)!;
     const mobility =
-      (1 + clan.herd * 0.012) * (clan.paths.herd === 0 ? 1.2 : 1) * (clan.region === 1 ? 0.8 : 1);
+      (1 + clan.herd * 0.012) *
+      (hasDevelopment(run, 'herd', 'remount-herds') ? 1.2 : 1) *
+      (clan.region === 1 ? 0.8 : 1);
     clan.migrationProgress = Math.min(
       1,
       (clan.stageTime * mobility) / (GAME.clan.migrationDuration * route.duration),

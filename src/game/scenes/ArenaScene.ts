@@ -23,6 +23,7 @@ import {
   burningTempest,
   canMigrate,
   damageClan,
+  hasDevelopment,
   riderCount,
 } from '../state/clan';
 import { UPGRADES } from '../data/upgrades';
@@ -422,7 +423,7 @@ export class ArenaScene extends Phaser.Scene {
     this.setPhase(menu);
   }
 
-  construct(id: BuildingId, path?: number): void {
+  construct(id: BuildingId, path?: string): void {
     if (!buildStructure(this.run, id, path)) return;
     this.refreshCamp();
     this.audio.play('level');
@@ -782,7 +783,7 @@ export class ArenaScene extends Phaser.Scene {
           rider.y,
           riderTarget,
           1,
-          0.6 + (this.run.clan.paths.archery === 1 ? 0.3 : 0),
+          0.6 + (hasDevelopment(this.run, 'archery', 'veteran-riders') ? 0.3 : 0),
         );
       }
     }
@@ -815,7 +816,7 @@ export class ArenaScene extends Phaser.Scene {
         .clearTint();
       // Preserve the original 4.5-world-unit arrow radius at the new texture scale.
       bolt.setCircle(4.5, bolt.width / 2 - 4.5, bolt.height / 2 - 4.5);
-      bolt.fire = this.run.clan.paths.archery === 0;
+      bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
       bolt.tempest = tempest;
       bolt.turn = tempest ? (i % 2 ? 1 : -1) * 0.65 : 0;
       if (bolt.fire) bolt.setTint(0xffa04e);
@@ -1236,7 +1237,9 @@ export class ArenaScene extends Phaser.Scene {
           this.damageEnemy(enemy, this.run.stats.damage * 3),
         );
       }
-      this.supportTimer = (clan.paths.sanctuary === 0 ? 1.8 : 3.5) * (clan.region === 3 ? 1.5 : 1);
+      this.supportTimer =
+        (hasDevelopment(this.run, 'sanctuary', 'wind-shamans') ? 1.8 : 3.5) *
+        (clan.region === 3 ? 1.5 : 1);
     }
     if (clan.buildings.wagon && this.wagonTimer <= 0) {
       const target = this.spatial.nearest(this.camp.x, this.camp.y, 520);
@@ -1245,12 +1248,12 @@ export class ArenaScene extends Phaser.Scene {
           this.camp.x,
           this.camp.y,
           target,
-          clan.paths.wagon === 0 ? 3 : 1,
-          clan.stage === 'migration' && clan.paths.wagon !== 0 ? 0.7 : 1.5,
+          hasDevelopment(this.run, 'wagon', 'war-carts') ? 3 : 1,
+          clan.stage === 'migration' && !hasDevelopment(this.run, 'wagon', 'war-carts') ? 0.7 : 1.5,
         );
       this.wagonTimer = 0.9;
     }
-    if (clan.paths.sanctuary === 1 && this.wardTimer <= 0) {
+    if (hasDevelopment(this.run, 'sanctuary', 'ancestral-ward') && this.wardTimer <= 0) {
       this.spatial.forEachNearby(this.camp.x, this.camp.y, 125, (enemy) =>
         this.damageEnemy(enemy, this.run.stats.damage * 1.5),
       );

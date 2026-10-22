@@ -350,7 +350,8 @@ export class GameUI {
       this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu"><button class="menu-button featured" data-action="begin" data-primary>NEW GAME <span>→</span></button><button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${quit}</nav><button class="story-preference" data-action="story-mode" aria-pressed="${run.story.enabled}">Camp scenes: ${run.story.enabled ? 'On' : 'Off'}</button><p class="title-caption">Two acts. Four pastures. One people to carry through.</p></section>`;
     } else if (run.phase === 'paused') {
       this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">Your people will be here when you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="research">Tradition tech tree</button><button class="menu-button" data-action="restart">Start a new run</button><button class="menu-button" data-action="story-log">Our remembered road</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${quit}</nav></section>`;
-    } else if (run.phase === 'building') this.overlay.innerHTML = buildingMenu(run);
+    } else if (run.phase === 'building')
+      this.overlay.innerHTML = buildingMenu(run, this.treeView());
     else if (run.phase === 'route') this.overlay.innerHTML = routeMenu(run);
     else if (run.phase === 'upgrade') this.overlay.innerHTML = researchMenu(run, this.treeView());
     else if (run.phase === 'journal') this.overlay.innerHTML = journalMenu(run, this.journalTab);
@@ -424,10 +425,7 @@ export class GameUI {
     } else if (button.dataset.research)
       this.scene.research(button.dataset.research, Number(button.dataset.rank));
     else if (button.dataset.building)
-      this.scene.construct(
-        button.dataset.building as BuildingId,
-        button.dataset.path === undefined ? undefined : Number(button.dataset.path),
-      );
+      this.scene.construct(button.dataset.building as BuildingId, button.dataset.path);
     else if (button.dataset.route) this.scene.chooseRoute(button.dataset.route);
     else if (button.dataset.tab) this.selectJournalTab(button.dataset.tab as JournalTab);
   }

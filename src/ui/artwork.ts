@@ -1,6 +1,6 @@
 import propsSource from '/art/steppe-props.json?raw';
 import actorsSource from '/art/steppe-actors.json?raw';
-import type { BuildingId } from '../game/types';
+import type { BuildingDefinition } from '../game/data/clan';
 
 // Public assets use root URLs in Vite. Bundle the metadata as text so both the
 // browser preview and file-based desktop build share the same atlas definitions.
@@ -47,7 +47,7 @@ export function clanMark(name: ClanMark): string {
   return `<svg class="clan-mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${marks[name]}</svg>`;
 }
 
-export const BUILDING_MARKS: Record<BuildingId, ClanMark> = {
+export const BUILDING_MARKS: Readonly<Record<string, ClanMark>> = {
   ger: 'ger',
   archery: 'bow',
   herd: 'horse',
@@ -66,7 +66,7 @@ export const TRADITION_MARKS: Readonly<Record<string, ClanMark>> = {
 
 /** Crop the existing painted world art with its shared atlas metadata, without
  * creating duplicate raster assets or pulling simulation state into the UI. */
-export function campIllustration(name: BuildingId | 'banner'): string {
+export function campIllustration(name: NonNullable<BuildingDefinition['illustration']>): string {
   const [atlas, frame] =
     name === 'archery'
       ? [actors, actors.frames.rider.frame]

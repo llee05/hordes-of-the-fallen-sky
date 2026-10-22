@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
-import { BUILDINGS } from '../../src/game/data/clan';
+import { BUILDINGS, type BuildingDefinition } from '../../src/game/data/clan';
 import { createRun } from '../../src/game/state/run';
 import {
   advanceClan,
@@ -12,6 +12,9 @@ import {
   clanDoctrine,
   damageClan,
   riderCount,
+  assignedWorkers,
+  buildingBlocker,
+  buildingCost,
 } from '../../src/game/state/clan';
 import type { RunState } from '../../src/game/types';
 
@@ -80,29 +83,87 @@ describe('a civilization that moves', () => {
     expect(buildStructure(run, 'archery')).toBe(false);
     expect(run.clan.materials).toBe(500);
     run.clan.population = 8;
-    expect(buildStructure(run, 'archery', 0)).toBe(false);
+    expect(buildStructure(run, 'archery', 'fire-arrows')).toBe(false);
     expect(buildStructure(run, 'archery')).toBe(true);
     expect(run.clan.materials).toBe(476);
     expect(riderCount(run)).toBeGreaterThan(1);
     expect(availableFormations(run)).toContain('wedge');
     expect(buildStructure(run, 'archery')).toBe(false);
-    expect(buildStructure(run, 'archery', 0)).toBe(true);
+    expect(buildStructure(run, 'archery', 'fire-arrows')).toBe(true);
     expect(run.clan.materials).toBe(440);
-    expect(buildStructure(run, 'archery', 1)).toBe(false);
-    expect(run.clan.paths.archery).toBe(0);
+    expect(buildStructure(run, 'archery', 'veteran-riders')).toBe(false);
+    expect(run.clan.paths.archery).toEqual(['fire-arrows']);
     expect(clanDoctrine(run)).toBe('The Iron Horde');
   });
 
   it('unlocks the Burning Tempest only by combining both building specializations', () => {
     const run = builder();
     buildStructure(run, 'archery');
-    buildStructure(run, 'archery', 0);
+    buildStructure(run, 'archery', 'fire-arrows');
     expect(burningTempest(run)).toBe(false);
     buildStructure(run, 'sanctuary');
-    buildStructure(run, 'sanctuary', 0);
+    buildStructure(run, 'sanctuary', 'wind-shamans');
     expect(burningTempest(run)).toBe(true);
-    expect(BUILDINGS).toHaveLength(5);
-    expect(BUILDINGS.every((b) => b.paths.length === 2)).toBe(true);
+    expect(
+      BUILDINGS.every(
+        (building) => new Set(building.paths.map((path) => path.id)).size === building.paths.length,
+      ),
+    ).toBe(true);
+  });
+
+  it('accepts added sibling paths and deeper developments through content definitions', () => {
+    const definitions = BUILDINGS as BuildingDefinition[];
+    const index = definitions.findIndex((entry) => entry.id === 'archery');
+    const original = definitions[index]!;
+    definitions[index] = {
+      ...original,
+      paths: [
+        ...original.paths,
+        {
+          id: 'scouts',
+          title: 'Scouts',
+          description: 'Another exclusive choice.',
+          exclusiveGroup: 'specialization',
+        },
+        {
+          id: 'fire-mastery',
+          title: 'Fire mastery',
+          description: 'A deeper upgrade.',
+          requires: ['fire-arrows'],
+          materials: 12,
+          spirit: 7,
+          apply: (run) => {
+            run.stats.damage *= 2;
+          },
+        },
+      ],
+    };
+    try {
+      const run = builder();
+      expect(buildStructure(run, 'archery', 'fire-arrows')).toBe(false);
+      expect(buildStructure(run, 'archery')).toBe(true);
+      expect(buildStructure(run, 'archery', 'fire-mastery')).toBe(false);
+      expect(buildingBlocker(run, 'archery', 'fire-mastery')).toContain('Fire arrows');
+      expect(buildStructure(run, 'archery', 'fire-arrows')).toBe(true);
+      expect(buildStructure(run, 'archery', 'scouts')).toBe(false);
+      expect(buildStructure(run, 'archery', 'fire-mastery')).toBe(true);
+      expect(buildingCost('archery', 'fire-mastery')).toEqual({ materials: 12, spirit: 7 });
+      expect(run.clan.paths.archery).toEqual(['fire-arrows', 'fire-mastery']);
+      expect(run.clan.materials).toBe(428);
+      expect(run.clan.spirit).toBe(493);
+      expect(assignedWorkers(run)).toBe(3);
+      expect(run.stats.damage).toBe(32);
+      const before = structuredClone(run);
+      expect(buildStructure(run, 'archery', 'fire-mastery')).toBe(false);
+      expect(buildStructure(run, 'archery', 'missing')).toBe(false);
+      expect(run).toEqual(before);
+      const alternate = builder();
+      buildStructure(alternate, 'archery');
+      expect(buildStructure(alternate, 'archery', 'scouts')).toBe(true);
+      expect(buildStructure(alternate, 'archery', 'fire-arrows')).toBe(false);
+    } finally {
+      definitions[index] = original;
+    }
   });
 
   it('protects the clan through guard formation and caravan armor', () => {
@@ -114,7 +175,7 @@ describe('a civilization that moves', () => {
     expect(guard.clan.population).toBe(8);
     expect(guard.clan.integrity).toBeGreaterThan(exposed.clan.integrity);
     const armor = createRun();
-    armor.clan.paths.wagon = 1;
+    armor.clan.paths.wagon = ['felt-armor'];
     damageClan(armor, 10);
     expect(armor.clan.integrity).toBeGreaterThan(guard.clan.integrity);
   });
@@ -152,7 +213,7 @@ describe('a civilization that moves', () => {
       beginMigration(run, 'river');
       run.phase = 'playing';
       run.clan.region = region;
-      if (remounts) run.clan.paths.herd = 0;
+      if (remounts) run.clan.paths.herd = ['remount-herds'];
       advanceClan(run, 10);
       return run.clan.migrationProgress;
     };

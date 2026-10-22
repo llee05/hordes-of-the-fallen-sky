@@ -64,30 +64,36 @@ export function treeLevels(nodes: readonly TreeNode[]): TreeNode[][] {
   return levels;
 }
 
-function nodeButton(node: TreeNode, compact: boolean): string {
+function nodeButton(node: TreeNode, compact: boolean, parents = ''): string {
   const attributes = Object.entries(node.action)
     .map(([key, value]) => `data-${key}="${escapeHtml(value)}"`)
     .join(' ');
-  const label = `${node.title}. ${node.description} ${node.reason || node.cost}`;
+  const label = `${node.title}. ${node.description} ${node.cost}. ${node.reason} ${parents}`;
   return `<button class="tree-node ${compact ? 'tree-rank' : ''}" data-node="${escapeHtml(node.id)}" data-focus-key="${escapeHtml(node.id)}" data-status="${node.status}" aria-disabled="${node.status !== 'available'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}" ${attributes}>
     <span class="tree-node-state">${node.status === 'learned' ? '✓ LEARNED' : node.status === 'available' ? 'AVAILABLE' : node.status === 'excluded' ? 'OTHER PATH CHOSEN' : 'LOCKED'}</span>
     <strong>${escapeHtml(node.title)}</strong>
     ${compact ? '' : `<span class="tree-node-description">${escapeHtml(node.description)}</span>`}
-    <span class="tree-node-cost">${escapeHtml(node.reason || node.cost)}</span>
+    ${parents ? `<span class="tree-node-requires">${escapeHtml(parents)}</span>` : ''}
+    <span class="tree-node-cost">${escapeHtml(compact ? node.reason || node.cost : node.cost)}</span>${!compact && node.reason ? `<span class="tree-node-reason">${escapeHtml(node.reason)}</span>` : ''}
   </button>`;
 }
 
 function branchMarkup(branch: TreeBranch): string {
+  const labels = new Map(branch.nodes.map((node) => [node.id, node.title]));
+  const parents = (node: TreeNode): string =>
+    node.requires.length
+      ? `Requires: ${node.requires.map((id) => labels.get(id) ?? id).join(' + ')}`
+      : '';
   const nodes =
     branch.layout === 'ranks'
       ? `<div class="tree-rank-track">${branch.nodes.map((node) => nodeButton(node, true)).join('')}</div>`
       : `<div class="tree-tiers">${treeLevels(branch.nodes)
           .map(
             (level, index) =>
-              `<div class="tree-tier" data-depth="${index}">${level.map((node) => nodeButton(node, false)).join('')}</div>`,
+              `<div class="tree-tier" data-depth="${index}">${level.map((node) => nodeButton(node, false, parents(node))).join('')}</div>`,
           )
           .join('')}</div>`;
-  return `<article class="tree-branch" data-tree-branch="${escapeHtml(branch.id)}">
+  return `<article class="tree-branch tree-layout-${branch.layout}" data-tree-branch="${escapeHtml(branch.id)}">
     <header class="tree-branch-heading"><span class="tree-illustration">${branch.illustration}</span><div><p class="eyebrow">${escapeHtml(branch.category)}</p><h3>${escapeHtml(branch.title)}</h3><p class="tree-progress">${escapeHtml(branch.progress)}</p></div></header>
     <p class="tree-branch-description">${escapeHtml(branch.description)}</p>${nodes}
   </article>`;
@@ -126,5 +132,5 @@ export function progressionMenu(options: {
       <div class="tree-legend"><span data-status="available">◇ Available</span><span data-status="learned">✓ Learned</span><span data-status="locked">○ Locked</span></div>
       <div class="progression-branches">${visible.map(branchMarkup).join('')}</div>
       ${visible.length ? '' : '<p class="tree-empty" role="status">No branches match. Clear your search or choose another category.</p>'}
-    </div>${footer('Keep riding')}</section>`;
+    </div>${footer('Close tree')}</section>`;
 }
