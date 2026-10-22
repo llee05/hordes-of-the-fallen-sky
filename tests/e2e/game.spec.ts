@@ -163,6 +163,9 @@ test('mobile layout fits and touch movement works', async ({ browser }) => {
     true,
   );
   await page.screenshot({ path: 'test-results/mobile-playing.png', fullPage: true });
+  await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
+  await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
+  await expect(page.locator('#zoom-level')).toHaveText('80%');
   const startX = await page.evaluate(() => (window as any).__gloam.scene.player.x);
   const box = (await page.locator('#game-canvas').boundingBox())!;
   const session = await context.newCDPSession(page);
@@ -177,6 +180,18 @@ test('mobile layout fits and touch movement works', async ({ browser }) => {
     await expect
       .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.x))
       .toBeGreaterThan(startX + 15);
+    const joystick = await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      const graphic = scene.joystick;
+      const origin = scene.dragOrigin;
+      const point = scene.cameras.main.matrix.transformPoint(
+        graphic.x + origin.x * graphic.scaleX,
+        graphic.y + origin.y * graphic.scaleY,
+      );
+      return { x: point.x, y: point.y, expectedX: origin.x, expectedY: origin.y };
+    });
+    expect(joystick.x).toBeCloseTo(joystick.expectedX, 1);
+    expect(joystick.y).toBeCloseTo(joystick.expectedY, 1);
   } finally {
     await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   }

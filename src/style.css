@@ -2035,3 +2035,51 @@ canvas {
     font-size: 11px;
   }
 }
+
+.zoom-controls {
+  position: absolute;
+  right: 24px;
+  bottom: 114px;
+  width: 170px;
+  height: 40px;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+}
+.zoom-controls button {
+  border: 0;
+  border-right: 1px solid #e0cf9433;
+  color: var(--gold);
+  background: transparent;
+  font:
+    23px Georgia,
+    serif;
+  cursor: pointer;
+}
+.zoom-controls button:last-child {
+  border-right: 0;
+}
+.zoom-controls button:hover:not(:disabled) {
+  background: #315860;
+}
+.zoom-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+#zoom-reset {
+  font: 10px var(--mono);
+  color: #e6dfb9;
+}
+@media (max-width: 1100px) {
+  .zoom-controls {
+    right: 18px;
+    bottom: 202px;
+  }
+}
+@media (max-width: 600px) {
+  .zoom-controls {
+    right: 12px;
+    bottom: 190px;
+    width: 137px;
+    height: 36px;
+  }
+}

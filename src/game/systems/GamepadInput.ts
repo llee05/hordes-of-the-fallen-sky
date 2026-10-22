@@ -11,6 +11,9 @@ export interface ControllerFrame {
   formation: boolean;
   journal: boolean;
   research: boolean;
+  zoomIn: boolean;
+  zoomOut: boolean;
+  zoomReset: boolean;
 }
 
 export type ControllerDevice = Pick<Gamepad, 'connected' | 'mapping' | 'axes' | 'buttons'>;
@@ -39,6 +42,9 @@ export class GamepadInput {
       formation: false,
       journal: false,
       research: false,
+      zoomIn: false,
+      zoomOut: false,
+      zoomReset: false,
     };
     if (!pad) {
       this.previousButtons = 0;
@@ -60,6 +66,9 @@ export class GamepadInput {
     frame.formation = (tapped & (1 << 5)) !== 0;
     frame.research = (tapped & (1 << 4)) !== 0;
     frame.journal = (tapped & (1 << 8)) !== 0;
+    frame.zoomIn = (tapped & (1 << 7)) !== 0;
+    frame.zoomOut = (tapped & (1 << 6)) !== 0;
+    frame.zoomReset = (tapped & (1 << 11)) !== 0;
     const x = pad.axes[0] ?? 0;
     const y = pad.axes[1] ?? 0;
     const length = Math.hypot(x, y);

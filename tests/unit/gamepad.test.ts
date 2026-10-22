@@ -16,6 +16,16 @@ function pad(x = 0, y = 0, pressed: number[] = []): ControllerDevice {
 }
 
 describe('controller input', () => {
+  it('zooms with trigger taps and resets with the right stick without repeating held inputs', () => {
+    const input = new GamepadInput();
+    expect(input.poll([pad(0, 0, [7])]).zoomIn).toBe(true);
+    expect(input.poll([pad(0, 0, [7])]).zoomIn).toBe(false);
+    input.poll([pad()]);
+    expect(input.poll([pad(0, 0, [6])]).zoomOut).toBe(true);
+    input.poll([pad()]);
+    expect(input.poll([pad(0, 0, [11])]).zoomReset).toBe(true);
+    expect(input.poll([])).toMatchObject({ zoomIn: false, zoomOut: false, zoomReset: false });
+  });
   it('filters stick drift and limits diagonal speed', () => {
     const input = new GamepadInput();
     expect(input.poll([pad(0.1, 0.1)]).x).toBe(0);

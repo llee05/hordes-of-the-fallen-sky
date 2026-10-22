@@ -44,6 +44,7 @@ import { PatronSupport } from '../systems/PatronSupport';
 import { completeGuidance } from '../state/guidance';
 import { GameAudio } from '../systems/Audio';
 import { SpatialHash } from '../systems/SpatialHash';
+import { cameraZoomLimits, clampCameraZoom, enemySpawnPosition } from '../systems/CameraView';
 import { ActionKeys } from '../systems/ActionKeys';
 import { GamepadInput } from '../systems/GamepadInput';
 import type { GamePlatform } from '../../platform/GamePlatform';
@@ -109,6 +110,8 @@ export class ArenaScene extends Phaser.Scene {
   private dashRemaining = 0;
   private invulnerable = 0;
   private hudTimer = 0;
+  private cameraZoom: number = GAME.camera.defaultZoom;
+  private wheelZoomDelta = 0;
   private best = 0;
   private researchReturnPhase: 'playing' | 'journal' | 'paused' = 'playing';
   private utilityReturnPhase: 'ready' | 'paused' = 'ready';
@@ -149,6 +152,7 @@ export class ArenaScene extends Phaser.Scene {
     this.dashRemaining = 0;
     this.invulnerable = 0;
     this.hudTimer = 0;
+    this.wheelZoomDelta = 0;
     this.researchReturnPhase = 'playing';
     this.utilityReturnPhase = 'ready';
     this.supportTimer = 0;
@@ -241,6 +245,12 @@ export class ArenaScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09);
     this.cameras.main.roundPixels = false;
     this.cameras.main.setFollowOffset(120, 0);
+    this.applyCameraZoom(this.cameraZoom);
+    const resizeZoom = (): void => this.applyCameraZoom(this.cameraZoom);
+    this.scale.on(Phaser.Scale.Events.RESIZE, resizeZoom);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
+      this.scale.off(Phaser.Scale.Events.RESIZE, resizeZoom),
+    );
 
     this.keys = this.input.keyboard!.addKeys({
       up: 'UP',
@@ -270,6 +280,43 @@ export class ArenaScene extends Phaser.Scene {
     bindAction('F', () => this.cycleFormation());
     bindAction('J', () => this.toggleJournal());
     bindAction('T', () => this.openResearch());
+    const bindZoom = (key: string, steps: number): void => {
+      this.input.keyboard!.on(`keydown-${key}`, (event: KeyboardEvent) => {
+        if (
+          !this.actionKeys.consume(event) ||
+          this.run.phase !== 'playing' ||
+          event.ctrlKey ||
+          event.metaKey ||
+          event.altKey ||
+          (event.target instanceof HTMLElement && event.target.closest('input, textarea, select'))
+        )
+          return;
+        event.preventDefault();
+        this.changeZoom(steps);
+      });
+    };
+    for (const key of ['PLUS', 'NUMPAD_ADD']) bindZoom(key, 1);
+    for (const key of ['MINUS', 'NUMPAD_SUBTRACT']) bindZoom(key, -1);
+    for (const key of ['ZERO', 'NUMPAD_ZERO']) bindZoom(key, 0);
+    this.input.on(
+      'wheel',
+      (
+        pointer: Phaser.Input.Pointer,
+        _over: Phaser.GameObjects.GameObject[],
+        _dx: number,
+        dy: number,
+      ) => {
+        const event = pointer.event as WheelEvent;
+        if (this.run.phase !== 'playing' || event.ctrlKey || event.metaKey) return;
+        if (Math.sign(dy) !== Math.sign(this.wheelZoomDelta)) this.wheelZoomDelta = 0;
+        this.wheelZoomDelta += dy;
+        const steps = Math.trunc(this.wheelZoomDelta / GAME.camera.wheelStep);
+        if (steps) {
+          this.wheelZoomDelta %= GAME.camera.wheelStep;
+          this.changeZoom(-steps);
+        }
+      },
+    );
     this.input.keyboard!.on('keydown-TAB', (event: KeyboardEvent) => {
       if (this.run.phase !== 'playing' || !this.actionKeys.consume(event)) return;
       event.preventDefault();
@@ -489,6 +536,20 @@ export class ArenaScene extends Phaser.Scene {
     this.callbacks?.onHud(this.snapshot());
   }
 
+  changeZoom(steps: number): void {
+    if (this.run.phase !== 'playing' || !Number.isFinite(steps)) return;
+    this.applyCameraZoom(
+      steps === 0 ? GAME.camera.defaultZoom : this.cameras.main.zoom + steps * GAME.camera.zoomStep,
+    );
+    this.callbacks?.onHud(this.snapshot());
+  }
+
+  private applyCameraZoom(zoom: number): void {
+    const camera = this.cameras.main;
+    this.cameraZoom = clampCameraZoom(zoom, camera.width, camera.height);
+    camera.setZoom(this.cameraZoom);
+  }
+
   toggleGuidance(): void {
     this.guidanceEnabled = !this.run.guidance.enabled;
     this.run.guidance.enabled = this.guidanceEnabled;
@@ -554,6 +615,9 @@ export class ArenaScene extends Phaser.Scene {
       this.togglePause();
     else if (controller.research) this.openResearch();
     else if (this.run.phase === 'playing') {
+      if (controller.zoomReset) this.changeZoom(0);
+      else if (controller.zoomIn) this.changeZoom(1);
+      else if (controller.zoomOut) this.changeZoom(-1);
       if (controller.confirm) this.dash();
       if (controller.build) this.openBuildings();
       else if (controller.migrate) this.openRoutes();
@@ -689,7 +753,12 @@ export class ArenaScene extends Phaser.Scene {
       this.dustTimer = 0.12;
     }
     this.aura.setPosition(this.player.x, this.player.y);
-    this.joystick!.clear();
+    // Scroll factor alone does not cancel camera zoom for the screen-space joystick.
+    const camera = this.cameras.main;
+    const inverseZoom = 1 / camera.zoom;
+    this.joystick!.setScale(inverseZoom)
+      .setPosition((camera.width / 2) * (1 - inverseZoom), (camera.height / 2) * (1 - inverseZoom))
+      .clear();
     if (this.dragOrigin) {
       this.joystick!.lineStyle(2, 0xc8df9b, 0.3).strokeCircle(
         this.dragOrigin.x,
@@ -708,14 +777,16 @@ export class ArenaScene extends Phaser.Scene {
     const definition = forced ?? chooseEnemy(this.run.elapsed + this.run.clan.region * 80);
     const camera = this.cameras.main;
     const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-    // Spawn beyond the visible rectangle, including near the world boundaries.
-    const distance = Math.min(
-      (camera.width / 2 + 60) / Math.max(0.01, Math.abs(Math.cos(angle))),
-      (camera.height / 2 + 60) / Math.max(0.01, Math.abs(Math.sin(angle))),
-    );
     const anchor = !isKhanActive(this.run) || Math.random() < 0.45 ? this.camp : this.player;
-    const x = Phaser.Math.Clamp(anchor.x + Math.cos(angle) * distance, 24, GAME.worldSize - 24);
-    const y = Phaser.Math.Clamp(anchor.y + Math.sin(angle) * distance, 24, GAME.worldSize - 24);
+    const viewWidth = camera.width / camera.zoom;
+    const viewHeight = camera.height / camera.zoom;
+    const view = {
+      x: camera.midPoint.x - viewWidth / 2,
+      y: camera.midPoint.y - viewHeight / 2,
+      width: viewWidth,
+      height: viewHeight,
+    };
+    const { x, y } = enemySpawnPosition(view, anchor, angle);
     if (
       isKhanActive(this.run) &&
       Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) < 200
@@ -1132,6 +1203,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private setPhase(phase: RunState['phase']): void {
     this.run.phase = phase;
+    this.wheelZoomDelta = 0;
     this.clearTouch();
     if (phase === 'playing') {
       this.input.keyboard!.addCapture(['SPACE', 'TAB']);
@@ -1152,7 +1224,11 @@ export class ArenaScene extends Phaser.Scene {
     const direction = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'][
       (Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) + 8) % 8
     ]!;
+    const zoomLimits = cameraZoomLimits(this.cameras.main.width, this.cameras.main.height);
     return {
+      zoom: this.cameras.main.zoom,
+      minZoom: zoomLimits.min,
+      maxZoom: zoomLimits.max,
       run: this.run,
       introSlide: this.introSlide,
       dashReady: Math.max(0, 1 - this.dashTimer / gallopCooldown(this.run)),

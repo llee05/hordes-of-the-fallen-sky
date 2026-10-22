@@ -171,6 +171,9 @@ export interface EnemyDefinition {
 }
 
 export interface HudSnapshot {
+  zoom: number;
+  minZoom: number;
+  maxZoom: number;
   run: RunState;
   introSlide: number;
   dashReady: number;

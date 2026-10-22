@@ -97,6 +97,10 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.getByRole('button', { name: /Share the work/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await expect(page.locator('#khan-title')).toHaveText('THE KHAN');
+    await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
+    await expect(page.locator('#zoom-level')).toHaveText('90%');
+    await page.getByRole('button', { name: 'Reset battlefield zoom to 100%' }).click();
+    await expect(page.locator('#zoom-level')).toHaveText('100%');
     await expect(page.locator('#field-guide')).toContainText('Ride out, keep watch');
     await page.getByRole('button', { name: 'Hide guidance', exact: true }).click();
     await expect(page.locator('#field-guide')).toBeHidden();
