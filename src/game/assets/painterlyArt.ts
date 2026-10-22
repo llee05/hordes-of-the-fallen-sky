@@ -4,6 +4,8 @@ import { characterTexture, isCharacterKind, MOTION_SHEETS } from '../animation/C
 /** Two motion atlases and one prop atlas keep painted actors on shared textures. */
 const PROPS = new Set(['ger', 'cart', 'banner', 'sheep', 'rock', 'pillar']);
 export const ART_WIDTH: Readonly<Record<string, number>> = {
+  worker: 30,
+  packhorse: 58,
   player: 62,
   rider: 50,
   wolf: 45,

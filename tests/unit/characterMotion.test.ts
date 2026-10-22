@@ -5,11 +5,14 @@ import {
   characterTexture,
 } from '../../src/game/animation/CharacterMotion';
 import mountedSource from '/art/steppe-mounted-motion.json?raw';
+import clanSource from '/art/steppe-clan-motion.json?raw';
 import creatureSource from '/art/steppe-creature-motion.json?raw';
 
 const mounted = JSON.parse(
   mountedSource,
 ) as typeof import('../../public/art/steppe-mounted-motion.json');
+const clan = JSON.parse(clanSource) as typeof import('../../public/art/steppe-clan-motion.json');
+
 const creatures = JSON.parse(
   creatureSource,
 ) as typeof import('../../public/art/steppe-creature-motion.json');
@@ -75,7 +78,8 @@ describe('character presentation clocks', () => {
 it('gives every actor complete clips with a constant canvas and ground registration', () => {
   for (const kind of CHARACTER_KINDS) {
     const [sheet] = characterTexture(kind);
-    const atlas = sheet.includes('mounted') ? mounted : creatures;
+    const campActor = sheet.includes('clan');
+    const atlas = campActor ? clan : sheet.includes('mounted') ? mounted : creatures;
     const frames = atlas.frames as Record<string, (typeof mounted.frames)['player-move-0']>;
     for (const [action, count] of [
       ['move', 4],
@@ -84,10 +88,16 @@ it('gives every actor complete clips with a constant canvas and ground registrat
       for (let index = 0; index < count; index++) {
         const entry = frames[`${kind}-${action}-${index}`]!;
         expect(entry).toBeDefined();
-        expect(entry.sourceSize).toEqual({ w: 256, h: 360 });
-        expect(entry.spriteSourceSize.y + entry.spriteSourceSize.h).toBe(324);
+        expect(entry.sourceSize).toEqual(campActor ? { w: 320, h: 440 } : { w: 256, h: 360 });
+        if (!campActor) expect(entry.spriteSourceSize.y + entry.spriteSourceSize.h).toBe(324);
+        expect(entry.spriteSourceSize.y).toBeGreaterThanOrEqual(0);
+        expect(entry.spriteSourceSize.y + entry.spriteSourceSize.h).toBeLessThanOrEqual(
+          campActor ? 440 : 360,
+        );
         expect(entry.spriteSourceSize.x).toBeGreaterThanOrEqual(0);
-        expect(entry.spriteSourceSize.x + entry.spriteSourceSize.w).toBeLessThanOrEqual(256);
+        expect(entry.spriteSourceSize.x + entry.spriteSourceSize.w).toBeLessThanOrEqual(
+          campActor ? 320 : 256,
+        );
         expect(entry.frame.x + entry.frame.w).toBeLessThanOrEqual(atlas.meta.size.w);
         expect(entry.frame.y + entry.frame.h).toBeLessThanOrEqual(atlas.meta.size.h);
       }

@@ -1,0 +1,256 @@
+{
+  "frames": {
+    "worker-move-0": {
+      "frame": {
+        "x": 47,
+        "y": 160,
+        "w": 197,
+        "h": 356
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 61,
+        "y": 40,
+        "w": 197,
+        "h": 356
+      },
+      "sourceSize": {
+        "w": 320,
+        "h": 440
+      }
+    },
+    "worker-move-1": {
+      "frame": {
+        "x": 311,
+        "y": 159,
+        "w": 183,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 68,
+        "y": 36,
+        "w": 183,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 320,
+        "h": 440
+      }
+    },
+    "worker-move-2": {
+      "frame": {
+        "x": 571,
+        "y": 159,
+        "w": 176,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 72,
+        "y": 36,
+        "w": 176,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 320,
+        "h": 440
+      }
+    },
+    "worker-move-3": {
+      "frame": {
+        "x": 822,
+        "y": 160,
+        "w": 190,
+        "h": 356
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 65,
+        "y": 40,
+        "w": 190,
+        "h": 356
+      },
+      "sourceSize": {
+        "w": 320,
+        "h": 440
+      }
+    },
+    "worker-attack-0": {
+      "frame": {
+        "x": 1093,
+        "y": 158,
+        "w": 159,
+        "h": 363
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 80,
+        "y": 33,
+        "w": 159,
+        "h": 363
+      },
+      "sourceSize": {
+        "w": 320,
+        "h": 440
+      }
+    },
+    "worker-attack-1": {
+      "frame": {
+        "x": 1338,
+        "y": 165,
+        "w": 161,
+        "h": 357
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 79,
+        "y": 39,
+        "w": 161,
+        "h": 357
+      },
+      "sourceSize": {
+        "w": 320,
+        "h": 440
+      }
+    },
+    "packhorse-move-0": {
+      "frame": {
+        "x": 12,
+        "y": 608,
+        "w": 260,
+        "h": 281
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 30,
+        "y": 115,
+        "w": 260,
+        "h": 281
+      },
+      "sourceSize": {
+        "w": 320,
+        "h": 440
+      }
+    },
+    "packhorse-move-1": {
+      "frame": {
+        "x": 272,
+        "y": 618,
+        "w": 263,
+        "h": 262
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 28,
+        "y": 134,
+        "w": 263,
+        "h": 262
+      },
+      "sourceSize": {
+        "w": 320,
+        "h": 440
+      }
+    },
+    "packhorse-move-2": {
+      "frame": {
+        "x": 535,
+        "y": 617,
+        "w": 259,
+        "h": 267
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 30,
+        "y": 129,
+        "w": 259,
+        "h": 267
+      },
+      "sourceSize": {
+        "w": 320,
+        "h": 440
+      }
+    },
+    "packhorse-move-3": {
+      "frame": {
+        "x": 794,
+        "y": 621,
+        "w": 258,
+        "h": 264
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 31,
+        "y": 132,
+        "w": 258,
+        "h": 264
+      },
+      "sourceSize": {
+        "w": 320,
+        "h": 440
+      }
+    },
+    "packhorse-attack-0": {
+      "frame": {
+        "x": 1052,
+        "y": 663,
+        "w": 243,
+        "h": 227
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 38,
+        "y": 201,
+        "w": 243,
+        "h": 227
+      },
+      "sourceSize": {
+        "w": 320,
+        "h": 440
+      }
+    },
+    "packhorse-attack-1": {
+      "frame": {
+        "x": 1295,
+        "y": 669,
+        "w": 228,
+        "h": 217
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 46,
+        "y": 207,
+        "w": 228,
+        "h": 217
+      },
+      "sourceSize": {
+        "w": 320,
+        "h": 440
+      }
+    }
+  },
+  "meta": {
+    "image": "steppe-clan-motion.png",
+    "size": {
+      "w": 1536,
+      "h": 1024
+    },
+    "scale": "1",
+    "groundAnchor": {
+      "x": 160,
+      "y": 396
+    }
+  }
+}

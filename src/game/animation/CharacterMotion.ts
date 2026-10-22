@@ -1,4 +1,6 @@
 const PROFILES = {
+  worker: { sheet: 'clan', stride: 30, idleFps: 1, recovery: 0.18, resting: true },
+  packhorse: { sheet: 'clan', stride: 50, idleFps: 0.8, recovery: 0.18, resting: true },
   player: { sheet: 'mounted', stride: 70, idleFps: 0, recovery: 0.18 },
   rider: { sheet: 'mounted', stride: 65, idleFps: 0, recovery: 0.18 },
   wolf: { sheet: 'mounted', stride: 35, idleFps: 0, recovery: 0.2 },
@@ -11,7 +13,7 @@ const PROFILES = {
 
 export type CharacterKind = keyof typeof PROFILES;
 export const CHARACTER_KINDS = Object.keys(PROFILES) as CharacterKind[];
-export const MOTION_SHEETS = ['mounted', 'creature'] as const;
+export const MOTION_SHEETS = ['mounted', 'creature', 'clan'] as const;
 
 export function isCharacterKind(name: string): name is CharacterKind {
   return Object.hasOwn(PROFILES, name);
@@ -74,6 +76,8 @@ export class CharacterMotion {
   get frame(): string {
     if (this.releaseRemaining > 0) return `${this.kind}-attack-1`;
     if (this.windingUp) return `${this.kind}-attack-0`;
+    if (!this.moving && 'resting' in PROFILES[this.kind])
+      return `${this.kind}-attack-${Math.floor(this.cycle * 4) % 2}`;
     const frame = this.moving || PROFILES[this.kind].idleFps > 0 ? Math.floor(this.cycle * 4) : 0;
     return `${this.kind}-move-${frame}`;
   }

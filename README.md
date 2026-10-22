@@ -38,7 +38,7 @@ The title and pause menus contain **Settings** and **How to play**. Sound prefer
 
 ## The Living Steppe Tapestry
 
-The game now uses a stylized painterly 2.5D presentation: golden brushwork grasslands, miniature mounted warriors, decorated ivory gers, turquoise and vermilion banners, and cold, unsettling calamity creatures. Soft shadows, ground-position depth sorting, drifting wind and snow, and parchment panels carry the direction through gameplay. All artwork ships locally. See [the art direction and generation prompts](docs/living-steppe-tapestry.md).
+The game now uses a stylized painterly 2.5D presentation: golden brushwork grasslands, miniature mounted warriors, decorated ivory gers, turquoise and vermilion banners, and cold, unsettling calamity creatures. Soft shadows, ground-position depth sorting, drifting wind and snow, and parchment panels carry the direction through gameplay. Visible camp workers carry felt between shared stores and established workplaces. A bounded pack herd grazes at camp and walks with the caravan. Additional households raise more shelters, while losses reduce the visible group. Packing briefly folds the old camp into the travelling carts while departure begins immediately. These visual representatives use the existing population and worker assignments; they do not add a second economy. All artwork ships locally. See [the art direction and generation prompts](docs/living-steppe-tapestry.md).
 
 The Khan, allied archers, and all six creature designs have painted sprite animation: four gait or hovering frames and two attack poses each. Riding speed drives the gait, galloping quickens it, and actual volleys, charges, and strikes trigger release poses. Hits briefly tint the character; defeated enemies fade through a small visual pool after their collision bodies leave immediately. Character animation and these effects freeze in every paused run phase. See [the sprite sheets, registration, and generation prompts](docs/character-animation.md).
 
@@ -140,6 +140,8 @@ src/game/state/patrons.ts      Neutral patron effects, damage, recovery, and rev
 src/game/systems/PatronSupport.ts Ancestral riders, slowing fields, pulse, and camp ward
 src/game/assets/painterlyArt.ts Shared painted atlases, sizing, collision alignment, effects
 src/game/assets/SteppeLandscape.ts Painterly ground, riverbanks, weather, regional scenery
+src/game/assets/ClanLife.ts     Bounded workers, pack horses, and active-time camp activity
+src/game/state/campLife.ts      Workplaces, population-driven shelters, and visual routes
 public/art/                   Bundled painted PNGs and atlas frame metadata
 src/game/scenes/ArenaScene.ts  Simulation, mounted host, combat, regional arenas
 src/ui/GameUI.ts               Full-window HUD, title/pause menus, focus and input

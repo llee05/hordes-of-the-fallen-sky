@@ -7,6 +7,8 @@ import {
   preloadPainterlyArt,
   styleActor,
 } from '../assets/painterlyArt';
+import { ClanLife } from '../assets/ClanLife';
+import { campShelters } from '../state/campLife';
 import { SteppeLandscape } from '../assets/SteppeLandscape';
 import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
 import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
@@ -65,6 +67,11 @@ export class ArenaScene extends Phaser.Scene {
   private hostileShots!: Phaser.Physics.Arcade.Group;
   private campLabel!: Phaser.GameObjects.Text;
   private landscape!: SteppeLandscape;
+  private clanLife!: ClanLife;
+  private campPopulation = -1;
+  private campHerd = -1;
+  private packedGers: { image: Phaser.GameObjects.Image; x: number; y: number }[] = [];
+  private packingRemaining = 0;
   private riderShadows: Phaser.GameObjects.Image[] = [];
   private readonly playerMotion = new CharacterMotion('player');
   private riderMotions: CharacterMotion[] = [];
@@ -153,6 +160,8 @@ export class ArenaScene extends Phaser.Scene {
     this.playerMotion.reset('player');
     this.enemyShadows.clear();
     this.dustTimer = 0;
+    this.packedGers = [];
+    this.packingRemaining = 0;
     this.boss = undefined;
     this.hazards = [];
     this.hazardTimer = 8;
@@ -168,6 +177,7 @@ export class ArenaScene extends Phaser.Scene {
     const center = GAME.worldSize / 2;
     this.camp = this.add.container(center, center).setDepth(100 + center);
     this.refreshCamp();
+    this.clanLife = new ClanLife(this);
     this.campLabel = this.add
       .text(center, center - 125, 'YOUR CLAN', {
         fontFamily: 'Georgia',
@@ -449,6 +459,16 @@ export class ArenaScene extends Phaser.Scene {
 
   chooseRoute(id: string): void {
     if (!beginMigration(this.run, id)) return;
+    for (const ger of this.camp.list) {
+      if (!(ger instanceof Phaser.GameObjects.Image) || ger.name !== 'ger') continue;
+      const image = this.add
+        .image(this.camp.x + ger.x, this.camp.y + ger.y, ger.texture.key, ger.frame.name)
+        .setOrigin(ger.originX, ger.originY)
+        .setScale(ger.scaleX)
+        .setDepth(100 + this.camp.y + ger.y);
+      this.packedGers.push({ image, x: ger.x, y: ger.y });
+    }
+    this.packingRemaining = 2.4;
     this.refreshCamp();
     this.setPhase('playing');
   }
@@ -1192,16 +1212,14 @@ export class ArenaScene extends Phaser.Scene {
       this.camp.add(image);
       return image;
     };
-    add(-64, 0, migrating ? 'cart' : 'ger');
-    add(65, 28, migrating ? 'cart' : 'ger');
+    for (const shelter of campShelters(this.run))
+      add(
+        shelter.x,
+        shelter.y,
+        migrating ? 'cart' : 'ger',
+        shelter.x === -64 || shelter.x === 65 ? 2.5 : 2,
+      ).setData('household', true);
     add(10, -45, 'banner', 3.2);
-    if (
-      hasDevelopment(this.run, 'ger', 'hearthkeepers') ||
-      hasDevelopment(this.run, 'ger', 'refugee-beacons')
-    ) {
-      add(-110, 55, migrating ? 'cart' : 'ger', 2);
-      add(110, -55, migrating ? 'cart' : 'ger', 2);
-    }
     if (this.run.clan.buildings.archery) add(-130, -35, 'banner');
     if (this.run.clan.buildings.sanctuary) add(128, 58, 'pillar', 2.5);
     if (this.run.clan.buildings.wagon) {
@@ -1216,16 +1234,29 @@ export class ArenaScene extends Phaser.Scene {
       add(185, 75, 'cart', 1.7).setData('buildingId', 'relay');
       add(185, 45, 'banner', 2);
     }
-    for (let i = 0; i < Math.min(10, this.run.clan.herd); i += 1)
-      add(-55 + (i % 5) * 27, 80 + Math.floor(i / 5) * 20, 'sheep', 2);
+    this.campPopulation = this.run.clan.population;
+    this.campHerd = this.run.clan.herd;
     this.camp.sort('depth');
   }
 
   private updateCamp(dt: number): void {
     const clan = this.run.clan;
     const center = GAME.worldSize / 2;
+    if (clan.population !== this.campPopulation || clan.herd !== this.campHerd) this.refreshCamp();
     if (clan.stage === 'migration') this.camp.x = center + clan.migrationProgress * 1150;
     this.camp.setDepth(100 + this.camp.y);
+    this.clanLife.update(this.run, dt, this.camp);
+    this.packingRemaining = Math.max(0, this.packingRemaining - dt);
+    for (const ger of this.packedGers) {
+      ger.image
+        .setPosition(this.camp.x + ger.x, this.camp.y + ger.y)
+        .setAlpha(this.packingRemaining / 2.4)
+        .setDepth(100 + this.camp.y + ger.y);
+    }
+    if (this.packingRemaining === 0 && this.packedGers.length) {
+      for (const ger of this.packedGers) ger.image.destroy();
+      this.packedGers = [];
+    }
     for (const child of this.camp.list)
       if (child instanceof Phaser.GameObjects.Image && child.name === 'banner') {
         const rest = child.getData('restScale') as number;
@@ -1435,6 +1466,10 @@ export class ArenaScene extends Phaser.Scene {
   private arrive(): void {
     const center = GAME.worldSize / 2;
     // Each crossing leads to a new handcrafted arena; structures travel with the clan.
+    this.clanLife.relocate();
+    this.packingRemaining = 0;
+    for (const ger of this.packedGers) ger.image.destroy();
+    this.packedGers = [];
     this.camp.setPosition(center, center);
     this.player.setPosition(center, center + 100).setVelocity(0, 0);
     this.patronSupport.relocate(isKhanActive(this.run) ? this.player : this.camp);
