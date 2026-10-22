@@ -21,6 +21,7 @@ export const GAME = {
   invulnerability: 0.65,
   khan: { successionDelay: 10, returnProtection: 3, campOffset: 90 },
   camp: {
+    enemyAttack: { range: 120, interval: 1.5, damageMultiplier: 0.45 },
     ger: {
       hospitality: { materials: 36, resolve: 0.15, arrivalHealth: 10 },
       apprentices: { materials: 36, gathering: 1.2 },

@@ -843,7 +843,9 @@ export class ArenaScene extends Phaser.Scene {
         enemy.disableBody(true, true);
         continue;
       }
-      const target = campDistance < playerDistance * 1.25 ? this.camp : this.player;
+      const attackingCamp = campDistance <= GAME.camp.enemyAttack.range;
+      const target =
+        attackingCamp || campDistance < playerDistance * 1.25 ? this.camp : this.player;
       const distance = target === this.camp ? campDistance : playerDistance;
       const behavior = enemy.definition.behavior;
       let speed =
@@ -851,28 +853,34 @@ export class ArenaScene extends Phaser.Scene {
         (1 + clan.region * 0.1) *
         terrainSpeedMultiplier(this.run, Math.min(playerDistance, campDistance));
       if ((behavior === 'ranged' || behavior === 'boss') && distance < 260) speed = 0;
-      if (behavior === 'charger' && enemy.chargeTimer <= 0) {
-        enemy.chargeTimer = 3;
-        enemy.motion.attack();
-        const angle = Math.atan2(target.y - enemy.y, target.x - enemy.x);
-        enemy.setData('chargeAngle', angle);
+      if (attackingCamp) {
+        // Hold outside the tents instead of walking (or charging) into their centre.
+        enemy.setVelocity(0, 0);
+        enemy.chargeTimer = 0;
+      } else {
+        if (behavior === 'charger' && enemy.chargeTimer <= 0) {
+          enemy.chargeTimer = 3;
+          enemy.motion.attack();
+          const angle = Math.atan2(target.y - enemy.y, target.x - enemy.x);
+          enemy.setData('chargeAngle', angle);
+        }
+        if (behavior === 'charger' && enemy.chargeTimer > 2.3) {
+          const angle = enemy.getData('chargeAngle') as number;
+          enemy.setVelocity(Math.cos(angle) * speed * 2.2, Math.sin(angle) * speed * 2.2);
+        } else this.physics.moveToObject(enemy, target, speed);
       }
-      if (behavior === 'charger' && enemy.chargeTimer > 2.3) {
-        const angle = enemy.getData('chargeAngle') as number;
-        enemy.setVelocity(Math.cos(angle) * speed * 2.2, Math.sin(angle) * speed * 2.2);
-      } else this.physics.moveToObject(enemy, target, speed);
       enemy.setFlipX(enemy.x > target.x);
       enemy.preparingAttack =
         ((behavior === 'ranged' || behavior === 'boss') &&
           distance < 650 &&
           enemy.attackTimer > 0 &&
           enemy.attackTimer < 0.25) ||
-        (campDistance < 90 && enemy.clanAttackTimer > 0 && enemy.clanAttackTimer < 0.2) ||
+        (attackingCamp && enemy.clanAttackTimer > 0 && enemy.clanAttackTimer < 0.2) ||
         (behavior === 'charger' && enemy.chargeTimer > 0 && enemy.chargeTimer < 0.2);
-      if (campDistance < 68 && enemy.clanAttackTimer <= 0) {
+      if (attackingCamp && enemy.clanAttackTimer <= 0) {
         enemy.motion.attack();
-        damageClan(this.run, enemy.definition.damage * 0.45);
-        enemy.clanAttackTimer = 1.5;
+        damageClan(this.run, enemy.definition.damage * GAME.camp.enemyAttack.damageMultiplier);
+        enemy.clanAttackTimer = GAME.camp.enemyAttack.interval;
         this.burst(this.camp.x, this.camp.y, 0xc56c4e, 3);
       }
       if (
