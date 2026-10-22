@@ -9,8 +9,9 @@ import {
   styleActor,
 } from '../assets/painterlyArt';
 import { ClanLife } from '../assets/ClanLife';
+import { CampBarrier } from '../assets/CampBarrier';
 import { campShelters } from '../state/campLife';
-import { campBoundary } from '../state/campBarrier';
+import { barrierContact, campBoundary } from '../state/campBarrier';
 import { SteppeLandscape } from '../assets/SteppeLandscape';
 import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
 import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
@@ -71,6 +72,7 @@ export class ArenaScene extends Phaser.Scene {
   private campLabel!: Phaser.GameObjects.Text;
   private landscape!: SteppeLandscape;
   private clanLife!: ClanLife;
+  private campBarrier!: CampBarrier;
   private campPopulation = -1;
   private campHerd = -1;
   private packedGers: { image: Phaser.GameObjects.Image; x: number; y: number }[] = [];
@@ -185,6 +187,7 @@ export class ArenaScene extends Phaser.Scene {
       .container(center, center)
       .setScale(CAMP_VISUAL_SCALE)
       .setDepth(100 + center);
+    this.campBarrier = new CampBarrier(this);
     this.refreshCamp();
     this.clanLife = new ClanLife(this);
     this.campLabel = this.add
@@ -832,6 +835,15 @@ export class ArenaScene extends Phaser.Scene {
       const shadow = this.enemyShadows.get(enemy);
       shadow?.setVisible(enemy.active);
       if (!enemy.active) continue;
+      let campDistance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.camp.x, this.camp.y);
+      const clearance = boundary.attackRange - 1;
+      if (campDistance < clearance) {
+        // Moving or expanding hurdles push attackers out instead of covering them.
+        const contact = barrierContact(this.camp, enemy, clearance);
+        enemy.setPosition(contact.x, contact.y);
+        enemy.body!.updateFromGameObject();
+        campDistance = clearance;
+      }
       enemy.setDepth(100 + enemy.y);
       shadow?.setPosition(enemy.x + 8, enemy.y + 5).setDepth(99 + enemy.y);
       enemy.attackTimer -= dt;
@@ -840,7 +852,6 @@ export class ArenaScene extends Phaser.Scene {
       const playerDistance = khanActive
         ? Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y)
         : Infinity;
-      const campDistance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.camp.x, this.camp.y);
       if (playerDistance > 1600 && campDistance > 1600 && enemy !== this.boss) {
         enemy.disableBody(true, true);
         continue;
@@ -883,7 +894,8 @@ export class ArenaScene extends Phaser.Scene {
         enemy.motion.attack();
         damageClan(this.run, enemy.definition.damage * GAME.camp.enemyAttack.damageMultiplier);
         enemy.clanAttackTimer = GAME.camp.enemyAttack.interval;
-        this.burst(this.camp.x, this.camp.y, 0xc56c4e, 3);
+        const impact = this.campBarrier.hit(this.camp, enemy);
+        this.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
       }
       if (
         (behavior === 'ranged' || behavior === 'boss') &&
@@ -1056,6 +1068,8 @@ export class ArenaScene extends Phaser.Scene {
         Phaser.Math.Distance.Between(shot.x, shot.y, this.camp.x, this.camp.y) <= boundary.radius
       ) {
         damageClan(this.run, shot.damage * 0.5);
+        const impact = this.campBarrier.hit(this.camp, shot);
+        this.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
         shot.disableBody(true, true);
       }
     }
@@ -1289,9 +1303,6 @@ export class ArenaScene extends Phaser.Scene {
   private refreshCamp(): void {
     this.camp.removeAll(true);
     const migrating = this.run.clan.stage === 'migration';
-    const ring = this.add.graphics();
-    ring.lineStyle(1.5, 0xf4deb0, 0.24).strokeEllipse(0, 16, 300, 170);
-    this.camp.add(ring);
     const add = (x: number, y: number, key: string, scale = 2.5): Phaser.GameObjects.Image => {
       const width = ((ART_WIDTH[key] ?? 60) * scale) / 2.5;
       this.camp.add(
@@ -1331,6 +1342,7 @@ export class ArenaScene extends Phaser.Scene {
     this.campPopulation = this.run.clan.population;
     this.campHerd = this.run.clan.herd;
     this.camp.sort('depth');
+    this.campBarrier.refresh(this.run, this.camp);
   }
 
   private updateCamp(dt: number): void {
@@ -1339,6 +1351,7 @@ export class ArenaScene extends Phaser.Scene {
     if (clan.population !== this.campPopulation || clan.herd !== this.campHerd) this.refreshCamp();
     if (clan.stage === 'migration') this.camp.x = center + clan.migrationProgress * 1150;
     this.camp.setDepth(100 + this.camp.y);
+    this.campBarrier.update(this.run, dt, this.camp);
     this.clanLife.update(this.run, dt, this.camp);
     this.packingRemaining = Math.max(0, this.packingRemaining - dt);
     for (const ger of this.packedGers) {
@@ -1580,6 +1593,7 @@ export class ArenaScene extends Phaser.Scene {
     this.hazardTimer = 8;
     this.landscape.setRegion(this.run.clan.region);
     this.refreshCamp();
+    this.campBarrier.relocate(this.run, this.camp);
     this.cameras.main.flash(500, 225, 215, 180);
     if (!this.presentStory()) this.publishPhase();
   }

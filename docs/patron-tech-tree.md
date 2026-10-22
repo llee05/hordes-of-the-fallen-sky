@@ -116,14 +116,14 @@ Full investment adds four living riders: five with the starting companion, befor
 
 The clan's imagined mountain guardian inspires cheaper portable defenses, camp protection, and a ward that follows the caravan.
 
-| Tier                | Technology / stable ID                               | Effect                                                                                                                           |
-| ------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Foundation, 2 ranks | **Foundations we can carry** · `caravan-foundations` | Each rank: camp material prices ×0.9 and clan damage taken ×0.9.                                                                 |
-| Practice A          | **Watchfires on the ridge** · `watchfires`           | Wagon circle firing interval ×0.75: 0.9 → 0.675 seconds. A constructed Wagon circle is required to fire.                         |
-| Practice B          | **A circle of sheltered ground** · `stone-shelter`   | Camp ward deals shared damage ×0.65 within radius 125 every 2 seconds, including during migration. Does not require a sanctuary. |
-| Capstone            | **Hold the passage** · `hold-the-passage`            | Clan damage taken ×0.8 again, stacking with camp defenses and formation.                                                         |
+| Tier                | Technology / stable ID                               | Effect                                                                                                                                        |
+| ------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Foundation, 2 ranks | **Foundations we can carry** · `caravan-foundations` | Each rank: camp material prices ×0.9 and clan damage taken ×0.9.                                                                              |
+| Practice A          | **Watchfires on the ridge** · `watchfires`           | Wagon circle firing interval ×0.75: 0.9 → 0.675 seconds. A constructed Wagon circle is required to fire.                                      |
+| Practice B          | **A circle of sheltered ground** · `stone-shelter`   | Camp ward deals shared damage ×0.65 within a minimum radius of 125 every 2 seconds, including during migration. Does not require a sanctuary. |
+| Capstone            | **Hold the passage** · `hold-the-passage`            | Clan damage taken ×0.8 again, stacking with camp defenses and formation.                                                                      |
 
-Two foundation ranks give a material price multiplier of 0.81. Apply it to the normal individual purchase price and round up; Archery grounds therefore cost `ceil(24 ×0.81) = 20` materials. Spirit and worker requirements are unchanged. Discounts cover both establishment and developments; they do not refund earlier purchases. At full investment, this patron's clan protection multiplier is 0.648. With Caravan guard, Felt armor, and Ancestral ward, the clan takes 18.144% of raw damage. Khan health is protected separately through Golomt and eruption mitigation. The mountain ward and sanctuary ward can both operate with independent timers.
+Two foundation ranks give a material price multiplier of 0.81. Apply it to the normal individual purchase price and round up; Archery grounds therefore cost `ceil(24 ×0.81) = 20` materials. Spirit and worker requirements are unchanged. Discounts cover both establishment and developments; they do not refund earlier purchases. At full investment, this patron's clan protection multiplier is 0.648. With Caravan guard, Felt armor, and Ancestral ward, the clan takes 18.144% of raw damage. Khan health is protected separately through Golomt and eruption mitigation. The mountain ward and sanctuary ward can both operate with independent timers. Their 125-unit minimum radius expands to reach 5 units beyond the barricade's melee attack range as the camp grows.
 
 ## Interface and extension points
 

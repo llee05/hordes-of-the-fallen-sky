@@ -106,15 +106,15 @@ flowchart TD
 
 Wind shamans and Ancestral ward are exclusive. The sanctuary's attacks are fantasy; the remembrance crafts do not describe real ritual instructions.
 
-| Development / ID                            | Cost    | Requirement    | Effect                                                                           |
-| ------------------------------------------- | ------- | -------------- | -------------------------------------------------------------------------------- |
-| Wind shamans · `wind-shamans`               | 30 +18S | Established    | Lightning interval becomes 1.8 seconds; combines with Fire arrows.               |
-| Ancestral ward · `ancestral-ward`           | 30 +18S | Established    | Shared damage ×1.5 in radius 125 every 1.2 seconds; clan damage ×0.8.            |
-| Remembered ovoos · `ovoo-remembrance`       | 24 +8S  | Established    | Completed crossings restore 6 additional clan resolve.                           |
-| Keepers of the storm watch · `storm-watch`  | 40 +18S | Wind shamans   | Lightning interval ×0.85: 1.8 → 1.53 seconds.                                    |
-| Names beside the hearth · `ancestral-tales` | 38 +16S | Ancestral ward | Khan recovery +0.15/active second; stationary clan resolve recovery +0.1/second. |
+| Development / ID                            | Cost    | Requirement    | Effect                                                                             |
+| ------------------------------------------- | ------- | -------------- | ---------------------------------------------------------------------------------- |
+| Wind shamans · `wind-shamans`               | 30 +18S | Established    | Lightning interval becomes 1.8 seconds; combines with Fire arrows.                 |
+| Ancestral ward · `ancestral-ward`           | 30 +18S | Established    | Shared damage ×1.5 in a minimum radius of 125 every 1.2 seconds; clan damage ×0.8. |
+| Remembered ovoos · `ovoo-remembrance`       | 24 +8S  | Established    | Completed crossings restore 6 additional clan resolve.                             |
+| Keepers of the storm watch · `storm-watch`  | 40 +18S | Wind shamans   | Lightning interval ×0.85: 1.8 → 1.53 seconds.                                      |
+| Names beside the hearth · `ancestral-tales` | 38 +16S | Ancestral ward | Khan recovery +0.15/active second; stationary clan resolve recovery +0.1/second.   |
 
-Red Eclipse still multiplies lightning intervals by 1.5, giving 2.295 seconds with Storm watch. Ward timers are independent. The Khan's recovery continues while travelling; resolve recovery waits for a stationary camp. Golomt's regeneration adds to the Khan recovery. Sanctuary and Guardian wards remain separate systems.
+Red Eclipse still multiplies lightning intervals by 1.5, giving 2.295 seconds with Storm watch. Ward timers are independent. The sanctuary and Guardian wards each have a minimum radius of 125; both expand to reach 5 units beyond the barricade's melee attack range around larger camps. The Khan's recovery continues while travelling; resolve recovery waits for a stationary camp. Golomt's regeneration adds to the Khan recovery. Sanctuary and Guardian wards remain separate systems.
 
 ## Wagon circle · portable defenses
 

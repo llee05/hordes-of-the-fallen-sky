@@ -133,7 +133,9 @@ test('every enemy can hold and animate a camp attack, including a charging rider
     const scene = (window as any).__gloam.scene;
     const definitions = [...ENEMIES, SKYBREAKER];
     for (const [index, definition] of definitions.entries()) {
-      scene.spawnEnemy({ ...definition, damage: 0, health: 10000 });
+      const before = scene.enemies.countActive(true);
+      for (let attempt = 0; attempt < 10 && scene.enemies.countActive(true) === before; attempt++)
+        scene.spawnEnemy({ ...definition, damage: 0, health: 10000 });
       const enemy = scene.boss;
       const angle = (index * Math.PI * 2) / definitions.length;
       enemy.setPosition(scene.camp.x + Math.cos(angle) * 118, scene.camp.y + Math.sin(angle) * 118);

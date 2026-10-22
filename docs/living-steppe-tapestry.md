@@ -37,6 +37,12 @@ The built-in image_gen tool produced `public/art/ui-felt.png` with this prompt:
 
 > Use case: stylized-concept. Asset type: seamless square UI material texture for Hordes of the Fallen Sky, a painterly Mongolian-inspired nomadic fantasy game with The Living Steppe Tapestry art direction. Fill the entire square with a single uninterrupted piece of warm undyed ivory wool felt over fine linen, illustrated in matte gouache with very subtle soft brushwork. Low-contrast warm oatmeal and cream, fine irregular natural fibers, a gently worn tactile surface. Uniform illumination and even color across the whole square. Quiet and readable enough for dark text overlaid by game code. This texture will also be multiplied with indigo and vermilion colors for cloth game HUD panels. Absolutely NO objects, no frames, no ornamental borders, no fringe, no seams, no text, no letters, no icons, no vignette, no strong stains, no folds, no shadows, no gradients, no scene or mockup. Seamless on all four edges, flat front view. Produce a production-ready material swatch, not a UI screenshot.
 
+## Portable camp barricade
+
+`src/game/assets/CampBarrier.ts` builds a bounded set of timber hurdles directly in Phaser graphics: warm umber wood, ochre edge light, rope lashings, crossed braces, and small indigo and rust felt bands with brass geometric details. Soft olive shadows reuse the locally bundled shadow texture. Separate ground anchors let the near and far pieces sort correctly with riders, creatures, workers, and tents. Low panels keep the camp readable; worn wood and shorter cloth ends reflect the clan's existing resolve. Travelling hurdles lower into wheeled screens around the caravan.
+
+The geometry comes from `state/campBarrier.ts`, shared with melee reach, hostile missile interception, and defensive wards. Camp growth expands the enclosure without scaling combat actors. A struck panel briefly brightens and jolts, using active gameplay seconds; menus freeze it. Arrival clears impacts and relocates the existing pieces. No new bitmap or animation sheet is required for these adaptable geometric props.
+
 ## Generation prompts
 
 The following shared direction prefixed each generation prompt:
