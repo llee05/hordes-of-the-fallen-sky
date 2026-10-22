@@ -3,7 +3,7 @@ import { GAME } from './config';
 import { ArenaScene } from './scenes/ArenaScene';
 
 export function createGame(parent: HTMLElement, scene: ArenaScene): Phaser.Game {
-  return new Phaser.Game({
+  const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent,
     width: GAME.width,
@@ -20,4 +20,23 @@ export function createGame(parent: HTMLElement, scene: ArenaScene): Phaser.Game 
     input: { activePointers: 2 },
     scene: [scene],
   });
+
+  // Native window managers can resize the parent while Phaser's frame loop sleeps.
+  // Track the actual surface independently so paused/title screens fit immediately.
+  let observer: ResizeObserver | undefined;
+  game.events.once(Phaser.Core.Events.READY, () => {
+    const fitParent = (): void => {
+      const width = parent.clientWidth;
+      const height = parent.clientHeight;
+      if (width > 0 && height > 0 && (game.scale.width !== width || game.scale.height !== height)) {
+        game.scale.getParentBounds();
+        game.scale.resize(width, height);
+      }
+    };
+    observer = new ResizeObserver(fitParent);
+    observer.observe(parent);
+    fitParent();
+  });
+  game.events.once(Phaser.Core.Events.DESTROY, () => observer?.disconnect());
+  return game;
 }
