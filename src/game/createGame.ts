@@ -12,6 +12,8 @@ export function createGame(parent: HTMLElement, scene: ArenaScene): Phaser.Game 
     pixelArt: false,
     roundPixels: false,
     antialias: true,
+    // GameAudio owns the gesture-unlocked mixer; avoid an unused Phaser context.
+    audio: { noAudio: true },
     scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
     physics: {
       default: 'arcade',

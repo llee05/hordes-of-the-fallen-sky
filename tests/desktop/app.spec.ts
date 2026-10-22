@@ -83,11 +83,6 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
-    await page.evaluate(async () => {
-      const desktop = (window as any).desktop;
-      const profile = await desktop.loadProfile();
-      await desktop.saveProfile({ ...profile, bestSeconds: 88 });
-    });
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: /NEW GAME/ }).click();
     await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
@@ -97,6 +92,33 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.getByRole('button', { name: /Share the work/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await expect(page.locator('#khan-title')).toHaveText('THE KHAN');
+    // Exercise the production Web Audio path without a development scene hook.
+    await page.evaluate(() => {
+      const NativeAudioContext = window.AudioContext;
+      window.AudioContext = class extends NativeAudioContext {
+        constructor(options?: AudioContextOptions) {
+          super(options);
+          (window as any).nativeSoundContext = this;
+        }
+        createBufferSource(): AudioBufferSourceNode {
+          const source = super.createBufferSource();
+          const start = source.start.bind(source);
+          source.start = (when = 0) => {
+            (window as any).nativeSoundsPlayed = ((window as any).nativeSoundsPlayed ?? 0) + 1;
+            start(when);
+          };
+          return source;
+        }
+      };
+    });
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.getByRole('button', { name: 'Unmute sound', exact: true }).click();
+    await expect
+      .poll(() => page.evaluate(() => (window as any).nativeSoundContext?.state))
+      .toBe('running');
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
     await expect(page.locator('#zoom-level')).toHaveText('90%');
     await page.getByRole('button', { name: 'Reset battlefield zoom to 100%' }).click();
@@ -127,10 +149,14 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.keyboard.up('d');
     await page.keyboard.press('Space');
     await expect(page.locator('#dash-label')).toContainText('RECHARGING');
+    await expect
+      .poll(() => page.evaluate(() => (window as any).nativeSoundsPlayed ?? 0))
+      .toBeGreaterThan(0);
     await page.keyboard.press('Escape');
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
     // CDP keyboard events do not reach Electron's native before-input-event hook.
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
     await page.getByRole('button', { name: 'Enter fullscreen', exact: true }).click();
     await expect
       .poll(() =>
@@ -143,6 +169,12 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
         app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.isFullScreen()),
       )
       .toBe(false);
+    // Seed the native bridge fixture after renderer-owned setting writes.
+    await page.evaluate(async () => {
+      const desktop = (window as any).desktop;
+      const profile = await desktop.loadProfile();
+      await desktop.saveProfile({ ...profile, bestSeconds: 88 });
+    });
     await app.close();
     expect(JSON.parse(await readFile(join(directory, 'saves/profile.json'), 'utf8'))).toEqual({
       version: 1,

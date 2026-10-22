@@ -143,6 +143,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.audio.reset();
     this.run = createRun();
     this.run.story.enabled = this.storiesEnabled;
     this.run.guidance.enabled = this.guidanceEnabled;
@@ -347,10 +348,13 @@ export class ArenaScene extends Phaser.Scene {
     this.input.on('pointerupoutside', () => this.clearTouch());
     this.game.events.on(Phaser.Core.Events.BLUR, this.pauseOnBlur, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.audio.reset();
       this.game.events.off(Phaser.Core.Events.BLUR, this.pauseOnBlur, this);
       this.input.keyboard!.removeAllListeners();
       this.clearTouch();
     });
+    this.events.off(Phaser.Scenes.Events.DESTROY, this.audio.destroy, this.audio);
+    this.events.once(Phaser.Scenes.Events.DESTROY, this.audio.destroy, this.audio);
     this.physics.pause();
     this.tweens.pauseAll();
     this.publishPhase();
@@ -368,6 +372,7 @@ export class ArenaScene extends Phaser.Scene {
     this.cameras.main.setFollowOffset(0, 0);
     this.setPhase('playing');
     this.presentStory();
+    this.audio.play('arrive');
   }
 
   toggleStoryMode(): void {
@@ -508,7 +513,7 @@ export class ArenaScene extends Phaser.Scene {
     if (!buildStructure(this.run, id, path)) return;
     this.dashTimer *= gallopCooldown(this.run) / previousCooldown;
     this.refreshCamp();
-    this.audio.play('level');
+    this.audio.play('build');
     this.publishPhase();
   }
 
@@ -528,6 +533,7 @@ export class ArenaScene extends Phaser.Scene {
     this.packingRemaining = 2.4;
     this.refreshCamp();
     this.setPhase('playing');
+    this.audio.play('depart');
   }
 
   cycleFormation(): void {
@@ -562,6 +568,7 @@ export class ArenaScene extends Phaser.Scene {
 
   toggleAudio(): boolean {
     this.audio.muted = !this.audio.muted;
+    if (!this.audio.muted) this.audio.unlock();
     void this.platform.saveMuted(this.audio.muted).catch(() => this.callbacks?.onSaveError());
     return this.audio.muted;
   }
@@ -579,7 +586,7 @@ export class ArenaScene extends Phaser.Scene {
     const upgrade = UPGRADES.find((entry) => entry.id === id);
     const previousCooldown = gallopCooldown(this.run);
     if (this.run.phase !== 'upgrade' || !upgrade || !applyUpgrade(this.run, upgrade, rank)) return;
-    this.audio.play('level');
+    this.audio.play('research');
     this.dashTimer *= gallopCooldown(this.run) / previousCooldown;
     this.run.clan.message = `${upgrade.title} — rank ${rank} learned.`;
     redeemMasteredResearch(this.run);
@@ -666,6 +673,14 @@ export class ArenaScene extends Phaser.Scene {
     if (advanceSuccession(this.run, dt)) this.returnKhan();
     if (isKhanActive(this.run)) this.movePlayer(dt);
     else this.player.setPosition(this.camp.x, this.camp.y + GAME.khan.campOffset);
+    this.audio.update(dt, {
+      speed: isKhanActive(this.run) ? this.player.body!.velocity.length() : 0,
+      galloping: this.dashRemaining > 0,
+      caravan: this.run.clan.stage === 'migration',
+      region: this.run.clan.region,
+      listener: isKhanActive(this.run) ? this.player : this.camp,
+      camp: this.camp,
+    });
     this.updateEnemies(dt);
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
       this.finish('dead');
@@ -895,6 +910,7 @@ export class ArenaScene extends Phaser.Scene {
         damageClan(this.run, enemy.definition.damage * GAME.camp.enemyAttack.damageMultiplier);
         enemy.clanAttackTimer = GAME.camp.enemyAttack.interval;
         const impact = this.campBarrier.hit(this.camp, enemy);
+        this.audio.play('barrier', impact);
         this.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
       }
       if (
@@ -975,7 +991,6 @@ export class ArenaScene extends Phaser.Scene {
       this.run.stats.attackInterval *
       this.run.clan.campEffects.multipliers.hostInterval *
       (this.run.clan.formation === 'retreat' && momentum > 0.4 ? 0.7 : 1);
-    this.audio.play('shoot');
   }
 
   private shootVolley(
@@ -988,9 +1003,11 @@ export class ArenaScene extends Phaser.Scene {
   ): void {
     const direction = Math.atan2(target.y - y, target.x - x);
     const tempest = burningTempest(this.run);
+    let fired = false;
     for (let i = 0; i < count + (tempest ? 2 : 0); i += 1) {
       const bolt = this.projectiles.get(x, y, 'bolt') as Projectile | null;
       if (!bolt) break;
+      fired = true;
       const angle = direction + (i - (count - 1) / 2) * (tempest ? 0.28 : 0.12);
       bolt.enableBody(true, x, y, true, true);
       bolt
@@ -1019,6 +1036,7 @@ export class ArenaScene extends Phaser.Scene {
         Math.sin(angle) * GAME.projectile.speed,
       );
     }
+    if (fired) this.audio.play('shoot', { x, y });
   }
 
   private fireHostile(enemy: Enemy, angle: number): void {
@@ -1042,6 +1060,7 @@ export class ArenaScene extends Phaser.Scene {
     shot.pierces = 0;
     shot.hitTargets.clear();
     shot.setVelocity(Math.cos(angle) * 125, Math.sin(angle) * 125);
+    this.audio.play('spell', enemy);
   }
 
   private updateProjectiles(dt: number): void {
@@ -1069,6 +1088,7 @@ export class ArenaScene extends Phaser.Scene {
       ) {
         damageClan(this.run, shot.damage * 0.5);
         const impact = this.campBarrier.hit(this.camp, shot);
+        this.audio.play('barrier', impact);
         this.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
         shot.disableBody(true, true);
       }
@@ -1093,11 +1113,15 @@ export class ArenaScene extends Phaser.Scene {
     );
     if (amount >= 1) enemy.motion.hit();
     enemy.health -= amount;
-    if (enemy.health > 0) return;
+    if (enemy.health > 0) {
+      if (amount >= 1) this.audio.play('impact', enemy);
+      return;
+    }
     const { x, y } = enemy;
     const value = enemy.definition.xp;
     this.defeats.show(enemy);
     enemy.disableBody(true, true);
+    this.audio.play('defeat', { x, y });
     this.enemyShadows.get(enemy)?.setVisible(false);
     this.run.kills += 1;
     this.run.clan.spirit += value * 0.4 * this.run.patrons.ancestors.spiritGain;
@@ -1172,9 +1196,10 @@ export class ArenaScene extends Phaser.Scene {
     this.playerMotion.hit();
     this.invulnerable = GAME.invulnerability;
     this.cameras.main.shake(90, 0.003);
-    this.audio.play('hit');
+    this.audio.play(outcome === 'fallen' ? 'fall' : 'hit');
     this.burst(this.player.x, this.player.y, 0xdd967c, 8);
     if (outcome === 'revived') {
+      this.audio.play('level');
       this.run.clan.message = 'The last ember holds. Your Khan rides again.';
       this.burst(this.player.x, this.player.y, 0xf1c27b, 12);
     } else if (outcome === 'fallen') this.hideFallenKhan();
@@ -1217,7 +1242,7 @@ export class ArenaScene extends Phaser.Scene {
     this.clearTouch();
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09).setFollowOffset(0, 0);
     this.burst(x, y, 0xf1c27b, 12);
-    this.audio.play('level');
+    this.audio.play('succession');
     this.callbacks?.onHud(this.snapshot());
   }
 
@@ -1226,10 +1251,12 @@ export class ArenaScene extends Phaser.Scene {
     this.best = Math.max(this.best, Math.floor(this.run.elapsed));
     void this.platform.saveBest(this.best).catch(() => this.callbacks?.onSaveError());
     this.setPhase(phase === 'won' && this.run.story.enabled ? 'epilogue' : phase);
+    this.audio.play(phase === 'won' ? 'victory' : 'loss');
   }
 
   private setPhase(phase: RunState['phase']): void {
     this.run.phase = phase;
+    this.audio.setPlaying(phase === 'playing');
     this.wheelZoomDelta = 0;
     this.clearTouch();
     if (phase === 'playing') {
@@ -1501,6 +1528,7 @@ export class ArenaScene extends Phaser.Scene {
       hazard.remaining -= dt;
       if (hazard.remaining > 0) continue;
       this.burst(hazard.x, hazard.y, clan.region === 3 ? 0xbf6558 : 0x796d4d, 12);
+      this.audio.play('thunder', hazard);
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.player.x, this.player.y) < 70)
         this.takeDamage(20 * this.run.patrons.water.hazardDamage);
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.camp.x, this.camp.y) < 95)
@@ -1523,6 +1551,7 @@ export class ArenaScene extends Phaser.Scene {
       if (target) {
         const x = target.x;
         const y = target.y;
+        this.audio.play('thunder', { x, y });
         const lightning = this.add.graphics().setDepth(9600);
         lightning
           .lineStyle(3, 0xd9f2f5)
@@ -1596,5 +1625,6 @@ export class ArenaScene extends Phaser.Scene {
     this.campBarrier.relocate(this.run, this.camp);
     this.cameras.main.flash(500, 225, 215, 180);
     if (!this.presentStory()) this.publishPhase();
+    this.audio.play('arrive');
   }
 }
