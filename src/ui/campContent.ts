@@ -4,6 +4,7 @@ import {
   buildingBlocker,
   buildingCost,
   burningTempest,
+  developmentExcluded,
   hasDevelopment,
 } from '../game/state/clan';
 import type { RunState } from '../game/types';
@@ -42,13 +43,7 @@ export function campBranches(run: RunState): TreeBranch[] {
       },
       ...building.paths.map((path): TreeNode => {
         const chosen = hasDevelopment(run, building.id, path.id);
-        const excluded =
-          !!path.exclusiveGroup &&
-          building.paths.some(
-            (other) =>
-              other.exclusiveGroup === path.exclusiveGroup &&
-              hasDevelopment(run, building.id, other.id),
-          );
+        const excluded = developmentExcluded(run, building.id, path.id);
         const blocker = buildingBlocker(run, building.id, path.id);
         const requirements = path.requires?.length
           ? path.requires.map((id) => `${building.id}-${id}`)

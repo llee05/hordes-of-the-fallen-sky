@@ -1,7 +1,8 @@
 import { GAME } from '../config';
-import type { BuildingId, Doctrine, Formation, RunState } from '../types';
+import type { BuildingId, CampEffectDefinition, Doctrine, Formation, RunState } from '../types';
 
 export interface BuildingPathDefinition {
+  effects?: CampEffectDefinition;
   id: string;
   title: string;
   description: string;
@@ -13,6 +14,7 @@ export interface BuildingPathDefinition {
 }
 
 export interface BuildingDefinition {
+  effects?: CampEffectDefinition;
   id: BuildingId;
   title: string;
   icon: string;

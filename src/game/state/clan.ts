@@ -1,9 +1,11 @@
 import { GAME } from '../config';
 import { BUILDINGS, ROUTES } from '../data/clan';
 import type { BuildingId, ClanState, Formation, RunState } from '../types';
+import { applyCampEffects, createCampEffects } from './camp';
 
 export function createClan(): ClanState {
   return {
+    campEffects: createCampEffects(),
     stage: 'camp',
     region: 0,
     stageTime: 0,
@@ -37,6 +39,26 @@ export function assignedWorkers(run: RunState): number {
 
 export function hasDevelopment(run: RunState, id: BuildingId, path: string): boolean {
   return run.clan.paths[id]?.includes(path) ?? false;
+}
+
+/** An excluded ancestor also excludes its descendants, without hard-coded path depths. */
+export function developmentExcluded(run: RunState, id: BuildingId, path: string): boolean {
+  const paths = BUILDINGS.find((building) => building.id === id)?.paths ?? [];
+  const visit = (pathId: string, visited: Set<string>): boolean => {
+    if (visited.has(pathId)) return false;
+    visited.add(pathId);
+    const node = paths.find((entry) => entry.id === pathId);
+    if (!node || hasDevelopment(run, id, pathId)) return false;
+    return !!(
+      (node.exclusiveGroup &&
+        paths.some(
+          (other) =>
+            other.exclusiveGroup === node.exclusiveGroup && hasDevelopment(run, id, other.id),
+        )) ||
+      node.requires?.some((parent) => visit(parent, visited))
+    );
+  };
+  return visit(path, new Set());
 }
 
 export function riderCount(run: RunState): number {
@@ -100,14 +122,7 @@ export function buildingBlocker(run: RunState, id: BuildingId, path?: string): s
     if (!development) return 'Unknown development';
     if (!clan.buildings[id]) return `Establish ${definition.title} first`;
     if (hasDevelopment(run, id, path)) return 'Already learned';
-    if (
-      development.exclusiveGroup &&
-      definition.paths.some(
-        (other) =>
-          other.exclusiveGroup === development.exclusiveGroup && hasDevelopment(run, id, other.id),
-      )
-    )
-      return 'Another path chosen';
+    if (developmentExcluded(run, id, path)) return 'Another path chosen';
     for (const parent of development.requires ?? []) {
       if (!hasDevelopment(run, id, parent))
         return `Requires ${definition.paths.find((entry) => entry.id === parent)?.title ?? parent}`;
@@ -132,6 +147,10 @@ export function buildStructure(run: RunState, id: BuildingId, path?: string): bo
     clan.paths[id] = [...(clan.paths[id] ?? []), development.id];
     development.apply?.(run);
   } else definition.onBuild?.(run);
+  applyCampEffects(
+    clan.campEffects,
+    development?.effects ?? (path === undefined ? definition.effects : undefined),
+  );
   clan.message = burningTempest(run)
     ? 'THE BURNING TEMPEST — fire arrows meet the wind shamans.'
     : `${development?.title ?? definition.title} joins your living civilization.`;
@@ -163,7 +182,8 @@ export function damageClan(run: RunState, amount: number): void {
     (clan.formation === 'guard' ? 0.7 : 1) *
     (hasDevelopment(run, 'wagon', 'felt-armor') ? 0.5 : 1) *
     (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? 0.8 : 1) *
-    run.patrons.guardian.protection;
+    run.patrons.guardian.protection *
+    clan.campEffects.multipliers.clanProtection;
   const previous = clan.integrity;
   clan.integrity = Math.max(0, previous - amount * protection);
   if (Math.floor((100 - previous) / 20) < Math.floor((100 - clan.integrity) / 20)) {
@@ -179,12 +199,14 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
   if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
   const clan = run.clan;
   const previousTime = clan.stageTime;
+  const { multipliers, bonuses } = clan.campEffects;
   clan.stageTime += dt;
   const consumption =
     clan.population *
     GAME.clan.foodPerPerson *
     (hasDevelopment(run, 'herd', 'winter-stores') ? 0.5 : 1) *
-    run.patrons.land.consumption;
+    run.patrons.land.consumption *
+    multipliers.consumption;
   if (clan.stage !== 'migration') {
     clan.pasture = Math.max(
       0,
@@ -192,7 +214,9 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
         100,
         clan.pasture -
           dt *
-            ((100 / GAME.clan.pastureLifetime) * run.patrons.land.pastureUse -
+            ((100 / GAME.clan.pastureLifetime) *
+              run.patrons.land.pastureUse *
+              multipliers.pastureUse -
               run.patrons.land.pastureRecovery),
       ),
     );
@@ -200,11 +224,23 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
     const winter = clan.region === 1 ? 0.7 : 1;
     clan.food +=
       dt *
-      ((0.65 + (clan.buildings.herd ? 0.65 : 0)) * pasture * winter * run.patrons.land.food -
+      ((0.65 + (clan.buildings.herd ? 0.65 : 0)) *
+        pasture *
+        winter *
+        run.patrons.land.food *
+        multipliers.foodProduction -
         consumption);
-    clan.materials += dt * (0.28 + clan.population * 0.018) * pasture * run.patrons.land.materials;
-    if (hasDevelopment(run, 'ger', 'hearthkeepers'))
-      clan.integrity = Math.min(100, clan.integrity + dt * 0.25);
+    clan.materials +=
+      dt *
+      (0.28 + clan.population * 0.018) *
+      pasture *
+      run.patrons.land.materials *
+      multipliers.materialProduction;
+    clan.integrity = Math.min(
+      100,
+      clan.integrity +
+        dt * ((hasDevelopment(run, 'ger', 'hearthkeepers') ? 0.25 : 0) + bonuses.resolveRecovery),
+    );
   } else {
     clan.food -= dt * consumption;
     const route = ROUTES.find((r) => r.id === clan.routeId)!;
@@ -212,7 +248,8 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
       (1 + clan.herd * 0.012) *
       (hasDevelopment(run, 'herd', 'remount-herds') ? 1.2 : 1) *
       (clan.region === 1 ? 0.8 : 1) *
-      run.patrons.banner.mobility;
+      run.patrons.banner.mobility *
+      multipliers.mobility;
     clan.migrationProgress = Math.min(
       1,
       (clan.stageTime * mobility) / (GAME.clan.migrationDuration * route.duration),
@@ -237,23 +274,24 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
   if (clan.population === 0 || clan.integrity === 0) return 'lost';
   if (clan.stage === 'migration' && clan.migrationProgress >= 1) {
     const route = ROUTES.find((r) => r.id === clan.routeId)!;
-    clan.food = Math.max(0, clan.food + route.food);
-    clan.materials += route.materials;
+    clan.food = Math.max(0, clan.food + route.food + bonuses.arrivalFood);
+    clan.materials += route.materials + bonuses.arrivalMaterials;
     clan.spirit += route.id === 'ridge' ? 10 : 0;
-    clan.population = Math.min(GAME.clan.maxPopulation, clan.population + route.population);
+    const newPeople = route.population + (route.id === 'refuge' ? bonuses.refugePeople : 0);
+    clan.population = Math.min(GAME.clan.maxPopulation, clan.population + newPeople);
     if (route.id === 'refuge') clan.rescuedRiders += 2;
-    clan.herd = Math.min(GAME.clan.maxHerd, clan.herd + route.herd);
+    clan.herd = Math.min(GAME.clan.maxHerd, clan.herd + route.herd + bonuses.arrivalHerd);
     clan.region += 1;
     run.story.crossings.push({ route: route.id, region: clan.region, population: clan.population });
     clan.stage = clan.region === 3 ? 'final' : 'camp';
     clan.stageTime = 0;
     clan.pasture = 100;
-    clan.integrity = Math.min(100, clan.integrity + 12);
-    run.health = Math.min(run.stats.maxHealth, run.health + 25);
+    clan.integrity = Math.min(100, clan.integrity + 12 + bonuses.arrivalResolve);
+    run.health = Math.min(run.stats.maxHealth, run.health + 25 + bonuses.arrivalHealth);
     clan.message =
       clan.stage === 'final'
         ? 'The Red Eclipse. Protect your people for three minutes while the mountain passage opens.'
-        : `${route.population ? 'Eight survivors join the clan. ' : ''}Fresh pasture. Unpack, rebuild, and decide how long to stay.`;
+        : `${newPeople ? `${newPeople} survivors join the clan. ` : ''}Fresh pasture. Unpack, rebuild, and decide how long to stay.`;
     return 'arrived';
   }
   if (clan.stage === 'final' && clan.stageTime >= GAME.clan.finalDuration) return 'saved';

@@ -26,7 +26,11 @@ export function createPatronEffects(): PatronEffects {
 }
 
 export function gallopCooldown(run: RunState): number {
-  return GAME.dash.cooldown * run.patrons.hunt.gallopCooldown;
+  return (
+    GAME.dash.cooldown *
+    run.patrons.hunt.gallopCooldown *
+    run.clan.campEffects.multipliers.gallopCooldown
+  );
 }
 
 export function friendlyDamageMultiplier(run: RunState, enemyHealthRatio: number): number {
@@ -42,7 +46,11 @@ export function terrainSpeedMultiplier(run: RunState, distance: number): number 
 
 export function advancePatrons(run: RunState, dt: number): void {
   if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0 || run.health <= 0) return;
-  run.health = Math.min(run.stats.maxHealth, run.health + run.patrons.hearth.regeneration * dt);
+  run.health = Math.min(
+    run.stats.maxHealth,
+    run.health +
+      (run.patrons.hearth.regeneration + run.clan.campEffects.bonuses.commanderRecovery) * dt,
+  );
 }
 
 /** Returns the outcome so the scene can provide immediate hit/revival feedback. */

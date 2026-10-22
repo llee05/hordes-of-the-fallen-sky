@@ -435,7 +435,9 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   construct(id: BuildingId, path?: string): void {
+    const previousCooldown = gallopCooldown(this.run);
     if (!buildStructure(this.run, id, path)) return;
+    this.dashTimer *= gallopCooldown(this.run) / previousCooldown;
     this.refreshCamp();
     this.audio.play('level');
     this.publishPhase();
@@ -764,7 +766,10 @@ export class ArenaScene extends Phaser.Scene {
       }
       if (enemy.burning > 0) {
         enemy.burning -= dt;
-        this.damageEnemy(enemy, dt * this.run.stats.damage * 0.45);
+        this.damageEnemy(
+          enemy,
+          dt * this.run.stats.damage * 0.45 * this.run.clan.campEffects.multipliers.burnDamage,
+        );
       }
       if (
         enemy.active &&
@@ -781,7 +786,10 @@ export class ArenaScene extends Phaser.Scene {
     const target = this.spatial.nearest(
       this.player.x,
       this.player.y,
-      GAME.projectile.range + this.run.patrons.bow.range + momentum * 120,
+      GAME.projectile.range +
+        this.run.patrons.bow.range +
+        this.run.clan.campEffects.bonuses.range +
+        momentum * 120,
     );
     if (target) {
       this.playerMotion.attack();
@@ -800,7 +808,9 @@ export class ArenaScene extends Phaser.Scene {
       const riderTarget = this.spatial.nearest(
         rider.x,
         rider.y,
-        GAME.projectile.range + this.run.patrons.bow.range,
+        GAME.projectile.range +
+          this.run.patrons.bow.range +
+          this.run.clan.campEffects.bonuses.range,
       );
       if (riderTarget) {
         this.riderMotions[i]!.attack();
@@ -811,12 +821,14 @@ export class ArenaScene extends Phaser.Scene {
           riderTarget,
           1,
           (0.6 + (hasDevelopment(this.run, 'archery', 'veteran-riders') ? 0.3 : 0)) *
-            this.run.patrons.banner.damage,
+            this.run.patrons.banner.damage *
+            this.run.clan.campEffects.multipliers.riderDamage,
         );
       }
     }
     this.attackTimer =
       this.run.stats.attackInterval *
+      this.run.clan.campEffects.multipliers.hostInterval *
       (this.run.clan.formation === 'retreat' && momentum > 0.4 ? 0.7 : 1);
     this.audio.play('shoot');
   }
@@ -1195,7 +1207,9 @@ export class ArenaScene extends Phaser.Scene {
           this.spatial.nearest(
             this.player.x,
             this.player.y,
-            GAME.projectile.range + this.run.patrons.bow.range,
+            GAME.projectile.range +
+              this.run.patrons.bow.range +
+              this.run.clan.campEffects.bonuses.range,
           ),
         ),
     );
@@ -1213,7 +1227,9 @@ export class ArenaScene extends Phaser.Scene {
             this.spatial.nearest(
               rider.x,
               rider.y,
-              GAME.projectile.range + this.run.patrons.bow.range,
+              GAME.projectile.range +
+                this.run.patrons.bow.range +
+                this.run.clan.campEffects.bonuses.range,
             ),
           ),
       );
@@ -1299,7 +1315,8 @@ export class ArenaScene extends Phaser.Scene {
       }
       this.supportTimer =
         (hasDevelopment(this.run, 'sanctuary', 'wind-shamans') ? 1.8 : 3.5) *
-        (clan.region === 3 ? 1.5 : 1);
+        (clan.region === 3 ? 1.5 : 1) *
+        clan.campEffects.multipliers.sanctuaryInterval;
     }
     if (clan.buildings.wagon && this.wagonTimer <= 0) {
       const target = this.spatial.nearest(this.camp.x, this.camp.y, 520);
@@ -1309,7 +1326,9 @@ export class ArenaScene extends Phaser.Scene {
           this.camp.y,
           target,
           hasDevelopment(this.run, 'wagon', 'war-carts') ? 3 : 1,
-          clan.stage === 'migration' && !hasDevelopment(this.run, 'wagon', 'war-carts') ? 0.7 : 1.5,
+          (clan.stage === 'migration' && !hasDevelopment(this.run, 'wagon', 'war-carts')
+            ? 0.7
+            : 1.5) * clan.campEffects.multipliers.wagonDamage,
         );
       this.wagonTimer = 0.9 * this.run.patrons.guardian.wagonInterval;
     }

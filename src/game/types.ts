@@ -31,6 +31,7 @@ export type PatronId =
 export type Doctrine = 'iron' | 'sky' | 'wander';
 
 export interface ClanState {
+  campEffects: CampEffects;
   stage: JourneyStage;
   region: number;
   stageTime: number;
@@ -53,6 +54,39 @@ export interface ClanState {
   finalBossDefeated: boolean;
   rescuedRiders: number;
   message: string;
+}
+
+export interface CampEffects {
+  multipliers: {
+    foodProduction: number;
+    materialProduction: number;
+    consumption: number;
+    pastureUse: number;
+    mobility: number;
+    clanProtection: number;
+    riderDamage: number;
+    hostInterval: number;
+    burnDamage: number;
+    gallopCooldown: number;
+    sanctuaryInterval: number;
+    wagonDamage: number;
+  };
+  bonuses: {
+    range: number;
+    resolveRecovery: number;
+    commanderRecovery: number;
+    arrivalFood: number;
+    arrivalMaterials: number;
+    arrivalHerd: number;
+    arrivalResolve: number;
+    arrivalHealth: number;
+    refugePeople: number;
+  };
+}
+
+export interface CampEffectDefinition {
+  multipliers?: Partial<CampEffects['multipliers']>;
+  bonuses?: Partial<CampEffects['bonuses']>;
 }
 
 export interface PlayerStats {
