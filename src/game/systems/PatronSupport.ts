@@ -7,6 +7,7 @@ import type { Enemy } from '../entities/actors';
 import type { RunState } from '../types';
 import type { SpatialHash } from './SpatialHash';
 import { isKhanActive } from '../state/khan';
+import { campBoundary } from '../state/campBarrier';
 
 interface GroundPosition {
   x: number;
@@ -62,6 +63,7 @@ export class PatronSupport {
   ): void {
     if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
     const effects = run.patrons;
+    const boundary = campBoundary(run);
     const khanActive = isKhanActive(run);
     const anchor = khanActive ? player : camp;
     this.ancestorTimer -= dt;
@@ -76,9 +78,7 @@ export class PatronSupport {
           .strokeCircle(position.x, position.y, effects.water.radius);
     }
     if (effects.guardian.wardDamage > 0)
-      this.fields
-        .lineStyle(1, 0xd8bc7e, 0.3)
-        .strokeCircle(camp.x, camp.y, GAME.patrons.guardian.wardRadius);
+      this.fields.lineStyle(1, 0xd8bc7e, 0.3).strokeCircle(camp.x, camp.y, boundary.wardRadius);
 
     const count = Math.min(this.spirits.length, effects.ancestors.count);
     if (count === 0) this.ancestorTimer = 0;
@@ -135,7 +135,7 @@ export class PatronSupport {
       this.waterTimer = GAME.patrons.water.pulseEvery;
     }
     if (effects.guardian.wardDamage > 0 && this.guardianTimer <= 0) {
-      spatial.forEachNearby(camp.x, camp.y, GAME.patrons.guardian.wardRadius, (enemy) =>
+      spatial.forEachNearby(camp.x, camp.y, boundary.wardRadius, (enemy) =>
         actions.damage(enemy, run.stats.damage * effects.guardian.wardDamage),
       );
       this.guardianTimer = GAME.patrons.guardian.wardEvery;

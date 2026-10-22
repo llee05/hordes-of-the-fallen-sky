@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
+import { GAME } from '../config';
 import { characterTexture, isCharacterKind, MOTION_SHEETS } from '../animation/CharacterMotion';
 
 /** Two motion atlases and one prop atlas keep painted actors on shared textures. */
 const PROPS = new Set(['ger', 'cart', 'banner', 'sheep', 'rock', 'pillar']);
 /** Scales the camp presentation around its world anchor, independently of combat. */
-export const CAMP_VISUAL_SCALE = 0.75;
+export const CAMP_VISUAL_SCALE = GAME.camp.visualScale;
 export const ART_WIDTH: Readonly<Record<string, number>> = {
   worker: 30,
   packhorse: 58,

@@ -10,6 +10,7 @@ import {
 } from '../assets/painterlyArt';
 import { ClanLife } from '../assets/ClanLife';
 import { campShelters } from '../state/campLife';
+import { campBoundary } from '../state/campBarrier';
 import { SteppeLandscape } from '../assets/SteppeLandscape';
 import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
 import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
@@ -825,6 +826,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private updateEnemies(dt: number): void {
     const clan = this.run.clan;
+    const boundary = campBoundary(this.run);
     const khanActive = isKhanActive(this.run);
     for (const enemy of this.enemies.getChildren() as Enemy[]) {
       const shadow = this.enemyShadows.get(enemy);
@@ -843,7 +845,7 @@ export class ArenaScene extends Phaser.Scene {
         enemy.disableBody(true, true);
         continue;
       }
-      const attackingCamp = campDistance <= GAME.camp.enemyAttack.range;
+      const attackingCamp = campDistance <= boundary.attackRange;
       const target =
         attackingCamp || campDistance < playerDistance * 1.25 ? this.camp : this.player;
       const distance = target === this.camp ? campDistance : playerDistance;
@@ -1031,6 +1033,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private updateProjectiles(dt: number): void {
+    const boundary = campBoundary(this.run);
     for (const bolt of this.projectiles.getChildren() as Projectile[]) {
       if (!bolt.active) continue;
       bolt.remaining -= dt;
@@ -1049,7 +1052,9 @@ export class ArenaScene extends Phaser.Scene {
       if (!shot.active) continue;
       shot.remaining -= dt;
       if (shot.remaining <= 0) shot.disableBody(true, true);
-      else if (Phaser.Math.Distance.Between(shot.x, shot.y, this.camp.x, this.camp.y) < 48) {
+      else if (
+        Phaser.Math.Distance.Between(shot.x, shot.y, this.camp.x, this.camp.y) <= boundary.radius
+      ) {
         damageClan(this.run, shot.damage * 0.5);
         shot.disableBody(true, true);
       }
@@ -1544,8 +1549,11 @@ export class ArenaScene extends Phaser.Scene {
       this.wagonTimer = 0.9 * this.run.patrons.guardian.wagonInterval;
     }
     if (hasDevelopment(this.run, 'sanctuary', 'ancestral-ward') && this.wardTimer <= 0) {
-      this.spatial.forEachNearby(this.camp.x, this.camp.y, 125, (enemy) =>
-        this.damageEnemy(enemy, this.run.stats.damage * 1.5),
+      this.spatial.forEachNearby(
+        this.camp.x,
+        this.camp.y,
+        campBoundary(this.run).wardRadius,
+        (enemy) => this.damageEnemy(enemy, this.run.stats.damage * 1.5),
       );
       this.burst(this.camp.x, this.camp.y, 0x8acfe2, 8);
       this.wardTimer = 1.2;

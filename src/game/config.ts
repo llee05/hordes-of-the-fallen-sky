@@ -21,6 +21,8 @@ export const GAME = {
   invulnerability: 0.65,
   khan: { successionDelay: 10, returnProtection: 3, campOffset: 90 },
   camp: {
+    visualScale: 0.75,
+    barrier: { attackReach: 12, groundClearance: 50, padding: 8 },
     enemyAttack: { range: 120, interval: 1.5, damageMultiplier: 0.45 },
     ger: {
       hospitality: { materials: 36, resolve: 0.15, arrivalHealth: 10 },
