@@ -89,6 +89,14 @@ The clan's three possible identities are interpretations of its shared duty. The
 
 All three can carry the banner through. The measure of the journey remains the people who arrive.
 
+## Work carried with the camp
+
+The clan survives through work shared among households. Gers are dismantled and loaded, wool becomes felt and weatherproof covers, bows are cared for, and herders remember which pasture can bear another halt. Elders teach apprentices while making something the next crossing will need. These skills belong to living people; welcoming a family brings obligations as well as useful hands.
+
+A provisioning ger keeps aaruul, borts, dairy work, and hospitality within the same circle of care. The clan's Örtöö relay is a fictional network of couriers, contacts, and supplies ahead of the caravan, represented by a portable dispatch point. Historical relay stations are not being depicted as buildings that followed one travelling clan. Arban drills adapt a motif of coordinated mounted organisation to the game's small host rather than reconstructing an imperial military unit.
+
+The camp's eight branches combine Mongolian cultural motifs across periods in this fantasy setting. Numerical yields, armor protection against the unreturned, recurring arrival gifts, and storm attacks are invented mechanics. Remembering ovoos is written as care for shared memory and places, not a universal rite or a claim about ritual rewards. [The camp upgrade tree](docs/camp-upgrade-tree.md#cultural-context-and-sources) records the designs and their cultural sources.
+
 ## Patron traditions
 
 The Blue Banner clan remembers eight patron traditions: **Börte Chino**, **Etügen Eke**, **Khükhedei Mergen**, **Golomt**, **Lus**, **Ongod**, **Sülde**, and the **Guardian of Burkhan Khaldun**. “Patron” is the game's progression term, gathering ancestral figures, the hearth, spirits, standards, and a landscape guardian under one interface. These are not eight interchangeable gods or a claim about a single historical pantheon.

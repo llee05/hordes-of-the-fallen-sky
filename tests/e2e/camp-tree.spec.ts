@@ -13,7 +13,7 @@ test('camp previews every development and enforces resources, workers, and exclu
     clan.population = 2;
   });
   await page.keyboard.press('b');
-  await expect(page.locator('[data-tree-branch]')).toHaveCount(5);
+  await expect(page.locator('[data-tree-branch]')).toHaveCount(8);
   await expect(page.locator('[data-node="archery-base"]')).toContainText('More families needed');
   await expect(page.locator('[data-node="archery-fire-arrows"]')).toContainText(
     'Establish Archery grounds first',
@@ -82,7 +82,7 @@ test('additional choices and deeper camp tiers work without new layout or purcha
     (window as any).__gloam.scene.run.clan.materials = 100;
   });
   await page.keyboard.press('b');
-  await expect(page.locator('[data-tree-branch="ger"] [data-node]')).toHaveCount(5);
+  await expect(page.locator('[data-tree-branch="ger"] [data-node]')).toHaveCount(8);
   const materialsBefore = await page.evaluate(
     () => (window as any).__gloam.scene.run.clan.materials,
   );

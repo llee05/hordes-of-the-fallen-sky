@@ -139,6 +139,7 @@ export function buildStructure(run: RunState, id: BuildingId, path?: string): bo
   const definition = BUILDINGS.find((building) => building.id === id)!;
   const development = definition.paths.find((entry) => entry.id === path);
   const cost = buildingCost(run, id, path);
+  const hadTempest = burningTempest(run);
   clan.materials -= cost.materials;
   clan.spirit -= cost.spirit;
   clan.buildings[id] += 1;
@@ -151,9 +152,10 @@ export function buildStructure(run: RunState, id: BuildingId, path?: string): bo
     clan.campEffects,
     development?.effects ?? (path === undefined ? definition.effects : undefined),
   );
-  clan.message = burningTempest(run)
-    ? 'THE BURNING TEMPEST — fire arrows meet the wind shamans.'
-    : `${development?.title ?? definition.title} joins your living civilization.`;
+  clan.message =
+    !hadTempest && burningTempest(run)
+      ? 'THE BURNING TEMPEST — fire arrows meet the wind shamans.'
+      : `${development?.title ?? definition.title} joins your living civilization.`;
   return true;
 }
 

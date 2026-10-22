@@ -17,7 +17,8 @@ export type RunPhase =
   | 'dead'
   | 'won';
 export type JourneyStage = 'camp' | 'migration' | 'final';
-export type BuildingId = 'ger' | 'archery' | 'herd' | 'sanctuary' | 'wagon';
+export type BuildingId =
+  'ger' | 'archery' | 'herd' | 'sanctuary' | 'wagon' | 'felt' | 'provisions' | 'relay';
 export type Formation = 'guard' | 'encircle' | 'wedge' | 'retreat';
 export type PatronId =
   | 'borte-chino'

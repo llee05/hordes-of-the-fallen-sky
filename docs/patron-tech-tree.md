@@ -1,6 +1,6 @@
 # Patron tech tree
 
-The implemented roster contains **eight patrons, 32 technologies, and 40 research ranks**. Each patron supports a different way of keeping the Blue Banner clan alive. Their abilities are original game mechanics; the narrative context and historical sources are in [lore.md](../lore.md#patron-traditions).
+The implemented roster contains **eight patrons, 32 technologies, and 40 research ranks**. Each patron supports a different way of keeping the Blue Banner clan alive. Their abilities are original game mechanics; the narrative context and historical sources are in [lore.md](../lore.md#patron-traditions). Numerical examples below are before additional [camp crafts](camp-upgrade-tree.md), unless a camp interaction is named. Camp multipliers stack with patron effects; camp recovery and arrival bonuses add.
 
 ## Research rules
 

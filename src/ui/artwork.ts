@@ -56,6 +56,9 @@ export const BUILDING_MARKS: Readonly<Record<string, ClanMark>> = {
   herd: 'horse',
   sanctuary: 'sanctuary',
   wagon: 'wagon',
+  felt: 'materials',
+  provisions: 'grain',
+  relay: 'horse',
 };
 
 /** Crop the existing painted world art with its shared atlas metadata, without

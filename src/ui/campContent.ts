@@ -30,7 +30,7 @@ export function campBranches(run: RunState): TreeBranch[] {
     const nodes: TreeNode[] = [
       {
         id: baseId,
-        title: `Establish ${building.title.toLowerCase()}`,
+        title: `Establish ${building.title}`,
         description:
           established && building.startsBuilt
             ? 'This building is provided at the start of your expedition.'
@@ -86,11 +86,15 @@ export function buildingMenu(run: RunState, view: TreeViewState): string {
     mark: 'ger',
     view,
     introduction:
-      'Establish a building, then follow its connected upgrades. Highlighted nodes are ready to buy. Choosing an exclusive path locks its alternatives. Your entire camp travels with you.',
+      'Establish a building, then follow its connected crafts and developments. Shared crafts can be learned together. An exclusive specialization locks its alternative and that path’s descendants. Your entire camp travels with you.',
     summary: [
       { label: 'Materials', value: String(Math.floor(run.clan.materials)) },
       { label: 'Spirit', value: String(Math.floor(run.clan.spirit)) },
       { label: 'Workers assigned', value: `${assignedWorkers(run)} / ${run.clan.population}` },
+      {
+        label: 'Developments learned',
+        value: String(Object.values(run.clan.paths).reduce((sum, paths) => sum + paths.length, 0)),
+      },
     ],
     branches: campBranches(run),
     notice: burningTempest(run)

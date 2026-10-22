@@ -45,10 +45,10 @@ The opening camp already has **Family gers at level 1**, represented by two tent
 Let `P = pasture / 100`, `N = population`, and `W = 0.7` at Silent River or `1` elsewhere:
 
 ```text
-Food consumed / second = N × 0.025 × (0.5 with Winter stores, otherwise 1) × Etügen consumption modifier
-Food produced / second while stationary = (0.65 + 0.65 if Herding grounds exist) × P × W × Etügen food modifier
-Materials produced / second while stationary = (0.28 + N × 0.018) × P × Etügen material modifier
-Pasture lost / second while stationary = (100 / 210) × Etügen depletion modifier − Etügen recovery
+Food consumed / second = N × 0.025 × (0.5 with Winter stores, otherwise 1) × Etügen consumption modifier × camp consumption modifier
+Food produced / second while stationary = (0.65 + 0.65 if Herding grounds exist) × P × W × Etügen food modifier × camp food production modifier
+Materials produced / second while stationary = (0.28 + N × 0.018) × P × Etügen material modifier × camp material production modifier
+Pasture lost / second while stationary = (100 / 210) × Etügen depletion modifier × camp depletion modifier − Etügen recovery
 ```
 
 At the starting camp, full pasture produces 0.65 food/second against consumption of 0.2, for a net gain of 0.45. Materials initially grow by 0.424/second. Production declines with pasture; consumption does not. There is no passive Spirit income, trading, crafting inventory, housing capacity, or individually simulated gathering unit.
@@ -63,9 +63,10 @@ Final resolve damage = raw damage
                      × 0.5 with Felt armor
                      × 0.8 with Ancestral ward
                      × Guardian patron protection (1 before research)
+                     × camp craft protection (1 before crafts)
 ```
 
-The three camp/formation bonuses together leave 28% of raw damage. Full Guardian research multiplies this by 0.648, leaving 18.144%. Crossing a downward 20-point damage band removes one person and one horse per damage event, even if that event crosses several bands. Repairs can restore resolve, but do not resurrect casualties.
+The three camp/formation bonuses together leave 28% of raw damage. Full Guardian research multiplies this by 0.648, leaving 18.144% before further camp crafts. Crossing a downward 20-point damage band removes one person and one horse per damage event, even if that event crosses several bands. Repairs can restore resolve, but do not resurrect casualties.
 
 ## 3. Spirit-stone / patron tech tree
 
@@ -107,47 +108,81 @@ Each enemy drops its defined XP independent of scaled health. Shards begin follo
 
 ## 4. Camp development and upgrade tree
 
-Press **B** to open the camp upgrade tree. Purchases are immediate while simulation is paused. The interface previews all buildings and developments with costs, prerequisites, and learned, available, locked, or excluded states; categories and search support larger trees. Purchases preserve focus and scroll. The current content follows the tree below; the renderer and purchase rules also accept more sibling choices and deeper tiers from content definitions. Each of the five logical buildings has just two levels: **established → one exclusive specialization**. In the current content, you cannot buy duplicate copies, take both paths, switch paths, or develop beyond level 2. Family gers begin established; all other buildings begin absent. All buildings persist through migration.
+Press **B** to open the paused camp tree. It contains **eight building branches and 37 developments**, shown as 45 nodes including establishment. Search, categories, wrapping tiers, and local prerequisites derive from content definitions. The five original branches have an exclusive specialization pair, a shared craft, and a deeper development for each specialization. The three new branches have complementary crafts with two-parent final upgrades. At most 27 developments can be learned together, because alternatives and their descendants are excluded.
 
-You may establish other buildings in any order, subject to materials, Spirit, and worker capacity. Before patron discounts, current specializations cost **1.5× the base resource cost, rounded up**, with no additional workers. Definitions can provide explicit costs and prerequisites for future developments. All four worker-using buildings need eight workers in total, so the starting eight people can staff the complete base camp if no one has been lost. Existing buildings remain functional after population losses; worker availability is checked when establishing a new building. Construction is unavailable while packed for migration.
+Purchases are immediate and charged once. Every acquired building and effect travels with the clan. Construction is unavailable while packed. There is no fixed two-level cap, duplicate establishment, respecialization, or building upkeep. Buildings reserve workers on establishment; developments need no extra workers. Existing buildings keep working after population losses. The starting eight people cannot staff all eight branches: all bases need **13 workers**, and Hearthkeepers alone can raise population to fourteen.
+
+| Building                 | Establishment cost      | Workers | Core effect and development direction                                                                                                                   |
+| ------------------------ | ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Family gers**          | Provided at the start   | 0       | Hearthkeepers (+6 people and 0.25 stationary resolve/second) or Refugee beacons (+10 people); shared felt lining and deeper hospitality/apprenticeship. |
+| **Archery grounds**      | 24 materials            | 3       | +3 riders and two formations. Fire arrows or Veteran riders, shared bow craft, then resin or Arban drills.                                              |
+| **Herding grounds**      | 20 materials            | 2       | +4 horses, +0.65 base food/second, Feigned retreat. Remount herds or Winter stores, shared seasonal grazing, then reserve horses or dairy.              |
+| **Spirit sanctuary**     | 20 materials +12 Spirit | 2       | Lightning. Wind shamans or Ancestral ward, shared remembrance, then storm watch or ancestral tales.                                                     |
+| **Wagon circle**         | 26 materials            | 1       | Camp/caravan volleys. War carts or Felt armor, shared lashings, then wheelwrights or layered screens.                                                   |
+| **Feltmakers’ workshop** | 22 materials            | 2       | Material gathering ×1.15; wool sorting, protective covers, folding pack frames, and master felt craft.                                                  |
+| **Provisioning ger**     | 28 materials            | 2       | +25 food and food production ×1.15; aaruul, borts, hospitality, and shared arrival provisions.                                                          |
+| **Örtöö relay**          | 30 materials            | 1       | Migration mobility ×1.08; scouts, supplies, family messengers, and fresh horses on arrival.                                                             |
+
+Establishing all absent bases costs **170 materials +12 Spirit** before patron discounts. The base Family gers definition would cost 18 materials and welcome six people, but cannot be purchased again in a normal run. Original specializations cost 1.5× base resources, rounded up: 27 for gers, 36 for archery, 30 for herding, 30 +18 Spirit for the sanctuary, and 39 for wagons. The new crafts have explicit individual prices. Guardian discounts multiply every material price by 0.9 per foundation rank, rounded up; Spirit and worker requirements stay unchanged.
 
 ```mermaid
 flowchart TD
-    Camp[Travelling camp: materials and available workers]
-    Camp --> Ger[Family gers: already established]
-    Ger --> Hearth[Hearthkeepers: 27 materials]
-    Ger --> Beacon[Refugee beacons: 27 materials]
-    Camp --> Archery[Archery grounds: 24 materials, 3 workers]
-    Archery --> Fire[Fire arrows: 36 materials]
-    Archery --> Veterans[Veteran riders: 36 materials]
-    Camp --> Herd[Herding grounds: 20 materials, 2 workers]
-    Herd --> Remount[Remount herds: 30 materials]
-    Herd --> Winter[Winter stores: 30 materials]
-    Camp --> Sanctuary[Spirit sanctuary: 20 materials, 12 Spirit, 2 workers]
-    Sanctuary --> Wind[Wind shamans: 30 materials, 18 Spirit]
-    Sanctuary --> Ward[Ancestral ward: 30 materials, 18 Spirit]
-    Camp --> Wagon[Wagon circle: 26 materials, 1 worker]
-    Wagon --> War[War carts: 39 materials]
-    Wagon --> Felt[Felt armor: 39 materials]
-    Fire --> Tempest[Burning Tempest: requires BOTH specializations]
-    Wind --> Tempest
+    Camp[Travelling camp: materials, Spirit, workers] --> Ger[Family gers: provided]
+    Camp --> Bow[Archery grounds]
+    Camp --> Herd[Herding grounds]
+    Camp --> Spirit[Spirit sanctuary]
+    Camp --> Wagon[Wagon circle]
+    Camp --> Felt[Feltmakers' workshop]
+    Camp --> Food[Provisioning ger]
+    Camp --> Relay[Örtöö relay]
+    Felt --> Wool[Wool sorting]
+    Felt --> Covers[Weatherproof covers]
+    Wool --> Master[Master felt craft: both required]
+    Covers --> Master
+    Food --> Aaruul[Aaruul drying]
+    Food --> Borts[Borts stores]
+    Aaruul --> Shared[Shared provisions: both required]
+    Borts --> Shared
+    Relay --> Scouts[Pasture scouts]
+    Relay --> Caches[Supply caches]
+    Scouts --> Horses[Fresh horses: both required]
+    Caches --> Horses
 ```
 
-Each pair of child nodes is an **either/or** choice. Arrows into Burning Tempest are a combination requirement, not further purchases. Diagram prices are the cost of that individual step before Guardian material discounts; establishing and specializing a sanctuary costs **50 materials + 30 Spirit total**.
+### Original specializations and deeper crafts
 
-| Building         | Establishment                                                                                                                                               | Exclusive specialization A                                                                                                                                            | Exclusive specialization B                                                                                                                                       |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Family gers      | Base definition: 18 materials, 0 workers, +6 people. Already level 1 at run start; this purchase is therefore unavailable in a normal run.                  | **Hearthkeepers:** 27 materials; +6 people immediately and +0.25 resolve/second while stationary, including the final stand.                                          | **Refugee beacons:** 27 materials; +10 people immediately. No recurring refugee arrivals.                                                                        |
-| Archery grounds  | 24 materials, 3 workers; +3 riders; unlock Encirclement and Charging wedge.                                                                                 | **Fire arrows:** 36 materials; arrows ignite for 2 seconds, dealing `damage stat × 0.45` per second. Hits refresh the burn duration rather than stack separate burns. | **Veteran riders:** 36 materials; +3 riders, and every accompanying rider's arrow multiplier rises from 0.6 to 0.9 of the damage stat.                           |
-| Herding grounds  | 20 materials, 2 workers; +4 horses; add 0.65 food/second before pasture/winter scaling; unlock Feigned retreat.                                             | **Remount herds:** 30 materials; commander movement ×1.12 and migration mobility ×1.2.                                                                                | **Winter stores:** 30 materials; +45 food immediately and food consumption ×0.5 thereafter.                                                                      |
-| Spirit sanctuary | 20 materials + 12 Spirit, 2 workers; area lightning for `damage stat ×3`, with a 70-unit search radius around the target, every 3.5 seconds.                | **Wind shamans:** 30 materials + 18 Spirit; lightning interval becomes 1.8 seconds; combines with Fire arrows for Burning Tempest.                                    | **Ancestral ward:** 30 materials + 18 Spirit; camp-area damage of `damage stat ×1.5` every 1.2 seconds, with a 125-unit spatial search radius; clan damage ×0.8. |
-| Wagon circle     | 26 materials, 1 worker; fires one arrow every 0.9 seconds at targets within 520 units of camp. Damage multiplier 1.5 while stationary, 0.7 while migrating. | **War carts:** 39 materials; three arrows per volley and retains the 1.5 damage multiplier while migrating.                                                           | **Felt armor:** 39 materials; clan damage ×0.5 and immediately restore 30 resolve, up to 100.                                                                    |
+| Branch           | Original specialization benefits                                                                                                  | Shared craft                                                             | Deeper development after that specialization                                                                                                                                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Family gers      | **Hearthkeepers:** +6 people and 0.25 stationary resolve/second; **Refugee beacons:** +10 people.                                 | **Felt-lined households:** 22 materials, clan damage ×0.9.               | **A place at every hearth:** 36, requires Hearthkeepers, +0.15 stationary resolve/second and +10 arrival healing. **Household apprentices:** 36, requires Refugee beacons, materials ×1.2.                                                     |
+| Archery grounds  | **Fire arrows:** 2-second burns at shared damage ×0.45/second; **Veteran riders:** +3 riders, companion multiplier 0.6 →0.9.      | **Horn-and-sinew bowyers:** 28, +30 commander/companion targeting range. | **Prepared resin bundles:** 42, requires Fire arrows, burn damage ×1.3. **Arban drills:** 42, requires Veterans, companion damage ×1.2 and host firing interval ×0.9.                                                                          |
+| Herding grounds  | **Remount herds:** commander speed ×1.12 and mobility ×1.2; **Winter stores:** +45 food and consumption ×0.5.                     | **Seasonal grazing knowledge:** 24, pasture depletion ×0.85.             | **A horse held in reserve:** 36, requires Remounts, +3 horses and gallop cooldown ×0.9. **The herders’ dairy reserve:** 32, requires Winter stores, +25 food and food production ×1.2.                                                         |
+| Spirit sanctuary | **Wind shamans:** lightning every 1.8 seconds; **Ancestral ward:** damage ×1.5 within 125 every 1.2 seconds and clan damage ×0.8. | **Remembered ovoos:** 24 +8 Spirit, +6 arrival resolve.                  | **Keepers of the storm watch:** 40 +18 Spirit, requires Wind shamans, lightning interval ×0.85. **Names beside the hearth:** 38 +16 Spirit, requires Ancestral ward, +0.15 active commander healing/second and +0.1 stationary resolve/second. |
+| Wagon circle     | **War carts:** 3 arrows and full stationary damage during migration; **Felt armor:** clan damage ×0.5 and +30 immediate resolve.  | **Rawhide lashings:** 26, mobility ×1.08.                                | **Wheelwright crews:** 40, requires War carts, wagon damage ×1.25. **Layered felt screens:** 38, requires Felt armor, clan damage ×0.9 again.                                                                                                  |
 
-Lightning first looks for a target within 520 units of the commander, then within 520 of camp. It and the ancestral ward continue working during migration. The Red Eclipse lengthens lightning intervals to 5.25 seconds normally or 2.7 with Wind shamans. Wards and wagon timers keep their usual intervals. Area attacks affect active enemies within their circular search radii.
+Lightning looks for targets within 520 of commander, then camp, and affects a 70-unit radius. It and wards continue during migration. Red Eclipse multiplies lightning intervals by 1.5, giving 2.295 seconds with Wind shamans and Storm watch. Wagon volleys target within 520 every 0.9 seconds (0.675 with Guardian Watchfires), for shared damage ×1.5 stationary or ×0.7 migrating unless War carts are learned. Independent support timers are not changed by host haste.
 
-**Burning Tempest** activates automatically when Fire arrows and Wind shamans are both selected. Every friendly arrow volley gains two additional arrows, a wider fan, and alternating curvature of ±0.65 radians/second. This applies to the commander, accompanying riders, and wagon volleys. The arrows retain Fire arrows' burn. There is no extra payment, button, or separate rank. Choosing Veteran riders or Ancestral ward rules out this combination for that expedition.
+**Burning Tempest** still combines Fire arrows and Wind shamans without another purchase. Every friendly volley gains two additional arrows with a wider fan and alternating curvature ±0.65 radians/second. Commander, companion, ancestral, and wagon arrows participate. Prepared resin strengthens burns; hits refresh rather than stack separate burn timers. Choosing Veterans or Ancestral ward excludes this combination.
 
-Completing every building and one specialization each costs **252 materials and 30 Spirit from the starting camp**. This excludes the already provided family gers and any other resource gains/spends. Worker reservation stays at eight. Guardian foundation ranks multiply each individual material price by 0.9 per rank, rounded up after the normal price is calculated. Spirit costs and workers stay unchanged.
+### Complementary craft, provision, and relay developments
+
+| Branch     | Development and cost                     | Effect / requirement                                                               |
+| ---------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |
+| Feltmakers | **Wool sorting circles:** 24             | Material gathering ×1.15 again.                                                    |
+| Feltmakers | **Weatherproof ger covers:** 28          | Food consumption ×0.9, including migration.                                        |
+| Feltmakers | **Folding pack frames:** 28              | Migration mobility ×1.1.                                                           |
+| Feltmakers | **Felt passed between generations:** 42  | Requires sorting **and** covers; clan damage ×0.9.                                 |
+| Provisions | **Aaruul drying racks:** 26              | +20 food immediately; consumption ×0.9.                                            |
+| Provisions | **Borts travel stores:** 28              | +15 food per successful crossing.                                                  |
+| Provisions | **Airag hospitality:** 24                | +4 people and +10 resolve immediately, respecting caps.                            |
+| Provisions | **Provisions for every household:** 42   | Requires aaruul **and** borts; +10 arrival healing and +6 arrival resolve.         |
+| Relay      | **Pasture scouts:** 28                   | Pasture depletion ×0.9.                                                            |
+| Relay      | **Supplies along the road:** 32          | +10 materials and +8 food per successful crossing.                                 |
+| Relay      | **Messengers to scattered families:** 30 | Blue-banner arrivals welcome 3 additional people; rescued-rider reward stays 2.    |
+| Relay      | **Fresh horses on the road:** 44         | Requires scouts **and** supplies; +1 horse and +4 resolve per successful crossing. |
+
+Arrival benefits are paid once, after completing the crossing, including the third crossing. They add to route rewards and never repeat in the final stand. Food and material production stop while travelling; consumption reductions and mobility continue. Commander recovery uses active time during travel; resolve recovery requires a stationary camp. Population and horses remain capped at 120 and forty.
+
+See [the complete camp tree](camp-upgrade-tree.md) for all eight branch diagrams, stable IDs, interaction examples, and sourced cultural context. The shared UI and typed camp-effect definitions support further buildings, siblings, and tiers without new coordinate tables.
 
 ## 5. Mounted combat and formations
 
@@ -155,9 +190,9 @@ Completing every building and one specialization each costs **252 materials and 
 
 The commander starts with 100 health, 190 movement speed, 16 damage, a 0.6-second firing interval, 85 shard attraction radius, and one arrow per volley. Attacks automatically choose the nearest available enemy within targeting range; there is no manual aim or attack input.
 
-Momentum rises by 0.72/second while moving and falls by 1.5/second while stopped, clamped to 0–1. Full momentum takes about 1.39 seconds. Commander targeting range is `440 + 120 × momentum`; personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum gives 560 targeting range and +30% personal damage.
+Momentum rises by 0.72/second while moving and falls by 1.5/second while stopped, clamped to 0–1. Full momentum takes about 1.39 seconds. Before research/crafts, commander targeting range is `440 + 120 × momentum`; personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum gives 560 targeting range and +30% personal damage.
 
-Accompanying riders each fire one arrow per host volley, at 60% of the shared damage stat, or 90% with Veteran riders. Their targeting range starts at 440; Khükhedei Mergen adds up to 60 to both commander and rider targeting range. Sülde multiplies rider damage by 1.25. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
+Accompanying riders each fire one arrow per host volley, at 60% of the shared damage stat, or 90% with Veteran riders. Their targeting range starts at 440; Khükhedei Mergen adds up to 60 and Horn-and-sinew bowyers adds 30 to commander and rider targeting range. Sülde multiplies rider damage by 1.25; Arban drills adds ×1.2 and a ×0.9 host firing interval. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
 
 ```text
 min(16, 1 starting rider
@@ -179,7 +214,7 @@ The Guardian's independent camp ward deals 65% shared damage in radius 125 every
 
 ### Gallop
 
-**Space / controller A** gallops in the current or last facing direction at speed 570 for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop. Börte Chino can reduce the cooldown to 2.25 seconds. Golomt reduces commander damage, provides active-time regeneration, and can prevent one lethal hit per expedition; clan loss still ends the expedition.
+**Space / controller A** gallops in the current or last facing direction at speed 570 for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop. Börte Chino can reduce the cooldown to 2.25 seconds; reserve horses multiply it by 0.9 again, reaching 2.025 with both. Golomt reduces commander damage, provides active-time regeneration, and can prevent one lethal hit per expedition; clan loss still ends the expedition.
 
 ### Formation tree
 
@@ -209,6 +244,7 @@ Mobility = (1 + herd × 0.012)
          × (1.2 with Remount herds, otherwise 1)
          × (0.8 when leaving Silent River, otherwise 1)
          × Sülde mobility modifier (1.15 with No wagon left behind)
+         × camp mobility modifiers (lashings, pack frames, relay)
 Progress = stage time × Mobility / route base duration
 ```
 
@@ -314,6 +350,7 @@ The desktop game runs offline with local assets and native, validated, atomic sa
 | Starting run, XP thresholds, upgrade application                                     | [state/run.ts](../src/game/state/run.ts)                                            |
 | Patron technology definitions and prerequisites                                      | [data/upgrades.ts](../src/game/data/upgrades.ts)                                    |
 | Building costs, stable path IDs, prerequisites, effects, formations, routes, regions | [data/clan.ts](../src/game/data/clan.ts)                                            |
+| Typed camp effects and once-only purchase grants                                     | [state/camp.ts](../src/game/state/camp.ts)                                          |
 | Economy, staffing, purchases, protection, migration, identity                        | [state/clan.ts](../src/game/state/clan.ts)                                          |
 | Patron metadata and playstyles                                                       | [data/patrons.ts](../src/game/data/patrons.ts)                                      |
 | Neutral patron state, conditional damage, recovery, revival                          | [state/patrons.ts](../src/game/state/patrons.ts)                                    |

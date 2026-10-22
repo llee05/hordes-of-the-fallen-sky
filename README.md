@@ -2,7 +2,7 @@
 
 A Mongolian-inspired nomadic civilization builder × mounted bullet heaven. **TypeScript + Phaser 3 + Electron + Vite.** The cities have fallen, the sky is going dark, and a small clan survives by moving. Build a people, defend their temporary home, and protect the caravan on its journey to the sacred heart of the steppe.
 
-This playable prototype includes a complete two-act expedition: eight illustrated camp encounters with choices, four companions, three defended crossings, a final mountain stand, and an epilogue reflecting the people who arrive. Its civilization systems include five buildings with two exclusive specializations each, abstracted population and workers, three resources, four regional arenas, five standard enemies, two elites, and one boss. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and permanent civilization unlocks remain future work.
+This playable prototype includes a complete two-act expedition: eight illustrated camp encounters with choices, four companions, three defended crossings, a final mountain stand, and an epilogue reflecting the people who arrive. Its civilization systems include eight camp branches with 37 developments, abstracted population and workers, three resources, four regional arenas, five standard enemies, two elites, and one boss. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and permanent civilization unlocks remain future work.
 
 Read [the world lore](lore.md) for the Tengri-inspired setting: Eternal Heaven, Etügen and the living land, the Last Court's Iron Vow, the unreturned, and the Blue Banner clan's search for refuge. Research notes separate the religious and cultural inspiration from the game's invented mythology.
 
@@ -50,15 +50,18 @@ Act I crosses Golden Pasture and Silent River. Arrival at Broken Pass begins Act
 
 Start with eight people, three horses, two gers, supplies, and a mounted commander with one accompanying rider. Attacks are automatic. Ride to collect spirit shards. Each level banks a knowledge point without interrupting combat. Press **T** (controller **LB**) or use the HUD to open the paused **Patron tech tree**, inspect every branch, and spend points on the ranks you choose. Eight patrons support hunting, civilisation, archery, survival, terrain control, ancestral summons, army leadership, and defensive construction. Each has a two-rank foundation, two practices, and a capstone; mix patrons freely. You can leave with unspent points and return later. Categories and search help you find branches. The tree is also accessible from Pause and the chronicle’s Traditions tab. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through.
 
-Press **B** to open the **camp upgrade tree**. Planning pauses the simulation, including food consumption, pasture depletion, enemies, and migration. Preview every building and development, including costs, worker requirements, prerequisites, and exclusive choices. Search or filter by category, then purchase a highlighted node. The five current buildings each have two exclusive specializations; the interface and purchase rules support additional choices and deeper tiers through content definitions. Your buildings travel with the clan.
+Press **B** to open the **camp upgrade tree**. Planning pauses the simulation, including food consumption, pasture depletion, enemies, and migration. Preview every building and development, including costs, worker requirements, prerequisites, and exclusive choices. Search or filter by category, then purchase a highlighted node. The five original branches retain their exclusive specializations, with shared crafts and deeper upgrades. A Feltmakers’ workshop, Provisioning ger, and Örtöö relay add complementary crafts and upgrades that require two earlier developments. There are eight branches and 37 developments, with no fixed two-level limit. Establishing every base reserves 13 workers, so grow the starting eight-person clan before staffing everything. Your buildings and learned effects travel with the clan.
 
-| Building         | What it adds                                        | Specializations                                                        |
-| ---------------- | --------------------------------------------------- | ---------------------------------------------------------------------- |
-| Family gers      | Families and faster material gathering              | Hearthkeepers repair clan resolve; refugee beacons welcome more people |
-| Archery grounds  | Three mounted archers, encirclement, charging wedge | Fire arrows or veteran riders                                          |
-| Herding grounds  | Horses, food production, feigned retreat            | Faster remount herds or food-preserving winter stores                  |
-| Spirit sanctuary | Lightning strikes against nearby enemies            | Wind shamans or an ancestral camp guardian                             |
-| Wagon circle     | Defensive volleys, including during migration       | Triple-volley war carts or protective felt armor                       |
+| Building             | What it adds                                        | Development paths                                                              |
+| -------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Family gers          | Families and faster material gathering              | Hearthkeepers repair clan resolve; refugee beacons welcome more people         |
+| Archery grounds      | Three mounted archers, encirclement, charging wedge | Fire arrows or veteran riders                                                  |
+| Herding grounds      | Horses, food production, feigned retreat            | Faster remount herds or food-preserving winter stores                          |
+| Spirit sanctuary     | Lightning strikes against nearby enemies            | Wind shamans or an ancestral camp guardian                                     |
+| Wagon circle         | Defensive volleys, including during migration       | War carts or felt armor, then wheelwrights or layered screens; shared lashings |
+| Feltmakers’ workshop | Faster material gathering                           | Wool sorting, weatherproof covers, pack frames, and master felt craft          |
+| Provisioning ger     | Food supplies and production                        | Aaruul, borts, hospitality, and shared arrival provisions                      |
+| Örtöö relay          | Faster crossings                                    | Pasture scouts, supply caches, family messengers, and fresh horses             |
 
 **Fire arrows + wind shamans = the Burning Tempest:** curving, flaming arrow fans with lingering burn damage. Military, spiritual, and migration decisions gradually establish the Iron Horde, Children of the Eternal Sky, or Wandering Nation identity.
 
@@ -72,7 +75,7 @@ In a story expedition, victory opens **A place beside the fire**, a skippable ep
 
 An expedition is intended to take about 15 minutes with roughly three minutes of growth per camp. Earlier departures shorten the journey; longer stays increase danger. This is a prototype balance, not a fixed time limit.
 
-For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For all 32 technologies and 40 ranks, see [the patron tech tree](docs/patron-tech-tree.md). For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
+For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For every camp cost, dependency, effect, and cultural source, see [the camp upgrade tree](docs/camp-upgrade-tree.md). For all 32 technologies and 40 ranks, see [the patron tech tree](docs/patron-tech-tree.md). For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
 
 ## Controls
 
@@ -125,6 +128,7 @@ src/game/config.ts             Balance, world, and journey timings (seconds)
 src/game/types.ts              Run, clan, and snapshot contracts
 src/game/state/run.ts          Experience, traditions, run lifecycle
 src/game/state/clan.ts         Economy, construction, migration, victory
+src/game/state/camp.ts         Typed camp effects, neutral defaults, and once-only grants
 src/game/data/clan.ts          Buildings, specializations, routes, regions, formations
 src/game/data/enemies.ts       Five enemies, two elites, and the Skybreaker
 src/game/data/patrons.ts       Eight patrons, playstyles, symbols, and descriptions

@@ -11,6 +11,54 @@ export const GAME = {
   projectile: { speed: 440, lifetime: 1.6, range: 440 },
   dash: { speed: 570, duration: 0.3, cooldown: 3 },
   invulnerability: 0.65,
+  camp: {
+    ger: {
+      hospitality: { materials: 36, resolve: 0.15, arrivalHealth: 10 },
+      apprentices: { materials: 36, gathering: 1.2 },
+      linings: { materials: 22, protection: 0.9 },
+    },
+    archery: {
+      bowyers: { materials: 28, range: 30 },
+      resin: { materials: 42, damage: 1.3 },
+      arban: { materials: 42, damage: 1.2, interval: 0.9 },
+    },
+    herd: {
+      grazing: { materials: 24, depletion: 0.85 },
+      relay: { materials: 36, horses: 3, gallop: 0.9 },
+      dairy: { materials: 32, food: 25, production: 1.2 },
+    },
+    sanctuary: {
+      remembrance: { materials: 24, spirit: 8, arrivalResolve: 6 },
+      watch: { materials: 40, spirit: 18, interval: 0.85 },
+      tales: { materials: 38, spirit: 16, health: 0.15, resolve: 0.1 },
+    },
+    wagon: {
+      lashings: { materials: 26, mobility: 1.08 },
+      wheels: { materials: 40, damage: 1.25 },
+      felt: { materials: 38, protection: 0.9 },
+    },
+    felt: {
+      base: { materials: 22, workers: 2, gathering: 1.15 },
+      sorting: { materials: 24, gathering: 1.15 },
+      covers: { materials: 28, consumption: 0.9 },
+      frames: { materials: 28, mobility: 1.1 },
+      mastery: { materials: 42, protection: 0.9 },
+    },
+    provisions: {
+      base: { materials: 28, workers: 2, food: 25, production: 1.15 },
+      aaruul: { materials: 26, food: 20, consumption: 0.9 },
+      borts: { materials: 28, arrivalFood: 15 },
+      airag: { materials: 24, people: 4, resolve: 10 },
+      shared: { materials: 42, arrivalHealth: 10, arrivalResolve: 6 },
+    },
+    relay: {
+      base: { materials: 30, workers: 1, mobility: 1.08 },
+      scouts: { materials: 28, depletion: 0.9 },
+      caches: { materials: 32, arrivalMaterials: 10, arrivalFood: 8 },
+      messengers: { materials: 30, people: 3 },
+      horses: { materials: 44, arrivalHerd: 1, arrivalResolve: 4 },
+    },
+  },
   patrons: {
     wolf: { movingDamage: 1.15, speed: 1.04, execute: 1.3, gallop: 0.75, killHeal: 2 },
     earth: { food: 1.15, pasture: 0.85, materials: 1.25, consumption: 0.8, recovery: 0.12 },

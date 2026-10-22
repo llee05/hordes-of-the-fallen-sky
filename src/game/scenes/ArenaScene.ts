@@ -1102,7 +1102,7 @@ export class ArenaScene extends Phaser.Scene {
     const ring = this.add.graphics();
     ring.lineStyle(1.5, 0xf4deb0, 0.24).strokeEllipse(0, 16, 300, 170);
     this.camp.add(ring);
-    const add = (x: number, y: number, key: string, scale = 2.5): void => {
+    const add = (x: number, y: number, key: string, scale = 2.5): Phaser.GameObjects.Image => {
       const width = ((ART_WIDTH[key] ?? 60) * scale) / 2.5;
       this.camp.add(
         this.add
@@ -1114,11 +1114,15 @@ export class ArenaScene extends Phaser.Scene {
       const image = paintedImage(this, x, y, key, width).setDepth(y).setName(key);
       image.setData('restScale', image.scaleX);
       this.camp.add(image);
+      return image;
     };
     add(-64, 0, migrating ? 'cart' : 'ger');
     add(65, 28, migrating ? 'cart' : 'ger');
     add(10, -45, 'banner', 3.2);
-    if (this.run.clan.buildings.ger > 1) {
+    if (
+      hasDevelopment(this.run, 'ger', 'hearthkeepers') ||
+      hasDevelopment(this.run, 'ger', 'refugee-beacons')
+    ) {
       add(-110, 55, migrating ? 'cart' : 'ger', 2);
       add(110, -55, migrating ? 'cart' : 'ger', 2);
     }
@@ -1127,6 +1131,14 @@ export class ArenaScene extends Phaser.Scene {
     if (this.run.clan.buildings.wagon) {
       add(-95, 55, 'cart', 2);
       add(100, 0, 'cart', 2);
+    }
+    if (this.run.clan.buildings.felt)
+      add(-190, -75, migrating ? 'cart' : 'ger', 1.7).setData('buildingId', 'felt');
+    if (this.run.clan.buildings.provisions)
+      add(178, -70, migrating ? 'cart' : 'ger', 1.7).setData('buildingId', 'provisions');
+    if (this.run.clan.buildings.relay) {
+      add(185, 75, 'cart', 1.7).setData('buildingId', 'relay');
+      add(185, 45, 'banner', 2);
     }
     for (let i = 0; i < Math.min(10, this.run.clan.herd); i += 1)
       add(-55 + (i % 5) * 27, 80 + Math.floor(i / 5) * 20, 'sheep', 2);
