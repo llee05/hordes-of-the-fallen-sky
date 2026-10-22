@@ -1,6 +1,7 @@
 import { UPGRADES } from '../data/upgrades';
 import { GAME } from '../config';
 import { createClan } from './clan';
+import { createPatronEffects } from './patrons';
 import { createStory } from './story';
 import type { RunState, UpgradeDefinition } from '../types';
 
@@ -21,6 +22,7 @@ export function createRun(): RunState {
     upgrades: {},
     clan: createClan(),
     story: createStory(),
+    patrons: createPatronEffects(),
     stats: {
       maxHealth: GAME.player.health,
       speed: GAME.player.speed,

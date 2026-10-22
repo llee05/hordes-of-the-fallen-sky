@@ -147,7 +147,7 @@ describe('a civilization that moves', () => {
       expect(buildStructure(run, 'archery', 'fire-arrows')).toBe(true);
       expect(buildStructure(run, 'archery', 'scouts')).toBe(false);
       expect(buildStructure(run, 'archery', 'fire-mastery')).toBe(true);
-      expect(buildingCost('archery', 'fire-mastery')).toEqual({ materials: 12, spirit: 7 });
+      expect(buildingCost(run, 'archery', 'fire-mastery')).toEqual({ materials: 12, spirit: 7 });
       expect(run.clan.paths.archery).toEqual(['fire-arrows', 'fire-mastery']);
       expect(run.clan.materials).toBe(428);
       expect(run.clan.spirit).toBe(493);

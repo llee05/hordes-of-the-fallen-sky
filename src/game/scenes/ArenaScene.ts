@@ -29,6 +29,15 @@ import {
 import { UPGRADES } from '../data/upgrades';
 import { Enemy, Gem, Projectile } from '../entities/actors';
 import { applyUpgrade, createRun, gainExperience, redeemMasteredResearch } from '../state/run';
+import {
+  advancePatrons,
+  damageCommander,
+  friendlyDamageMultiplier,
+  gallopCooldown,
+  rewardPatronKill,
+  terrainSpeedMultiplier,
+} from '../state/patrons';
+import { PatronSupport } from '../systems/PatronSupport';
 import { GameAudio } from '../systems/Audio';
 import { SpatialHash } from '../systems/SpatialHash';
 import { ActionKeys } from '../systems/ActionKeys';
@@ -60,6 +69,7 @@ export class ArenaScene extends Phaser.Scene {
   private riderMotions: CharacterMotion[] = [];
   private riderSpeeds: number[] = [];
   private defeats!: DefeatSprites;
+  private patronSupport!: PatronSupport;
   private enemyShadows = new Map<Enemy, Phaser.GameObjects.Image>();
   private dustTimer = 0;
   private supportTimer = 0;
@@ -183,6 +193,7 @@ export class ArenaScene extends Phaser.Scene {
       .sprite(center, center + 100, ...artTexture('player'))
       .setCollideWorldBounds(true);
     styleActor(this.player, 'player', ART_WIDTH.player!, 10);
+    this.patronSupport = new PatronSupport(this, this.player);
 
     this.enemies = this.physics.add.group({
       classType: Enemy,
@@ -454,7 +465,7 @@ export class ArenaScene extends Phaser.Scene {
   dash(): void {
     if (this.run.phase !== 'playing' || this.dashTimer > 0) return;
     this.dashRemaining = GAME.dash.duration;
-    this.dashTimer = GAME.dash.cooldown;
+    this.dashTimer = gallopCooldown(this.run);
     this.invulnerable = Math.max(this.invulnerable, GAME.dash.duration);
     this.audio.play('dash');
     this.burst(this.player.x, this.player.y, 0xc8df9b, 7);
@@ -462,8 +473,10 @@ export class ArenaScene extends Phaser.Scene {
 
   research(id: string, rank: number): void {
     const upgrade = UPGRADES.find((entry) => entry.id === id);
+    const previousCooldown = gallopCooldown(this.run);
     if (this.run.phase !== 'upgrade' || !upgrade || !applyUpgrade(this.run, upgrade, rank)) return;
     this.audio.play('level');
+    this.dashTimer *= gallopCooldown(this.run) / previousCooldown;
     this.run.clan.message = `${upgrade.title} — rank ${rank} learned.`;
     redeemMasteredResearch(this.run);
     this.publishPhase();
@@ -518,6 +531,7 @@ export class ArenaScene extends Phaser.Scene {
     if (this.presentStory()) return;
     const dt = Math.min(delta / 1000, 0.05);
     this.run.elapsed += dt;
+    advancePatrons(this.run, dt);
     this.dashTimer = Math.max(0, this.dashTimer - dt);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
     this.dashRemaining = Math.max(0, this.dashRemaining - dt);
@@ -542,6 +556,10 @@ export class ArenaScene extends Phaser.Scene {
     }
     this.spatial.rebuild(this.enemies.getChildren() as Enemy[]);
     this.updateSupport(dt);
+    this.patronSupport.update(this.run, dt, this.player, this.camp, this.spatial, {
+      damage: (enemy, amount) => this.damageEnemy(enemy, amount),
+      volley: (x, y, target, multiplier) => this.shootVolley(x, y, target, 1, multiplier, true),
+    });
     this.attackTimer -= dt;
     if (this.attackTimer <= 0) this.fire();
     this.spawnTimer -= dt;
@@ -660,6 +678,8 @@ export class ArenaScene extends Phaser.Scene {
       .setVisible(true);
     enemy.definition = definition;
     enemy.health = definition.health * (forced ? 1 : 1 + this.run.elapsed / 1200);
+    enemy.maxHealth = enemy.health;
+    enemy.spawnId += 1;
     enemy.setAlpha(1).setAngle(0).setVelocity(0, 0);
     enemy.attackTimer = 1.5;
     enemy.clanAttackTimer = 0;
@@ -701,7 +721,10 @@ export class ArenaScene extends Phaser.Scene {
       const target = campDistance < playerDistance * 1.25 ? this.camp : this.player;
       const distance = target === this.camp ? campDistance : playerDistance;
       const behavior = enemy.definition.behavior;
-      let speed = enemy.definition.speed * (1 + clan.region * 0.1);
+      let speed =
+        enemy.definition.speed *
+        (1 + clan.region * 0.1) *
+        terrainSpeedMultiplier(this.run, Math.min(playerDistance, campDistance));
       if ((behavior === 'ranged' || behavior === 'boss') && distance < 260) speed = 0;
       if (behavior === 'charger' && enemy.chargeTimer <= 0) {
         enemy.chargeTimer = 3;
@@ -758,7 +781,7 @@ export class ArenaScene extends Phaser.Scene {
     const target = this.spatial.nearest(
       this.player.x,
       this.player.y,
-      GAME.projectile.range + momentum * 120,
+      GAME.projectile.range + this.run.patrons.bow.range + momentum * 120,
     );
     if (target) {
       this.playerMotion.attack();
@@ -774,7 +797,11 @@ export class ArenaScene extends Phaser.Scene {
     const count = riderCount(this.run);
     for (let i = 0; i < count; i += 1) {
       const rider = this.riders[i]!;
-      const riderTarget = this.spatial.nearest(rider.x, rider.y, GAME.projectile.range);
+      const riderTarget = this.spatial.nearest(
+        rider.x,
+        rider.y,
+        GAME.projectile.range + this.run.patrons.bow.range,
+      );
       if (riderTarget) {
         this.riderMotions[i]!.attack();
         if (this.riderSpeeds[i]! < 2) rider.setFlipX(riderTarget.x < rider.x);
@@ -783,7 +810,8 @@ export class ArenaScene extends Phaser.Scene {
           rider.y,
           riderTarget,
           1,
-          0.6 + (hasDevelopment(this.run, 'archery', 'veteran-riders') ? 0.3 : 0),
+          (0.6 + (hasDevelopment(this.run, 'archery', 'veteran-riders') ? 0.3 : 0)) *
+            this.run.patrons.banner.damage,
         );
       }
     }
@@ -799,6 +827,7 @@ export class ArenaScene extends Phaser.Scene {
     target: Enemy,
     count: number,
     multiplier: number,
+    ancestral = false,
   ): void {
     const direction = Math.atan2(target.y - y, target.x - x);
     const tempest = burningTempest(this.run);
@@ -818,8 +847,11 @@ export class ArenaScene extends Phaser.Scene {
       bolt.setCircle(4.5, bolt.width / 2 - 4.5, bolt.height / 2 - 4.5);
       bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
       bolt.tempest = tempest;
+      bolt.pierces = this.run.patrons.bow.pierce;
+      bolt.hitTargets.clear();
       bolt.turn = tempest ? (i % 2 ? 1 : -1) * 0.65 : 0;
       if (bolt.fire) bolt.setTint(0xffa04e);
+      if (ancestral) bolt.setTint(0x91ded6);
       bolt.damage =
         this.run.stats.damage *
         multiplier *
@@ -850,6 +882,8 @@ export class ArenaScene extends Phaser.Scene {
     shot.fire = false;
     shot.tempest = false;
     shot.turn = 0;
+    shot.pierces = 0;
+    shot.hitTargets.clear();
     shot.setVelocity(Math.cos(angle) * 125, Math.sin(angle) * 125);
   }
 
@@ -881,13 +915,20 @@ export class ArenaScene extends Phaser.Scene {
 
   private hitEnemy(bolt: Projectile, enemy: Enemy): void {
     if (this.run.phase !== 'playing' || !bolt.active || !enemy.active) return;
-    bolt.disableBody(true, true);
+    if (bolt.hitTargets.get(enemy) === enemy.spawnId) return;
+    bolt.hitTargets.set(enemy, enemy.spawnId);
+    if (bolt.pierces > 0) bolt.pierces -= 1;
+    else bolt.disableBody(true, true);
     if (bolt.fire) enemy.burning = 2;
     this.damageEnemy(enemy, bolt.damage);
   }
 
   private damageEnemy(enemy: Enemy, amount: number): void {
     if (!enemy.active) return;
+    amount *= friendlyDamageMultiplier(
+      this.run,
+      enemy.maxHealth > 0 ? enemy.health / enemy.maxHealth : 1,
+    );
     if (amount >= 1) enemy.motion.hit();
     enemy.health -= amount;
     if (enemy.health > 0) return;
@@ -897,7 +938,8 @@ export class ArenaScene extends Phaser.Scene {
     enemy.disableBody(true, true);
     this.enemyShadows.get(enemy)?.setVisible(false);
     this.run.kills += 1;
-    this.run.clan.spirit += value * 0.4;
+    this.run.clan.spirit += value * 0.4 * this.run.patrons.ancestors.spiritGain;
+    rewardPatronKill(this.run);
     if (enemy === this.boss) {
       this.run.clan.finalBossDefeated = true;
       this.run.clan.integrity = Math.min(100, this.run.clan.integrity + 20);
@@ -956,13 +998,17 @@ export class ArenaScene extends Phaser.Scene {
 
   private takeDamage(amount: number): void {
     if (this.run.phase !== 'playing' || this.invulnerable > 0) return;
-    this.run.health = Math.max(0, this.run.health - amount);
+    const outcome = damageCommander(this.run, amount);
+    if (!outcome) return;
     this.playerMotion.hit();
     this.invulnerable = GAME.invulnerability;
     this.cameras.main.shake(90, 0.003);
     this.audio.play('hit');
     this.burst(this.player.x, this.player.y, 0xdd967c, 8);
-    if (this.run.health === 0) this.finish('dead');
+    if (outcome === 'revived') {
+      this.run.clan.message = 'The last ember holds. Your commander rides again.';
+      this.burst(this.player.x, this.player.y, 0xf1c27b, 12);
+    } else if (outcome === 'dead') this.finish('dead');
   }
 
   private finish(phase: 'won' | 'dead'): void {
@@ -996,7 +1042,8 @@ export class ArenaScene extends Phaser.Scene {
     return {
       run: this.run,
       introSlide: this.introSlide,
-      dashReady: 1 - this.dashTimer / GAME.dash.cooldown,
+      dashReady: Math.max(0, 1 - this.dashTimer / gallopCooldown(this.run)),
+      dashCooldown: gallopCooldown(this.run),
       best: this.best,
       bossHealth: this.boss?.active ? this.boss.health / SKYBREAKER.health : undefined,
       clanBearing: `${direction} CLAN · ${Math.round(Math.hypot(dx, dy))} PACES`,
@@ -1144,7 +1191,13 @@ export class ArenaScene extends Phaser.Scene {
       dt,
       this.player.body!.velocity.length(),
       preparingVolley &&
-        Boolean(this.spatial.nearest(this.player.x, this.player.y, GAME.projectile.range)),
+        Boolean(
+          this.spatial.nearest(
+            this.player.x,
+            this.player.y,
+            GAME.projectile.range + this.run.patrons.bow.range,
+          ),
+        ),
     );
     renderCharacter(this.player, this.playerMotion);
     this.player.setTint(this.playerMotion.hurt ? 0xffd3b2 : 0xffffff);
@@ -1155,7 +1208,14 @@ export class ArenaScene extends Phaser.Scene {
       motion.advance(
         dt,
         this.riderSpeeds[i]!,
-        preparingVolley && Boolean(this.spatial.nearest(rider.x, rider.y, GAME.projectile.range)),
+        preparingVolley &&
+          Boolean(
+            this.spatial.nearest(
+              rider.x,
+              rider.y,
+              GAME.projectile.range + this.run.patrons.bow.range,
+            ),
+          ),
       );
       renderCharacter(rider, motion);
     }
@@ -1189,7 +1249,7 @@ export class ArenaScene extends Phaser.Scene {
         .fillCircle(x, y, 70)
         .lineStyle(2, 0xe6bd7b, 0.8)
         .strokeCircle(x, y, 70);
-      this.hazards.push({ x, y, remaining: 2, warning });
+      this.hazards.push({ x, y, remaining: 2 + this.run.patrons.water.warning, warning });
       this.hazardTimer = clan.region === 3 ? 6 : 10;
     }
     for (let i = this.hazards.length - 1; i >= 0; i -= 1) {
@@ -1198,9 +1258,9 @@ export class ArenaScene extends Phaser.Scene {
       if (hazard.remaining > 0) continue;
       this.burst(hazard.x, hazard.y, clan.region === 3 ? 0xbf6558 : 0x796d4d, 12);
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.player.x, this.player.y) < 70)
-        this.takeDamage(20);
+        this.takeDamage(20 * this.run.patrons.water.hazardDamage);
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.camp.x, this.camp.y) < 95)
-        damageClan(this.run, 8);
+        damageClan(this.run, 8 * this.run.patrons.water.hazardDamage);
       hazard.warning.destroy();
       this.hazards.splice(i, 1);
     }
@@ -1251,7 +1311,7 @@ export class ArenaScene extends Phaser.Scene {
           hasDevelopment(this.run, 'wagon', 'war-carts') ? 3 : 1,
           clan.stage === 'migration' && !hasDevelopment(this.run, 'wagon', 'war-carts') ? 0.7 : 1.5,
         );
-      this.wagonTimer = 0.9;
+      this.wagonTimer = 0.9 * this.run.patrons.guardian.wagonInterval;
     }
     if (hasDevelopment(this.run, 'sanctuary', 'ancestral-ward') && this.wardTimer <= 0) {
       this.spatial.forEachNearby(this.camp.x, this.camp.y, 125, (enemy) =>
@@ -1267,6 +1327,7 @@ export class ArenaScene extends Phaser.Scene {
     // Each crossing leads to a new handcrafted arena; structures travel with the clan.
     this.camp.setPosition(center, center);
     this.player.setPosition(center, center + 100).setVelocity(0, 0);
+    this.patronSupport.relocate(this.player);
     for (const group of [this.enemies, this.projectiles, this.hostileShots])
       for (const actor of group.getChildren() as Enemy[]) actor.disableBody(true, true);
     // Carry all uncollected experience to the next camp rather than discarding it.

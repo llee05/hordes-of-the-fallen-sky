@@ -55,6 +55,30 @@ export interface PlayerStats {
   projectiles: number;
 }
 
+/** Neutral defaults keep every patron modifier opt-in and isolated to its expedition. */
+export interface PatronEffects {
+  hunt: { movingDamage: number; executeDamage: number; gallopCooldown: number; killHeal: number };
+  land: {
+    food: number;
+    materials: number;
+    consumption: number;
+    pastureUse: number;
+    pastureRecovery: number;
+  };
+  bow: { range: number; pierce: number };
+  hearth: { regeneration: number; damageTaken: number; revives: number };
+  water: {
+    slow: number;
+    radius: number;
+    hazardDamage: number;
+    warning: number;
+    pulseDamage: number;
+  };
+  ancestors: { count: number; damage: number; interval: number; spiritGain: number };
+  banner: { riders: number; damage: number; mobility: number; resolveOnKill: number };
+  guardian: { cost: number; protection: number; wagonInterval: number; wardDamage: number };
+}
+
 export interface RunState {
   phase: RunPhase;
   elapsed: number;
@@ -66,6 +90,7 @@ export interface RunState {
   pendingUpgrades: number;
   upgrades: Record<string, number>;
   stats: PlayerStats;
+  patrons: PatronEffects;
   clan: ClanState;
   story: StoryState;
 }
@@ -99,6 +124,7 @@ export interface HudSnapshot {
   run: RunState;
   introSlide: number;
   dashReady: number;
+  dashCooldown: number;
   best: number;
   bossHealth?: number;
   clanBearing: string;

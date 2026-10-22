@@ -47,6 +47,7 @@ export function riderCount(run: RunState): number {
       (clan.buildings.archery ? 3 : 0) +
       (hasDevelopment(run, 'archery', 'veteran-riders') ? 3 : 0) +
       (run.upgrades.multishot ?? 0) +
+      run.patrons.banner.riders +
       clan.rescuedRiders,
   );
 }
@@ -66,14 +67,20 @@ export function availableFormations(run: RunState): Formation[] {
   ];
 }
 
-export function buildingCost(id: BuildingId, path?: string): { materials: number; spirit: number } {
+export function buildingCost(
+  run: RunState,
+  id: BuildingId,
+  path?: string,
+): { materials: number; spirit: number } {
   const definition = BUILDINGS.find((building) => building.id === id)!;
   const development = definition.paths.find((entry) => entry.id === path);
   return {
-    materials:
-      path === undefined
+    materials: Math.ceil(
+      (path === undefined
         ? definition.materials
-        : (development?.materials ?? Math.ceil(definition.materials * 1.5)),
+        : (development?.materials ?? Math.ceil(definition.materials * 1.5))) *
+        run.patrons.guardian.cost,
+    ),
     spirit:
       path === undefined
         ? definition.spirit
@@ -107,7 +114,7 @@ export function buildingBlocker(run: RunState, id: BuildingId, path?: string): s
         return `Requires ${definition.paths.find((entry) => entry.id === parent)?.title ?? parent}`;
     }
   }
-  const cost = buildingCost(id, path);
+  const cost = buildingCost(run, id, path);
   if (clan.materials < cost.materials || clan.spirit < cost.spirit) return 'Gather more resources';
   return undefined;
 }
@@ -117,7 +124,7 @@ export function buildStructure(run: RunState, id: BuildingId, path?: string): bo
   const clan = run.clan;
   const definition = BUILDINGS.find((building) => building.id === id)!;
   const development = definition.paths.find((entry) => entry.id === path);
-  const cost = buildingCost(id, path);
+  const cost = buildingCost(run, id, path);
   clan.materials -= cost.materials;
   clan.spirit -= cost.spirit;
   clan.buildings[id] += 1;
@@ -156,7 +163,8 @@ export function damageClan(run: RunState, amount: number): void {
   const protection =
     (clan.formation === 'guard' ? 0.7 : 1) *
     (hasDevelopment(run, 'wagon', 'felt-armor') ? 0.5 : 1) *
-    (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? 0.8 : 1);
+    (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? 0.8 : 1) *
+    run.patrons.guardian.protection;
   const previous = clan.integrity;
   clan.integrity = Math.max(0, previous - amount * protection);
   if (Math.floor((100 - previous) / 20) < Math.floor((100 - clan.integrity) / 20)) {
@@ -176,13 +184,26 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
   const consumption =
     clan.population *
     GAME.clan.foodPerPerson *
-    (hasDevelopment(run, 'herd', 'winter-stores') ? 0.5 : 1);
+    (hasDevelopment(run, 'herd', 'winter-stores') ? 0.5 : 1) *
+    run.patrons.land.consumption;
   if (clan.stage !== 'migration') {
-    clan.pasture = Math.max(0, clan.pasture - (dt * 100) / GAME.clan.pastureLifetime);
+    clan.pasture = Math.max(
+      0,
+      Math.min(
+        100,
+        clan.pasture -
+          dt *
+            ((100 / GAME.clan.pastureLifetime) * run.patrons.land.pastureUse -
+              run.patrons.land.pastureRecovery),
+      ),
+    );
     const pasture = clan.pasture / 100;
     const winter = clan.region === 1 ? 0.7 : 1;
-    clan.food += dt * ((0.65 + (clan.buildings.herd ? 0.65 : 0)) * pasture * winter - consumption);
-    clan.materials += dt * (0.28 + clan.population * 0.018) * pasture;
+    clan.food +=
+      dt *
+      ((0.65 + (clan.buildings.herd ? 0.65 : 0)) * pasture * winter * run.patrons.land.food -
+        consumption);
+    clan.materials += dt * (0.28 + clan.population * 0.018) * pasture * run.patrons.land.materials;
     if (hasDevelopment(run, 'ger', 'hearthkeepers'))
       clan.integrity = Math.min(100, clan.integrity + dt * 0.25);
   } else {
@@ -191,7 +212,8 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
     const mobility =
       (1 + clan.herd * 0.012) *
       (hasDevelopment(run, 'herd', 'remount-herds') ? 1.2 : 1) *
-      (clan.region === 1 ? 0.8 : 1);
+      (clan.region === 1 ? 0.8 : 1) *
+      run.patrons.banner.mobility;
     clan.migrationProgress = Math.min(
       1,
       (clan.stageTime * mobility) / (GAME.clan.migrationDuration * route.duration),

@@ -1,0 +1,69 @@
+import { GAME } from '../config';
+import type { PatronEffects, RunState } from '../types';
+
+export function createPatronEffects(): PatronEffects {
+  return {
+    hunt: { movingDamage: 1, executeDamage: 1, gallopCooldown: 1, killHeal: 0 },
+    land: { food: 1, materials: 1, consumption: 1, pastureUse: 1, pastureRecovery: 0 },
+    bow: { range: 0, pierce: 0 },
+    hearth: { regeneration: 0, damageTaken: 1, revives: 0 },
+    water: {
+      slow: 0,
+      radius: GAME.patrons.water.radius,
+      hazardDamage: 1,
+      warning: 0,
+      pulseDamage: 0,
+    },
+    ancestors: {
+      count: 0,
+      damage: GAME.patrons.ancestors.damage,
+      interval: GAME.patrons.ancestors.interval,
+      spiritGain: 1,
+    },
+    banner: { riders: 0, damage: 1, mobility: 1, resolveOnKill: 0 },
+    guardian: { cost: 1, protection: 1, wagonInterval: 1, wardDamage: 0 },
+  };
+}
+
+export function gallopCooldown(run: RunState): number {
+  return GAME.dash.cooldown * run.patrons.hunt.gallopCooldown;
+}
+
+export function friendlyDamageMultiplier(run: RunState, enemyHealthRatio: number): number {
+  return (
+    (run.clan.momentum > 0.5 ? run.patrons.hunt.movingDamage : 1) *
+    (enemyHealthRatio < 0.5 ? run.patrons.hunt.executeDamage : 1)
+  );
+}
+
+export function terrainSpeedMultiplier(run: RunState, distance: number): number {
+  return distance < run.patrons.water.radius ? Math.max(0.2, 1 - run.patrons.water.slow) : 1;
+}
+
+export function advancePatrons(run: RunState, dt: number): void {
+  if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0 || run.health <= 0) return;
+  run.health = Math.min(run.stats.maxHealth, run.health + run.patrons.hearth.regeneration * dt);
+}
+
+/** Returns the outcome so the scene can provide immediate hit/revival feedback. */
+export function damageCommander(
+  run: RunState,
+  amount: number,
+): 'hit' | 'revived' | 'dead' | undefined {
+  if (run.phase !== 'playing' || !Number.isFinite(amount) || amount <= 0) return;
+  run.health = Math.max(0, run.health - amount * run.patrons.hearth.damageTaken);
+  if (run.health > 0) return 'hit';
+  if (run.patrons.hearth.revives > 0) {
+    run.patrons.hearth.revives -= 1;
+    run.health = run.stats.maxHealth * GAME.patrons.fire.revival;
+    return 'revived';
+  }
+  return 'dead';
+}
+
+export function rewardPatronKill(run: RunState): void {
+  if (run.phase !== 'playing') return;
+  if (run.clan.momentum > 0.5)
+    run.health = Math.min(run.stats.maxHealth, run.health + run.patrons.hunt.killHeal);
+  run.clan.integrity = Math.min(100, run.clan.integrity + run.patrons.banner.resolveOnKill);
+}

@@ -156,7 +156,7 @@ export class GameUI {
 
   private update(snapshot: HudSnapshot): void {
     this.lastSnapshot = snapshot;
-    const { run, dashReady, best, bossHealth, clanBearing } = snapshot;
+    const { run, dashReady, dashCooldown, best, bossHealth, clanBearing } = snapshot;
     this.motion.setPlaying(run.phase === 'playing');
     const clan = run.clan;
     const region = REGIONS[clan.region]!;
@@ -182,7 +182,7 @@ export class GameUI {
       'dash-label',
       dashReady >= 1
         ? 'SPACE / READY'
-        : `RECHARGING ${((1 - dashReady) * GAME.dash.cooldown).toFixed(1)}s`,
+        : `RECHARGING ${((1 - dashReady) * dashCooldown).toFixed(1)}s`,
     );
     this.text('research-points', run.pendingUpgrades);
     this.get('research').classList.toggle('has-points', run.pendingUpgrades > 0);

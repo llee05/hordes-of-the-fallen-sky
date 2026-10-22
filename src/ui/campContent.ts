@@ -23,7 +23,7 @@ export function campBranches(run: RunState): TreeBranch[] {
     const baseId = `${building.id}-base`;
     const baseBlocker = buildingBlocker(run, building.id);
     const costLabel = (path?: string): string => {
-      const cost = buildingCost(building.id, path);
+      const cost = buildingCost(run, building.id, path);
       return `${cost.materials} materials${cost.spirit ? ` · ${cost.spirit} Spirit` : ''}${path === undefined ? ` · ${building.workers} workers` : ''}`;
     };
     const nodes: TreeNode[] = [
