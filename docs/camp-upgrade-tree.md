@@ -27,15 +27,15 @@ flowchart TD
 
 Hearthkeepers and Refugee beacons are exclusive; Felt-lined households can accompany either.
 
-| Development / ID                                | Cost | Requirement     | Effect                                                                                 |
-| ----------------------------------------------- | ---- | --------------- | -------------------------------------------------------------------------------------- |
-| Hearthkeepers · `hearthkeepers`                 | 27   | Established     | +6 people immediately; restore 0.25 resolve/second while stationary.                   |
-| Refugee beacons · `refugee-beacons`             | 27   | Established     | +10 people immediately.                                                                |
-| Felt-lined households · `felt-linings`          | 22   | Established     | Clan damage ×0.9.                                                                      |
-| A place at every hearth · `hospitality-circle`  | 36   | Hearthkeepers   | Another +0.15 stationary resolve/second; arrivals heal 10 additional commander health. |
-| Household apprentices · `household-apprentices` | 36   | Refugee beacons | Stationary material gathering ×1.2.                                                    |
+| Development / ID                                | Cost | Requirement     | Effect                                                                            |
+| ----------------------------------------------- | ---- | --------------- | --------------------------------------------------------------------------------- |
+| Hearthkeepers · `hearthkeepers`                 | 27   | Established     | +6 people immediately; restore 0.25 resolve/second while stationary.              |
+| Refugee beacons · `refugee-beacons`             | 27   | Established     | +10 people immediately.                                                           |
+| Felt-lined households · `felt-linings`          | 22   | Established     | Clan damage ×0.9.                                                                 |
+| A place at every hearth · `hospitality-circle`  | 36   | Hearthkeepers   | Another +0.15 stationary resolve/second; arrivals heal 10 additional Khan health. |
+| Household apprentices · `household-apprentices` | 36   | Refugee beacons | Stationary material gathering ×1.2.                                               |
 
-Population is capped at 120. Resolve and commander recovery respect their maximums. Recovery does not resurrect casualties.
+Population is capped at 120. Resolve and Khan recovery respect their maximums. Recovery does not resurrect casualties.
 
 ## Archery grounds · bow craft and mounted organisation
 
@@ -56,7 +56,7 @@ Fire arrows and Veteran riders are exclusive. Bowyers can accompany either.
 | -------------------------------------------- | ---- | -------------- | --------------------------------------------------------------------------------------------------- |
 | Fire arrows · `fire-arrows`                  | 36   | Established    | Friendly arrows ignite enemies for 2 seconds, at shared damage ×0.45/second. Hits refresh the burn. |
 | Veteran riders · `veteran-riders`            | 36   | Established    | +3 riders; companion arrow multiplier rises from 0.6 to 0.9.                                        |
-| Horn-and-sinew bowyers · `seasoned-bowyers`  | 28   | Established    | Commander and companion targeting range +30 world units. Does not extend projectile lifetime.       |
+| Horn-and-sinew bowyers · `seasoned-bowyers`  | 28   | Established    | Khan and companion targeting range +30 world units. Does not extend projectile lifetime.            |
 | Prepared resin bundles · `resin-preparation` | 42   | Fire arrows    | Burn damage ×1.3, reaching shared damage ×0.585/second.                                             |
 | Arban drills · `arban-drills`                | 42   | Veteran riders | Companion arrow damage ×1.2; mounted-host firing interval ×0.9.                                     |
 
@@ -81,7 +81,7 @@ Remount herds and Winter stores are exclusive.
 
 | Development / ID                                | Cost | Requirement   | Effect                                                        |
 | ----------------------------------------------- | ---- | ------------- | ------------------------------------------------------------- |
-| Remount herds · `remount-herds`                 | 30   | Established   | Commander ordinary movement ×1.12; migration mobility ×1.2.   |
+| Remount herds · `remount-herds`                 | 30   | Established   | Khan ordinary movement ×1.12; migration mobility ×1.2.        |
 | Winter stores · `winter-stores`                 | 30   | Established   | +45 food immediately; food consumption ×0.5.                  |
 | Seasonal grazing knowledge · `seasonal-grazing` | 24   | Established   | Pasture depletion ×0.85.                                      |
 | A horse held in reserve · `relay-remounts`      | 36   | Remount herds | +3 horses immediately, capped at forty; gallop cooldown ×0.9. |
@@ -104,15 +104,15 @@ flowchart TD
 
 Wind shamans and Ancestral ward are exclusive. The sanctuary's attacks are fantasy; the remembrance crafts do not describe real ritual instructions.
 
-| Development / ID                            | Cost    | Requirement    | Effect                                                                                |
-| ------------------------------------------- | ------- | -------------- | ------------------------------------------------------------------------------------- |
-| Wind shamans · `wind-shamans`               | 30 +18S | Established    | Lightning interval becomes 1.8 seconds; combines with Fire arrows.                    |
-| Ancestral ward · `ancestral-ward`           | 30 +18S | Established    | Shared damage ×1.5 in radius 125 every 1.2 seconds; clan damage ×0.8.                 |
-| Remembered ovoos · `ovoo-remembrance`       | 24 +8S  | Established    | Completed crossings restore 6 additional clan resolve.                                |
-| Keepers of the storm watch · `storm-watch`  | 40 +18S | Wind shamans   | Lightning interval ×0.85: 1.8 → 1.53 seconds.                                         |
-| Names beside the hearth · `ancestral-tales` | 38 +16S | Ancestral ward | Commander recovery +0.15/active second; stationary clan resolve recovery +0.1/second. |
+| Development / ID                            | Cost    | Requirement    | Effect                                                                           |
+| ------------------------------------------- | ------- | -------------- | -------------------------------------------------------------------------------- |
+| Wind shamans · `wind-shamans`               | 30 +18S | Established    | Lightning interval becomes 1.8 seconds; combines with Fire arrows.               |
+| Ancestral ward · `ancestral-ward`           | 30 +18S | Established    | Shared damage ×1.5 in radius 125 every 1.2 seconds; clan damage ×0.8.            |
+| Remembered ovoos · `ovoo-remembrance`       | 24 +8S  | Established    | Completed crossings restore 6 additional clan resolve.                           |
+| Keepers of the storm watch · `storm-watch`  | 40 +18S | Wind shamans   | Lightning interval ×0.85: 1.8 → 1.53 seconds.                                    |
+| Names beside the hearth · `ancestral-tales` | 38 +16S | Ancestral ward | Khan recovery +0.15/active second; stationary clan resolve recovery +0.1/second. |
 
-Red Eclipse still multiplies lightning intervals by 1.5, giving 2.295 seconds with Storm watch. Ward timers are independent. The commander's recovery continues while travelling; resolve recovery waits for a stationary camp. Golomt's regeneration adds to the commander recovery. Sanctuary and Guardian wards remain separate systems.
+Red Eclipse still multiplies lightning intervals by 1.5, giving 2.295 seconds with Storm watch. Ward timers are independent. The Khan's recovery continues while travelling; resolve recovery waits for a stationary camp. Golomt's regeneration adds to the Khan recovery. Sanctuary and Guardian wards remain separate systems.
 
 ## Wagon circle · portable defenses
 
@@ -178,12 +178,12 @@ flowchart TD
 
 All four developments can be learned together.
 
-| Development / ID                                     | Cost | Requirement                       | Effect                                                                         |
-| ---------------------------------------------------- | ---- | --------------------------------- | ------------------------------------------------------------------------------ |
-| Aaruul drying racks · `aaruul-drying`                | 26   | Established                       | +20 food immediately; food consumption ×0.9.                                   |
-| Borts travel stores · `borts-stores`                 | 28   | Established                       | +15 food on each successful crossing.                                          |
-| Airag hospitality · `airag-hospitality`              | 24   | Established                       | Welcome 4 people and restore 10 resolve immediately, respecting caps.          |
-| Provisions for every household · `shared-provisions` | 42   | Aaruul racks **and** Borts stores | Arrivals heal 10 additional commander health and restore 6 additional resolve. |
+| Development / ID                                     | Cost | Requirement                       | Effect                                                                    |
+| ---------------------------------------------------- | ---- | --------------------------------- | ------------------------------------------------------------------------- |
+| Aaruul drying racks · `aaruul-drying`                | 26   | Established                       | +20 food immediately; food consumption ×0.9.                              |
+| Borts travel stores · `borts-stores`                 | 28   | Established                       | +15 food on each successful crossing.                                     |
+| Airag hospitality · `airag-hospitality`              | 24   | Established                       | Welcome 4 people and restore 10 resolve immediately, respecting caps.     |
+| Provisions for every household · `shared-provisions` | 42   | Aaruul racks **and** Borts stores | Arrivals heal 10 additional Khan health and restore 6 additional resolve. |
 
 Aaruul is dried curd, borts preserved meat, and airag a fermented mare's-milk beverage. They remain named practices inside the existing abstract Food resource; there is no new item inventory or separate alcohol meter. The hospitality benefit belongs to welcoming households, not a claim of medicinal or magical effects.
 

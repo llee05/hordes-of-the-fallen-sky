@@ -40,7 +40,7 @@ export const PATRONS: readonly PatronDefinition[] = [
     playstyle: 'Survival',
     symbol: 'hearth',
     description:
-      'Carry the hearth through darkness. Recover from wounds, shelter the commander, and keep one last ember against defeat.',
+      'Carry the hearth through darkness. Recover from wounds, shelter the Khan, and keep one last ember against defeat.',
   },
   {
     id: 'lus',

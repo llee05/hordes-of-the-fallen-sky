@@ -1018,7 +1018,7 @@ export class ArenaScene extends Phaser.Scene {
     this.audio.play('hit');
     this.burst(this.player.x, this.player.y, 0xdd967c, 8);
     if (outcome === 'revived') {
-      this.run.clan.message = 'The last ember holds. Your commander rides again.';
+      this.run.clan.message = 'The last ember holds. Your Khan rides again.';
       this.burst(this.player.x, this.player.y, 0xf1c27b, 12);
     } else if (outcome === 'dead') this.finish('dead');
   }

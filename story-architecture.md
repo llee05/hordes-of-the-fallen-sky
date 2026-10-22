@@ -10,7 +10,7 @@ This document maps one expedition into **two acts**, framed by the prologue and 
 
 **External goal:** Bring the clan through the mountain passage alive.
 
-**Internal movement:** The banner-bearer begins responsible for a handful of familiar survivors. By the end, they must accept responsibility for a community whose members have different histories, beliefs, and needs.
+**Internal movement:** The Khan begins responsible for a handful of familiar survivors. By the end, they must accept responsibility for a community whose members have different histories, beliefs, and needs.
 
 **Opposition:** The unreturned pursue the caravan while hunger, depleted pasture, broken terrain, and uncertainty strain the clan. The Last Court's attempt to secure permanent authority remains the political shadow over the journey.
 
@@ -38,13 +38,13 @@ The first playable image should fulfill the intro's promise: a small camp, a blu
 
 **Act question:** Who belongs within the circle of this camp?
 
-**Starting condition:** Eight survivors share an old home and an immediate emergency. The banner-bearer can still imagine protecting everyone by watching every approach personally.
+**Starting condition:** Eight survivors share an old home and an immediate emergency. The Khan can still imagine protecting everyone by watching every approach personally.
 
 ### 1. The first fire — Golden Pasture
 
 Introduce the hearthkeeper through useful work: tending embers, counting blankets, and asking who has eaten. Establish a herder who knows the nearby land and a younger survivor who notices the adults' evasions. Give the player one small image to carry forward, such as a spare bowl kept beside the fire.
 
-Building the camp makes the group tangible. Gers create room for more households; archers take over part of its defense; herding and sanctuary work give different people a place in the effort. The banner-bearer learns to leave tasks in other hands.
+Building the camp makes the group tangible. Gers create room for more households; archers take over part of its defense; herding and sanctuary work give different people a place in the effort. The Khan learns to leave tasks in other hands.
 
 **Proposed exchange:** “Who is the empty bowl for?” / “Whoever reaches us next.”
 
@@ -54,7 +54,7 @@ As food, workers, and defenses compete for attention, introduce disagreement abo
 
 Use the existing route decision to express priorities. A provision route can mean preparing to shelter people later; a rescue route can mean accepting immediate strain to gain families and riders. Avoid declaring one route the morally correct answer.
 
-**Act turn:** Packing the gers makes departure real. The people carry their home into danger together, and the banner-bearer must defend what they have chosen to bring.
+**Act turn:** Packing the gers makes departure real. The people carry their home into danger together, and the Khan must defend what they have chosen to bring.
 
 ### 3. Familiar voices — Silent River
 
@@ -70,7 +70,7 @@ After reaching Broken Pass, households add their own scraps of cloth to the blue
 
 This proposed scene gives the journey a shared commitment: whoever travels under this banner will be counted when the wagons leave. The player has helped assemble the people who can now make that promise.
 
-**Midpoint change:** The clan takes collective ownership of the journey. The banner-bearer becomes accountable to people who have chosen to follow, including strangers welcomed along the road.
+**Midpoint change:** The clan takes collective ownership of the journey. The Khan becomes accountable to people who have chosen to follow, including strangers welcomed along the road.
 
 ## Act II — Carry the Living
 
@@ -84,7 +84,7 @@ Use the moving ground and eruption warnings to test the clan's ability to respon
 
 A proposed camp conversation can follow an actual setback or a successful arrival. A badly hurt clan needs reassurance and a practical plan. A strong clan can begin discussing whom it might shelter beyond the mountain. Neither version requires a scripted death or loss of resources.
 
-**Character turn:** The banner-bearer's strength becomes most visible in the space they make for others to act.
+**Character turn:** The Khan's strength becomes most visible in the space they make for others to act.
 
 ### 6. The court's empty promise — before the final departure
 
@@ -104,11 +104,11 @@ A proposed visual explanation is that people are clearing fallen stone and ice f
 
 ### 8. Hold the road — climax
 
-The final three-minute defense brings the expedition's choices together: riders hold approaches, wagons protect families, and the banner-bearer moves between threats. Narrative presentation should keep attention on the people behind the fighting.
+The final three-minute defense brings the expedition's choices together: riders hold approaches, wagons protect families, and the Khan moves between threats. Narrative presentation should keep attention on the people behind the fighting.
 
 The Skybreaker can fall or remain standing. The decisive event is the passage opening with the clan alive to use it. A proposed closing beat has the youngest survivor help carry the ember vessel through while the hearthkeeper steadies someone else.
 
-**Resolution of the act question:** The clan keeps its promise through many people doing their part. The banner-bearer's last task is to make room for the final wagons to pass.
+**Resolution of the act question:** The clan keeps its promise through many people doing their part. The Khan's last task is to make room for the final wagons to pass.
 
 ## Epilogue — A place beside the fire
 
@@ -141,13 +141,13 @@ Keep the geography and two-act structure shared across runs. Existing route choi
 
 For an initial implementation, aim for one brief arrival beat per region, the midpoint exchange, the clerk's confession, and the epilogue. Optional chronicle entries can hold longer conversations. Put substantial reading in paused menus; allow players to dismiss story scenes immediately and consult a record later if one is added. Combat objectives should remain understandable when all optional writing is skipped.
 
-| Available foundation                                  | Proposed narrative addition                                      |
-| ----------------------------------------------------- | ---------------------------------------------------------------- |
-| Five-chapter intro and existing lore                  | Act titles and a visible record of story beats                   |
-| Four regions, three crossings, route choices          | Arrival exchanges and responses to the chosen route              |
-| Construction, specializations, clan identities        | Character reactions to the community's development               |
-| Population, herd, food, resolve, and commander health | Dialogue reflecting the actual condition of the caravan          |
-| Three-minute final defense and optional boss kill     | Passage-clearing presentation and the final wagon's departure    |
-| Victory and defeat screens                            | Short epilogue variations and a restrained remembrance on defeat |
+| Available foundation                              | Proposed narrative addition                                      |
+| ------------------------------------------------- | ---------------------------------------------------------------- |
+| Five-chapter intro and existing lore              | Act titles and a visible record of story beats                   |
+| Four regions, three crossings, route choices      | Arrival exchanges and responses to the chosen route              |
+| Construction, specializations, clan identities    | Character reactions to the community's development               |
+| Population, herd, food, resolve, and Khan health  | Dialogue reflecting the actual condition of the caravan          |
+| Three-minute final defense and optional boss kill | Passage-clearing presentation and the final wagon's departure    |
+| Victory and defeat screens                        | Short epilogue variations and a restrained remembrance on defeat |
 
 Failure remains an expedition ending. A proposed defeat remembrance may acknowledge the actual journey, but should not reveal later scenes or treat a restart as an established cycle of reincarnation. Long-term campaign continuation and persistent story consequences would need their own design.

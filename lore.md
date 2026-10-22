@@ -55,7 +55,7 @@ The playable story names four of these original survivors: **Saran**, the hearth
 
 The **hearthkeeper** wraps embers from their last camp in a covered vessel. At every halt, someone coaxes those embers into flame. The hearthkeeper remembers routes, blessings, and family histories, but listens when a shepherd knows a better ford. Spiritual knowledge belongs within the work of keeping the camp alive.
 
-The player is the **banner-bearer**, a mounted archer entrusted with the road ahead. The role was given by survivors who needed someone to ride between danger and the wagons. It grants responsibility before authority. No prophecy guarantees that this rider will succeed.
+The player is the **Khan**, a mounted archer entrusted with the road ahead. The role was given by survivors who needed someone to ride between danger and the wagons. It grants responsibility before authority. No prophecy guarantees that this rider will succeed.
 
 Every family welcomed into the circle changes the people who will emerge from the journey. Their tents, tools, horses, and stories travel together. The clan's settlement is temporary; its obligations travel on.
 
@@ -71,7 +71,7 @@ The elders remember a valley east of the broken country, sheltered beneath a str
 
 **The Broken Pass — the Earth That Walks.** Fractures move beneath the stones. The clan watches the ground as closely as the sky, crossing between eruptions and carrying each wagon over before the route closes. Cairns mark remembered paths, not guarantees of safety.
 
-**The Heart of the Steppe — the Red Eclipse.** At the sacred mountain, the wounded sky turns red and the Skybreaker approaches. The passage needs time to open. The banner-bearer rides out while the people keep the wagons together and the hearth alight.
+**The Heart of the Steppe — the Red Eclipse.** At the sacred mountain, the wounded sky turns red and the Skybreaker approaches. The passage needs time to open. The Khan rides out while the people keep the wagons together and the hearth alight.
 
 This mountain and its refuge are fictional. They are not Burkhan Khaldun or a claim about access to a real sacred place. The valley is a physical refuge within the setting, not an afterlife reserved for believers.
 

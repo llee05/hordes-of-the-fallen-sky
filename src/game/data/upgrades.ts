@@ -15,8 +15,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         id: 'wolf-trail',
         title: 'The wolf’s trail',
         maxStacks: 2,
-        description:
-          'Each rank: +15% friendly damage above half momentum; commander rides 4% faster.',
+        description: 'Each rank: +15% friendly damage above half momentum; Khan rides 4% faster.',
         apply: (run) => {
           run.patrons.hunt.movingDamage *= P.wolf.movingDamage;
           run.stats.speed *= P.wolf.speed;
@@ -47,7 +46,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Blood of the hunt',
         maxStacks: 1,
         requires: [need('culling-bite'), need('pursuit-gallop')],
-        description: 'Every kill above half momentum restores 2 commander health.',
+        description: 'Every kill above half momentum restores 2 Khan health.',
         apply: (run) => {
           run.patrons.hunt.killHeal += P.wolf.killHeal;
         },
@@ -108,7 +107,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'The measured bow',
         maxStacks: 2,
         description:
-          'Each rank: shared attack damage +25%; commander and rider targeting range +30 paces.',
+          'Each rank: shared attack damage +25%; Khan and rider targeting range +30 paces.',
         apply: (run) => {
           run.stats.damage *= P.bow.damage;
           run.patrons.bow.range += P.bow.range;
@@ -140,7 +139,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'A sky full of arrows',
         maxStacks: 1,
         requires: [need('haste'), need('piercing-shaft')],
-        description: 'Add two arrows to every commander volley.',
+        description: 'Add two arrows to every Khan volley.',
         apply: (run) => {
           run.stats.projectiles += P.bow.volley;
         },
@@ -154,7 +153,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         id: 'vitality',
         title: 'Keep the hearth alive',
         maxStacks: 2,
-        description: 'Each rank: +20 maximum commander health and immediately heal 35 health.',
+        description: 'Each rank: +20 maximum Khan health and immediately heal 35 health.',
         apply: (run) => {
           run.stats.maxHealth += P.fire.health;
           run.health = Math.min(run.stats.maxHealth, run.health + P.fire.heal);
@@ -165,7 +164,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'The carried embers',
         maxStacks: 1,
         requires: [need('vitality', 2)],
-        description: 'Recover 0.3 commander health per active second.',
+        description: 'Recover 0.3 Khan health per active second.',
         apply: (run) => {
           run.patrons.hearth.regeneration += P.fire.regeneration;
         },
@@ -175,7 +174,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Felt around the flame',
         maxStacks: 1,
         requires: [need('vitality', 2)],
-        description: 'Commander damage taken falls by 15%.',
+        description: 'Khan damage taken falls by 15%.',
         apply: (run) => {
           run.patrons.hearth.damageTaken *= P.fire.protection;
         },
@@ -186,7 +185,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('carried-embers'), need('felt-and-fire')],
         description:
-          'Once this expedition, a lethal hit instead restores 40% of maximum commander health.',
+          'Once this expedition, a lethal hit instead restores 40% of maximum Khan health.',
         apply: (run) => {
           run.patrons.hearth.revives += 1;
         },
@@ -200,7 +199,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         id: 'watercourse',
         title: 'Find the watercourse',
         maxStacks: 2,
-        description: 'Each rank: enemies within 165 paces of commander or camp move 12% slower.',
+        description: 'Each rank: enemies within 165 paces of Khan or camp move 12% slower.',
         apply: (run) => {
           run.patrons.water.slow += P.water.slow;
         },
@@ -221,7 +220,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('watercourse', 2)],
         description:
-          'Eruption warnings last one second longer. Eruptions deal half damage to commander and clan.',
+          'Eruption warnings last one second longer. Eruptions deal half damage to Khan and clan.',
         apply: (run) => {
           run.patrons.water.warning += P.water.warning;
           run.patrons.water.hazardDamage *= P.water.hazardDamage;
@@ -233,7 +232,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('reed-beds'), need('turned-earth')],
         description:
-          'Every 4 active seconds, the commander’s field deals 75% shared damage and pushes enemies back 80 paces.',
+          'Every 4 active seconds, the Khan’s field deals 75% shared damage and pushes enemies back 80 paces.',
         apply: (run) => {
           run.patrons.water.pulseDamage += P.water.pulseDamage;
         },
@@ -248,7 +247,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'A rider remembered',
         maxStacks: 2,
         description:
-          'Each rank summons one ancestral echo. Echoes follow the commander and fire at 55% shared damage every 1.1 seconds.',
+          'Each rank summons one ancestral echo. Echoes follow the Khan and fire at 55% shared damage every 1.1 seconds.',
         apply: (run) => {
           run.patrons.ancestors.count += 1;
         },
@@ -295,8 +294,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         id: 'sworn-riders',
         title: 'Riders of one standard',
         maxStacks: 2,
-        description:
-          'Each rank recruits one accompanying rider, independent of commander arrow count.',
+        description: 'Each rank recruits one accompanying rider, independent of Khan arrow count.',
         apply: (run) => {
           run.patrons.banner.riders += 1;
         },

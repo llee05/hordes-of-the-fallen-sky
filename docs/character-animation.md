@@ -4,7 +4,7 @@ The Living Steppe Tapestry character sheets contain 48 painted poses: four locom
 
 | Sheet     | Characters                                            | Local files                                                                       |
 | --------- | ----------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Mounted   | Commander, allied archer, wolf, ghost rider           | `public/art/steppe-mounted-motion.png`, `public/art/steppe-mounted-motion.json`   |
+| Mounted   | Khan, allied archer, wolf, ghost rider                | `public/art/steppe-mounted-motion.png`, `public/art/steppe-mounted-motion.json`   |
 | Creatures | Winged shade, earth creature, hollow seer, Skybreaker | `public/art/steppe-creature-motion.png`, `public/art/steppe-creature-motion.json` |
 
 Each PNG is 1536 × 1024 with transparent alpha. Metadata crops the individual silhouettes without modifying or slicing the source PNG. The generated row spacing varies slightly, so the atlas uses explicit frame rectangles rather than assuming a uniform spritesheet grid.

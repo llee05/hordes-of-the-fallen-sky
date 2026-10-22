@@ -78,7 +78,7 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
         requires: ['hearthkeepers'],
         materials: C.ger.hospitality.materials,
         description:
-          'Recover another 0.15 resolve per stationary second. Arrivals heal the commander by 10 more.',
+          'Recover another 0.15 resolve per stationary second. Arrivals heal the Khan by 10 more.',
         effects: {
           bonuses: {
             resolveRecovery: C.ger.hospitality.resolve,
@@ -126,7 +126,7 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
         title: 'Horn-and-sinew bowyers',
         materials: C.archery.bowyers.materials,
         description:
-          'Carefully fitted bows extend commander and accompanying-rider targeting range by 30 paces.',
+          'Carefully fitted bows extend Khan and accompanying-rider targeting range by 30 paces.',
         effects: { bonuses: { range: C.archery.bowyers.range } },
       },
       {
@@ -266,7 +266,7 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
         materials: C.sanctuary.tales.materials,
         spirit: C.sanctuary.tales.spirit,
         description:
-          'Recover 0.15 commander health per active second and another 0.1 clan resolve per stationary second.',
+          'Recover 0.15 Khan health per active second and another 0.1 clan resolve per stationary second.',
         effects: {
           bonuses: {
             commanderRecovery: C.sanctuary.tales.health,
@@ -428,7 +428,7 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
         requires: ['aaruul-drying', 'borts-stores'],
         materials: C.provisions.shared.materials,
         description:
-          'Successful arrivals restore 10 additional commander health and 6 additional clan resolve.',
+          'Successful arrivals restore 10 additional Khan health and 6 additional clan resolve.',
         effects: {
           bonuses: {
             arrivalHealth: C.provisions.shared.arrivalHealth,
