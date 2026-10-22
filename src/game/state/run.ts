@@ -3,6 +3,7 @@ import { GAME } from '../config';
 import { createClan } from './clan';
 import { createPatronEffects } from './patrons';
 import { createStory } from './story';
+import { completeGuidance } from './guidance';
 import { isKhanActive } from './khan';
 import type { RunState, UpgradeDefinition } from '../types';
 
@@ -12,6 +13,7 @@ export function xpForLevel(level: number): number {
 
 export function createRun(): RunState {
   return {
+    guidance: { enabled: true, completed: [] },
     khan: { generation: 1, successionRemaining: 0 },
     phase: 'ready',
     elapsed: 0,
@@ -38,6 +40,7 @@ export function createRun(): RunState {
 
 export function gainExperience(run: RunState, amount: number): boolean {
   run.xp += Math.max(0, amount);
+  if (amount > 0) completeGuidance(run, 'shards');
   let leveled = false;
   while (run.xp >= run.nextLevelXp) {
     run.xp -= run.nextLevelXp;
@@ -78,6 +81,7 @@ export function applyUpgrade(
   if (run.khan.successionRemaining > 0) run.health = 0;
   run.upgrades[upgrade.id] = stacks + 1;
   run.pendingUpgrades -= 1;
+  completeGuidance(run, 'research');
   return true;
 }
 

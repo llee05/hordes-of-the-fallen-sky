@@ -1,3 +1,4 @@
+import type { GuidanceState } from './state/guidance';
 import type { StoryState } from './story/types';
 
 export type RunPhase =
@@ -124,6 +125,7 @@ export interface PatronEffects {
 }
 
 export interface RunState {
+  guidance: GuidanceState;
   khan: { generation: number; successionRemaining: number };
   phase: RunPhase;
   elapsed: number;

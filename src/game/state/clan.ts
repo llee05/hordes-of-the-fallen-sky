@@ -2,6 +2,7 @@ import { GAME } from '../config';
 import { BUILDINGS, ROUTES } from '../data/clan';
 import type { BuildingId, ClanState, Formation, RunState } from '../types';
 import { applyCampEffects, createCampEffects } from './camp';
+import { completeGuidance } from './guidance';
 import { isKhanActive } from './khan';
 
 export function createClan(): ClanState {
@@ -141,6 +142,7 @@ export function buildStructure(run: RunState, id: BuildingId, path?: string): bo
   const development = definition.paths.find((entry) => entry.id === path);
   const cost = buildingCost(run, id, path);
   const hadTempest = burningTempest(run);
+  completeGuidance(run, 'build');
   clan.materials -= cost.materials;
   clan.spirit -= cost.spirit;
   clan.buildings[id] += 1;
@@ -170,6 +172,7 @@ export function beginMigration(run: RunState, routeId: string): boolean {
   const route = ROUTES.find((entry) => entry.id === routeId);
   if (run.phase !== 'route' || !canMigrate(run) || !route) return false;
   const clan = run.clan;
+  completeGuidance(run, 'depart');
   clan.stage = 'migration';
   clan.stageTime = 0;
   clan.routeId = route.id;
@@ -284,6 +287,7 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
     clan.population = Math.min(GAME.clan.maxPopulation, clan.population + newPeople);
     if (route.id === 'refuge') clan.rescuedRiders += 2;
     clan.herd = Math.min(GAME.clan.maxHerd, clan.herd + route.herd + bonuses.arrivalHerd);
+    completeGuidance(run, 'crossing');
     clan.region += 1;
     run.story.crossings.push({ route: route.id, region: clan.region, population: clan.population });
     clan.stage = clan.region === 3 ? 'final' : 'camp';

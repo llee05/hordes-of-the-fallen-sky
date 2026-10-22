@@ -15,6 +15,8 @@ import {
   clanDoctrine,
   riderCount,
 } from '../game/state/clan';
+import { currentGuidance, clanWarning } from '../game/state/guidance';
+import { guidanceContent } from './guidanceContent';
 import { formatTime } from '../game/state/run';
 import { isKhanActive } from '../game/state/khan';
 import type { BuildingId, HudSnapshot, RunPhase } from '../game/types';
@@ -44,6 +46,7 @@ export class GameUI {
     return view;
   }
   private lastSnapshot?: HudSnapshot;
+  private guideId = '';
   private lastMessage = '';
   private toastTimer?: number;
 
@@ -80,7 +83,8 @@ export class GameUI {
           </section>
           <div class="expedition-clock"><strong id="timer">00:00</strong><span id="stage-label">ENCAMPMENT</span></div>
           <nav class="hud-menu" aria-label="Game menus"><button id="journal" class="hud-menu-button" title="Clan chronicle (Tab / J)" aria-label="Open clan chronicle" aria-keyshortcuts="Tab J"><span>${clanMark('journal')}</span><kbd>TAB</kbd></button><button id="pause" class="hud-menu-button" aria-label="Pause" title="Pause (Escape)"><span>${clanMark('pause')}</span><kbd>ESC</kbd></button></nav>
-          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p class="act-heading" id="act-heading">ACT I · GATHER THE SCATTERED</p><p id="objective">Build the camp. Protect your people.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Crossing</span><b id="crossing">0%</b></div><div class="track"><div id="crossing-fill"></div></div></div><p class="objective-hint" id="migration-hint">New routes in 45s.</p></section>
+          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p class="act-heading" id="act-heading">ACT I · GATHER THE SCATTERED</p><p id="objective">Build the camp. Protect your people.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Crossing</span><b id="crossing">0%</b></div><div class="track"><div id="crossing-fill"></div></div></div><p class="objective-hint" id="migration-hint">New routes in 45s.</p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
+          <aside id="field-guide" class="field-guide hud-surface" aria-label="Expedition guidance" hidden></aside>
           <div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
           <div id="boss-bar" class="boss-bar" hidden><span>THE SKYBREAKER</span><div class="track"><div id="boss-fill"></div></div></div>
           <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span>BOW <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
@@ -105,6 +109,17 @@ export class GameUI {
     this.get('build').addEventListener('click', () => scene.openBuildings());
     this.get('migrate').addEventListener('click', () => scene.openRoutes());
     this.get('formation').addEventListener('click', () => scene.cycleFormation());
+    this.get('field-guide').addEventListener('click', (event) => {
+      const action = (event.target as HTMLElement).closest<HTMLElement>('[data-guide-action]')
+        ?.dataset.guideAction;
+      if (action === 'hide') {
+        scene.toggleGuidance();
+        this.get('arena-wrap').focus();
+      } else if (action === 'build') scene.openBuildings();
+      else if (action === 'research') scene.openResearch();
+      else if (action === 'formation') scene.cycleFormation();
+      else if (action === 'migrate') scene.openRoutes();
+    });
     this.overlay.addEventListener('click', (event) => this.handleMenuClick(event));
     this.overlay.addEventListener('keydown', (event) => this.handleMenuKey(event));
     this.overlay.addEventListener('input', (event) => {
@@ -160,6 +175,17 @@ export class GameUI {
     const { run, dashReady, dashCooldown, best, bossHealth, clanBearing } = snapshot;
     this.motion.setPlaying(run.phase === 'playing');
     const clan = run.clan;
+    const guide = currentGuidance(run);
+    this.get('field-guide').hidden = !guide;
+    if ((guide?.id ?? '') !== this.guideId) {
+      this.guideId = guide?.id ?? '';
+      this.get('field-guide').innerHTML = guide ? guidanceContent(guide) : '';
+    }
+    const warning = clanWarning(run);
+    this.text('clan-warning', warning);
+    this.get('clan-warning').hidden = !warning;
+    this.get('integrity-fill').classList.toggle('low', clan.integrity <= 35);
+    this.get('pasture-fill').classList.toggle('low', clan.pasture <= 25);
     const khanActive = isKhanActive(run);
     this.text(
       'khan-title',
@@ -374,7 +400,7 @@ export class GameUI {
     else if (run.phase === 'journal') this.overlay.innerHTML = journalMenu(run, this.journalTab);
     else if (run.phase === 'settings')
       this.overlay.innerHTML = settingsMenu(this.platform.profile.muted, this.fullscreen);
-    else if (run.phase === 'help') this.overlay.innerHTML = helpMenu();
+    else if (run.phase === 'help') this.overlay.innerHTML = helpMenu(run.guidance.enabled);
     else {
       const won = run.phase === 'won';
       this.overlay.innerHTML = `<section class="end-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">${won ? 'A PEOPLE, STILL ALIVE' : 'THE STEPPE WILL REMEMBER'}</p><h2 id="overlay-title">${won ? 'A sky worth saving.' : 'The banners fall.'}</h2><p class="panel-intro">${won ? `${run.clan.population} ${run.clan.population === 1 ? 'person' : 'people'} and ${run.clan.herd} ${run.clan.herd === 1 ? 'animal' : 'animals'} reach the mountain passage.<br>Your civilization lives to see another sky.` : 'The journey ends here. Another clan will take up the blue banner.'}</p><div class="end-stats"><div><strong>${formatTime(run.elapsed)}</strong><span>JOURNEY</span></div><div><strong>${run.clan.population}</strong><span>PEOPLE</span></div><div><strong>${run.clan.region + 1}/4</strong><span>PASTURES</span></div></div><nav class="main-menu"><button class="menu-button featured" data-action="restart" data-primary>RAISE THE BANNERS AGAIN <span>→</span></button>${won ? '<button class="menu-button" data-action="epilogue">Read the epilogue</button>' : ''}<button class="menu-button" data-action="story-log">Our remembered road</button>${quit}</nav></section>`;
@@ -421,6 +447,7 @@ export class GameUI {
     else if (action === 'intro-back') this.scene.advanceIntro(-1);
     else if (action === 'intro-skip') this.scene.skipIntro();
     else if (action === 'begin') this.scene.startRun();
+    else if (action === 'guidance') this.scene.toggleGuidance();
     else if (action === 'resume') this.scene.togglePause();
     else if (action === 'restart') this.scene.restart();
     else if (action === 'settings' || action === 'help') this.scene.openUtilityMenu(action);

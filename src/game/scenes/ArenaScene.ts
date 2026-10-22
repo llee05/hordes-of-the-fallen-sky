@@ -38,6 +38,7 @@ import {
 } from '../state/patrons';
 import { advanceSuccession, beginSuccession, damageKhan, isKhanActive } from '../state/khan';
 import { PatronSupport } from '../systems/PatronSupport';
+import { completeGuidance } from '../state/guidance';
 import { GameAudio } from '../systems/Audio';
 import { SpatialHash } from '../systems/SpatialHash';
 import { ActionKeys } from '../systems/ActionKeys';
@@ -106,6 +107,7 @@ export class ArenaScene extends Phaser.Scene {
   private introSlide = 0;
   private introStartsRun = false;
   private storiesEnabled = true;
+  private guidanceEnabled = true;
   private storyLogReturn: 'paused' | 'won' | 'dead' = 'paused';
   private facing = new Phaser.Math.Vector2(0, 1);
   private touchMove = new Phaser.Math.Vector2();
@@ -129,6 +131,7 @@ export class ArenaScene extends Phaser.Scene {
   create(): void {
     this.run = createRun();
     this.run.story.enabled = this.storiesEnabled;
+    this.run.guidance.enabled = this.guidanceEnabled;
     this.storyLogReturn = 'paused';
     this.introSlide = 0;
     this.introStartsRun = false;
@@ -453,10 +456,18 @@ export class ArenaScene extends Phaser.Scene {
   cycleFormation(): void {
     if (this.run.phase !== 'playing') return;
     const formations = availableFormations(this.run);
+    if (formations.length < 2) return;
+    completeGuidance(this.run, 'formation');
     this.run.clan.formation =
       formations[(formations.indexOf(this.run.clan.formation) + 1) % formations.length]!;
     this.run.clan.message = FORMATIONS[this.run.clan.formation].description;
     this.callbacks?.onHud(this.snapshot());
+  }
+
+  toggleGuidance(): void {
+    this.guidanceEnabled = !this.run.guidance.enabled;
+    this.run.guidance.enabled = this.guidanceEnabled;
+    this.publishPhase();
   }
 
   toggleAudio(): boolean {
@@ -622,7 +633,10 @@ export class ArenaScene extends Phaser.Scene {
       0,
       1,
     );
-    if (moving) this.facing.copy(movement).normalize();
+    if (moving) {
+      completeGuidance(this.run, 'ride');
+      this.facing.copy(movement).normalize();
+    }
     if (this.dashRemaining > 0) movement.copy(this.facing).scale(GAME.dash.speed);
     else movement.scale(this.run.stats.speed);
     this.player.setVelocity(movement.x, movement.y);
