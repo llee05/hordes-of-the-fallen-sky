@@ -96,6 +96,12 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.screenshot({ path: 'test-results/native-story.png' });
     await page.getByRole('button', { name: /Share the work/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
+    await page.keyboard.press('t');
+    await expect(page.getByRole('heading', { name: 'Tradition tech tree' })).toBeVisible();
+    await expect(page.locator('[data-tree-branch]')).toHaveCount(6);
+    await expect(page.locator('#game-hud')).toHaveAttribute('inert', '');
+    await page.screenshot({ path: 'test-results/native-tech-tree.png' });
+    await page.keyboard.press('Escape');
     await page.keyboard.press('b');
     await expect(page.getByRole('heading', { name: 'Build a people.' })).toBeVisible();
     await page.getByRole('button', { name: /Establish archery grounds/ }).click();

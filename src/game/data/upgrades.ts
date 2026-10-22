@@ -1,8 +1,9 @@
-import type { RunState, UpgradeDefinition } from '../types';
+import type { UpgradeDefinition } from '../types';
 
 export const UPGRADES: readonly UpgradeDefinition[] = [
   {
     id: 'power',
+    category: 'Warfare',
     title: 'Horn-and-sinew bows',
     subtitle: 'DAMAGE',
     icon: '✦',
@@ -14,6 +15,7 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
   },
   {
     id: 'haste',
+    category: 'Warfare',
     title: 'The endless volley',
     subtitle: 'ATTACK SPEED',
     icon: 'ϟ',
@@ -25,6 +27,7 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
   },
   {
     id: 'multishot',
+    category: 'Warfare',
     title: 'Sworn riders',
     subtitle: 'PROJECTILES',
     icon: '⋔',
@@ -36,6 +39,7 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
   },
   {
     id: 'stride',
+    category: 'Wayfinding',
     title: 'Steppe-bred horses',
     subtitle: 'MOVEMENT',
     icon: '»',
@@ -47,6 +51,7 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
   },
   {
     id: 'magnet',
+    category: 'Wayfinding',
     title: 'Ancestral memory',
     subtitle: 'COLLECTION',
     icon: '◇',
@@ -58,6 +63,7 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
   },
   {
     id: 'vitality',
+    category: 'Survival',
     title: 'The healer’s craft',
     subtitle: 'VITALITY',
     icon: '+',
@@ -69,15 +75,3 @@ export const UPGRADES: readonly UpgradeDefinition[] = [
     },
   },
 ];
-
-export function upgradeChoices(run: RunState, random = Math.random): UpgradeDefinition[] {
-  const available = UPGRADES.filter(
-    (upgrade) => (run.upgrades[upgrade.id] ?? 0) < upgrade.maxStacks,
-  );
-  // Fisher–Yates lets tests inject a seeded RNG without coupling gameplay to Phaser.
-  for (let i = available.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(random() * (i + 1));
-    [available[i], available[j]] = [available[j]!, available[i]!];
-  }
-  return available.slice(0, 3);
-}

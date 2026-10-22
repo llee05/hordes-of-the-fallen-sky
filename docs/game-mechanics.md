@@ -27,7 +27,7 @@ The intended rhythm is **build → defend → choose when to leave → escort �
 | Food               | 70                      | Grazing, herding grounds, winter stores, river crossings, story choices, rewards after mastering every tradition | Consumed by people, including during migration. Blue-banner rescue costs 18 food on arrival. Zero food triggers starvation checks.                                                                                         |
 | Materials          | 50                      | Passive camp gathering, more population, ridge crossings, story choices, rewards after mastering every tradition | Construct and specialize camp buildings. No ongoing building maintenance cost.                                                                                                                                             |
 | Spirit             | 0                       | Every enemy kill immediately grants `enemy XP × 0.4`; ridge arrival grants 10; some story choices grant 4        | Pay for the spirit sanctuary and its specialization. Stored Spirit does not buy tradition ranks. It is not consumed by lightning, wards, arrows, or migration.                                                             |
-| Spirit shards / XP | Level 1, 0 XP           | Collect drops from defeated enemies                                                                              | Fill the current level's XP threshold and earn tradition choices. Collection does not deduct stored Spirit.                                                                                                                |
+| Spirit shards / XP | Level 1, 0 XP           | Collect drops from defeated enemies                                                                              | Fill the current level's XP threshold and bank knowledge points for the tech tree. Collection does not deduct stored Spirit.                                                                                               |
 | People             | 8                       | Family-ger development; blue-banner arrivals                                                                     | Produce materials, consume food, provide worker capacity. Losses come from starvation and resolve damage. Population gains are capped at 120.                                                                              |
 | Workers            | 0 assigned of 8         | Existing population                                                                                              | Construction requires sufficient total population for assigned jobs. Workers are reserved by established buildings, not spent. No manual job reassignment or worker production penalty is simulated.                       |
 | Herd / horses      | 3                       | Establish herding grounds (+4); river arrival (+2)                                                               | Each horse increases migration mobility by 1.2% of the base. Starvation and clan losses remove livestock. Route rewards cap herd at 40. Herd size does not independently change grazing income or limit rider recruitment. |
@@ -68,7 +68,7 @@ All three together leave 28% of the raw damage. Crossing a downward 20-point dam
 
 ## 3. Spirit-stone / tradition progression tree
 
-The current game calls collectible stones **spirit shards**. They carry XP. **Spirit** is a separate camp currency earned automatically on kills. Neither system is permanent progression, and the current tradition tree has six independent, repeatable branches rather than prerequisite chains.
+The current game calls collectible stones **spirit shards**. They carry XP. **Spirit** is a separate camp currency earned automatically on kills. Neither system is permanent progression, and the current tradition tree has six branches with sequential ranks. The six branches have no dependencies on one another; learning the next rank requires the preceding rank in that branch.
 
 ```mermaid
 flowchart TD
@@ -76,7 +76,8 @@ flowchart TD
     Enemy --> Spirit[Stored Spirit: enemy XP x 0.4]
     Shard --> Collect[Ride close enough to collect]
     Collect --> Level[Fill XP threshold and gain a level]
-    Level --> Choice[Choose 1 of up to 3 random eligible traditions]
+    Level --> Points[Bank 1 knowledge point without pausing combat]
+    Points --> Choice[Open the tech tree and choose any eligible rank]
     Choice --> Power[Horn-and-sinew bows: 8 ranks]
     Choice --> Haste[The endless volley: 6 ranks]
     Choice --> Riders[Sworn riders: 4 ranks]
@@ -86,7 +87,9 @@ flowchart TD
     Spirit --> Sanctuary[Spirit sanctuary and its chosen specialization]
 ```
 
-The XP threshold for advancing from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and so on. Excess XP carries over; one pickup can earn several levels and every earned choice remains queued. The game pauses for each selection, offering up to three distinct traditions below their stack limits. There is no reroll, purchase price, rank prerequisite, or dependency between these six traditions. Repeated percentage effects multiply.
+The XP threshold for advancing from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and so on. Excess XP carries over; one pickup can earn several levels and every earned point remains banked. Level-ups never open a popup or pause combat. Open the **Tradition tech tree** with **T**, controller **LB**, the HUD, Pause, or the chronicle’s Traditions tab. The tree pauses simulation and shows all ranks with learned, available, and locked states. Each next rank costs **one knowledge point**; future ranks require the previous rank. The six current branches are independent, so you can invest in any branch immediately. There are no random offers or rerolls. Repeated percentage effects multiply.
+
+Search and category filters work across all authored branches. Purchases keep the tree open and preserve focus and scroll. Close with Escape, T, controller B / LB, or the return button; unspent points remain available. Opening from Pause returns to Pause, and opening from the chronicle returns to the chronicle. Stored Spirit remains a separate camp currency.
 
 | Tradition           | Each rank                                              | Max ranks | At maximum, before other bonuses                                                                                       |
 | ------------------- | ------------------------------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -97,7 +100,7 @@ The XP threshold for advancing from level `L` is `8 + (L − 1) × 6`: 8, 14, 20
 | Ancestral memory    | Shard attraction radius ×1.4                           | 5         | Radius ≈457.16, from 85. Feigned retreat can further multiply it by 1.7.                                               |
 | The healer's craft  | +20 maximum health; heal 35, capped at the new maximum | 8         | Maximum commander health 260. Each rank heals immediately.                                                             |
 
-There are 36 total ranks. Once every tradition is mastered, subsequent earned choices grant **20 food and 15 materials each**, and the commander is fully healed when those choices are processed. Extra XP remains meaningful.
+There are 36 total ranks. Once every tradition is mastered, subsequent knowledge points grant **20 food and 15 materials each**, and the commander is fully healed when those points are converted. Extra XP remains meaningful.
 
 Each enemy drops its defined XP value, independent of its scaled health. Shards begin following the commander inside the attraction radius and collect within 18 world units. Once attracted, they keep following. At the 500-shard pool limit, new XP merges into an existing active shard. Uncollected XP travels to the next camp on arrival.
 
@@ -201,7 +204,7 @@ Progress = stage time × Mobility / route base duration
 
 Three starting horses make a nominal 60-second crossing take about 57.9 seconds outside winter. Population does not directly slow the caravan, but increases provisions needed. Herd losses can reduce calculated progress because mobility uses the current herd.
 
-The caravan moves east automatically across 1,150 world units as progress reaches 100%. It does not wait for the commander or depend on remaining within an escort radius. Defend it because nearby enemies and hostile shots damage the clan. You can fight, gallop, change formations, collect shards, and learn traditions during travel; construction waits for unpacking.
+The caravan moves east automatically across 1,150 world units as progress reaches 100%. It does not wait for the commander or depend on remaining within an escort radius. Defend it because nearby enemies and hostile shots damage the clan. You can fight, gallop, change formations, collect shards, and use the tech tree during travel; construction waits for unpacking.
 
 Rewards are not paid when choosing the route. On successful arrival, route rewards apply, the next region begins, pasture resets to 100%, resolve recovers by 12, and commander health recovers by 25, each capped at its maximum. Buildings, specializations, resources, traditions, and riders carry over. Enemies, projectiles, and eruption warnings are cleared; uncollected shards move to the new camp. Arrivals reset the stage clock, not total active journey time.
 
@@ -262,7 +265,7 @@ The strongest identity becomes the clan's name once any score reaches 4:
 
 Ties favor Iron, then Sky, then Wander. Identities do not make other buildings or routes unavailable.
 
-**Tab / J** opens the paused clan chronicle: journey, clan/workforce/buildings, traditions, and recorded story. The story tab retains the actual resolved dialogue, selected choice or skip, outcome, time, and population. Pause and result menus also offer **Our remembered road**. Reading records never grants rewards again and returns to the previous paused or ended screen. Story completion preserves queued tradition choices.
+**Tab / J** opens the paused clan chronicle: journey, clan/workforce/buildings, traditions, and recorded story. The story tab retains the actual resolved dialogue, selected choice or skip, outcome, time, and population. Pause and result menus also offer **Our remembered road**. Reading records never grants rewards again and returns to the previous paused or ended screen. Story completion preserves banked knowledge points; it does not force a research menu.
 
 With camp scenes enabled, victory first opens a skippable epilogue reflecting survivors, recorded casualties, identity, the shared tally decision, and the Skybreaker's fate, followed by journey results. The epilogue can be read again. The Last Court, Iron Vow, Sundering, creatures, and refuge are original fantasy; spirit shards represent scattered vitality, not purchased ancestral souls. See [the lore](../lore.md) for writing boundaries.
 
@@ -279,7 +282,8 @@ With camp scenes enabled, victory first opens a skippable epilogue reflecting su
 | Chronicle                                  | Tab / J / HUD button                           | View                              |
 | Pause, resume, close a panel, skip a scene | Escape / P                                     | Start / B                         |
 | Menu navigation / confirmation             | Tab, Shift+Tab / Enter, Space, click           | Stick or D-pad / A                |
-| Tradition choice                           | 1, 2, 3 / click                                | Navigate, then A                  |
+| Tradition tech tree                        | T / HUD button                                 | Left bumper                       |
+| Learn a rank                               | Navigate, then Enter / Space / click           | Navigate, then A                  |
 | Prologue pages                             | Continue, Back / Enter / left and right arrows | Navigate, then A; B / Start skips |
 | Fullscreen                                 | F11 / Alt+Enter / Settings                     | Navigate Settings                 |
 | Quit desktop game                          | Quit game / window close                       | Navigate Quit game                |
@@ -288,7 +292,7 @@ Touch preview supports dragging the battlefield to ride and tapping command butt
 
 Simulation, physics, economy, migration, combat animations, cooldowns, and the run timer advance only during active play. Title, prologue, story, epilogue, records, pause, traditions, camp development, routes, chronicle, settings, help, defeat, and victory stop them. Losing window focus pauses active combat. UI motion respects the operating system's reduced-motion preference; menus and values respond without waiting for animation.
 
-Only **longest journey time** and **sound preference** persist to the profile. A run cannot be resumed after quitting. New expeditions reset resources, buildings, traditions, identity, story records, casualties, and crossings. The camp-scene preference survives run restarts within the app session. There is no permanent spirit-stone wallet, meta-tech tree, achievement system, Steamworks progression, or campaign save in this prototype.
+Only **longest journey time** and **sound preference** persist to the profile. A run cannot be resumed after quitting. New expeditions reset resources, buildings, traditions, identity, story records, casualties, and crossings. The camp-scene preference survives run restarts within the app session. There is no permanent spirit-stone wallet, permanent meta-tech tree, achievement system, Steamworks progression, or campaign save in this prototype.
 
 The desktop game runs offline with local assets and native, validated, atomic saves. Browser preview has separate saves. The technology stack is TypeScript, Phaser 3, Vite, and Electron; there is no runtime AI service or backend.
 

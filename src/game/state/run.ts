@@ -1,3 +1,4 @@
+import { UPGRADES } from '../data/upgrades';
 import { GAME } from '../config';
 import { createClan } from './clan';
 import { createStory } from './story';
@@ -44,12 +45,50 @@ export function gainExperience(run: RunState, amount: number): boolean {
   return leveled;
 }
 
-export function applyUpgrade(run: RunState, upgrade: UpgradeDefinition): boolean {
+export function upgradeBlocker(
+  run: RunState,
+  upgrade: UpgradeDefinition,
+  rank = (run.upgrades[upgrade.id] ?? 0) + 1,
+): string | undefined {
   const stacks = run.upgrades[upgrade.id] ?? 0;
-  if (run.pendingUpgrades < 1 || stacks >= upgrade.maxStacks) return false;
+  if (rank <= stacks || stacks >= upgrade.maxStacks) return 'Already learned';
+  if (!Number.isInteger(rank) || rank !== stacks + 1) return `Requires rank ${rank - 1}`;
+  for (const requirement of upgrade.requires ?? []) {
+    if ((run.upgrades[requirement.id] ?? 0) < requirement.rank) {
+      const title = UPGRADES.find((entry) => entry.id === requirement.id)?.title ?? requirement.id;
+      return `Requires ${title} rank ${requirement.rank}`;
+    }
+  }
+  if (run.pendingUpgrades < 1) return 'Earn a knowledge point by collecting spirit shards';
+  return undefined;
+}
+
+export function applyUpgrade(
+  run: RunState,
+  upgrade: UpgradeDefinition,
+  rank = (run.upgrades[upgrade.id] ?? 0) + 1,
+): boolean {
+  const stacks = run.upgrades[upgrade.id] ?? 0;
+  if (upgradeBlocker(run, upgrade, rank)) return false;
   upgrade.apply(run);
   run.upgrades[upgrade.id] = stacks + 1;
   run.pendingUpgrades -= 1;
+  return true;
+}
+
+/** Only complete mastery converts banked points; locked branches keep their points. */
+export function redeemMasteredResearch(run: RunState): boolean {
+  if (
+    run.pendingUpgrades < 1 ||
+    UPGRADES.some((entry) => (run.upgrades[entry.id] ?? 0) < entry.maxStacks)
+  )
+    return false;
+  run.health = run.stats.maxHealth;
+  run.clan.food += run.pendingUpgrades * 20;
+  run.clan.materials += run.pendingUpgrades * 15;
+  run.pendingUpgrades = 0;
+  run.clan.message =
+    'Every tradition is mastered. Each knowledge point supplies 20 food and 15 materials.';
   return true;
 }
 

@@ -38,6 +38,13 @@ describe('controller input', () => {
     expect(input.poll([])).toMatchObject({ x: 0, y: 0, confirm: false });
     expect(input.poll([pad(0, 0, [9])]).pause).toBe(true);
   });
+  it('opens research once per press of the left bumper', () => {
+    const input = new GamepadInput();
+    expect(input.poll([pad(0, 0, [4])]).research).toBe(true);
+    expect(input.poll([pad(0, 0, [4])]).research).toBe(false);
+    input.poll([pad()]);
+    expect(input.poll([pad(0, 0, [4])]).research).toBe(true);
+  });
   it('opens the clan chronicle once per press of the View button', () => {
     const input = new GamepadInput();
     expect(input.poll([pad(0, 0, [8])]).journal).toBe(true);

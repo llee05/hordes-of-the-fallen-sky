@@ -118,7 +118,7 @@ test('complete the two acts, all eight choices, three crossings, and a survivor-
   expect(errors).toEqual([]);
 });
 
-test('story cannot grant twice, and queued tradition choices survive a camp conversation', async ({
+test('story cannot grant twice, and banked knowledge points survive a camp conversation', async ({
   page,
 }) => {
   await beginStory(page);
@@ -135,10 +135,12 @@ test('story cannot grant twice, and queued tradition choices survive a camp conv
       records: scene.run.story.records.length,
     };
   });
-  expect(outcome).toEqual({ difference: 6, phase: 'upgrade', pending: 2, records: 1 });
-  await page.locator('[data-upgrade="0"]').click();
+  expect(outcome).toEqual({ difference: 6, phase: 'playing', pending: 2, records: 1 });
+  await page.keyboard.press('t');
+  await page.locator('[data-research="power"][data-rank="1"]').click();
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'upgrade');
-  await page.locator('[data-upgrade="0"]').click();
+  await page.locator('[data-research="power"][data-rank="2"]').click();
+  await page.keyboard.press('Escape');
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await page.keyboard.press('j');
   await page.getByRole('tab', { name: 'Our story' }).click();
@@ -228,6 +230,10 @@ test('controller chooses, skips, reads memories, and returns to the paused exped
   await press(1);
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await press(9);
+  await press(13);
+  await expect(
+    page.getByRole('button', { name: 'Tradition tech tree', exact: true }),
+  ).toBeFocused();
   await press(13);
   await press(13);
   await press(0);

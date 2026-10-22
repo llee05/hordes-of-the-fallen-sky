@@ -25,25 +25,19 @@ import {
   damageClan,
   riderCount,
 } from '../state/clan';
-import { upgradeChoices } from '../data/upgrades';
+import { UPGRADES } from '../data/upgrades';
 import { Enemy, Gem, Projectile } from '../entities/actors';
-import { applyUpgrade, createRun, gainExperience } from '../state/run';
+import { applyUpgrade, createRun, gainExperience, redeemMasteredResearch } from '../state/run';
 import { GameAudio } from '../systems/Audio';
 import { SpatialHash } from '../systems/SpatialHash';
 import { ActionKeys } from '../systems/ActionKeys';
 import { GamepadInput } from '../systems/GamepadInput';
 import type { GamePlatform } from '../../platform/GamePlatform';
-import type {
-  BuildingId,
-  EnemyDefinition,
-  HudSnapshot,
-  RunState,
-  UpgradeDefinition,
-} from '../types';
+import type { BuildingId, EnemyDefinition, HudSnapshot, RunState } from '../types';
 
 export interface ArenaCallbacks {
   onHud: (snapshot: HudSnapshot) => void;
-  onPhase: (snapshot: HudSnapshot, choices: readonly UpgradeDefinition[]) => void;
+  onPhase: (snapshot: HudSnapshot) => void;
   onMenuInput: (action: 'next' | 'previous' | 'confirm') => void;
   onSaveError: () => void;
 }
@@ -96,7 +90,7 @@ export class ArenaScene extends Phaser.Scene {
   private invulnerable = 0;
   private hudTimer = 0;
   private best = 0;
-  private choices: readonly UpgradeDefinition[] = [];
+  private researchReturnPhase: 'playing' | 'journal' | 'paused' = 'playing';
   private utilityReturnPhase: 'ready' | 'paused' = 'ready';
   private introSlide = 0;
   private introStartsRun = false;
@@ -133,7 +127,7 @@ export class ArenaScene extends Phaser.Scene {
     this.dashRemaining = 0;
     this.invulnerable = 0;
     this.hudTimer = 0;
-    this.choices = [];
+    this.researchReturnPhase = 'playing';
     this.utilityReturnPhase = 'ready';
     this.supportTimer = 0;
     this.wagonTimer = 0;
@@ -231,6 +225,12 @@ export class ArenaScene extends Phaser.Scene {
     }) as typeof this.keys;
     const bindAction = (key: string, action: () => void): void => {
       this.input.keyboard!.on(`keydown-${key}`, (event: KeyboardEvent) => {
+        if (
+          key !== 'ESC' &&
+          event.target instanceof HTMLElement &&
+          event.target.closest('input, textarea, select')
+        )
+          return;
         if (this.actionKeys.consume(event)) action();
       });
     };
@@ -240,6 +240,7 @@ export class ArenaScene extends Phaser.Scene {
     bindAction('M', () => this.openRoutes());
     bindAction('F', () => this.cycleFormation());
     bindAction('J', () => this.toggleJournal());
+    bindAction('T', () => this.openResearch());
     this.input.keyboard!.on('keydown-TAB', (event: KeyboardEvent) => {
       if (this.run.phase !== 'playing' || !this.actionKeys.consume(event)) return;
       event.preventDefault();
@@ -248,14 +249,6 @@ export class ArenaScene extends Phaser.Scene {
     // Native Space activation remains available to focused menu buttons.
     this.input.keyboard!.removeCapture('SPACE');
     bindAction('SPACE', () => this.dash());
-    this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
-      if (
-        this.run.phase === 'upgrade' &&
-        ['1', '2', '3'].includes(event.key) &&
-        this.actionKeys.consume(event)
-      )
-        this.selectUpgrade(Number(event.key) - 1);
-    });
 
     // Drag anywhere in the arena for analog movement on touch screens.
     this.joystick = this.add.graphics().setScrollFactor(0).setDepth(10000);
@@ -315,8 +308,8 @@ export class ArenaScene extends Phaser.Scene {
     // Check for a queued arrival beat before resuming any simulation.
     this.run.phase = 'playing';
     if (this.presentStory()) return;
-    if (this.run.pendingUpgrades > 0) this.offerUpgrade();
-    else this.setPhase('playing');
+    redeemMasteredResearch(this.run);
+    this.setPhase('playing');
   }
 
   showEpilogue(): void {
@@ -370,7 +363,9 @@ export class ArenaScene extends Phaser.Scene {
     else if (this.run.phase === 'story-log') this.closePlanning();
     else if (this.run.phase === 'playing') this.setPhase('paused');
     else if (this.run.phase === 'paused') this.setPhase('playing');
-    else if (['building', 'route', 'journal', 'settings', 'help'].includes(this.run.phase))
+    else if (
+      ['building', 'route', 'journal', 'upgrade', 'settings', 'help'].includes(this.run.phase)
+    )
       this.closePlanning();
   }
 
@@ -393,6 +388,10 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   closePlanning(): void {
+    if (this.run.phase === 'upgrade') {
+      this.setPhase(this.researchReturnPhase);
+      return;
+    }
     if (this.run.phase === 'story-log') {
       this.setPhase(this.storyLogReturn);
       return;
@@ -404,6 +403,17 @@ export class ArenaScene extends Phaser.Scene {
   toggleJournal(): void {
     if (this.run.phase === 'playing') this.setPhase('journal');
     else if (this.run.phase === 'journal') this.setPhase('playing');
+  }
+
+  openResearch(): void {
+    const phase = this.run.phase;
+    if (phase === 'upgrade') {
+      this.closePlanning();
+      return;
+    }
+    if (phase !== 'playing' && phase !== 'journal' && phase !== 'paused') return;
+    this.researchReturnPhase = phase;
+    this.setPhase('upgrade');
   }
 
   openUtilityMenu(menu: 'settings' | 'help'): void {
@@ -449,12 +459,13 @@ export class ArenaScene extends Phaser.Scene {
     this.burst(this.player.x, this.player.y, 0xc8df9b, 7);
   }
 
-  selectUpgrade(index: number): void {
-    const upgrade = this.choices[index];
-    if (this.run.phase !== 'upgrade' || !upgrade || !applyUpgrade(this.run, upgrade)) return;
+  research(id: string, rank: number): void {
+    const upgrade = UPGRADES.find((entry) => entry.id === id);
+    if (this.run.phase !== 'upgrade' || !upgrade || !applyUpgrade(this.run, upgrade, rank)) return;
     this.audio.play('level');
-    if (this.run.pendingUpgrades > 0) this.offerUpgrade();
-    else this.setPhase('playing');
+    this.run.clan.message = `${upgrade.title} — rank ${rank} learned.`;
+    redeemMasteredResearch(this.run);
+    this.publishPhase();
   }
 
   update(_time: number, delta: number): void {
@@ -477,6 +488,7 @@ export class ArenaScene extends Phaser.Scene {
           'playing',
           'paused',
           'building',
+          'upgrade',
           'route',
           'journal',
           'settings',
@@ -487,6 +499,7 @@ export class ArenaScene extends Phaser.Scene {
         ].includes(this.run.phase))
     )
       this.togglePause();
+    else if (controller.research) this.openResearch();
     else if (this.run.phase === 'playing') {
       if (controller.confirm) this.dash();
       if (controller.build) this.openBuildings();
@@ -925,7 +938,12 @@ export class ArenaScene extends Phaser.Scene {
     }
     if (experience > 0) {
       this.audio.play('gem');
-      if (gainExperience(this.run, experience)) this.offerUpgrade();
+      if (gainExperience(this.run, experience)) {
+        this.audio.play('level');
+        if (!redeemMasteredResearch(this.run))
+          this.run.clan.message = `${this.run.pendingUpgrades} knowledge point${this.run.pendingUpgrades === 1 ? '' : 's'} ready. Open the tech tree with T.`;
+        this.callbacks?.onHud(this.snapshot());
+      }
     }
   }
 
@@ -944,22 +962,6 @@ export class ArenaScene extends Phaser.Scene {
     this.audio.play('hit');
     this.burst(this.player.x, this.player.y, 0xdd967c, 8);
     if (this.run.health === 0) this.finish('dead');
-  }
-
-  private offerUpgrade(): void {
-    this.choices = upgradeChoices(this.run);
-    if (this.choices.length === 0) {
-      this.run.health = this.run.stats.maxHealth;
-      this.run.clan.food += this.run.pendingUpgrades * 20;
-      this.run.clan.materials += this.run.pendingUpgrades * 15;
-      this.run.clan.message =
-        'Every tradition is mastered. Each earned choice supplies the clan with 20 food and 15 materials.';
-      this.run.pendingUpgrades = 0;
-      this.setPhase('playing');
-      return;
-    }
-    this.audio.play('level');
-    this.setPhase('upgrade');
   }
 
   private finish(phase: 'won' | 'dead'): void {
@@ -1002,7 +1004,7 @@ export class ArenaScene extends Phaser.Scene {
   private publishPhase(): void {
     const snapshot = this.snapshot();
     this.callbacks?.onHud(snapshot);
-    this.callbacks?.onPhase(snapshot, this.choices);
+    this.callbacks?.onPhase(snapshot);
   }
   private pauseOnBlur(): void {
     if (this.run.phase === 'playing') this.setPhase('paused');

@@ -77,6 +77,8 @@ export interface UpgradeDefinition {
   description: string;
   icon: string;
   maxStacks: number;
+  category: string;
+  requires?: readonly { id: string; rank: number }[];
   apply: (run: RunState) => void;
 }
 

@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { UPGRADES, upgradeChoices } from '../../src/game/data/upgrades';
+import { UPGRADES } from '../../src/game/data/upgrades';
 import { chooseEnemy, spawnInterval } from '../../src/game/data/enemies';
-import { applyUpgrade, createRun, formatTime, gainExperience } from '../../src/game/state/run';
+import {
+  applyUpgrade,
+  createRun,
+  formatTime,
+  gainExperience,
+  redeemMasteredResearch,
+  upgradeBlocker,
+} from '../../src/game/state/run';
 
 describe('run progression', () => {
   it('creates independent runs, including nested stats and upgrades', () => {
@@ -37,22 +44,47 @@ describe('run progression', () => {
     expect(applyUpgrade(run, power)).toBe(false);
   });
 
-  it('never offers a maxed blessing and never duplicates a choice', () => {
+  it('rejects maxed ranks, skipped ranks, stale duplicate purchases, and invalid rank values', () => {
     const run = createRun();
     const power = UPGRADES.find((upgrade) => upgrade.id === 'power')!;
+    run.pendingUpgrades = 3;
+    expect(applyUpgrade(run, power, 2)).toBe(false);
+    expect(applyUpgrade(run, power, NaN)).toBe(false);
+    expect(applyUpgrade(run, power, 1)).toBe(true);
+    expect(applyUpgrade(run, power, 1)).toBe(false);
+    expect(run.pendingUpgrades).toBe(2);
+    expect(run.stats.damage).toBe(20);
     run.upgrades.power = power.maxStacks;
-    run.pendingUpgrades = 1;
     expect(applyUpgrade(run, power)).toBe(false);
-    const choices = upgradeChoices(run, () => 0.5);
-    expect(choices).toHaveLength(3);
-    expect(new Set(choices.map((choice) => choice.id)).size).toBe(3);
-    expect(choices.some((choice) => choice.id === 'power')).toBe(false);
+    expect(run.pendingUpgrades).toBe(2);
   });
 
-  it('allows exhausting the upgrade pool without an invalid choice', () => {
+  it('supports data-defined prerequisites and keeps banked points when a branch is locked', () => {
     const run = createRun();
+    const power = UPGRADES.find((upgrade) => upgrade.id === 'power')!;
+    const advanced = { ...power, id: 'advanced', requires: [{ id: 'power', rank: 2 }] };
+    run.pendingUpgrades = 5;
+    expect(upgradeBlocker(run, advanced)).toContain('Horn-and-sinew bows rank 2');
+    expect(applyUpgrade(run, advanced)).toBe(false);
+    applyUpgrade(run, power, 1);
+    applyUpgrade(run, power, 2);
+    expect(applyUpgrade(run, advanced)).toBe(true);
+    expect(run.pendingUpgrades).toBe(2);
+  });
+
+  it('converts every banked point only after all branches are mastered, exactly once', () => {
+    const run = createRun();
+    run.pendingUpgrades = 3;
+    expect(redeemMasteredResearch(run)).toBe(false);
+    expect(run.pendingUpgrades).toBe(3);
     for (const upgrade of UPGRADES) run.upgrades[upgrade.id] = upgrade.maxStacks;
-    expect(upgradeChoices(run)).toEqual([]);
+    run.health = 1;
+    expect(redeemMasteredResearch(run)).toBe(true);
+    expect(run.clan.food).toBe(130);
+    expect(run.clan.materials).toBe(95);
+    expect(run.health).toBe(run.stats.maxHealth);
+    expect(redeemMasteredResearch(run)).toBe(false);
+    expect(run.pendingUpgrades).toBe(0);
   });
 
   it('vitality increases the cap and heals without exceeding it', () => {

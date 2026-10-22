@@ -8,7 +8,7 @@ import {
   clanDoctrine,
   riderCount,
 } from '../game/state/clan';
-import type { RunState, UpgradeDefinition } from '../game/types';
+import type { RunState } from '../game/types';
 import {
   BUILDING_MARKS,
   TRADITION_MARKS,
@@ -16,17 +16,10 @@ import {
   clanMark,
   routeIllustration,
 } from './artwork';
-import type { ClanMark } from './artwork';
+import { heading, footer } from './panelContent';
 import { storyRecords } from './storyContent';
 
 export type JournalTab = 'journey' | 'clan' | 'traditions' | 'story';
-
-function heading(eyebrow: string, title: string, close = true, mark: ClanMark = 'journal'): string {
-  return `<header class="panel-heading"><div class="panel-title"><span class="panel-emblem">${clanMark(mark)}</span><div><p class="eyebrow">${eyebrow}</p><h2 id="overlay-title">${title}</h2></div></div>${close ? '<button class="panel-close" data-action="back" aria-label="Close panel" title="Close (Escape)">×</button>' : ''}</header>`;
-}
-function footer(label = 'Return to the steppe'): string {
-  return `<footer class="panel-footer"><span class="paused-note">Ⅱ &nbsp; THE WORLD IS PAUSED</span><button class="secondary-button" data-action="back">${label} <kbd>ESC</kbd></button></footer>`;
-}
 
 export function buildingMenu(run: RunState): string {
   return `<section class="game-panel planning-dialog">${heading('THE ENCAMPMENT', 'Build a people.', true, 'ger')}<div class="panel-body"><p class="panel-intro">Assign your families. Every structure travels with you.</p><div class="building-grid">${BUILDINGS.map(
@@ -41,10 +34,6 @@ export function buildingMenu(run: RunState): string {
 
 export function routeMenu(run: RunState): string {
   return `<section class="game-panel route-dialog">${heading(`CAMP ${run.clan.region + 1} / THE ROAD EAST`, 'Where the grass still grows.', true, 'banner')}<div class="panel-body"><p class="panel-intro">Pack the gers. Protect the moving caravan. Rewards await at the far end.</p><div class="route-map"><span>${REGIONS[run.clan.region]!.short}</span><i>◇ ─ ─ ─ → ◇</i><span>${REGIONS[run.clan.region + 1]!.short}</span></div><div class="upgrade-cards">${ROUTES.map((r) => `<button class="upgrade-card route-card" data-route="${r.id}">${routeIllustration(r.id)}<span class="upgrade-subtitle">${r.subtitle}</span><h3>${r.title}</h3><p>${r.description}</p><span class="card-bottom">PACK & DEPART <span>→</span></span></button>`).join('')}</div></div>${footer('Stay a little longer')}</section>`;
-}
-
-export function traditionMenu(run: RunState, choices: readonly UpgradeDefinition[]): string {
-  return `<section class="game-panel">${heading(`TRADITION ${run.level} / ${run.pendingUpgrades} CHOICE${run.pendingUpgrades === 1 ? '' : 'S'} EARNED`, 'What we carry.', false, 'spirit')}<div class="panel-body"><p class="panel-intro">A people is shaped by what it learns. Choose a tradition.</p><div class="upgrade-cards">${choices.map((upgrade, index) => `<button class="upgrade-card" data-upgrade="${index}"><div class="upgrade-card-top"><span class="upgrade-icon">${clanMark(TRADITION_MARKS[upgrade.id] ?? 'spirit')}</span><kbd>${index + 1}</kbd></div><span class="upgrade-subtitle">${upgrade.subtitle}</span><h3>${upgrade.title}</h3><p>${upgrade.description}</p><span class="card-bottom">${run.upgrades[upgrade.id] ? `RANK ${(run.upgrades[upgrade.id] ?? 0) + 1}` : 'NEW TRADITION'} <span>↗</span></span></button>`).join('')}</div></div><footer class="panel-footer"><span class="paused-note">Ⅱ &nbsp; THE WORLD IS PAUSED</span><span class="input-hint">1, 2, 3 · CLICK · CONTROLLER A</span></footer></section>`;
 }
 
 export function journalMenu(run: RunState, tab: JournalTab): string {
@@ -67,8 +56,8 @@ export function journalMenu(run: RunState, tab: JournalTab): string {
               return `<article class="tradition-entry"><span>${clanMark(TRADITION_MARKS[upgrade.id] ?? 'spirit')}</span><div><h4>${upgrade.title} <small>RANK ${stacks}</small></h4><p>${upgrade.description}</p></div></article>`;
             })
             .join('')
-        : '<p class="journal-callout">Gather spirit shards from fallen enemies to earn your first tradition. Every earned choice lets you shape the host.</p>'
-    }</div></div>`;
+        : '<p class="journal-callout">Gather spirit shards from fallen enemies to earn knowledge points, then spend them in the tech tree.</p>'
+    }</div><button class="primary-button" data-action="research">Open tech tree · ${run.pendingUpgrades} knowledge points <span>→</span></button></div>`;
   }
   return `<section class="game-panel journal-dialog">${heading('THE CLAN CHRONICLE', 'A people on the move.')}<div class="journal-tabs" role="tablist" aria-label="Chronicle sections">${(['journey', 'clan', 'traditions', 'story'] as const).map((entry) => `<button role="tab" id="tab-${entry}" aria-selected="${entry === tab}" aria-controls="journal-page" tabindex="${entry === tab ? 0 : -1}" data-tab="${entry}">${entry === 'journey' ? 'The journey' : entry === 'clan' ? 'Your clan' : entry === 'story' ? 'Our story' : 'Traditions'}</button>`).join('')}</div><div class="panel-body" id="journal-page" role="tabpanel" aria-labelledby="tab-${tab}">${content}</div>${footer()}</section>`;
 }
@@ -82,10 +71,11 @@ export function helpMenu(): string {
     ['WASD / ARROWS', 'Ride', 'LEFT STICK'],
     ['SPACE', 'Gallop', 'A'],
     ['B', 'Develop camp', 'X'],
+    ['T', 'Tradition tech tree', 'LB'],
     ['M', 'Pack & migrate', 'Y'],
     ['F', 'Change formation', 'RB'],
     ['TAB / J', 'Clan chronicle', 'VIEW'],
     ['ESC', 'Pause / back', 'START / B'],
   ];
-  return `<section class="game-panel help-panel">${heading('A SMALL CLAN. AN ENDLESS STEPPE.', 'How to play')}<div class="panel-body"><div class="help-loop"><article><span class="help-step">${clanMark('ger')}<b>01</b></span><h3>Build</h3><p>Raise gers, train riders, and gather supplies. Your civilization is your fighting force.</p></article><article><span class="help-step">${clanMark('bow')}<b>02</b></span><h3>Defend</h3><p>Ride to dodge. Attacks fire automatically. Collect spirit shards to learn new traditions.</p></article><article><span class="help-step">${clanMark('banner')}<b>03</b></span><h3>Migrate</h3><p>After 45 seconds, new routes open. Pack up before the pasture dies and protect the moving caravan.</p></article></div><p class="journal-callout">Two acts carry the clan across four regions. Camp conversations pause the world and offer a choice; Escape or controller B continues without choosing. Read past scenes in the chronicle’s Our story tab. Turn Camp scenes off at the title for uninterrupted combat.</p><div class="control-table"><div class="control-table-heading"><span>KEYBOARD</span><span>ACTION</span><span>CONTROLLER</span></div>${controls.map(([key, action, pad]) => `<div><kbd>${key}</kbd><span>${action}</span><kbd>${pad}</kbd></div>`).join('')}</div><p class="journal-callout">Keep your people fed and their resolve above zero. Reach the sacred mountain and hold the passage for three minutes to save the clan.</p><p class="settings-note">Touch preview: drag the battlefield to ride; tap the command dock to act.</p></div>${footer('Back')}</section>`;
+  return `<section class="game-panel help-panel">${heading('A SMALL CLAN. AN ENDLESS STEPPE.', 'How to play')}<div class="panel-body"><div class="help-loop"><article><span class="help-step">${clanMark('ger')}<b>01</b></span><h3>Build</h3><p>Raise gers, train riders, and gather supplies. Your civilization is your fighting force.</p></article><article><span class="help-step">${clanMark('bow')}<b>02</b></span><h3>Defend</h3><p>Ride to dodge. Attacks fire automatically. Collect spirit shards for knowledge points. Open the tech tree with T to learn traditions.</p></article><article><span class="help-step">${clanMark('banner')}<b>03</b></span><h3>Migrate</h3><p>After 45 seconds, new routes open. Pack up before the pasture dies and protect the moving caravan.</p></article></div><p class="journal-callout">Two acts carry the clan across four regions. Camp conversations pause the world and offer a choice; Escape or controller B continues without choosing. Read past scenes in the chronicle’s Our story tab. Turn Camp scenes off at the title for uninterrupted combat.</p><div class="control-table"><div class="control-table-heading"><span>KEYBOARD</span><span>ACTION</span><span>CONTROLLER</span></div>${controls.map(([key, action, pad]) => `<div><kbd>${key}</kbd><span>${action}</span><kbd>${pad}</kbd></div>`).join('')}</div><p class="journal-callout">Keep your people fed and their resolve above zero. Reach the sacred mountain and hold the passage for three minutes to save the clan.</p><p class="settings-note">Touch preview: drag the battlefield to ride; tap the command dock to act.</p></div>${footer('Back')}</section>`;
 }

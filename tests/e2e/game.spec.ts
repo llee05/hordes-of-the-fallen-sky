@@ -39,6 +39,10 @@ test('controller starts a run, moves, dashes, pauses, and navigates menus', asyn
   await press(9);
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
   await press(13);
+  await expect(
+    page.getByRole('button', { name: 'Tradition tech tree', exact: true }),
+  ).toBeFocused();
+  await press(13);
   await expect(page.getByRole('button', { name: 'Start a new run' })).toBeFocused();
   await press(0);
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
@@ -82,7 +86,7 @@ test('starts, moves, dashes, pauses, resumes, and resets a run', async ({ page }
   expect(errors).toEqual([]);
 });
 
-test('automatic attacks defeat enemies and collected XP opens a working upgrade choice', async ({
+test('automatic attacks defeat enemies and collected XP banks research without interrupting combat', async ({
   page,
 }) => {
   await openTitle(page);
@@ -105,10 +109,16 @@ test('automatic attacks defeat enemies and collected XP opens a working upgrade 
     gem.value = 1;
     gem.attracted = false;
   });
-  await expect(page.getByRole('heading', { name: 'What we carry.' })).toBeVisible();
-  await expect(page.locator('.upgrade-card')).toHaveCount(3);
+  await expect(page.locator('#level')).toHaveText('02');
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(page.locator('#research-points')).toHaveText('1');
+  await page.keyboard.press('t');
+  await expect(page.getByRole('heading', { name: 'Tradition tech tree' })).toBeVisible();
+  await expect(page.locator('[data-tree-branch]')).toHaveCount(6);
   await page.screenshot({ path: 'test-results/desktop-upgrade.png', fullPage: true });
-  await page.keyboard.press('1');
+  await page.locator('[data-research="power"][data-rank="1"]').click();
+  await expect(page.getByRole('heading', { name: 'Tradition tech tree' })).toBeVisible();
+  await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#blessing-count')).toHaveText('1');
   await expect(page.locator('#level')).toHaveText('02');

@@ -10,6 +10,7 @@ export interface ControllerFrame {
   migrate: boolean;
   formation: boolean;
   journal: boolean;
+  research: boolean;
 }
 
 export type ControllerDevice = Pick<Gamepad, 'connected' | 'mapping' | 'axes' | 'buttons'>;
@@ -37,6 +38,7 @@ export class GamepadInput {
       migrate: false,
       formation: false,
       journal: false,
+      research: false,
     };
     if (!pad) {
       this.previousButtons = 0;
@@ -56,6 +58,7 @@ export class GamepadInput {
     frame.build = (tapped & (1 << 2)) !== 0;
     frame.migrate = (tapped & (1 << 3)) !== 0;
     frame.formation = (tapped & (1 << 5)) !== 0;
+    frame.research = (tapped & (1 << 4)) !== 0;
     frame.journal = (tapped & (1 << 8)) !== 0;
     const x = pad.axes[0] ?? 0;
     const y = pad.axes[1] ?? 0;

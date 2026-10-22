@@ -48,7 +48,7 @@ Camp scenes are **On** by default. Saran the hearthkeeper, Boro the herder, Erde
 
 Act I crosses Golden Pasture and Silent River. Arrival at Broken Pass begins Act II, followed by the Heart of the Steppe. The chronicle's **Our story** tab keeps the actual conversations and decisions from the current expedition. Pause, victory, and defeat menus also offer **Our remembered road**. Read-only memories never restart simulation or grant a choice again.
 
-Start with eight people, three horses, two gers, supplies, and a mounted commander with one accompanying rider. Attacks are automatic. Ride to collect spirit shards and learn clan traditions. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through.
+Start with eight people, three horses, two gers, supplies, and a mounted commander with one accompanying rider. Attacks are automatic. Ride to collect spirit shards. Each level banks a knowledge point without interrupting combat. Press **T** (controller **LB**) or use the HUD to open the paused **Tradition tech tree**, inspect every branch, and spend points on the ranks you choose. You can leave with unspent points and return later. Categories and search help you find branches. The tree is also accessible from Pause and the chronicle’s Traditions tab. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through.
 
 Press **B** to develop your camp. Planning pauses the simulation, including food consumption, pasture depletion, enemies, and migration. Structures cost materials, sometimes spirit, and available workers. A constructed building can take one of two exclusive specializations. Your buildings travel with the clan.
 
@@ -72,25 +72,26 @@ In a story expedition, victory opens **A place beside the fire**, a skippable ep
 
 An expedition is intended to take about 15 minutes with roughly three minutes of growth per camp. Earlier departures shorten the journey; longer stays increase danger. This is a prototype balance, not a fixed time limit.
 
-For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md).
+For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
 
 ## Controls
 
-| Action                          | Keyboard / mouse                    | Standard controller           |
-| ------------------------------- | ----------------------------------- | ----------------------------- |
-| Ride                            | WASD / arrows                       | Left stick / D-pad            |
-| Attack                          | Automatic                           | Automatic                     |
-| Gallop                          | Space / Gallop button               | A                             |
-| Develop camp                    | B / Develop camp                    | X                             |
-| Pack and choose route           | M / Pack & migrate                  | Y                             |
-| Cycle unlocked formations       | F / Formation button                | Right bumper                  |
-| Clan chronicle                  | Tab / J / chronicle button          | View                          |
-| Pause / resume / close planning | Escape / P                          | Start / B                     |
-| Navigate menus                  | Tab / Shift+Tab                     | Stick / D-pad                 |
-| Confirm                         | Enter / Space / click               | A                             |
-| Choose tradition                | 1, 2, 3 / click                     | Navigate, then A              |
-| Fullscreen                      | F11 / Alt+Enter / fullscreen button | —                             |
-| Quit                            | Quit game / window close            | Navigate to Quit game, then A |
+| Action                          | Keyboard / mouse                     | Standard controller           |
+| ------------------------------- | ------------------------------------ | ----------------------------- |
+| Ride                            | WASD / arrows                        | Left stick / D-pad            |
+| Attack                          | Automatic                            | Automatic                     |
+| Gallop                          | Space / Gallop button                | A                             |
+| Develop camp                    | B / Develop camp                     | X                             |
+| Pack and choose route           | M / Pack & migrate                   | Y                             |
+| Cycle unlocked formations       | F / Formation button                 | Right bumper                  |
+| Clan chronicle                  | Tab / J / chronicle button           | View                          |
+| Pause / resume / close planning | Escape / P                           | Start / B                     |
+| Navigate menus                  | Tab / Shift+Tab                      | Stick / D-pad                 |
+| Confirm                         | Enter / Space / click                | A                             |
+| Tradition tech tree             | T / Tech tree button                 | Left bumper                   |
+| Learn a rank                    | Navigate, then Enter / Space / click | Navigate, then A              |
+| Fullscreen                      | F11 / Alt+Enter / fullscreen button  | —                             |
+| Quit                            | Quit game / window close             | Navigate to Quit game, then A |
 
 Caravan guard keeps riders near the clan and reduces clan damage. Encirclement circles nearby enemies and rewards moving fire. Charging wedge follows your commander and turns gallop into an attack. Feigned retreat spreads riders, accelerates moving volleys, and gathers shards from farther away. Touch preview supports dragging to ride and tapping command buttons.
 
@@ -133,12 +134,14 @@ public/art/                   Bundled painted PNGs and atlas frame metadata
 src/game/scenes/ArenaScene.ts  Simulation, mounted host, combat, regional arenas
 src/ui/GameUI.ts               Full-window HUD, title/pause menus, focus and input
 src/ui/menuContent.ts          Camp, route, chronicle, settings, and help panels
+src/ui/progressionTree.ts      Shared data-driven progression tree renderer
+src/ui/researchContent.ts      Tradition branches, ranks, and research state
 src/platform/                 Narrow native capability bridge and browser fallback
 desktop/                      Secure Electron lifecycle and atomic profile storage
 scripts/                      Build staging, packaging, icon, SteamPipe preparation
 ```
 
-Actors use bounded pools and a spatial grid. Combat, economy, and physics stop in menus and on focus loss. Construction, route rewards, and earned tradition choices live in renderer-independent state modules. The renderer keeps sandboxing, context isolation, and disabled Node integration. `window.__gloam` remains a development-only test/inspection hook, absent from production.
+Actors use bounded pools and a spatial grid. Combat, economy, and physics stop in menus and on focus loss. Construction, route rewards, and banked knowledge points live in renderer-independent state modules. The renderer keeps sandboxing, context isolation, and disabled Node integration. `window.__gloam` remains a development-only test/inspection hook, absent from production.
 
 ## Checks
 
