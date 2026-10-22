@@ -31,12 +31,12 @@ import { Enemy, Gem, Projectile } from '../entities/actors';
 import { applyUpgrade, createRun, gainExperience, redeemMasteredResearch } from '../state/run';
 import {
   advancePatrons,
-  damageCommander,
   friendlyDamageMultiplier,
   gallopCooldown,
   rewardPatronKill,
   terrainSpeedMultiplier,
 } from '../state/patrons';
+import { advanceSuccession, beginSuccession, damageKhan, isKhanActive } from '../state/khan';
 import { PatronSupport } from '../systems/PatronSupport';
 import { GameAudio } from '../systems/Audio';
 import { SpatialHash } from '../systems/SpatialHash';
@@ -310,6 +310,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private presentStory(): boolean {
+    if (!isKhanActive(this.run)) return false;
     if (!openNextStory(this.run)) return false;
     this.setPhase('story');
     return true;
@@ -465,7 +466,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   dash(): void {
-    if (this.run.phase !== 'playing' || this.dashTimer > 0) return;
+    if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.dashTimer > 0) return;
     this.dashRemaining = GAME.dash.duration;
     this.dashTimer = gallopCooldown(this.run);
     this.invulnerable = Math.max(this.invulnerable, GAME.dash.duration);
@@ -532,6 +533,10 @@ export class ArenaScene extends Phaser.Scene {
     if (this.run.phase !== 'playing') return;
     if (this.presentStory()) return;
     const dt = Math.min(delta / 1000, 0.05);
+    if (!isKhanActive(this.run) && this.player.active) {
+      beginSuccession(this.run);
+      this.hideFallenKhan();
+    }
     this.run.elapsed += dt;
     advancePatrons(this.run, dt);
     this.dashTimer = Math.max(0, this.dashTimer - dt);
@@ -550,7 +555,13 @@ export class ArenaScene extends Phaser.Scene {
     if (this.run.phase !== 'playing') return;
     this.updateCamp(dt);
     if (this.run.phase !== 'playing') return;
-    this.movePlayer(dt);
+    if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
+      this.finish('dead');
+      return;
+    }
+    if (advanceSuccession(this.run, dt)) this.returnKhan();
+    if (isKhanActive(this.run)) this.movePlayer(dt);
+    else this.player.setPosition(this.camp.x, this.camp.y + GAME.khan.campOffset);
     this.updateEnemies(dt);
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
       this.finish('dead');
@@ -663,10 +674,14 @@ export class ArenaScene extends Phaser.Scene {
       (camera.width / 2 + 60) / Math.max(0.01, Math.abs(Math.cos(angle))),
       (camera.height / 2 + 60) / Math.max(0.01, Math.abs(Math.sin(angle))),
     );
-    const anchor = Math.random() < 0.45 ? this.camp : this.player;
+    const anchor = !isKhanActive(this.run) || Math.random() < 0.45 ? this.camp : this.player;
     const x = Phaser.Math.Clamp(anchor.x + Math.cos(angle) * distance, 24, GAME.worldSize - 24);
     const y = Phaser.Math.Clamp(anchor.y + Math.sin(angle) * distance, 24, GAME.worldSize - 24);
-    if (Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) < 200) return;
+    if (
+      isKhanActive(this.run) &&
+      Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) < 200
+    )
+      return;
     const enemy = this.enemies.get(x, y, ...artTexture(definition.texture)) as Enemy | null;
     if (!enemy) return;
     enemy.enableBody(true, x, y, true, true);
@@ -700,6 +715,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private updateEnemies(dt: number): void {
     const clan = this.run.clan;
+    const khanActive = isKhanActive(this.run);
     for (const enemy of this.enemies.getChildren() as Enemy[]) {
       const shadow = this.enemyShadows.get(enemy);
       shadow?.setVisible(enemy.active);
@@ -709,12 +725,9 @@ export class ArenaScene extends Phaser.Scene {
       enemy.attackTimer -= dt;
       enemy.clanAttackTimer -= dt;
       enemy.chargeTimer -= dt;
-      const playerDistance = Phaser.Math.Distance.Between(
-        enemy.x,
-        enemy.y,
-        this.player.x,
-        this.player.y,
-      );
+      const playerDistance = khanActive
+        ? Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y)
+        : Infinity;
       const campDistance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.camp.x, this.camp.y);
       if (playerDistance > 1600 && campDistance > 1600 && enemy !== this.boss) {
         enemy.disableBody(true, true);
@@ -791,7 +804,7 @@ export class ArenaScene extends Phaser.Scene {
         this.run.clan.campEffects.bonuses.range +
         momentum * 120,
     );
-    if (target) {
+    if (isKhanActive(this.run) && target) {
       this.playerMotion.attack();
       if (this.player.body!.velocity.lengthSq() < 4) this.player.setFlipX(target.x < this.player.x);
       this.shootVolley(
@@ -973,6 +986,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private collectGems(dt: number): void {
+    if (!isKhanActive(this.run)) return;
     let experience = 0;
     for (const gem of this.gems.getChildren() as Gem[]) {
       if (!gem.active) continue;
@@ -1003,14 +1017,20 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private hurtPlayer(enemy: Enemy): void {
-    if (this.run.phase !== 'playing' || !enemy.active || this.invulnerable > 0) return;
+    if (
+      this.run.phase !== 'playing' ||
+      !isKhanActive(this.run) ||
+      !enemy.active ||
+      this.invulnerable > 0
+    )
+      return;
     enemy.motion.attack();
     this.takeDamage(enemy.definition.damage);
   }
 
   private takeDamage(amount: number): void {
     if (this.run.phase !== 'playing' || this.invulnerable > 0) return;
-    const outcome = damageCommander(this.run, amount);
+    const outcome = damageKhan(this.run, amount);
     if (!outcome) return;
     this.playerMotion.hit();
     this.invulnerable = GAME.invulnerability;
@@ -1020,7 +1040,48 @@ export class ArenaScene extends Phaser.Scene {
     if (outcome === 'revived') {
       this.run.clan.message = 'The last ember holds. Your Khan rides again.';
       this.burst(this.player.x, this.player.y, 0xf1c27b, 12);
-    } else if (outcome === 'dead') this.finish('dead');
+    } else if (outcome === 'fallen') this.hideFallenKhan();
+  }
+
+  private hideFallenKhan(): void {
+    this.player.setVelocity(0, 0).disableBody(true, true);
+    this.shadow.setVisible(false);
+    this.aura.setVisible(false);
+    this.dashRemaining = 0;
+    this.run.clan.momentum = 0;
+    this.clearTouch();
+    this.patronSupport.relocate(this.camp);
+    this.cameras.main.startFollow(this.camp, true, 0.09, 0.09).setFollowOffset(0, 0);
+    this.callbacks?.onHud(this.snapshot());
+  }
+
+  private returnKhan(): void {
+    if (!isKhanActive(this.run)) return;
+    const x = this.camp.x;
+    const y = Phaser.Math.Clamp(this.camp.y + GAME.khan.campOffset, 24, GAME.worldSize - 24);
+    this.player.enableBody(true, x, y, true, true);
+    this.player
+      .setVelocity(0, 0)
+      .setAlpha(1)
+      .clearTint()
+      .setFlipX(false)
+      .setDepth(100 + y);
+    this.playerMotion.reset('player', 0);
+    renderCharacter(this.player, this.playerMotion);
+    this.shadow
+      .setPosition(x + 9, y + 5)
+      .setDepth(99 + y)
+      .setVisible(true);
+    this.aura.setPosition(x, y).setVisible(true);
+    this.facing.set(1, 0);
+    this.dashRemaining = this.dashTimer = 0;
+    this.attackTimer = this.dustTimer = 0;
+    this.invulnerable = GAME.khan.returnProtection;
+    this.clearTouch();
+    this.cameras.main.startFollow(this.player, true, 0.09, 0.09).setFollowOffset(0, 0);
+    this.burst(x, y, 0xf1c27b, 12);
+    this.audio.play('level');
+    this.callbacks?.onHud(this.snapshot());
   }
 
   private finish(phase: 'won' | 'dead'): void {
@@ -1167,7 +1228,7 @@ export class ArenaScene extends Phaser.Scene {
       rider.setVisible(i < count);
       this.riderShadows[i]!.setVisible(i < count);
       if (i >= count) continue;
-      const formation = clan.formation;
+      const formation = isKhanActive(this.run) ? clan.formation : 'guard';
       const angle =
         (i / count) * Math.PI * 2 + (formation === 'encircle' ? this.run.elapsed * 0.65 : 0);
       const enemyGroup =
@@ -1211,22 +1272,24 @@ export class ArenaScene extends Phaser.Scene {
 
   private updateCharacterAnimations(dt: number): void {
     const preparingVolley = this.attackTimer > 0 && this.attackTimer < 0.12;
-    this.playerMotion.advance(
-      dt,
-      this.player.body!.velocity.length(),
-      preparingVolley &&
-        Boolean(
-          this.spatial.nearest(
-            this.player.x,
-            this.player.y,
-            GAME.projectile.range +
-              this.run.patrons.bow.range +
-              this.run.clan.campEffects.bonuses.range,
+    if (isKhanActive(this.run)) {
+      this.playerMotion.advance(
+        dt,
+        this.player.body!.velocity.length(),
+        preparingVolley &&
+          Boolean(
+            this.spatial.nearest(
+              this.player.x,
+              this.player.y,
+              GAME.projectile.range +
+                this.run.patrons.bow.range +
+                this.run.clan.campEffects.bonuses.range,
+            ),
           ),
-        ),
-    );
-    renderCharacter(this.player, this.playerMotion);
-    this.player.setTint(this.playerMotion.hurt ? 0xffd3b2 : 0xffffff);
+      );
+      renderCharacter(this.player, this.playerMotion);
+      this.player.setTint(this.playerMotion.hurt ? 0xffd3b2 : 0xffffff);
+    }
     for (let i = 0; i < this.riders.length; i++) {
       const rider = this.riders[i]!;
       if (!rider.visible) continue;
@@ -1268,7 +1331,7 @@ export class ArenaScene extends Phaser.Scene {
     const clan = this.run.clan;
     if (clan.region < 2) return;
     this.hazardTimer -= dt;
-    if (this.hazardTimer <= 0) {
+    if (this.hazardTimer <= 0 && isKhanActive(this.run)) {
       const x = this.player.x;
       const y = this.player.y;
       const warning = this.add.graphics().setDepth(3);
@@ -1300,8 +1363,9 @@ export class ArenaScene extends Phaser.Scene {
     this.wagonTimer -= dt;
     this.wardTimer -= dt;
     if (clan.buildings.sanctuary && this.supportTimer <= 0) {
+      const anchor = isKhanActive(this.run) ? this.player : this.camp;
       const target =
-        this.spatial.nearest(this.player.x, this.player.y, 520) ??
+        this.spatial.nearest(anchor.x, anchor.y, 520) ??
         this.spatial.nearest(this.camp.x, this.camp.y, 520);
       if (target) {
         const x = target.x;
@@ -1358,7 +1422,7 @@ export class ArenaScene extends Phaser.Scene {
     // Each crossing leads to a new handcrafted arena; structures travel with the clan.
     this.camp.setPosition(center, center);
     this.player.setPosition(center, center + 100).setVelocity(0, 0);
-    this.patronSupport.relocate(this.player);
+    this.patronSupport.relocate(isKhanActive(this.run) ? this.player : this.camp);
     for (const group of [this.enemies, this.projectiles, this.hostileShots])
       for (const actor of group.getChildren() as Enemy[]) actor.disableBody(true, true);
     // Carry all uncollected experience to the next camp rather than discarding it.

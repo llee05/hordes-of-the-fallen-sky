@@ -9,12 +9,12 @@ import {
 } from '../../src/game/state/clan';
 import {
   advancePatrons,
-  damageCommander,
   friendlyDamageMultiplier,
   gallopCooldown,
   rewardPatronKill,
   terrainSpeedMultiplier,
 } from '../../src/game/state/patrons';
+import { damageKhan } from '../../src/game/state/khan';
 import type { RunPhase } from '../../src/game/types';
 
 describe('patron simulation', () => {
@@ -79,12 +79,12 @@ describe('patron simulation', () => {
     run.patrons.hearth = { regeneration: 0.3, damageTaken: 0.85, revives: 1 };
     advancePatrons(run, 10);
     expect(run.health).toBe(53);
-    expect(damageCommander(run, 10)).toBe('hit');
+    expect(damageKhan(run, 10)).toBe('hit');
     expect(run.health).toBe(44.5);
-    expect(damageCommander(run, 1000)).toBe('revived');
+    expect(damageKhan(run, 1000)).toBe('revived');
     expect(run.health).toBe(40);
     expect(run.patrons.hearth.revives).toBe(0);
-    expect(damageCommander(run, 1000)).toBe('dead');
+    expect(damageKhan(run, 1000)).toBe('fallen');
     advancePatrons(run, 100);
     expect(run.health).toBe(0);
   });
@@ -113,7 +113,7 @@ describe('patron simulation', () => {
       run.patrons.hearth = { regeneration: 10, damageTaken: 0.5, revives: 1 };
       const before = structuredClone(run);
       advancePatrons(run, 10);
-      damageCommander(run, 1000);
+      damageKhan(run, 1000);
       rewardPatronKill(run);
       expect(run).toEqual(before);
     }

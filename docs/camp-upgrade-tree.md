@@ -10,6 +10,8 @@ The five original branches retain their **either/or specialization pair**. Their
 
 Every node is a one-time purchase. The 37 authored developments include alternatives: at most **27 developments** can be learned together in the current catalog. There is no fixed two-level limit. Resources, effects, staffing, and chosen paths travel through every crossing. Construction waits until the caravan unpacks. New expeditions reset the camp.
 
+Personal regeneration and arrival healing require a living Khan. They never bypass the ten-second succession countdown; camp resources and clan recovery still work while a successor is being chosen.
+
 All prices below are **individual material prices before discounts**; `+S` indicates additional stored Spirit. Two Guardian foundation ranks apply ×0.81 to each material price, rounded up. Workers and Spirit are unaffected. Percentage effects multiply with other camp upgrades, patron effects, and formations; flat recovery and arrival rewards add. Timers use active gameplay seconds and freeze in menus. “Stationary” includes the final stand.
 
 ## Family gers · households and hospitality

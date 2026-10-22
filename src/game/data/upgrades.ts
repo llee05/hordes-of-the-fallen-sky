@@ -153,7 +153,8 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         id: 'vitality',
         title: 'Keep the hearth alive',
         maxStacks: 2,
-        description: 'Each rank: +20 maximum Khan health and immediately heal 35 health.',
+        description:
+          'Each rank: +20 maximum Khan health. A living Khan immediately recovers 35 health.',
         apply: (run) => {
           run.stats.maxHealth += P.fire.health;
           run.health = Math.min(run.stats.maxHealth, run.health + P.fire.heal);

@@ -393,6 +393,27 @@ canvas {
   font-weight: 400;
   color: #f3e9c1;
 }
+.khan-succession {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #c7a66d55;
+  color: #ecd3a3;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.khan-succession strong {
+  font:
+    15px Georgia,
+    serif;
+}
+.vitals-hud.choosing-khan {
+  border-color: #c7a66d;
+}
+.vitals-hud.choosing-khan + .tradition-hud {
+  translate: 0 -80px;
+}
 .health-track > div {
   background: #c4cd8e;
 }

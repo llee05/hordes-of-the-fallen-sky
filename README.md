@@ -65,9 +65,11 @@ Press **B** to open the **camp upgrade tree**. Planning pauses the simulation, i
 
 **Fire arrows + wind shamans = the Burning Tempest:** curving, flaming arrow fans with lingering burn damage. Military, spiritual, and migration decisions gradually establish the Iron Horde, Children of the Eternal Sky, or Wandering Nation identity.
 
+**The Khan is a title carried by successive leaders.** If he falls, the clan spends **10 active seconds choosing a new Khan** while riders, ancestral echoes, and camp defenses keep fighting. A visible countdown marks succession. The successor returns at the current camp or moving caravan with full maximum health, a ready gallop, and 3 seconds of protection. All research, resources, buildings, and journey progress carry on. Menus pause the countdown. Golomt’s Last Ember saves the current Khan immediately once per expedition; its charge does not refresh for successors. Losing the clan’s people or resolve still ends the expedition.
+
 Pastures deplete and spawn pressure increases while you stay. After 45 active seconds at a camp, press **M** to inspect routes. You choose when to leave. Stay to gather materials and grow, or pack up before grazing and provisions run out. Refugees strengthen your host but consume food. Starvation and attacks can cost families and livestock; losing all people or clan resolve ends the run.
 
-Choose a river crossing for food and horses, an exposed ridge for materials and spirit, or blue banners for refugees and veteran riders. **Rewards arrive only after a successful crossing.** The caravan travels east automatically; ride alongside it and defend the supply carts. Structures cannot be developed while packed. Arrival restores some resolve and Khan health, refreshes the pasture, and preserves your build and uncollected XP.
+Choose a river crossing for food and horses, an exposed ridge for materials and spirit, or blue banners for refugees and veteran riders. **Rewards arrive only after a successful crossing.** The caravan travels east automatically; ride alongside it and defend the supply carts. Structures cannot be developed while packed. Arrival restores some resolve and a living Khan’s health, refreshes the pasture, and preserves your build and uncollected XP.
 
 The journey crosses the Golden Pasture, Silent River, Broken Pass, and Sacred Mountain. The White Silence reduces grazing and caravan speed. Ground eruptions in the pass warn before striking. The Red Eclipse weakens rituals and brings the Skybreaker. At the mountain, protect your people for three minutes until the passage opens. **Victory depends on saving the clan; killing the boss is optional.** Defeating it restores resolve.
 
@@ -127,6 +129,7 @@ Longest journey and sound preference persist. Writes are validated, serialized, 
 src/game/config.ts             Balance, world, and journey timings (seconds)
 src/game/types.ts              Run, clan, and snapshot contracts
 src/game/state/run.ts          Experience, traditions, run lifecycle
+src/game/state/khan.ts         Khan presence, lethal hits, and active-time succession
 src/game/state/clan.ts         Economy, construction, migration, victory
 src/game/state/camp.ts         Typed camp effects, neutral defaults, and once-only grants
 src/game/data/clan.ts          Buildings, specializations, routes, regions, formations

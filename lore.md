@@ -55,7 +55,7 @@ The playable story names four of these original survivors: **Saran**, the hearth
 
 The **hearthkeeper** wraps embers from their last camp in a covered vessel. At every halt, someone coaxes those embers into flame. The hearthkeeper remembers routes, blessings, and family histories, but listens when a shepherd knows a better ford. Spiritual knowledge belongs within the work of keeping the camp alive.
 
-The player is the **Khan**, a mounted archer entrusted with the road ahead. The role was given by survivors who needed someone to ride between danger and the wagons. It grants responsibility before authority. No prophecy guarantees that this rider will succeed.
+The player is the **Khan**, a mounted archer entrusted with the road ahead. The role was given by survivors who needed someone to ride between danger and the wagons. It grants responsibility before authority. No prophecy guarantees that this rider will succeed. If he falls, the people choose another Khan to take up the road. The banner, learned skills, and responsibility pass onward; the clan’s journey belongs to more than one life. This succession is part of the invented clan’s story, not a reconstruction of a historical election ceremony.
 
 Every family welcomed into the circle changes the people who will emerge from the journey. Their tents, tools, horses, and stories travel together. The clan's settlement is temporary; its obligations travel on.
 

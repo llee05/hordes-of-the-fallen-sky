@@ -11,6 +11,7 @@ export const GAME = {
   projectile: { speed: 440, lifetime: 1.6, range: 440 },
   dash: { speed: 570, duration: 0.3, cooldown: 3 },
   invulnerability: 0.65,
+  khan: { successionDelay: 10, returnProtection: 3, campOffset: 90 },
   camp: {
     ger: {
       hospitality: { materials: 36, resolve: 0.15, arrivalHealth: 10 },

@@ -124,6 +124,7 @@ export interface PatronEffects {
 }
 
 export interface RunState {
+  khan: { generation: number; successionRemaining: number };
   phase: RunPhase;
   elapsed: number;
   health: number;

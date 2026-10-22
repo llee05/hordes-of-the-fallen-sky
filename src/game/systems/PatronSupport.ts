@@ -6,6 +6,7 @@ import { GAME } from '../config';
 import type { Enemy } from '../entities/actors';
 import type { RunState } from '../types';
 import type { SpatialHash } from './SpatialHash';
+import { isKhanActive } from '../state/khan';
 
 interface GroundPosition {
   x: number;
@@ -61,13 +62,15 @@ export class PatronSupport {
   ): void {
     if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
     const effects = run.patrons;
+    const khanActive = isKhanActive(run);
+    const anchor = khanActive ? player : camp;
     this.ancestorTimer -= dt;
     this.waterTimer -= dt;
     this.guardianTimer -= dt;
     this.fields.clear();
     if (effects.water.slow > 0) {
       this.fields.lineStyle(1.5, 0x86beb1, 0.22).fillStyle(0x70a99c, 0.025);
-      for (const position of [player, camp])
+      for (const position of khanActive ? [player, camp] : [camp])
         this.fields
           .fillCircle(position.x, position.y, effects.water.radius)
           .strokeCircle(position.x, position.y, effects.water.radius);
@@ -83,7 +86,7 @@ export class PatronSupport {
     for (const [index, spirit] of this.spirits.entries()) {
       const active = index < count;
       if (active && !spirit.image.visible) {
-        spirit.image.setPosition(player.x, player.y);
+        spirit.image.setPosition(anchor.x, anchor.y);
         spirit.motion.reset('rider', index * 0.23);
       }
       spirit.image.setVisible(active);
@@ -92,12 +95,12 @@ export class PatronSupport {
       const angle = run.elapsed * 0.45 + (index * Math.PI * 2) / count;
       const x = Phaser.Math.Linear(
         spirit.image.x,
-        player.x + Math.cos(angle) * 80,
+        anchor.x + Math.cos(angle) * 80,
         Math.min(1, dt * 5),
       );
       const y = Phaser.Math.Linear(
         spirit.image.y,
-        player.y + Math.sin(angle) * 60,
+        anchor.y + Math.sin(angle) * 60,
         Math.min(1, dt * 5),
       );
       const dx = x - spirit.image.x;
@@ -115,7 +118,7 @@ export class PatronSupport {
     }
     if (release) this.ancestorTimer = effects.ancestors.interval;
 
-    if (effects.water.pulseDamage > 0 && this.waterTimer <= 0) {
+    if (khanActive && effects.water.pulseDamage > 0 && this.waterTimer <= 0) {
       spatial.forEachNearby(player.x, player.y, effects.water.radius, (enemy) => {
         actions.damage(enemy, run.stats.damage * effects.water.pulseDamage);
         if (!enemy.active) return;

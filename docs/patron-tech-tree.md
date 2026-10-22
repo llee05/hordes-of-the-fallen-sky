@@ -6,7 +6,7 @@ The implemented roster contains **eight patrons, 32 technologies, and 40 researc
 
 Collectible spirit shards grant XP. Each level banks one knowledge point without interrupting combat. Open the paused **Patron tech tree** with **T**, controller **LB**, the HUD, Pause, or the chronicle. Every rank costs one knowledge point. Stored **Spirit** remains a separate currency for camp construction.
 
-Every patron begins with a two-rank foundation. Both practices require foundation rank 2. The capstone requires both practices. Completing a patron costs five points; there are no mutually exclusive patrons or practices. Invest across patrons freely, keep points unspent, and research during crossings. All research resets with a new expedition.
+Every patron begins with a two-rank foundation. Both practices require foundation rank 2. The capstone requires both practices. Completing a patron costs five points; there are no mutually exclusive patrons or practices. Invest across patrons freely, keep points unspent, and research during crossings. A successor Khan inherits all research; only a new expedition resets it.
 
 ```mermaid
 flowchart TD
@@ -64,14 +64,14 @@ Full investment gives shared damage 25 from 16, host interval 0.51 seconds from 
 
 Carry the hearth through the expedition: increase health, recover between hits, and survive one lethal blow.
 
-| Tier                | Technology / stable ID                      | Effect                                                                                                                    |
-| ------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Foundation, 2 ranks | **Keep the hearth alive** · `vitality`      | Each rank: +20 maximum Khan health; immediately heal 35, capped at the new maximum.                                       |
-| Practice A          | **The carried embers** · `carried-embers`   | Regenerate 0.3 Khan health/second during active play.                                                                     |
-| Practice B          | **Felt around the flame** · `felt-and-fire` | Khan damage taken ×0.85.                                                                                                  |
-| Capstone            | **The last ember** · `last-ember`           | The next lethal Khan hit restores 40% maximum health instead of ending the expedition. Consumed once for this expedition. |
+| Tier                | Technology / stable ID                      | Effect                                                                                                                  |
+| ------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Foundation, 2 ranks | **Keep the hearth alive** · `vitality`      | Each rank: +20 maximum Khan health; a living Khan immediately heals 35, capped at the new maximum.                      |
+| Practice A          | **The carried embers** · `carried-embers`   | Regenerate 0.3 Khan health/second during active play.                                                                   |
+| Practice B          | **Felt around the flame** · `felt-and-fire` | Khan damage taken ×0.85.                                                                                                |
+| Capstone            | **The last ember** · `last-ember`           | The next lethal Khan hit restores 40% maximum health instead of starting succession. Consumed once for this expedition. |
 
-Full investment gives maximum health 140 and revival health 56. Regeneration and the revival do not restore population or clan resolve. Losing the clan still ends the expedition. The revival charge cannot be repurchased after use: its technology remains learned. Normal hit invulnerability still applies. Recovery timers freeze in every menu.
+Full investment gives maximum health 140 and Last Ember recovery of 56. Last Ember saves the same Khan immediately. After that charge is spent, lethal hits start the normal ten-second succession; a successor inherits the learned technology with its charge still consumed. Regeneration and the revival do not restore population or clan resolve. Losing the clan still ends the expedition. Healing cannot bypass succession. The revival charge cannot be repurchased after use: its technology remains learned. Normal hit invulnerability still applies. Recovery timers freeze in every menu.
 
 ## Lus · terrain manipulation
 
@@ -84,7 +84,7 @@ Control approaches around both Khan and caravan, anticipate eruptions, and push 
 | Practice B          | **Read the shifting ground** · `turned-earth`   | Eruption warnings +1 second; eruption damage to Khan and clan ×0.5.                                                         |
 | Capstone            | **The returning current** · `returning-current` | Every 4 seconds, enemies in the Khan's field take shared damage ×0.75 and are pushed 80 units outward, within world bounds. |
 
-Two foundation ranks slow enemies by 24%; overlapping Khan/camp fields do not double it. Slowing affects enemy movement, including bosses, rather than projectile speed or spawning. The damaging pulse belongs to the Khan field; camp has a slowing field but no separate water pulse. Eruption mitigation stacks with Khan and clan protection. It does not protect against ordinary attacks or hostile arrows. These moving fields do not edit the map or create impassable terrain.
+Two foundation ranks slow enemies by 24%; overlapping Khan/camp fields do not double it. Slowing affects enemy movement, including bosses, rather than projectile speed or spawning. While a new Khan is being chosen, only the camp slowing field remains and the damaging pulse waits for his return. The damaging pulse belongs to the Khan field; camp has a slowing field but no separate water pulse. Eruption mitigation stacks with Khan and clan protection. It does not protect against ordinary attacks or hostile arrows. These moving fields do not edit the map or create impassable terrain.
 
 ## Ongod · spiritual summoning
 
@@ -97,7 +97,7 @@ Ride with visible ancestral echoes while improving shard collection and stored S
 | Practice B          | **Follow the spirit thread** · `spirit-thread`         | Shard attraction radius ×1.4; stored Spirit earned on kills ×1.25. Does not increase dropped XP.                              |
 | Capstone            | **The council rides with us** · `council-of-ancestors` | Summon a third echo; ancestral firing interval ×0.7, reaching 0.77 seconds.                                                   |
 
-Echoes are separate from the ordinary rider count, with a hard maximum of three. They do not reserve workers, consume horses, take damage, or provide physical shields. Their arrows use the existing bounded projectile pool and benefit from friendly projectile effects. They retain the shared rider animation frames, ground anchors, active-time movement, and menu freeze behavior. Full investment gives attraction radius 119 from 85 and kill Spirit `enemy XP ×0.5` instead of ×0.4. Route/story Spirit rewards are unaffected.
+During succession, echoes defend the camp until the new Khan returns. Echoes are separate from the ordinary rider count, with a hard maximum of three. They do not reserve workers, consume horses, take damage, or provide physical shields. Their arrows use the existing bounded projectile pool and benefit from friendly projectile effects. They retain the shared rider animation frames, ground anchors, active-time movement, and menu freeze behavior. Full investment gives attraction radius 119 from 85 and kill Spirit `enemy XP ×0.5` instead of ×0.4. Route/story Spirit rewards are unaffected.
 
 ## Sülde · army leadership
 
@@ -133,4 +133,4 @@ Add patron metadata in [data/patrons.ts](../src/game/data/patrons.ts), technolog
 
 Neutral modifiers and pure gameplay rules live in [state/patrons.ts](../src/game/state/patrons.ts); [state/clan.ts](../src/game/state/clan.ts) applies economy, construction, protection, leadership, and travel modifiers. [PatronSupport](../src/game/systems/PatronSupport.ts) handles the bounded ancestral riders, quiet ground fields, pulse, and mountain ward using active seconds. [ArenaScene](../src/game/scenes/ArenaScene.ts) remains the authority for simulation, attacks, damage, pooling, and menu transitions.
 
-After all 40 ranks are mastered, further knowledge points convert to 20 food and 15 materials each and fully heal the Khan. Excess XP remains preserved. A temporarily blocked technology never counts as mastery.
+After all 40 ranks are mastered, further knowledge points convert to 20 food and 15 materials each and fully heal a living Khan. A fallen Khan stays at zero health until succession completes. Excess XP remains preserved. A temporarily blocked technology never counts as mastery.

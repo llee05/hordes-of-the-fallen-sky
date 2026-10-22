@@ -18,7 +18,7 @@ The intended rhythm is **build → defend → choose when to leave → escort �
 | Crossing 3          | Choose any of the same three routes       | Eruptions continue while travelling through the pass.                                                                                                                   |
 | Act II, final stand | The Heart of the Steppe / The Red Eclipse | Hold for 180 seconds. More frequent eruptions; lightning cooldown ×1.5. Skybreaker appears after 20 seconds. No further migration. Camp construction remains available. |
 
-**Victory:** survive the final stand with Khan health, clan population, and clan resolve above zero. **Defeat:** Khan health reaches zero, population reaches zero, or resolve reaches zero. No individual companion must be kept alive through a separate character-health system.
+**Victory:** survive the final stand with clan population and resolve above zero, including during Khan succession. **Defeat:** population or clan resolve reaches zero. When the Khan falls, the expedition continues while the clan chooses a successor. No individual companion has a separate health meter.
 
 ## 2. Starting state and resources
 
@@ -32,7 +32,7 @@ The intended rhythm is **build → defend → choose when to leave → escort �
 | Workers            | 0 assigned of 8         | Existing population                                                                                              | Construction requires sufficient total population for assigned jobs. Workers are reserved by established buildings, not spent. No manual job reassignment or worker production penalty is simulated.                       |
 | Herd / horses      | 3                       | Establish herding grounds (+4); river arrival (+2)                                                               | Each horse increases migration mobility by 1.2% of the base. Starvation and clan losses remove livestock. Route rewards cap herd at 40. Herd size does not independently change grazing income or limit rider recruitment. |
 | Clan resolve       | 100 / 100               | Hearthkeepers, felt armor, Sülde kills, arrivals (+12), boss defeat (+20), story choices (+5)                    | Clan-wide survival meter, internally called integrity. Attacks and starvation reduce it; crossing damage thresholds can also cost people and livestock.                                                                    |
-| Khan health        | 100 / 100               | Golomt, Börte Chino, arrivals (+25), full recovery after mastering all patrons                                   | Separate survival meter for the player. Enemy contact, hostile shots, and eruptions damage it.                                                                                                                             |
+| Khan health        | 100 / 100               | Golomt, Börte Chino, arrivals (+25), full recovery after mastering all patrons                                   | Personal health; at zero, choose a new Khan after 10 active seconds while the clan fights on. Enemy contact, hostile shots, and eruptions damage it.                                                                       |
 | Pasture            | 100%                    | Refreshed on arrival; Etügen reduces depletion and adds recovery                                                 | Scales food and material production. Without patron bonuses, depletes to zero over 210 stationary seconds, including the final stand. Does not deplete during crossings.                                                   |
 | Momentum           | 0–100%                  | Riding builds it; stopping drains it                                                                             | Improves Khan arrow damage and targeting range; activates moving formation bonuses.                                                                                                                                        |
 | Threat             | 0–100%                  | Region and time in the current stage                                                                             | A pressure indicator. Spawn intervals use their own stage/region formula; the displayed threat value is not an additional damage multiplier.                                                                               |
@@ -102,7 +102,7 @@ The XP threshold from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and 
 
 Search and playstyle filters derive from the authored patrons; search ignores diacritics. The paused tree shows foundation/practice/capstone roles, rank progress, prerequisites, and learned/available/locked states. Purchases keep it open and preserve focus and scroll. Escape, T, controller B/LB, or the return button closes it with points unspent. Opening from Pause or the chronicle returns to that parent screen. Stored Spirit remains a separate camp currency.
 
-Once all 40 ranks are mastered, subsequent points grant **20 food and 15 materials each**, and the Khan is fully healed when those points are converted. Blocked but unlearned technologies do not count as mastery.
+Once all 40 ranks are mastered, subsequent points grant **20 food and 15 materials each**, and a living Khan is fully healed when those points are converted. Conversion cannot revive a fallen Khan during succession. Blocked but unlearned technologies do not count as mastery.
 
 Each enemy drops its defined XP independent of scaled health. Shards begin following inside the attraction radius and collect within 18 world units. Once attracted, they keep following. At the 500-shard pool limit, new XP merges into an existing active shard. Uncollected XP travels to the next camp on arrival.
 
@@ -212,6 +212,18 @@ Lus creates slowing fields around Khan and camp, reaching 24% slow within 230 un
 
 The Guardian's independent camp ward deals 65% shared damage in radius 125 every 2 seconds, including migration. It stacks with the sanctuary's Ancestral ward and needs no sanctuary. Its Watchfires practice reduces a constructed Wagon circle's firing interval from 0.9 to 0.675 seconds. Full Sülde research restores 0.15 resolve per enemy kill. Support attacks use the same active-time simulation, damage/kill pipeline, and bounded projectile pools as other combat.
 
+### Choosing a new Khan
+
+The player character is **the Khan**. A lethal hit normally starts **10 active gameplay seconds of succession**, marked by **Choosing a new Khan** and a live countdown in the health HUD. This does not change the run to its ended `dead` phase. The fallen Khan is hidden and his collision body is disabled immediately. Riding, galloping, his personal arrows, and shard collection stop; already-fired arrows and burns can finish normally.
+
+The world keeps advancing: enemies attack the camp, food is consumed, the caravan moves, and camp weapons, accompanying riders, and ancestral echoes defend it. Riders and echoes position around camp during succession. The camp's Lus slowing field remains; the Khan's field and damaging pulse are absent. Menus pause the countdown and all other simulation. Camp encounters wait until the new Khan is present.
+
+When the countdown finishes with the clan alive, a successor appears **90 world units below the current camp/caravan center**, at full maximum health with a ready gallop and **3 seconds of invulnerability**. His movement, hit feedback, and attack pose reset. The HUD advances its Khan number. Research, upgrades, max health, resources, workers, buildings, companions, story decisions, and route progress all carry over. The successor follows the current moving caravan or the new regional camp if an arrival happened during succession.
+
+Regeneration, kill healing, immediate healing research, mastery conversion, and arrival healing cannot end succession early. Health upgrades still increase the successor's maximum; food/material rewards still apply. **Last Ember** instead prevents the current Khan's fall immediately, recovering 40% maximum health and consuming its single expedition charge. A successor does not refresh that charge.
+
+Clan population or resolve reaching zero ends the expedition during the countdown. Conversely, completing the final stand saves the clan even while it is choosing a Khan. End screens freeze the remaining timer. A new expedition resets the lineage to Khan 1 with no pending succession. Balance lives in `GAME.khan`, with the pure lifecycle in [state/khan.ts](../src/game/state/khan.ts).
+
 ### Gallop
 
 **Space / controller A** gallops in the current or last facing direction at speed 570 for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop. Börte Chino can reduce the cooldown to 2.25 seconds; reserve horses multiply it by 0.9 again, reaching 2.025 with both. Golomt reduces Khan damage, provides active-time regeneration, and can prevent one lethal hit per expedition; clan loss still ends the expedition.
@@ -271,7 +283,7 @@ Enemies choose between Khan and clan: they favor camp when its distance is less 
 
 Enemy unlock score is `total elapsed seconds + region index ×80`, with region indices 0–3. Unlocks are not fixed real-time timestamps across all runs. Eligible normal enemies are drawn with weights 6, 3, 2, 3, 2, 1, 1 in the table order. Elites join that random pool rather than appear as unique scheduled encounters.
 
-Normal enemy health is multiplied by `1 + total elapsed / 1200`. Boss health stays at 3,600. Movement speed is multiplied by `1 + region index ×0.1`. Spawn interval is `max(0.14, 0.85 − 0.004 × (stage time + region index ×65))`, divided by route danger during migration. The first 18 seconds in Golden Pasture override the interval to 2 seconds. Up to 350 enemies may be active; 45% of spawn attempts anchor around camp and the rest around the Khan.
+Normal enemy health is multiplied by `1 + total elapsed / 1200`. Boss health stays at 3,600. Movement speed is multiplied by `1 + region index ×0.1`. Spawn interval is `max(0.14, 0.85 − 0.004 × (stage time + region index ×65))`, divided by route danger during migration. The first 18 seconds in Golden Pasture override the interval to 2 seconds. Up to 350 enemies may be active; 45% of spawn attempts anchor around camp and the rest around the Khan. During succession, all spawn attempts anchor around camp.
 
 Chargers commit to a direction every 3 seconds and move at 2.2× speed for 0.7 seconds. Ranged creatures stop closing within 260 units and fire within 650: one projectile every 3.5 seconds, or a 12-projectile ring every 2.5 seconds for the boss, after an initial attack delay. Hostile projectiles move at 125 units/second, last 5 seconds, and damage the Khan for the listed damage or clan for half that raw damage. Enemy contact damages the Khan for the listed value. Within 68 units of camp, enemies deal `listed damage ×0.45` raw resolve damage every 1.5 seconds.
 
@@ -347,6 +359,7 @@ The desktop game runs offline with local assets and native, validated, atomic sa
 | Area                                                                                 | Implementation                                                                      |
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | Starting stats and balance constants                                                 | [config.ts](../src/game/config.ts)                                                  |
+| Khan damage, presence, succession timing                                             | [state/khan.ts](../src/game/state/khan.ts)                                          |
 | Starting run, XP thresholds, upgrade application                                     | [state/run.ts](../src/game/state/run.ts)                                            |
 | Patron technology definitions and prerequisites                                      | [data/upgrades.ts](../src/game/data/upgrades.ts)                                    |
 | Building costs, stable path IDs, prerequisites, effects, formations, routes, regions | [data/clan.ts](../src/game/data/clan.ts)                                            |

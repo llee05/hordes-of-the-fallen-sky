@@ -16,6 +16,7 @@ import {
   riderCount,
 } from '../game/state/clan';
 import { formatTime } from '../game/state/run';
+import { isKhanActive } from '../game/state/khan';
 import type { BuildingId, HudSnapshot, RunPhase } from '../game/types';
 import type { GamePlatform } from '../platform/GamePlatform';
 import { buildingMenu, helpMenu, journalMenu, routeMenu, settingsMenu } from './menuContent';
@@ -82,7 +83,7 @@ export class GameUI {
           <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p class="act-heading" id="act-heading">ACT I · GATHER THE SCATTERED</p><p id="objective">Build the camp. Protect your people.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Crossing</span><b id="crossing">0%</b></div><div class="track"><div id="crossing-fill"></div></div></div><p class="objective-hint" id="migration-hint">New routes in 45s.</p></section>
           <div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
           <div id="boss-bar" class="boss-bar" hidden><span>THE SKYBREAKER</span><div class="track"><div id="boss-fill"></div></div></div>
-          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span>THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span>BOW <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
+          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span>BOW <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
           <section class="tradition-hud" aria-label="Run progression"><span>TRADITION <b id="level">01</b> <small>· <span id="blessing-count">0</span> LEARNED</small></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small><button id="research" class="research-button" aria-label="Open patron tech tree" aria-keyshortcuts="T">Tech tree <kbd>T</kbd><span id="research-points">0</span></button></section>
           <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
           <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">${clanMark('bow')}</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
@@ -159,6 +160,19 @@ export class GameUI {
     const { run, dashReady, dashCooldown, best, bossHealth, clanBearing } = snapshot;
     this.motion.setPlaying(run.phase === 'playing');
     const clan = run.clan;
+    const khanActive = isKhanActive(run);
+    this.text(
+      'khan-title',
+      run.khan.generation > 1 ? `THE KHAN · ${run.khan.generation}` : 'THE KHAN',
+    );
+    this.get('khan-succession').hidden = run.khan.successionRemaining <= 0;
+    this.text(
+      'khan-succession-countdown',
+      `Returns ${clan.stage === 'migration' ? 'to the caravan' : 'at camp'} in ${Math.ceil(run.khan.successionRemaining)}s`,
+    );
+    this.get('khan-succession')
+      .closest('.vitals-hud')!
+      .classList.toggle('choosing-khan', !khanActive);
     const region = REGIONS[clan.region]!;
     this.text('timer', formatTime(run.elapsed));
     this.text('level', run.level.toString().padStart(2, '0'));
@@ -174,15 +188,18 @@ export class GameUI {
     this.meter('xp-fill', (run.xp / run.nextLevelXp) * 100);
     this.meter('dash-charge', dashReady * 100);
     const dash = this.get('dash');
-    const dashAvailable = dashReady >= 1;
+    const dashAvailable = khanActive && dashReady >= 1;
+    (dash as HTMLButtonElement).disabled = run.phase !== 'playing' || !khanActive;
     if (dashAvailable && dash.dataset.ready === 'false')
       this.motion.notice(dash.querySelector<HTMLElement>('.dash-symbol')!);
     dash.dataset.ready = String(dashAvailable);
     this.text(
       'dash-label',
-      dashReady >= 1
-        ? 'SPACE / READY'
-        : `RECHARGING ${((1 - dashReady) * dashCooldown).toFixed(1)}s`,
+      !khanActive
+        ? 'CHOOSING A KHAN'
+        : dashReady >= 1
+          ? 'SPACE / READY'
+          : `RECHARGING ${((1 - dashReady) * dashCooldown).toFixed(1)}s`,
     );
     this.text('research-points', run.pendingUpgrades);
     this.get('research').classList.toggle('has-points', run.pendingUpgrades > 0);

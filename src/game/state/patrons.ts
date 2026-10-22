@@ -1,5 +1,6 @@
 import { GAME } from '../config';
 import type { PatronEffects, RunState } from '../types';
+import { isKhanActive } from './khan';
 
 export function createPatronEffects(): PatronEffects {
   return {
@@ -45,7 +46,7 @@ export function terrainSpeedMultiplier(run: RunState, distance: number): number 
 }
 
 export function advancePatrons(run: RunState, dt: number): void {
-  if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0 || run.health <= 0) return;
+  if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0 || !isKhanActive(run)) return;
   run.health = Math.min(
     run.stats.maxHealth,
     run.health +
@@ -53,25 +54,9 @@ export function advancePatrons(run: RunState, dt: number): void {
   );
 }
 
-/** Returns the outcome so the scene can provide immediate hit/revival feedback. */
-export function damageCommander(
-  run: RunState,
-  amount: number,
-): 'hit' | 'revived' | 'dead' | undefined {
-  if (run.phase !== 'playing' || !Number.isFinite(amount) || amount <= 0) return;
-  run.health = Math.max(0, run.health - amount * run.patrons.hearth.damageTaken);
-  if (run.health > 0) return 'hit';
-  if (run.patrons.hearth.revives > 0) {
-    run.patrons.hearth.revives -= 1;
-    run.health = run.stats.maxHealth * GAME.patrons.fire.revival;
-    return 'revived';
-  }
-  return 'dead';
-}
-
 export function rewardPatronKill(run: RunState): void {
   if (run.phase !== 'playing') return;
-  if (run.clan.momentum > 0.5)
+  if (isKhanActive(run) && run.clan.momentum > 0.5)
     run.health = Math.min(run.stats.maxHealth, run.health + run.patrons.hunt.killHeal);
   run.clan.integrity = Math.min(100, run.clan.integrity + run.patrons.banner.resolveOnKill);
 }

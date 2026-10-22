@@ -3,6 +3,7 @@ import { GAME } from '../config';
 import { createClan } from './clan';
 import { createPatronEffects } from './patrons';
 import { createStory } from './story';
+import { isKhanActive } from './khan';
 import type { RunState, UpgradeDefinition } from '../types';
 
 export function xpForLevel(level: number): number {
@@ -11,6 +12,7 @@ export function xpForLevel(level: number): number {
 
 export function createRun(): RunState {
   return {
+    khan: { generation: 1, successionRemaining: 0 },
     phase: 'ready',
     elapsed: 0,
     health: GAME.player.health,
@@ -73,6 +75,7 @@ export function applyUpgrade(
   const stacks = run.upgrades[upgrade.id] ?? 0;
   if (upgradeBlocker(run, upgrade, rank)) return false;
   upgrade.apply(run);
+  if (run.khan.successionRemaining > 0) run.health = 0;
   run.upgrades[upgrade.id] = stacks + 1;
   run.pendingUpgrades -= 1;
   return true;
@@ -85,7 +88,7 @@ export function redeemMasteredResearch(run: RunState): boolean {
     UPGRADES.some((entry) => (run.upgrades[entry.id] ?? 0) < entry.maxStacks)
   )
     return false;
-  run.health = run.stats.maxHealth;
+  if (isKhanActive(run)) run.health = run.stats.maxHealth;
   run.clan.food += run.pendingUpgrades * 20;
   run.clan.materials += run.pendingUpgrades * 15;
   run.pendingUpgrades = 0;

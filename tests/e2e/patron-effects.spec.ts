@@ -131,6 +131,7 @@ test('the returning current pushes enemies and the mountain ward protects the tr
     scene.run.patrons.water.pulseDamage = 0.75;
     scene.run.patrons.guardian.wardDamage = 0.65;
     scene.run.clan.stage = 'migration';
+    scene.run.clan.routeId = 'river';
     scene.player.setPosition(scene.camp.x, scene.camp.y + 100);
     for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
     const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);
@@ -145,21 +146,29 @@ test('the returning current pushes enemies and the mountain ward protects the tr
     const first = { health: enemy.health, offset: enemy.y - scene.camp.y };
     scene.run.phase = 'upgrade';
     scene.patronSupport.update(scene.run, 10, scene.player, scene.camp, scene.spatial, actions);
-    return {
+    const paused = {
       first,
       pausedHealth: enemy.health,
       waterTimer: scene.patronSupport.waterTimer,
       guardianTimer: scene.patronSupport.guardianTimer,
     };
+    scene.run.phase = 'playing';
+    scene.invulnerable = 0;
+    scene.takeDamage(1000);
+    scene.patronSupport.update(scene.run, 4, scene.player, scene.camp, scene.spatial, actions);
+    return { ...paused, afterFall: { health: enemy.health, offset: enemy.y - scene.camp.y } };
   });
   expect(result.first.health).toBeCloseTo(77.6);
   expect(result.first.offset).toBe(-30);
   expect(result.pausedHealth).toBe(result.first.health);
   expect(result.waterTimer).toBe(4);
   expect(result.guardianTimer).toBe(2);
+  // The camp's ward continues while the fallen Khan's personal water pulse stops.
+  expect(result.afterFall.health).toBeCloseTo(67.2);
+  expect(result.afterFall.offset).toBe(-30);
 });
 
-test('the last ember prevents one defeat and gallop reports its modified cooldown', async ({
+test('the last ember saves the same Khan before a later lethal hit starts succession', async ({
   page,
 }) => {
   const result = await page.evaluate(() => {
@@ -177,12 +186,18 @@ test('the last ember prevents one defeat and gallop reports its modified cooldow
     const cooldown = scene.snapshot().dashCooldown;
     scene.invulnerable = 0;
     scene.takeDamage(1000);
-    return { revival, cooldown, phase: scene.run.phase };
+    return {
+      revival,
+      cooldown,
+      phase: scene.run.phase,
+      succession: scene.run.khan.successionRemaining,
+    };
   });
   expect(result).toEqual({
     revival: { phase: 'playing', health: 40, charges: 0 },
     cooldown: 2.25,
-    phase: 'dead',
+    phase: 'playing',
+    succession: 10,
   });
-  await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
+  await expect(page.getByText('Choosing a new Khan', { exact: true })).toBeVisible();
 });

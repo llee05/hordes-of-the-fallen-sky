@@ -2,6 +2,7 @@ import { GAME } from '../config';
 import { BUILDINGS, ROUTES } from '../data/clan';
 import type { BuildingId, ClanState, Formation, RunState } from '../types';
 import { applyCampEffects, createCampEffects } from './camp';
+import { isKhanActive } from './khan';
 
 export function createClan(): ClanState {
   return {
@@ -289,7 +290,8 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
     clan.stageTime = 0;
     clan.pasture = 100;
     clan.integrity = Math.min(100, clan.integrity + 12 + bonuses.arrivalResolve);
-    run.health = Math.min(run.stats.maxHealth, run.health + 25 + bonuses.arrivalHealth);
+    if (isKhanActive(run))
+      run.health = Math.min(run.stats.maxHealth, run.health + 25 + bonuses.arrivalHealth);
     clan.message =
       clan.stage === 'final'
         ? 'The Red Eclipse. Protect your people for three minutes while the mountain passage opens.'

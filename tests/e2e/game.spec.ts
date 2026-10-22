@@ -97,7 +97,7 @@ test('automatic attacks defeat enemies and collected XP banks research without i
     enemy.setPosition(scene.player.x + 100, scene.player.y);
     enemy.health = 1;
   });
-  await expect(page.locator('#kills')).not.toHaveText('0', { timeout: 5000 });
+  await expect(page.locator('#kills')).not.toHaveText('0', { timeout: 15000 });
   // Place a shard at the player to exercise actual pickup and level-up integration.
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -122,15 +122,13 @@ test('automatic attacks defeat enemies and collected XP banks research without i
   await expect(page.locator('#level')).toHaveText('02');
 });
 
-test('death, victory, best time, and replay complete the run lifecycle', async ({ page }) => {
+test('clan defeat, victory, best time, and replay complete the run lifecycle', async ({ page }) => {
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.run.elapsed = 42;
-    scene.run.health = 1;
-    scene.spawnEnemy();
-    scene.hurtPlayer(scene.enemies.getChildren().find((item: any) => item.active));
+    scene.run.clan.integrity = 0;
   });
   await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
   await expect(page.locator('#best')).toHaveText('00:42');

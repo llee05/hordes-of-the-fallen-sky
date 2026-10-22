@@ -34,6 +34,8 @@ The intro establishes what happened and why the clan travels. During play, survi
 
 The first playable image should fulfill the intro's promise: a small camp, a blue banner, and people worth riding back to protect.
 
+In the playable prototype, the Khan’s death starts a short succession while the clan keeps fighting. A new Khan inherits the expedition rather than restarting the story. Camp encounters wait until a Khan is present; earlier conversations and decisions remain the clan’s actual record. The arc below follows the responsibility of the role and the community across those leaders.
+
 ## Act I — Gather the Scattered
 
 **Act question:** Who belongs within the circle of this camp?
