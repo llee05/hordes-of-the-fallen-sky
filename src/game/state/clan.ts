@@ -1,3 +1,4 @@
+import { rememberClan } from './legacy';
 import { GAME } from '../config';
 import { BUILDINGS, ROUTES } from '../data/clan';
 import type { BuildingId, ClanState, Formation, RunState } from '../types';
@@ -159,6 +160,16 @@ export function buildStructure(run: RunState, id: BuildingId, path?: string): bo
     !hadTempest && burningTempest(run)
       ? 'THE BURNING TEMPEST — fire arrows meet the wind shamans.'
       : `${development?.title ?? definition.title} joins your living civilization.`;
+  rememberClan(
+    run,
+    development?.title ?? definition.title,
+    `${development ? 'Learned' : 'Established'} for the travelling camp.`,
+    {
+      speaker: 'saran',
+      text: 'Give each new craft a place beside the hearth. These are skills we can carry.',
+    },
+    'The remaining hands make room for another craft.',
+  );
   return true;
 }
 
@@ -179,6 +190,16 @@ export function beginMigration(run: RunState, routeId: string): boolean {
   clan.migrationProgress = 0;
   clan.identity[route.doctrine] += 2;
   clan.message = 'The gers are packed. Stay close to the caravan and bring your people through.';
+  rememberClan(
+    run,
+    'The camp packed for the road',
+    `${clan.population} people set out along ${route.title}.`,
+    {
+      speaker: 'boro',
+      text: 'Count the households before we move. Keep the packs balanced and the herd beside us.',
+    },
+    'The remaining hands load the wagons and count before leaving.',
+  );
   return true;
 }
 
@@ -197,6 +218,16 @@ export function damageClan(run: RunState, amount: number): void {
     clan.population = Math.max(0, clan.population - 1);
     clan.herd = Math.max(0, clan.herd - 1);
     clan.message = 'The clan has suffered losses. Bring your riders back to guard.';
+    rememberClan(
+      run,
+      'A place left empty',
+      'An attack cost the clan a person. The surviving households carried on.',
+      {
+        speaker: 'erden',
+        text: 'One fewer at the fire. I will keep the loss in the tally, where we can all see it.',
+      },
+      'One fewer beneath the banner. The loss remains in the tally.',
+    );
   }
 }
 
@@ -276,6 +307,16 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
     clan.herd = Math.max(0, clan.herd - 1);
     damageClan(run, 8);
     clan.message = 'The provisions are gone. Families and livestock are being lost.';
+    rememberClan(
+      run,
+      'The provisions ran out',
+      'Starvation cost a person and livestock; low resolve may bring further losses.',
+      {
+        speaker: 'boro',
+        text: 'There is nothing left to share. Keep the remaining stores close when we find them.',
+      },
+      'Empty stores cost another life. The remaining people keep moving.',
+    );
   }
   if (clan.population === 0 || clan.integrity === 0) return 'lost';
   if (clan.stage === 'migration' && clan.migrationProgress >= 1) {
@@ -284,6 +325,7 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
     clan.materials += route.materials + bonuses.arrivalMaterials;
     clan.spirit += route.id === 'ridge' ? 10 : 0;
     const newPeople = route.population + (route.id === 'refuge' ? bonuses.refugePeople : 0);
+    const arrivedPeople = Math.min(GAME.clan.maxPopulation - clan.population, newPeople);
     clan.population = Math.min(GAME.clan.maxPopulation, clan.population + newPeople);
     if (route.id === 'refuge') clan.rescuedRiders += 2;
     clan.herd = Math.min(GAME.clan.maxHerd, clan.herd + route.herd + bonuses.arrivalHerd);
@@ -299,7 +341,22 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
     clan.message =
       clan.stage === 'final'
         ? 'The Red Eclipse. Protect your people for three minutes while the mountain passage opens.'
-        : `${newPeople ? `${newPeople} survivors join the clan. ` : ''}Fresh pasture. Unpack, rebuild, and decide how long to stay.`;
+        : `${arrivedPeople ? `${arrivedPeople} survivors join the clan. ` : ''}Fresh pasture. Unpack, rebuild, and decide how long to stay.`;
+    rememberClan(
+      run,
+      arrivedPeople ? 'New households at the fire' : 'The caravan arrived',
+      `${clan.population} people reached the next pasture by ${route.title}.`,
+      arrivedPeople
+        ? {
+            speaker: 'nara',
+            text: 'Move the bowls closer. There are more people to make room for.',
+          }
+        : {
+            speaker: 'saran',
+            text: 'Set the covered embers down gently. We can make a hearth here.',
+          },
+      'Those who reached the pasture make another small hearth.',
+    );
     return 'arrived';
   }
   if (clan.stage === 'final' && clan.stageTime >= GAME.clan.finalDuration) return 'saved';

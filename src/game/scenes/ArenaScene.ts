@@ -1099,6 +1099,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private finish(phase: 'won' | 'dead'): void {
+    this.run.legacy.outcome = phase;
     this.best = Math.max(this.best, Math.floor(this.run.elapsed));
     void this.platform.saveBest(this.best).catch(() => this.callbacks?.onSaveError());
     this.setPhase(phase === 'won' && this.run.story.enabled ? 'epilogue' : phase);

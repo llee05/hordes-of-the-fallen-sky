@@ -44,3 +44,9 @@ Defeat shows the actual journey result and leaves the memories available. A rest
 `src/game/data/story.ts` contains the cast, conditional scenes, choices, and epilogue. `src/game/state/story.ts` handles once-only progression; `ArenaScene` owns phase transitions and pause behavior. `src/ui/storyContent.ts` and `src/story.css` render manuscript conversations using the existing locally bundled paintings. No new runtime service, voice synthesis, or remote asset loading is involved.
 
 The complete story is playable as a short prototype. Dialogue is text-based, geography is shared across runs, and individual companion agents, a longer campaign, permanent progression, and campaign save/resume remain future work. Unit and browser coverage checks chronology, choices, losses, banked knowledge points, all crossings, victory, defeat, memories, controller input, layout, and restart. Electron smoke coverage checks the offline story panel and the existing native platform flow.
+
+## Life beneath the banner
+
+Validated camp purchases, departures, completed crossings, actual losses, and Khan succession add factual memories to the chronicle. A brief companion reaction may accompany a moment; reactions are spaced by eight active seconds and freeze in menus. Only displayed reactions receive a retained transcript. Fewer than five survivors use the collective remembered-road voice. Camp scenes: Off keeps factual memories without companion speech. Records are bounded to the latest 96 moments and 64 Khans, showing totals when earlier records have left the view.
+
+Each Khan record retains the actual selection and fall times, regions, population at selection, and host victories during that tenure. Last Ember preserves the same Khan; succession adds one new record only after its active-time countdown finishes. Reading records never grants rewards or changes simulation.

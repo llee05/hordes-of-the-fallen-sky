@@ -98,6 +98,9 @@ export const GAME = {
   },
   story: {
     campBeatDelay: 15,
+    reactionDuration: 8,
+    memoryLimit: 96,
+    khanRecordLimit: 64,
     finalBeatTime: 90,
     gifts: { food: 8, materials: 6, spirit: 4, resolve: 5 },
     identityPerChoice: 1,

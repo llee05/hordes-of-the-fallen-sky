@@ -15,6 +15,8 @@ import {
   clanDoctrine,
   riderCount,
 } from '../game/state/clan';
+import { currentReaction } from '../game/state/legacy';
+import { COMPANIONS } from '../game/data/story';
 import { currentGuidance, clanWarning } from '../game/state/guidance';
 import { guidanceContent } from './guidanceContent';
 import { formatTime } from '../game/state/run';
@@ -91,7 +93,7 @@ export class GameUI {
           <section class="tradition-hud" aria-label="Run progression"><span>TRADITION <b id="level">01</b> <small>· <span id="blessing-count">0</span> LEARNED</small></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small><button id="research" class="research-button" aria-label="Open patron tech tree" aria-keyshortcuts="T">Tech tree <kbd>T</kbd><span id="research-points">0</span></button></section>
           <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
           <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">${clanMark('bow')}</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
-          <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><p id="clan-message"></p></div>
+          <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><div><p id="clan-message"></p><p id="companion-reaction" class="companion-reaction" hidden></p></div></div>
         </div>
         <div id="overlay" class="overlay ready-screen" role="dialog" aria-modal="true" aria-labelledby="overlay-title" tabindex="-1"></div>
         <div id="menu-record" class="menu-record"><span>LONGEST JOURNEY</span><strong id="best">— — : — —</strong></div>
@@ -310,8 +312,15 @@ export class GameUI {
     );
     this.text('best', best > 0 ? formatTime(best) : '— — : — —');
     this.text('clan-message', clan.message);
-    if (clan.message !== this.lastMessage) {
-      this.lastMessage = clan.message;
+    const reaction = currentReaction(run);
+    this.get('companion-reaction').hidden = !reaction;
+    this.text(
+      'companion-reaction',
+      reaction?.line ? `${COMPANIONS[reaction.line.speaker].name}: “${reaction.line.text}”` : '',
+    );
+    const messageKey = `${clan.message}:${reaction?.sequence ?? ''}`;
+    if (messageKey !== this.lastMessage) {
+      this.lastMessage = messageKey;
       this.showMessage();
     }
   }
@@ -340,7 +349,11 @@ export class GameUI {
     this.overlay.dataset.entry =
       run.phase !== this.phase || !this.overlay.firstElementChild ? 'phase' : 'content';
     if (run.phase !== this.phase) this.motion.cancel();
-    if (run.phase === 'playing' && (this.phase === 'ready' || this.phase === 'intro'))
+    if (
+      run.phase === 'playing' &&
+      this.phase !== 'playing' &&
+      (this.phase === 'ready' || this.phase === 'intro' || currentReaction(run))
+    )
       this.showMessage();
     this.phase = run.phase;
     this.root.dataset.phase = run.phase;

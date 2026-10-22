@@ -159,19 +159,22 @@
   color: var(--paper-muted);
   margin-bottom: 22px;
 }
-.story-memory {
+.story-memory,
+.clan-memory {
   border: 1px solid #9f815144;
   border-left: 3px solid #a76b41;
   background: #d7bf8b33;
   margin-bottom: 12px;
 }
-.story-memory summary {
+.story-memory summary,
+.clan-memory summary {
   padding: 16px;
   cursor: pointer;
   color: #35443d;
   font-weight: 600;
 }
-.story-memory summary small {
+.story-memory summary small,
+.clan-memory summary small {
   display: block;
   margin: 7px 0 0 17px;
   font: 10px var(--mono);
@@ -230,4 +233,35 @@
     display: block;
     margin: 4px 0;
   }
+}
+
+.khan-records,
+.clan-memories {
+  margin-bottom: 24px;
+}
+.khan-records ol {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.khan-records li {
+  border-left: 2px solid #b48a48;
+  padding: 8px 14px;
+  background: #b48a4810;
+}
+.khan-records li > * {
+  display: block;
+  margin-bottom: 4px;
+}
+.khan-records small {
+  line-height: 1.5;
+  color: #675945;
+}
+.chronicle-toast .companion-reaction {
+  color: #d8d9bd;
+  border-top: 1px solid #bfa57155;
+  padding-top: 7px;
+  margin-top: 7px;
+  font-size: 12px;
 }

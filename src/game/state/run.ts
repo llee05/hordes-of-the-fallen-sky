@@ -1,5 +1,6 @@
 import { UPGRADES } from '../data/upgrades';
 import { GAME } from '../config';
+import { createLegacy } from './legacy';
 import { createClan } from './clan';
 import { createPatronEffects } from './patrons';
 import { createStory } from './story';
@@ -13,6 +14,7 @@ export function xpForLevel(level: number): number {
 
 export function createRun(): RunState {
   return {
+    legacy: createLegacy(),
     guidance: { enabled: true, completed: [] },
     khan: { generation: 1, successionRemaining: 0 },
     phase: 'ready',

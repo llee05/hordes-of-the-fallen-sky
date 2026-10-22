@@ -1,3 +1,4 @@
+import { rememberFallenKhan, rememberChosenKhan } from './legacy';
 import { GAME } from '../config';
 import type { RunState } from '../types';
 
@@ -8,6 +9,7 @@ export function isKhanActive(run: RunState): boolean {
 /** Falling starts succession; it never creates an ended expedition phase. */
 export function beginSuccession(run: RunState): boolean {
   if (run.phase !== 'playing' || run.health > 0 || run.khan.successionRemaining > 0) return false;
+  rememberFallenKhan(run);
   run.khan.successionRemaining = GAME.khan.successionDelay;
   run.clan.momentum = 0;
   run.clan.message = 'The Khan has fallen. The clan is choosing a new Khan.';
@@ -46,6 +48,7 @@ export function advanceSuccession(run: RunState, dt: number): boolean {
   if (run.khan.successionRemaining > 0) return false;
   run.khan.generation += 1;
   run.health = run.stats.maxHealth;
+  rememberChosenKhan(run);
   run.clan.message = `A new Khan has been chosen. Khan ${run.khan.generation} rides from the camp.`;
   return true;
 }

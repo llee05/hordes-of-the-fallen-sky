@@ -1,0 +1,118 @@
+import { GAME } from '../config';
+import type { RunState } from '../types';
+import type { StoryLine } from '../story/types';
+
+export interface KhanRecord {
+  generation: number;
+  chosenAt: number;
+  region: number;
+  people: number;
+  killsAtStart: number;
+  fallenAt?: number;
+  fallenRegion?: number;
+  killsAtFall?: number;
+}
+
+export interface ClanMemory {
+  sequence: number;
+  elapsed: number;
+  region: number;
+  population: number;
+  title: string;
+  detail: string;
+  line?: StoryLine;
+}
+
+export interface ClanLegacy {
+  outcome?: 'won' | 'dead';
+  khans: KhanRecord[];
+  memories: ClanMemory[];
+  totalMemories: number;
+  reactionUntil: number;
+}
+
+export function createLegacy(): ClanLegacy {
+  return {
+    khans: [{ generation: 1, chosenAt: 0, region: 0, people: 8, killsAtStart: 0 }],
+    memories: [],
+    totalMemories: 0,
+    reactionUntil: 0,
+  };
+}
+
+/** Facts are retained even with camp scenes off. Only a reaction actually shown gets a transcript. */
+export function rememberClan(
+  run: RunState,
+  title: string,
+  detail: string,
+  reaction: StoryLine,
+  remnant: string,
+): void {
+  const legacy = run.legacy;
+  const canSpeak =
+    run.clan.population > 0 && run.story.enabled && run.elapsed >= legacy.reactionUntil;
+  const line = canSpeak
+    ? run.clan.population < 5
+      ? { speaker: 'clan' as const, text: remnant }
+      : reaction
+    : undefined;
+  legacy.totalMemories += 1;
+  legacy.memories.push({
+    sequence: legacy.totalMemories,
+    elapsed: run.elapsed,
+    region: run.clan.region,
+    population: run.clan.population,
+    title,
+    detail,
+    line,
+  });
+  if (line) legacy.reactionUntil = run.elapsed + GAME.story.reactionDuration;
+  if (legacy.memories.length > GAME.story.memoryLimit) legacy.memories.shift();
+}
+
+export function currentReaction(run: RunState): ClanMemory | undefined {
+  if (run.elapsed >= run.legacy.reactionUntil) return;
+  for (let i = run.legacy.memories.length - 1; i >= 0; i -= 1) {
+    const memory = run.legacy.memories[i]!;
+    if (memory.line) return memory;
+  }
+}
+
+export function rememberFallenKhan(run: RunState): void {
+  const khan = run.legacy.khans.at(-1)!;
+  if (khan.fallenAt !== undefined) return;
+  khan.fallenAt = run.elapsed;
+  khan.fallenRegion = run.clan.region;
+  khan.killsAtFall = run.kills;
+  rememberClan(
+    run,
+    `Khan ${run.khan.generation} fell`,
+    'The clan began choosing another leader while its defenses fought on.',
+    {
+      speaker: 'saran',
+      text: 'Keep the banner where the people can see it. The road still needs a Khan.',
+    },
+    'The banner remains with the people while another Khan is chosen.',
+  );
+}
+
+export function rememberChosenKhan(run: RunState): void {
+  run.legacy.khans.push({
+    generation: run.khan.generation,
+    chosenAt: run.elapsed,
+    region: run.clan.region,
+    people: run.clan.population,
+    killsAtStart: run.kills,
+  });
+  if (run.legacy.khans.length > GAME.story.khanRecordLimit) run.legacy.khans.shift();
+  rememberClan(
+    run,
+    `Khan ${run.khan.generation} took the banner`,
+    `${run.clan.population} people carried their buildings, traditions, and journey forward.`,
+    {
+      speaker: 'erden',
+      text: 'A new hand carries the banner. The people and everything they have learned remain.',
+    },
+    'Another hand takes the banner. The remaining people carry their learning onward.',
+  );
+}

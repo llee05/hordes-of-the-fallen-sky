@@ -1,3 +1,4 @@
+import type { ClanLegacy } from './state/legacy';
 import type { GuidanceState } from './state/guidance';
 import type { StoryState } from './story/types';
 
@@ -125,6 +126,7 @@ export interface PatronEffects {
 }
 
 export interface RunState {
+  legacy: ClanLegacy;
   guidance: GuidanceState;
   khan: { generation: number; successionRemaining: number };
   phase: RunPhase;
