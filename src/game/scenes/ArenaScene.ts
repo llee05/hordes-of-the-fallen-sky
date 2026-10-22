@@ -476,8 +476,7 @@ export class ArenaScene extends Phaser.Scene {
   cycleFormation(): void {
     if (this.run.phase !== 'playing') return;
     const formations = availableFormations(this.run);
-    if (formations.length < 2) return;
-    completeGuidance(this.run, 'formation');
+    if (formations.length > 1) completeGuidance(this.run, 'formation');
     this.run.clan.formation =
       formations[(formations.indexOf(this.run.clan.formation) + 1) % formations.length]!;
     this.run.clan.message = FORMATIONS[this.run.clan.formation].description;

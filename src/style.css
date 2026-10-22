@@ -339,7 +339,6 @@ canvas {
   top: 182px;
   width: 300px;
   padding: 13px 15px;
-  pointer-events: auto;
 }
 .field-guide > strong {
   font:
@@ -1991,5 +1990,48 @@ canvas {
   }
   .clan-warning {
     font-size: 9px;
+  }
+}
+
+@media (max-width: 1100px) and (max-height: 680px) {
+  .field-guide {
+    top: 140px;
+  }
+  .field-guide > strong {
+    font-size: 16px;
+  }
+  .guide-copy {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+  .guide-actions button {
+    font-size: 10px;
+    padding-block: 3px;
+  }
+  .tradition-hud {
+    bottom: 215px;
+  }
+}
+@media (max-width: 600px) {
+  .field-guide {
+    top: 310px;
+    padding: 10px 12px;
+  }
+  .field-guide > strong {
+    font-size: 16px;
+  }
+  .guide-copy {
+    font-size: 11px;
+    line-height: 1.4;
+    margin-block: 6px;
+  }
+  .chronicle-toast:has(.companion-reaction:not([hidden])) #clan-message {
+    display: none;
+  }
+  .chronicle-toast .companion-reaction {
+    border-top: 0;
+    padding-top: 0;
+    margin-top: 0;
+    font-size: 11px;
   }
 }

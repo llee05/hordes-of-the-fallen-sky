@@ -211,6 +211,7 @@ export function damageClan(run: RunState, amount: number): void {
     (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? 0.8 : 1) *
     run.patrons.guardian.protection *
     clan.campEffects.multipliers.clanProtection;
+  const previousPopulation = clan.population;
   const previous = clan.integrity;
   clan.integrity = Math.max(0, previous - amount * protection);
   if (Math.floor((100 - previous) / 20) < Math.floor((100 - clan.integrity) / 20)) {
@@ -218,16 +219,17 @@ export function damageClan(run: RunState, amount: number): void {
     clan.population = Math.max(0, clan.population - 1);
     clan.herd = Math.max(0, clan.herd - 1);
     clan.message = 'The clan has suffered losses. Bring your riders back to guard.';
-    rememberClan(
-      run,
-      'A place left empty',
-      'An attack cost the clan a person. The surviving households carried on.',
-      {
-        speaker: 'erden',
-        text: 'One fewer at the fire. I will keep the loss in the tally, where we can all see it.',
-      },
-      'One fewer beneath the banner. The loss remains in the tally.',
-    );
+    if (clan.population < previousPopulation)
+      rememberClan(
+        run,
+        'A place left empty',
+        'An attack cost the clan a person. The surviving households carried on.',
+        {
+          speaker: 'erden',
+          text: 'One fewer at the fire. I will keep the loss in the tally, where we can all see it.',
+        },
+        'One fewer beneath the banner. The loss remains in the tally.',
+      );
   }
 }
 

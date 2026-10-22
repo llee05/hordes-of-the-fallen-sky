@@ -67,3 +67,49 @@ test('tips can be hidden and restored while danger warnings remain visible', asy
   await expect(page.locator('#field-guide')).toBeVisible();
   await page.screenshot({ path: 'test-results/first-crossing-guidance.png' });
 });
+
+test('guidance leaves danger warnings and controls readable at supported preview sizes', async ({
+  page,
+}) => {
+  await openTitle(page);
+  await startExpedition(page);
+  await page.keyboard.down('d');
+  await expect(page.locator('#field-guide')).toContainText('Your camp is your strength');
+  await page.keyboard.up('d');
+  await page.evaluate(() => {
+    const run = (window as any).__gloam.scene.run;
+    run.clan.integrity = 25;
+  });
+  await expect(page.locator('#clan-warning')).toContainText('resolve is critical');
+  for (const viewport of [
+    { width: 1280, height: 800 },
+    { width: 960, height: 600 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const guide = (await page.locator('#field-guide').boundingBox())!;
+    expect(guide.x).toBeGreaterThanOrEqual(0);
+    expect(guide.x + guide.width).toBeLessThanOrEqual(viewport.width);
+    for (const id of ['clan-warning', 'research', 'build', 'migrate', 'dash']) {
+      const box = (await page.locator(`#${id}`).boundingBox())!;
+      const overlaps =
+        guide.x < box.x + box.width &&
+        guide.x + guide.width > box.x &&
+        guide.y < box.y + box.height &&
+        guide.y + guide.height > box.y;
+      expect(overlaps, `guidance overlaps ${id} at ${viewport.width}×${viewport.height}`).toBe(
+        false,
+      );
+    }
+  }
+  await page.setViewportSize({ width: 960, height: 600 });
+  await page.evaluate(() => {
+    const scene = (window as any).__gloam.scene;
+    scene.invulnerable = 0;
+    scene.takeDamage(1000);
+  });
+  await expect(page.locator('#field-guide')).toContainText('The people carry on');
+  const guide = (await page.locator('#field-guide').boundingBox())!;
+  const research = (await page.locator('#research').boundingBox())!;
+  expect(guide.y + guide.height).toBeLessThanOrEqual(research.y);
+});

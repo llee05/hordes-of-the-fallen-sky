@@ -97,6 +97,9 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.getByRole('button', { name: /Share the work/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await expect(page.locator('#khan-title')).toHaveText('THE KHAN');
+    await expect(page.locator('#field-guide')).toContainText('Ride out, keep watch');
+    await page.getByRole('button', { name: 'Hide guidance', exact: true }).click();
+    await expect(page.locator('#field-guide')).toBeHidden();
     await page.keyboard.press('t');
     await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
     await expect(page.locator('[data-tree-branch]')).toHaveCount(8);

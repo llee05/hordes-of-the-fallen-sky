@@ -50,6 +50,7 @@ export class GameUI {
   private lastSnapshot?: HudSnapshot;
   private guideId = '';
   private lastMessage = '';
+  private lastReaction = 0;
   private toastTimer?: number;
 
   constructor(
@@ -318,9 +319,12 @@ export class GameUI {
       'companion-reaction',
       reaction?.line ? `${COMPANIONS[reaction.line.speaker].name}: “${reaction.line.text}”` : '',
     );
-    const messageKey = `${clan.message}:${reaction?.sequence ?? ''}`;
-    if (messageKey !== this.lastMessage) {
-      this.lastMessage = messageKey;
+    if (
+      clan.message !== this.lastMessage ||
+      (reaction && reaction.sequence !== this.lastReaction)
+    ) {
+      this.lastMessage = clan.message;
+      if (reaction) this.lastReaction = reaction.sequence;
       this.showMessage();
     }
   }

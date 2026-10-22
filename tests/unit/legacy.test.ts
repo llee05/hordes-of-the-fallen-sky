@@ -7,6 +7,17 @@ import { currentReaction, rememberClan } from '../../src/game/state/legacy';
 import { clanMemories, khanRecords } from '../../src/ui/legacyContent';
 
 describe('the clan’s lived history', () => {
+  it('does not invent another casualty when damage reaches an already empty clan', () => {
+    const run = createRun();
+    run.phase = 'playing';
+    run.clan.population = 1;
+    damageClan(run, 40);
+    expect(run.clan.population).toBe(0);
+    const count = run.legacy.totalMemories;
+    damageClan(run, 40);
+    expect(run.legacy.totalMemories).toBe(count);
+  });
+
   it('records actual Khan lifetimes, host victories, and inheritance exactly once', () => {
     const run = createRun();
     run.phase = 'playing';

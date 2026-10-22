@@ -23,13 +23,15 @@ test('controller starts a run, moves, dashes, pauses, and navigates menus', asyn
   await page.evaluate(() => {
     (window as any).testController.axes[0] = 1;
   });
-  await page.waitForTimeout(400);
-  await page.evaluate(() => {
-    (window as any).testController.axes[0] = 0;
-  });
-  expect(await page.evaluate(() => (window as any).__gloam.scene.player.x)).toBeGreaterThan(
-    initialX + 25,
-  );
+  try {
+    await expect
+      .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.x))
+      .toBeGreaterThan(initialX + 25);
+  } finally {
+    await page.evaluate(() => {
+      (window as any).testController.axes[0] = 0;
+    });
+  }
   await press(0);
   await expect(page.locator('#dash-label')).toContainText('RECHARGING');
   await press(8);
@@ -171,11 +173,13 @@ test('mobile layout fits and touch movement works', async ({ browser }) => {
     type: 'touchMove',
     touchPoints: [{ x: x + 55, y }],
   });
-  await page.waitForTimeout(500);
-  await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  expect(await page.evaluate(() => (window as any).__gloam.scene.player.x)).toBeGreaterThan(
-    startX + 15,
-  );
+  try {
+    await expect
+      .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.x))
+      .toBeGreaterThan(startX + 15);
+  } finally {
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  }
   await page.getByRole('button', { name: 'Dash', exact: true }).click();
   await expect(page.locator('#dash-label')).toContainText('RECHARGING');
   await context.close();

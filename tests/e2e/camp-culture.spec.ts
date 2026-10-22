@@ -174,6 +174,14 @@ test('bowyers, arban drills, wheelwrights, storm watch, and reserve horses alter
       scene.construct(id, path);
   });
   await page.keyboard.press('Escape');
+  // Construction is paused; the first active frame places the newly recruited riders.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as any).__gloam.scene.riders.filter((rider: any) => rider.visible).length,
+      ),
+    )
+    .toBe(7);
   const result = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
