@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import {
   ART_WIDTH,
+  CAMP_VISUAL_SCALE,
   artTexture,
   createPainterlyEffects,
   paintedImage,
@@ -175,11 +176,14 @@ export class ArenaScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.landscape = new SteppeLandscape(this);
     const center = GAME.worldSize / 2;
-    this.camp = this.add.container(center, center).setDepth(100 + center);
+    this.camp = this.add
+      .container(center, center)
+      .setScale(CAMP_VISUAL_SCALE)
+      .setDepth(100 + center);
     this.refreshCamp();
     this.clanLife = new ClanLife(this);
     this.campLabel = this.add
-      .text(center, center - 125, 'YOUR CLAN', {
+      .text(center, center - 125 * CAMP_VISUAL_SCALE, 'YOUR CLAN', {
         fontFamily: 'Georgia',
         fontSize: '11px',
         color: '#f5e6bf',
@@ -461,12 +465,14 @@ export class ArenaScene extends Phaser.Scene {
     if (!beginMigration(this.run, id)) return;
     for (const ger of this.camp.list) {
       if (!(ger instanceof Phaser.GameObjects.Image) || ger.name !== 'ger') continue;
+      const x = ger.x * this.camp.scaleX;
+      const y = ger.y * this.camp.scaleY;
       const image = this.add
-        .image(this.camp.x + ger.x, this.camp.y + ger.y, ger.texture.key, ger.frame.name)
+        .image(this.camp.x + x, this.camp.y + y, ger.texture.key, ger.frame.name)
         .setOrigin(ger.originX, ger.originY)
-        .setScale(ger.scaleX)
-        .setDepth(100 + this.camp.y + ger.y);
-      this.packedGers.push({ image, x: ger.x, y: ger.y });
+        .setScale(ger.scaleX * this.camp.scaleX, ger.scaleY * this.camp.scaleY)
+        .setDepth(100 + this.camp.y + y);
+      this.packedGers.push({ image, x, y });
     }
     this.packingRemaining = 2.4;
     this.refreshCamp();
@@ -1264,7 +1270,7 @@ export class ArenaScene extends Phaser.Scene {
           .setAngle(Math.sin(this.run.elapsed * 1.7 + child.x) * 1.2);
       }
     this.campLabel
-      .setPosition(this.camp.x, this.camp.y - 112)
+      .setPosition(this.camp.x, this.camp.y - 112 * CAMP_VISUAL_SCALE)
       .setText(clan.stage === 'migration' ? 'PROTECT THE CARAVAN  →' : 'YOUR CLAN');
     const count = riderCount(this.run);
     for (let i = 0; i < this.riders.length; i += 1) {

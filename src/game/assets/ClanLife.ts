@@ -8,7 +8,7 @@ import {
   CAMP_LIFE_LIMITS,
 } from '../state/campLife';
 import type { RunState } from '../types';
-import { paintedImage } from './painterlyArt';
+import { ART_WIDTH, CAMP_VISUAL_SCALE, paintedImage } from './painterlyArt';
 
 interface CampActor {
   kind: 'worker' | 'packhorse';
@@ -29,18 +29,18 @@ export class ClanLife {
     const pool = (kind: 'worker' | 'packhorse', count: number, width: number): CampActor[] =>
       Array.from({ length: count }, (_, index) => ({
         kind,
-        image: paintedImage(scene, 0, 0, kind, width)
+        image: paintedImage(scene, 0, 0, kind, width * CAMP_VISUAL_SCALE)
           .setName(`camp-${kind}-${index}`)
           .setVisible(false)
           .setAlpha(0),
         shadow: scene.add
           .image(0, 0, 'shadow')
-          .setDisplaySize(width * 0.6, width * 0.22)
+          .setDisplaySize(width * 0.6 * CAMP_VISUAL_SCALE, width * 0.22 * CAMP_VISUAL_SCALE)
           .setVisible(false),
         motion: new CharacterMotion(kind, index * 0.137),
       }));
-    this.workers = pool('worker', CAMP_LIFE_LIMITS.workers, 30);
-    this.horses = pool('packhorse', CAMP_LIFE_LIMITS.horses, 58);
+    this.workers = pool('worker', CAMP_LIFE_LIMITS.workers, ART_WIDTH.worker!);
+    this.horses = pool('packhorse', CAMP_LIFE_LIMITS.horses, ART_WIDTH.packhorse!);
   }
 
   update(run: RunState, dt: number, anchor: { x: number; y: number }): void {
@@ -68,8 +68,8 @@ export class ClanLife {
         } else actor.shadow.setAlpha(image.alpha * 0.7);
         return;
       }
-      const x = anchor.x + target.x;
-      const y = anchor.y + target.y;
+      const x = anchor.x + target.x * CAMP_VISUAL_SCALE;
+      const y = anchor.y + target.y * CAMP_VISUAL_SCALE;
       if (!image.visible || relocated) {
         image.setPosition(x, y).setVisible(true).setFlipX(false).clearTint().setAngle(0);
         actor.motion.reset(actor.kind, index * 0.137);
@@ -80,7 +80,7 @@ export class ClanLife {
         Phaser.Math.Linear(oldX, x, Math.min(1, dt * 4)),
         Phaser.Math.Linear(oldY, y, Math.min(1, dt * 4)),
       );
-      const speed = Math.hypot(image.x - oldX, image.y - oldY) / dt;
+      const speed = Math.hypot(image.x - oldX, image.y - oldY) / (dt * CAMP_VISUAL_SCALE);
       // A moving caravan's representatives walk even after settling into their travelling rows.
       const walking = run.clan.stage === 'migration' ? Math.max(20, speed) : speed;
       actor.motion.advance(dt, walking);
@@ -90,7 +90,7 @@ export class ClanLife {
       image.setDepth(100 + image.y).setAlpha(Math.min(1, image.alpha + dt * 4));
       actor.shadow
         .setVisible(true)
-        .setPosition(image.x + 4, image.y + 2)
+        .setPosition(image.x + 4 * CAMP_VISUAL_SCALE, image.y + 2 * CAMP_VISUAL_SCALE)
         .setDepth(99 + image.y)
         .setAlpha(image.alpha * 0.7);
     };
