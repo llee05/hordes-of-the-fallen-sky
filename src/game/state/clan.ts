@@ -46,7 +46,6 @@ export function riderCount(run: RunState): number {
     1 +
       (clan.buildings.archery ? 3 : 0) +
       (hasDevelopment(run, 'archery', 'veteran-riders') ? 3 : 0) +
-      (run.upgrades.multishot ?? 0) +
       run.patrons.banner.riders +
       clan.rescuedRiders,
   );

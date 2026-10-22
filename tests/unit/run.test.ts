@@ -64,7 +64,7 @@ describe('run progression', () => {
     const power = UPGRADES.find((upgrade) => upgrade.id === 'power')!;
     const advanced = { ...power, id: 'advanced', requires: [{ id: 'power', rank: 2 }] };
     run.pendingUpgrades = 5;
-    expect(upgradeBlocker(run, advanced)).toContain('Horn-and-sinew bows rank 2');
+    expect(upgradeBlocker(run, advanced)).toContain(`${power.title} rank 2`);
     expect(applyUpgrade(run, advanced)).toBe(false);
     applyUpgrade(run, power, 1);
     applyUpgrade(run, power, 2);

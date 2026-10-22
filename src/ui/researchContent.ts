@@ -1,32 +1,47 @@
+import { PATRONS } from '../game/data/patrons';
 import { UPGRADES } from '../game/data/upgrades';
 import { upgradeBlocker } from '../game/state/run';
 import type { RunState } from '../game/types';
-import { clanMark, TRADITION_MARKS } from './artwork';
+import { clanMark } from './artwork';
 import { progressionMenu, type TreeBranch, type TreeViewState } from './progressionTree';
 
 export function researchBranches(run: RunState): TreeBranch[] {
-  return UPGRADES.map((upgrade) => {
-    const learned = run.upgrades[upgrade.id] ?? 0;
+  return PATRONS.map((patron) => {
+    const technologies = UPGRADES.filter((upgrade) => upgrade.patron === patron.id);
+    const total = technologies.reduce((sum, upgrade) => sum + upgrade.maxStacks, 0);
+    const learned = technologies.reduce((sum, upgrade) => sum + (run.upgrades[upgrade.id] ?? 0), 0);
     return {
-      id: upgrade.id,
-      title: upgrade.title,
-      category: upgrade.category,
-      description: upgrade.description,
-      illustration: clanMark(TRADITION_MARKS[upgrade.id] ?? 'spirit'),
-      progress: `${learned} / ${upgrade.maxStacks} ranks learned`,
-      layout: 'ranks',
-      nodes: Array.from({ length: upgrade.maxStacks }, (_, index) => {
-        const rank = index + 1;
-        const blocker = upgradeBlocker(run, upgrade, rank);
+      id: patron.id,
+      title: patron.name,
+      category: patron.playstyle,
+      description: patron.description,
+      illustration: clanMark(patron.symbol),
+      progress: `${learned} / ${total} ranks learned`,
+      layout: 'tiers',
+      nodes: technologies.map((upgrade) => {
+        const rank = run.upgrades[upgrade.id] ?? 0;
+        const next = rank + 1;
+        const blocker = upgradeBlocker(run, upgrade, next);
+        const mastered = rank >= upgrade.maxStacks;
+        const isParent = technologies.some((other) =>
+          other.requires?.some((requirement) => requirement.id === upgrade.id),
+        );
         return {
-          id: `${upgrade.id}-${rank}`,
-          title: `Rank ${rank}`,
-          description: upgrade.title,
-          status: rank <= learned ? 'learned' : blocker ? 'locked' : 'available',
-          cost: '1 knowledge point',
-          reason: rank <= learned ? 'Learned' : (blocker ?? ''),
-          requires: rank > 1 ? [`${upgrade.id}-${rank - 1}`] : [],
-          action: { research: upgrade.id, rank: String(rank) },
+          id: upgrade.id,
+          title: upgrade.title,
+          description: upgrade.description,
+          status: mastered ? 'learned' : blocker ? 'locked' : 'available',
+          cost: mastered ? 'Mastered' : '1 knowledge point',
+          reason: mastered ? 'Learned' : (blocker ?? `Learn rank ${next}`),
+          progress: `${rank} / ${upgrade.maxStacks} ranks learned`,
+          kind: !upgrade.requires?.length ? 'foundation' : isParent ? 'practice' : 'capstone',
+          requires: (upgrade.requires ?? [])
+            .filter((requirement) => technologies.some((entry) => entry.id === requirement.id))
+            .map((requirement) => requirement.id),
+          requirementsLabel: upgrade.requires?.length
+            ? `Requires: ${upgrade.requires.map((requirement) => `${UPGRADES.find((entry) => entry.id === requirement.id)?.title ?? requirement.id} rank ${requirement.rank}`).join(' + ')}`
+            : '',
+          action: { research: upgrade.id, rank: String(next) },
         };
       }),
     };
@@ -35,12 +50,14 @@ export function researchBranches(run: RunState): TreeBranch[] {
 
 export function researchMenu(run: RunState, view: TreeViewState): string {
   return progressionMenu({
-    title: 'Tradition tech tree',
-    eyebrow: 'WHAT WE CARRY',
+    title: 'Patron tech tree',
+    eyebrow: `${PATRONS.length} PATRONS · ONE LIVING CLAN`,
     mark: 'spirit',
+    kind: 'patrons',
+    allLabel: 'All patrons',
     view,
     introduction:
-      'Collect spirit shards to earn one knowledge point per level. Choose a highlighted rank to learn it. Points stay with you until spent; you can return to the road at any time.',
+      'Shape your expedition through patron traditions. Learn two foundation ranks, then both practices to unlock a capstone. Mix patrons freely. Each rank costs one knowledge point earned from spirit shards.',
     summary: [
       { label: 'Knowledge points', value: String(run.pendingUpgrades) },
       {
@@ -51,6 +68,6 @@ export function researchMenu(run: RunState, view: TreeViewState): string {
     ],
     branches: researchBranches(run),
     notice:
-      'Each rank costs 1 knowledge point and needs the previous rank in its branch. Stored Spirit is reserved for camp construction.',
+      'Unspent points stay with the clan. Stored Spirit funds camp construction. These traditions begin afresh with each expedition.',
   });
 }

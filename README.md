@@ -48,7 +48,7 @@ Camp scenes are **On** by default. Saran the hearthkeeper, Boro the herder, Erde
 
 Act I crosses Golden Pasture and Silent River. Arrival at Broken Pass begins Act II, followed by the Heart of the Steppe. The chronicle's **Our story** tab keeps the actual conversations and decisions from the current expedition. Pause, victory, and defeat menus also offer **Our remembered road**. Read-only memories never restart simulation or grant a choice again.
 
-Start with eight people, three horses, two gers, supplies, and a mounted commander with one accompanying rider. Attacks are automatic. Ride to collect spirit shards. Each level banks a knowledge point without interrupting combat. Press **T** (controller **LB**) or use the HUD to open the paused **Tradition tech tree**, inspect every branch, and spend points on the ranks you choose. You can leave with unspent points and return later. Categories and search help you find branches. The tree is also accessible from Pause and the chronicle’s Traditions tab. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through.
+Start with eight people, three horses, two gers, supplies, and a mounted commander with one accompanying rider. Attacks are automatic. Ride to collect spirit shards. Each level banks a knowledge point without interrupting combat. Press **T** (controller **LB**) or use the HUD to open the paused **Patron tech tree**, inspect every branch, and spend points on the ranks you choose. Eight patrons support hunting, civilisation, archery, survival, terrain control, ancestral summons, army leadership, and defensive construction. Each has a two-rank foundation, two practices, and a capstone; mix patrons freely. You can leave with unspent points and return later. Categories and search help you find branches. The tree is also accessible from Pause and the chronicle’s Traditions tab. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through.
 
 Press **B** to open the **camp upgrade tree**. Planning pauses the simulation, including food consumption, pasture depletion, enemies, and migration. Preview every building and development, including costs, worker requirements, prerequisites, and exclusive choices. Search or filter by category, then purchase a highlighted node. The five current buildings each have two exclusive specializations; the interface and purchase rules support additional choices and deeper tiers through content definitions. Your buildings travel with the clan.
 
@@ -72,7 +72,7 @@ In a story expedition, victory opens **A place beside the fire**, a skippable ep
 
 An expedition is intended to take about 15 minutes with roughly three minutes of growth per camp. Earlier departures shorten the journey; longer stays increase danger. This is a prototype balance, not a fixed time limit.
 
-For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
+For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For all 32 technologies and 40 ranks, see [the patron tech tree](docs/patron-tech-tree.md). For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
 
 ## Controls
 
@@ -88,7 +88,7 @@ For a detailed reference to resources, combat, enemies, progression, and both up
 | Pause / resume / close planning | Escape / P                           | Start / B                     |
 | Navigate menus                  | Tab / Shift+Tab                      | Stick / D-pad                 |
 | Confirm                         | Enter / Space / click                | A                             |
-| Tradition tech tree             | T / Tech tree button                 | Left bumper                   |
+| Patron tech tree                | T / Tech tree button                 | Left bumper                   |
 | Learn a rank                    | Navigate, then Enter / Space / click | Navigate, then A              |
 | Fullscreen                      | F11 / Alt+Enter / fullscreen button  | —                             |
 | Quit                            | Quit game / window close             | Navigate to Quit game, then A |
@@ -127,7 +127,10 @@ src/game/state/run.ts          Experience, traditions, run lifecycle
 src/game/state/clan.ts         Economy, construction, migration, victory
 src/game/data/clan.ts          Buildings, specializations, routes, regions, formations
 src/game/data/enemies.ts       Five enemies, two elites, and the Skybreaker
-src/game/data/upgrades.ts      Stackable clan traditions
+src/game/data/patrons.ts       Eight patrons, playstyles, symbols, and descriptions
+src/game/data/upgrades.ts      Patron technologies, ranks, and prerequisites
+src/game/state/patrons.ts      Neutral patron effects, damage, recovery, and revival
+src/game/systems/PatronSupport.ts Ancestral riders, slowing fields, pulse, and camp ward
 src/game/assets/painterlyArt.ts Shared painted atlases, sizing, collision alignment, effects
 src/game/assets/SteppeLandscape.ts Painterly ground, riverbanks, weather, regional scenery
 public/art/                   Bundled painted PNGs and atlas frame metadata
@@ -135,7 +138,7 @@ src/game/scenes/ArenaScene.ts  Simulation, mounted host, combat, regional arenas
 src/ui/GameUI.ts               Full-window HUD, title/pause menus, focus and input
 src/ui/menuContent.ts          Camp, route, chronicle, settings, and help panels
 src/ui/progressionTree.ts      Shared data-driven progression tree renderer
-src/ui/researchContent.ts      Tradition branches, ranks, and research state
+src/ui/researchContent.ts      Patron branches, ranks, and research state
 src/ui/campContent.ts          Camp nodes, prerequisites, costs, and exclusive paths
 src/platform/                 Narrow native capability bridge and browser fallback
 desktop/                      Secure Electron lifecycle and atomic profile storage

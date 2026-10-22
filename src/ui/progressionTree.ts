@@ -12,6 +12,9 @@ export interface TreeNode {
   reason: string;
   requires: readonly string[];
   action: Readonly<Record<string, string>>;
+  kind?: 'foundation' | 'practice' | 'capstone';
+  progress?: string;
+  requirementsLabel?: string;
 }
 
 export interface TreeBranch {
@@ -68,10 +71,22 @@ function nodeButton(node: TreeNode, compact: boolean, parents = ''): string {
   const attributes = Object.entries(node.action)
     .map(([key, value]) => `data-${key}="${escapeHtml(value)}"`)
     .join(' ');
-  const label = `${node.title}. ${node.description} ${node.cost}. ${node.reason} ${parents}`;
-  return `<button class="tree-node ${compact ? 'tree-rank' : ''}" data-node="${escapeHtml(node.id)}" data-focus-key="${escapeHtml(node.id)}" data-status="${node.status}" aria-disabled="${node.status !== 'available'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}" ${attributes}>
+  const label = [
+    `${node.title}.`,
+    node.kind,
+    node.progress,
+    node.description,
+    `${node.cost}.`,
+    node.reason,
+    parents,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return `<button data-kind="${node.kind ?? 'upgrade'}" class="tree-node ${compact ? 'tree-rank' : ''}" data-node="${escapeHtml(node.id)}" data-focus-key="${escapeHtml(node.id)}" data-status="${node.status}" aria-disabled="${node.status !== 'available'}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}" ${attributes}>
     <span class="tree-node-state">${node.status === 'learned' ? '✓ LEARNED' : node.status === 'available' ? 'AVAILABLE' : node.status === 'excluded' ? 'OTHER PATH CHOSEN' : 'LOCKED'}</span>
     <strong>${escapeHtml(node.title)}</strong>
+    ${node.kind ? `<span class="tree-node-kind">${escapeHtml(node.kind)}</span>` : ''}
+    ${node.progress ? `<span class="tree-node-progress">${escapeHtml(node.progress)}</span>` : ''}
     ${compact ? '' : `<span class="tree-node-description">${escapeHtml(node.description)}</span>`}
     ${parents ? `<span class="tree-node-requires">${escapeHtml(parents)}</span>` : ''}
     <span class="tree-node-cost">${escapeHtml(compact ? node.reason || node.cost : node.cost)}</span>${!compact && node.reason ? `<span class="tree-node-reason">${escapeHtml(node.reason)}</span>` : ''}
@@ -81,9 +96,10 @@ function nodeButton(node: TreeNode, compact: boolean, parents = ''): string {
 function branchMarkup(branch: TreeBranch): string {
   const labels = new Map(branch.nodes.map((node) => [node.id, node.title]));
   const parents = (node: TreeNode): string =>
-    node.requires.length
+    node.requirementsLabel ??
+    (node.requires.length
       ? `Requires: ${node.requires.map((id) => labels.get(id) ?? id).join(' + ')}`
-      : '';
+      : '');
   const nodes =
     branch.layout === 'ranks'
       ? `<div class="tree-rank-track">${branch.nodes.map((node) => nodeButton(node, true)).join('')}</div>`
@@ -99,6 +115,13 @@ function branchMarkup(branch: TreeBranch): string {
   </article>`;
 }
 
+function searchText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLocaleLowerCase();
+}
+
 export function progressionMenu(options: {
   title: string;
   eyebrow: string;
@@ -108,26 +131,27 @@ export function progressionMenu(options: {
   branches: readonly TreeBranch[];
   view: TreeViewState;
   notice?: string;
+  kind?: string;
+  allLabel?: string;
 }): string {
   const { branches, view } = options;
   const categories = [...new Set(branches.map((branch) => branch.category))];
-  const query = view.query.trim().toLocaleLowerCase();
+  const query = searchText(view.query.trim());
   const visible = branches.filter(
     (branch) =>
       (view.category === 'all' || branch.category === view.category) &&
-      [
-        branch.title,
-        branch.description,
-        ...branch.nodes.flatMap((node) => [node.title, node.description]),
-      ]
-        .join(' ')
-        .toLocaleLowerCase()
-        .includes(query),
+      searchText(
+        [
+          branch.title,
+          branch.description,
+          ...branch.nodes.flatMap((node) => [node.title, node.description]),
+        ].join(' '),
+      ).includes(query),
   );
-  return `<section class="game-panel progression-panel">${heading(options.eyebrow, options.title, true, options.mark)}
+  return `<section class="game-panel progression-panel" data-tree-kind="${escapeHtml(options.kind ?? 'progression')}">${heading(options.eyebrow, options.title, true, options.mark)}
     <div class="tree-toolbar"><div class="tree-summary">${options.summary.map((item) => `<span><strong>${escapeHtml(item.value)}</strong>${escapeHtml(item.label)}</span>`).join('')}</div>
     <label class="tree-search-label">Find a branch<input type="search" id="tree-search" data-tree-search data-focus-key="tree-search" placeholder="Search names and effects" value="${escapeHtml(view.query)}" /></label></div>
-    <div class="tree-filters" role="group" aria-label="Tree categories">${['all', ...categories].map((category) => `<button data-tree-filter="${escapeHtml(category)}" data-focus-key="filter-${escapeHtml(category)}" aria-pressed="${view.category === category}">${escapeHtml(category === 'all' ? 'All branches' : category)}</button>`).join('')}</div>
+    <div class="tree-filters" role="group" aria-label="Tree categories">${['all', ...categories].map((category) => `<button data-tree-filter="${escapeHtml(category)}" data-focus-key="filter-${escapeHtml(category)}" aria-pressed="${view.category === category}">${escapeHtml(category === 'all' ? (options.allLabel ?? 'All branches') : category)}</button>`).join('')}</div>
     <div class="panel-body tree-scroll"><p class="panel-intro">${escapeHtml(options.introduction)}</p>${options.notice ? `<p class="tree-notice">${escapeHtml(options.notice)}</p>` : ''}
       <div class="tree-legend"><span data-status="available">◇ Available</span><span data-status="learned">✓ Learned</span><span data-status="locked">○ Locked</span></div>
       <div class="progression-branches">${visible.map(branchMarkup).join('')}</div>

@@ -26,14 +26,14 @@ The intended rhythm is **build → defend → choose when to leave → escort �
 | ------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Food               | 70                      | Grazing, herding grounds, winter stores, river crossings, story choices, rewards after mastering every tradition | Consumed by people, including during migration. Blue-banner rescue costs 18 food on arrival. Zero food triggers starvation checks.                                                                                         |
 | Materials          | 50                      | Passive camp gathering, more population, ridge crossings, story choices, rewards after mastering every tradition | Construct and specialize camp buildings. No ongoing building maintenance cost.                                                                                                                                             |
-| Spirit             | 0                       | Every enemy kill immediately grants `enemy XP × 0.4`; ridge arrival grants 10; some story choices grant 4        | Pay for the spirit sanctuary and its specialization. Stored Spirit does not buy tradition ranks. It is not consumed by lightning, wards, arrows, or migration.                                                             |
+| Spirit             | 0                       | Kills grant `enemy XP ×0.4` (×0.5 with Spirit thread); ridge arrival grants 10; some story choices grant 4       | Pay for the spirit sanctuary and its specialization. Stored Spirit does not buy tradition ranks. It is not consumed by lightning, wards, arrows, or migration.                                                             |
 | Spirit shards / XP | Level 1, 0 XP           | Collect drops from defeated enemies                                                                              | Fill the current level's XP threshold and bank knowledge points for the tech tree. Collection does not deduct stored Spirit.                                                                                               |
 | People             | 8                       | Family-ger development; blue-banner arrivals                                                                     | Produce materials, consume food, provide worker capacity. Losses come from starvation and resolve damage. Population gains are capped at 120.                                                                              |
 | Workers            | 0 assigned of 8         | Existing population                                                                                              | Construction requires sufficient total population for assigned jobs. Workers are reserved by established buildings, not spent. No manual job reassignment or worker production penalty is simulated.                       |
 | Herd / horses      | 3                       | Establish herding grounds (+4); river arrival (+2)                                                               | Each horse increases migration mobility by 1.2% of the base. Starvation and clan losses remove livestock. Route rewards cap herd at 40. Herd size does not independently change grazing income or limit rider recruitment. |
-| Clan resolve       | 100 / 100               | Hearthkeepers, felt armor, arrivals (+12), boss defeat (+20), story choices (+5)                                 | Clan-wide survival meter, internally called integrity. Attacks and starvation reduce it; crossing damage thresholds can also cost people and livestock.                                                                    |
-| Commander health   | 100 / 100               | The healer's craft, arrivals (+25), full recovery after all traditions are mastered                              | Separate survival meter for the player. Enemy contact, hostile shots, and eruptions damage it.                                                                                                                             |
-| Pasture            | 100%                    | Refreshed on each regional arrival                                                                               | Scales food and material production. Depletes to zero over 210 seconds while stationary, including the final stand. Does not deplete during crossings.                                                                     |
+| Clan resolve       | 100 / 100               | Hearthkeepers, felt armor, Sülde kills, arrivals (+12), boss defeat (+20), story choices (+5)                    | Clan-wide survival meter, internally called integrity. Attacks and starvation reduce it; crossing damage thresholds can also cost people and livestock.                                                                    |
+| Commander health   | 100 / 100               | Golomt, Börte Chino, arrivals (+25), full recovery after mastering all patrons                                   | Separate survival meter for the player. Enemy contact, hostile shots, and eruptions damage it.                                                                                                                             |
+| Pasture            | 100%                    | Refreshed on arrival; Etügen reduces depletion and adds recovery                                                 | Scales food and material production. Without patron bonuses, depletes to zero over 210 stationary seconds, including the final stand. Does not deplete during crossings.                                                   |
 | Momentum           | 0–100%                  | Riding builds it; stopping drains it                                                                             | Improves commander arrow damage and targeting range; activates moving formation bonuses.                                                                                                                                   |
 | Threat             | 0–100%                  | Region and time in the current stage                                                                             | A pressure indicator. Spawn intervals use their own stage/region formula; the displayed threat value is not an additional damage multiplier.                                                                               |
 | Identity           | Iron 0, Sky 0, Wander 0 | Construction, specialization, route choices, story choices                                                       | Determines the clan's descriptive identity and epilogue. Grants no additional stat modifiers or technology locks.                                                                                                          |
@@ -45,10 +45,10 @@ The opening camp already has **Family gers at level 1**, represented by two tent
 Let `P = pasture / 100`, `N = population`, and `W = 0.7` at Silent River or `1` elsewhere:
 
 ```text
-Food consumed / second = N × 0.025 × (0.5 with Winter stores, otherwise 1)
-Food produced / second while stationary = (0.65 + 0.65 if Herding grounds exist) × P × W
-Materials produced / second while stationary = (0.28 + N × 0.018) × P
-Pasture lost / second while stationary = 100 / 210 percentage points
+Food consumed / second = N × 0.025 × (0.5 with Winter stores, otherwise 1) × Etügen consumption modifier
+Food produced / second while stationary = (0.65 + 0.65 if Herding grounds exist) × P × W × Etügen food modifier
+Materials produced / second while stationary = (0.28 + N × 0.018) × P × Etügen material modifier
+Pasture lost / second while stationary = (100 / 210) × Etügen depletion modifier − Etügen recovery
 ```
 
 At the starting camp, full pasture produces 0.65 food/second against consumption of 0.2, for a net gain of 0.45. Materials initially grow by 0.424/second. Production declines with pasture; consumption does not. There is no passive Spirit income, trading, crafting inventory, housing capacity, or individually simulated gathering unit.
@@ -62,13 +62,14 @@ Final resolve damage = raw damage
                      × 0.7 with Caravan guard
                      × 0.5 with Felt armor
                      × 0.8 with Ancestral ward
+                     × Guardian patron protection (1 before research)
 ```
 
-All three together leave 28% of the raw damage. Crossing a downward 20-point damage band removes one person and one horse per damage event, even if that event crosses several bands. Repairs can restore resolve, but do not resurrect casualties.
+The three camp/formation bonuses together leave 28% of raw damage. Full Guardian research multiplies this by 0.648, leaving 18.144%. Crossing a downward 20-point damage band removes one person and one horse per damage event, even if that event crosses several bands. Repairs can restore resolve, but do not resurrect casualties.
 
-## 3. Spirit-stone / tradition progression tree
+## 3. Spirit-stone / patron tech tree
 
-The current game calls collectible stones **spirit shards**. They carry XP. **Spirit** is a separate camp currency earned automatically on kills. Neither system is permanent progression, and the current tradition tree has six branches with sequential ranks. The six branches have no dependencies on one another; learning the next rank requires the preceding rank in that branch.
+Collectible **spirit shards** carry XP; **Spirit** is a separate camp currency earned automatically on kills. Research is expedition progression, with **eight patrons, 32 technologies, and 40 ranks**. Patrons can be mixed freely. Their combat abilities are original game mechanics; see [the complete patron tree](patron-tech-tree.md) for every technology, stable ID, exact modifier, and interaction.
 
 ```mermaid
 flowchart TD
@@ -77,38 +78,38 @@ flowchart TD
     Shard --> Collect[Ride close enough to collect]
     Collect --> Level[Fill XP threshold and gain a level]
     Level --> Points[Bank 1 knowledge point without pausing combat]
-    Points --> Choice[Open the tech tree and choose any eligible rank]
-    Choice --> Power[Horn-and-sinew bows: 8 ranks]
-    Choice --> Haste[The endless volley: 6 ranks]
-    Choice --> Riders[Sworn riders: 4 ranks]
-    Choice --> Speed[Steppe-bred horses: 5 ranks]
-    Choice --> Pickup[Ancestral memory: 5 ranks]
-    Choice --> Health[The healer's craft: 8 ranks]
+    Points --> Foundation[Choose any patron: foundation ranks 1 and 2]
+    Foundation --> A[Practice A: 1 point]
+    Foundation --> B[Practice B: 1 point]
+    A --> Capstone[Capstone: 1 point, requires both practices]
+    B --> Capstone
     Spirit --> Sanctuary[Spirit sanctuary and its chosen specialization]
 ```
 
-The XP threshold for advancing from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and so on. Excess XP carries over; one pickup can earn several levels and every earned point remains banked. Level-ups never open a popup or pause combat. Open the **Tradition tech tree** with **T**, controller **LB**, the HUD, Pause, or the chronicle’s Traditions tab. The tree pauses simulation and shows all ranks with learned, available, and locked states. Each next rank costs **one knowledge point**; future ranks require the previous rank. The six current branches are independent, so you can invest in any branch immediately. There are no random offers or rerolls. Repeated percentage effects multiply.
+The XP threshold from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and so on. Excess XP carries over; a pickup can earn several levels and every earned point remains banked. Level-ups never open a popup or pause combat. Open the **Patron tech tree** with **T**, controller **LB**, the HUD, Pause, or the chronicle’s Traditions tab. Each rank costs **one knowledge point**. Both practices require foundation rank 2; the capstone requires both practices. A complete patron costs five points. There are no patron exclusions, random offers, or rerolls. Repeated percentage modifiers multiply except Lus's two additive slow ranks.
 
-Search and category filters work across all authored branches. Purchases keep the tree open and preserve focus and scroll. Close with Escape, T, controller B / LB, or the return button; unspent points remain available. Opening from Pause returns to Pause, and opening from the chronicle returns to the chronicle. Stored Spirit remains a separate camp currency.
+| Patron                          | Playstyle                | Foundation → practices → capstone                                                                                    |
+| ------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| **Börte Chino**                 | Aggressive hunting       | Moving damage and speed → wounded-target damage + shorter gallop cooldown → moving kills heal the commander.         |
+| **Etügen Eke**                  | Sustainable civilisation | Food production and pasture preservation → material gathering + lower food use → pasture recovery offsets depletion. |
+| **Khükhedei Mergen**            | Ranged combat            | Shared damage and targeting range → host firing rate + piercing → two additional commander arrows.                   |
+| **Golomt**                      | Survival                 | Maximum health and immediate healing → regeneration + commander protection → one lethal-hit revival.                 |
+| **Lus**                         | Terrain manipulation     | Slowing fields around commander and camp → larger fields + eruption warning/mitigation → damaging push pulse.        |
+| **Ongod**                       | Spiritual summoning      | Two ancestral echoes → stronger echoes + shard attraction/Spirit income → third echo and faster ancestral volleys.   |
+| **Sülde**                       | Army leadership          | Two accompanying riders → rider damage + caravan mobility → two more riders and resolve on kills.                    |
+| **Guardian of Burkhan Khaldun** | Defensive construction   | Material discounts and clan protection → faster Wagon circle + independent camp ward → further clan protection.      |
 
-| Tradition           | Each rank                                              | Max ranks | At maximum, before other bonuses                                                                                       |
-| ------------------- | ------------------------------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Horn-and-sinew bows | All attacks using the shared damage stat ×1.25         | 8         | Damage stat ≈95.37, from 16 (`16 × 1.25⁸`). Also strengthens burn, lightning, wards, and wedge damage.                 |
-| The endless volley  | Host firing interval ×0.85                             | 6         | Interval ≈0.226 seconds, from 0.6; about 4.42 volleys/second. Does not change independent sanctuary/wagon/ward timers. |
-| Sworn riders        | +1 commander projectile and +1 accompanying rider      | 4         | 5 commander arrows per volley; 5 accompanying riders before camp/rescue bonuses.                                       |
-| Steppe-bred horses  | Commander movement speed ×1.12                         | 5         | Speed ≈334.84 world units/second, from 190. Does not change fixed gallop speed.                                        |
-| Ancestral memory    | Shard attraction radius ×1.4                           | 5         | Radius ≈457.16, from 85. Feigned retreat can further multiply it by 1.7.                                               |
-| The healer's craft  | +20 maximum health; heal 35, capped at the new maximum | 8         | Maximum commander health 260. Each rank heals immediately.                                                             |
+Search and playstyle filters derive from the authored patrons; search ignores diacritics. The paused tree shows foundation/practice/capstone roles, rank progress, prerequisites, and learned/available/locked states. Purchases keep it open and preserve focus and scroll. Escape, T, controller B/LB, or the return button closes it with points unspent. Opening from Pause or the chronicle returns to that parent screen. Stored Spirit remains a separate camp currency.
 
-There are 36 total ranks. Once every tradition is mastered, subsequent knowledge points grant **20 food and 15 materials each**, and the commander is fully healed when those points are converted. Extra XP remains meaningful.
+Once all 40 ranks are mastered, subsequent points grant **20 food and 15 materials each**, and the commander is fully healed when those points are converted. Blocked but unlearned technologies do not count as mastery.
 
-Each enemy drops its defined XP value, independent of its scaled health. Shards begin following the commander inside the attraction radius and collect within 18 world units. Once attracted, they keep following. At the 500-shard pool limit, new XP merges into an existing active shard. Uncollected XP travels to the next camp on arrival.
+Each enemy drops its defined XP independent of scaled health. Shards begin following inside the attraction radius and collect within 18 world units. Once attracted, they keep following. At the 500-shard pool limit, new XP merges into an existing active shard. Uncollected XP travels to the next camp on arrival.
 
 ## 4. Camp development and upgrade tree
 
 Press **B** to open the camp upgrade tree. Purchases are immediate while simulation is paused. The interface previews all buildings and developments with costs, prerequisites, and learned, available, locked, or excluded states; categories and search support larger trees. Purchases preserve focus and scroll. The current content follows the tree below; the renderer and purchase rules also accept more sibling choices and deeper tiers from content definitions. Each of the five logical buildings has just two levels: **established → one exclusive specialization**. In the current content, you cannot buy duplicate copies, take both paths, switch paths, or develop beyond level 2. Family gers begin established; all other buildings begin absent. All buildings persist through migration.
 
-You may establish other buildings in any order, subject to materials, Spirit, and worker capacity. Current specializations cost **1.5× the base resource cost, rounded up**, with no additional workers. Definitions can provide explicit costs and prerequisites for future developments. All four worker-using buildings need eight workers in total, so the starting eight people can staff the complete base camp if no one has been lost. Existing buildings remain functional after population losses; worker availability is checked when establishing a new building. Construction is unavailable while packed for migration.
+You may establish other buildings in any order, subject to materials, Spirit, and worker capacity. Before patron discounts, current specializations cost **1.5× the base resource cost, rounded up**, with no additional workers. Definitions can provide explicit costs and prerequisites for future developments. All four worker-using buildings need eight workers in total, so the starting eight people can staff the complete base camp if no one has been lost. Existing buildings remain functional after population losses; worker availability is checked when establishing a new building. Construction is unavailable while packed for migration.
 
 ```mermaid
 flowchart TD
@@ -132,7 +133,7 @@ flowchart TD
     Wind --> Tempest
 ```
 
-Each pair of child nodes is an **either/or** choice. Arrows into Burning Tempest are a combination requirement, not further purchases. Diagram prices are the cost of that individual step; establishing and specializing a sanctuary costs **50 materials + 30 Spirit total**.
+Each pair of child nodes is an **either/or** choice. Arrows into Burning Tempest are a combination requirement, not further purchases. Diagram prices are the cost of that individual step before Guardian material discounts; establishing and specializing a sanctuary costs **50 materials + 30 Spirit total**.
 
 | Building         | Establishment                                                                                                                                               | Exclusive specialization A                                                                                                                                            | Exclusive specialization B                                                                                                                                       |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -146,7 +147,7 @@ Lightning first looks for a target within 520 units of the commander, then withi
 
 **Burning Tempest** activates automatically when Fire arrows and Wind shamans are both selected. Every friendly arrow volley gains two additional arrows, a wider fan, and alternating curvature of ±0.65 radians/second. This applies to the commander, accompanying riders, and wagon volleys. The arrows retain Fire arrows' burn. There is no extra payment, button, or separate rank. Choosing Veteran riders or Ancestral ward rules out this combination for that expedition.
 
-Completing every building and one specialization each costs **252 materials and 30 Spirit from the starting camp**. This excludes the already provided family gers and any other resource gains/spends. Worker reservation stays at eight.
+Completing every building and one specialization each costs **252 materials and 30 Spirit from the starting camp**. This excludes the already provided family gers and any other resource gains/spends. Worker reservation stays at eight. Guardian foundation ranks multiply each individual material price by 0.9 per rank, rounded up after the normal price is calculated. Spirit costs and workers stay unchanged.
 
 ## 5. Mounted combat and formations
 
@@ -156,21 +157,29 @@ The commander starts with 100 health, 190 movement speed, 16 damage, a 0.6-secon
 
 Momentum rises by 0.72/second while moving and falls by 1.5/second while stopped, clamped to 0–1. Full momentum takes about 1.39 seconds. Commander targeting range is `440 + 120 × momentum`; personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum gives 560 targeting range and +30% personal damage.
 
-Accompanying riders each fire one arrow per host volley, at 60% of the shared damage stat, or 90% with Veteran riders. Their targeting range is 440. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
+Accompanying riders each fire one arrow per host volley, at 60% of the shared damage stat, or 90% with Veteran riders. Their targeting range starts at 440; Khükhedei Mergen adds up to 60 to both commander and rider targeting range. Sülde multiplies rider damage by 1.25. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
 
 ```text
 min(16, 1 starting rider
         + 3 with Archery grounds
         + 3 with Veteran riders
-        + Sworn riders ranks
+        + Sülde rider recruitment (up to 4)
         + 2 per completed blue-banner crossing)
 ```
 
-Arrows travel at 440 world units/second for 1.6 seconds and disappear on their first hit. They do not pierce or critically hit. Targeting range determines when a volley is fired, rather than its entire travel distance. The shared projectile pool holds 250 friendly arrows, which can limit very large simultaneous volleys.
+Arrows travel at 440 world units/second for 1.6 seconds and normally disappear on their first hit. Khükhedei Mergen unlocks one additional pierced enemy. Each arrow hits a pooled enemy incarnation at most once; its hit history resets on reuse. There are no critical hits. Targeting range determines when a volley is fired, rather than its entire travel distance. The shared projectile pool holds 250 friendly arrows, which can limit very large simultaneous volleys.
+
+### Patron support and terrain
+
+Ongod summons up to three visible ancestral riders, separate from the 16 living-rider limit. They follow the commander, target enemies within 360, and fire every 1.1 seconds (0.77 with their capstone), at 55% shared damage (90% after their practice). They have no individual health or worker cost and freeze with the world in menus.
+
+Lus creates slowing fields around commander and camp, reaching 24% slow within 230 units at full investment. Its capstone pulses around the commander every 4 seconds for 75% shared damage and an 80-unit outward push. Its other practice adds one second to eruption warnings and halves eruption damage to commander and clan.
+
+The Guardian's independent camp ward deals 65% shared damage in radius 125 every 2 seconds, including migration. It stacks with the sanctuary's Ancestral ward and needs no sanctuary. Its Watchfires practice reduces a constructed Wagon circle's firing interval from 0.9 to 0.675 seconds. Full Sülde research restores 0.15 resolve per enemy kill. Support attacks use the same active-time simulation, damage/kill pipeline, and bounded projectile pools as other combat.
 
 ### Gallop
 
-**Space / controller A** gallops in the current or last facing direction at speed 570 for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop.
+**Space / controller A** gallops in the current or last facing direction at speed 570 for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop. Börte Chino can reduce the cooldown to 2.25 seconds. Golomt reduces commander damage, provides active-time regeneration, and can prevent one lethal hit per expedition; clan loss still ends the expedition.
 
 ### Formation tree
 
@@ -199,6 +208,7 @@ Actual crossing progress is:
 Mobility = (1 + herd × 0.012)
          × (1.2 with Remount herds, otherwise 1)
          × (0.8 when leaving Silent River, otherwise 1)
+         × Sülde mobility modifier (1.15 with No wagon left behind)
 Progress = stage time × Mobility / route base duration
 ```
 
@@ -282,7 +292,7 @@ With camp scenes enabled, victory first opens a skippable epilogue reflecting su
 | Chronicle                                  | Tab / J / HUD button                           | View                              |
 | Pause, resume, close a panel, skip a scene | Escape / P                                     | Start / B                         |
 | Menu navigation / confirmation             | Tab, Shift+Tab / Enter, Space, click           | Stick or D-pad / A                |
-| Tradition tech tree                        | T / HUD button                                 | Left bumper                       |
+| Patron tech tree                           | T / HUD button                                 | Left bumper                       |
 | Learn a rank                               | Navigate, then Enter / Space / click           | Navigate, then A                  |
 | Prologue pages                             | Continue, Back / Enter / left and right arrows | Navigate, then A; B / Start skips |
 | Fullscreen                                 | F11 / Alt+Enter / Settings                     | Navigate Settings                 |
@@ -302,9 +312,12 @@ The desktop game runs offline with local assets and native, validated, atomic sa
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | Starting stats and balance constants                                                 | [config.ts](../src/game/config.ts)                                                  |
 | Starting run, XP thresholds, upgrade application                                     | [state/run.ts](../src/game/state/run.ts)                                            |
-| Tradition definitions and random choice pool                                         | [data/upgrades.ts](../src/game/data/upgrades.ts)                                    |
+| Patron technology definitions and prerequisites                                      | [data/upgrades.ts](../src/game/data/upgrades.ts)                                    |
 | Building costs, stable path IDs, prerequisites, effects, formations, routes, regions | [data/clan.ts](../src/game/data/clan.ts)                                            |
 | Economy, staffing, purchases, protection, migration, identity                        | [state/clan.ts](../src/game/state/clan.ts)                                          |
+| Patron metadata and playstyles                                                       | [data/patrons.ts](../src/game/data/patrons.ts)                                      |
+| Neutral patron state, conditional damage, recovery, revival                          | [state/patrons.ts](../src/game/state/patrons.ts)                                    |
+| Ancestral riders, terrain pulse, and mountain ward                                   | [PatronSupport.ts](../src/game/systems/PatronSupport.ts)                            |
 | Enemy definitions and spawn interval                                                 | [data/enemies.ts](../src/game/data/enemies.ts)                                      |
 | Combat, targeting, support attacks, hazards, phase transitions                       | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                   |
 | Encounter content, choices, epilogue                                                 | [data/story.ts](../src/game/data/story.ts)                                          |

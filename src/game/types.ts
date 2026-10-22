@@ -19,6 +19,15 @@ export type RunPhase =
 export type JourneyStage = 'camp' | 'migration' | 'final';
 export type BuildingId = 'ger' | 'archery' | 'herd' | 'sanctuary' | 'wagon';
 export type Formation = 'guard' | 'encircle' | 'wedge' | 'retreat';
+export type PatronId =
+  | 'borte-chino'
+  | 'etugen-eke'
+  | 'khukhedei-mergen'
+  | 'golomt'
+  | 'lus'
+  | 'ongod'
+  | 'sulde'
+  | 'burkhan-guardian';
 export type Doctrine = 'iron' | 'sky' | 'wander';
 
 export interface ClanState {
@@ -97,6 +106,7 @@ export interface RunState {
 
 export interface UpgradeDefinition {
   id: string;
+  patron: PatronId;
   title: string;
   subtitle: string;
   description: string;

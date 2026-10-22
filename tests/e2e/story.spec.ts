@@ -231,9 +231,7 @@ test('controller chooses, skips, reads memories, and returns to the paused exped
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await press(9);
   await press(13);
-  await expect(
-    page.getByRole('button', { name: 'Tradition tech tree', exact: true }),
-  ).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Patron tech tree', exact: true })).toBeFocused();
   await press(13);
   await press(13);
   await press(0);

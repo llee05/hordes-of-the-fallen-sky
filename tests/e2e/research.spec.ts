@@ -10,17 +10,18 @@ test('banked research pauses only on opening the tree, spends exact ranks, and k
     (window as any).__gloam.scene.run.pendingUpgrades = 3;
   });
   await page.keyboard.press('t');
-  await expect(page.getByRole('heading', { name: 'Tradition tech tree' })).toBeVisible();
-  await expect(page.locator('[data-tree-branch]')).toHaveCount(6);
+  await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
+  await expect(page.locator('[data-tree-branch]')).toHaveCount(8);
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.waitForTimeout(250);
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
-  const first = page.locator('[data-node="power-1"]');
-  await expect(page.locator('[data-node="power-2"]')).toHaveAttribute('aria-disabled', 'true');
+  const first = page.locator('[data-node="power"]');
+  await expect(page.locator('[data-node="haste"]')).toHaveAttribute('aria-disabled', 'true');
   await first.click();
   await expect(first).toBeFocused();
-  await expect(first).toHaveAttribute('data-status', 'learned');
-  await expect(page.locator('[data-node="power-2"]')).toHaveAttribute('data-status', 'available');
+  await expect(first).toContainText('1 / 2 ranks learned');
+  await expect(first).toHaveAccessibleName(/foundation 1 \/ 2 ranks learned/);
+  await expect(page.locator('[data-node="haste"]')).toHaveAttribute('data-status', 'locked');
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.research('power', 1); // A replayed action cannot buy another rank.
@@ -37,8 +38,8 @@ test('banked research pauses only on opening the tree, spends exact ranks, and k
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#research-points')).toHaveText('2');
-  await page.getByRole('button', { name: /Open tradition tech tree/ }).click();
-  await expect(page.locator('[data-node="power-1"]')).toHaveAttribute('data-status', 'learned');
+  await page.getByRole('button', { name: /Open patron tech tree/ }).click();
+  await expect(page.locator('[data-node="power"]')).toContainText('1 / 2 ranks learned');
   await page.keyboard.press('Escape');
   await page.evaluate(() => (window as any).__gloam.scene.research('power', 2));
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.upgrades.power)).toBe(1);
@@ -50,12 +51,12 @@ test('the tree is browsable without points, filters and searches safely, and ret
   await openTitle(page);
   await startExpedition(page);
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Tradition tech tree', exact: true }).click();
+  await page.getByRole('button', { name: 'Patron tech tree', exact: true }).click();
   await expect(page.locator('.tree-node[data-status="available"]')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Wayfinding', exact: true }).click();
-  await expect(page.locator('[data-tree-branch]')).toHaveCount(2);
+  await page.getByRole('button', { name: 'Hunting', exact: true }).click();
+  await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
   const search = page.getByRole('searchbox', { name: 'Find a branch' });
-  await search.pressSequentially('steppe-bred');
+  await search.pressSequentially('borte chino');
   await expect(search).toBeFocused();
   await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
   await search.fill('no such technology');
@@ -104,7 +105,7 @@ test('tree panels fit desktop, Steam Deck, and narrow screens and preserve scrol
         .evaluate((element) => element.scrollWidth <= element.clientWidth + 1),
     ).toBe(true);
   }
-  const vitality = page.locator('[data-node="vitality-1"]');
+  const vitality = page.locator('[data-node="vitality"]');
   await vitality.scrollIntoViewIfNeeded();
   const scroll = await page.locator('.tree-scroll').evaluate((element) => element.scrollTop);
   await vitality.click();
@@ -135,11 +136,11 @@ test('controller opens the tree, learns a chosen rank once, and returns without 
     (window as any).__gloam.scene.run.pendingUpgrades = 2;
   });
   await tapController(page, 4);
-  await expect(page.locator('[data-node="power-1"]')).toBeFocused();
+  await expect(page.locator('[data-node="wolf-trail"]')).toBeFocused();
   await page.evaluate(() => {
     (window as any).testController.buttons[0].pressed = true;
   });
-  await expect(page.locator('[data-node="power-1"]')).toHaveAttribute('data-status', 'learned');
+  await expect(page.locator('[data-node="wolf-trail"]')).toContainText('1 / 2 ranks learned');
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades)).toBe(1);
   await page.evaluate(() => {
@@ -148,5 +149,5 @@ test('controller opens the tree, learns a chosen rank once, and returns without 
   await tapController(page, 1);
   await expect(page.getByRole('dialog')).toBeHidden();
   await tapController(page, 4);
-  await expect(page.getByRole('heading', { name: 'Tradition tech tree' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
 });

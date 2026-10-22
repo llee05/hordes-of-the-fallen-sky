@@ -10,6 +10,9 @@ const actors = JSON.parse(actorsSource) as typeof import('../../public/art/stepp
 // Small brass-cut silhouettes stay legible at HUD scale. Decorative SVGs never add
 // accessible names or focus targets to the buttons and labels that contain them.
 const marks = {
+  wolf: '<path d="m8 21 5-14 9 8 8-9 9 14-6 17-12 6-11-8-2-14Z" fill="currentColor" fill-opacity=".15"/><path d="m13 20 7 6-5 5m17-11-7 6 5 5m-15 0 7 5 8-5m-8-5v10m-4-14h.1m11 0h.1"/>',
+  hearth:
+    '<path d="M8 39h32M12 33h24m-20 6 8-6 8 6M24 5c4 9-5 9 1 17 2-3 4-4 5-7 10 11 5 19-6 19S8 25 15 15c0 7 5 8 4 1-1-5 1-8 5-11Z" fill="currentColor" fill-opacity=".16"/>',
   people:
     '<circle cx="24" cy="13" r="5"/><path d="M14 37v-9c0-6 4-9 10-9s10 3 10 9v9H14Z" fill="currentColor" fill-opacity=".2"/><path d="M8 34v-7c0-5 2-8 6-9m26 16v-7c0-5-2-8-6-9M18 8l6-4 6 4M18 28v9m12-9v9"/>',
   horse:
@@ -43,8 +46,8 @@ const marks = {
 
 export type ClanMark = keyof typeof marks;
 
-export function clanMark(name: ClanMark): string {
-  return `<svg class="clan-mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${marks[name]}</svg>`;
+export function clanMark(name: string): string {
+  return `<svg class="clan-mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${marks[name as ClanMark] ?? marks.spirit}</svg>`;
 }
 
 export const BUILDING_MARKS: Readonly<Record<string, ClanMark>> = {
@@ -53,15 +56,6 @@ export const BUILDING_MARKS: Readonly<Record<string, ClanMark>> = {
   herd: 'horse',
   sanctuary: 'sanctuary',
   wagon: 'wagon',
-};
-
-export const TRADITION_MARKS: Readonly<Record<string, ClanMark>> = {
-  power: 'bow',
-  haste: 'volley',
-  multishot: 'banner',
-  stride: 'horse',
-  magnet: 'spirit',
-  vitality: 'healer',
 };
 
 /** Crop the existing painted world art with its shared atlas metadata, without

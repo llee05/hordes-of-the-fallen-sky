@@ -83,7 +83,7 @@ export class GameUI {
           <div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
           <div id="boss-bar" class="boss-bar" hidden><span>THE SKYBREAKER</span><div class="track"><div id="boss-fill"></div></div></div>
           <section class="vitals-hud hud-surface" aria-label="Commander and clan health"><div class="health-heading"><span>COMMANDER</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span>BOW <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
-          <section class="tradition-hud" aria-label="Run progression"><span>TRADITION <b id="level">01</b> <small>· <span id="blessing-count">0</span> LEARNED</small></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small><button id="research" class="research-button" aria-label="Open tradition tech tree" aria-keyshortcuts="T">Tech tree <kbd>T</kbd><span id="research-points">0</span></button></section>
+          <section class="tradition-hud" aria-label="Run progression"><span>TRADITION <b id="level">01</b> <small>· <span id="blessing-count">0</span> LEARNED</small></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small><button id="research" class="research-button" aria-label="Open patron tech tree" aria-keyshortcuts="T">Tech tree <kbd>T</kbd><span id="research-points">0</span></button></section>
           <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
           <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">${clanMark('bow')}</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
           <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><p id="clan-message"></p></div>
@@ -188,7 +188,7 @@ export class GameUI {
     this.get('research').classList.toggle('has-points', run.pendingUpgrades > 0);
     this.get('research').setAttribute(
       'aria-label',
-      `Open tradition tech tree, ${run.pendingUpgrades} knowledge points`,
+      `Open patron tech tree, ${run.pendingUpgrades} knowledge points`,
     );
     this.text('momentum', `MOMENTUM ${Math.round(clan.momentum * 100)}%`);
     for (const id of ['population', 'herd', 'food', 'materials', 'spirit'] as const)
@@ -325,7 +325,7 @@ export class GameUI {
       ready: 'THE SKY IS WAITING',
       playing: 'THE CLAN ENDURES',
       paused: 'EXPEDITION PAUSED',
-      upgrade: 'TRADITION TECH TREE',
+      upgrade: 'PATRON TECH TREE',
       building: 'DEVELOPING THE CAMP',
       route: 'CHOOSING A ROUTE',
       journal: 'READING THE CLAN CHRONICLE',
@@ -349,7 +349,7 @@ export class GameUI {
     else if (run.phase === 'ready') {
       this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu"><button class="menu-button featured" data-action="begin" data-primary>NEW GAME <span>→</span></button><button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${quit}</nav><button class="story-preference" data-action="story-mode" aria-pressed="${run.story.enabled}">Camp scenes: ${run.story.enabled ? 'On' : 'Off'}</button><p class="title-caption">Two acts. Four pastures. One people to carry through.</p></section>`;
     } else if (run.phase === 'paused') {
-      this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">Your people will be here when you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="research">Tradition tech tree</button><button class="menu-button" data-action="restart">Start a new run</button><button class="menu-button" data-action="story-log">Our remembered road</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${quit}</nav></section>`;
+      this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">Your people will be here when you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="research">Patron tech tree</button><button class="menu-button" data-action="restart">Start a new run</button><button class="menu-button" data-action="story-log">Our remembered road</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${quit}</nav></section>`;
     } else if (run.phase === 'building')
       this.overlay.innerHTML = buildingMenu(run, this.treeView());
     else if (run.phase === 'route') this.overlay.innerHTML = routeMenu(run);

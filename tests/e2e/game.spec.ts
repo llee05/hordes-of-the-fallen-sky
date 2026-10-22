@@ -39,9 +39,7 @@ test('controller starts a run, moves, dashes, pauses, and navigates menus', asyn
   await press(9);
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
   await press(13);
-  await expect(
-    page.getByRole('button', { name: 'Tradition tech tree', exact: true }),
-  ).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Patron tech tree', exact: true })).toBeFocused();
   await press(13);
   await expect(page.getByRole('button', { name: 'Start a new run' })).toBeFocused();
   await press(0);
@@ -113,11 +111,11 @@ test('automatic attacks defeat enemies and collected XP banks research without i
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#research-points')).toHaveText('1');
   await page.keyboard.press('t');
-  await expect(page.getByRole('heading', { name: 'Tradition tech tree' })).toBeVisible();
-  await expect(page.locator('[data-tree-branch]')).toHaveCount(6);
+  await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
+  await expect(page.locator('[data-tree-branch]')).toHaveCount(8);
   await page.screenshot({ path: 'test-results/desktop-upgrade.png', fullPage: true });
   await page.locator('[data-research="power"][data-rank="1"]').click();
-  await expect(page.getByRole('heading', { name: 'Tradition tech tree' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#blessing-count')).toHaveText('1');

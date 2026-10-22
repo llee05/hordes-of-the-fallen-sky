@@ -344,3 +344,31 @@
   width: 64px;
   height: 64px;
 }
+
+.progression-panel[data-tree-kind='patrons'] .progression-branches {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+}
+.tree-node-kind,
+.tree-node-progress {
+  font: 8px var(--mono);
+  line-height: 1.5;
+  color: #6c5a3b;
+}
+.tree-node-kind {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.tree-node[data-kind='foundation'] {
+  border-top: 3px solid #466867;
+}
+.tree-node[data-kind='capstone'] {
+  border-top: 3px solid #9b642f;
+}
+.progression-panel[data-tree-kind='patrons'] .tree-branch h3 {
+  font-size: 25px;
+}
+@media (max-width: 600px) {
+  .progression-panel[data-tree-kind='patrons'] .tree-branch h3 {
+    font-size: 22px;
+  }
+}

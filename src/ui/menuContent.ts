@@ -1,8 +1,9 @@
 import { BUILDINGS, FORMATIONS, REGIONS, ROUTES } from '../game/data/clan';
+import { PATRONS } from '../game/data/patrons';
 import { UPGRADES } from '../game/data/upgrades';
 import { assignedWorkers, canMigrate, clanDoctrine, riderCount } from '../game/state/clan';
 import type { RunState } from '../game/types';
-import { TRADITION_MARKS, campIllustration, clanMark, routeIllustration } from './artwork';
+import { campIllustration, clanMark, routeIllustration } from './artwork';
 import { heading, footer } from './panelContent';
 import { storyRecords } from './storyContent';
 
@@ -40,12 +41,14 @@ export function journalMenu(run: RunState, tab: JournalTab): string {
     content = storyRecords(run);
   } else {
     const entries = Object.entries(run.upgrades);
-    content = `<div class="journal-chapter"><span class="eyebrow">WHAT YOUR PEOPLE HAVE LEARNED</span><h3>Clan traditions</h3><div class="traditions-list">${
+    content = `<div class="journal-chapter"><span class="eyebrow">WHAT YOUR PEOPLE HAVE LEARNED</span><h3>Patron traditions</h3><div class="traditions-list">${
       entries.length
         ? entries
             .map(([id, stacks]) => {
-              const upgrade = UPGRADES.find((entry) => entry.id === id)!;
-              return `<article class="tradition-entry"><span>${clanMark(TRADITION_MARKS[upgrade.id] ?? 'spirit')}</span><div><h4>${upgrade.title} <small>RANK ${stacks}</small></h4><p>${upgrade.description}</p></div></article>`;
+              const upgrade = UPGRADES.find((entry) => entry.id === id);
+              if (!upgrade) return '';
+              const patron = PATRONS.find((entry) => entry.id === upgrade.patron);
+              return `<article class="tradition-entry"><span>${clanMark(patron?.symbol ?? 'spirit')}</span><div><h4>${patron?.name ?? ''} · ${upgrade.title} <small>RANK ${stacks}</small></h4><p>${upgrade.description}</p></div></article>`;
             })
             .join('')
         : '<p class="journal-callout">Gather spirit shards from fallen enemies to earn knowledge points, then spend them in the tech tree.</p>'
@@ -63,7 +66,7 @@ export function helpMenu(): string {
     ['WASD / ARROWS', 'Ride', 'LEFT STICK'],
     ['SPACE', 'Gallop', 'A'],
     ['B', 'Develop camp', 'X'],
-    ['T', 'Tradition tech tree', 'LB'],
+    ['T', 'Patron tech tree', 'LB'],
     ['M', 'Pack & migrate', 'Y'],
     ['F', 'Change formation', 'RB'],
     ['TAB / J', 'Clan chronicle', 'VIEW'],

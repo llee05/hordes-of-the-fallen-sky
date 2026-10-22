@@ -7,6 +7,7 @@ import {
 } from '../../src/ui/progressionTree';
 import { researchBranches } from '../../src/ui/researchContent';
 import { createRun } from '../../src/game/state/run';
+import { PATRONS } from '../../src/game/data/patrons';
 import { UPGRADES } from '../../src/game/data/upgrades';
 import { BUILDINGS, type BuildingDefinition } from '../../src/game/data/clan';
 import { campBranches } from '../../src/ui/campContent';
@@ -124,19 +125,29 @@ describe('expandable progression views', () => {
     expect(escaped).not.toContain('<img src=x>');
   });
 
-  it('shows all authored ranks and only permits the next unlearned rank', () => {
+  it('shows all patrons with connected foundations, practices, and capstones', () => {
     const run = createRun();
     run.pendingUpgrades = 2;
     run.upgrades.power = 1;
     const branches = researchBranches(run);
-    expect(branches).toHaveLength(UPGRADES.length);
-    const power = branches.find((entry) => entry.id === 'power')!;
-    expect(power.nodes).toHaveLength(8);
-    expect(power.nodes.slice(0, 3).map((entry) => entry.status)).toEqual([
-      'learned',
+    expect(branches).toHaveLength(PATRONS.length);
+    expect(branches.flatMap((entry) => entry.nodes)).toHaveLength(UPGRADES.length);
+    for (const branch of branches)
+      expect(treeLevels(branch.nodes).map((level) => level.length)).toEqual([1, 2, 1]);
+    const archer = branches.find((entry) => entry.id === 'khukhedei-mergen')!;
+    expect(archer.nodes.map((entry) => entry.status)).toEqual([
       'available',
       'locked',
+      'locked',
+      'locked',
     ]);
+    expect(archer.nodes[0]?.progress).toBe('1 / 2 ranks learned');
+    run.upgrades.power = 2;
+    expect(
+      researchBranches(run)
+        .find((entry) => entry.id === archer.id)!
+        .nodes.map((entry) => entry.status),
+    ).toEqual(['learned', 'available', 'available', 'locked']);
     run.pendingUpgrades = 0;
     expect(
       researchBranches(run)

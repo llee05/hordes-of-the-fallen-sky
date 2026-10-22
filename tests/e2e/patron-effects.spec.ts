@@ -123,6 +123,42 @@ test('water fields slow enemies and extend eruption warnings while reducing erup
   expect(result.resolve).toBeCloseTo(97.2);
 });
 
+test('the returning current pushes enemies and the mountain ward protects the travelling camp', async ({
+  page,
+}) => {
+  const result = await page.evaluate(() => {
+    const scene = (window as any).__gloam.scene;
+    scene.run.patrons.water.pulseDamage = 0.75;
+    scene.run.patrons.guardian.wardDamage = 0.65;
+    scene.run.clan.stage = 'migration';
+    scene.player.setPosition(scene.camp.x, scene.camp.y + 100);
+    for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
+    const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);
+    enemy.health = enemy.maxHealth = 100;
+    enemy.setPosition(scene.camp.x, scene.camp.y + 50);
+    scene.spatial.rebuild(scene.enemies.getChildren());
+    const actions = {
+      damage: (target: any, amount: number) => scene.damageEnemy(target, amount),
+      volley: () => {},
+    };
+    scene.patronSupport.update(scene.run, 0.05, scene.player, scene.camp, scene.spatial, actions);
+    const first = { health: enemy.health, offset: enemy.y - scene.camp.y };
+    scene.run.phase = 'upgrade';
+    scene.patronSupport.update(scene.run, 10, scene.player, scene.camp, scene.spatial, actions);
+    return {
+      first,
+      pausedHealth: enemy.health,
+      waterTimer: scene.patronSupport.waterTimer,
+      guardianTimer: scene.patronSupport.guardianTimer,
+    };
+  });
+  expect(result.first.health).toBeCloseTo(77.6);
+  expect(result.first.offset).toBe(-30);
+  expect(result.pausedHealth).toBe(result.first.health);
+  expect(result.waterTimer).toBe(4);
+  expect(result.guardianTimer).toBe(2);
+});
+
 test('the last ember prevents one defeat and gallop reports its modified cooldown', async ({
   page,
 }) => {

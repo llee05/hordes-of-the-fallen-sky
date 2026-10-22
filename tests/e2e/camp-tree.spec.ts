@@ -83,6 +83,9 @@ test('additional choices and deeper camp tiers work without new layout or purcha
   });
   await page.keyboard.press('b');
   await expect(page.locator('[data-tree-branch="ger"] [data-node]')).toHaveCount(5);
+  const materialsBefore = await page.evaluate(
+    () => (window as any).__gloam.scene.run.clan.materials,
+  );
   const deeper = page.locator('[data-node="ger-field-medicine"]');
   await expect(deeper).toHaveAttribute('data-status', 'locked');
   await expect(deeper).toContainText('Requires: Herb gardens');
@@ -99,7 +102,7 @@ test('additional choices and deeper camp tiers work without new layout or purcha
       materials: (window as any).__gloam.scene.run.clan.materials,
       health: (window as any).__gloam.scene.run.stats.maxHealth,
     })),
-  ).toEqual({ materials: 92, health: 110 });
+  ).toEqual({ materials: materialsBefore - 8, health: 110 });
 });
 
 test('camp trees fit small screens, filter content, and retain scroll and focus on purchase', async ({
