@@ -4,6 +4,7 @@ import { campShelters } from '../game/state/campLife';
 import type { BuildingId, RunState } from '../game/types';
 import { campProp, campResident, clanMark } from './artwork';
 import { campBranches } from './campContent';
+import { developmentOutlook, economySummary } from './economyContent';
 import { footer } from './panelContent';
 import { branchMarkup, escapeHtml, searchText, type TreeViewState } from './progressionTree';
 
@@ -84,10 +85,18 @@ export function buildingMenu(run: RunState, view: TreeViewState, selected: strin
       ? (matches.find((entry) => entry.id === selected) ?? matches[0])
       : branches.find((entry) => entry.id === selected)) ?? branches[0]!;
   const summary = [
+    ['grain', String(Math.floor(run.clan.food)), 'Food'],
     ['materials', String(Math.floor(run.clan.materials)), 'Materials'],
     ['spirit', String(Math.floor(run.clan.spirit)), 'Spirit'],
     ['people', `${assignedWorkers(run)} / ${run.clan.population}`, 'Workers'],
   ];
+  const inspectedBranch = {
+    ...branch,
+    nodes: branch.nodes.map((node) => ({
+      ...node,
+      forecast: developmentOutlook(run, branch.id as BuildingId, node.action.path),
+    })),
+  };
   return `<section class="game-panel camp-estate" data-region="${run.clan.region}">
     <header class="camp-estate-heading"><div class="camp-estate-title">${clanMark('banner')}<div><p class="eyebrow">BLUE BANNER CLAN · ${escapeHtml(REGIONS[run.clan.region]!.short)}</p><h2 id="overlay-title">Build a people.</h2></div></div><div class="camp-stores" aria-label="Camp resources">${summary.map(([mark, value, label]) => `<span>${clanMark(mark!)}<span><strong>${value}</strong><small>${label}</small></span></span>`).join('')}</div><button class="panel-close" data-action="back" aria-label="Close panel" title="Close (Escape)">×</button></header>
     <div class="camp-estate-body">
@@ -111,7 +120,7 @@ export function buildingMenu(run: RunState, view: TreeViewState, selected: strin
         <div class="camp-model-key"><span>◆ Established</span><span>+ Building site</span><span>Select a place to develop it</span></div>
       </div>
       <aside class="camp-inspector" id="camp-inspector" aria-label="Building developments"><div class="camp-inspector-tools"><label class="tree-search-label">Find in camp<input type="search" data-tree-search data-focus-key="tree-search" placeholder="Search buildings & crafts" value="${escapeHtml(view.query)}" /></label>${query ? `<p class="camp-search-result" role="status">${matches.length ? `${matches.length} matching site${matches.length === 1 ? '' : 's'}` : 'No matching sites. Clear your search to explore the camp.'}</p>` : '<p>Select a miniature to see its crafts and costs.</p>'}</div>
-        <div class="panel-body tree-scroll camp-development-scroll">${!query || matches.length ? branchMarkup(branch) : ''}<p class="camp-carry-note">${clanMark('wagon')}Buildings and learned crafts travel with your clan.</p>${burningTempest(run) ? '<p class="tree-notice">Burning Tempest learned — Fire arrows and Wind shamans combine in every volley.</p>' : ''}</div>
+        <div class="panel-body tree-scroll camp-development-scroll">${economySummary(run)}${!query || matches.length ? branchMarkup(inspectedBranch) : ''}<p class="camp-carry-note">${clanMark('wagon')}Buildings and learned crafts travel with your clan.</p>${burningTempest(run) ? '<p class="tree-notice">Burning Tempest learned — Fire arrows and Wind shamans combine in every volley.</p>' : ''}</div>
       </aside>
     </div>${footer()}</section>`;
 }

@@ -51,6 +51,18 @@ estimates stop at arrival. `crossingForecast` exposes remaining travel time, foo
 needed en route, any provision shortfall, and food after the separate arrival reward
 or rescue cost. Arrival supplies cannot cover an earlier shortage on the road.
 
+The HUD shows net food per second and the projected time until stores empty, or
+whether food lasts to arrival/the final passage. Shortages within 30 active seconds
+add a persistent warning, including for large clans with more than 15 food remaining.
+The camp inspector displays current production, consumption, net food, and material
+rates. Eligible development cards show changes to those rates, immediate food grants,
+food duration, and changes to the range of crossing food costs by evaluating the actual purchase on an isolated run copy through
+`state/developmentPreview.ts`. Resource costs may be planned for, but missing workers,
+prerequisites, learned crafts, and exclusive choices still block a preview. Inspection
+never spends resources, grants rewards or guidance, or writes to the actual chronicle.
+Route estimates show travel time, food consumed before arrival, food after the arrival
+transaction, and any en-route shortfall; they never disable a route.
+
 Let `P = pasture / 100`, `N = population`, and `W = 0.7` at Silent River or `1` elsewhere:
 
 ```text

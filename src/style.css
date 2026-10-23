@@ -195,6 +195,19 @@ canvas {
   color: #dedfbc;
   font-weight: 400;
 }
+.economy-hud {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 8px 0 0;
+  font: 9px/1.5 var(--mono);
+  color: #f1e4bc;
+  font-variant-numeric: tabular-nums;
+}
+.economy-hud .danger {
+  color: #ffb798;
+}
 .expedition-clock {
   position: absolute;
   left: 50%;
@@ -386,7 +399,7 @@ canvas {
 .clan-bearing {
   position: absolute;
   left: 28px;
-  top: 137px;
+  top: 159px;
   font: 8px var(--mono);
   letter-spacing: 0.6px;
   color: #f1e7b9;
@@ -1095,6 +1108,25 @@ canvas {
 .route-card > .upgrade-icon {
   margin-bottom: 23px;
 }
+.forecast-note {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--paper-muted);
+}
+.route-forecast {
+  display: grid;
+  gap: 7px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--paper-line);
+  color: var(--paper-ink);
+  font-size: 12px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.forecast-shortfall {
+  color: #843c2a;
+}
 .journal-tabs {
   display: flex;
   gap: 3px;
@@ -1447,7 +1479,7 @@ canvas {
   }
   .clan-bearing {
     left: 22px;
-    top: 127px;
+    top: 149px;
   }
   .synergy {
     left: 18px;
@@ -1584,7 +1616,7 @@ canvas {
   }
   .expedition-clock {
     left: 12px;
-    top: 108px;
+    top: 130px;
     right: auto;
     width: 75px;
   }
@@ -1592,7 +1624,7 @@ canvas {
     font-size: 25px;
   }
   .hud-menu {
-    top: 105px;
+    top: 127px;
     right: 12px;
     gap: 6px;
   }
@@ -1607,7 +1639,7 @@ canvas {
     font-size: 6px;
   }
   .objective-hud {
-    top: 102px;
+    top: 124px;
     left: 98px;
     right: auto;
     width: calc(100% - 194px);
@@ -1655,7 +1687,7 @@ canvas {
   }
   .clan-bearing {
     left: 16px;
-    top: 165px;
+    top: 187px;
     font-size: 6px;
   }
   .synergy {
@@ -1995,7 +2027,7 @@ canvas {
 
 @media (max-width: 1100px) and (max-height: 680px) {
   .field-guide {
-    top: 140px;
+    top: 162px;
   }
   .field-guide > strong {
     font-size: 16px;
@@ -2012,9 +2044,15 @@ canvas {
     bottom: 215px;
   }
 }
+@media (min-width: 761px) and (max-width: 1100px) and (max-height: 680px) {
+  .vitals-hud.choosing-khan + .tradition-hud {
+    left: 252px;
+    translate: none;
+  }
+}
 @media (max-width: 600px) {
   .field-guide {
-    top: 310px;
+    top: 332px;
     padding: 10px 12px;
   }
   .field-guide > strong {

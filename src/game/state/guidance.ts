@@ -1,5 +1,7 @@
 import { availableFormations, canMigrate } from './clan';
 import type { RunState } from '../types';
+import { economyForecast, type EconomyForecast } from './economy';
+import { GAME } from '../config';
 
 export type GuidanceStep =
   'ride' | 'build' | 'shards' | 'research' | 'formation' | 'depart' | 'crossing';
@@ -89,7 +91,10 @@ export function currentGuidance(run: RunState): Guidance | undefined {
 }
 
 /** Persistent danger text remains available even when the introductory guidance is hidden. */
-export function clanWarning(run: RunState): string {
+export function clanWarning(
+  run: RunState,
+  forecast: EconomyForecast = economyForecast(run),
+): string {
   const clan = run.clan;
   if (clan.food <= 0)
     return clan.stage === 'migration'
@@ -105,6 +110,12 @@ export function clanWarning(run: RunState): string {
       : clan.stage === 'final'
         ? 'Food is low. Develop herding or provisions and protect the remaining supplies.'
         : 'Food is low. Develop herding or provisions, or seek a river route.';
+  if (forecast.foodSeconds !== undefined && forecast.foodSeconds <= GAME.clan.foodWarningSeconds)
+    return clan.stage === 'migration'
+      ? 'Food will run out before arrival. Protect the caravan; arrival supplies come at the far end.'
+      : clan.stage === 'final'
+        ? 'Food will run out before the passage opens. Develop herding or provisions.'
+        : 'Food will run out soon. Develop herding or provisions, or inspect a route east.';
   if (clan.stage === 'camp' && clan.pasture <= 25)
     return 'Pasture is nearly spent. Gathering slows while mouths still need feeding. Inspect a route east.';
   if (clan.stage === 'final' && clan.pasture <= 25)

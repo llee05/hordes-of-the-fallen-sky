@@ -81,6 +81,20 @@ In a story expedition, victory opens **A place beside the fire**, a skippable ep
 
 An expedition is intended to take about 15 minutes with roughly three minutes of growth per camp. Earlier departures shorten the journey; longer stays increase danger. This is a prototype balance, not a fixed time limit.
 
+Plan supplies with the live **Food net** rate and **Stores empty in** estimate beneath
+the resource bar. The estimate follows pasture depletion or recovery, current
+households, winter conditions, and learned improvements; food can be increasing now
+and still run out later. During crossings and the final stand, it reports whether
+supplies last to arrival or the passage opening. Imminent shortages remain visible
+when tips are hidden. In the camp inspector, **Provisions & gathering** breaks down
+production, consumption, and material gathering, while eligible craft cards preview
+their before/after rates, immediate food grants, time until stores empty, and the
+range of food needed across the available crossing routes. You can
+preview a craft while saving up its resource cost. Route cards show estimated travel
+time, food needed en route, food after arrival rewards or rescue costs, and shortages
+before arrival. Estimates assume current households and improvements without future
+battle losses or purchases; risky routes remain your choice.
+
 For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For every camp cost, dependency, effect, and cultural source, see [the camp upgrade tree](docs/camp-upgrade-tree.md). For all 32 technologies and 40 ranks, see [the patron tech tree](docs/patron-tech-tree.md). For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
 
 ## Controls

@@ -15,6 +15,7 @@ export interface TreeNode {
   kind?: 'foundation' | 'practice' | 'capstone';
   progress?: string;
   requirementsLabel?: string;
+  forecast?: string;
 }
 
 export interface TreeBranch {
@@ -76,6 +77,7 @@ function nodeButton(node: TreeNode, compact: boolean, parents = ''): string {
     node.kind,
     node.progress,
     node.description,
+    node.forecast,
     `${node.cost}.`,
     node.reason,
     parents,
@@ -88,6 +90,7 @@ function nodeButton(node: TreeNode, compact: boolean, parents = ''): string {
     ${node.kind ? `<span class="tree-node-kind">${escapeHtml(node.kind)}</span>` : ''}
     ${node.progress ? `<span class="tree-node-progress">${escapeHtml(node.progress)}</span>` : ''}
     ${compact ? '' : `<span class="tree-node-description">${escapeHtml(node.description)}</span>`}
+    ${node.forecast ? `<span class="tree-node-forecast">${escapeHtml(node.forecast)}</span>` : ''}
     ${parents ? `<span class="tree-node-requires">${escapeHtml(parents)}</span>` : ''}
     <span class="tree-node-cost">${escapeHtml(compact ? node.reason || node.cost : node.cost)}</span>${!compact && node.reason ? `<span class="tree-node-reason">${escapeHtml(node.reason)}</span>` : ''}
   </button>`;

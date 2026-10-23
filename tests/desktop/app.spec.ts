@@ -92,6 +92,8 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.getByRole('button', { name: /Share the work/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await expect(page.locator('#khan-title')).toHaveText('THE KHAN');
+    await expect(page.locator('#food-rate')).toContainText('Food net +0.');
+    await expect(page.locator('#food-outlook')).toContainText('Stores empty in ~');
     // Exercise the production Web Audio path without a development scene hook.
     await page.evaluate(() => {
       const NativeAudioContext = window.AudioContext;
@@ -135,6 +137,12 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.keyboard.press('b');
     await expect(page.getByRole('heading', { name: 'Build a people.' })).toBeVisible();
     await expect(page.locator('[data-camp-site]')).toHaveCount(8);
+    await page.locator('[data-camp-site="herd"]').click();
+    await expect(page.getByRole('region', { name: 'Camp economy' })).toContainText('Food net');
+    await expect(page.locator('[data-node="herd-base"] .tree-node-forecast')).toContainText(
+      'Food net',
+    );
+    await page.screenshot({ path: 'test-results/native-economy-camp.png' });
     await page.locator('[data-camp-site="archery"]').click();
     await page.locator('[data-node="archery-base"]').click();
     await page.locator('[data-camp-site="felt"]').click();
@@ -144,6 +152,27 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect(page.locator('#riders')).toHaveText('4');
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toBeHidden();
+    for (const size of [
+      { width: 1280, height: 800 },
+      { width: 960, height: 600 },
+    ]) {
+      await app.evaluate(
+        ({ BrowserWindow }, size) =>
+          BrowserWindow.getAllWindows()[0]!.setContentSize(size.width, size.height),
+        size,
+      );
+      await expect.poll(() => page.evaluate(() => innerWidth)).toBe(size.width);
+      const resources = (await page.locator('.resource-hud').boundingBox())!;
+      const bearing = (await page.locator('#clan-bearing').boundingBox())!;
+      expect(resources.y + resources.height).toBeLessThanOrEqual(bearing.y);
+      await expect(page.locator('.economy-hud')).toBeVisible();
+    }
+    await page.screenshot({ path: 'test-results/native-economy-hud.png' });
+    await app.evaluate(
+      ({ BrowserWindow }, size) =>
+        BrowserWindow.getAllWindows()[0]!.setContentSize(size.width, size.height),
+      viewport,
+    );
     await page.screenshot({ path: 'test-results/native-playing.png' });
     await page.keyboard.down('d');
     await page.waitForTimeout(250);

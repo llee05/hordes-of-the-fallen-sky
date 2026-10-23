@@ -8,13 +8,20 @@ import { campIllustration, clanMark, routeIllustration } from './artwork';
 import { heading, footer } from './panelContent';
 import { khanRecords } from './legacyContent';
 import { storyRecords } from './storyContent';
+import { crossingForecast } from '../game/state/economy';
+import { formatTime } from '../game/state/run';
 
 export type JournalTab = 'journey' | 'clan' | 'traditions' | 'story';
 
 export { buildingMenu } from './campModel';
 
 export function routeMenu(run: RunState): string {
-  return `<section class="game-panel route-dialog">${heading(`CAMP ${run.clan.region + 1} / THE ROAD EAST`, 'Where the grass still grows.', true, 'banner')}<div class="panel-body"><p class="panel-intro">Pack the gers. Protect the moving caravan. Rewards await at the far end.</p><div class="route-map"><span>${REGIONS[run.clan.region]!.short}</span><i>◇ ─ ─ ─ → ◇</i><span>${REGIONS[run.clan.region + 1]!.short}</span></div><div class="upgrade-cards">${ROUTES.map((r) => `<button class="upgrade-card route-card" data-route="${r.id}">${routeIllustration(r.id)}<span class="upgrade-subtitle">${r.subtitle}</span><h3>${r.title}</h3><p>${r.description}</p><span class="card-bottom">PACK & DEPART <span>→</span></span></button>`).join('')}</div></div>${footer('Stay a little longer')}</section>`;
+  return `<section class="game-panel route-dialog">${heading(`CAMP ${run.clan.region + 1} / THE ROAD EAST`, 'Where the grass still grows.', true, 'banner')}<div class="panel-body"><p class="panel-intro">Pack the gers. Protect the moving caravan. Rewards await at the far end.</p><p class="forecast-note">Travel estimates use your current households, horses, and improvements. Losses can change them. Arrival supplies come after the crossing.</p><div class="route-map"><span>${REGIONS[run.clan.region]!.short}</span><i>◇ ─ ─ ─ → ◇</i><span>${REGIONS[run.clan.region + 1]!.short}</span></div><div class="upgrade-cards">${ROUTES.map(
+    (r) => {
+      const forecast = crossingForecast(run, r);
+      return `<button class="upgrade-card route-card" data-route="${r.id}">${routeIllustration(r.id)}<span class="upgrade-subtitle">${r.subtitle}</span><h3>${r.title}</h3><p>${r.description}</p><span class="route-forecast"><span>Travel ~${formatTime(Math.ceil(forecast.duration))}</span><span>Food needed en route ~${forecast.foodNeeded.toFixed(1)}</span><span>Food after arrival ~${forecast.foodAfterArrival.toFixed(1)}</span>${forecast.shortfall > 0 ? `<strong class="forecast-shortfall">Food runs out before arrival · short ~${forecast.shortfall.toFixed(1)}</strong>` : '<span>Supplied for the crossing</span>'}</span><span class="card-bottom">PACK & DEPART <span>→</span></span></button>`;
+    },
+  ).join('')}</div></div>${footer('Stay a little longer')}</section>`;
 }
 
 export function journalMenu(run: RunState, tab: JournalTab): string {

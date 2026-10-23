@@ -123,6 +123,7 @@ export const GAME = {
     finalDuration: 180,
     caravanSpeed: 22,
     foodPerPerson: 0.025,
+    foodWarningSeconds: 30,
     starvationInterval: 12,
     maxPopulation: 120,
     maxHerd: 40,

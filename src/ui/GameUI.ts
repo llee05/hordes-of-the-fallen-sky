@@ -19,6 +19,8 @@ import { currentReaction } from '../game/state/legacy';
 import { COMPANIONS } from '../game/data/story';
 import { currentGuidance, clanWarning } from '../game/state/guidance';
 import { guidanceContent } from './guidanceContent';
+import { economyForecast } from '../game/state/economy';
+import { foodOutlook, FORECAST_NOTE, signedRate } from './economyContent';
 import { formatTime } from '../game/state/run';
 import { isKhanActive } from '../game/state/khan';
 import type { BuildingId, HudSnapshot, RunPhase } from '../game/types';
@@ -84,6 +86,7 @@ export class GameUI {
               )
               .join('')}</div>
             <div class="host-summary"><span id="doctrine">A people taking shape</span><span><b id="riders">1</b> RIDERS &nbsp; <b id="workers">0 / 8</b> WORKERS</span></div>
+            <p class="economy-hud" title="${FORECAST_NOTE}"><span id="food-rate"></span><span id="food-outlook"></span></p>
           </section>
           <div class="expedition-clock"><strong id="timer">00:00</strong><span id="stage-label">ENCAMPMENT</span></div>
           <nav class="hud-menu" aria-label="Game menus"><button id="journal" class="hud-menu-button" title="Clan chronicle (Tab / J)" aria-label="Open clan chronicle" aria-keyshortcuts="Tab J"><span>${clanMark('journal')}</span><kbd>TAB</kbd></button><button id="pause" class="hud-menu-button" aria-label="Pause" title="Pause (Escape)"><span>${clanMark('pause')}</span><kbd>ESC</kbd></button></nav>
@@ -195,7 +198,14 @@ export class GameUI {
       this.guideId = guide?.id ?? '';
       this.get('field-guide').innerHTML = guide ? guidanceContent(guide) : '';
     }
-    const warning = clanWarning(run);
+    const forecast = economyForecast(run);
+    this.text('food-rate', `Food net ${signedRate(forecast.foodNet)}`);
+    this.text('food-outlook', foodOutlook(run, forecast));
+    this.get('food-outlook').classList.toggle(
+      'danger',
+      forecast.foodSeconds !== undefined && forecast.foodSeconds <= GAME.clan.foodWarningSeconds,
+    );
+    const warning = clanWarning(run, forecast);
     this.text('clan-warning', warning);
     this.get('clan-warning').hidden = !warning;
     this.get('integrity-fill').classList.toggle('low', clan.integrity <= 35);

@@ -113,4 +113,7 @@ test('guidance leaves danger warnings and controls readable at supported preview
   const guide = (await page.locator('#field-guide').boundingBox())!;
   const research = (await page.locator('#research').boundingBox())!;
   expect(guide.y + guide.height).toBeLessThanOrEqual(research.y);
+  const traditions = (await page.locator('.tradition-hud').boundingBox())!;
+  expect(guide.y + guide.height).toBeLessThanOrEqual(traditions.y);
+  await page.screenshot({ path: 'test-results/economy-succession-layout.png' });
 });
