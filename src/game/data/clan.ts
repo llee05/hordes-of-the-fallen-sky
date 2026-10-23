@@ -1,5 +1,12 @@
 import { GAME } from '../config';
-import type { BuildingId, CampEffectDefinition, Doctrine, Formation, RunState } from '../types';
+import type {
+  BuildingId,
+  CampEffectDefinition,
+  Doctrine,
+  Formation,
+  LocationId,
+  RunState,
+} from '../types';
 
 export interface BuildingPathDefinition {
   effects?: CampEffectDefinition;
@@ -499,6 +506,7 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
 
 export const REGIONS = [
   {
+    id: 'golden-pasture',
     name: 'The Golden Pasture',
     short: 'GOLDEN PASTURE',
     event: 'The Sundering',
@@ -506,6 +514,7 @@ export const REGIONS = [
     color: 0xc6ad6b,
   },
   {
+    id: 'silent-river',
     name: 'The Silent River',
     short: 'SILENT RIVER',
     event: 'The White Silence',
@@ -513,6 +522,7 @@ export const REGIONS = [
     color: 0xb4cbd0,
   },
   {
+    id: 'broken-pass',
     name: 'The Broken Pass',
     short: 'BROKEN PASS',
     event: 'The Earth That Walks',
@@ -520,6 +530,7 @@ export const REGIONS = [
     color: 0xa09d83,
   },
   {
+    id: 'heart-of-the-steppe',
     name: 'The Heart of the Steppe',
     short: 'SACRED MOUNTAIN',
     event: 'The Red Eclipse',
@@ -527,6 +538,141 @@ export const REGIONS = [
     color: 0xa95f59,
   },
 ] as const;
+
+export interface MigrationLocation {
+  id: LocationId;
+  name: string;
+  short: string;
+  area: string;
+  description: string;
+  context?: string;
+  terrain: 'river' | 'foothills' | 'peaks' | 'volcanic' | 'desert';
+  peaks: number;
+  color: number;
+  balance: { food: number; materials: number; mobility: number; crossing: number };
+}
+
+const neutralLocation = { food: 1, materials: 1, mobility: 1, crossing: 1 };
+
+/** Real place context is separate from the game's invented weather, combat, and balance. */
+export const LOCATIONS: readonly MigrationLocation[] = [
+  ...REGIONS.map((region, index): MigrationLocation => ({
+    ...region,
+    area: 'The fictional steppe',
+    terrain: index === 1 ? 'river' : index >= 2 ? 'peaks' : 'foothills',
+    peaks: index >= 2 ? 3 : 0,
+    balance: neutralLocation,
+  })),
+  {
+    id: 'otgontenger',
+    name: 'Mount Otgontenger',
+    short: 'OTGONTENGER',
+    area: 'Khangai · Mongolia',
+    terrain: 'peaks',
+    peaks: 1,
+    color: 0xaeb9b1,
+    description:
+      'Make camp in the high foothills beneath a snow-capped summit. Thin grazing rewards careful provisioning.',
+    context:
+      'A sacred mountain of the Khangai, with shamanic and Buddhist traditions of reverence.',
+    balance: GAME.locations.otgontenger,
+  },
+  {
+    id: 'bogd-khan-uul',
+    name: 'Bogd Khan Uul',
+    short: 'BOGD KHAN UUL',
+    area: 'Khentii · Mongolia',
+    terrain: 'foothills',
+    peaks: 2,
+    color: 0x9eaf8e,
+    description: 'Sheltered foothills offer grazing and timber for a growing travelling camp.',
+    context:
+      'A long-revered mountain south of present-day Ulaanbaatar, associated with protected sacred land.',
+    balance: GAME.locations['bogd-khan-uul'],
+  },
+  {
+    id: 'altai-tavan-bogd',
+    name: 'Altai Tavan Bogd',
+    short: 'ALTAI TAVAN BOGD',
+    area: 'Mongol Altai · Mongolia',
+    terrain: 'peaks',
+    peaks: 5,
+    color: 0xb7c4c1,
+    description:
+      'Five distant peaks frame a stony camp. Materials are plentiful; food and the next departure need care.',
+    context: 'The Five Holy Peaks belong to the sacred landscapes of the Mongolian Altai.',
+    balance: GAME.locations['altai-tavan-bogd'],
+  },
+  {
+    id: 'khan-tengri',
+    name: 'Khan Tengri Peak',
+    short: 'KHAN TENGRI',
+    area: 'Tian Shan · Central Asia',
+    terrain: 'peaks',
+    peaks: 1,
+    color: 0xb8bcc5,
+    description:
+      'A sharp skyline rises above a demanding highland camp. Bring stores for the long approach and sparse pasture.',
+    context: 'A Tian Shan peak whose Turkic name is commonly interpreted as Lord of the Sky.',
+    balance: GAME.locations['khan-tengri'],
+  },
+  {
+    id: 'belukha',
+    name: 'Mount Belukha (Üch-Sümer)',
+    short: 'BELUKHA · ÜCH-SÜMER',
+    area: 'Altai · Russia / Kazakhstan',
+    terrain: 'peaks',
+    peaks: 3,
+    color: 0xc4c9c7,
+    description:
+      'White summits overlook a cool upland halt. Gather stone and wood while guarding the travelling stores.',
+    context:
+      'Belukha is especially revered in Altaian sacred-landscape traditions, distinct from Mongolian practices.',
+    balance: GAME.locations.belukha,
+  },
+  {
+    id: 'altan-ovoo',
+    name: 'Altan Ovoo',
+    short: 'ALTAN OVOO',
+    area: 'Dariganga · Mongolia',
+    terrain: 'volcanic',
+    peaks: 1,
+    color: 0xc6ad76,
+    description:
+      'Open steppe surrounds an old volcanic mountain. Gentle approaches favor a mobile clan.',
+    context:
+      'An extinct volcanic mountain revered by Dariganga communities through local worship traditions.',
+    balance: GAME.locations['altan-ovoo'],
+  },
+  {
+    id: 'eej-khairkhan',
+    name: 'Eej Khairkhan',
+    short: 'EEJ KHAIRKHAN',
+    area: 'Govi-Altai · Mongolia',
+    terrain: 'desert',
+    peaks: 2,
+    color: 0xc9ad82,
+    description:
+      'Warm rock shelters a camp on the dry steppe. Salvage materials and keep the herd ready to move.',
+    context:
+      'A revered Govi-Altai mountain whose name carries an association with maternal protection.',
+    balance: GAME.locations['eej-khairkhan'],
+  },
+  {
+    id: 'orkhon-valley',
+    name: 'Orkhon Valley',
+    short: 'ORKHON VALLEY',
+    area: 'Orkhon · Mongolia',
+    terrain: 'river',
+    peaks: 0,
+    color: 0xa4b48a,
+    description:
+      'Broad river pastures feed the households. A gentler approach leaves more supplies for the next camp.',
+    context:
+      'A cultural landscape of Turkic and Mongol history, with memorials and a long tradition of nomadic pastoralism.',
+    balance: GAME.locations['orkhon-valley'],
+  },
+];
 
 export const ROUTES = [
   {

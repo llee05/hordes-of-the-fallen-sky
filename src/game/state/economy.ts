@@ -1,7 +1,8 @@
 import { GAME } from '../config';
-import { ROUTES } from '../data/clan';
+import { ROUTES, type MigrationLocation } from '../data/clan';
 import type { RunState } from '../types';
 import { hasDevelopment } from './camp';
+import { arrivalLocation, currentLocation } from './journey';
 
 export interface EconomyRates {
   foodProduction: number;
@@ -30,7 +31,8 @@ export function migrationMobility(run: RunState): number {
     (hasDevelopment(run, 'herd', 'remount-herds') ? 1.2 : 1) *
     (run.clan.region === 1 ? 0.8 : 1) *
     run.patrons.banner.mobility *
-    run.clan.campEffects.multipliers.mobility
+    run.clan.campEffects.multipliers.mobility *
+    currentLocation(run).balance.mobility
   );
 }
 
@@ -38,6 +40,7 @@ export function migrationMobility(run: RunState): number {
 export function economyRates(run: RunState, pasture = run.clan.pasture): EconomyRates {
   const { clan, patrons } = run;
   const { multipliers } = clan.campEffects;
+  const location = currentLocation(run).balance;
   const foodConsumption =
     clan.population *
     GAME.clan.foodPerPerson *
@@ -50,7 +53,8 @@ export function economyRates(run: RunState, pasture = run.clan.pasture): Economy
     grazing *
     (clan.region === 1 ? 0.7 : 1) *
     patrons.land.food *
-    multipliers.foodProduction;
+    multipliers.foodProduction *
+    location.food;
   return {
     foodProduction,
     foodConsumption,
@@ -59,13 +63,29 @@ export function economyRates(run: RunState, pasture = run.clan.pasture): Economy
       (0.28 + clan.population * 0.018) *
       grazing *
       patrons.land.materials *
-      multipliers.materialProduction,
+      multipliers.materialProduction *
+      location.materials,
   };
 }
 
 /** No losses or purchases are assumed; arrival gifts cannot feed people during the crossing. */
-export function crossingForecast(run: RunState, route: (typeof ROUTES)[number]) {
-  const duration = (GAME.clan.migrationDuration * route.duration) / migrationMobility(run);
+export function crossingDuration(
+  run: RunState,
+  route: (typeof ROUTES)[number],
+  destination: MigrationLocation = arrivalLocation(run),
+): number {
+  return (
+    (GAME.clan.migrationDuration * route.duration * destination.balance.crossing) /
+    migrationMobility(run)
+  );
+}
+
+export function crossingForecast(
+  run: RunState,
+  route: (typeof ROUTES)[number],
+  destination: MigrationLocation = arrivalLocation(run),
+) {
+  const duration = crossingDuration(run, route, destination);
   const remaining = Math.max(
     0,
     duration -

@@ -1,5 +1,6 @@
 import { GAME } from '../config';
 import { clanDoctrine } from '../state/clan';
+import { currentLocation } from '../state/journey';
 import type { RunState } from '../types';
 import type { StoryBeat, StoryChoice, StoryEncounter, StoryLine, Speaker } from '../story/types';
 
@@ -43,6 +44,7 @@ const choice = (
 
 /** Resolve conditional dialogue once, when the scene opens, so the record keeps what was said. */
 export function storyEncounter(run: RunState, id: StoryBeat): StoryEncounter {
+  const place = currentLocation(run).name.replace(/^The /, '');
   const rescued = run.story.crossings.some((crossing) => crossing.route === 'refuge');
   const caredFor = run.story.records.some((record) => record.choice?.id === 'share-work');
   const trustedClerk = run.story.records.some((record) => record.choice?.id === 'trust-erden');
@@ -87,7 +89,7 @@ export function storyEncounter(run: RunState, id: StoryBeat): StoryEncounter {
       title: 'More mouths, more hands.',
       image: 'intro-steppe.png',
       setting:
-        'The first departure · The grazing is thinning. The camp can pack its gers and choose a road east.',
+        'The first departure · The grazing is thinning. The camp can pack its gers and choose its next destination.',
       lines: [
         line(
           'boro',
@@ -127,8 +129,7 @@ export function storyEncounter(run: RunState, id: StoryBeat): StoryEncounter {
       act: 1,
       title: 'Voices across the ice.',
       image: 'intro-fallen-sky.png',
-      setting:
-        'Silent River · Winter has entered the wrong season. A familiar voice calls from beyond the ice.',
+      setting: `${place} · Winter has entered the wrong season. A familiar voice calls from beyond the ice.`,
       lines: [
         line('nara', 'It sounds like someone we knew. It says there is a shorter road.'),
         line('saran', 'I know the sound. I do not know what is making it.'),
@@ -163,8 +164,7 @@ export function storyEncounter(run: RunState, id: StoryBeat): StoryEncounter {
       act: 2,
       title: 'A promise chosen.',
       image: 'intro-caravan.png',
-      setting:
-        'Broken Pass · Act II begins. Households tie scraps of their own cloth into the blue banner. Erden holds an unmarked strip.',
+      setting: `${place} · Act II begins. Households tie scraps of their own cloth into the blue banner. Erden holds an unmarked strip.`,
       lines: [
         line('saran', 'Every household has brought a piece. Whose banner is it now?'),
         line('nara', 'Ours. Even the parts that are different colors.'),
@@ -197,8 +197,7 @@ export function storyEncounter(run: RunState, id: StoryBeat): StoryEncounter {
       act: 2,
       title: 'When the earth moves.',
       image: 'intro-caravan.png',
-      setting:
-        'Broken Pass · Boro watches the cracks in the slope while the families tend the wheels and harness.',
+      setting: `${place} · Boro watches the cracks in the slope while the families tend the wheels and harness.`,
       lines: [
         line(
           'boro',
@@ -351,7 +350,7 @@ export function storyEncounter(run: RunState, id: StoryBeat): StoryEncounter {
   if (run.clan.population < 5) {
     const remembrance: Record<StoryBeat, string> = {
       fire: 'The carried embers become a small fire. A place beside it is still a promise.',
-      departure: 'The gers can be packed. The remaining hands must choose what to carry east.',
+      departure: 'The gers can be packed. The remaining hands must choose what to carry onward.',
       river: 'A familiar voice calls beyond the ice. The tested bank offers a way through.',
       promise:
         'Scraps of cloth are tied into the blue banner. Those who remain keep the promise to count before leaving.',

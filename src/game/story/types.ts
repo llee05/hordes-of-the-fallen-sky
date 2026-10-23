@@ -1,4 +1,4 @@
-import type { Doctrine } from '../types';
+import type { Doctrine, LocationId } from '../types';
 
 export type StoryBeat =
   'fire' | 'departure' | 'river' | 'promise' | 'earth' | 'court' | 'opening' | 'road';
@@ -41,6 +41,7 @@ export interface StoryCrossing {
   route: string;
   region: number;
   population: number;
+  locationId?: LocationId;
 }
 
 export interface StoryState {

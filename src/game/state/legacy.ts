@@ -1,15 +1,18 @@
 import { GAME } from '../config';
-import type { RunState } from '../types';
+import type { LocationId, RunState } from '../types';
 import type { StoryLine } from '../story/types';
+import { currentLocation } from './journey';
 
 export interface KhanRecord {
   generation: number;
   chosenAt: number;
   region: number;
+  locationId?: LocationId;
   people: number;
   killsAtStart: number;
   fallenAt?: number;
   fallenRegion?: number;
+  fallenLocationId?: LocationId;
   killsAtFall?: number;
 }
 
@@ -17,6 +20,7 @@ export interface ClanMemory {
   sequence: number;
   elapsed: number;
   region: number;
+  locationId?: LocationId;
   population: number;
   title: string;
   detail: string;
@@ -61,6 +65,7 @@ export function rememberClan(
     sequence: legacy.totalMemories,
     elapsed: run.elapsed,
     region: run.clan.region,
+    locationId: currentLocation(run).id,
     population: run.clan.population,
     title,
     detail,
@@ -83,6 +88,7 @@ export function rememberFallenKhan(run: RunState): void {
   if (khan.fallenAt !== undefined) return;
   khan.fallenAt = run.elapsed;
   khan.fallenRegion = run.clan.region;
+  khan.fallenLocationId = currentLocation(run).id;
   khan.killsAtFall = run.kills;
   rememberClan(
     run,
@@ -101,6 +107,7 @@ export function rememberChosenKhan(run: RunState): void {
     generation: run.khan.generation,
     chosenAt: run.elapsed,
     region: run.clan.region,
+    locationId: currentLocation(run).id,
     people: run.clan.population,
     killsAtStart: run.kills,
   });

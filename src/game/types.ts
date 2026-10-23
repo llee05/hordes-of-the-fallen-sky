@@ -32,11 +32,27 @@ export type PatronId =
   | 'sulde'
   | 'burkhan-guardian';
 export type Doctrine = 'iron' | 'sky' | 'wander';
+export type LocationId =
+  | 'golden-pasture'
+  | 'silent-river'
+  | 'broken-pass'
+  | 'heart-of-the-steppe'
+  | 'otgontenger'
+  | 'bogd-khan-uul'
+  | 'altai-tavan-bogd'
+  | 'khan-tengri'
+  | 'belukha'
+  | 'altan-ovoo'
+  | 'eej-khairkhan'
+  | 'orkhon-valley';
 
 export interface ClanState {
   campEffects: CampEffects;
   stage: JourneyStage;
   region: number;
+  /** Journey chapter and physical location are independent. Unset uses the original chapter camp. */
+  locationId?: LocationId;
+  destinationId?: LocationId;
   stageTime: number;
   pasture: number;
   threat: number;

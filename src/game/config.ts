@@ -20,6 +20,16 @@ export const GAME = {
   dash: { speed: 570, duration: 0.3, cooldown: 3 },
   invulnerability: 0.65,
   khan: { successionDelay: 10, returnProtection: 3, campOffset: 90 },
+  locations: {
+    otgontenger: { food: 0.85, materials: 1.25, mobility: 0.9, crossing: 1.15 },
+    'bogd-khan-uul': { food: 1.1, materials: 1.15, mobility: 1, crossing: 1 },
+    'altai-tavan-bogd': { food: 0.8, materials: 1.3, mobility: 0.85, crossing: 1.2 },
+    'khan-tengri': { food: 0.75, materials: 1.35, mobility: 0.8, crossing: 1.25 },
+    belukha: { food: 0.85, materials: 1.25, mobility: 0.85, crossing: 1.2 },
+    'altan-ovoo': { food: 1.05, materials: 1.1, mobility: 1.1, crossing: 0.9 },
+    'eej-khairkhan': { food: 0.9, materials: 1.2, mobility: 1.05, crossing: 1.05 },
+    'orkhon-valley': { food: 1.25, materials: 1.05, mobility: 1.05, crossing: 0.95 },
+  },
   camp: {
     visualScale: 0.75,
     barrier: { attackReach: 12, groundClearance: 50, padding: 8 },

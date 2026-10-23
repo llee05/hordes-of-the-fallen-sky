@@ -3,7 +3,8 @@ import { GAME } from '../config';
 import { BUILDINGS, ROUTES } from '../data/clan';
 import type { BuildingId, ClanState, Formation, RunState } from '../types';
 import { applyCampEffects, createCampEffects, hasDevelopment } from './camp';
-import { economyRates, migrationMobility, pastureDepletion } from './economy';
+import { economyRates, crossingDuration, pastureDepletion } from './economy';
+import { arrivalLocation, availableDestinations } from './journey';
 import { completeGuidance } from './guidance';
 import { isKhanActive } from './khan';
 
@@ -178,21 +179,27 @@ export function canMigrate(run: RunState): boolean {
   );
 }
 
-export function beginMigration(run: RunState, routeId: string): boolean {
+export function beginMigration(
+  run: RunState,
+  routeId: string,
+  destinationId: string = arrivalLocation(run).id,
+): boolean {
   const route = ROUTES.find((entry) => entry.id === routeId);
-  if (run.phase !== 'route' || !canMigrate(run) || !route) return false;
+  const destination = availableDestinations(run).find((entry) => entry.id === destinationId);
+  if (run.phase !== 'route' || !canMigrate(run) || !route || !destination) return false;
   const clan = run.clan;
   completeGuidance(run, 'depart');
   clan.stage = 'migration';
   clan.stageTime = 0;
   clan.routeId = route.id;
+  clan.destinationId = destination.id;
   clan.migrationProgress = 0;
   clan.identity[route.doctrine] += 2;
-  clan.message = 'The gers are packed. Stay close to the caravan and bring your people through.';
+  clan.message = `The gers are packed for ${destination.name}. Stay close to the caravan and bring your people through.`;
   rememberClan(
     run,
     'The camp packed for the road',
-    `${clan.population} people set out along ${route.title}.`,
+    `${clan.population} people set out toward ${destination.name} along ${route.title}.`,
     {
       speaker: 'boro',
       text: 'Count the households before we move. Keep the packs balanced and the herd beside us.',
@@ -252,11 +259,7 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
   } else {
     clan.food += dt * economyRates(run).foodNet;
     const route = ROUTES.find((r) => r.id === clan.routeId)!;
-    const mobility = migrationMobility(run);
-    clan.migrationProgress = Math.min(
-      1,
-      (clan.stageTime * mobility) / (GAME.clan.migrationDuration * route.duration),
-    );
+    clan.migrationProgress = Math.min(1, clan.stageTime / crossingDuration(run, route));
   }
   clan.food = Math.max(0, clan.food);
   clan.threat = Math.min(
@@ -287,6 +290,7 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
   if (clan.population === 0 || clan.integrity === 0) return 'lost';
   if (clan.stage === 'migration' && clan.migrationProgress >= 1) {
     const route = ROUTES.find((r) => r.id === clan.routeId)!;
+    const destination = arrivalLocation(run);
     clan.food = Math.max(0, clan.food + route.food + bonuses.arrivalFood);
     clan.materials += route.materials + bonuses.arrivalMaterials;
     clan.spirit += route.id === 'ridge' ? 10 : 0;
@@ -297,7 +301,14 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
     clan.herd = Math.min(GAME.clan.maxHerd, clan.herd + route.herd + bonuses.arrivalHerd);
     completeGuidance(run, 'crossing');
     clan.region += 1;
-    run.story.crossings.push({ route: route.id, region: clan.region, population: clan.population });
+    clan.locationId = destination.id;
+    clan.destinationId = undefined;
+    run.story.crossings.push({
+      route: route.id,
+      region: clan.region,
+      population: clan.population,
+      locationId: destination.id,
+    });
     clan.stage = clan.region === 3 ? 'final' : 'camp';
     clan.stageTime = 0;
     clan.pasture = 100;
@@ -307,11 +318,11 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
     clan.message =
       clan.stage === 'final'
         ? 'The Red Eclipse. Protect your people for three minutes while the mountain passage opens.'
-        : `${arrivedPeople ? `${arrivedPeople} survivors join the clan. ` : ''}Fresh pasture. Unpack, rebuild, and decide how long to stay.`;
+        : `${destination.name}. ${arrivedPeople ? `${arrivedPeople} survivors join the clan. ` : ''}Fresh pasture. Unpack, rebuild, and decide how long to stay.`;
     rememberClan(
       run,
       arrivedPeople ? 'New households at the fire' : 'The caravan arrived',
-      `${clan.population} people reached the next pasture by ${route.title}.`,
+      `${clan.population} people reached ${destination.name} by ${route.title}.`,
       arrivedPeople
         ? {
             speaker: 'nara',

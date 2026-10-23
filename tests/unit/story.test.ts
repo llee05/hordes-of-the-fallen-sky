@@ -101,7 +101,9 @@ describe('the two-act expedition', () => {
     expect(run.story.crossings).toEqual([]);
     run.phase = 'playing';
     advanceClan(run, 100);
-    expect(run.story.crossings).toEqual([{ route: 'refuge', region: 1, population: 16 }]);
+    expect(run.story.crossings).toEqual([
+      { route: 'refuge', region: 1, population: 16, locationId: 'silent-river' },
+    ]);
     damageClan(run, 40);
     expect(run.story.peopleLost).toBe(1);
     run.clan.identity.sky = 6;
