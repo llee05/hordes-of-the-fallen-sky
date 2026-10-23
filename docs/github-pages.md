@@ -1,7 +1,7 @@
 # GitHub Pages browser release
 
 The browser release contains the same playable expedition as the desktop game. It
-needs no server, account, API key, or runtime asset service. Only Vite's compiled
+needs no backend, account, API key, or runtime asset service. Only Vite's compiled
 `dist/` directory is published; Electron, source files, tests, and development
 dependencies stay out of the site.
 
@@ -33,6 +33,36 @@ Open the full URL including the trailing slash. Keep Vite's relative `base: './'
 the same files resolve artwork, scripts, styles, and local fonts under the project
 path, a custom domain, or Electron's `file://` URL. The game has no client-side
 routes, so it needs no SPA redirect or copied `404.html`.
+
+## Publish on GitHub Pages
+
+The prepared project URL is
+`https://llee05.github.io/hordes-of-the-fallen-sky/`. It becomes available after the
+first successful deployment; preparing or building locally does not publish it.
+
+1. In the repository's **Settings → Pages → Build and deployment**, choose
+   **GitHub Actions** as the source. This is a one-time repository setting.
+2. Push the release commits to `main`. The **GitHub Pages** workflow runs all of
+   `npm run check`, installs Chromium, and tests the exact production `dist/`
+   artifact beneath the project subpath before uploading it for deployment.
+3. Open the workflow in **Actions**. The deploy job publishes only when every build
+   and smoke-test step succeeds. Its `github-pages` environment links to the live
+   site. Any configured environment approval must be completed there.
+4. Open the live URL in a fresh browser profile. Start an expedition, build a camp
+   development, open the prologue, and check fullscreen and sound. Test any physical
+   controller and additional browsers you intend to recommend to playtesters.
+
+Pull requests to `main` run the same checks without uploading or deploying a site.
+**Run workflow** on `main` can redeploy the current release; dispatching it on
+another branch only runs checks. The workflow uses pinned official GitHub Actions,
+the standard `GITHUB_TOKEN`, and deployment-scoped Pages/OIDC permissions. It needs
+no personal access token or additional repository secret. In-progress releases are
+not cancelled by a newer push.
+
+For a rollback, revert the unwanted change on `main` and push it. The resulting
+commit is rebuilt and verified before deployment. For a custom domain, configure
+it in Pages settings and follow GitHub's domain instructions; the relative asset
+paths do not need changing.
 
 ## Browser behavior
 

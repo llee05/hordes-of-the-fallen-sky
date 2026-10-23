@@ -26,6 +26,8 @@ For the static browser release, run `npm run build:web` and then `npm run test:p
 with Playwright Chromium installed. The production smoke tests use the GitHub Pages
 project subpath. See [browser release and GitHub Pages instructions](docs/github-pages.md)
 for preview commands, browser saves, and release verification.
+The **GitHub Pages** workflow checks pull requests and deploys successful `main`
+builds once the repository's Pages source is set to **GitHub Actions**.
 
 ## Desktop presentation
 
