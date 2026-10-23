@@ -98,6 +98,34 @@ export function riverPoint(section: RiverSection, side: number, padding = 0): Ri
   return { x: section.x + section.nx * offset, y: section.y + section.ny * offset };
 }
 
+/** Sample by travelled distance, keeping the current speed steady through bends. */
+export function riverSectionAt(channel: RiverChannel, distance: number): RiverSection {
+  const target = Math.max(0, Math.min(channel.length, distance));
+  let low = 0;
+  let high = channel.sections.length - 1;
+  while (high - low > 1) {
+    const middle = Math.floor((low + high) / 2);
+    if (channel.sections[middle]!.distance < target) low = middle;
+    else high = middle;
+  }
+  const a = channel.sections[low]!;
+  const b = channel.sections[high]!;
+  const t = (target - a.distance) / (b.distance - a.distance || 1);
+  const blend = (first: number, second: number) => first + (second - first) * t;
+  const nx = blend(a.nx, b.nx);
+  const ny = blend(a.ny, b.ny);
+  const length = Math.hypot(nx, ny) || 1;
+  return {
+    x: blend(a.x, b.x),
+    y: blend(a.y, b.y),
+    nx: nx / length,
+    ny: ny / length,
+    left: blend(a.left, b.left),
+    right: blend(a.right, b.right),
+    distance: target,
+  };
+}
+
 export function riverOutline(
   sections: readonly RiverSection[],
   scale = 1,

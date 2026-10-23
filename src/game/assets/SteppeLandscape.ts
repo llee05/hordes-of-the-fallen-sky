@@ -14,6 +14,7 @@ export class SteppeLandscape {
   private readonly wind: Phaser.GameObjects.Graphics;
   private readonly props: Phaser.GameObjects.Image[] = [];
   private passage: Phaser.GameObjects.Image[] = [];
+  private river?: RiverSurface;
   private definition: LandscapeDefinition = LANDSCAPES['golden-pasture'];
 
   constructor(private readonly scene: Phaser.Scene) {
@@ -30,6 +31,7 @@ export class SteppeLandscape {
     const id = location?.id ?? REGIONS[region]?.id ?? LOCATIONS[0]!.id;
     this.definition = LANDSCAPES[id];
     this.regional.removeAll(true);
+    this.river = undefined;
     for (const prop of this.props) prop.destroy();
     this.props.length = 0;
     this.passage = [];
@@ -37,8 +39,10 @@ export class SteppeLandscape {
     const definition = this.definition;
     this.groundWash.setFillStyle(definition.ground, definition.wash);
     this.drawSurface(id);
-    if (definition.water)
-      this.regional.add(new RiverSurface(this.scene, id, definition.water).container);
+    if (definition.water) {
+      this.river = new RiverSurface(this.scene, id, definition.water);
+      this.regional.add(this.river.container);
+    }
     const center = GAME.worldSize / 2;
     for (const item of landscapeCover(id)) {
       const x = center + item.x;
@@ -172,6 +176,7 @@ export class SteppeLandscape {
     camera: Phaser.Cameras.Scene2D.Camera,
     passageProgress = 0,
   ): void {
+    this.river?.update(elapsed);
     for (let i = 0; i < this.passage.length; i += 1) {
       const progress = Phaser.Math.Clamp(passageProgress, 0, 1);
       this.passage[i]!.setX(

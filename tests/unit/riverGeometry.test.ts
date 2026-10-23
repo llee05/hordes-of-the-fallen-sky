@@ -5,11 +5,26 @@ import {
   riverChannels,
   riverOutline,
   riverPoint,
+  riverSectionAt,
 } from '../../src/game/assets/riverGeometry';
 import { landscapeCover } from '../../src/game/assets/landscapeLayout';
 import type { LocationId } from '../../src/game/types';
 
 describe('river shorelines', () => {
+  it('samples current positions continuously by distance and clamps safely at each end', () => {
+    const channel = riverChannels(LANDSCAPES['orkhon-valley'].water!)[0]!;
+    expect(riverSectionAt(channel, -100).x).toBe(channel.sections[0]!.x);
+    expect(riverSectionAt(channel, channel.length + 100).x).toBe(channel.sections.at(-1)!.x);
+    for (const index of [12, 40, 80]) {
+      const a = channel.sections[index]!;
+      const b = channel.sections[index + 1]!;
+      const middle = riverSectionAt(channel, (a.distance + b.distance) / 2);
+      expect(middle.x).toBeCloseTo((a.x + b.x) / 2);
+      expect(middle.y).toBeCloseTo((a.y + b.y) / 2);
+      expect(Math.hypot(middle.nx, middle.ny)).toBeCloseTo(1);
+      expect(Object.values(middle).every(Number.isFinite)).toBe(true);
+    }
+  });
   it('keeps authored courses reproducible, smooth, finite, and bounded with asymmetric banks', () => {
     for (const definition of Object.values(LANDSCAPES)) {
       const water = definition.water;

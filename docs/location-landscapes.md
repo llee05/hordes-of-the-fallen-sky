@@ -57,3 +57,10 @@ angular ice shelves, shaded edges, and fine fractures around open water. These
 adaptable shapes use native geometry and the existing painted reed atlas; no new
 bitmap or character frame is required. All river layers stay behind combat actors
 and remain decorative and walkable.
+
+Broken current highlights follow distance along each bend using active gameplay
+seconds, with a bounded number of strokes redrawn at 15 Hz. Frozen water moves more
+slowly while its ice stays fixed. Menus freeze the water, and the operating system's
+reduced-motion preference keeps current highlights still, including live preference
+changes. Destination vignettes reuse these same channel outlines, including the
+Orkhon branches and Silent River ice.

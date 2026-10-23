@@ -30,9 +30,19 @@ test('painted landscapes and destination previews remain readable in Electron', 
         size,
       );
       await expect.poll(() => page.evaluate(() => innerWidth)).toBe(size.width);
-      for (const id of ['eej-khairkhan', 'bogd-khan-uul', 'altai-tavan-bogd', 'orkhon-valley']) {
+      for (const id of [
+        'eej-khairkhan',
+        'bogd-khan-uul',
+        'altai-tavan-bogd',
+        'orkhon-valley',
+        'golden-pasture',
+        'silent-river',
+      ]) {
         await page.keyboard.press('F8');
-        await page.locator(`[data-developer-level="destination:2:${id}"]`).click();
+        const checkpoint = ['golden-pasture', 'silent-river'].includes(id)
+          ? `chapter:${id}`
+          : `destination:2:${id}`;
+        await page.locator(`[data-developer-level="${checkpoint}"]`).click();
         await expect(page.getByRole('dialog')).toBeHidden();
         expect(
           await page.evaluate(() => {
@@ -40,6 +50,12 @@ test('painted landscapes and destination previews remain readable in Electron', 
             return scene.textures.get('steppe-scenery').getFrameNames().length;
           }),
         ).toBe(12);
+        await page.evaluate(() => {
+          const scene = (window as any).__gloam.scene;
+          if (!scene.landscape.definition.water) return;
+          scene.cameras.main.stopFollow().centerOn(scene.camp.x, scene.camp.y - 240);
+          scene.player.setPosition(scene.camp.x, scene.camp.y - 150);
+        });
         await page.screenshot({ path: `test-results/landscapes/native-${id}-${size.width}.png` });
       }
       await page.keyboard.press('m');

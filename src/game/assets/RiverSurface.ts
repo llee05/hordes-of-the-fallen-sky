@@ -8,6 +8,8 @@ import {
   isRiverWater,
   riverOutline,
   riverPoint,
+  riverSectionAt,
+  type RiverChannel,
   type RiverDefinition,
   type RiverSection,
 } from './riverGeometry';
@@ -22,6 +24,18 @@ function mix(a: number, b: number, amount: number): number {
 export class RiverSurface {
   readonly container: Phaser.GameObjects.Container;
   readonly channels;
+  private readonly currents: Phaser.GameObjects.Graphics;
+  private readonly flowColor: number;
+  private readonly reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  private readonly marks: {
+    channel: RiverChannel;
+    distance: number;
+    side: number;
+    length: number;
+    speed: number;
+    phase: number;
+  }[] = [];
+  private lastFrame = -1;
 
   constructor(scene: Phaser.Scene, id: LocationId, water: RiverDefinition) {
     this.channels = riverChannels(water);
@@ -33,6 +47,7 @@ export class RiverSurface {
     const deep = mix(water.color, 0x264b55, water.kind === 'glacial' ? 0.28 : 0.4);
     const shallow = mix(water.color, water.bank, 0.36);
     const light = mix(water.color, 0xe7e7cc, 0.52);
+    this.flowColor = mix(water.color, 0xe6ead7, 0.75);
 
     // Draw complete banks first, then every water channel, so joining braids have no seams.
     for (const channel of this.channels) {
@@ -69,7 +84,7 @@ export class RiverSurface {
           const point = riverPoint(section, (random() * 2 - 1) * 0.84);
           const length = 10 + random() * 35;
           paint
-            .lineStyle(0.7 + random() * 2, brush === 0 ? deep : light, 0.035 + random() * 0.07)
+            .lineStyle(0.7 + random() * 2, brush === 0 ? deep : light, 0.06 + random() * 0.09)
             .lineBetween(
               point.x,
               point.y,
@@ -114,6 +129,49 @@ export class RiverSurface {
             .lineBetween(point.x - 16, point.y + 5, point.x + 8, point.y + 3);
         }
       }
+    }
+    for (const channel of this.channels) {
+      for (let distance = 45; distance < channel.length - 60; distance += 145) {
+        this.marks.push({
+          channel,
+          distance,
+          side: (random() * 2 - 1) * 0.55,
+          length: 12 + random() * Math.min(38, water.width * 0.4),
+          speed: water.kind === 'frozen' ? 4 + random() * 3 : 10 + random() * 8,
+          phase: random() * Math.PI * 2,
+        });
+      }
+    }
+    this.currents = scene.add.graphics().setName('river-currents');
+    this.container.add(this.currents);
+    this.update(0);
+  }
+
+  /** Only the scene's active seconds advance these subtle strokes; no automatic tweens. */
+  update(elapsed: number): void {
+    if (!Number.isFinite(elapsed)) return;
+    const frame = this.reducedMotion.matches ? 0 : Math.floor(elapsed * 15);
+    if (frame === this.lastFrame) return;
+    this.lastFrame = frame;
+    const time = frame / 15;
+    this.currents.clear();
+    for (const mark of this.marks) {
+      const distance = (mark.distance + time * mark.speed) % mark.channel.length;
+      const points = [0, 0.45, 1].map((offset) =>
+        riverPoint(
+          riverSectionAt(
+            mark.channel,
+            Math.min(mark.channel.length, distance + offset * mark.length),
+          ),
+          mark.side + Math.sin(time * 0.8 + mark.phase + offset) * 0.025,
+        ),
+      );
+      const alpha = 0.1 + (Math.sin(time * 1.2 + mark.phase) + 1) * 0.045;
+      this.currents.lineStyle(1.1, this.flowColor, alpha).strokePoints(points);
+      const point = points[1]!;
+      this.currents
+        .lineStyle(0.7, this.flowColor, alpha * 0.55)
+        .lineBetween(point.x - 3, point.y + 3, point.x + 8, point.y + 2);
     }
   }
 

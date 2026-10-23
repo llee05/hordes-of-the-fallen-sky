@@ -4,6 +4,12 @@ import clanSource from '/art/steppe-clan-motion.json?raw';
 import scenerySource from '/art/steppe-scenery.json?raw';
 import type { BuildingDefinition } from '../game/data/clan';
 import { LANDSCAPES } from '../game/data/landscapes';
+import {
+  riverChannels,
+  riverOutline,
+  riverPoint,
+  type RiverPoint,
+} from '../game/assets/riverGeometry';
 import type { LocationId } from '../game/types';
 
 // Public assets use root URLs in Vite. Bundle the metadata as text so both the
@@ -115,8 +121,34 @@ export function destinationIllustration(id: LocationId): string {
   const color = (value: number) => `#${value.toString(16).padStart(6, '0')}`;
   const root = `${import.meta.env.BASE_URL}art/`;
   const water = landscape.water;
+  const waterPath = (points: readonly RiverPoint[]) =>
+    points
+      .map(
+        (point, index) =>
+          `${index ? 'L' : 'M'}${(120 + point.x * 0.065).toFixed(1)},${(94 + point.y * 0.065).toFixed(1)}`,
+      )
+      .join(' ') + 'Z';
   const river = water
-    ? `<path d="${water.course.map((value, index) => (index % 2 ? `${94 + value * 0.065}` : `${index ? 'L' : 'M'}${120 + value * 0.065},`)).join(' ')}" fill="none" stroke="${color(water.color)}" stroke-width="${water.width * 0.065 + 2}"/>`
+    ? `<g data-river-kind="${water.kind}">${riverChannels(water)
+        .map((channel, index) => {
+          const sections = channel.sections.filter(
+            (_, i) => i % 6 === 0 || i === channel.sections.length - 1,
+          );
+          const ice =
+            water.kind === 'frozen'
+              ? sections
+                  .filter((_, i) => i % 5 === 0)
+                  .map((section, i) => {
+                    const point = riverPoint(section, i % 2 ? -0.65 : 0.65);
+                    const x = 120 + point.x * 0.065;
+                    const y = 94 + point.y * 0.065;
+                    return `<path d="M${x - 3},${y}l2,-1.2 4,.2 2,1.2 -4,1Z" fill="#e4e8d7" opacity=".85"/>`;
+                  })
+                  .join('')
+              : '';
+          return `<path d="${waterPath(riverOutline(sections, 1, 12))}" fill="${color(water.bank)}" opacity=".7"/><path data-river-channel="${index}" d="${waterPath(riverOutline(sections))}" fill="${color(water.color)}"/><path d="${waterPath(riverOutline(sections, 0.45, 0, 0.08))}" fill="#426f76" opacity=".2"/>${ice}`;
+        })
+        .join('')}</g>`
     : '';
   const landmarks = landscape.landmarks
     .map((item) => {
