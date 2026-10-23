@@ -1,35 +1,28 @@
-import { BUILDINGS, FORMATIONS, REGIONS, ROUTES } from '../game/data/clan';
+import { BUILDINGS, FORMATIONS, REGIONS } from '../game/data/clan';
 import { PATRONS } from '../game/data/patrons';
 import { GAME } from '../game/config';
 import { UPGRADES } from '../game/data/upgrades';
 import { assignedWorkers, canMigrate, clanDoctrine, riderCount } from '../game/state/clan';
 import type { RunState } from '../game/types';
-import { campIllustration, clanMark, routeIllustration } from './artwork';
+import { campIllustration, clanMark } from './artwork';
 import { heading, footer } from './panelContent';
 import { khanRecords } from './legacyContent';
 import { storyRecords } from './storyContent';
-import { crossingForecast } from '../game/state/economy';
-import { formatTime } from '../game/state/run';
+import { arrivalLocation, currentLocation, locationAtChapter } from '../game/state/journey';
 
 export type JournalTab = 'journey' | 'clan' | 'traditions' | 'story';
 
 export { buildingMenu } from './campModel';
 
-export function routeMenu(run: RunState): string {
-  return `<section class="game-panel route-dialog">${heading(`CAMP ${run.clan.region + 1} / THE ROAD EAST`, 'Where the grass still grows.', true, 'banner')}<div class="panel-body"><p class="panel-intro">Pack the gers. Protect the moving caravan. Rewards await at the far end.</p><p class="forecast-note">Travel estimates use your current households, horses, and improvements. Losses can change them. Arrival supplies come after the crossing.</p><div class="route-map"><span>${REGIONS[run.clan.region]!.short}</span><i>◇ ─ ─ ─ → ◇</i><span>${REGIONS[run.clan.region + 1]!.short}</span></div><div class="upgrade-cards">${ROUTES.map(
-    (r) => {
-      const forecast = crossingForecast(run, r);
-      return `<button class="upgrade-card route-card" data-route="${r.id}">${routeIllustration(r.id)}<span class="upgrade-subtitle">${r.subtitle}</span><h3>${r.title}</h3><p>${r.description}</p><span class="route-forecast"><span>Travel ~${formatTime(Math.ceil(forecast.duration))}</span><span>Food needed en route ~${forecast.foodNeeded.toFixed(1)}</span><span>Food after arrival ~${forecast.foodAfterArrival.toFixed(1)}</span>${forecast.shortfall > 0 ? `<strong class="forecast-shortfall">Food runs out before arrival · short ~${forecast.shortfall.toFixed(1)}</strong>` : '<span>Supplied for the crossing</span>'}</span><span class="card-bottom">PACK & DEPART <span>→</span></span></button>`;
-    },
-  ).join('')}</div></div>${footer('Stay a little longer')}</section>`;
-}
+export { routeMenu } from './migrationContent';
 
 export function journalMenu(run: RunState, tab: JournalTab): string {
   const clan = run.clan;
-  const region = REGIONS[clan.region]!;
+  const region = currentLocation(run);
+  const description = [region.description, region.context].filter(Boolean).join(' ');
   let content: string;
   if (tab === 'journey') {
-    content = `<div class="journal-chapter"><span class="eyebrow">PASTURE ${clan.region + 1} OF 4</span><h3>${region.name}</h3><p>${region.description}</p><div class="journey-map" aria-label="Journey progress">${REGIONS.map((r, i) => `<div class="journey-stop ${i === clan.region ? 'current' : i < clan.region ? 'passed' : ''}"><span>${clanMark(i === 3 ? 'mountain' : i === 1 ? 'river' : i === 2 ? 'sanctuary' : 'ger')}</span><div><strong>${r.name}</strong><small>${i < clan.region ? 'CROSSED' : i === clan.region ? 'YOUR CLAN IS HERE' : r.event.toUpperCase()}</small></div></div>`).join('')}</div><div class="journal-callout">${clan.stage === 'migration' ? 'The caravan is moving east. Stay alongside your people until the crossing is complete.' : clan.stage === 'final' ? 'Protect the clan until the mountain passage opens. Saving your people is the victory condition.' : 'Pasture runs out and the calamity grows. Choose when to pack up and leave.'}</div>${canMigrate(run) ? '<button class="primary-button" data-action="routes">Choose a migration route <span>→</span></button>' : ''}</div>`;
+    content = `<div class="journal-chapter"><span class="eyebrow">PASTURE ${clan.region + 1} OF 4</span><h3>${region.name}</h3><p>${description}</p><div class="journey-map" aria-label="Journey progress">${REGIONS.map((r, i) => `<div class="journey-stop ${i === clan.region ? 'current' : i < clan.region ? 'passed' : ''}"><span>${clanMark(i === 3 ? 'mountain' : i === 1 ? 'river' : i === 2 ? 'sanctuary' : 'ger')}</span><div><strong>${locationAtChapter(run, i).name}</strong><small>${i < clan.region ? 'CROSSED' : i === clan.region ? 'YOUR CLAN IS HERE' : r.event.toUpperCase()}</small></div></div>`).join('')}</div><div class="journal-callout">${clan.stage === 'migration' ? `The caravan is travelling to ${arrivalLocation(run).name}. Stay alongside your people until the crossing is complete.` : clan.stage === 'final' ? 'Protect the clan until the mountain passage opens. Saving your people is the victory condition.' : 'Pasture runs out and the calamity grows. Choose when to pack up and leave.'}</div>${canMigrate(run) ? '<button class="primary-button" data-action="routes">Choose a migration route <span>→</span></button>' : ''}</div>`;
   } else if (tab === 'clan') {
     content = `<div class="journal-chapter"><span class="eyebrow">YOUR LIVING CIVILIZATION</span><h3>${clanDoctrine(run)}</h3><div class="clan-facts"><div><strong>${clan.population}</strong><span>People</span></div><div><strong>${riderCount(run)}</strong><span>Mounted riders</span></div><div><strong>${assignedWorkers(run)} / ${clan.population}</strong><span>Assigned workers</span></div><div><strong>${clan.herd}</strong><span>Livestock</span></div></div>${khanRecords(run)}<p class="formation-detail"><strong>${FORMATIONS[clan.formation].title}</strong><br>${FORMATIONS[clan.formation].description}</p><div class="clan-buildings">${BUILDINGS.map(
       (b) =>

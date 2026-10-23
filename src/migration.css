@@ -1,0 +1,104 @@
+.destination-picker > h3,
+.migration-approaches > h3 {
+  font:
+    23px/1.3 Georgia,
+    serif;
+  color: var(--paper-ink);
+  margin-bottom: 8px;
+}
+.destination-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.destination-card {
+  min-width: 0;
+  padding: 12px;
+  text-align: left;
+  border: 1px solid var(--paper-line);
+  background: #f6ecd45c;
+  color: var(--paper-ink);
+}
+.destination-card[aria-pressed='true'] {
+  border-color: #80552e;
+  background: #d2b77761;
+  box-shadow: inset 3px 0 #984d37;
+}
+.destination-card strong,
+.destination-card span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.destination-card strong {
+  font:
+    17px/1.3 Georgia,
+    serif;
+}
+.destination-card span {
+  margin-top: 5px;
+  font-size: 10px;
+  color: var(--paper-muted);
+}
+.destination-detail {
+  padding: 18px 0;
+  margin-block: 18px;
+  border-block: 1px dashed var(--paper-line);
+  color: var(--paper-ink);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.destination-detail h3 {
+  font:
+    27px/1.3 Georgia,
+    serif;
+  margin-block: 8px;
+}
+.destination-detail .eyebrow {
+  color: var(--paper-muted);
+  overflow-wrap: anywhere;
+}
+.destination-context {
+  margin-top: 8px;
+  color: var(--paper-muted);
+}
+.destination-effects {
+  margin-top: 10px;
+  color: #345650;
+  font-weight: 600;
+}
+.migration-approaches > .forecast-note {
+  margin-bottom: 14px;
+}
+.route-dialog .route-illustration {
+  height: 52px;
+  margin-bottom: 10px;
+}
+.route-dialog .upgrade-card {
+  padding: 16px;
+}
+.route-dialog .upgrade-card h3 {
+  font-size: 23px;
+}
+.route-dialog .card-bottom {
+  padding-top: 16px;
+}
+.objective-heading strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .destination-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .destination-card strong {
+    font-size: 15px;
+  }
+  .destination-card {
+    padding: 10px;
+  }
+  .objective-heading strong {
+    white-space: normal;
+    max-width: 100%;
+  }
+}

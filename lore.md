@@ -75,6 +75,16 @@ The elders remember a valley east of the broken country, sheltered beneath a str
 
 This mountain and its refuge are fictional. They are not Burkhan Khaldun or a claim about access to a real sacred place. The valley is a physical refuge within the setting, not an afterlife reserved for believers.
 
+The playable expedition can now visit camps around Otgontenger, Bogd Khan Uul,
+Altai Tavan Bogd, Khan Tengri, Belukha / Üch-Sümer, Altan Ovoo, Eej Khairkhan,
+and Orkhon Valley before the final refuge. These real landscape names do not replace
+the fictional Heart of the Steppe. Their Mongolian, Turkic, and Altaian cultural
+contexts are recorded separately in [the destination guide](docs/migration-locations.md).
+The roads compress real distances; camps are not summit ascents or reconstructions
+of worship. Gathering bonuses, travel modifiers, hostile creatures, and chapter
+calamities remain invented gameplay, with no claim that a site's traditions cause
+or defeat the Sundering.
+
 Victory means that the clan reaches the passage alive. Destroying the Skybreaker may buy relief, but the people can escape while it still walks. Beyond the mountain they must build another camp, welcome whoever follows, and learn how to live under a damaged sky. Their survival begins a possible renewal; it does not instantly undo the Sundering.
 
 ## The people the journey makes

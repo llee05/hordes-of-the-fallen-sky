@@ -1,4 +1,5 @@
-import { BUILDINGS, REGIONS } from '../game/data/clan';
+import { BUILDINGS } from '../game/data/clan';
+import { currentLocation } from '../game/state/journey';
 import { assignedWorkers, burningTempest } from '../game/state/clan';
 import { campShelters } from '../game/state/campLife';
 import type { BuildingId, RunState } from '../game/types';
@@ -98,7 +99,7 @@ export function buildingMenu(run: RunState, view: TreeViewState, selected: strin
     })),
   };
   return `<section class="game-panel camp-estate" data-region="${run.clan.region}">
-    <header class="camp-estate-heading"><div class="camp-estate-title">${clanMark('banner')}<div><p class="eyebrow">BLUE BANNER CLAN · ${escapeHtml(REGIONS[run.clan.region]!.short)}</p><h2 id="overlay-title">Build a people.</h2></div></div><div class="camp-stores" aria-label="Camp resources">${summary.map(([mark, value, label]) => `<span>${clanMark(mark!)}<span><strong>${value}</strong><small>${label}</small></span></span>`).join('')}</div><button class="panel-close" data-action="back" aria-label="Close panel" title="Close (Escape)">×</button></header>
+    <header class="camp-estate-heading"><div class="camp-estate-title">${clanMark('banner')}<div><p class="eyebrow">BLUE BANNER CLAN · ${escapeHtml(currentLocation(run).short)}</p><h2 id="overlay-title">Build a people.</h2></div></div><div class="camp-stores" aria-label="Camp resources">${summary.map(([mark, value, label]) => `<span>${clanMark(mark!)}<span><strong>${value}</strong><small>${label}</small></span></span>`).join('')}</div><button class="panel-close" data-action="back" aria-label="Close panel" title="Close (Escape)">×</button></header>
     <div class="camp-estate-body">
       <div class="camp-model" role="group" aria-label="Camp model. Select a building to inspect its developments.">
         <div class="camp-model-caption"><p class="eyebrow">A HOME WE CARRY</p><p>Every hearth. Every craft. Your people.</p></div>

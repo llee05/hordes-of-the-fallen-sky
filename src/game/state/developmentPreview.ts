@@ -2,6 +2,7 @@ import type { BuildingId, RunState } from '../types';
 import { buildingBlocker, buildingCost, buildStructure } from './clan';
 import { crossingForecast, economyForecast } from './economy';
 import { ROUTES } from '../data/clan';
+import { availableDestinations } from './journey';
 
 /** Evaluate the real purchase on an isolated copy. Missing supplies can still be planned for. */
 export function developmentPreview(run: RunState, id: BuildingId, path?: string) {
@@ -20,8 +21,12 @@ export function developmentPreview(run: RunState, id: BuildingId, path?: string)
     crossingFood:
       run.clan.stage === 'camp' && run.clan.region < 3
         ? {
-            before: ROUTES.map((route) => crossingForecast(run, route).foodNeeded),
-            after: ROUTES.map((route) => crossingForecast(preview, route).foodNeeded),
+            before: availableDestinations(run).flatMap((destination) =>
+              ROUTES.map((route) => crossingForecast(run, route, destination).foodNeeded),
+            ),
+            after: availableDestinations(preview).flatMap((destination) =>
+              ROUTES.map((route) => crossingForecast(preview, route, destination).foodNeeded),
+            ),
           }
         : undefined,
   };

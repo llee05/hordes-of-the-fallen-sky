@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME } from '../config';
 import { paintedImage } from './painterlyArt';
+import type { MigrationLocation } from '../data/clan';
 
 /** Decorative terrain is deliberately walkable; the simulation stays top-down. */
 export class SteppeLandscape {
@@ -57,10 +58,39 @@ export class SteppeLandscape {
     this.setRegion(0);
   }
 
-  setRegion(region: number): void {
+  setRegion(region: number, location?: MigrationLocation): void {
     this.regional.removeAll(true);
+    this.regional.setName(`landscape-${location?.id ?? region}`);
     this.passage = [];
     const center = GAME.worldSize / 2;
+    if (location?.context) {
+      this.regional.add(
+        this.scene.add.rectangle(
+          center,
+          center,
+          GAME.worldSize,
+          GAME.worldSize,
+          location.color,
+          0.12,
+        ),
+      );
+      // Low, distant outcrops reuse painted terrain; their ground remains walkable and quiet.
+      for (let peak = 0; peak < location.peaks; peak += 1) {
+        const x = center + (peak - (location.peaks - 1) / 2) * 190;
+        const y = center - 295 - (peak % 2) * 35;
+        const width =
+          location.terrain === 'foothills' ? 145 : location.terrain === 'volcanic' ? 240 : 190;
+        this.regional.add(
+          this.scene.add
+            .image(x + 12, y + 10, 'shadow')
+            .setDisplaySize(width, width * 0.3)
+            .setAlpha(0.4),
+        );
+        this.regional.add(
+          paintedImage(this.scene, x, y, 'rock', width).setTint(location.color).setAlpha(0.85),
+        );
+      }
+    }
     const river = this.scene.add.graphics();
     const points = new Phaser.Curves.Spline([
       center - 1800,
@@ -74,12 +104,13 @@ export class SteppeLandscape {
       center + 1800,
       center - 220,
     ]).getPoints(120);
-    river.lineStyle(region === 1 ? 100 : 72, 0x9caa82, 0.55).strokePoints(points);
+    const broadRiver = region === 1 || location?.terrain === 'river';
+    river.lineStyle(broadRiver ? 100 : 72, 0x9caa82, 0.55).strokePoints(points);
     river
-      .lineStyle(region === 1 ? 79 : 53, region === 1 ? 0x91b2b2 : 0x668f89, 0.85)
+      .lineStyle(broadRiver ? 79 : 53, region === 1 ? 0x91b2b2 : 0x668f89, 0.85)
       .strokePoints(points);
     river
-      .lineStyle(region === 1 ? 52 : 30, region === 1 ? 0xc3d0bb : 0x87a79a, 0.6)
+      .lineStyle(broadRiver ? 52 : 30, region === 1 ? 0xc3d0bb : 0x87a79a, 0.6)
       .strokePoints(points);
     river.lineStyle(2, 0xe8e1b8, 0.5);
     for (let i = 7; i < points.length - 7; i += 8) {

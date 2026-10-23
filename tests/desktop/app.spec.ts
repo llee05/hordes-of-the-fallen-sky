@@ -3,6 +3,64 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
+test('desktop migration offers named destinations and frozen, responsive travel forecasts', async () => {
+  test.setTimeout(110000);
+  const directory = await mkdtemp(join(tmpdir(), 'gloam-destinations-'));
+  const environment = { ...process.env };
+  delete environment.ELECTRON_RUN_AS_NODE;
+  delete environment.GLOAM_DEV_SERVER_URL;
+  const app = await electron.launch({
+    ...(process.env.GLOAM_TEST_EXECUTABLE
+      ? {
+          executablePath: process.env.GLOAM_TEST_EXECUTABLE,
+          args: [`--user-data-dir=${directory}`],
+        }
+      : { args: [resolve('dist-desktop/desktop/main.js'), `--user-data-dir=${directory}`] }),
+    env: environment,
+  });
+  try {
+    const page = await app.firstWindow();
+    await page.getByRole('button', { name: 'Camp scenes: On' }).click();
+    await page.getByRole('button', { name: /NEW GAME/ }).click();
+    await page.getByRole('button', { name: /Skip intro/ }).click();
+    await page.keyboard.press('b');
+    await page.locator('[data-camp-site="archery"]').click();
+    await page.locator('[data-node="archery-base"]').click();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#migrate')).toBeEnabled({ timeout: 75000 });
+    await page.keyboard.press('m');
+    await expect(page.locator('[data-destination]')).toHaveCount(9);
+    const frozen = await page.locator('#timer').textContent();
+    for (const size of [
+      { width: 1280, height: 800 },
+      { width: 960, height: 600 },
+    ]) {
+      await app.evaluate(
+        ({ BrowserWindow }, size) =>
+          BrowserWindow.getAllWindows()[0]!.setContentSize(size.width, size.height),
+        size,
+      );
+      await expect.poll(() => page.evaluate(() => innerWidth)).toBe(size.width);
+      await page.locator('[data-destination="belukha"]').click();
+      await expect(page.locator('#destination-detail')).toContainText('Mount Belukha (Üch-Sümer)');
+      await expect(page.locator('#destination-detail')).toContainText('Approach time +20%');
+      expect(
+        await page
+          .locator('.route-dialog')
+          .evaluate((panel) => panel.scrollWidth <= panel.clientWidth),
+      ).toBe(true);
+      await page.locator('#destination-detail').scrollIntoViewIfNeeded();
+      await page.screenshot({ path: `test-results/native-destinations-${size.width}.png` });
+    }
+    await expect(page.locator('#timer')).toHaveText(frozen!);
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toBeHidden();
+  } finally {
+    await app.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, and quits', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'gloam-desktop-'));
   const environment = { ...process.env };

@@ -22,6 +22,15 @@ export function arrivalLocation(run: RunState): MigrationLocation {
   );
 }
 
+/** Chronicle stops retain completed destinations and show the chosen target during a crossing. */
+export function locationAtChapter(run: RunState, chapter: number): MigrationLocation {
+  if (chapter === run.clan.region) return currentLocation(run);
+  if (run.clan.stage === 'migration' && chapter === run.clan.region + 1)
+    return arrivalLocation(run);
+  const id = run.story.crossings.find((crossing) => crossing.region === chapter)?.locationId;
+  return (id && locationById(id)) || chapterLocation(chapter);
+}
+
 /** Two freely chosen camp stops precede the original, explicitly fictional final refuge. */
 export function availableDestinations(run: RunState): readonly MigrationLocation[] {
   if (run.clan.stage !== 'camp' || run.clan.region >= REGIONS.length - 1) return [];

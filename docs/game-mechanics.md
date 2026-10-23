@@ -8,6 +8,16 @@ The player commands a mounted archer protecting the Blue Banner clan. Ride, dodg
 
 The intended rhythm is **build → defend → choose when to leave → escort → rebuild**. A typical expedition targets roughly 15 minutes, but the first three camps have no forced departure time. Leaving early shortens the journey; waiting provides gathering time at the cost of pasture and increasing enemy pressure. There is no global 15-minute victory timer.
 
+The four regions below are journey chapters. The first two crossings can instead
+visit any unvisited named destination from the eight-location catalog. Choose the
+destination before a river, ridge, or rescue approach. Chapter events and the eight
+story beats retain their timing; actual camp names, terrain details, gathering, and
+travel modifiers follow the selected location. Food/material multipliers stack with
+camp and patron effects, the current camp modifies onward mobility, and the target
+modifies incoming crossing duration. All forecasts use those same rules. The third
+crossing and final stand remain at the fictional Heart of the Steppe. See
+[migration locations](migration-locations.md) for the catalog and cultural sources.
+
 | Stage               | Region / event                            | Rules                                                                                                                                                                   |
 | ------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Act I, camp 1       | The Golden Pasture / The Sundering        | Starting camp. Routes open after 45 seconds. Introductory spawn pacing for the first 18 seconds.                                                                        |

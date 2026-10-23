@@ -680,7 +680,7 @@ export const ROUTES = [
     title: 'Follow the river',
     icon: '≈',
     subtitle: 'PROVISIONS / LONG CROSSING',
-    description: '+35 food, +2 horses. A slower journey through the White Silence.',
+    description: '+35 food, +2 horses. A longer crossing along the water.',
     food: 35,
     materials: 0,
     population: 0,

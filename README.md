@@ -2,7 +2,7 @@
 
 A Mongolian-inspired nomadic civilization builder × mounted bullet heaven. **TypeScript + Phaser 3 + Electron + Vite.** The cities have fallen, the sky is going dark, and a small clan survives by moving. Build a people, defend their temporary home, and protect the caravan on its journey to the sacred heart of the steppe.
 
-This playable prototype includes a complete two-act expedition: eight illustrated camp encounters with choices, four companions, three defended crossings, a final mountain stand, and an epilogue reflecting the people who arrive. Its civilization systems include eight camp branches with 37 developments, abstracted population and workers, three resources, four regional arenas, five standard enemies, two elites, and one boss. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and permanent civilization unlocks remain future work.
+This playable prototype includes a complete two-act expedition: eight illustrated camp encounters with choices, four companions, three defended crossings, a final mountain stand, and an epilogue reflecting the people who arrive. Its civilization systems include eight camp branches with 37 developments, abstracted population and workers, three resources, four journey chapters with eight additional named camp destinations, five standard enemies, two elites, and one boss. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and permanent civilization unlocks remain future work.
 
 Read [the world lore](lore.md) for the Tengri-inspired setting: Eternal Heaven, Etügen and the living land, the Last Court's Iron Vow, the unreturned, and the Blue Banner clan's search for refuge. Research notes separate the religious and cultural inspiration from the game's invented mythology.
 
@@ -49,6 +49,18 @@ The Khan, allied archers, and all six creature designs have painted sprite anima
 Camp scenes are **On** by default. Saran the hearthkeeper, Boro the herder, Erden the tally keeper, and Nara the youngest survivor travel through the story with the Blue Banner clan. Conversations pause the world and offer two responses, each with a displayed resource benefit. Escape / controller B continues without choosing. Turn **Camp scenes: Off** at the title for uninterrupted combat; this preference lasts through run restarts in the current app session.
 
 Act I crosses Golden Pasture and Silent River. Arrival at Broken Pass begins Act II, followed by the Heart of the Steppe. The chronicle's **Our story** tab keeps the actual conversations and decisions from the current expedition. It also remembers construction, departures, arrivals, losses, and succession. Companions offer brief reactions during play, spaced by active time; a small remnant uses a collective voice, and Camp scenes: Off records facts without spoken reactions. **Your clan** and **Our story** record each Khan’s time carrying the banner and the host’s victories during that tenure. The record retains the latest 96 clan moments and 64 Khans, with total counts visible. Pause, victory, and defeat menus also offer **Our remembered road**. Read-only memories never restart simulation or grant a choice again.
+
+The first two departures also offer **Mount Otgontenger, Bogd Khan Uul, Altai Tavan
+Bogd, Khan Tengri Peak, Mount Belukha (Üch-Sümer), Altan Ovoo, Eej Khairkhan, and
+Orkhon Valley** as alternative destinations. Press M after routes open, choose a
+camp, then choose a river, ridge, or rescue approach. Each place has its own gathering
+and travel modifiers, shown alongside its cultural context and destination-specific
+food forecasts. Visited places are left behind. The HUD, camp, story settings,
+chronicle, and Khan records retain the actual location; chapter weather and story
+beats still follow the four-stage expedition. The third crossing leads to the
+fictional Heart of the Steppe. These are stylized camps in the surrounding landscapes,
+with compressed travel geography; real sacred places remain distinct from the
+invented calamity. See [destinations, rules, and cultural sources](docs/migration-locations.md).
 
 Start with eight people, three horses, two gers, supplies, and a mounted Khan with one accompanying rider. Attacks are automatic. Ride to collect spirit shards. Each level banks a knowledge point without interrupting combat. Press **T** (controller **LB**) or use the HUD to open the paused **Patron tech tree**, inspect every branch, and spend points on the ranks you choose. Eight patrons support hunting, civilisation, archery, survival, terrain control, ancestral summons, army leadership, and defensive construction. Each has a two-rank foundation, two practices, and a capstone; mix patrons freely. You can leave with unspent points and return later. Categories and search help you find branches. The tree is also accessible from Pause and the chronicle’s Traditions tab. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through.
 

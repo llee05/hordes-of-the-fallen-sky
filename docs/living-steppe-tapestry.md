@@ -8,6 +8,14 @@ Golden, sage, and ochre grasses form a quiet field beneath ivory felt gers, turq
 
 The four regions share the same painting language. Rounded riverbanks and ice distinguish the Silent River, layered stone outcrops define the Broken Pass, and cool violet atmosphere and a red eclipse mark the sacred mountain. Wind strokes, drifting snow, hoof dust, and gently moving banners add motion without obscuring attacks or danger warnings.
 
+Named migration camps overlay the chapter weather with a quiet location tint and
+painted outcrops: single, three, and five-part skylines, low foothills, a volcanic
+silhouette, or a broad river. These reuse the local rock and shadow assets and remain
+walkable, behind combat actors, with no new collision geometry or animation clocks.
+They suggest the surrounding landscape rather than reconstructing real monuments
+or sacred ceremonies. `src/migration.css` keeps destination selection and the three
+approach forecasts on the existing manuscript panels.
+
 The interface uses indigo felt, warm manuscript paper, brass edging, rust-red woven trim, and serif chapter titles. A stitched hanging cloth carries the title menu while leaving the painted camp visible beside it. During play, compact textile HUD panels and a bottom command dock float above the full-window battlefield. Detailed manuscript pages live in the paused clan chronicle and management menus. Keep material contrast quiet beneath text, and keep decorative stitches and borders out of pointer and keyboard navigation.
 
 `src/tapestry.css` defines the material treatment. `src/ui/artwork.ts` defines decorative brass-cut SVG symbols and route landscape vignettes. Camp and chronicle illustrations crop the existing painted atlases using their shared JSON frame metadata, so structures look the same in the world and in management pages. Symbols and illustrations are hidden from assistive technology; the containing controls retain their text labels, keyboard focus, and controller navigation.

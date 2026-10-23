@@ -1,7 +1,8 @@
 import { GAME } from '../game/config';
 import { clanMark } from './artwork';
 import { UIMotion } from './Motion';
-import { FORMATIONS, REGIONS } from '../game/data/clan';
+import { FORMATIONS } from '../game/data/clan';
+import { arrivalLocation, availableDestinations, currentLocation } from '../game/state/journey';
 import { INTRO_SLIDES, introImageUrl } from '../game/data/intro';
 import { introMenu } from './introContent';
 import { storyAct } from '../game/data/story';
@@ -41,6 +42,7 @@ export class GameUI {
   private journalTab: JournalTab = 'journey';
   private treeViews = new Map<RunPhase, TreeViewState>();
   private campSelection: BuildingId = 'ger';
+  private destinationSelection?: string;
 
   private treeView(): TreeViewState {
     let view = this.treeViews.get(this.phase);
@@ -223,7 +225,7 @@ export class GameUI {
     this.get('khan-succession')
       .closest('.vitals-hud')!
       .classList.toggle('choosing-khan', !khanActive);
-    const region = REGIONS[clan.region]!;
+    const region = currentLocation(run);
     this.text('timer', formatTime(run.elapsed));
     this.text('level', run.level.toString().padStart(2, '0'));
     this.text('kills', run.kills);
@@ -290,7 +292,7 @@ export class GameUI {
     this.text(
       'objective',
       clan.stage === 'migration'
-        ? 'Ride with the caravan. Protect the clan.'
+        ? `Escort the caravan to ${arrivalLocation(run).name}.`
         : clan.stage === 'final'
           ? 'Guard the families clearing the mountain passage.'
           : 'Grow the camp. Keep your people alive.',
@@ -366,8 +368,11 @@ export class GameUI {
 
   private renderPhase(snapshot: HudSnapshot): void {
     const { run } = snapshot;
-    const preserveTree = run.phase === this.phase && ['upgrade', 'building'].includes(run.phase);
-    const scroll = preserveTree ? this.overlay.querySelector('.tree-scroll')?.scrollTop : undefined;
+    const preserveTree =
+      run.phase === this.phase && ['upgrade', 'building', 'route'].includes(run.phase);
+    const scroll = preserveTree
+      ? this.overlay.querySelector('.tree-scroll, .migration-scroll')?.scrollTop
+      : undefined;
     const active = document.activeElement as HTMLElement | null;
     const focusKey = preserveTree ? active?.dataset.focusKey : undefined;
     const selection = active instanceof HTMLInputElement ? active.selectionStart : null;
@@ -433,8 +438,11 @@ export class GameUI {
       this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">Your people will be here when you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="research">Patron tech tree</button><button class="menu-button" data-action="restart">Start a new run</button><button class="menu-button" data-action="story-log">Our remembered road</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${quit}</nav></section>`;
     } else if (run.phase === 'building')
       this.overlay.innerHTML = buildingMenu(run, this.treeView(), this.campSelection);
-    else if (run.phase === 'route') this.overlay.innerHTML = routeMenu(run);
-    else if (run.phase === 'upgrade') this.overlay.innerHTML = researchMenu(run, this.treeView());
+    else if (run.phase === 'route') {
+      if (!availableDestinations(run).some((location) => location.id === this.destinationSelection))
+        this.destinationSelection = arrivalLocation(run).id;
+      this.overlay.innerHTML = routeMenu(run, this.destinationSelection);
+    } else if (run.phase === 'upgrade') this.overlay.innerHTML = researchMenu(run, this.treeView());
     else if (run.phase === 'journal') this.overlay.innerHTML = journalMenu(run, this.journalTab);
     else if (run.phase === 'settings')
       this.overlay.innerHTML = settingsMenu(this.platform.profile.muted, this.fullscreen);
@@ -443,7 +451,8 @@ export class GameUI {
       const won = run.phase === 'won';
       this.overlay.innerHTML = `<section class="end-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">${won ? 'A PEOPLE, STILL ALIVE' : 'THE STEPPE WILL REMEMBER'}</p><h2 id="overlay-title">${won ? 'A sky worth saving.' : 'The banners fall.'}</h2><p class="panel-intro">${won ? `${run.clan.population} ${run.clan.population === 1 ? 'person' : 'people'} and ${run.clan.herd} ${run.clan.herd === 1 ? 'animal' : 'animals'} reach the mountain passage.<br>Your civilization lives to see another sky.` : 'The journey ends here. Another clan will take up the blue banner.'}</p><div class="end-stats"><div><strong>${formatTime(run.elapsed)}</strong><span>JOURNEY</span></div><div><strong>${run.clan.population}</strong><span>PEOPLE</span></div><div><strong>${run.clan.region + 1}/4</strong><span>PASTURES</span></div></div><nav class="main-menu"><button class="menu-button featured" data-action="restart" data-primary>RAISE THE BANNERS AGAIN <span>→</span></button>${won ? '<button class="menu-button" data-action="epilogue">Read the epilogue</button>' : ''}<button class="menu-button" data-action="story-log">Our remembered road</button>${quit}</nav></section>`;
     }
-    if (scroll !== undefined) this.overlay.querySelector('.tree-scroll')!.scrollTop = scroll;
+    if (scroll !== undefined)
+      this.overlay.querySelector('.tree-scroll, .migration-scroll')!.scrollTop = scroll;
     if (focusKey) {
       const target = [...this.overlay.querySelectorAll<HTMLElement>('[data-focus-key]')].find(
         (entry) => entry.dataset.focusKey === focusKey,
@@ -458,7 +467,7 @@ export class GameUI {
     this.overlay.scrollTop = 0;
     this.overlay
       .querySelector<HTMLButtonElement>(
-        '[data-primary], [data-camp-site][aria-pressed="true"], .tree-node[aria-disabled="false"], [data-building]:not(:disabled), [data-route], [role="tab"][aria-selected="true"], [data-action="sound"]',
+        '[data-primary], [data-camp-site][aria-pressed="true"], [data-destination][aria-pressed="true"], .tree-node[aria-disabled="false"], [data-building]:not(:disabled), [data-route], [role="tab"][aria-selected="true"], [data-action="sound"]',
       )
       ?.focus({ preventScroll: true });
     if (!this.overlay.contains(document.activeElement))
@@ -476,6 +485,9 @@ export class GameUI {
       this.treeView().query = '';
       this.renderPhase(this.lastSnapshot);
       this.overlay.querySelector('.tree-scroll')!.scrollTop = 0;
+    } else if (button.dataset.destination && this.lastSnapshot && this.phase === 'route') {
+      this.destinationSelection = button.dataset.destination;
+      this.renderPhase(this.lastSnapshot);
     } else if (button.dataset.treeFilter && this.lastSnapshot) {
       this.treeView().category = button.dataset.treeFilter;
       this.renderPhase(this.lastSnapshot);
@@ -513,7 +525,8 @@ export class GameUI {
       this.scene.research(button.dataset.research, Number(button.dataset.rank));
     else if (button.dataset.building)
       this.scene.construct(button.dataset.building as BuildingId, button.dataset.path);
-    else if (button.dataset.route) this.scene.chooseRoute(button.dataset.route);
+    else if (button.dataset.route)
+      this.scene.chooseRoute(button.dataset.route, this.destinationSelection);
     else if (button.dataset.tab) this.selectJournalTab(button.dataset.tab as JournalTab);
   }
 
@@ -556,7 +569,7 @@ export class GameUI {
       return;
     }
     if (
-      ['upgrade', 'building'].includes(this.phase) &&
+      ['upgrade', 'building', 'route'].includes(this.phase) &&
       ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) &&
       !(event.target instanceof HTMLInputElement)
     ) {

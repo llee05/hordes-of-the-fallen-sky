@@ -115,9 +115,9 @@ export function clanWarning(
       ? 'Food will run out before arrival. Protect the caravan; arrival supplies come at the far end.'
       : clan.stage === 'final'
         ? 'Food will run out before the passage opens. Develop herding or provisions.'
-        : 'Food will run out soon. Develop herding or provisions, or inspect a route east.';
+        : 'Food will run out soon. Develop herding or provisions, or inspect a route ahead.';
   if (clan.stage === 'camp' && clan.pasture <= 25)
-    return 'Pasture is nearly spent. Gathering slows while mouths still need feeding. Inspect a route east.';
+    return 'Pasture is nearly spent. Gathering slows while mouths still need feeding. Inspect a route ahead.';
   if (clan.stage === 'final' && clan.pasture <= 25)
     return 'Pasture is nearly spent. Protect your provisions and hold until the passage opens.';
   return '';

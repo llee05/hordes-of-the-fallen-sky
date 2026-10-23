@@ -1,5 +1,6 @@
 import { COMPANIONS } from '../game/data/story';
 import { REGIONS } from '../game/data/clan';
+import { locationById } from '../game/state/journey';
 import { formatTime } from '../game/state/run';
 import type { RunState } from '../game/types';
 
@@ -10,18 +11,18 @@ export function khanRecords(run: RunState): string {
       const kills = (khan.killsAtFall ?? run.kills) - khan.killsAtStart;
       const state =
         khan.fallenAt !== undefined
-          ? `Fell in ${REGIONS[khan.fallenRegion!]!.name}`
+          ? `Fell in ${(khan.fallenLocationId && locationById(khan.fallenLocationId)?.name) || REGIONS[khan.fallenRegion!]!.name}`
           : run.legacy.outcome === 'won' || ['won', 'epilogue'].includes(run.phase)
             ? 'Carried the banner to refuge'
             : run.legacy.outcome === 'dead' || run.phase === 'dead'
               ? 'With the clan at the journey’s end'
               : 'Carries the banner';
-      return `<li><strong>Khan ${khan.generation}</strong><span>${state}</span><small>${formatTime(khan.chosenAt)}–${formatTime(end)} · ${formatTime(end - khan.chosenAt)} in the saddle · ${Math.max(0, kills)} banished by the host</small><small>Chosen in ${REGIONS[khan.region]!.name} with ${khan.people} ${khan.people === 1 ? 'person' : 'people'}</small></li>`;
+      return `<li><strong>Khan ${khan.generation}</strong><span>${state}</span><small>${formatTime(khan.chosenAt)}–${formatTime(end)} · ${formatTime(end - khan.chosenAt)} in the saddle · ${Math.max(0, kills)} banished by the host</small><small>Chosen in ${(khan.locationId && locationById(khan.locationId)?.name) || REGIONS[khan.region]!.name} with ${khan.people} ${khan.people === 1 ? 'person' : 'people'}</small></li>`;
     })
     .join('')}</ol></section>`;
 }
 
 export function clanMemories(run: RunState): string {
   if (!run.legacy.memories.length) return '';
-  return `<section class="clan-memories" aria-label="Life beneath the banner"><h3>Life beneath the banner</h3><p>The latest ${run.legacy.memories.length} of ${run.legacy.totalMemories} moments from this expedition.</p>${run.legacy.memories.map((memory) => `<details class="clan-memory"><summary><span>${memory.title}</span><small>${formatTime(memory.elapsed)} · ${memory.population} ${memory.population === 1 ? 'person' : 'people'}</small></summary><div class="story-memory-body"><p>${REGIONS[memory.region]!.name} · ${memory.detail}</p>${memory.line ? `<blockquote><strong>${COMPANIONS[memory.line.speaker].name}</strong><br>${memory.line.text}</blockquote>` : ''}</div></details>`).join('')}</section>`;
+  return `<section class="clan-memories" aria-label="Life beneath the banner"><h3>Life beneath the banner</h3><p>The latest ${run.legacy.memories.length} of ${run.legacy.totalMemories} moments from this expedition.</p>${run.legacy.memories.map((memory) => `<details class="clan-memory"><summary><span>${memory.title}</span><small>${formatTime(memory.elapsed)} · ${memory.population} ${memory.population === 1 ? 'person' : 'people'}</small></summary><div class="story-memory-body"><p>${(memory.locationId && locationById(memory.locationId)?.name) || REGIONS[memory.region]!.name} · ${memory.detail}</p>${memory.line ? `<blockquote><strong>${COMPANIONS[memory.line.speaker].name}</strong><br>${memory.line.text}</blockquote>` : ''}</div></details>`).join('')}</section>`;
 }

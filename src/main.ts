@@ -9,6 +9,7 @@ import './intro.css';
 import './story.css';
 import './progression.css';
 import './camp.css';
+import './migration.css';
 import { createGame } from './game/createGame';
 import { ArenaScene } from './game/scenes/ArenaScene';
 import { GameUI } from './ui/GameUI';

@@ -18,6 +18,7 @@ import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
 import { GAME } from '../config';
 import { chooseEnemy, SKYBREAKER, spawnInterval } from '../data/enemies';
 import { FORMATIONS, ROUTES } from '../data/clan';
+import { currentLocation } from '../state/journey';
 import { INTRO_SLIDES } from '../data/intro';
 import { openNextStory, resolveStory } from '../state/story';
 import {
@@ -517,8 +518,8 @@ export class ArenaScene extends Phaser.Scene {
     this.publishPhase();
   }
 
-  chooseRoute(id: string): void {
-    if (!beginMigration(this.run, id)) return;
+  chooseRoute(id: string, destinationId?: string): void {
+    if (!beginMigration(this.run, id, destinationId)) return;
     for (const ger of this.camp.list) {
       if (!(ger instanceof Phaser.GameObjects.Image) || ger.name !== 'ger') continue;
       const x = ger.x * this.camp.scaleX;
@@ -1620,7 +1621,7 @@ export class ArenaScene extends Phaser.Scene {
     for (const hazard of this.hazards) hazard.warning.destroy();
     this.hazards = [];
     this.hazardTimer = 8;
-    this.landscape.setRegion(this.run.clan.region);
+    this.landscape.setRegion(this.run.clan.region, currentLocation(this.run));
     this.refreshCamp();
     this.campBarrier.relocate(this.run, this.camp);
     this.cameras.main.flash(500, 225, 215, 180);

@@ -35,6 +35,16 @@ Khan records retain both their chosen and fallen locations.
 The simulation and `crossingForecast` share `crossingDuration`; forecasts never
 count arrival rewards toward provisions consumed before arrival.
 
+`ui/migrationContent.ts` renders the destination picker and the three approach cards.
+The selected destination is temporary UI view state until `ArenaScene.chooseRoute`
+validates and starts the crossing. Inspection preserves focus, scroll, and every
+simulation value. Keyboard arrows, Tab, mouse, and controller navigation can inspect
+destinations without departing. Escape closes planning. Camp purchase previews use
+the food-cost range across all currently available destination/approach combinations.
+The chronicle's four stops retain completed locations and show the chosen destination
+while travelling. Cultural descriptions and the resource effects are displayed
+separately. All art, fonts, and source context ship locally.
+
 ## Cultural context and sources
 
 - **Otgontenger, Altan Ovoo, Eej Khairkhan:** Mongolia's submission describes their
