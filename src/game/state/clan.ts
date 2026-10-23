@@ -2,7 +2,8 @@ import { rememberClan } from './legacy';
 import { GAME } from '../config';
 import { BUILDINGS, ROUTES } from '../data/clan';
 import type { BuildingId, ClanState, Formation, RunState } from '../types';
-import { applyCampEffects, createCampEffects } from './camp';
+import { applyCampEffects, createCampEffects, hasDevelopment } from './camp';
+import { economyRates, migrationMobility, pastureDepletion } from './economy';
 import { completeGuidance } from './guidance';
 import { isKhanActive } from './khan';
 
@@ -40,9 +41,7 @@ export function assignedWorkers(run: RunState): number {
   return BUILDINGS.reduce((sum, b) => sum + (run.clan.buildings[b.id] ? b.workers : 0), 0);
 }
 
-export function hasDevelopment(run: RunState, id: BuildingId, path: string): boolean {
-  return run.clan.paths[id]?.includes(path) ?? false;
-}
+export { hasDevelopment } from './camp';
 
 /** An excluded ancestor also excludes its descendants, without hard-coded path depths. */
 export function developmentExcluded(run: RunState, id: BuildingId, path: string): boolean {
@@ -238,57 +237,22 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
   if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
   const clan = run.clan;
   const previousTime = clan.stageTime;
-  const { multipliers, bonuses } = clan.campEffects;
+  const { bonuses } = clan.campEffects;
   clan.stageTime += dt;
-  const consumption =
-    clan.population *
-    GAME.clan.foodPerPerson *
-    (hasDevelopment(run, 'herd', 'winter-stores') ? 0.5 : 1) *
-    run.patrons.land.consumption *
-    multipliers.consumption;
   if (clan.stage !== 'migration') {
-    clan.pasture = Math.max(
-      0,
-      Math.min(
-        100,
-        clan.pasture -
-          dt *
-            ((100 / GAME.clan.pastureLifetime) *
-              run.patrons.land.pastureUse *
-              multipliers.pastureUse -
-              run.patrons.land.pastureRecovery),
-      ),
-    );
-    const pasture = clan.pasture / 100;
-    const winter = clan.region === 1 ? 0.7 : 1;
-    clan.food +=
-      dt *
-      ((0.65 + (clan.buildings.herd ? 0.65 : 0)) *
-        pasture *
-        winter *
-        run.patrons.land.food *
-        multipliers.foodProduction -
-        consumption);
-    clan.materials +=
-      dt *
-      (0.28 + clan.population * 0.018) *
-      pasture *
-      run.patrons.land.materials *
-      multipliers.materialProduction;
+    clan.pasture = Math.max(0, Math.min(100, clan.pasture - dt * pastureDepletion(run)));
+    const rates = economyRates(run);
+    clan.food += dt * rates.foodNet;
+    clan.materials += dt * rates.materials;
     clan.integrity = Math.min(
       100,
       clan.integrity +
         dt * ((hasDevelopment(run, 'ger', 'hearthkeepers') ? 0.25 : 0) + bonuses.resolveRecovery),
     );
   } else {
-    clan.food -= dt * consumption;
+    clan.food += dt * economyRates(run).foodNet;
     const route = ROUTES.find((r) => r.id === clan.routeId)!;
-    const mobility =
-      (1 + clan.herd * 0.012) *
-      (hasDevelopment(run, 'herd', 'remount-herds') ? 1.2 : 1) *
-      (clan.region === 1 ? 0.8 : 1) *
-      run.patrons.banner.mobility *
-      multipliers.mobility;
+    const mobility = migrationMobility(run);
     clan.migrationProgress = Math.min(
       1,
       (clan.stageTime * mobility) / (GAME.clan.migrationDuration * route.duration),

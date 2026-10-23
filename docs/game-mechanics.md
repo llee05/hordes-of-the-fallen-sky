@@ -42,6 +42,15 @@ The opening camp already has **Family gers at level 1**, represented by two tent
 
 ### Economy and scarcity
 
+`state/economy.ts` supplies the simulation's food/material rates, pasture depletion,
+and caravan mobility. Its read-only `economyForecast` estimates active seconds until
+food stores empty, integrating changing pasture up to its 0–100% bounds. It holds
+population, developments, and regional conditions fixed and assumes no combat losses
+or future purchases. Final-stand estimates stop at the passage opening; migration
+estimates stop at arrival. `crossingForecast` exposes remaining travel time, food
+needed en route, any provision shortfall, and food after the separate arrival reward
+or rescue cost. Arrival supplies cannot cover an earlier shortage on the road.
+
 Let `P = pasture / 100`, `N = population`, and `W = 0.7` at Silent River or `1` elsewhere:
 
 ```text

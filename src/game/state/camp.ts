@@ -1,4 +1,8 @@
-import type { CampEffectDefinition, CampEffects } from '../types';
+import type { BuildingId, CampEffectDefinition, CampEffects, RunState } from '../types';
+
+export function hasDevelopment(run: RunState, id: BuildingId, path: string): boolean {
+  return run.clan.paths[id]?.includes(path) ?? false;
+}
 
 /** Applied once per successful purchase, never inferred from presentation or building levels. */
 export function createCampEffects(): CampEffects {
