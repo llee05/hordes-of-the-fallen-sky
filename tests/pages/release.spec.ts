@@ -94,7 +94,10 @@ test('browser expedition builds, pauses, resumes, and retains its profile after 
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#riders')).toHaveText('4');
-  await expect(page.locator('#timer')).not.toHaveText(timer!);
+  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
+  // Active time caps each simulation step at 50 ms. Software rendering on CI
+  // can need more than five wall-clock seconds to display a full gameplay second.
+  await expect(page.locator('#timer')).not.toHaveText(timer!, { timeout: 15000 });
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
   const paused = await page.locator('#timer').textContent();
