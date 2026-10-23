@@ -42,3 +42,18 @@ All terrain is seeded by location, so returning to a checkpoint reproduces its
 composition. Arrival destroys the previous location's scenery before rebuilding;
 textures load once through `painterlyArt.ts`. Weather uses active gameplay seconds
 and freezes in menus. No runtime image generation or asset downloads are required.
+
+## Rivers and shores
+
+`assets/riverGeometry.ts` samples the authored watercourses into smooth channels
+with separately varying near and far banks. Orkhon's narrower branch splits and
+rejoins the main river around dry gravel bars. The same geometry keeps scattered
+tree, reed, and rock bases away from the water, including a small dry margin.
+
+`assets/RiverSurface.ts` paints opaque blue-green water over softened soil edges,
+shallow shelves, broken deeper pools, and restrained directional brush grain.
+Pebbles and small reed clumps follow the banks. Silent River has irregular,
+angular ice shelves, shaded edges, and fine fractures around open water. These
+adaptable shapes use native geometry and the existing painted reed atlas; no new
+bitmap or character frame is required. All river layers stay behind combat actors
+and remain decorative and walkable.

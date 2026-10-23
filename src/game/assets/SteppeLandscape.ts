@@ -4,6 +4,7 @@ import { paintedImage, sceneryImage } from './painterlyArt';
 import { LOCATIONS, REGIONS, type MigrationLocation } from '../data/clan';
 import { LANDSCAPES, type LandscapeDefinition } from '../data/landscapes';
 import { landscapeCover, landscapeRandom, isLandscapeClearing } from './landscapeLayout';
+import { RiverSurface } from './RiverSurface';
 
 /** Walkable painted scenery; only ArenaScene owns simulation and collision geometry. */
 export class SteppeLandscape {
@@ -36,7 +37,8 @@ export class SteppeLandscape {
     const definition = this.definition;
     this.groundWash.setFillStyle(definition.ground, definition.wash);
     this.drawSurface(id);
-    this.drawWater();
+    if (definition.water)
+      this.regional.add(new RiverSurface(this.scene, id, definition.water).container);
     const center = GAME.worldSize / 2;
     for (const item of landscapeCover(id)) {
       const x = center + item.x;
@@ -136,45 +138,6 @@ export class SteppeLandscape {
       const y = random() * size;
       if (isLandscapeClearing(x - center, y - center)) continue;
       marks.fillStyle(definition.patch, 0.23).fillEllipse(x, y, 3 + random() * 7, 2 + random() * 3);
-    }
-  }
-
-  private drawWater(): void {
-    const water = this.definition.water;
-    if (!water) return;
-    const center = GAME.worldSize / 2;
-    const river = this.scene.add.graphics().setName(`water-${water.kind}`);
-    this.regional.add(river);
-    const channels = water.kind === 'braided' ? 2 : 1;
-    for (let channel = 0; channel < channels; channel += 1) {
-      const course = water.course.map(
-        (value, index) => center + value + (index % 2 ? channel * (80 + Math.sin(index) * 30) : 0),
-      );
-      const points = new Phaser.Curves.Spline(course).getPoints(160);
-      const width = water.width * (channel ? 0.42 : 1);
-      river.lineStyle(width + 32, water.bank, 0.42).strokePoints(points);
-      river.lineStyle(width + 9, water.bank, 0.62).strokePoints(points);
-      river.lineStyle(width, water.color, 0.88).strokePoints(points);
-      river.lineStyle(width * 0.35, 0xc4d8c5, 0.23).strokePoints(points);
-      for (let i = 3; i < points.length - 3; i += 5) {
-        const p = points[i]!;
-        if (water.kind === 'frozen') {
-          river
-            .fillStyle(0xe4e7d6, 0.64)
-            .fillEllipse(p.x, p.y - width * 0.34, 48 + (i % 4) * 13, 13);
-          river
-            .lineStyle(1, 0x799da0, 0.45)
-            .lineBetween(p.x - 10, p.y - width * 0.34, p.x + 10, p.y - width * 0.3);
-        } else {
-          river.lineStyle(1.5, 0xe4e4c8, 0.38).lineBetween(p.x - 13, p.y + 4, p.x + 14, p.y + 2);
-        }
-        if (i % 3 === 0)
-          this.regional.add(
-            sceneryImage(this.scene, p.x, p.y + width / 2 + 13, 'reeds', 32 + (i % 7) * 4).setAlpha(
-              0.7,
-            ),
-          );
-      }
     }
   }
 

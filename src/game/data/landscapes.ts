@@ -335,7 +335,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     ],
     landmarks: [
       landmark('willow', -410, -160, 195),
-      landmark('willow', 470, -220, 220),
+      landmark('willow', 470, -465, 220),
       landmark('foothill', -380, 335, 255),
     ],
     water: {

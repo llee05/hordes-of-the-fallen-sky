@@ -1,6 +1,7 @@
 import { LANDSCAPES, type SceneryProp } from '../data/landscapes';
 import type { LocationId } from '../types';
 import { GAME } from '../config';
+import { isRiverWater, riverChannels } from './riverGeometry';
 
 export interface LandscapeProp {
   prop: SceneryProp;
@@ -30,6 +31,7 @@ export function landscapeRandom(id: LocationId): () => number {
 export function landscapeCover(id: LocationId): readonly LandscapeProp[] {
   const definition = LANDSCAPES[id];
   const random = landscapeRandom(id);
+  const channels = definition.water ? riverChannels(definition.water) : [];
   const half = GAME.worldSize / 2 - 120;
   const props: LandscapeProp[] = [];
   for (const cover of definition.cover) {
@@ -45,6 +47,7 @@ export function landscapeCover(id: LocationId): readonly LandscapeProp[] {
               : (random() * 2 - 1) * half;
         const y = i < 26 ? random() * 1060 - 460 : (random() * 2 - 1) * half;
         if (isLandscapeClearing(x, y)) continue;
+        if (isRiverWater(channels, x, y, width * 0.2 + 14)) continue;
         // Keep complete painted silhouettes apart, including the space above their ground anchors.
         if (
           definition.landmarks.some(
