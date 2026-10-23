@@ -22,6 +22,11 @@ npm start           # Play the offline desktop build
 
 The packaged game includes its runtime, painted art, fonts, and synthesized sound. It makes no runtime asset downloads or AI calls. The desktop fills its window and provides fullscreen, quit, and durable native saves.
 
+For the static browser release, run `npm run build:web` and then `npm run test:pages`
+with Playwright Chromium installed. The production smoke tests use the GitHub Pages
+project subpath. See [browser release and GitHub Pages instructions](docs/github-pages.md)
+for preview commands, browser saves, and release verification.
+
 ## Desktop presentation
 
 The game opens at the title menu. **New Game** opens a skippable, five-chapter painted prologue adapted from [the world lore](lore.md#opening-slideshow): Heaven and Earth, the Iron Vow, the unreturned, the living hearth, and the road to the Heart of the Steppe. Read at your own pace with Continue / Enter / controller A; use Back or the left/right arrow keys to turn pages. Completing the prologue, Skip intro, Escape, or controller B / Start begins the expedition, opening the first camp scene when camp scenes are enabled. Every New Game starts with the prologue. Replay introduction at the title lets you read it independently; completing or skipping that replay returns to the title. Gameplay remains frozen throughout; reduced-motion preferences disable the gentle painting movement. See [the bundled paintings and generation prompts](docs/intro-artwork.md).

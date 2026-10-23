@@ -9,11 +9,13 @@
   "scripts": {
     "dev": "npm run build:desktop && node scripts/dev.mjs",
     "build": "npm run typecheck && vite build && npm run build:desktop",
+    "build:web": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.desktop.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:pages": "playwright test --config playwright.pages.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run format:check && npm run typecheck && npm test && npm run build",
