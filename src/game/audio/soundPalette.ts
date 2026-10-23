@@ -1,6 +1,6 @@
 /** Original, locally synthesized materials for the fictional mounted clan.
  * These are game sound designs, not recordings of historical instruments or rites. */
-type Material = 'string' | 'skin' | 'wood' | 'horn' | 'metal' | 'air';
+type Material = 'string' | 'bowstring' | 'skin' | 'wood' | 'horn' | 'metal' | 'air';
 
 interface Layer {
   material: Material;
@@ -44,9 +44,9 @@ const signal = (volume: number, layers: Layer[]): SoundCue => ({
 
 export const SOUND_CUES = {
   shoot: world(0.27, 0.085, 2, [
-    layer('string', 196, 0.16, 0.8),
-    layer('wood', 540, 0.045, 0.3),
-    layer('air', 2100, 0.13, 0.3, 0.015),
+    layer('bowstring', 165, 0.085, 0.9),
+    layer('wood', 245, 0.04, 0.2),
+    layer('air', 1700, 0.06, 0.14, 0.004),
   ]),
   hoof: world(
     0.29,
@@ -208,10 +208,22 @@ export function renderSound(
   };
   const tuning = 1 + (variation - 1) * 0.013;
   for (const part of cue.layers) {
+    const bowstring = part.material === 'bowstring';
     const frequency = part.frequency * tuning;
     const period = Math.max(2, Math.round(sampleRate / frequency - 0.5));
     const string = new Float64Array(period);
-    for (let i = 0; i < period; i++) string[i] = noise();
+    const excitationRate = 1 - Math.exp((-Math.PI * 2 * 2400) / sampleRate);
+    let excitation = 0;
+    for (let i = 0; i < period; i++) {
+      const white = noise();
+      // A softened release avoids a brittle click before the taut string settles.
+      excitation += excitationRate * (white - excitation);
+      string[i] = bowstring ? excitation : white;
+    }
+    if (bowstring) {
+      const mean = string.reduce((sum, sample) => sum + sample, 0) / period;
+      for (let i = 0; i < period; i++) string[i] = string[i]! - mean;
+    }
     let stringIndex = 0;
     let phase = 0;
     let low = 0;
@@ -237,12 +249,13 @@ export function renderSound(
       const breath = (high - low) * 2;
       const envelope = Math.min(1, t / attack) * Math.min(1, (part.duration - t) / release);
       let value = 0;
-      if (part.material === 'string') {
+      if (part.material === 'string' || bowstring) {
         value = string[stringIndex]!;
         const next = (stringIndex + 1) % period;
-        string[stringIndex] = (value + string[next]!) * 0.496;
+        // Bow limbs quickly damp the release; musical plucks keep their resonance.
+        string[stringIndex] = (value + string[next]!) * (bowstring ? 0.44 : 0.496);
         stringIndex = next;
-        value *= Math.exp((-t * 1.5) / part.duration);
+        value *= Math.exp((-t * (bowstring ? 4.5 : 1.5)) / part.duration);
       } else if (part.material === 'air') {
         value = breath * Math.sin((Math.PI * t) / part.duration);
       } else {

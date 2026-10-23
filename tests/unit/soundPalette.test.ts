@@ -4,6 +4,7 @@ import {
   SOUND_CUES,
   SOUND_KINDS,
   SOUND_SAMPLE_RATE,
+  SOUND_VARIANTS,
 } from '../../src/game/audio/soundPalette';
 
 describe('the steppe sound materials', () => {
@@ -44,5 +45,25 @@ describe('the steppe sound materials', () => {
       4,
     );
     expect(() => renderSound('hoof', 0, 0)).toThrow(RangeError);
+  });
+
+  it('keeps bow releases brief and damped instead of ringing through repeated volleys', () => {
+    for (const rate of [24000, 44100, 48000]) {
+      for (let variant = 0; variant < SOUND_VARIANTS; variant++) {
+        const pcm = renderSound('shoot', variant, rate);
+        let total = 0;
+        let release = 0;
+        let tail = 0;
+        for (let i = 0; i < pcm.length; i++) {
+          const energy = pcm[i]! * pcm[i]!;
+          total += energy;
+          if (i < rate * 0.03) release += energy;
+          if (i >= rate * 0.06) tail += energy;
+        }
+        expect(pcm.length / rate).toBeLessThan(0.13);
+        expect(release / total).toBeGreaterThan(0.6);
+        expect(tail / total).toBeLessThan(0.03);
+      }
+    }
   });
 });

@@ -6,7 +6,7 @@ The sound direction translates the Living Steppe Tapestry's wood, felt, leather,
 
 | Action                   | Sound materials                                                                    |
 | ------------------------ | ---------------------------------------------------------------------------------- |
-| Bow volley               | Damped string snap, wooden bow body, and a short feather rush                      |
+| Bow volley               | Softened, dry bowstring release, low wooden body, and a quiet feather rush         |
 | Riding / gallop          | Weighted hoof contacts with low drum body, dry wood, grass, and a brief cloth rush |
 | Khan hit                 | Leather and wood over a low membrane thud                                          |
 | Creature hit / defeat    | Dry bone and stone knocks, then an ash-like breath                                 |
@@ -22,6 +22,13 @@ The sound direction translates the Living Steppe Tapestry's wood, felt, leather,
 
 `src/game/audio/soundPalette.ts` defines all 21 cues as typed material layers. Strings use a damped delay loop excited by noise; wood, membrane, horn, and metal use different resonances, envelopes, and transients. Filtered noise supplies breath, grass, and cloth. Three reproducible variants vary tuning and excitation. Each mono PCM buffer renders at 24 kHz, with quiet endpoints, DC removal, and peak headroom, then caches on first use.
 
+Bowstrings have their own short, heavily damped release rather than the sustained
+pluck used by musical cues. A 2.4 kHz excitation filter softens the initial edge,
+the wooden body sits lower, and the feather rush stays short and quiet. Each shot
+lasts 115 milliseconds including its silent buffer tail; most energy arrives in
+the first 30 milliseconds, with less than 3% remaining after 60 milliseconds.
+This keeps repeated volleys dry without a bright click or lingering musical note.
+
 ## Mixing and lifecycle
 
 `src/game/systems/Audio.ts` unlocks Web Audio through a user action. A shared output gain and compressor mix at most 16 live sources. Per-cue cooldowns and overlap limits restrain large volleys and crowds. Important clan signals can replace a quieter voice. World sources pan gently left or right and fade with distance from the living Khan, or from camp during succession. Barricade hits retain a quiet minimum level so a distant attack on the clan remains audible.
@@ -32,4 +39,4 @@ Mute suppresses new sounds and fades current voices over 15 milliseconds. Its ex
 
 ## Verification
 
-`tests/unit/soundPalette.test.ts` checks every rendered cue for finite samples, audible energy, headroom, DC, endpoints, and repeatable variation. `tests/unit/audio.test.ts` checks gating, mute, voice limits, cleanup, active-time cadence, and audio-device failure. `tests/e2e/audio.spec.ts` exercises real Web Audio buffers, scene actions, paused purchases, mute persistence, journey signals, succession, and context reuse. Run `npm run check`, the focused browser tests, and the Electron smoke test when changing playback or lifecycle behavior.
+`tests/unit/soundPalette.test.ts` checks every rendered cue for finite samples, audible energy, headroom, DC, endpoints, and repeatable variation, plus the bow release's short decay at 24, 44.1, and 48 kHz. `tests/unit/audio.test.ts` checks gating, mute, voice limits, cleanup, active-time cadence, and audio-device failure. `tests/e2e/audio.spec.ts` exercises real Web Audio buffers, scene actions, paused purchases, mute persistence, journey signals, succession, and context reuse. Run `npm run check`, the focused browser tests, and the Electron smoke test when changing playback or lifecycle behavior.

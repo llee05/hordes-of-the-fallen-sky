@@ -74,6 +74,7 @@ test('riding and combat use real material buffers, and an empty volley stays sil
     return voices.map((voice) => {
       const samples = voice.source.buffer.getChannelData(0);
       return {
+        kind: voice.kind,
         rate: voice.source.buffer.sampleRate,
         seconds: voice.source.buffer.duration,
         peak: samples.reduce((peak: number, sample: number) => Math.max(peak, Math.abs(sample)), 0),
@@ -84,6 +85,9 @@ test('riding and combat use real material buffers, and an empty volley stays sil
     expect(await heard(page)).toContain(kind);
   expect(combat.length).toBeGreaterThan(0);
   expect(combat.length).toBeLessThanOrEqual(16);
+  const bow = combat.find((voice) => voice.kind === 'shoot');
+  expect(bow).toBeDefined();
+  expect(bow!.seconds).toBeLessThan(0.13);
   for (const voice of combat) {
     expect(voice.rate).toBe(24000);
     expect(voice.seconds).toBeGreaterThan(0.06);
