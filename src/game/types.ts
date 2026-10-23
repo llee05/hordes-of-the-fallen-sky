@@ -16,6 +16,7 @@ export type RunPhase =
   | 'journal'
   | 'settings'
   | 'help'
+  | 'developer'
   | 'dead'
   | 'won';
 export type JourneyStage = 'camp' | 'migration' | 'final';
@@ -187,6 +188,7 @@ export interface EnemyDefinition {
 }
 
 export interface HudSnapshot {
+  developerRun: boolean;
   zoom: number;
   minZoom: number;
   maxZoom: number;

@@ -116,6 +116,10 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     expect(page.url()).toMatch(/^file:/);
     expect(await page.evaluate(() => typeof (window as any).require)).toBe('undefined');
     expect(await page.evaluate(() => typeof (window as any).__gloam)).toBe('undefined');
+    await expect(page.locator('[data-action="developer"], #developer-run')).toHaveCount(0);
+    await page.keyboard.press('F8');
+    await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();
+    await expect(page.locator('[data-developer-level]')).toHaveCount(0);
     expect(await page.evaluate(() => Boolean((window as any).desktop))).toBe(true);
     expect(
       await app.evaluate(({ BrowserWindow }) => {

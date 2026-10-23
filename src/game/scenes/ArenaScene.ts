@@ -20,6 +20,7 @@ import { chooseEnemy, SKYBREAKER, spawnInterval } from '../data/enemies';
 import { FORMATIONS, ROUTES } from '../data/clan';
 import { currentLocation } from '../state/journey';
 import { INTRO_SLIDES } from '../data/intro';
+import { createDeveloperRun, DEVELOPER_LEVELS } from '../dev/levels';
 import { openNextStory, resolveStory } from '../state/story';
 import {
   advanceClan,
@@ -119,6 +120,8 @@ export class ArenaScene extends Phaser.Scene {
   private best = 0;
   private researchReturnPhase: 'playing' | 'journal' | 'paused' = 'playing';
   private utilityReturnPhase: 'ready' | 'paused' = 'ready';
+  private developerReturnPhase: RunState['phase'] = 'ready';
+  private developerRun = false;
   private introSlide = 0;
   private introStartsRun = false;
   private storiesEnabled = true;
@@ -143,11 +146,19 @@ export class ArenaScene extends Phaser.Scene {
     preloadPainterlyArt(this);
   }
 
-  create(): void {
+  create(data?: { developerLevel?: string }): void {
     this.audio.reset();
-    this.run = createRun();
-    this.run.story.enabled = this.storiesEnabled;
-    this.run.guidance.enabled = this.guidanceEnabled;
+    const developerRun =
+      import.meta.env.DEV && data?.developerLevel
+        ? createDeveloperRun(data.developerLevel)
+        : undefined;
+    this.developerRun = !!developerRun;
+    this.run = developerRun ?? createRun();
+    if (!developerRun) {
+      this.run.story.enabled = this.storiesEnabled;
+      this.run.guidance.enabled = this.guidanceEnabled;
+    }
+    this.developerReturnPhase = 'ready';
     this.storyLogReturn = 'paused';
     this.introSlide = 0;
     this.introStartsRun = false;
@@ -272,6 +283,7 @@ export class ArenaScene extends Phaser.Scene {
       this.input.keyboard!.on(`keydown-${key}`, (event: KeyboardEvent) => {
         if (
           key !== 'ESC' &&
+          key !== 'F8' &&
           event.target instanceof HTMLElement &&
           event.target.closest('input, textarea, select')
         )
@@ -286,6 +298,7 @@ export class ArenaScene extends Phaser.Scene {
     bindAction('F', () => this.cycleFormation());
     bindAction('J', () => this.toggleJournal());
     bindAction('T', () => this.openResearch());
+    if (import.meta.env.DEV) bindAction('F8', () => this.toggleDeveloperMenu());
     const bindZoom = (key: string, steps: number): void => {
       this.input.keyboard!.on(`keydown-${key}`, (event: KeyboardEvent) => {
         if (
@@ -358,7 +371,12 @@ export class ArenaScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.DESTROY, this.audio.destroy, this.audio);
     this.physics.pause();
     this.tweens.pauseAll();
-    this.publishPhase();
+    if (developerRun) {
+      this.landscape.setRegion(this.run.clan.region, currentLocation(this.run));
+      this.campBarrier.relocate(this.run, this.camp);
+      this.invulnerable = GAME.khan.returnProtection;
+      this.beginExpedition();
+    } else this.publishPhase();
   }
 
   startRun(): void {
@@ -440,7 +458,27 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   restart(): void {
-    this.scene.restart();
+    this.scene.restart({});
+  }
+
+  toggleDeveloperMenu(): void {
+    if (!import.meta.env.DEV) return;
+    if (this.run.phase === 'developer') this.setPhase(this.developerReturnPhase);
+    else {
+      this.developerReturnPhase = this.run.phase;
+      this.setPhase('developer');
+    }
+  }
+
+  startDeveloperLevel(id: string): void {
+    if (
+      !import.meta.env.DEV ||
+      this.run.phase !== 'developer' ||
+      !DEVELOPER_LEVELS.some((level) => level.id === id)
+    )
+      return;
+    this.audio.unlock();
+    this.scene.restart({ developerLevel: id });
   }
 
   togglePause(): void {
@@ -451,7 +489,9 @@ export class ArenaScene extends Phaser.Scene {
     else if (this.run.phase === 'playing') this.setPhase('paused');
     else if (this.run.phase === 'paused') this.setPhase('playing');
     else if (
-      ['building', 'route', 'journal', 'upgrade', 'settings', 'help'].includes(this.run.phase)
+      ['building', 'route', 'journal', 'upgrade', 'settings', 'help', 'developer'].includes(
+        this.run.phase,
+      )
     )
       this.closePlanning();
   }
@@ -475,6 +515,10 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   closePlanning(): void {
+    if (this.run.phase === 'developer') {
+      this.setPhase(this.developerReturnPhase);
+      return;
+    }
     if (this.run.phase === 'upgrade') {
       this.setPhase(this.researchReturnPhase);
       return;
@@ -622,6 +666,7 @@ export class ArenaScene extends Phaser.Scene {
           'story',
           'epilogue',
           'story-log',
+          'developer',
         ].includes(this.run.phase))
     )
       this.togglePause();
@@ -1249,8 +1294,10 @@ export class ArenaScene extends Phaser.Scene {
 
   private finish(phase: 'won' | 'dead'): void {
     this.run.legacy.outcome = phase;
-    this.best = Math.max(this.best, Math.floor(this.run.elapsed));
-    void this.platform.saveBest(this.best).catch(() => this.callbacks?.onSaveError());
+    if (!this.developerRun) {
+      this.best = Math.max(this.best, Math.floor(this.run.elapsed));
+      void this.platform.saveBest(this.best).catch(() => this.callbacks?.onSaveError());
+    }
     this.setPhase(phase === 'won' && this.run.story.enabled ? 'epilogue' : phase);
     this.audio.play(phase === 'won' ? 'victory' : 'loss');
   }
@@ -1281,6 +1328,7 @@ export class ArenaScene extends Phaser.Scene {
     ]!;
     const zoomLimits = cameraZoomLimits(this.cameras.main.width, this.cameras.main.height);
     return {
+      developerRun: this.developerRun,
       zoom: this.cameras.main.zoom,
       minZoom: zoomLimits.min,
       maxZoom: zoomLimits.max,

@@ -17,38 +17,42 @@ export interface DeveloperLevel {
   routeId?: (typeof ROUTES)[number]['id'];
 }
 
-/** Every chapter, crossing approach, and optional camp under both playable chapter pressures. */
-export const DEVELOPER_LEVELS: readonly DeveloperLevel[] = [
-  ...REGIONS.map((chapter, region): DeveloperLevel => ({
-    id: `chapter:${chapter.id}`,
-    group: 'chapters',
-    title: chapter.name,
-    description: `Chapter ${region + 1} · ${chapter.event}`,
-    region,
-    locationId: chapter.id,
-  })),
-  ...REGIONS.slice(0, -1).flatMap((chapter, region) =>
-    ROUTES.map((route): DeveloperLevel => ({
-      id: `crossing:${chapter.id}:${route.id}`,
-      group: 'crossings',
-      title: `${chapterLocation(region + 1).name} · ${route.title}`,
-      description: `Crossing ${region + 1} · ${route.description}`,
+function createDeveloperLevels(): readonly DeveloperLevel[] {
+  return [
+    ...REGIONS.map((chapter, region): DeveloperLevel => ({
+      id: `chapter:${chapter.id}`,
+      group: 'chapters',
+      title: chapter.name,
+      description: `Chapter ${region + 1} · ${chapter.event}`,
       region,
       locationId: chapter.id,
-      routeId: route.id,
     })),
-  ),
-  ...[1, 2].flatMap((region) =>
-    LOCATIONS.filter((location) => location.context).map((location): DeveloperLevel => ({
-      id: `destination:${region + 1}:${location.id}`,
-      group: 'destinations',
-      title: location.name,
-      description: `Chapter ${region + 1} · ${REGIONS[region]!.event}`,
-      region,
-      locationId: location.id,
-    })),
-  ),
-];
+    ...REGIONS.slice(0, -1).flatMap((chapter, region) =>
+      ROUTES.map((route): DeveloperLevel => ({
+        id: `crossing:${chapter.id}:${route.id}`,
+        group: 'crossings',
+        title: `${chapterLocation(region + 1).name} · ${route.title}`,
+        description: `Crossing ${region + 1} · ${route.description}`,
+        region,
+        locationId: chapter.id,
+        routeId: route.id,
+      })),
+    ),
+    ...[1, 2].flatMap((region) =>
+      LOCATIONS.filter((location) => location.context).map((location): DeveloperLevel => ({
+        id: `destination:${region + 1}:${location.id}`,
+        group: 'destinations',
+        title: location.name,
+        description: `Chapter ${region + 1} · ${REGIONS[region]!.event}`,
+        region,
+        locationId: location.id,
+      })),
+    ),
+  ];
+}
+
+/** Every chapter, crossing approach, and optional camp under both playable chapter pressures. */
+export const DEVELOPER_LEVELS = /* @__PURE__ */ createDeveloperLevels();
 
 /** Fresh test expeditions use the real journey rules; only the scene may activate them in DEV. */
 export function createDeveloperRun(id: string): RunState | undefined {

@@ -20,6 +20,15 @@ npm run build       # Compile renderer and desktop main/preload
 npm start           # Play the offline desktop build
 ```
 
+Development builds include **Developer mode** in the title and pause menus. Press
+**F8** from any screen to open the level selector: jump to any of the four chapters,
+any crossing approach, or any named destination in chapters 2 and 3. Each choice
+starts a fresh test expedition with supplies and 40 unspent knowledge points.
+Escape / F8 closes the selector and returns to the previous screen. Developer runs
+skip the prologue and camp scenes and do not change your saved longest journey.
+Start a new run to return to normal play. The selector is absent from production
+and packaged builds. See [developer mode](docs/developer-mode.md) for checkpoint rules.
+
 The packaged game includes its runtime, painted art, fonts, and synthesized sound. It makes no runtime asset downloads or AI calls. The desktop fills its window and provides fullscreen, quit, and durable native saves.
 
 For the static browser release, run `npm run build:web` and then `npm run test:pages`

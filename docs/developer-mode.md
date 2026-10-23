@@ -1,5 +1,16 @@
 # Developer level checkpoints
 
+Run `npm run dev` for Electron or `npm run dev:web` for the browser. Choose
+**Developer mode** at the title or pause menu, or press **F8** from any screen.
+The selector pauses the entire expedition. Escape, F8, and Back return to the
+original screen, retaining its story, research, or ended-run state.
+
+Selecting a checkpoint replaces the current expedition immediately, bypasses the
+introduction, and rebuilds the scene. Enemies, projectiles, shards, hazards, defeat
+effects, camp packing, succession, and boss state start fresh. The HUD identifies
+the expedition as **DEVELOPER RUN**. Start a new run from Pause or an outcome menu
+to return to the title and begin a normal expedition with the original preferences.
+
 The checkpoint catalog in `src/game/dev/levels.ts` covers all four journey chapters,
 all three approaches to each of the three crossings, and all eight named camps in
 both chapters 2 and 3. IDs derive from the existing chapter, route, and location data.
@@ -17,5 +28,12 @@ Camp scenes and guidance are off for the test expedition; earlier encounters are
 recorded as passed without granting story gifts. Normal new games retain their
 usual state and preferences. Test provisions are configured in `GAME.developer`.
 
-The scene must guard checkpoint activation with `import.meta.env.DEV`, recreate the
-world when switching checkpoints, and exclude test expeditions from saved records.
+Both the menu and scene actions are guarded by `import.meta.env.DEV`; production
+and packaged builds have no selector or F8 binding. Developer victories and defeats
+leave the saved longest journey unchanged. Settings still save normally.
+
+`npm run check` covers checkpoint state and the production build. Browser regression
+tests in `tests/e2e/developer-mode.spec.ts` launch every checkpoint and cover frozen
+menus, input, scene cleanup, records, normal restarts, and narrow layouts.
+`npm run test:desktop` also checks the selector at native window sizes using an
+isolated profile and a local Vite server, and checks its absence in the offline build.
