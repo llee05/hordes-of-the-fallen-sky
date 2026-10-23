@@ -2,154 +2,512 @@
 
 ## Scope and dramatic spine
 
-This document maps one expedition into **two acts**, framed by the prologue and epilogue. [World lore](lore.md) supplies the setting and writing boundaries; [the game loop](README.md#build-defend-migrate) supplies the playable structure. The playable prototype now adapts all eight beats into illustrated camp conversations, choices, a chronicle, and an epilogue. The scene descriptions below remain the writing blueprint; fully acted character scenes are future presentation work. See [the implementation guide](docs/story-prototype.md) for the exact current triggers and adaptations.
+This is the revised narrative blueprint for an expedition with **two chosen camp
+stops**, drawn from the eight named destinations, before the fictional Heart of
+the Steppe. It keeps **two acts, eight camp encounters, three crossings, and one
+final defense**. The original Silent River and Broken Pass remain valid stops.
+Each destination changes the work, disagreement, and memory of a scene; choosing
+its name should change more than the heading above the same conversation.
 
-**Premise:** After the Iron Vow tears the sky, eight survivors gather beneath a blue banner and travel toward a mountain refuge. Their camp grows into a people through the decisions required to keep it moving.
+[World lore](lore.md) supplies the setting and canonical prologue.
+[Migration destinations](docs/migration-locations.md) supplies the actual selection
+rules, cultural context, and sources. [The prototype guide](docs/story-prototype.md)
+records what is playable today. The destination scenes and callbacks below are
+**proposed writing**, with an implementation plan at the end of this document.
 
-**Dramatic question:** Can people who have lost their homes learn to entrust their lives to one another?
+**Premise:** Eight survivors carry a hearth away from the Sundering. They choose
+where to halt, whom to trust, and what they can promise before the next departure.
+By the mountain passage, their shared practices have become a civilization small
+enough to travel in wagons.
 
-**External goal:** Bring the clan through the mountain passage alive.
+**Dramatic question:** Can a people build a lasting obligation to one another while
+every home they make must be left behind?
 
-**Internal movement:** The Khan begins responsible for a handful of familiar survivors. By the end, they must accept responsibility for a community whose members have different histories, beliefs, and needs.
+**External goal:** Bring the clan through the final mountain passage alive.
 
-**Opposition:** The unreturned pursue the caravan while hunger, depleted pasture, broken terrain, and uncertainty strain the clan. The Last Court's attempt to secure permanent authority remains the political shadow over the journey.
+**Internal movement:** The Khan begins by protecting familiar survivors and learns
+to accept responsibility for people whose knowledge, memories, and needs differ.
+That responsibility passes between Khans if succession occurs.
 
-## Expedition map
+**Opposition:** Hunger, failing pasture, the spreading calamity, and the difficulty
+of sharing authority. The Last Court tried to make one claim permanent; the clan
+must learn to make decisions that others can question and help carry out.
 
-| Movement                           | Location                          | Dramatic work                                                              | Existing gameplay anchor                                       |
-| ---------------------------------- | --------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| Prologue · The Iron Vow            | Before the expedition             | Establish the rupture, the eight survivors, and the hope of refuge         | Five skippable painted chapters                                |
-| Act I · Gather the Scattered       | Golden Pasture → Silent River     | Build a camp, welcome difference, and make a shared commitment to the road | Construction, traditions, first two crossings                  |
-| Midpoint · A Promise Chosen        | Arrival at Broken Pass            | Make the blue banner a promise the assembled clan has chosen together      | Second crossing completed; people and supplies carried forward |
-| Act II · Carry the Living          | Broken Pass → Heart of the Steppe | Test that promise under pressure and turn shared knowledge into escape     | Hazards, final crossing, three-minute mountain defense         |
-| Epilogue · A Place Beside the Fire | Beyond the passage                | Show what the survivors can begin together                                 | Victory result; a new closing scene is proposed                |
+**What the destinations add:** Each landscape tests a different part of that task:
+restraint, shelter, shared judgment, leadership, listening, hospitality, care, or
+public memory. These themes belong to the game's fictional scenes. They are not
+claims about what a real sacred place demands from visitors.
 
-Act boundaries follow arrival at a region. Camp duration remains the player's decision. The current expedition is intended to last roughly fifteen minutes, with substantial variation; narrative beats should follow events rather than fixed timestamps.
+## The journey: one spine, different remembered roads
 
-## Prologue — What was broken
+The four camps are **positions in the story**, separate from the places selected
+for them. A mountain can be the first chosen shelter or the second camp where the
+clan begins Act II. Orkhon Valley can occupy either position as well. No destination
+requires another named place to have been visited first.
 
-Keep the five chapters in [the canonical intro script](lore.md#opening-slideshow): Heaven and Earth, the Iron Vow, the unreturned, the living hearth, and the road toward refuge.
+| Movement                           | Camp and crossing                                                       | Dramatic work                                                        | Gameplay anchor                                                 |
+| ---------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Prologue · The Iron Vow            | Before the expedition                                                   | Establish the rupture, the carried hearth, and the remembered refuge | Five skippable painted chapters                                 |
+| Act I · Gather the Scattered       | Golden Pasture, then crossing 1                                         | Turn an emergency group into people who can make a decision together | First camp, construction, provisions, departure                 |
+| Act I · A borrowed shelter         | First chosen destination, or Silent River                               | Encounter the limits of the clan's knowledge and learn to listen     | White Silence chapter; first arrival encounter                  |
+| Midpoint · A promise chosen        | Crossing 2 and arrival at the second chosen destination, or Broken Pass | Make the banner a commitment the households share                    | Second arrival; Act II begins                                   |
+| Act II · Carry the Living          | Second chosen camp, then crossing 3                                     | Put that commitment under strain and confront Erden's former service | Earth That Walks chapter; repairs, rest, confession             |
+| Climax · Hold the road             | Fictional Heart of the Steppe                                           | Use what the journey taught to keep a road open for the living       | Red Eclipse; 180-second defense; optional boss kill             |
+| Epilogue · A place beside the fire | Sheltered valley beyond the passage                                     | Show which obligations the survivors will carry into their next home | Actual survivors, losses, choices, identity, and visited places |
 
-The intro establishes what happened and why the clan travels. During play, survivors can disagree about its deeper causes. A later revelation should change how the clan understands its responsibilities without requiring the player to forget the opening account.
+The first crossing offers Silent River and all eight named destinations. The second
+offers Broken Pass and any named destination not already visited. The third always
+leads to the Heart of the Steppe. River, ridge, and blue-banner rescue are **approaches
+to a chosen destination**; they remain separate from the destination itself.
 
-The first playable image should fulfill the intro's promise: a small camp, a blue banner, and people worth riding back to protect.
+The journey compresses real distances. These are surrounding camp landscapes,
+not summit ascents or a geographically accurate itinerary. The prologue's remembered
+valley to the east remains part of the fictional setting; it does not establish an
+eastward real-world road between every selectable pair. All eight destinations
+belong to the catalog, while an individual expedition visits at most two of them.
 
-In the playable prototype, the Khan’s death starts a short succession while the clan keeps fighting. A new Khan inherits the expedition rather than restarting the story. Camp encounters wait until a Khan is present; earlier conversations and decisions remain the clan’s actual record. The arc below follows the responsibility of the role and the community across those leaders.
+## Three things every camp scene must know
+
+1. **The chapter:** The White Silence follows the first crossing; the Earth That
+   Walks follows the second. These fictional pressures can reach any chosen camp.
+   They do not originate in its local traditions. The chapter controls escalation
+   and the act boundary.
+2. **The place:** Its established terrain, practical demands, and cultural context
+   determine the scene's concrete work and imagery. A dry camp needs different
+   observations from a river pasture. Do not put a ford, reeds, or an icy river in
+   every destination's conversation.
+3. **The actual journey:** Arrival approach, previous destination, recorded choices,
+   population, losses, camp development, and succession determine what the speakers
+   can truthfully remember. A rescue response requires an actual rescue crossing.
+
+A scene has one main disagreement and two useful responses. The common plot advances
+through that disagreement; local material does not add a second compulsory scene,
+extra reward, or a separate quest chain. Cultural context remains available beside
+the destination's description without turning dialogue into a guidebook recital.
+
+## Prologue — The hearth that travels
+
+Keep the five chapters of [the canonical intro](lore.md#opening-slideshow): Heaven
+and Earth, the Iron Vow, the unreturned, the living hearth, and the road to refuge.
+The opening establishes the Last Court's act and the rupture. The characters remain
+uncertain about Heaven's intentions. No later destination supplies a definitive
+divine explanation or a ritual that repairs the sky.
+
+The first playable camp fulfills the opening image: two gers, three horses, a blue
+banner, and a spare bowl. The destination picker later gives the remembered road
+its uncertainty. The people know where they hope to finish; they must still decide
+how to live at each halt along the way.
 
 ## Act I — Gather the Scattered
 
-**Act question:** Who belongs within the circle of this camp?
+**Act question:** Whose knowledge and needs will have a place beside this fire?
 
-**Starting condition:** Eight survivors share an old home and an immediate emergency. The Khan can still imagine protecting everyone by watching every approach personally.
+### 1. A place beside the fire — Golden Pasture
 
-### 1. The first fire — Golden Pasture
+Saran tends the embers, Boro checks the horses, and Erden counts the blankets. Nara
+asks who the spare bowl is for. Saran answers, “Whoever reaches us next.” Boro asks
+what they can feed that person when they arrive.
 
-Introduce the hearthkeeper through useful work: tending embers, counting blankets, and asking who has eaten. Establish a herder who knows the nearby land and a younger survivor who notices the adults' evasions. Give the player one small image to carry forward, such as a spare bowl kept beside the fire.
+The first choice shares work or shares the watch. Both let the Khan delegate and
+give the households a part in their survival. Erden belongs to the original eight;
+his place in the story never depends on choosing a rescue route.
 
-Building the camp makes the group tangible. Gers create room for more households; archers take over part of its defense; herding and sanctuary work give different people a place in the effort. The Khan learns to leave tasks in other hands.
+### 2. More mouths, more hands — choosing the first road
 
-**Proposed exchange:** “Who is the empty bowl for?” / “Whoever reaches us next.”
+At the first departure, preparation becomes a disagreement about responsibility.
+Boro wants provisions that will last; Saran wants room for people still scattered.
+Erden offers a count, then has to accept that a count cannot choose for them.
 
-### 2. More mouths, more hands — the first departure
+Keep the council choice about provisions or wagon preparation. The subsequent
+migration panel chooses **where to camp**, then **how to approach it**. A well-fed
+river stop, a difficult highland halt, and a rescue approach express different
+priorities without assigning the player a moral grade.
 
-As food, workers, and defenses compete for attention, introduce disagreement about what the clan can promise. The herder wants enough provisions to finish the crossing. The hearthkeeper wants a place for people still scattered outside the camp. Both have responsibilities the player can recognize.
+The dialogue must not announce a destination before the player commits to one.
+The factual departure memory can name it after migration starts. Supplies gained
+on arrival cannot be described as food already eaten during the crossing.
 
-Use the existing route decision to express priorities. A provision route can mean preparing to shelter people later; a rescue route can mean accepting immediate strain to gain families and riders. Avoid declaring one route the morally correct answer.
+### 3. Whose road is this? — first chosen destination
 
-**Act turn:** Packing the gers makes departure real. The people carry their home into danger together, and the Khan must defend what they have chosen to bring.
+This is the first destination-specific encounter. The White Silence makes familiar
+signs unreliable. A voice may offer an easy answer, but the scene's practical problem
+comes from the selected landscape: find usable grazing, read an approach, share
+shelter, or check whose knowledge the clan has overlooked.
 
-### 3. Familiar voices — Silent River
+Use the destination treatments below to stage the disagreement. The two responses
+retain the existing functions: **test and provide** or **listen and keep people
+connected**. Neither response guarantees safety or settles a religious question.
+With rescued families, acknowledge their knowledge without inventing their community,
+belief, or individual identity. Without a rescue, the original companions can still
+disagree and learn from one another.
 
-The White Silence makes ordinary cooperation difficult. A familiar voice from beyond the ice offers a survivor an easy route or news of someone missing. Keep its identity uncertain. Another person finds a practical way across: a remembered ford, a marked bank, or a route sheltered from the wind.
+**Act I change:** The clan leaves knowing that the Khan and Saran cannot supply
+every answer. The next home will depend on knowledge shared between households.
 
-The hearthkeeper admits the limits of their knowledge. The player sees that old stories and immediate observation both matter. A proposed newcomer, a former clerk of the Last Court, recognizes the language of a promise that asks for obedience before offering safety.
+## Midpoint — A promise chosen
 
-**Pressure:** The clan has grown, and old households disagree about whose memories deserve trust. The river tests whether they can act together while those disagreements remain.
+### 4. The banner belongs to those who carry it — second arrival
 
-### 4. A promise chosen — second crossing and midpoint
+The second destination changes the immediate work around the fire. Within that
+work, the households add pieces of cloth to the blue banner. Erden holds a blank
+strip. The clan agrees that whoever travels beneath the banner will be counted
+before the wagons leave.
 
-After reaching Broken Pass, households add their own scraps of cloth to the blue banner. The hearthkeeper invites them to speak the names of people they carry in memory. The clerk contributes a blank strip, unable yet to speak about the court.
+This commitment follows the completed second crossing, regardless of location or
+approach. The response can emphasize looking out for one another or carrying every
+name. A clan with no rescued families still has several original households able
+to share responsibility; do not invent an intake of newcomers to justify the scene.
+A small remnant uses the survivor's account instead of a full conversation.
 
-This proposed scene gives the journey a shared commitment: whoever travels under this banner will be counted when the wagons leave. The player has helped assemble the people who can now make that promise.
+The first camp taught a duty. The second asks the clan to apply it while another
+duty competes for attention. A route through Orkhon and Eej Khairkhan can move from
+counting people to caring for the people who do the counting. Reversing those stops
+can move from sharing care to making that care publicly accountable. These are
+alternative dramatic readings, not additional mechanical bonuses.
 
-**Midpoint change:** The clan takes collective ownership of the journey. The Khan becomes accountable to people who have chosen to follow, including strangers welcomed along the road.
+## Eight destination treatments
+
+Each treatment supplies a first-stop encounter, a second-stop variation for the
+midpoint and its following camp scene, and an image that can return at the ending.
+The images are writing motifs, not collectible items or new inventory state. Their
+ending callbacks require the corresponding scene or decision to have occurred.
+
+The location names and cultural frames follow the sourced
+[destination guide](docs/migration-locations.md#cultural-context-and-sources).
+Every incident below is original fiction about the Blue Banner clan.
+
+### Mount Otgontenger — Below the snowline
+
+**Dramatic role:** Admit limits before making a promise.
+
+At the first stop, the high foothills expose the difference between a grand view
+and enough grazing for the herd. Boro checks what the camp can actually support;
+Saran asks him to make the count understandable to everyone. Test the ground and
+prepare provisions, or bring the households together to discuss what each can carry.
+The mountain supplies no verdict on which response is virtuous.
+
+At the second stop, the patched banner is tied while travelling loads are checked.
+The Earth That Walks makes a previously usable approach uncertain. The clan must
+share the work of preparing another departure rather than wait for a leader to
+promise that the route will stay open.
+
+**Remembered image:** Several hands retie the same pack strap. At the final passage,
+the promise rests on checked loads and people answering for one another.
+
+### Bogd Khan Uul — Shelter with limits
+
+**Dramatic role:** Distinguish a welcome halt from a permanent entitlement.
+
+At the first stop, sheltered foothills make staying feel possible. Saran wants a
+proper meal; Boro points to the next stretch of the journey. The scene asks how to
+use a good shelter while retaining the ability to leave. Gather travelling stores,
+or arrange a shared watch that lets people rest and hear one another.
+
+At the second stop, a windbreak becomes the place where households tie their cloth
+to the banner. When the ground begins to move, familiar comforts cannot settle the
+departure decision. Repair travelling equipment or relieve the tired workers. The
+clan's shelter is something maintained through care, with room for others to use it.
+
+**Remembered image:** A repaired shelter with an open side. In the valley, the new
+camp leaves an approach open instead of treating arrival as a right to close it.
+
+### Altai Tavan Bogd — Several ways of seeing
+
+**Dramatic role:** Build a shared decision from observations that disagree.
+
+At the first stop, the five-peak skyline offers several landmarks, and the companions
+read the way ahead differently. Boro tests the ground while Saran asks each person
+to explain what they actually saw. Choose practical inspection or an exchange of
+accounts. Agreement comes from comparing evidence rather than declaring one voice
+entitled to interpret the landscape for everyone.
+
+At the second stop, Erden sketches the approach while the banner is patched. Others
+correct his marks. When the ground changes, the sketch must be revised in public.
+The repair-or-rest choice tests whether the shared plan makes room for the people
+who must carry it out.
+
+**Remembered image:** A route sketch bearing several corrections. At the passage,
+Erden's tally can likewise be checked by the people it describes.
+
+### Khan Tengri Peak — A name is no command
+
+**Dramatic role:** Test what the title Khan entitles its bearer to ask.
+
+At the first stop, the demanding approach and sparse pasture expose the limits of
+a single rider. Boro asks for a plan the wagons can follow; Nara asks who watches
+when the Khan needs rest. Choose a tested provision plan or a shared account of
+who is carrying which responsibility. The real mountain's name is never evidence
+that Heaven has appointed the player to rule.
+
+At the second stop, the shared banner is raised beside the departing host's work.
+A household's objection must be heard even when preparations are urgent. Actual
+succession can supply a short acknowledgment that the title has already passed to
+another rider; a run without succession receives no invented fallen predecessor.
+
+**Remembered image:** A bow laid down briefly while another person keeps watch.
+The final defense pays this off through delegation, including when succession leaves
+camp defenses protecting the clan without a living Khan for a time.
+
+### Mount Belukha (Üch-Sümer) — Beyond our telling
+
+**Dramatic role:** Make room for knowledge the clan does not own.
+
+At the first stop, Saran admits that the stories she carries cannot speak for every
+people or landscape. The practical work is a cool upland halt with stores to protect.
+Test what the camp can use, or hear the companions' different accounts without
+forcing them into one explanation. No fictional visitor is made the authoritative
+spokesperson for all Altaian traditions.
+
+At the second stop, differing pieces of cloth remain visible in the banner. The
+clan can share a task without agreeing about every name or story. Repairs and rest
+become a test of that commitment under the fictional chapter's pressure. Erden's
+later testimony establishes what he witnessed, while interpretation remains open.
+
+**Remembered image:** A seam joining cloth whose patterns remain distinct. The
+ending can leave several accounts beside the same hearth without resolving them
+into a universal doctrine.
+
+### Altan Ovoo — A halt, not a claim
+
+**Dramatic role:** Practice hospitality without turning a halt into possession.
+
+At the first stop, the open approach makes the camp feel connected to roads beyond
+its own wagons. Nara asks how another travelling group would recognize a welcome.
+Prepare stores for the onward road, or organize the households so that anyone who
+actually reaches them can be heard. A rescue callback is conditional on the crossing;
+the scene itself does not recruit people or spend supplies off the books.
+
+At the second stop, the banner marks where the households gather and count before
+leaving. Erden's language of claims and obligations begins to trouble him. The scene
+can foreshadow his confession without revealing it early. The extinct volcanic
+landform is background; chapter eruptions must not be narrated as a real volcano
+awakening or as a consequence of local worship.
+
+**Remembered image:** Space beside the wagons left clear for an arrival. The new
+valley camp can retain that welcome after its own people are safe.
+
+### Eej Khairkhan — Who carries the carriers?
+
+**Dramatic role:** Make care a shared responsibility.
+
+At the first stop, dry-country camp work reveals who has been carrying water,
+watching others, and forgetting to rest. Nara notices Saran taking the last turn.
+Gather and check the remaining provisions, or let others take responsibility around
+the hearth. Saran accepts help instead of remaining an inexhaustible source of it.
+
+At the second stop, changing hands on the ember vessel accompanies the banner
+promise. The repair-or-rest decision recognizes the cost borne by the people doing
+the carrying. The scene draws a human theme alongside the destination's established
+association with maternal protection; it does not make the mountain speak, assign
+a divine command, or prescribe a gendered duty for the clan.
+
+**Remembered image:** A cup passed back to the person who has been serving everyone.
+At the passage, another pair of hands can carry the covered embers while the
+hearthkeeper helps with the escape. Use collective language when survivors are few.
+
+### Orkhon Valley — What a tally leaves out
+
+**Dramatic role:** Turn a record of authority into a record people can answer.
+
+At the first stop, broad pastures allow the companions a moment to examine Erden's
+tally. It has food and horses, but little space for what people know or need. Check
+provisions against the ground, or hear the households' accounts together. The
+landscape's historical associations can frame a question about whose lives enter
+a record; the scene invents no quotation from a real memorial or inscription.
+
+At the second stop, households answer their own entries as their cloth joins the
+banner. Erden can organize the page differently before admitting where he learned
+to count people as obligations. The later court scene remains necessary and occurs
+at the usual point, wherever the second camp lies.
+
+**Remembered image:** A space in the tally for a person to answer. At the passage and
+epilogue, shared-tally dialogue requires the player to have actually chosen to put
+Erden's record in shared hands.
+
+### The original road remains complete
+
+Silent River keeps **Voices across the ice** as its specific first-stop treatment:
+a tested bank and living voices answer the uncertain call beyond the ice. Broken
+Pass keeps **When the earth moves** as its specific second-stop work: unstable slopes,
+wheels, harness, and rest. They receive the same midpoint, confession, climax, and
+ending structure as named camps. Neither is required to explain a later scene.
 
 ## Act II — Carry the Living
 
-**Act question:** How does the clan keep its promise when survival grows costly?
+**Act question:** How do people keep their promise when doing so becomes costly?
 
-**Starting condition:** The community has a shared purpose. Its supplies, defenses, and trust now face the hardest terrain of the expedition.
+### 5. What the road asks — work at the second camp
 
-### 5. The earth moves — Broken Pass
+After fifteen active seconds at the second camp, its destination treatment tests
+the banner's promise through concrete work. The shared Earth That Walks escalation
+threatens the route; local descriptions determine where people observe danger and
+how they prepare. A valley conversation does not assume a summit climb, and an
+upland conversation does not require a riverbank.
 
-Use the moving ground and eruption warnings to test the clan's ability to respond together. The herder can recognize an unstable slope; a newcomer can mend a wheel; riders can give a wagon time to move. Let useful knowledge pass between people who argued at the river.
+Keep the useful choice between preparing travelling equipment and relieving tired
+hands. A badly hurt clan needs a workable next step; a strong clan can plan how to
+keep helping others. Neither version imposes a scripted casualty or assumes that
+another family's labor can be taken for granted.
 
-A proposed camp conversation can follow an actual setback or a successful arrival. A badly hurt clan needs reassurance and a practical plan. A strong clan can begin discussing whom it might shelter beyond the mountain. Neither version requires a scripted death or loss of resources.
+### 6. The court's empty promise — Erden's account
 
-**Character turn:** The Khan's strength becomes most visible in the space they make for others to act.
+At the second camp's departure threshold, Erden unfolds his court tally. He once
+recorded households as taxes, soldiers, and obligations, and witnessed the Iron Vow.
+The place-specific scenes have prepared questions about limits, care, or authority;
+they do not make his testimony conditional on visiting Orkhon or Khan Tengri.
 
-### 6. The court's empty promise — before the final departure
+His confession changes the present relationship. The clan can place the tally in
+shared hands or hear and record the whole account. Both responses hold him to useful
+work and honest testimony. Neither grants him absolution on behalf of people who
+are absent. The court's human actions are established; Heaven's intentions remain
+uncertain.
 
-The clerk finally explains their connection to the Last Court. They once recorded households as taxes, soldiers, and obligations. They heard the Iron Vow spoken and saw people seek certainty from an empty throne. Their testimony establishes human actions; their interpretation of the rupture remains fallible.
-
-Give the confession a present consequence: the clerk asks to use their knowledge to organize supplies and keep families together. The question for the clan is whether a person implicated in the old order can earn trust through useful work.
-
-**Revelation:** The court tried to make authority permanent. The survivors can choose how authority is exercised among them now. This develops the political meaning already present in the lore without supplying a final explanation of Tengri's intentions.
+**Revelation:** The old order made people into a claim the court could keep. The
+clan can exercise authority through responsibilities other people can examine.
 
 ### 7. The narrow opening — Heart of the Steppe
 
-At the mountain, the Red Eclipse reveals how exposed the clan still is. The Skybreaker approaches. The remembered refuge can be seen or described more clearly, but the passage will take time to open.
+All roads converge on the **fictional** mountain passage. The Red Eclipse brings
+the Skybreaker while the remaining people clear the approach. The arrival scene
+can recall one concrete lesson from the visited camps: checking loads, relieving
+a watch, hearing a correction, keeping room open, or sharing the tally.
 
-A proposed visual explanation is that people are clearing fallen stone and ice from the narrow approach. This would express the current survival timer through shared labor; it would not require a new worker assignment mechanic. Until such a scene is implemented, the existing objective remains to hold until the passage opens.
+Keep the callback brief. The player needs to understand the immediate task even
+with every council skipped: hold the approach for three minutes with people and
+resolve remaining. Passage-clearing is narrative presentation of that timer, not
+an additional worker allocation, hidden destination requirement, or ritual puzzle.
 
-**Lowest point:** The refuge is close enough to imagine, and every remaining family is within reach of the advancing calamity. Keep losses responsive to the run the player has actually played.
+### 8. Hold the road — the promise in action
 
-### 8. Hold the road — climax
+At ninety active seconds of the final defense, the ember vessel changes hands.
+The defenders keep the road open while the people behind them prepare to move.
+Use actual survivor counts, choices, and the Skybreaker's current condition.
 
-The final three-minute defense brings the expedition's choices together: riders hold approaches, wagons protect families, and the Khan moves between threats. Narrative presentation should keep attention on the people behind the fighting.
+The climax pays off both stops without demanding that they taught the same lesson.
+A clan that learned to share a watch and then to question a tally has reasons to
+trust the people organizing the escape. A different road can pay off shared care
+and realistic provisioning. These are readings of work already represented by the
+run, not extra combat powers awarded by real sacred places.
 
-The Skybreaker can fall or remain standing. The decisive event is the passage opening with the clan alive to use it. A proposed closing beat has the youngest survivor help carry the ember vessel through while the hearthkeeper steadies someone else.
+The Skybreaker can fall or remain standing. Victory is the living clan passing
+through when the approach opens. If the Khan falls, succession and camp defense
+continue under the existing rules; the story follows the banner across leaders.
 
-**Resolution of the act question:** The clan keeps its promise through many people doing their part. The Khan's last task is to make room for the final wagons to pass.
+## Epilogue — The home they can make
 
-## Epilogue — A place beside the fire
+Keep the closing scene short and skippable. Begin with the people and herd who
+actually arrived, remember actual losses, and acknowledge whether the Skybreaker
+still walks beyond the passage. Return to the spare bowl and the carried embers.
 
-A proposed short, skippable closing scene returns to the spare bowl, the ember vessel, and the patched banner. People unpack in the sheltered valley. Someone begins the next meal. The cloth now carries marks from more than one household.
+Add at most **two brief destination callbacks**, in visit order: one image from the
+first stop and one practice carried forward from the second. Derive them from the
+completed crossings and resolved scene records. Naming a visited place can rely on
+the crossing alone; recalling a conversation, chosen response, or handmade object
+requires that scene to have occurred. Skipped scenes create no unseen promises.
 
-Let the surviving population and the clan's developed identity affect a few details. The Iron Horde might post riders to watch the approach; the Children of the Eternal Sky might begin a song with several voices; the Wandering Nation might lay out space for more arrivals. Each version establishes ongoing duties and leaves the camp open to others.
+Let the clan identity describe how those practices continue. The Iron Horde relieves
+its watch so riders can eat; the Children of the Eternal Sky leave room for several
+voices; the Wandering Nation prepares a welcome it can actually sustain. All three
+remain valid endings, with no destination locked to one identity or patron.
 
-The Sundering remains beyond the mountain. The clan has gained a place to begin again, and the ending pays off the game's survival objective.
+For a remnant, use the survivor's account and singular language where needed. Do
+not identify casualties or place all four named companions at the fire after losses.
+The Sundering continues outside the valley. This people has gained a place to begin
+again and duties to carry into it.
 
-**Proposed final line:** “Keep a place beside the fire. Someone is still coming home.”
+**Final line:** “Keep a place beside the fire. Someone is still coming home.”
+
+Defeat keeps the actual journey and memories available without revealing unvisited
+places or later revelations. Restart clears the expedition. Repeated play explores
+other roads; it does not establish reincarnation, a permanent memory system, or a
+campaign in which all eight places have already been visited.
 
 ## Character and motif payoffs
 
-The prototype implements these roles as Saran, Boro, Erden, and Nara in camp conversations. Erden travels among the original eight survivors, so his presence does not depend on choosing a refugee route. The cast is represented through dialogue and brass symbols; individual companion movement and casualty identities are not simulated. A small remnant receives collective narration. The herder, clerk, and younger survivor may be combined or reduced in future revisions if the short expedition needs a smaller cast.
+| Character or motif              | First-act pressure                                           | Second-act and ending payoff                                                    |
+| ------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| Khan, across successive leaders | Tries to answer every danger personally                      | Accepts corrections and protects the space others need to act                   |
+| Saran, hearthkeeper             | Carries knowledge and assumes responsibility for care        | Admits the limits of her telling and lets others carry the hearth               |
+| Boro, herder                    | Makes limits visible through food, horses, and travel        | Turns practical judgment into knowledge the whole camp can use                  |
+| Erden, tally keeper             | Offers useful numbers while hiding where he learned them     | Gives an accountable witness statement and allows others to question the record |
+| Nara, youngest survivor         | Notices who is missing from a promise or doing too much work | Takes useful responsibility without a forced coming-of-age casualty             |
+| Blue banner                     | Identifies the original emergency group                      | Holds a shared promise while its pieces remain visibly different                |
+| Spare bowl                      | Makes a welcome imaginable                                   | Tests whether the next camp has room and provisions for someone else            |
+| Ember vessel                    | Preserves a remnant of the lost home                         | Can pass between hands without ceasing to belong to the clan                    |
+| Court tally and iron standard   | Turn people and favor into permanent claims                  | Give the clan concrete practices to question and change                         |
 
-| Role or motif      | Act I setup                                     | Act II payoff                                                              |
-| ------------------ | ----------------------------------------------- | -------------------------------------------------------------------------- |
-| Banner-bearer      | Tries to watch every danger personally          | Protects the room others need to carry out the escape                      |
-| Hearthkeeper       | Carries knowledge and the ember vessel          | Shares responsibility for both memory and the living hearth                |
-| Herder             | Argues for realistic provision limits           | Uses practical knowledge to help the whole caravan cross                   |
-| Former court clerk | Counts supplies while concealing their past     | Admits complicity and begins earning trust through service                 |
-| Younger survivor   | Asks who the spare bowl is for                  | Helps make the next camp ready for someone else                            |
-| Blue banner        | Identifies a small group of survivors           | Becomes a visibly shared promise made by many households                   |
-| Ember vessel       | Holds a remnant of the lost home                | Lights a new hearth through several people's care                          |
-| Iron standard      | Embodies the court's claim to lasting authority | Gives the clerk a concrete memory against which to judge their own conduct |
+## Writing and cultural boundaries
 
-## Choices, delivery, and implementation boundary
+- Ground real-place context in the [destination sources](docs/migration-locations.md#cultural-context-and-sources).
+  Keep Mongolian, Turkic, and Altaian contexts distinct. The clan's fictional
+  conversations do not speak for every community connected with a landscape.
+- Camp around the named places. Do not require a summit ascent, reconstruct a
+  ceremony, collect sacred objects, or make worship the payment for a resource gift.
+  Narrative motifs stay within the clan's own work and belongings.
+- The White Silence, Earth That Walks, Red Eclipse, hostile creatures, and numerical
+  bonuses are invented gameplay. A local tradition neither causes the calamity nor
+  supplies a guaranteed cure. Tengri and Etügen are never bosses.
+- A destination offers a question and work to do. No place is the mandatory correct
+  road, no real mountain replaces the fictional refuge, and no group must abandon
+  its beliefs to survive the ending.
 
-Keep the geography and two-act structure shared across runs. Existing route choices, specializations, clan identity, and actual losses can support variations in dialogue and closing details. A provision route, a rescue route, or any of the three identities can lead to a fulfilling ending. Do not invent past choices or casualties to force a scene to fit.
+## Delivery and implementation contract
 
-For an initial implementation, aim for one brief arrival beat per region, the midpoint exchange, the clerk's confession, and the epilogue. Optional chronicle entries can hold longer conversations. Put substantial reading in paused menus; allow players to dismiss story scenes immediately and consult a record later if one is added. Combat objectives should remain understandable when all optional writing is skipped.
+This revision is a writing blueprint. It does not itself add dialogue variants,
+change the prologue, alter balance, or lengthen the expedition. Keep reading in
+paused manuscript scenes, use existing local artwork initially, and retain immediate
+Skip, neutral continuation, and Camp scenes: Off. Any new artwork is separate work
+under the project's visual and animation guides.
 
-| Available foundation                              | Proposed narrative addition                                      |
-| ------------------------------------------------- | ---------------------------------------------------------------- |
-| Five-chapter intro and existing lore              | Act titles and a visible record of story beats                   |
-| Four regions, three crossings, route choices      | Arrival exchanges and responses to the chosen route              |
-| Construction, specializations, clan identities    | Character reactions to the community's development               |
-| Population, herd, food, resolve, and Khan health  | Dialogue reflecting the actual condition of the caravan          |
-| Three-minute final defense and optional boss kill | Passage-clearing presentation and the final wagon's departure    |
-| Victory and defeat screens                        | Short epilogue variations and a restrained remembrance on defeat |
+| Beat ID     | Proposed presentation                                                | Existing trigger retained                         |
+| ----------- | -------------------------------------------------------------------- | ------------------------------------------------- |
+| `fire`      | A place beside the fire                                              | Start the expedition                              |
+| `departure` | More mouths, more hands                                              | Golden Pasture reaches 45 active seconds          |
+| `river`     | Whose road is this?; destination-specific first-stop title           | First chosen camp arrival, including Silent River |
+| `promise`   | A promise chosen; destination-specific setting and shared commitment | Second chosen camp arrival; Act II begins         |
+| `earth`     | What the road asks; destination-specific work                        | Second chosen camp reaches 15 active seconds      |
+| `court`     | The court's empty promise                                            | Second chosen camp reaches 45 active seconds      |
+| `opening`   | The narrow opening, with a factual road callback                     | Heart of the Steppe arrival                       |
+| `road`      | Hold the road                                                        | Final defense reaches 90 active seconds           |
 
-Failure remains an expedition ending. A proposed defeat remembrance may acknowledge the actual journey, but should not reveal later scenes or treat a restart as an established cycle of reincarnation. Long-term campaign continuation and persistent story consequences would need their own design.
+Use stable beat and choice IDs. Destination variants replace the appropriate text
+inside these eight encounters, preserving the two responses' existing benefit and
+identity associations. One selected response grants one configured gift once; a
+place-specific paragraph does not grant another reward or silently charge supplies.
+
+Author destination treatments as structured content keyed by `LocationId`, separate
+from chapter timing. `state/journey.ts` supplies actual locations and completed stops;
+`data/story.ts` composes the chapter, place, and factual journey when a scene opens.
+`state/story.ts` retains the resolved transcript and choice. Keep `ArenaScene` in
+charge of menu transitions and simulation, with `GameUI` receiving snapshots.
+
+Select a deterministic variant once on opening. A later purchase, loss, menu visit,
+or change of Khan must not rewrite an earlier transcript. Derive callbacks from
+existing crossings and actual records instead of adding collectible motif flags.
+Remember that factual location records exist even with Camp scenes off, while
+undelivered dialogue does not become an event the clan remembers saying.
+
+### Writing milestones
+
+1. **Destination encounters:** Write the eight first-stop treatments and second-stop
+   settings/work variations, plus the legacy and neutral fallbacks. Resolve terrain
+   assumptions in choice descriptions and response lines as well as in the setting.
+2. **Remembered roads:** Add concise callbacks to the final approach and epilogue,
+   using completed locations and actual decisions. Update remnant and skipped-scene
+   variants alongside the main conversations.
+3. **Validate the adaptation:** Cover every named location in both eligible slots,
+   reversed pairs, both legacy defaults, all three approaches, skipped councils,
+   small populations, succession, and exactly-once gifts. Check that no unvisited
+   place, invented rescue, named casualty, or earlier unchosen decision is asserted.
+   Play the short expedition with story on and off before expanding its scope.
+
+### Current implementation and remaining adaptation
+
+The playable build already supports choosing destinations, local terrain and economy,
+actual camp names in story settings, completed-location records, eight once-only
+encounters, succession, a survivor-sensitive epilogue, and an animated final passage.
+Its first-arrival dialogue still uses the river-and-ice treatment at every camp;
+its later dialogue retains Broken Pass assumptions. Destination-specific disputes,
+ordered narrative callbacks, and the proposed display titles above remain to be
+implemented. The canonical intro, clan-survival objective, and current three-crossing
+length already support this architecture.
