@@ -1,20 +1,13 @@
 import { BUILDINGS } from '../game/data/clan';
 import {
-  assignedWorkers,
   buildingBlocker,
   buildingCost,
-  burningTempest,
   developmentExcluded,
   hasDevelopment,
 } from '../game/state/clan';
 import type { RunState } from '../game/types';
 import { campIllustration } from './artwork';
-import {
-  progressionMenu,
-  type TreeBranch,
-  type TreeNode,
-  type TreeViewState,
-} from './progressionTree';
+import { type TreeBranch, type TreeNode } from './progressionTree';
 
 /** Authored parent IDs determine the layout, including deeper tiers. */
 export function campBranches(run: RunState): TreeBranch[] {
@@ -76,29 +69,5 @@ export function campBranches(run: RunState): TreeBranch[] {
       layout: 'tiers',
       nodes,
     };
-  });
-}
-
-export function buildingMenu(run: RunState, view: TreeViewState): string {
-  return progressionMenu({
-    title: 'Build a people.',
-    eyebrow: 'CAMP UPGRADE TREE',
-    mark: 'ger',
-    view,
-    introduction:
-      'Establish a building, then follow its connected crafts and developments. Shared crafts can be learned together. An exclusive specialization locks its alternative and that path’s descendants. Your entire camp travels with you.',
-    summary: [
-      { label: 'Materials', value: String(Math.floor(run.clan.materials)) },
-      { label: 'Spirit', value: String(Math.floor(run.clan.spirit)) },
-      { label: 'Workers assigned', value: `${assignedWorkers(run)} / ${run.clan.population}` },
-      {
-        label: 'Developments learned',
-        value: String(Object.values(run.clan.paths).reduce((sum, paths) => sum + paths.length, 0)),
-      },
-    ],
-    branches: campBranches(run),
-    notice: burningTempest(run)
-      ? 'Burning Tempest learned — Fire arrows and Wind shamans combine in every volley.'
-      : 'Fire arrows + Wind shamans unlock the Burning Tempest. Buildings and learned developments carry into the next pasture.',
   });
 }

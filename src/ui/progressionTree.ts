@@ -93,7 +93,7 @@ function nodeButton(node: TreeNode, compact: boolean, parents = ''): string {
   </button>`;
 }
 
-function branchMarkup(branch: TreeBranch): string {
+export function branchMarkup(branch: TreeBranch): string {
   const labels = new Map(branch.nodes.map((node) => [node.id, node.title]));
   const parents = (node: TreeNode): string =>
     node.requirementsLabel ??
@@ -115,7 +115,7 @@ function branchMarkup(branch: TreeBranch): string {
   </article>`;
 }
 
-function searchText(value: string): string {
+export function searchText(value: string): string {
   return value
     .normalize('NFD')
     .replace(/\p{Diacritic}/gu, '')

@@ -11,7 +11,7 @@ import { storyRecords } from './storyContent';
 
 export type JournalTab = 'journey' | 'clan' | 'traditions' | 'story';
 
-export { buildingMenu } from './campContent';
+export { buildingMenu } from './campModel';
 
 export function routeMenu(run: RunState): string {
   return `<section class="game-panel route-dialog">${heading(`CAMP ${run.clan.region + 1} / THE ROAD EAST`, 'Where the grass still grows.', true, 'banner')}<div class="panel-body"><p class="panel-intro">Pack the gers. Protect the moving caravan. Rewards await at the far end.</p><div class="route-map"><span>${REGIONS[run.clan.region]!.short}</span><i>◇ ─ ─ ─ → ◇</i><span>${REGIONS[run.clan.region + 1]!.short}</span></div><div class="upgrade-cards">${ROUTES.map((r) => `<button class="upgrade-card route-card" data-route="${r.id}">${routeIllustration(r.id)}<span class="upgrade-subtitle">${r.subtitle}</span><h3>${r.title}</h3><p>${r.description}</p><span class="card-bottom">PACK & DEPART <span>→</span></span></button>`).join('')}</div></div>${footer('Stay a little longer')}</section>`;

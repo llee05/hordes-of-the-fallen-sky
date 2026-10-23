@@ -38,6 +38,7 @@ export class GameUI {
   private fullscreen = false;
   private journalTab: JournalTab = 'journey';
   private treeViews = new Map<RunPhase, TreeViewState>();
+  private campSelection: BuildingId = 'ger';
 
   private treeView(): TreeViewState {
     let view = this.treeViews.get(this.phase);
@@ -384,7 +385,7 @@ export class GameUI {
     // Transfer focus before hiding or removing the focused menu control.
     if (run.phase === 'playing') this.get('arena-wrap').focus({ preventScroll: true });
     this.overlay.hidden = run.phase === 'playing';
-    this.overlay.className = `overlay ${run.phase === 'intro' ? 'intro-screen' : run.phase === 'ready' ? 'ready-screen' : ['building', 'route', 'journal', 'upgrade', 'settings', 'help', 'story', 'epilogue', 'story-log'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
+    this.overlay.className = `overlay ${run.phase === 'building' ? 'planning camp-planning' : run.phase === 'intro' ? 'intro-screen' : run.phase === 'ready' ? 'ready-screen' : ['route', 'journal', 'upgrade', 'settings', 'help', 'story', 'epilogue', 'story-log'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
     if (run.phase === 'intro') this.overlay.setAttribute('aria-describedby', 'intro-caption');
     else this.overlay.removeAttribute('aria-describedby');
     const labels: Record<RunPhase, string> = {
@@ -421,7 +422,7 @@ export class GameUI {
     } else if (run.phase === 'paused') {
       this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">Your people will be here when you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="research">Patron tech tree</button><button class="menu-button" data-action="restart">Start a new run</button><button class="menu-button" data-action="story-log">Our remembered road</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${quit}</nav></section>`;
     } else if (run.phase === 'building')
-      this.overlay.innerHTML = buildingMenu(run, this.treeView());
+      this.overlay.innerHTML = buildingMenu(run, this.treeView(), this.campSelection);
     else if (run.phase === 'route') this.overlay.innerHTML = routeMenu(run);
     else if (run.phase === 'upgrade') this.overlay.innerHTML = researchMenu(run, this.treeView());
     else if (run.phase === 'journal') this.overlay.innerHTML = journalMenu(run, this.journalTab);
@@ -447,7 +448,7 @@ export class GameUI {
     this.overlay.scrollTop = 0;
     this.overlay
       .querySelector<HTMLButtonElement>(
-        '[data-primary], .tree-node[aria-disabled="false"], [data-building]:not(:disabled), [data-route], [role="tab"][aria-selected="true"], [data-action="sound"]',
+        '[data-primary], [data-camp-site][aria-pressed="true"], .tree-node[aria-disabled="false"], [data-building]:not(:disabled), [data-route], [role="tab"][aria-selected="true"], [data-action="sound"]',
       )
       ?.focus({ preventScroll: true });
     if (!this.overlay.contains(document.activeElement))
@@ -460,7 +461,12 @@ export class GameUI {
     const button = (event.target as Element).closest<HTMLButtonElement>('button');
     if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
     const action = button.dataset.action;
-    if (button.dataset.treeFilter && this.lastSnapshot) {
+    if (button.dataset.campSite && this.lastSnapshot && this.phase === 'building') {
+      this.campSelection = button.dataset.campSite as BuildingId;
+      this.treeView().query = '';
+      this.renderPhase(this.lastSnapshot);
+      this.overlay.querySelector('.tree-scroll')!.scrollTop = 0;
+    } else if (button.dataset.treeFilter && this.lastSnapshot) {
       this.treeView().category = button.dataset.treeFilter;
       this.renderPhase(this.lastSnapshot);
     } else if (button.dataset.storyChoice) this.scene.chooseStory(button.dataset.storyChoice);
