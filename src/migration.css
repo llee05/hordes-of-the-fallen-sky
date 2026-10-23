@@ -25,6 +25,28 @@
   background: #d2b77761;
   box-shadow: inset 3px 0 #984d37;
 }
+.destination-illustration {
+  display: block;
+  width: 100%;
+  height: 72px;
+  margin-bottom: 8px;
+  pointer-events: none;
+}
+.destination-detail > .destination-illustration {
+  float: right;
+  width: min(38%, 250px);
+  height: 130px;
+  margin: 0 0 12px 18px;
+}
+.destination-detail::after {
+  content: '';
+  display: block;
+  clear: both;
+}
+.destination-scenery {
+  margin-top: 8px;
+  color: #4f6551;
+}
 .destination-card strong,
 .destination-card span {
   display: block;

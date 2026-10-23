@@ -139,8 +139,8 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       { prop: 'pine', count: 20, width: [65, 100] },
     ],
     landmarks: [
-      landmark('pyramid', -450, -230, 420),
-      landmark('twin-summit', 470, -245, 440),
+      landmark('pyramid', -450, -60, 300),
+      landmark('twin-summit', 470, -60, 320),
       landmark('crag', -380, 365, 280),
     ],
     air: { color: 0x453b63, alpha: 0.12, particles: 'mist' },
@@ -161,9 +161,9 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       { prop: 'foothill', count: 42, width: [65, 120] },
     ],
     landmarks: [
-      landmark('snow-dome', -250, -245, 520),
+      landmark('snow-dome', -430, 310, 410),
       landmark('larch', 415, -160, 160),
-      landmark('foothill', -410, 310, 245),
+      landmark('foothill', -410, -110, 245),
     ],
     water: {
       kind: 'glacial',
@@ -190,7 +190,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       { prop: 'larch', count: 85, width: [80, 125] },
     ],
     landmarks: [
-      landmark('foothill', -320, -260, 420),
+      landmark('foothill', -320, -130, 280),
       landmark('pine', -435, -120, 195),
       landmark('larch', 405, -200, 210),
       landmark('pine', 490, 320, 165),
@@ -213,11 +213,11 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       { prop: 'glacier', count: 32, width: [90, 155] },
     ],
     landmarks: [
-      landmark('pyramid', -470, -280, 225),
-      landmark('snow-dome', -245, -310, 245),
-      landmark('pyramid', 0, -335, 260),
-      landmark('snow-dome', 245, -310, 245),
-      landmark('pyramid', 470, -280, 225),
+      landmark('pyramid', -470, -90, 195),
+      landmark('snow-dome', -245, -105, 210),
+      landmark('pyramid', 0, -120, 220),
+      landmark('snow-dome', 245, -105, 210),
+      landmark('pyramid', 470, -90, 195),
       landmark('glacier', -410, 340, 350),
     ],
     water: {
@@ -242,9 +242,9 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     flowers: false,
     cover: [{ prop: 'crag', count: 110, width: [70, 135] }],
     landmarks: [
-      landmark('pyramid', -180, -235, 590),
-      landmark('crag', 450, -190, 310),
-      landmark('crag', -470, 345, 255),
+      landmark('pyramid', -430, 315, 420),
+      landmark('crag', 450, -100, 230),
+      landmark('crag', 510, 335, 255),
     ],
     air: { color: 0xb3b6ce, alpha: 0.065, particles: 'snow' },
   },
@@ -264,9 +264,9 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       { prop: 'glacier', count: 28, width: [70, 125] },
     ],
     landmarks: [
-      landmark('twin-summit', -210, -255, 550),
+      landmark('twin-summit', -420, 300, 430),
       landmark('pine', 425, -180, 185),
-      landmark('pine', -430, 325, 160),
+      landmark('pine', 470, 325, 160),
     ],
     water: {
       kind: 'glacial',
@@ -293,9 +293,9 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       { prop: 'foothill', count: 25, width: [70, 120] },
     ],
     landmarks: [
-      landmark('volcano', -220, -235, 570),
+      landmark('volcano', -400, 300, 440),
       landmark('crag', 430, -165, 180),
-      landmark('foothill', -430, 330, 220),
+      landmark('foothill', -430, -110, 220),
     ],
     air: { color: 0xd9b479, alpha: 0.035, particles: 'dust' },
   },
@@ -312,8 +312,8 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     flowers: false,
     cover: [{ prop: 'granite', count: 95, width: [65, 135] }],
     landmarks: [
-      landmark('granite', -365, -195, 390),
-      landmark('granite', 375, -250, 460),
+      landmark('granite', -365, -45, 300),
+      landmark('granite', 410, -30, 350),
       landmark('granite', -450, 360, 270),
     ],
     air: { color: 0xe3bd8c, alpha: 0.045, particles: 'dust' },

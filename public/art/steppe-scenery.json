@@ -2,18 +2,18 @@
   "frames": {
     "larch": {
       "frame": {
-        "x": 20,
-        "y": 12,
-        "w": 366,
-        "h": 370
+        "x": 74,
+        "y": 43,
+        "w": 289,
+        "h": 294
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 41,
-        "y": 8,
-        "w": 366,
-        "h": 370
+        "x": 80,
+        "y": 84,
+        "w": 289,
+        "h": 294
       },
       "sourceSize": {
         "w": 448,
@@ -22,18 +22,18 @@
     },
     "pine": {
       "frame": {
-        "x": 410,
-        "y": 14,
-        "w": 356,
-        "h": 368
+        "x": 483,
+        "y": 35,
+        "w": 279,
+        "h": 301
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 46,
-        "y": 10,
-        "w": 356,
-        "h": 368
+        "x": 84,
+        "y": 77,
+        "w": 279,
+        "h": 301
       },
       "sourceSize": {
         "w": 448,
@@ -42,18 +42,18 @@
     },
     "willow": {
       "frame": {
-        "x": 780,
-        "y": 70,
-        "w": 344,
-        "h": 308
+        "x": 896,
+        "y": 77,
+        "w": 296,
+        "h": 261
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 52,
-        "y": 70,
-        "w": 344,
-        "h": 308
+        "x": 76,
+        "y": 117,
+        "w": 296,
+        "h": 261
       },
       "sourceSize": {
         "w": 448,
@@ -62,18 +62,18 @@
     },
     "foothill": {
       "frame": {
-        "x": 1128,
-        "y": 135,
-        "w": 408,
-        "h": 240
+        "x": 41,
+        "y": 423,
+        "w": 354,
+        "h": 189
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 20,
-        "y": 138,
-        "w": 408,
-        "h": 240
+        "x": 47,
+        "y": 189,
+        "w": 354,
+        "h": 189
       },
       "sourceSize": {
         "w": 448,
@@ -82,18 +82,18 @@
     },
     "snow-dome": {
       "frame": {
-        "x": 0,
-        "y": 390,
-        "w": 430,
-        "h": 295
+        "x": 438,
+        "y": 403,
+        "w": 371,
+        "h": 223
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 9,
-        "y": 83,
-        "w": 430,
-        "h": 295
+        "x": 38,
+        "y": 155,
+        "w": 371,
+        "h": 223
       },
       "sourceSize": {
         "w": 448,
@@ -102,18 +102,18 @@
     },
     "pyramid": {
       "frame": {
-        "x": 430,
-        "y": 390,
-        "w": 340,
-        "h": 295
+        "x": 856,
+        "y": 378,
+        "w": 363,
+        "h": 260
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 54,
-        "y": 83,
-        "w": 340,
-        "h": 295
+        "x": 42,
+        "y": 118,
+        "w": 363,
+        "h": 260
       },
       "sourceSize": {
         "w": 448,
@@ -122,18 +122,18 @@
     },
     "glacier": {
       "frame": {
-        "x": 770,
-        "y": 390,
-        "w": 375,
-        "h": 295
+        "x": 28,
+        "y": 714,
+        "w": 388,
+        "h": 187
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 37,
-        "y": 83,
-        "w": 375,
-        "h": 295
+        "x": 30,
+        "y": 191,
+        "w": 388,
+        "h": 187
       },
       "sourceSize": {
         "w": 448,
@@ -142,18 +142,18 @@
     },
     "twin-summit": {
       "frame": {
-        "x": 1145,
-        "y": 390,
-        "w": 391,
-        "h": 295
+        "x": 437,
+        "y": 698,
+        "w": 382,
+        "h": 215
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 29,
-        "y": 83,
-        "w": 391,
-        "h": 295
+        "x": 33,
+        "y": 163,
+        "w": 382,
+        "h": 215
       },
       "sourceSize": {
         "w": 448,
@@ -162,18 +162,18 @@
     },
     "volcano": {
       "frame": {
-        "x": 0,
-        "y": 685,
-        "w": 440,
-        "h": 339
+        "x": 844,
+        "y": 725,
+        "w": 381,
+        "h": 180
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 4,
-        "y": 39,
-        "w": 440,
-        "h": 339
+        "x": 34,
+        "y": 198,
+        "w": 381,
+        "h": 180
       },
       "sourceSize": {
         "w": 448,
@@ -182,18 +182,18 @@
     },
     "granite": {
       "frame": {
-        "x": 440,
-        "y": 685,
-        "w": 397,
-        "h": 339
+        "x": 44,
+        "y": 947,
+        "w": 340,
+        "h": 256
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 26,
-        "y": 39,
-        "w": 397,
-        "h": 339
+        "x": 54,
+        "y": 122,
+        "w": 340,
+        "h": 256
       },
       "sourceSize": {
         "w": 448,
@@ -202,18 +202,18 @@
     },
     "reeds": {
       "frame": {
-        "x": 837,
-        "y": 685,
-        "w": 305,
-        "h": 339
+        "x": 492,
+        "y": 940,
+        "w": 280,
+        "h": 270
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 72,
-        "y": 39,
-        "w": 305,
-        "h": 339
+        "x": 84,
+        "y": 108,
+        "w": 280,
+        "h": 270
       },
       "sourceSize": {
         "w": 448,
@@ -222,18 +222,18 @@
     },
     "crag": {
       "frame": {
-        "x": 1142,
-        "y": 685,
-        "w": 394,
-        "h": 339
+        "x": 855,
+        "y": 961,
+        "w": 363,
+        "h": 250
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 27,
-        "y": 39,
-        "w": 394,
-        "h": 339
+        "x": 42,
+        "y": 128,
+        "w": 363,
+        "h": 250
       },
       "sourceSize": {
         "w": 448,
@@ -242,11 +242,11 @@
     }
   },
   "meta": {
-    "image": "steppe-scenery.png",
+    "image": "steppe-scenery-v2.png",
     "format": "RGBA8888",
     "size": {
-      "w": 1536,
-      "h": 1024
+      "w": 1254,
+      "h": 1254
     },
     "scale": "1"
   }

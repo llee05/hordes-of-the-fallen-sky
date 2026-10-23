@@ -58,6 +58,8 @@ The sound palette uses bowstring snaps, grounded hoofbeats, wood and leather imp
 
 The game now uses a stylized painterly 2.5D presentation: golden brushwork grasslands, miniature mounted warriors, decorated ivory gers, turquoise and vermilion banners, and cold, unsettling calamity creatures. Soft shadows, ground-position depth sorting, drifting wind and snow, and parchment panels carry the direction through gameplay. Visible camp workers carry felt between shared stores and established workplaces. A bounded pack herd grazes at camp and walks with the caravan. Additional households raise more shelters, while losses reduce the visible group. Packing briefly folds the old camp into the travelling carts while departure begins immediately. These visual representatives use the existing population and worker assignments; they do not add a second economy. All artwork ships locally. See [the art direction and generation prompts](docs/living-steppe-tapestry.md).
 
+Every location has a distinct painted landscape: golden meadow, frozen river, slate pass, forested foothills, snowy peaks and glaciers, volcanic steppe, granite desert, and braided river pasture. Terrain colors, vegetation, watercourses, landmark silhouettes, and atmosphere follow the chosen place. Migration cards preview the same scenery before departure. See [the twelve-location landscape catalog](docs/location-landscapes.md).
+
 The Khan, allied archers, and all six creature designs have painted sprite animation: four gait or hovering frames and two attack poses each. Riding speed drives the gait, galloping quickens it, and actual volleys, charges, and strikes trigger release poses. Hits briefly tint the character; defeated enemies fade through a small visual pool after their collision bodies leave immediately. Character animation and these effects freeze in every paused run phase. See [the sprite sheets, registration, and generation prompts](docs/character-animation.md).
 
 ## Build, defend, migrate
@@ -181,6 +183,7 @@ src/game/state/khan.ts         Khan presence, lethal hits, and active-time succe
 src/game/state/clan.ts         Economy, construction, migration, victory
 src/game/state/camp.ts         Typed camp effects, neutral defaults, and once-only grants
 src/game/data/clan.ts          Buildings, specializations, routes, regions, formations
+src/game/data/landscapes.ts    Twelve location palettes, landmarks, vegetation, water, weather
 src/game/data/enemies.ts       Five enemies, two elites, and the Skybreaker
 src/game/data/patrons.ts       Eight patrons, playstyles, symbols, and descriptions
 src/game/data/upgrades.ts      Patron technologies, ranks, and prerequisites
@@ -188,6 +191,7 @@ src/game/state/patrons.ts      Neutral patron effects, damage, recovery, and rev
 src/game/systems/PatronSupport.ts Ancestral riders, slowing fields, pulse, and camp ward
 src/game/assets/painterlyArt.ts Shared painted atlases, sizing, collision alignment, effects
 src/game/assets/SteppeLandscape.ts Painterly ground, riverbanks, weather, regional scenery
+src/game/assets/landscapeLayout.ts Seeded scenery placement and clear caravan corridor
 src/game/assets/ClanLife.ts     Bounded workers, pack horses, and active-time camp activity
 src/game/state/campLife.ts      Workplaces, population-driven shelters, and visual routes
 public/art/                   Bundled painted PNGs and atlas frame metadata

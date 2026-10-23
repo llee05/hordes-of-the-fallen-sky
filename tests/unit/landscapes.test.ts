@@ -2,10 +2,35 @@ import { describe, expect, it } from 'vitest';
 import { LOCATIONS } from '../../src/game/data/clan';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
 import scenerySource from '/art/steppe-scenery.json?raw';
+import { GAME } from '../../src/game/config';
+import { isLandscapeClearing, landscapeCover } from '../../src/game/assets/landscapeLayout';
 
 const atlas = JSON.parse(scenerySource) as typeof import('../../public/art/steppe-scenery.json');
 
 describe('location scenery content', () => {
+  it('reproduces bounded scenery while keeping the camp and complete caravan corridor clear', () => {
+    for (const place of LOCATIONS) {
+      const layout = landscapeCover(place.id);
+      expect(layout).toEqual(landscapeCover(place.id));
+      expect(layout.length).toBeGreaterThan(0);
+      expect(layout.length).toBeLessThan(250);
+      for (const prop of layout) {
+        expect(isLandscapeClearing(prop.x, prop.y)).toBe(false);
+        expect(Math.abs(prop.x) + prop.width / 2).toBeLessThan(GAME.worldSize / 2);
+        expect(Math.abs(prop.y) + prop.width / 2).toBeLessThan(GAME.worldSize / 2);
+        for (const landmark of LANDSCAPES[place.id].landmarks) {
+          const overlaps =
+            Math.abs(prop.x - landmark.x) < (prop.width + landmark.width) / 2 &&
+            prop.y > landmark.y - landmark.width * 0.94 &&
+            prop.y - prop.width * 0.94 < landmark.y;
+          expect(overlaps).toBe(false);
+        }
+      }
+    }
+    for (let caravanX = 0; caravanX <= 1150; caravanX += 50)
+      expect(isLandscapeClearing(caravanX, 0)).toBe(true);
+  });
+
   it('covers every destination with a distinct composition and only bundled props', () => {
     expect(Object.keys(LANDSCAPES).sort()).toEqual(LOCATIONS.map((place) => place.id).sort());
     const compositions = new Set<string>();

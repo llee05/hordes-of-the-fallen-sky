@@ -6,15 +6,23 @@ Hordes of the Fallen Sky’s art direction combines the readable miniature scale
 
 Golden, sage, and ochre grasses form a quiet field beneath ivory felt gers, turquoise and vermilion banners, chestnut horses, and decorated wooden carts. Warm sunlight falls from the upper left. Soft olive shadows anchor the miniatures. The living clan uses textile bands, rope, wood, and felt; the calamity uses ash, stone, bone, indigo cloth, and restrained turquoise light.
 
-The four regions share the same painting language. Rounded riverbanks and ice distinguish the Silent River, layered stone outcrops define the Broken Pass, and cool violet atmosphere and a red eclipse mark the sacred mountain. Wind strokes, drifting snow, hoof dust, and gently moving banners add motion without obscuring attacks or danger warnings.
+All twelve locations share the same painting language and have distinct landscapes.
+Golden flowering meadows, frozen riverbanks, fractured slate corridors, woodland
+foothills, snow crowns and glacial ridges, extinct volcanic steppe, granite desert,
+and braided river pasture use their own surface palettes, vegetation, landforms,
+watercourses, and atmosphere. The White Silence lightly veils the chosen place;
+its geography persists across chapters. The final refuge retains its indigo basin,
+blue banners, opening passage, and red eclipse. Wind and particles use active time.
 
-Named migration camps overlay the chapter weather with a quiet location tint and
-painted outcrops: single, three, and five-part skylines, low foothills, a volcanic
-silhouette, or a broad river. These reuse the local rock and shadow assets and remain
-walkable, behind combat actors, with no new collision geometry or animation clocks.
-They suggest the surrounding landscape rather than reconstructing real monuments
-or sacred ceremonies. `src/migration.css` keeps destination selection and the three
-approach forecasts on the existing manuscript panels.
+`data/landscapes.ts` authors each location's composition. The locally bundled
+`steppe-scenery` atlas adds larch, pine, willow, foothill, snow dome, pyramid, glacier,
+white summits, extinct cone, desert granite, reeds, and slate crag cutouts. Sparse,
+seeded dressing leaves the camp and caravan corridor clear; large landforms sit
+behind combat actors and small props sort by ground position. All terrain remains
+walkable. Migration cards and destination details reuse the painted landmarks.
+See [the landscape catalog and rendering contract](location-landscapes.md) and
+[the full atlas generation prompt](location-scenery-prompt.md). These suggest the
+surrounding land rather than reconstructing real monuments or sacred ceremonies.
 
 The interface uses indigo felt, warm manuscript paper, brass edging, rust-red woven trim, and serif chapter titles. A stitched hanging cloth carries the title menu while leaving the painted camp visible beside it. During play, compact textile HUD panels and a bottom command dock float above the full-window battlefield. Detailed manuscript pages live in the paused clan chronicle and management menus. Keep material contrast quiet beneath text, and keep decorative stitches and borders out of pointer and keyboard navigation.
 
@@ -37,7 +45,7 @@ The original world-art PNGs, two character animation sheets, and the UI felt tex
 | Camp and terrain props    | `public/art/steppe-props.png`                                   | Ger, cart, two-color banners, sheep, stone outcrop, ribbon cairn              |
 | Atlas metadata            | `public/art/steppe-actors.json`, `public/art/steppe-props.json` | Named frames tightly bounded from the generated alpha                         |
 
-`src/game/assets/painterlyArt.ts` loads two shared character motion atlases and one prop atlas, defines visual sizes, and configures collision circles in world units independently of image resolution. It also creates small deterministic brush, arrow, shard, dust, and shadow textures. `src/game/assets/SteppeLandscape.ts` owns decorative terrain and atmosphere. `ArenaScene` owns the simulation, depth ordering, and pooled actors. The Phaser renderer uses antialiasing and linear texture filtering. Painted sprites use fractional coordinates; the game does not round them into a pixel grid.
+`src/game/assets/painterlyArt.ts` loads the shared character, civilian, camp prop, and scenery atlases, defines visual sizes, and configures collision circles in world units independently of image resolution. It also creates small deterministic brush, arrow, shard, dust, and shadow textures. `src/game/assets/SteppeLandscape.ts` owns decorative terrain and atmosphere. `ArenaScene` owns the simulation, depth ordering, and pooled actors. The Phaser renderer uses antialiasing and linear texture filtering. Painted sprites use fractional coordinates; the game does not round them into a pixel grid.
 
 Existing movement, formations, attack timing, collision radii, progression, construction, route rewards, native saves, and sandboxing are preserved. Decorative terrain remains walkable. The view is 2.5D presentation over a 2D simulation. Characters have four painted locomotion frames and two attack poses each, with left-facing mirroring and frame registration that keeps ground anchors stable. Gameplay time drives every character frame and defeat copy, so menus freeze their playback.
 

@@ -1,7 +1,10 @@
 import propsSource from '/art/steppe-props.json?raw';
 import actorsSource from '/art/steppe-actors.json?raw';
 import clanSource from '/art/steppe-clan-motion.json?raw';
+import scenerySource from '/art/steppe-scenery.json?raw';
 import type { BuildingDefinition } from '../game/data/clan';
+import { LANDSCAPES } from '../game/data/landscapes';
+import type { LocationId } from '../game/types';
 
 // Public assets use root URLs in Vite. Bundle the metadata as text so both the
 // browser preview and file-based desktop build share the same atlas definitions.
@@ -10,6 +13,7 @@ const actors = JSON.parse(actorsSource) as typeof import('../../public/art/stepp
 const civilians = JSON.parse(
   clanSource,
 ) as typeof import('../../public/art/steppe-clan-motion.json');
+const scenery = JSON.parse(scenerySource) as typeof import('../../public/art/steppe-scenery.json');
 
 // Small brass-cut silhouettes stay legible at HUD scale. Decorative SVGs never add
 // accessible names or focus targets to the buttons and labels that contain them.
@@ -103,6 +107,28 @@ export function campResident(name: 'worker' | 'packhorse'): string {
 
 export function campProp(name: keyof typeof props.frames): string {
   return atlasIllustration(props, props.frames[name].frame);
+}
+
+/** The same painted landmarks let players recognize a destination before departing. */
+export function destinationIllustration(id: LocationId): string {
+  const landscape = LANDSCAPES[id];
+  const color = (value: number) => `#${value.toString(16).padStart(6, '0')}`;
+  const root = `${import.meta.env.BASE_URL}art/`;
+  const water = landscape.water;
+  const river = water
+    ? `<path d="${water.course.map((value, index) => (index % 2 ? `${94 + value * 0.065}` : `${index ? 'L' : 'M'}${120 + value * 0.065},`)).join(' ')}" fill="none" stroke="${color(water.color)}" stroke-width="${water.width * 0.065 + 2}"/>`
+    : '';
+  const landmarks = landscape.landmarks
+    .map((item) => {
+      const frame = scenery.frames[item.prop].frame;
+      const width = item.width * 0.2;
+      const height = Math.min(66, (width * frame.h) / frame.w);
+      const x = 120 + item.x * 0.17 - width / 2;
+      const y = 87 + item.y * 0.025 - height;
+      return `<svg x="${x}" y="${y}" width="${width}" height="${height}" viewBox="${frame.x} ${frame.y} ${frame.w} ${frame.h}" overflow="hidden"><image href="${root}${scenery.meta.image}" width="${scenery.meta.size.w}" height="${scenery.meta.size.h}"/></svg>`;
+    })
+    .join('');
+  return `<svg class="destination-illustration" data-landscape="${id}" viewBox="0 0 240 110" aria-hidden="true" focusable="false"><path d="M0 65Q55 45 120 64T240 58V110H0Z" fill="${color(landscape.ground)}"/><path d="M0 91Q80 72 151 92T240 83V110H0Z" fill="${color(landscape.patch)}" opacity=".5"/>${river}${landmarks}</svg>`;
 }
 
 export function routeIllustration(name: 'river' | 'ridge' | 'refuge'): string {

@@ -56,7 +56,10 @@ destinations without departing. Escape closes planning. Camp purchase previews u
 the food-cost range across all currently available destination/approach combinations.
 The chronicle's four stops retain completed locations and show the chosen destination
 while travelling. Cultural descriptions and the resource effects are displayed
-separately. All art, fonts, and source context ship locally.
+separately. All art, fonts, and source context ship locally. Each location has its own terrain,
+vegetation, watercourse (where present), painted landmarks, and atmosphere; migration
+cards preview the same scenery. See [the landscape catalog](location-landscapes.md)
+for the twelve compositions and renderer contract.
 
 ## Cultural context and sources
 

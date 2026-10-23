@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRun } from '../../src/game/state/run';
 import { LOCATIONS } from '../../src/game/data/clan';
+import { LANDSCAPES } from '../../src/game/data/landscapes';
 import { advanceClan, beginMigration } from '../../src/game/state/clan';
 import { damageKhan, advanceSuccession } from '../../src/game/state/khan';
 import { locationAtChapter } from '../../src/game/state/journey';
@@ -24,7 +25,11 @@ describe('destination planning and remembered places', () => {
     expect(routeMenu(run, 'retired-place')).toContain('The Silent River');
     expect(run).toEqual(before);
     for (const place of LOCATIONS.filter((location) => location.context)) {
-      expect(routeMenu(run, place.id)).toContain(place.name);
+      const menu = routeMenu(run, place.id);
+      expect(menu).toContain(place.name);
+      expect(menu).toContain(`data-landscape="${place.id}"`);
+      expect(menu).toContain(LANDSCAPES[place.id].description);
+      expect(menu).toContain('art/steppe-scenery-v2.png');
       expect(destinationEffects(place)).not.toBe('Standard gathering and travel');
     }
   });

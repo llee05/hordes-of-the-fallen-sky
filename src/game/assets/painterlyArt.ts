@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME } from '../config';
 import { characterTexture, isCharacterKind, MOTION_SHEETS } from '../animation/CharacterMotion';
+import type { SceneryProp } from '../data/landscapes';
 
 /** Two motion atlases and one prop atlas keep painted actors on shared textures. */
 const PROPS = new Set(['ger', 'cart', 'banner', 'sheep', 'rock', 'pillar']);
@@ -39,6 +40,18 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
     scene.load.atlas(key, `${root}${key}.png`, `${root}${key}.json`);
   }
   scene.load.atlas('steppe-props', `${root}steppe-props.png`, `${root}steppe-props.json`);
+  scene.load.atlas('steppe-scenery', `${root}steppe-scenery-v2.png`, `${root}steppe-scenery.json`);
+}
+
+export function sceneryImage(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  name: SceneryProp,
+  width: number,
+): Phaser.GameObjects.Image {
+  const image = scene.add.image(x, y, 'steppe-scenery', name).setOrigin(0.5, 0.9);
+  return image.setScale(width / image.width).setName(`scenery-${name}`);
 }
 
 export function paintedImage(
