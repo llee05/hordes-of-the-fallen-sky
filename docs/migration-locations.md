@@ -15,6 +15,19 @@ The calamity, hostile creatures, passage, and all resource modifiers are invente
 Real sacred sites are not the source of the calamity or rewards for religious acts.
 Mongolian, Turkic, and Altaian traditions retain their distinct contexts.
 
+## Narrative direction
+
+[The revised story architecture](../story-architecture.md) gives each named place
+a distinct dramatic role and treatments for both eligible story positions. A first
+stop asks whose knowledge the clan will hear; a second tests its shared commitment
+through local work before Erden's confession. Destination and approach remain
+independent, and all roads converge on the fictional final passage.
+
+These scenes and their ending callbacks are proposed writing. The current build
+records actual destinations and uses their names in scene settings, but retains
+the original river and pass dialogue. [The prototype guide](story-prototype.md)
+lists the implemented encounters and distinguishes the remaining adaptation.
+
 ## Content and simulation
 
 `data/clan.ts` defines `LOCATIONS` with stable IDs, names, geographical/cultural

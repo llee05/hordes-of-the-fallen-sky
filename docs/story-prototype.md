@@ -1,6 +1,11 @@
 # Playable story prototype
 
-Hordes of the Fallen Sky now implements one complete expedition through the two acts in [the story architecture](../story-architecture.md). The five-chapter prologue leads into camp construction, automatic mounted combat, three caravan crossings, a timed final defense, an epilogue, journey results, and a fresh run.
+Hordes of the Fallen Sky implements the shared two-act expedition underlying
+[the revised story architecture](../story-architecture.md). The five-chapter prologue
+leads into camp construction, automatic mounted combat, three caravan crossings,
+a timed final defense, an epilogue, journey results, and a fresh run. The revised
+architecture proposes destination-specific conversations and ending callbacks;
+this guide describes the current playable adaptation.
 
 ## Play
 
@@ -10,18 +15,32 @@ Leave **Camp scenes: On** at the title to play the story. Ride with WASD or arro
 
 ## Two acts, eight memories
 
-| Beat                      | Trigger                                  | Story work                                                                                |
-| ------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
-| A place beside the fire   | Start the expedition                     | Meet Saran, Boro, Erden, and Nara; share the work or watch                                |
-| More mouths, more hands   | Golden Pasture reaches 45 active seconds | Prepare provisions or wagon supplies before choosing a route                              |
-| Voices across the ice     | Arrive at Silent River                   | Test the ground or gather the living voices; acknowledge rescued families when applicable |
-| A promise chosen          | Arrive at Broken Pass                    | Begin Act II and make the blue banner a shared promise                                    |
-| When the earth moves      | Broken Pass reaches 15 active seconds    | Mend the wheels or rest tired hands; acknowledge the clan's condition                     |
-| The court’s empty promise | Broken Pass reaches 45 active seconds    | Hear Erden's connection to the Iron Vow; share his tally or record his account            |
-| The narrow opening        | Arrive at Heart of the Steppe            | Organize the last watch or provisions while the passage is cleared                        |
-| Hold the road             | Final defense reaches 90 active seconds  | Carry the embers forward while the defenders hold the approach                            |
+| Beat                      | Trigger                                      | Story work                                                                                |
+| ------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| A place beside the fire   | Start the expedition                         | Meet Saran, Boro, Erden, and Nara; share the work or watch                                |
+| More mouths, more hands   | Golden Pasture reaches 45 active seconds     | Prepare provisions or wagon supplies before choosing a route                              |
+| Voices across the ice     | Arrive at the first chosen camp              | Test the ground or gather the living voices; acknowledge rescued families when applicable |
+| A promise chosen          | Arrive at the second chosen camp             | Begin Act II and make the blue banner a shared promise                                    |
+| When the earth moves      | Second chosen camp reaches 15 active seconds | Mend the wheels or rest tired hands; acknowledge the clan's condition                     |
+| The court’s empty promise | Second chosen camp reaches 45 active seconds | Hear Erden's connection to the Iron Vow; share his tally or record his account            |
+| The narrow opening        | Arrive at Heart of the Steppe                | Organize the last watch or provisions while the passage is cleared                        |
+| Hold the road             | Final defense reaches 90 active seconds      | Carry the embers forward while the defenders hold the approach                            |
 
 Each scene occurs once. Triggers follow active gameplay time and arrival, so reading a scene cannot consume pasture or advance the final defense. Construction, formations, route rewards, and earned traditions remain available between scenes. Opening a route cannot bypass an outstanding departure conversation.
+
+The first two crossings can visit any of the eight named destinations described in
+[the destination guide](migration-locations.md); Silent River and Broken Pass remain
+the respective defaults. Each named destination can appear in either intermediate
+slot, but cannot be revisited in the same expedition. Chapter weather, difficulty,
+and the act boundary follow the slot independently of the place. The third crossing
+always reaches the fictional Heart of the Steppe.
+
+Current scene settings use the actual selected camp name. The first-arrival dialogue
+still assumes a river and ice, and later dialogue retains some Broken Pass imagery.
+The blueprint replaces those assumptions with local work and disagreements, while
+retaining the eight encounter triggers and once-only choices above. Its proposed
+titles, eight destination treatments, and ordered ending callbacks are not yet
+runtime dialogue.
 
 ## Choices and memories
 
@@ -43,7 +62,14 @@ Defeat shows the actual journey result and leaves the memories available. A rest
 
 `src/game/data/story.ts` contains the cast, conditional scenes, choices, and epilogue. `src/game/state/story.ts` handles once-only progression; `ArenaScene` owns phase transitions and pause behavior. `src/ui/storyContent.ts` and `src/story.css` render manuscript conversations using the existing locally bundled paintings. No new runtime service, voice synthesis, or remote asset loading is involved.
 
-The complete story is playable as a short prototype. Dialogue is text-based, geography is shared across runs, and individual companion agents, a longer campaign, permanent progression, and campaign save/resume remain future work. Unit and browser coverage checks chronology, choices, losses, banked knowledge points, all crossings, victory, defeat, memories, controller input, layout, and restart. Electron smoke coverage checks the offline story panel and the existing native platform flow.
+The shared story is playable as a short prototype. Dialogue is text-based and the
+chapter structure is shared across runs, while intermediate destinations vary.
+Destination-specific dialogue and epilogue callbacks are the next narrative
+adaptation in the architecture. Individual companion agents, a longer campaign,
+permanent progression, and campaign save/resume remain future work. Unit and browser
+coverage checks chronology, choices, losses, banked knowledge points, all crossings,
+victory, defeat, memories, controller input, layout, and restart. Electron smoke
+coverage checks the offline story panel and the existing native platform flow.
 
 ## Life beneath the banner
 

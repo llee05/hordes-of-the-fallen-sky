@@ -330,18 +330,24 @@ The five-chapter prologue presents the fictional Sundering and the clan's flight
 
 Camp scenes are enabled by default and can be toggled at the title. Each encounter pauses combat, physics, economy, and journey clocks, with two choices. Any chosen benefit is granted once: **food +8, materials +6, Spirit +4, or resolve +5**. Each choice also grants **+1** to its associated identity. Escape / controller B skips without a reward. Disabled encounters pass without rewards; disabling camp scenes does not skip the prologue.
 
-| Encounter                 | Trigger                              | Choice A: gift / identity                            | Choice B: gift / identity                      |
-| ------------------------- | ------------------------------------ | ---------------------------------------------------- | ---------------------------------------------- |
-| A place beside the fire   | Expedition begins                    | Share the work: +6 materials / Wander                | Share the watch: +5 resolve / Iron             |
-| More mouths, more hands   | First camp reaches 45 seconds        | Prepare the provisions: +8 food / Wander             | Prepare the wagons: +6 materials / Iron        |
-| Voices across the ice     | Arrive at Silent River               | Trust the ground: +8 food / Wander                   | Keep the names together: +4 Spirit / Sky       |
-| A promise chosen          | Arrive at Broken Pass; Act II begins | We will watch for one another: +5 resolve / Iron     | We will carry every name: +4 Spirit / Sky      |
-| When the earth moves      | Broken Pass reaches 15 seconds       | Mend the wheels together: +6 materials / Iron        | Let the tired hands rest: +5 resolve / Wander  |
-| The court's empty promise | Broken Pass reaches 45 seconds       | Put the tally in shared hands: +6 materials / Wander | Hear the whole account: +4 Spirit / Sky        |
-| The narrow opening        | Arrive at Heart of the Steppe        | Organize the last watch: +5 resolve / Iron           | Share a meal before the work: +8 food / Wander |
-| Hold the road             | Final stand reaches 90 seconds       | Hold together: +5 resolve / Iron                     | Carry the song forward: +4 Spirit / Sky        |
+| Encounter                 | Trigger                                     | Choice A: gift / identity                            | Choice B: gift / identity                      |
+| ------------------------- | ------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------- |
+| A place beside the fire   | Expedition begins                           | Share the work: +6 materials / Wander                | Share the watch: +5 resolve / Iron             |
+| More mouths, more hands   | First camp reaches 45 seconds               | Prepare the provisions: +8 food / Wander             | Prepare the wagons: +6 materials / Iron        |
+| Voices across the ice     | Arrive at first chosen camp                 | Trust the ground: +8 food / Wander                   | Keep the names together: +4 Spirit / Sky       |
+| A promise chosen          | Arrive at second chosen camp; Act II begins | We will watch for one another: +5 resolve / Iron     | We will carry every name: +4 Spirit / Sky      |
+| When the earth moves      | Second chosen camp reaches 15 seconds       | Mend the wheels together: +6 materials / Iron        | Let the tired hands rest: +5 resolve / Wander  |
+| The court's empty promise | Second chosen camp reaches 45 seconds       | Put the tally in shared hands: +6 materials / Wander | Hear the whole account: +4 Spirit / Sky        |
+| The narrow opening        | Arrive at Heart of the Steppe               | Organize the last watch: +5 resolve / Iron           | Share a meal before the work: +8 food / Wander |
+| Hold the road             | Final stand reaches 90 seconds              | Hold together: +5 resolve / Iron                     | Carry the song forward: +4 Spirit / Sky        |
 
 Dialogue responds to earlier decisions, rescue routes, population, losses, and boss fate. Below five people, encounters use a remnant's collective remembrance instead of a conversation among four named survivors. These are changes to presentation; the same underlying resource and identity choices remain.
+
+The first and second camps above are story positions: Silent River and Broken Pass
+are their defaults, with named migration destinations available as alternatives.
+Current settings display the chosen place; destination-specific dialogue, revised
+display titles, and ending callbacks are proposed in
+[the story architecture](../story-architecture.md), rather than implemented here.
 
 Establishing or specializing a building adds **+2 identity**: gers/herding → Wander, archery/wagon → Iron, sanctuary → Sky. Selecting a route adds +2 of its identity at departure, independently of the delayed arrival rewards. The starting gers grant no identity points.
 
