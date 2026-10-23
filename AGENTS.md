@@ -14,7 +14,7 @@ Hordes of the Fallen Sky is a nomadic civilization builder and desktop TypeScrip
 
 ## Commit workflow
 
-- Split every task into appropriately sized, focused commits. Plan the logical pieces before editing, and commit each completed piece separately.
+- Split every task into appropriately sized, focused commits. Plan the logical pieces before editing, and commit each completed working milestone separately. Maintain a playable build throughout development and at every committed milestone.
 - Keep each commit coherent and reviewable, with its related code, tests, and documentation together. Use clear commit messages that describe the change.
 - Run the checks appropriate to each change before committing. Stage only work belonging to that commit; preserve unrelated user changes.
 
@@ -31,9 +31,11 @@ Hordes of the Fallen Sky is a nomadic civilization builder and desktop TypeScrip
 
 ## Code conventions
 
-- Prefer focused typed modules and plain content definitions over editor-only configuration.
+- Keep gameplay rules in small, independently testable TypeScript modules. Prefer plain structured content definitions over editor-only configuration.
+- Keep strict TypeScript settings enabled for the renderer and desktop. Run automated tests and `npm run check` for every significant change.
+- Whenever behavior changes, document the affected interfaces and update the relevant automated tests in the same commit.
 - Gameplay time is in **seconds**. Convert Phaser's millisecond update delta at the boundary.
-- Keep balance values in `src/game/config.ts`, enemies in `data/enemies.ts`, patron metadata in `data/patrons.ts`, technologies in `data/upgrades.ts`, and clan content in `data/clan.ts`.
+- Store enemy definitions, technology upgrades, and faction bonuses as structured data. Keep balance values in `src/game/config.ts`, enemies in `data/enemies.ts`, patron metadata in `data/patrons.ts`, technologies in `data/upgrades.ts`, and clan content in `data/clan.ts`.
 - Use `lore.md` as the narrative reference, including its canonical intro script and sourced writing boundaries. Keep the fictional Sundering and creatures distinct from historical Tengri traditions; preserve the clan-survival stakes when extending the story.
 - Keep renderer-independent progression in `state/run.ts`, `state/khan.ts`, `state/clan.ts`, `state/camp.ts`, `state/patrons.ts`, and `state/story.ts` for fast unit testing. Story definitions live in `data/story.ts`; resolve dialogue once on opening, grant each choice at most once, and retain the actual transcript and outcome in the run's chronicle.
 - `ArenaScene` owns simulation. `GameUI` receives snapshots and sends user actions; do not duplicate game state in the DOM.
