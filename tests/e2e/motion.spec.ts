@@ -17,7 +17,8 @@ test('animated menus accept actions immediately and do not replay their entrance
     const panel = document.querySelector('.game-panel')!;
     const entering = panel.getAnimations().some((animation) => animation.playState === 'running');
     const paused = scene.physics.world.isPaused;
-    document.querySelector<HTMLButtonElement>('[data-building="archery"]')!.click();
+    document.querySelector<HTMLButtonElement>('[data-camp-site="archery"]')!.click();
+    document.querySelector<HTMLButtonElement>('[data-node="archery-base"]')!.click();
     const refreshed = document.querySelector('.game-panel')!;
     const repeatedEntrance = refreshed.getAnimations().length;
     const built = scene.run.clan.buildings.archery;

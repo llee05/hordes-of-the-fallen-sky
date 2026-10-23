@@ -13,6 +13,7 @@ test('guidance follows riding, camp purchases, knowledge, formations, and the fi
   await page.keyboard.up('d');
   await guide.getByRole('button', { name: /Develop camp/ }).click();
   const frozen = await page.evaluate(() => (window as any).__gloam.scene.run.elapsed);
+  await page.locator('[data-camp-site="archery"]').click();
   await page.locator('[data-node="archery-base"]').click();
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.elapsed)).toBe(frozen);
   await page.keyboard.press('Escape');

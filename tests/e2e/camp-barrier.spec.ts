@@ -96,6 +96,7 @@ test('the barricade encloses new crafts and households while both attack and war
   });
   await expect.poll(async () => (await barrierState(page)).radius).toBeGreaterThan(108);
   await page.keyboard.press('b');
+  await page.locator('[data-camp-site="felt"]').click();
   await page.locator('[data-node="felt-base"]').click();
   await expect(page.locator('[data-node="felt-base"]')).toHaveAttribute('data-status', 'learned');
   await page.keyboard.press('Escape');

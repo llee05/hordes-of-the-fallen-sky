@@ -8,6 +8,7 @@ test('companions acknowledge camp work and the chronicle retains the real Khan s
   await startExpedition(page);
   await page.locator('[data-story-choice="share-work"]').click();
   await page.keyboard.press('b');
+  await page.locator('[data-camp-site="archery"]').click();
   await page.locator('[data-node="archery-base"]').click();
   await page.keyboard.press('Escape');
   await expect(page.locator('#companion-reaction')).toContainText('Saran:');

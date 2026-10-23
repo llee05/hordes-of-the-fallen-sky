@@ -50,6 +50,7 @@ test('all eight patrons expose foundations, complementary practices, and gated c
   await page.screenshot({ path: 'test-results/patron-guardian-tree.png' });
   await page.keyboard.press('Escape');
   await page.keyboard.press('b');
+  await page.locator('[data-camp-site="archery"]').click();
   await expect(page.locator('[data-node="archery-base"]')).toContainText('20 materials');
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades)).toBe(5);
 });

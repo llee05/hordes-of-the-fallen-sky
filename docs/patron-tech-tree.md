@@ -127,7 +127,7 @@ Two foundation ranks give a material price multiplier of 0.81. Apply it to the n
 
 ## Interface and extension points
 
-The tree shows one card per technology with its rank progress, foundation/practice/capstone role, effects, cost, prerequisites, and learned/available/locked state. The foundations remain actionable until both ranks are learned. Cards lay out by prerequisite depth; filters and accent-insensitive search work across all patrons. Purchases preserve focus and scroll. The camp upgrade tree uses the same renderer, its own content adapter, and the same scalable category/search controls.
+The tree shows one card per technology with its rank progress, foundation/practice/capstone role, effects, cost, prerequisites, and learned/available/locked state. The foundations remain actionable until both ranks are learned. Cards lay out by prerequisite depth; filters and accent-insensitive search work across all patrons. Purchases preserve focus and scroll. The camp model uses the same renderer in its selected-building inspector, with its own content adapter and search to highlight matching sites in the landscape.
 
 Add patron metadata in [data/patrons.ts](../src/game/data/patrons.ts), technologies in [data/upgrades.ts](../src/game/data/upgrades.ts), and balance constants in [config.ts](../src/game/config.ts). Layout derives from this data, with no fixed eight-slot markup or authored coordinates. New technologies can introduce additional siblings and deeper tiers. See [the extension guide](progression-ui.md) for the typed content contract and camp development examples.
 

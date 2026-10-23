@@ -13,12 +13,14 @@ test('camp previews every development and enforces resources, workers, and exclu
     clan.population = 2;
   });
   await page.keyboard.press('b');
-  await expect(page.locator('[data-tree-branch]')).toHaveCount(8);
+  await expect(page.locator('[data-camp-site]')).toHaveCount(8);
+  await page.locator('[data-camp-site="archery"]').click();
   await expect(page.locator('[data-node="archery-base"]')).toContainText('More families needed');
   await expect(page.locator('[data-node="archery-fire-arrows"]')).toContainText(
     'Establish Archery grounds first',
   );
   await expect(page.locator('[data-node="archery-fire-arrows"]')).toContainText('36 materials');
+  await page.locator('[data-camp-site="sanctuary"]').click();
   await expect(page.locator('[data-node="sanctuary-base"]')).toContainText('12 Spirit');
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.evaluate(() => (window as any).__gloam.scene.construct('archery'));
@@ -30,6 +32,7 @@ test('camp previews every development and enforces resources, workers, and exclu
     clan.spirit = 100;
   });
   await page.keyboard.press('b');
+  await page.locator('[data-camp-site="archery"]').click();
   await page.locator('[data-node="archery-base"]').click();
   await expect(page.locator('[data-node="archery-base"]')).toBeFocused();
   await page.locator('[data-node="archery-fire-arrows"]').click();
@@ -105,7 +108,7 @@ test('additional choices and deeper camp tiers work without new layout or purcha
   ).toEqual({ materials: materialsBefore - 8, health: 110 });
 });
 
-test('camp trees fit small screens, filter content, and retain scroll and focus on purchase', async ({
+test('camp models fit small screens, find crafts, and retain scroll and focus on purchase', async ({
   page,
 }) => {
   await openTitle(page);
@@ -120,7 +123,7 @@ test('camp trees fit small screens, filter content, and retain scroll and focus 
     { width: 390, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
-    const panel = (await page.locator('.progression-panel').boundingBox())!;
+    const panel = (await page.locator('.camp-estate').boundingBox())!;
     expect(panel.x).toBeGreaterThanOrEqual(0);
     expect(panel.y).toBeGreaterThanOrEqual(0);
     expect(panel.x + panel.width).toBeLessThanOrEqual(viewport.width + 1);
@@ -140,6 +143,7 @@ test('camp trees fit small screens, filter content, and retain scroll and focus 
       ),
     ).toBe(true);
   }
+  await page.locator('[data-camp-site="wagon"]').click();
   const wagon = page.locator('[data-node="wagon-base"]');
   await wagon.scrollIntoViewIfNeeded();
   const scroll = await page.locator('.tree-scroll').evaluate((element) => element.scrollTop);
@@ -150,10 +154,11 @@ test('camp trees fit small screens, filter content, and retain scroll and focus 
     0,
   );
   await page.screenshot({ path: 'test-results/mobile-camp-tree.png' });
-  await page.getByRole('button', { name: 'Warfare', exact: true }).click();
-  await expect(page.locator('[data-tree-branch]')).toHaveCount(2);
-  await page.getByRole('searchbox', { name: 'Find a branch' }).fill('felt armor');
+  await page.getByRole('searchbox', { name: 'Find in camp' }).fill('felt armor');
   await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
+  await expect(page.locator('[data-tree-branch="wagon"]')).toBeVisible();
+  await expect(page.locator('[data-camp-site][data-match="true"]')).toHaveCount(1);
+  await expect(page.getByRole('searchbox')).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
 });

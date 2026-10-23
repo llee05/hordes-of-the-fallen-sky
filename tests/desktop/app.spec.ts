@@ -134,9 +134,10 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.keyboard.press('Escape');
     await page.keyboard.press('b');
     await expect(page.getByRole('heading', { name: 'Build a people.' })).toBeVisible();
-    await expect(page.locator('[data-tree-branch]')).toHaveCount(8);
+    await expect(page.locator('[data-camp-site]')).toHaveCount(8);
+    await page.locator('[data-camp-site="archery"]').click();
     await page.locator('[data-node="archery-base"]').click();
-    await page.getByRole('button', { name: 'Craft', exact: true }).click();
+    await page.locator('[data-camp-site="felt"]').click();
     await page.locator('[data-node="felt-base"]').click();
     await expect(page.locator('[data-node="felt-base"]')).toHaveAttribute('data-status', 'learned');
     await page.screenshot({ path: 'test-results/native-camp-tree.png' });

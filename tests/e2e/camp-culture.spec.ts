@@ -17,9 +17,23 @@ test.beforeEach(async ({ page }) => {
 test('eight camp branches expose shared crafts and multi-parent mastery on narrow and desktop screens', async ({
   page,
 }) => {
-  await expect(page.locator('[data-tree-branch]')).toHaveCount(8);
-  await expect(page.locator('.tree-node')).toHaveCount(45);
-  await page.getByRole('button', { name: 'Craft', exact: true }).click();
+  await expect(page.locator('[data-camp-site]')).toHaveCount(8);
+  let nodes = 0;
+  for (const site of [
+    'ger',
+    'archery',
+    'herd',
+    'sanctuary',
+    'wagon',
+    'felt',
+    'provisions',
+    'relay',
+  ]) {
+    await page.locator(`[data-camp-site="${site}"]`).click();
+    nodes += await page.locator('.tree-node').count();
+  }
+  expect(nodes).toBe(45);
+  await page.locator('[data-camp-site="felt"]').click();
   await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
   const before = await page.evaluate(() => (window as any).__gloam.scene.run.clan.materials);
   await page.locator('[data-node="felt-base"]').click();
@@ -48,7 +62,7 @@ test('eight camp branches expose shared crafts and multi-parent mastery on narro
 test('specialization descendants are excluded while shared household crafts stay available', async ({
   page,
 }) => {
-  await page.getByRole('button', { name: 'Survival', exact: true }).click();
+  await page.locator('[data-camp-site="ger"]').click();
   await page.locator('[data-node="ger-hearthkeepers"]').click();
   await expect(page.locator('[data-node="ger-household-apprentices"]')).toHaveAttribute(
     'data-status',
@@ -79,6 +93,7 @@ test('provisioning and relay upgrades follow the caravan and grant their arrival
     'relay-supply-caches',
     'relay-horse-relays',
   ]) {
+    if (id.endsWith('-base')) await page.locator(`[data-camp-site="${id.split('-')[0]}"]`).click();
     await page.locator(`[data-node="${id}"]`).click();
   }
   const before = await page.evaluate(() => {
@@ -119,6 +134,7 @@ test('provisioning and relay upgrades follow the caravan and grant their arrival
   expect(result.resolve).toBe(72);
   expect(result.herd).toBe(6);
   expect(result.world).toEqual(['provisions', 'relay']);
+  await page.locator('[data-camp-site="provisions"]').click();
   await expect(page.locator('[data-node="provisions-shared-provisions"]')).toHaveAttribute(
     'data-status',
     'learned',

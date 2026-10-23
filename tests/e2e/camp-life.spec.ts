@@ -21,6 +21,7 @@ test('people work, households and herd reflect growth and losses, and menus free
     });
   await expect.poll(visible).toEqual({ people: 8, horses: 3 });
   await page.keyboard.press('b');
+  await page.locator('[data-camp-site="felt"]').click();
   await page.locator('[data-node="felt-base"]').click();
   await page.keyboard.press('Escape');
   const before = await page.evaluate(

@@ -215,8 +215,10 @@ test('camp planning spends resources, unlocks riders and builds the Burning Temp
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
+  await page.locator('[data-camp-site="archery"]').click();
   await page.locator('[data-node="archery-base"]').click();
   await page.locator('[data-node="archery-fire-arrows"]').click();
+  await page.locator('[data-camp-site="sanctuary"]').click();
   await page.locator('[data-node="sanctuary-base"]').click();
   await page.locator('[data-node="sanctuary-wind-shamans"]').click();
   await expect(page.locator('#synergy')).toBeVisible();

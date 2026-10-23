@@ -1,6 +1,6 @@
 # Hordes of the Fallen Sky — game mechanics brief
 
-This is a reference for the **implemented prototype**, checked against the game code on 22 October 2026. It covers the expedition, resources, combat, spirit progression, camp upgrade tree, migration, enemies, story, and persistence. Values are current balance, not promises for the final release. All times below are active gameplay seconds; menus freeze the world.
+This is a reference for the **implemented prototype**, checked against the game code on 23 October 2026. It covers the expedition, resources, combat, spirit progression, camp upgrade tree, migration, enemies, story, and persistence. Values are current balance, not promises for the final release. All times below are active gameplay seconds; menus freeze the world.
 
 ## 1. The expedition
 
@@ -108,7 +108,7 @@ Each enemy drops its defined XP independent of scaled health. Shards begin follo
 
 ## 4. Camp development and upgrade tree
 
-Press **B** to open the paused camp tree. It contains **eight building branches and 37 developments**, shown as 45 nodes including establishment. Search, categories, wrapping tiers, and local prerequisites derive from content definitions. The five original branches have an exclusive specialization pair, a shared craft, and a deeper development for each specialization. The three new branches have complementary crafts with two-parent final upgrades. At most 27 developments can be learned together, because alternatives and their descendants are excluded.
+Press **B** to open the paused camp model. Select one of **eight building sites** in the painted landscape to inspect its developments. The catalog contains **37 developments**, or 45 nodes including establishment, with the selected building’s nodes shown in the side inspector. Search names and effects to highlight matching sites; costs, tiers, and local prerequisites derive from content definitions. Ghosted sites become solid on establishment, learned crafts add supplies, and household growth adds shelters. Ambient smoke, fire, grass, and banners respect reduced motion; simulation and character poses stay frozen. The five original branches have an exclusive specialization pair, a shared craft, and a deeper development for each specialization. The three new branches have complementary crafts with two-parent final upgrades. At most 27 developments can be learned together, because alternatives and their descendants are excluded.
 
 Purchases are immediate and charged once. Every acquired building and effect travels with the clan. Construction is unavailable while packed. There is no fixed two-level cap, duplicate establishment, respecialization, or building upkeep. Buildings reserve workers on establishment; developments need no extra workers. Existing buildings keep working after population losses. The starting eight people cannot staff all eight branches: all bases need **13 workers**, and Hearthkeepers alone can raise population to fourteen.
 
@@ -182,7 +182,7 @@ Lightning looks for targets within 520 of Khan, then camp, and affects a 70-unit
 
 Arrival benefits are paid once, after completing the crossing, including the third crossing. They add to route rewards and never repeat in the final stand. Food and material production stop while travelling; consumption reductions and mobility continue. Khan recovery uses active time during travel; resolve recovery requires a stationary camp. Population and horses remain capped at 120 and forty.
 
-See [the complete camp tree](camp-upgrade-tree.md) for all eight branch diagrams, stable IDs, interaction examples, and sourced cultural context. The shared UI and typed camp-effect definitions support further buildings, siblings, and tiers without new coordinate tables.
+See [the complete camp tree](camp-upgrade-tree.md) for all eight branch diagrams, stable IDs, interaction examples, and sourced cultural context. The shared inspector and typed camp-effect definitions support further development siblings and tiers without new layout code. New building miniatures can supply presentation coordinates and assemblies independently of their gameplay definition.
 
 ## 5. Mounted combat and formations
 

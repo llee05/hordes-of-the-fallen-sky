@@ -106,6 +106,7 @@ test('camp work and research sound in menus while world cues and cadence are sto
     const scene = (window as any).__gloam.scene;
     return { time: scene.run.elapsed, wind: scene.audio.windTimer, hoof: scene.audio.hoofDistance };
   });
+  await page.locator('[data-camp-site="archery"]').click();
   await page.locator('[data-node="archery-base"]').click();
   expect(await heard(page)).toContain('build');
   expect(await page.evaluate(() => (window as any).__gloam.scene.audio.play('shoot'))).toBe(false);
