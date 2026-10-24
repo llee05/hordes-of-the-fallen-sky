@@ -12,7 +12,8 @@ export class ComposedTerrain extends MountainHeightfield {
   readonly river?: WorldRiver;
   constructor(region: ComposedRegion, water?: RiverDefinition) {
     super(region);
-    if (water) this.river = new WorldRiver(water, this.worldSize / 2, region.scene.floor);
+    if (water)
+      this.river = new WorldRiver(water, this.worldSize / 2, region.scene.floor, this.seed);
     if (region.scene.shelves.length > 8)
       throw new Error('A composed scene supports up to eight shelf layers');
     for (const shelf of region.scene.shelves)
@@ -54,13 +55,6 @@ export class ComposedTerrain extends MountainHeightfield {
     );
   }
 
-  private exposedField(shelf: SceneShelf, x: number, z: number): number {
-    return Math.min(
-      this.field(shelf, x, z),
-      (this.river?.distance(x, z) ?? Infinity) - (this.river?.definition.width ?? 0) * 0.9 - 40,
-    );
-  }
-
   protected override nodeValue(x: number, z: number): HeightNode {
     const scene = this.region.scene;
     const protection = this.protection(x, z);
@@ -69,18 +63,18 @@ export class ComposedTerrain extends MountainHeightfield {
     const ridge = fractalNoise(wx / 1000, wz / 600, this.seed + 19, true);
     const hill =
       (coherentNoise(wx / 380, wz / 380, this.seed + 41) - 0.5) * 20 + (ridge - 0.5) * 32;
-    const riverDistance = this.river?.distance(x, z) ?? Infinity;
-    const bank = this.river
-      ? smoothstep(
-          this.river.definition.width * 0.6 + 24,
-          this.river.definition.width * 0.9 + 64,
-          riverDistance,
-        )
-      : 1;
-    let base = scene.floor + hill * (1 - protection) * bank - 8 * (1 - bank);
+    const river = this.river?.sample(x, z);
+    const shore = river?.shoreDistance ?? Infinity;
+    const bank = river ? smoothstep(0, 110, shore) : 1;
+    const bed = river
+      ? shore <= 0
+        ? -1.5 - 10 * Math.pow(Math.min(1, -shore / river.halfWidth), 0.7)
+        : -1.5 + 1.5 * smoothstep(0, 24, shore)
+      : 0;
+    let base = scene.floor + bed + hill * (1 - protection) * bank;
     const layers = scene.shelves.map((shelf) => {
       const shelter = shelf.camp ? 0 : protection;
-      const field = this.exposedField(shelf, x, z);
+      const field = this.field(shelf, x, z);
       let ramp = 0;
       let grade = 0;
       for (const approach of [shelf.ramp, ...(shelf.approaches ?? [])]) {
@@ -107,8 +101,13 @@ export class ComposedTerrain extends MountainHeightfield {
         ? 1
         : 1 + (coherentNoise(x / 240, z / 270, this.seed + 719) - 0.5) * 0.07;
       const height = shelf.rise * weathering + peak;
-      base += height * ramp * grade * (1 - shelter) * bank;
-      return { field, rise: height * (1 - ramp) * (1 - shelter) };
+      const bankGrade = river ? smoothstep(8, 72 + (shelf.rise + (shelf.peak ?? 0)) * 2, shore) : 1;
+      base += height * ramp * grade * (1 - shelter) * bankGrade;
+      const rise = height * (1 - ramp) * (1 - shelter) * bankGrade;
+      // Round small cliff remnants into the riverbank rather than leaving dark slivers.
+      const roundedBank = river ? 1 - smoothstep(300, 500, shore) : 0;
+      base += rise * roundedBank * smoothstep(-96, 96, field);
+      return { field, rise: rise * (1 - roundedBank) };
     });
     const strongest = layers.reduce((a, b) => (a.field > b.field ? a : b), {
       field: -1e6,
@@ -154,8 +153,8 @@ export class ComposedTerrain extends MountainHeightfield {
 
   cliffNormal(x: number, z: number, layer: number): readonly [number, number, number] {
     const shelf = this.region.scene.shelves[layer]!;
-    const dx = this.exposedField(shelf, x + 8, z) - this.exposedField(shelf, x - 8, z);
-    const dz = this.exposedField(shelf, x, z + 8) - this.exposedField(shelf, x, z - 8);
+    const dx = this.field(shelf, x + 8, z) - this.field(shelf, x - 8, z);
+    const dz = this.field(shelf, x, z + 8) - this.field(shelf, x, z - 8);
     const length = Math.hypot(dx, dz) || 1;
     return [-dx / length, 0, -dz / length];
   }
@@ -165,9 +164,9 @@ export class ComposedTerrain extends MountainHeightfield {
     for (const shelf of this.region.scene.shelves) {
       const turn = (shelf.turn * Math.PI) / 180;
       const ex =
-        Math.abs(Math.cos(turn)) * shelf.width + Math.abs(Math.sin(turn)) * shelf.depth + 32;
+        Math.abs(Math.cos(turn)) * shelf.width + Math.abs(Math.sin(turn)) * shelf.depth + 128;
       const ez =
-        Math.abs(Math.sin(turn)) * shelf.width + Math.abs(Math.cos(turn)) * shelf.depth + 32;
+        Math.abs(Math.sin(turn)) * shelf.width + Math.abs(Math.cos(turn)) * shelf.depth + 128;
       const cx = this.worldSize / 2 + shelf.x;
       const cz = this.worldSize / 2 + shelf.z;
       if (

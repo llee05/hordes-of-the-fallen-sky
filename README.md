@@ -87,6 +87,8 @@ follows screen directions. F6 changes camera angle, F7 isolates terrain, and F9
 cycles debug views in development. Use `?terrain=2d` in browser preview or
 `VITE_TERRAIN_RENDERER=2d npm run dev` for the previous presentation. See
 [the angled scene guide](docs/world-3d.md) and [painted asset prompts](docs/angled-scene-art.md).
+The [environment quality guide](docs/environment-quality.md) describes painted material blending,
+weathered cliffs, shared riverbeds and shores, clustered vegetation, and render budgets.
 
 The Khan, allied archers, and all six creature designs have painted sprite animation: four gait or hovering frames and two attack poses each. Riding speed drives the gait, galloping quickens it, and actual volleys, charges, and strikes trigger release poses. Hits briefly tint the character; defeated enemies fade through a small visual pool after their collision bodies leave immediately. Character animation and these effects freeze in every paused run phase. See [the sprite sheets, registration, and generation prompts](docs/character-animation.md).
 

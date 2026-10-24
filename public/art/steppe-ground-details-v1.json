@@ -1,0 +1,132 @@
+{
+  "frames": {
+    "grass": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 490
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 80,
+        "w": 512,
+        "h": 490
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 600
+      }
+    },
+    "dry-grass": {
+      "frame": {
+        "x": 512,
+        "y": 0,
+        "w": 512,
+        "h": 490
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 80,
+        "w": 512,
+        "h": 490
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 600
+      }
+    },
+    "flowers": {
+      "frame": {
+        "x": 1024,
+        "y": 0,
+        "w": 512,
+        "h": 490
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 80,
+        "w": 512,
+        "h": 490
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 600
+      }
+    },
+    "reeds": {
+      "frame": {
+        "x": 0,
+        "y": 490,
+        "w": 512,
+        "h": 470
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 110,
+        "w": 512,
+        "h": 470
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 600
+      }
+    },
+    "branch": {
+      "frame": {
+        "x": 512,
+        "y": 490,
+        "w": 512,
+        "h": 470
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 110,
+        "w": 512,
+        "h": 470
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 600
+      }
+    },
+    "pebbles": {
+      "frame": {
+        "x": 1024,
+        "y": 490,
+        "w": 512,
+        "h": 470
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 110,
+        "w": 512,
+        "h": 470
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 600
+      }
+    }
+  },
+  "meta": {
+    "image": "steppe-ground-details-v1.png",
+    "size": {
+      "w": 1536,
+      "h": 1024
+    },
+    "scale": "1"
+  }
+}

@@ -12,7 +12,9 @@ export { WORLD_DEBUG_MODES, type WorldDebugMode } from './worldProjection';
 export class MountainMaterials {
   readonly surface: THREE.MeshLambertMaterial;
   readonly wall: THREE.MeshLambertMaterial;
+  readonly bedTexture: THREE.Texture;
   readonly debug = { value: 0 };
+  readonly samplingDetail = { value: 1 };
   private readonly textures: THREE.Texture[] = [];
 
   constructor(scene: Phaser.Scene, palette?: ScenePalette, anisotropy = 1) {
@@ -51,11 +53,13 @@ export class MountainMaterials {
       },
       snow: { value: texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!) },
       worldDebug: this.debug,
+      samplingDetail: this.samplingDetail,
       grassTint: { value: tint(palette?.grass, 0xa3ad69) },
       soilTint: { value: tint(palette?.soil, 0xc3a574) },
       rockTint: { value: tint(palette?.rock, 0x8d8f85) },
       snowTint: { value: tint(palette?.snow, 0xe4e9df) },
     };
+    this.bedTexture = maps.soil.value;
     const make = (wall: boolean): THREE.MeshLambertMaterial => {
       const material = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
       material.onBeforeCompile = (shader) => {

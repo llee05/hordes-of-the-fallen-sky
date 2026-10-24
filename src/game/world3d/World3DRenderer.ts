@@ -116,7 +116,7 @@ export class World3DRenderer {
     this.sprites = new SpriteBridge(scene, this.actors, terrain);
     this.effects = new GraphicsBridge(scene, this.actors, terrain);
     if (terrain instanceof ComposedTerrain && terrain.river) {
-      this.water = new Water3D(terrain.river);
+      this.water = new Water3D(terrain.river, terrain, this.materials.bedTexture);
       this.world.add(this.water.group);
     }
     this.label = document.createElement('div');
@@ -143,8 +143,24 @@ export class World3DRenderer {
     if (Number.isFinite(angle))
       this.angle = Math.max(WORLD_3D.minAngle, Math.min(WORLD_3D.maxAngle, angle));
   }
+  /** Match fragment cost to the existing adaptive pixel scale without changing world or camera units. */
+  setRenderScale(scale: number): void {
+    if (!Number.isFinite(scale)) return;
+    this.renderScale = Math.max(WORLD_3D.minRenderScale, Math.min(1, scale));
+    this.materials.samplingDetail.value = this.renderScale > 0.7 ? 1 : 0;
+    const shadows = this.renderScale > 0.7 ? THREE.PCFShadowMap : THREE.BasicShadowMap;
+    if (this.renderer.shadowMap.type !== shadows) {
+      this.renderer.shadowMap.type = shadows;
+      this.renderer.shadowMap.needsUpdate = true;
+    }
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, WORLD_3D.pixelRatio) * this.renderScale);
+    this.renderer.setSize(
+      this.width || this.scene.cameras.main.width,
+      this.height || this.scene.cameras.main.height,
+    );
+  }
   updateActiveTime(elapsed: number): void {
-    this.water?.update(elapsed);
+    this.water?.update(elapsed, window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   }
   movement(x: number, y: number): { x: number; y: number } {
     return screenMovement(x, y, this.yaw);
@@ -315,9 +331,7 @@ export class World3DRenderer {
             ? Math.min(1, this.renderScale + 0.1)
             : this.renderScale;
       if (scale !== this.renderScale) {
-        this.renderScale = scale;
-        this.renderer.setPixelRatio(Math.min(devicePixelRatio, WORLD_3D.pixelRatio) * scale);
-        this.renderer.setSize(width, height);
+        this.setRenderScale(scale);
         this.qualityTime = now;
       }
     }
@@ -390,25 +404,23 @@ export class World3DRenderer {
     if (!backdrop && this.terrain instanceof ComposedTerrain)
       for (const prop of sceneDressing(this.terrain, bounds)) {
         const image = this.scene.add
-          .image(
-            prop.x,
-            prop.z,
-            'tapestry-scenery',
-            prop.kind === 'boulders' ? 'boulder' : prop.kind,
-          )
+          .image(prop.x, prop.z, prop.texture, prop.frame)
           .setOrigin(0.5, 0.9)
           .setDepth(100 + prop.z)
           .setName(`scene-prop-${prop.kind}`)
-          .setFlipX(prop.flip);
-        image.setScale(prop.width / image.width);
-        props.push(
-          this.scene.add
-            .image(prop.x + 8, prop.z + 5, 'shadow')
-            .setDisplaySize(prop.width * 0.7, prop.width * 0.22)
-            .setAlpha(0.45)
-            .setDepth(99 + prop.z),
-          image,
-        );
+          .setFlipX(prop.flip)
+          .setTint(prop.tint);
+        const scale = prop.width / image.width;
+        image.setScale(scale, scale * prop.heightScale);
+        props.push(image);
+        if (prop.shadow)
+          props.push(
+            this.scene.add
+              .image(prop.x + 8, prop.z + 5, 'shadow')
+              .setDisplaySize(prop.width * 0.7, prop.width * 0.22)
+              .setAlpha(0.45)
+              .setDepth(99 + prop.z),
+          );
       }
     for (const prop of backdrop
       ? []

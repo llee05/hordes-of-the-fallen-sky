@@ -94,3 +94,6 @@ Electron checks exercise the default view, offline production launch, migration,
 persistence, and both 1280×800 and 960×600 windows. Terrain unit tests cover mesh/query
 agreement, chunk seams and normals, cliff winding, connected caravan ground,
 water/bridge registration, and moving fence anchors.
+
+See [the environmental quality pass](environment-quality.md) for the current material
+shader, cliff relief, shared bank geometry, vegetation masks, and quality scaling.

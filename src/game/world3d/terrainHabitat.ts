@@ -26,9 +26,8 @@ export function terrainHabitat(
   const wx = x + (broad - 0.5) * 180;
   const patch = coherentNoise(wx / 170, z / 210, seed + 311);
   const grove = coherentNoise(wx / 390, z / 440, seed + 313);
-  const distance = terrain.river?.distance(x, z) ?? Infinity;
-  const halfWidth = (terrain.river?.definition.width ?? 0) / 2;
-  const shore = 1 - smoothstep(halfWidth + 12, halfWidth + 110, distance);
+  const bank = terrain.river?.sample(x, z);
+  const shore = bank ? 1 - smoothstep(10, 110, bank.shoreDistance) : 0;
   const elevation = height - scene.floor;
   const exposure = clamp01(
     smoothstep(120, 650, elevation) * 0.55 + (1 - normalY) * 0.8 + (1 - broad) * 0.25,

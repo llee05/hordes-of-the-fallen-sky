@@ -1,69 +1,64 @@
 import * as THREE from 'three';
-import { riverPoint } from '../assets/riverGeometry';
+import type { MountainHeightfield } from './MountainHeightfield';
+import { waterGeometry } from './waterGeometry';
 import type { WorldRiver } from './WorldRiver';
 
 /** Turquoise channels and timber crossings occupy the same elevated world as the terrain. */
 export class Water3D {
   readonly group = new THREE.Group();
   readonly time = { value: 0 };
-  constructor(readonly river: WorldRiver) {
+  readonly motion = { value: 1 };
+  constructor(
+    readonly river: WorldRiver,
+    terrain: MountainHeightfield,
+    bedTexture: THREE.Texture,
+  ) {
     this.group.name = 'world-river';
-    const positions: number[] = [];
-    const uv: number[] = [];
-    const banks: number[] = [];
-    const height = river.floor - 1.5;
-    for (const channel of river.channels)
-      for (let i = 0; i + 1 < channel.sections.length; i++) {
-        const a = channel.sections[i]!;
-        const b = channel.sections[i + 1]!;
-        const leftA = riverPoint(a, -1),
-          rightA = riverPoint(a, 1),
-          leftB = riverPoint(b, -1),
-          rightB = riverPoint(b, 1);
-        for (const [p, u, distance] of [
-          [leftA, 0, a.distance],
-          [leftB, 0, b.distance],
-          [rightB, 1, b.distance],
-          [leftA, 0, a.distance],
-          [rightB, 1, b.distance],
-          [rightA, 1, a.distance],
-        ] as const) {
-          positions.push(river.center + p.x, height, river.center + p.y);
-          uv.push(u, distance / 36);
-        }
-        for (const side of [-1, 1]) {
-          const pa = riverPoint(a, side),
-            pb = riverPoint(b, side),
-            oa = riverPoint(a, side, 6),
-            ob = riverPoint(b, side, 6);
-          for (const p of [pa, pb, ob, pa, ob, oa])
-            banks.push(river.center + p.x, height + 0.3, river.center + p.y);
-        }
-      }
+    const data = waterGeometry(river, terrain);
     const geometry = new THREE.BufferGeometry()
-      .setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-      .setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      .setAttribute('position', new THREE.Float32BufferAttribute(data.positions, 3))
+      .setAttribute('uv', new THREE.Float32BufferAttribute(data.uv, 2))
+      .setAttribute('riverDepth', new THREE.Float32BufferAttribute(data.depth, 1));
     geometry.computeVertexNormals();
     const frozen = river.definition.kind === 'frozen';
     const material = new THREE.MeshLambertMaterial({
-      color: frozen ? 0xa6c4c9 : river.definition.color,
+      color: 0xffffff,
       side: THREE.DoubleSide,
+      transparent: true,
+      depthWrite: false,
     });
     material.onBeforeCompile = (shader) => {
       shader.uniforms.flowTime = this.time;
+      shader.uniforms.motionAmount = this.motion;
       shader.uniforms.frozen = { value: frozen ? 1 : 0 };
-      shader.vertexShader = `varying vec2 riverUv;\n${shader.vertexShader}`.replace(
-        '#include <begin_vertex>',
-        '#include <begin_vertex>\nriverUv=uv;',
-      );
+      shader.uniforms.bedTexture = { value: bedTexture };
+      shader.uniforms.deepWater = {
+        value: new THREE.Color(river.definition.color).multiplyScalar(0.65),
+      };
+      shader.uniforms.shallowWater = { value: new THREE.Color(0x8cae98) };
+      shader.vertexShader =
+        `attribute float riverDepth; varying float waterDepth; varying vec2 riverUv; varying vec2 riverWorld;\n${shader.vertexShader}`.replace(
+          '#include <begin_vertex>',
+          '#include <begin_vertex>\nwaterDepth=riverDepth;riverUv=uv;riverWorld=position.xz;',
+        );
       shader.fragmentShader =
-        `varying vec2 riverUv;uniform float flowTime;uniform int frozen;\n${shader.fragmentShader}`.replace(
+        `varying float waterDepth; varying vec2 riverUv; varying vec2 riverWorld;
+        uniform float flowTime;uniform float motionAmount;uniform int frozen;
+        uniform vec3 shallowWater;uniform vec3 deepWater;uniform sampler2D bedTexture;\n${shader.fragmentShader}`.replace(
           '#include <color_fragment>',
           `#include <color_fragment>
-        float flow=sin(riverUv.y*1.1-flowTime*1.6+sin(riverUv.x*7.0))*0.035;
-        float edge=pow(abs(riverUv.x*2.0-1.0),8.0);
-        diffuseColor.rgb*=0.89+flow+edge*0.22;
-        if(frozen==1)diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.75,0.85,0.86),0.2);
+        float deep=smoothstep(0.4,8.0,waterDepth);
+        vec3 bed=texture2D(bedTexture,riverWorld/170.0).rgb*vec3(0.72,0.83,0.75);
+        vec3 water=mix(mix(bed,shallowWater,0.65),deepWater,deep*0.82);
+        float time=flowTime*motionAmount*(frozen==1?0.0:1.0);
+        float ripple=sin(riverUv.y*.7-time*.65+sin(riverUv.x*8.0+riverUv.y*.16));
+        float stroke=pow(max(0.0,ripple),16.0)*.055;
+        float edge=1.0-smoothstep(0.0,2.2,waterDepth);
+        float broken=0.35+0.65*smoothstep(0.15,0.8,sin(riverUv.y*.4+sin(riverUv.y*.11)));
+        water=mix(water,vec3(.59,.68,.56),edge*broken*.25)+stroke;
+        if(frozen==1)water=mix(water,vec3(.54,.68,.7),.65);
+        diffuseColor.rgb*=water;
+        diffuseColor.a*=smoothstep(0.0,0.75,waterDepth);
       `,
         );
     };
@@ -71,23 +66,6 @@ export class Water3D {
     mesh.receiveShadow = true;
     mesh.name = 'river-water';
     this.group.add(mesh);
-    const shore = new THREE.BufferGeometry().setAttribute(
-      'position',
-      new THREE.Float32BufferAttribute(banks, 3),
-    );
-    shore.computeVertexNormals();
-    this.group.add(
-      new THREE.Mesh(
-        shore,
-        new THREE.MeshBasicMaterial({
-          color: 0xc6dccb,
-          transparent: true,
-          opacity: 0.3,
-          depthWrite: false,
-          side: THREE.DoubleSide,
-        }),
-      ),
-    );
     const matrices: THREE.Matrix4[] = [];
     const colors: THREE.Color[] = [];
     const dummy = new THREE.Object3D();
@@ -120,13 +98,15 @@ export class Water3D {
     deck.name = 'river-crossings';
     this.group.add(deck);
   }
-  update(elapsed: number): void {
-    this.time.value = elapsed;
+  update(elapsed: number, reducedMotion = false): void {
+    this.time.value = reducedMotion ? 0 : elapsed;
+    this.motion.value = reducedMotion ? 0 : 1;
   }
   destroy(): void {
     this.group.traverse((object) => {
       if (object instanceof THREE.Mesh) {
         object.geometry.dispose();
+        if (object instanceof THREE.InstancedMesh) object.dispose();
         for (const material of Array.isArray(object.material) ? object.material : [object.material])
           material.dispose();
       }
