@@ -54,8 +54,8 @@ export function terrainSurface(
     const dimensions = sizes[texture] ?? { width: 1254, height: 1254 };
     const repeatX = dimensions.width * art.tileScale;
     const repeatY = dimensions.height * art.tileScale;
-    const xs = coordinates(chunk.x, chunk.width, GAME.terrain.surfaceStep, repeatX);
-    const ys = coordinates(chunk.y, chunk.height, GAME.terrain.surfaceStep, repeatY);
+    const xs = coordinates(chunk.x, chunk.width, GAME.terrain.materialStep, repeatX);
+    const ys = coordinates(chunk.y, chunk.height, GAME.terrain.materialStep, repeatY);
     const geometry: TerrainLayerGeometry = {
       material,
       texture,

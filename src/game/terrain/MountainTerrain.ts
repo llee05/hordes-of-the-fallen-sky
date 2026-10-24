@@ -79,6 +79,10 @@ export class MountainTerrain {
     return this.worldSize / 2 + Math.sin((x - this.worldSize / 2) / pass.wavelength) * pass.bend;
   }
 
+  ravineCenter(y: number): number {
+    return this.worldSize / 2 - 720 + Math.sin((y - this.worldSize / 2) / 900) * 360;
+  }
+
   rawHeight(x: number, y: number): number {
     const { biome } = this.region;
     const seed = this.seed;
@@ -106,7 +110,7 @@ export class MountainTerrain {
       plateau.elevation + (height - plateau.elevation) * (1 - plateau.strength),
       flatten,
     );
-    const crossPass = this.worldSize / 2 - 720 + Math.sin((y - this.worldSize / 2) / 900) * 360;
+    const crossPass = this.ravineCenter(y);
     const distance = Math.min(Math.abs(y - this.passCenter(x)), Math.abs(x - crossPass) * 1.25);
     const carve =
       1 - smoothstep(biome.pass.halfWidth, biome.pass.halfWidth + biome.pass.shoulder, distance);
@@ -150,12 +154,12 @@ export class MountainTerrain {
       ) * this.terraceStrength(x, y);
     const radius = 96;
     const average =
-      (this.rawHeight(x - radius, y) +
-        this.rawHeight(x + radius, y) +
-        this.rawHeight(x, y - radius) +
-        this.rawHeight(x, y + radius)) /
+      (this.height(x - radius, y) +
+        this.height(x + radius, y) +
+        this.height(x, y - radius) +
+        this.height(x, y + radius)) /
       4;
-    const depression = clamp01((average - rawElevation) / 0.035);
+    const depression = clamp01((average - elevation) / 0.06);
     const dx =
       ((this.height(x + step, y) - this.height(x - step, y)) * this.region.biome.heightScale) /
       (step * 2);
@@ -181,7 +185,10 @@ export class MountainTerrain {
           : cliff > 0.4
             ? 'cliff'
             : rawElevation < 0.24
-              ? 'pass'
+              ? Math.abs(y - this.passCenter(x)) > this.region.biome.pass.halfWidth &&
+                Math.abs(x - this.ravineCenter(y)) < this.region.biome.pass.halfWidth
+                ? 'ravine'
+                : 'pass'
               : depression > 0.3 && level < 2
                 ? 'ravine'
                 : level >= 3

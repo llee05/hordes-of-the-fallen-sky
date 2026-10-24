@@ -75,7 +75,7 @@ export class SteppeLandscape {
       this.regional.add(this.river.container);
     }
     const center = GAME.worldSize / 2;
-    for (const item of landscapeCover(id)) {
+    for (const item of this.mountains ? [] : landscapeCover(id)) {
       const x = center + item.x;
       const y = center + item.y;
       if (
@@ -95,7 +95,7 @@ export class SteppeLandscape {
           .setDepth(100 + y),
       );
     }
-    for (const item of landscapeLandmarks(id)) {
+    for (const item of this.mountains ? [] : landscapeLandmarks(id)) {
       // Large landforms read as painted relief behind combat; smaller trees keep ground sorting.
       const x = center + item.x;
       const y = center + item.y;

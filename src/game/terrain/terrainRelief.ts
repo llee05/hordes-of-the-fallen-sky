@@ -1,38 +1,35 @@
 import { GAME } from '../config';
 import type { MountainTerrain } from './MountainTerrain';
-import { smoothstep } from './noise';
+import { clamp01, smoothstep } from './noise';
+import { terrainCliffBands } from './terrainCliffBands';
 import { terrainContours } from './terrainContours';
-import { appendTerrainPolygon } from './terrainPolygon';
+import { appendTerrainPolygon, type PaintedVertex } from './terrainPolygon';
 import { shadedColor, type TerrainLayerGeometry } from './terrainSurface';
 import type { TerrainArt, TerrainChunk, TerrainPoint } from './types';
 
 export interface CliffLayerGeometry extends Omit<TerrainLayerGeometry, 'material'> {
-  part: 'shadow' | 'face' | 'rim';
+  part: 'shadow' | 'ao' | 'face' | 'rim';
 }
 
-interface ReliefPoint extends TerrainPoint {
-  toe: TerrainPoint;
-  shadow: TerrainPoint;
-  rim: TerrainPoint;
-  strength: number;
-  shade: number;
-}
-
-/** Contour ledges remain attached to the heightfield, independently of square collision cells. */
+/** Tier walls cover the whole height transition, with a top lip and shadows below its foot. */
 export function terrainRelief(
   terrain: MountainTerrain,
   chunk: TerrainChunk,
   art: TerrainArt,
   sizes: Readonly<Record<string, { width: number; height: number }>> = {},
 ): readonly CliffLayerGeometry[] {
-  const style = GAME.terrain.relief;
-  const levels: number[] = [];
-  for (let level: number = style.firstElevation; level < 1; level += style.elevationInterval)
-    levels.push(level);
-  const contours = terrainContours(chunk, GAME.terrain.surfaceStep, levels, (x, y) =>
-    terrain.height(x, y),
-  );
-  const layers = (['shadow', 'face', 'rim'] as const).map((part): CliffLayerGeometry => ({
+  const { terraces, heightScale } = terrain.region.biome;
+  const rawSamples = new Map<string, number>();
+  const rawAt = (x: number, y: number): number => {
+    const key = `${x},${y}`;
+    let height = rawSamples.get(key);
+    if (height === undefined) {
+      height = terrain.rawHeight(x, y);
+      rawSamples.set(key, height);
+    }
+    return height;
+  };
+  const layers = (['shadow', 'ao', 'face', 'rim'] as const).map((part): CliffLayerGeometry => ({
     part,
     texture: part === 'face' ? (art.materials.stone.texture ?? '__WHITE') : '__WHITE',
     vertices: [],
@@ -41,90 +38,91 @@ export function terrainRelief(
     colors: [],
     alphas: [],
   }));
-  const cache = new Map<string, ReliefPoint>();
-  const pointAt = (point: TerrainPoint): ReliefPoint => {
+  const cache = new Map<string, { nx: number; ny: number; slope: number; ramp: number }>();
+  const normalAt = (point: TerrainPoint) => {
     const key = `${point.x},${point.y}`;
-    const cached = cache.get(key);
-    if (cached) return cached;
-    const sample = terrain.sample(point.x, point.y);
-    const nx = -sample.dx / Math.max(0.001, sample.slope);
-    const ny = -sample.dy / Math.max(0.001, sample.slope);
-    // Back-facing slopes are described by surface lighting, front-facing slopes by ledges.
-    const strength =
-      smoothstep(style.minSlope, style.fullSlope, sample.slope) *
-      smoothstep(-0.55, 0.35, ny + nx * 0.2);
-    const depth = style.faceDepth * strength;
-    const toe = { x: point.x + nx * depth * 0.3, y: point.y + depth * (0.75 + ny * 0.25) };
-    const result: ReliefPoint = {
-      ...point,
-      toe,
-      shadow: { x: toe.x + style.shadowReach * 0.64, y: toe.y + style.shadowReach * 0.77 },
-      rim: { x: point.x - nx * 2.5, y: point.y - ny * 2.5 },
-      strength,
-      shade: 0.72 + Math.max(0, -nx * 0.48 - ny * 0.57) * 0.28,
-    };
-    cache.set(key, result);
-    return result;
-  };
-  const quad = (
-    layer: CliffLayerGeometry,
-    points: readonly TerrainPoint[],
-    colors: readonly number[],
-    alphas: readonly number[],
-  ) => {
-    const base = layer.vertices.length / 2;
-    if (layer.part === 'face' && art.materials.stone.texture) {
-      const size = sizes[art.materials.stone.texture] ?? { width: 1254, height: 1254 };
-      appendTerrainPolygon(
-        layer,
-        [0, 1, 3, 2].map((i) => ({ ...points[i]!, color: colors[i]!, alpha: alphas[i]! })),
-        { x: chunk.x + chunk.width / 2, y: chunk.y + chunk.height / 2 },
-        size.width * art.tileScale,
-        size.height * art.tileScale,
-      );
-      return;
+    let normal = cache.get(key);
+    if (!normal) {
+      const dx = (rawAt(point.x + 16, point.y) - rawAt(point.x - 16, point.y)) / 32;
+      const dy = (rawAt(point.x, point.y + 16) - rawAt(point.x, point.y - 16)) / 32;
+      const slope = Math.max(0.000001, Math.hypot(dx, dy));
+      normal = {
+        nx: -dx / slope,
+        ny: -dy / slope,
+        slope: slope * heightScale,
+        ramp: terrain.terraceStrength(point.x, point.y),
+      };
+      cache.set(key, normal);
     }
-    for (let i = 0; i < 4; i++) {
-      layer.vertices.push(
-        points[i]!.x - chunk.x - chunk.width / 2,
-        -(points[i]!.y - chunk.y - chunk.height / 2),
-      );
-      layer.uvs.push(0.5, 0.5);
-      layer.colors.push(colors[i]!);
-      layer.alphas.push(alphas[i]!);
-    }
-    layer.indices.push(base, base + 2, base + 1, base + 2, base + 3, base + 1);
+    return normal;
   };
-  for (const contour of contours) {
-    const a = pointAt(contour.a);
-    const b = pointAt(contour.b);
-    if (Math.max(a.strength, b.strength) < 0.015) continue;
-    const faceColor = art.materials.stone.texture
-      ? (art.materials.stone.tint ?? 0xffffff)
-      : art.cliff.color;
-    quad(
-      layers[0]!,
-      [a.toe, b.toe, a.shadow, b.shadow],
-      [0x30392b, 0x30392b, 0x30392b, 0x30392b],
-      [a.strength * 0.24, b.strength * 0.24, 0, 0],
+  const strength = (point: TerrainPoint, tier: number) => {
+    const normal = normalAt(point);
+    const rise = terraces.heights[tier + 1]! - terraces.heights[tier]!;
+    return normal.ramp * smoothstep(0.35, 1.5, (normal.slope * rise) / (terraces.transition * 2));
+  };
+  const append = (layer: CliffLayerGeometry, polygon: readonly PaintedVertex[]) => {
+    const size = sizes[layer.texture] ?? { width: 1254, height: 1254 };
+    const white = layer.texture === '__WHITE';
+    appendTerrainPolygon(
+      layer,
+      polygon,
+      { x: chunk.x + chunk.width / 2, y: chunk.y + chunk.height / 2 },
+      white ? 1000000 : size.width * art.tileScale,
+      white ? 1000000 : size.height * art.tileScale,
     );
-    quad(
-      layers[1]!,
-      [a, b, a.toe, b.toe],
-      [
-        shadedColor(faceColor, a.shade),
-        shadedColor(faceColor, b.shade),
-        shadedColor(faceColor, a.shade * 0.74),
-        shadedColor(faceColor, b.shade * 0.74),
-      ],
-      [a.strength * 0.9, b.strength * 0.9, a.strength * 0.75, b.strength * 0.75],
+  };
+  const faceColor = art.materials.stone.texture
+    ? (art.materials.stone.tint ?? 0xffffff)
+    : art.cliff.color;
+  for (const band of terrainCliffBands(terrain, chunk, rawAt)) {
+    const polygon = band.vertices.map((point): PaintedVertex => {
+      const normal = normalAt(point);
+      const t = clamp01((point.raw - band.lower) / (band.upper - band.lower));
+      const light = Math.max(0, -normal.nx * 0.64 - normal.ny * 0.77);
+      const shade = (0.5 + light * 0.3) * (0.54 + t * 0.46);
+      return { ...point, color: shadedColor(faceColor, shade), alpha: strength(point, band.tier) };
+    });
+    if (polygon.some((point) => point.alpha > 0.015)) append(layers[2]!, polygon);
+  }
+  const quads = (tier: number, level: number, top: boolean) => {
+    const contours = terrainContours(chunk, GAME.terrain.surfaceStep, [level], (x, y) =>
+      rawAt(x, y),
     );
-    quad(
-      layers[2]!,
-      [a.rim, b.rim, a, b],
-      [art.cliff.rim, art.cliff.rim, art.cliff.rim, art.cliff.rim],
-      [0, 0, a.strength * 0.25, b.strength * 0.25],
-    );
+    for (const { a, b } of contours) {
+      const sa = strength(a, tier);
+      const sb = strength(b, tier);
+      if (Math.max(sa, sb) < 0.015) continue;
+      const na = normalAt(a);
+      const nb = normalAt(b);
+      if (top) {
+        append(layers[3]!, [
+          { x: a.x - na.nx * 3, y: a.y - na.ny * 3, color: art.cliff.rim, alpha: 0 },
+          { x: b.x - nb.nx * 3, y: b.y - nb.ny * 3, color: art.cliff.rim, alpha: 0 },
+          { ...b, color: art.cliff.rim, alpha: sb * 0.3 },
+          { ...a, color: art.cliff.rim, alpha: sa * 0.3 },
+        ]);
+      } else {
+        // Ambient occlusion hugs every cliff foot; directional shadows fall to the lower right.
+        append(layers[1]!, [
+          { ...a, color: 0x202a28, alpha: sa * 0.55 },
+          { ...b, color: 0x202a28, alpha: sb * 0.55 },
+          { x: b.x + nb.nx * 14, y: b.y + nb.ny * 14, color: 0x202a28, alpha: 0 },
+          { x: a.x + na.nx * 14, y: a.y + na.ny * 14, color: 0x202a28, alpha: 0 },
+        ]);
+        const reach = GAME.terrain.relief.shadowReach;
+        append(layers[0]!, [
+          { ...a, color: 0x30392b, alpha: sa * 0.3 },
+          { ...b, color: 0x30392b, alpha: sb * 0.3 },
+          { x: b.x + reach * 0.64, y: b.y + reach * 0.77, color: 0x30392b, alpha: 0 },
+          { x: a.x + reach * 0.64, y: a.y + reach * 0.77, color: 0x30392b, alpha: 0 },
+        ]);
+      }
+    }
+  };
+  for (let tier = 0; tier < terraces.thresholds.length; tier++) {
+    quads(tier, terraces.thresholds[tier]! - terraces.transition, false);
+    quads(tier, terraces.thresholds[tier]! + terraces.transition, true);
   }
   return layers.filter((layer) => layer.indices.length);
 }

@@ -17,10 +17,15 @@ export const MOUNTAIN_TERRAIN_ART: TerrainArt = {
     grassland: { texture: 'ground-mount-otgontenger', color: 0xa7ad72 },
     'rocky-soil': { texture: 'ground-eej-khairkhan', color: 0xb49672 },
     stone: { texture: 'ground-eej-khairkhan', tint: 0x96c0ec, color: 0x92958e },
-    tundra: { texture: 'ground-altai-tavan-bogd', color: 0xa3ad9c },
+    tundra: { texture: 'ground-mount-otgontenger', tint: 0xa8b59d, color: 0xa3ad9c },
     snow: { texture: 'ground-khan-tengri', color: 0xe2e9e8 },
   },
   cliff: { color: 0x81877a, rim: 0xc5c5aa },
+  dressing: {
+    rubble: { texture: 'steppe-props', frame: 'rock', width: 22, tint: 0x7e9dd0 },
+    scrub: { texture: 'steppe-scenery', frame: 'reeds', width: 23, tint: 0xa9b58e },
+    conifer: { texture: 'steppe-scenery', frame: 'pine', width: 50, tint: 0xc0c5a7 },
+  },
 };
 export const ART_WIDTH: Readonly<Record<string, number>> = {
   worker: 30,

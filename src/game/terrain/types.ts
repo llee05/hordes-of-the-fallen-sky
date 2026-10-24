@@ -79,6 +79,7 @@ export interface TerrainChunk extends TerrainBounds {
 }
 
 export type TerrainDebugMode = 'off' | 'elevation' | 'slope' | 'cliffs' | 'collision';
+export type TerrainDressingKind = 'rubble' | 'scrub' | 'conifer';
 
 export interface TerrainMaterialArt {
   /** An already loaded, locally bundled Phaser texture. Undefined uses a flat placeholder colour. */
@@ -91,6 +92,9 @@ export interface TerrainMaterialArt {
 export interface TerrainArt {
   materials: Readonly<Record<TerrainMaterial, TerrainMaterialArt>>;
   tileScale: number;
+  dressing?: Readonly<
+    Record<TerrainDressingKind, { texture: string; frame: string; width: number; tint: number }>
+  >;
   cliff: {
     color: number;
     rim: number;

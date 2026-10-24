@@ -1,115 +1,117 @@
-# Mountain terrain prototype
+# Stepped mountain terrain
 
-The Otgontenger biome now defines five shelf heights in `biome.terraces`: low
-rocky pasture, stone/scrub shelves, alpine terraces, snow-patched upper stone,
-and snow/ice summits. Four authored thresholds flatten the continuous source
-height into shelves with narrow steep transitions. Two connected mountain spines
-shape the ranges, while broad winding ravines and climbing ramps join the camp's
-open valley network. Materials use the tier, slope, and local concavity; sheltered
-depressions retain extra snow. These rules share global coordinates with navigation.
+Mount Otgontenger uses the existing Phaser renderer, locally bundled textures,
+and a deterministic five-tier heightfield. Mountains are continuous terrain with
+raised shelves, full cliff faces, and open valleys. They do not use mountain
+cutout sprites, standalone 3D models, new bitmap artwork, or a different engine.
 
-The mountain generator is renderer independent. `terrain/noise.ts` hashes a string
-seed into continuous quintic value noise and four-octave coherent and ridged noise.
-`terrain/MountainTerrain.ts` domain-warps elongated ridges, blends broad foothills,
-compresses selected uplands into plateaus, and carves two wide winding passes.
-It flattens a broad camp basin and the complete eastbound caravan corridor.
-`data/terrainBiomes.ts` authors the sample Mount Otgontenger region. Generation
-settings and traversal limits live in `GAME.terrain`.
+## Landforms and materials
 
-Sampling uses absolute world coordinates, including the halo used for central
-height differences. Chunk request order never changes height, slope, shading, or
-material weights. Chunks are 512 world units with 64-unit cells, clipped at the
-finite arena boundary, and retained in a bounded least-recently-used cache.
-Elevation blends grassland, rocky soil, exposed stone, alpine tundra, and snow;
-steep slopes expose more stone. Surface normals produce upper-left illumination.
-No artwork, PNGs, sprite sheets, or stand-alone mountain models are generated.
+`terrain/MountainTerrain.ts` combines domain-warped coherent/ridged noise with two
+long, connected mountain spines. It carves an east-west winding pass and a crossing
+ravine, flattens the camp basin and the complete caravan corridor, and provides two
+wide climbing ramps across the range flanks. This creates connected ridges,
+terraces, shelves, ravines, and passes rather than a field of isolated noisy mounds.
 
-Steep traversal cells retain N/E/S/W edge masks as diagnostic metadata. Their
-square boundaries are visible only in the collision debug overlay. The normal
-view uses continuous elevation contours, textured rocky slopes, and shaded cliff
-faces, consuming only the existing, locally bundled 2D ground textures.
+`data/terrainBiomes.ts` authors `biome.terraces`, including thresholds, actual shelf
+heights, transition width, ramp width, and material weights for each tier. Configs
+require at least four ordered heights, non-overlapping transitions, and normalized
+material weights. Otgontenger defines:
 
-`terrain/TerrainNavigation.ts` retains a coarse world traversal grid independently
-of visual chunk eviction. It merges steep cells into exact collision rectangles,
-records camp-connected ground for safe spawning, and shares bounded destination
-flow fields among enemies. Diagonal steps cannot cut blocked corners. A swept
-movement helper handles non-physical followers. Ordinary shots and ancestral
-spirits can fly over cliffs; ground units must use the passes.
+| Level | Height | Surface                                                       |
+| ----- | ------ | ------------------------------------------------------------- |
+| 0     | 0.20   | Rocky soil and sparse grass; the protected camp stays grassy. |
+| 1     | 0.36   | Exposed stone with alpine scrub.                              |
+| 2     | 0.52   | Alpine shelves with stone, scrub, and sheltered snow.         |
+| 3     | 0.70   | Bare stone and snow patches.                                  |
+| 4     | 0.90   | Snow and ice dominant.                                        |
 
-Unit tests cover deterministic seeds and chunk order, exact shared borders,
-bounded caches, material continuity, broad open corridors, connected ground,
-collision coverage, blocked spawn relocation, and paths around cliffs.
+`rawHeight()` describes the underlying landform. `height()` flattens it into these
+shelf heights, retaining continuous grades in the climbing ramps. `sample()` adds
+the tier, actual slope and surface normal, cliff strength, concavity, material
+weights, and landform classification. Positive concavity increases retained snow
+in upland depressions, while steep faces expose more stone. Every query uses
+absolute world coordinates, so seeds, chunk order, and eviction never change the
+result. Upper terrain is physically higher in the heightfield; surface artwork,
+actors, and collision retain the same established 2D ground coordinates.
 
-The presentation helpers are independent of traversal. `terrainContours.ts` uses
-marching squares with a bilinear saddle decider and exact shared edge crossings.
-`terrainRelief.ts` builds front-facing ledges, feathered rims, and fading olive
-shadows from elevation contours on steep slopes. `terrainLighting.ts` combines
-broad landform normals with short upper-left horizon shadows. Their render spacing
-and ledge dimensions live in `GAME.terrain`; none changes collision or pass width.
-These helpers produce runtime geometry and colours, never bitmap artwork.
-The 32-unit visual sampling is finer than the 64-unit collision grid. A cliff
-ledge appears only on sufficiently steep, front-facing slopes; its strength fades
-at gentle ground and back-facing slopes. This avoids drawing complete outlines
-around hills or filling combat areas with decorative cliff bands. The heightfield,
-traversal thresholds, camp basin, and caravan corridor retain their original shapes.
+## Visible height
 
-## Playing and inspecting the sample
+`terrainCliffBands.ts` clips terrain triangles between the lower and upper
+contours of each tier transition. These polygons fill the **entire cliff-face
+footprint**, rather than drawing a narrow decorative stripe. Their actual rise,
+slope, and ramp mask determine strength. `terrainRelief.ts` renders them with:
 
-Mount Otgontenger opts into `LandscapeDefinition.mountains` in both normal
-expeditions and developer checkpoints. In a development build, press **F8** and
-choose Mount Otgontenger in chapter 2 or 3. Ride north or south from the broad camp
-basin, or zoom out to 60%, to reach and inspect the surrounding ranges. **F9** cycles
-normal materials, elevation, slope, and collision overlays. It also outlines chunk
-boundaries and displays resident, cached, and pending chunk counts. Elevation runs
-from blue lowlands to red peaks; slope runs from green gentle ground to red cliffs.
-The collision overlay marks blocked ground red and traversable cells turquoise.
-Debug views also work while paused and never advance simulation time. F9 is absent
-from production input bindings; the terrain itself remains enabled in production.
+- Opaque, directionally shaded rock faces, darker toward the foot of the wall.
+- A restrained upper lip separating the raised shelf from the face.
+- Contact ambient occlusion immediately beneath every cliff foot.
+- Soft olive cast shadows toward the lower right, matching upper-left light.
 
-`terrain/MountainRenderer.ts` streams only the camera and a one-chunk margin, with
-at most four new chunks built per frame. Render objects are destroyed when they
-leave that area, while pure chunk data uses its independent 48-entry cache. Very
-wide views can retain up to the finite arena's 121 render chunks. The navigation
-grid and merged static collision bodies cover the entire region so offscreen
-enemies cannot walk through unloaded cliffs. Scene restarts, arrivals, and leaving
-the mountain region dispose old meshes, debug labels, boundaries, and navigation.
+Ground, shadow, ambient occlusion, face, rim, and debug layers have separate global
+depths. Neighbouring ground chunks cannot cover a face or shadow crossing their
+boundary. `terrainPolygon.ts` clips textured polygons at UV wrap boundaries,
+preserving the original non-power-of-two PNGs and world registration. No texture
+is resized or synthesized. `terrainLighting.ts` adds broad landform illumination
+and short horizon shadows to the shelf surfaces.
 
-The existing Phaser Mesh renderer blends the bundled grass, gravel, tundra, and
-snow PNGs with continuous vertex alpha. Global texture coordinates and extra face
-splits at wrap boundaries preserve the original 1254-pixel PNGs without resizing
-them, creating bitmap artwork, or relying on power-of-two-only texture wrapping.
-Broad normals and soft horizon shadows tint every material consistently. Exposed
-stone reuses the Eej Khairkhan rocky swatch with a cooler multiply tint, rather
-than a featureless grey fill. Slope-driven stone exposure starts later and retains
-some underlying material, allowing grass and soil to reach the foothills.
-Surface geometry stays in the existing 2D ground coordinate system; there are
-no standalone mountain meshes or models,
-and actor ground anchors and physics sizes retain their established registration.
-Phaser's Canvas fallback uses flat material colours and triangular cliff shading
-instead of textured meshes.
+`assets/painterlyArt.ts` maps materials through `MOUNTAIN_TERRAIN_ART`. Stone and
+faces reuse the rocky Eej Khairkhan swatch with a cooler tint; snow and ice reuse
+the Khan Tengri ground. Missing materials still support flat placeholder colours.
+The Canvas fallback uses the same cliff polygons with plain colours and shading.
+Dedicated painted cliff-face artwork can improve the finish without changing
+generation or traversal.
 
-Contour faces, upper rims, and fading toe shadows occupy separate global render
-depths above all ground chunks, so neighbouring ground never covers a cliff
-crossing a chunk boundary. `terrainPolygon.ts` clips face polygons at texture
-wraps, preserving tint, opacity, and the source PNG's world scale. Static mesh
-projection initializes immediately, eliminating the blank frame while a new chunk
-waits for Phaser's update list. Eviction destroys ground, ledges, shadows, and debug
-objects together. Actor ground anchors and collision sizes remain unchanged.
+## Props and combat readability
 
-`MOUNTAIN_TERRAIN_ART` in `assets/painterlyArt.ts` maps the five material slots to
-existing loaded textures, optional multiply tints, and fallback colours. The ledge
-face reuses the stone material; without its texture, it uses `cliff.color` as a
-placeholder. `cliff.rim` controls the restrained upper edge light. Dedicated cliff
-art remains a future improvement: painted face sections, rims, and inside/outside
-corners should follow the continuous contour directions rather than square cell
-masks. No asset generation pipeline is introduced. The sample replaces its former
-snowy-dome and foothill cutouts, and
-the former fixed meltwater spline is omitted until water follows generated valleys.
-Other locations retain their existing scenery and walkable surfaces.
+`terrainDressing.ts` selects small deterministic clusters from landform conditions:
 
-`ArenaScene` owns `TerrainCollision`, enemy movement, and safe spawn selection.
-Enemies share short-lived destination flow fields and take broad passes around
-cliffs; chargers still stop against the same physical boundaries. Mounted allies
-use swept ground movement when following the Khan. Existing camp workers stay in
-the protected basin and caravan corridor. Menus freeze all gameplay and physics,
-including succession, character motion, and migration.
+- Scree and rubble sit on flatter ground immediately below higher cliff terrain.
+- Alpine scrub occupies flatter shelves below the snow-dominant tiers.
+- Sparse conifers occupy suitable lower elevations with gentle slopes and little snow.
+- Snow accumulation follows upland depressions through material weights.
+
+Each placement is checked individually, including the offsets within a cluster.
+The camp and caravan clearings exclude these props. At most nine props occupy a
+chunk, and tall trees remain sparse. Painted rock and pine frames are reused;
+the existing reeds clump is a temporary alpine-scrub art stand-in. Asset frames,
+tints, and visual widths live in `MOUNTAIN_TERRAIN_ART.dressing`, separately from
+the renderer-independent placement rules. Generic scenery scatter is skipped in
+the mountain region so it cannot put trees on summits or rubble on open passes.
+
+`TerrainNavigation.ts` retains the steep-cell traversal grid independently of
+render streaming, merges blocked cells into exact Arcade collision rectangles,
+and shares bounded destination flow fields among enemies. Diagonals cannot cut
+blocked corners. Swept follower movement prevents riders tunnelling through walls.
+The camp, full eastbound caravan route, and broad passes remain open; tests require
+over 94% of walkable ground to connect to the camp. Shots and ancestral spirits
+can cross cliffs, while ordinary ground units use the passes and ramps.
+
+## Streaming and debugging
+
+Chunks span 512 world units. Collision cells and quiet material meshes use 64-unit
+spacing; cliff geometry uses 32-unit spacing. Shared cached samples avoid repeating
+height work across the cliff bands, lips, and shadows. Static mesh projection
+initializes before the first render to prevent loading flashes. At most four
+chunks are built per frame, with a one-chunk camera margin. Pure chunk data uses a
+48-entry LRU cache; very wide debug views may retain all 121 finite render chunks.
+Eviction, scene restart, and migration destroy surfaces, cliff layers, dressing,
+and debug objects together. Shared textures remain loaded once.
+
+In a development build, press **F8**, choose Mount Otgontenger, and ride north or
+south from camp or zoom out to 60%. **F9** cycles:
+
+1. Normal terrain.
+2. **Elevation:** five discrete colours showing tiers 0–4.
+3. **Slope:** green gentle surfaces through red steep ground.
+4. **Cliffs:** magenta coverage of actual visible face polygons.
+5. **Traversal:** red blocked cells and turquoise traversable cells.
+
+The legend displays the tier count and resident/cached/pending chunk counts.
+Overlays work while paused without advancing the expedition. F9 is excluded from
+production bindings; the generated mountain terrain remains enabled in production.
+
+Unit tests cover tier heights, material continuity, snow retention, complete cliff
+area, shared seams, valid UVs, AO/shadow layers, deterministic bounded dressing,
+open corridors, connected traversal, safe spawns, and cliff collision. Browser and
+Electron checks cover streaming, every overlay, paused state, riding into cliffs,
+and complete cleanup on migration. Other regions keep their existing landscapes.

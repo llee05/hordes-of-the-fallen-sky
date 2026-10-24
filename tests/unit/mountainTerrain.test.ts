@@ -29,7 +29,7 @@ describe('seeded mountain terrain', () => {
       }
     expect([...levels].sort()).toEqual([0, 1, 2, 3, 4]);
     expect(shelves).toBeGreaterThan(300);
-    for (const form of ['basin', 'pass', 'ridge', 'shelf', 'summit', 'cliff'])
+    for (const form of ['basin', 'pass', 'ravine', 'ridge', 'shelf', 'summit', 'cliff'])
       expect(forms.has(form)).toBe(true);
     expect(terrainWeights(0.7, 0, region, 1)[4]).toBeGreaterThan(
       terrainWeights(0.7, 0, region, 0)[4],

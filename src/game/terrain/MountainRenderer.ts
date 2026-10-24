@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { GAME } from '../config';
 import { MountainTerrain } from './MountainTerrain';
 import { shadedColor, terrainSurface } from './terrainSurface';
-import { terrainRelief } from './terrainRelief';
+import { terrainRelief, type CliffLayerGeometry } from './terrainRelief';
+import { terrainDressing } from './terrainDressing';
 import {
   TERRAIN_MATERIALS,
   type TerrainArt,
@@ -14,6 +15,8 @@ import {
 interface RenderedChunk {
   container: Phaser.GameObjects.Container;
   relief: Phaser.GameObjects.GameObject[];
+  dressing: Phaser.GameObjects.Image[];
+  cliffGeometry?: CliffLayerGeometry;
   debug: Phaser.GameObjects.Graphics;
   data: TerrainChunk;
 }
@@ -88,12 +91,12 @@ export class MountainRenderer {
       .setScale(1 / camera.zoom)
       .setPosition(camera.width / 2, camera.height / 2 + (150 - camera.height / 2) / camera.zoom)
       .setText(
-        `F9 · ${this.debugMode.toUpperCase()} · ${this.terrain.region.biome.id}\n${this.chunks.size} visible chunks · ${this.terrain.cachedChunks} cached · ${this.pendingChunks} pending`,
+        `F9 · ${this.debugMode.toUpperCase()} · ${this.terrain.region.biome.terraces.heights.length} elevation tiers\n${this.chunks.size} visible chunks · ${this.terrain.cachedChunks} cached · ${this.pendingChunks} pending`,
       );
   }
 
   cycleDebug(): void {
-    const modes: TerrainDebugMode[] = ['off', 'elevation', 'slope', 'collision'];
+    const modes: TerrainDebugMode[] = ['off', 'elevation', 'slope', 'cliffs', 'collision'];
     this.setDebug(modes[(modes.indexOf(this.debugMode) + 1) % modes.length]!);
   }
 
@@ -141,20 +144,59 @@ export class MountainRenderer {
       }
       container.add(placeholder);
     }
-    const relief = this.drawCliffs(data);
+    const reliefArt: TerrainArt =
+      this.scene.game.renderer.type === Phaser.WEBGL
+        ? this.art
+        : {
+            ...this.art,
+            materials: { ...this.art.materials, stone: { color: this.art.materials.stone.color } },
+          };
+    const geometry = terrainRelief(this.terrain, data, reliefArt, this.textureSizes);
+    const relief = this.drawCliffs(data, geometry);
+    const dressing: Phaser.GameObjects.Image[] = [];
+    for (const prop of terrainDressing(this.terrain, data)) {
+      const definition = this.art.dressing?.[prop.kind];
+      if (!definition) continue;
+      const width = definition.width * prop.scale;
+      const image = this.scene.add
+        .image(prop.x, prop.y, definition.texture, definition.frame)
+        .setOrigin(0.5, 0.9)
+        .setTint(definition.tint)
+        .setDepth(100 + prop.y)
+        .setName(`terrain-dressing-${prop.kind}`);
+      image.setScale(width / image.width);
+      dressing.push(
+        this.scene.add
+          .image(prop.x + 5, prop.y + 3, 'shadow')
+          .setDisplaySize(width * 0.7, width * 0.2)
+          .setAlpha(0.35)
+          .setDepth(99 + prop.y),
+        image,
+      );
+    }
     const debug = this.scene.add
       .graphics({ x: container.x, y: container.y })
       .setDepth(-17)
       .setName('terrain-debug');
-    const chunk = { container, relief, debug, data };
+    const chunk = {
+      container,
+      relief,
+      dressing,
+      cliffGeometry: geometry.find((layer) => layer.part === 'face'),
+      debug,
+      data,
+    };
     this.drawDebug(chunk);
     return chunk;
   }
 
-  private drawCliffs(data: TerrainChunk): Phaser.GameObjects.GameObject[] {
+  private drawCliffs(
+    data: TerrainChunk,
+    geometryLayers: readonly CliffLayerGeometry[],
+  ): Phaser.GameObjects.GameObject[] {
     const objects: Phaser.GameObjects.GameObject[] = [];
-    for (const geometry of terrainRelief(this.terrain, data, this.art, this.textureSizes)) {
-      const depth = { shadow: -17.9, face: -17.8, rim: -17.7 }[geometry.part];
+    for (const geometry of geometryLayers) {
+      const depth = { shadow: -17.9, ao: -17.85, face: -17.8, rim: -17.7 }[geometry.part];
       const x = data.x + data.width / 2;
       const y = data.y + data.height / 2;
       if (this.scene.game.renderer.type === Phaser.WEBGL) {
@@ -199,10 +241,28 @@ export class MountainRenderer {
     const { debug, data, container } = chunk;
     debug.clear();
     if (this.debugMode === 'off') return;
+    if (this.debugMode === 'cliffs') {
+      const geometry = chunk.cliffGeometry;
+      if (geometry)
+        for (let i = 0; i < geometry.indices.length; i += 3) {
+          const vertices = geometry.indices.slice(i, i + 3);
+          if (Math.max(...vertices.map((index) => geometry.alphas[index]!)) < 0.3) continue;
+          const [a, b, c] = vertices.map((index) => ({
+            x: geometry.vertices[index * 2]!,
+            y: -geometry.vertices[index * 2 + 1]!,
+          }));
+          debug.fillStyle(0xe67cd4, 0.8).fillTriangle(a!.x, a!.y, b!.x, b!.y, c!.x, c!.y);
+        }
+      return;
+    }
     for (const cell of data.cells) {
       let color: number;
       if (this.debugMode === 'elevation') {
-        color = Phaser.Display.Color.HSVToRGB((1 - cell.sample.elevation) * 0.65, 0.75, 0.85).color;
+        color = Phaser.Display.Color.HSVToRGB(
+          (1 - cell.sample.level / (this.terrain.region.biome.terraces.heights.length - 1)) * 0.65,
+          0.75,
+          0.85,
+        ).color;
       } else if (this.debugMode === 'slope') {
         color = Phaser.Display.Color.HSVToRGB(
           (1 - Math.min(1, cell.sample.slope / this.terrain.region.biome.cliffSlope)) * 0.33,
@@ -228,6 +288,7 @@ export class MountainRenderer {
   private destroyChunk(chunk: RenderedChunk): void {
     chunk.container.destroy(true);
     for (const object of chunk.relief) object.destroy();
+    for (const image of chunk.dressing) image.destroy();
     chunk.debug.destroy();
   }
 }

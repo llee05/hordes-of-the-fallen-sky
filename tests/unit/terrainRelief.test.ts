@@ -52,12 +52,13 @@ describe('continuous terrain contours', () => {
 describe('heightfield relief presentation', () => {
   it('joins face, rim, and fading shadow geometry exactly across chunk boundaries', () => {
     const terrain = new MountainTerrain(OTGONTENGER_MOUNTAINS, 1024);
-    terrain.height = (_x, y) => 0.8 - y / 450;
+    terrain.rawHeight = (_x, y) => 0.8 - y / 450;
+    terrain.terraceStrength = () => 1;
     const a = terrain.getChunk(0, 0);
     const b = terrain.getChunk(1, 0);
     const left = terrainRelief(terrain, a, art);
     const right = terrainRelief(terrain, b, art);
-    expect(left.map((layer) => layer.part)).toEqual(['shadow', 'face', 'rim']);
+    expect(left.map((layer) => layer.part)).toEqual(['shadow', 'ao', 'face', 'rim']);
     for (const layer of left) {
       const other = right.find((candidate) => candidate.part === layer.part)!;
       expect(layer.vertices.every(Number.isFinite)).toBe(true);
@@ -82,7 +83,7 @@ describe('heightfield relief presentation', () => {
 
   it('leaves gentle combat ground free of ledges and keeps relief local to steep slopes', () => {
     const flat = new MountainTerrain(OTGONTENGER_MOUNTAINS);
-    flat.height = () => 0.52;
+    flat.rawHeight = () => 0.52;
     expect(terrainRelief(flat, flat.getChunk(0, 0), art)).toEqual([]);
     const terrain = new MountainTerrain(OTGONTENGER_MOUNTAINS);
     const chunk = (() => {
@@ -103,7 +104,8 @@ describe('heightfield relief presentation', () => {
 
   it('wraps existing cliff-face textures without stretching UVs across tile seams', () => {
     const terrain = new MountainTerrain(OTGONTENGER_MOUNTAINS, 1024);
-    terrain.height = (_x, y) => 0.8 - y / 450;
+    terrain.rawHeight = (_x, y) => 0.8 - y / 450;
+    terrain.terraceStrength = () => 1;
     const painted: TerrainArt = {
       ...art,
       materials: {
