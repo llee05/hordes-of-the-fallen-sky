@@ -40,6 +40,8 @@ const marks = {
     '<path d="m24 4 5 14 14 6-14 6-5 14-5-14L5 24l14-6 5-14Z" fill="currentColor" fill-opacity=".2"/><path d="m24 14 3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7Z"/><path d="m8 7 4 4m24 26 4 4M8 41l4-4m24-26 4-4"/>',
   ger: '<path d="m5 23 19-15 19 15v16H5V23Z" fill="currentColor" fill-opacity=".16"/><path d="M5 23h38M5 28h38M18 39V28h12v11M20 8V5h8v3M11 19l13-7 13 7M10 33h4m20 0h4"/>',
   bow: '<path d="M10 6c32 2 32 34 0 36l16-18L10 6Z" fill="currentColor" fill-opacity=".12"/><path d="M5 24h38m-6-5 6 5-6 5M5 20l4 4-4 4"/>',
+  pierce:
+    '<path d="M5 24h38m-7-7 7 7-7 7M18 7v11m0 12v11M29 7v11m0 12v11M3 19l5 5-5 5"/><path d="m14 12 4-5 4 5m3 24 4 5 4-5"/>',
   banner:
     '<path d="M12 43V7m0 4c9-9 18 7 27 0v20c-9 7-18-9-27 0" fill="currentColor" fill-opacity=".18"/><path d="m24 15 5 6-5 5-5-6 5-5ZM8 43h8M10 5h4"/>',
   journal:

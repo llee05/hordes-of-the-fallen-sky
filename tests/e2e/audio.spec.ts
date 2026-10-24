@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { buyNode, openTitle, startExpedition } from './helpers';
 
 async function heard(page: Page): Promise<string[]> {
   return page.evaluate(() => (window as any).heardSounds);
@@ -111,7 +111,7 @@ test('camp work and research sound in menus while world cues and cadence are sto
     return { time: scene.run.elapsed, wind: scene.audio.windTimer, hoof: scene.audio.hoofDistance };
   });
   await page.locator('[data-camp-site="archery"]').click();
-  await page.locator('[data-node="archery-base"]').click();
+  await buyNode(page, 'archery-base');
   expect(await heard(page)).toContain('build');
   expect(await page.evaluate(() => (window as any).__gloam.scene.audio.play('shoot'))).toBe(false);
   await page.waitForTimeout(200);
@@ -130,7 +130,7 @@ test('camp work and research sound in menus while world cues and cadence are sto
     (window as any).__gloam.scene.run.pendingUpgrades = 1;
   });
   await page.keyboard.press('t');
-  await page.locator('[data-node="wolf-trail"]').click();
+  await buyNode(page, 'wolf-trail');
   expect(await heard(page)).toContain('research');
 });
 

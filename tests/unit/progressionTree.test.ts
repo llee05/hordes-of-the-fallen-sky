@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   progressionMenu,
   treeLevels,
+  treeRoute,
+  branchMarkup,
+  nodeInspector,
   type TreeNode,
   type TreeBranch,
 } from '../../src/ui/progressionTree';
@@ -107,14 +110,19 @@ describe('expandable progression views', () => {
       view: { category: 'all', query: '' },
     };
     const html = progressionMenu(options);
-    expect(html.match(/data-tree-branch=/g)).toHaveLength(17);
-    expect(html.match(/data-node=/g)).toHaveLength(102);
-    expect(html.match(/data-tree-filter=/g)).toHaveLength(5);
+    expect(html.match(/data-tree-branch=/g)).toHaveLength(1);
+    expect(html.match(/data-tree-branch-select=/g)).toHaveLength(17);
+    expect(html.match(/data-node=/g)).toHaveLength(6);
+    expect(
+      progressionMenu({ ...options, view: { ...options.view, overview: true } }).match(
+        /class="patron-overview-card"/g,
+      ),
+    ).toHaveLength(17);
     expect(
       progressionMenu({ ...options, view: { category: 'Category 1', query: 'Branch 1' } }).match(
         /data-tree-branch=/g,
       ),
-    ).toHaveLength(2);
+    ).toHaveLength(1);
     expect(
       progressionMenu({ ...options, view: { category: 'all', query: 'no such effect' } }),
     ).toContain('No branches match');
@@ -152,5 +160,46 @@ describe('expandable progression views', () => {
         .flatMap((entry) => entry.nodes)
         .some((entry) => entry.status === 'available'),
     ).toBe(false);
+  });
+  it('deduplicates multi-parent route costs, includes required ranks, and renders actual edges', () => {
+    const root = { ...node('root'), ranks: { current: 1, max: 2 }, price: { knowledge: 1 } };
+    const left = { ...node('left', ['root']), price: { knowledge: 1 } };
+    const right = { ...node('right', ['root']), price: { knowledge: 1 } };
+    const final = {
+      ...node('final', ['root', 'left', 'right']),
+      ranks: { current: 0, max: 1 },
+      price: { knowledge: 2 },
+      prerequisites: [{ id: 'root', title: 'Root', current: 1, rank: 2 }],
+    };
+    const branch: TreeBranch = {
+      id: 'test',
+      title: 'Test',
+      description: '',
+      category: '',
+      illustration: '',
+      progress: '',
+      layout: 'tiers',
+      nodes: [root, left, right, final],
+    };
+    expect(treeRoute(branch, final).price.knowledge).toBe(5);
+    const html = branchMarkup(branch, { selectedNode: 'final' });
+    expect(html).toContain('data-edge-from="left" data-edge-to="final"');
+    expect(html).toContain('data-edge-from="right" data-edge-to="final"');
+    expect(html).not.toContain('data-edge-from="root" data-edge-to="final"');
+    expect(html).not.toContain('data-research=');
+    expect(nodeInspector(branch, final)).toContain('5 knowledge points');
+  });
+
+  it('distinguishes missing prerequisites, insufficient points, mastery, and excluded choices', () => {
+    const run = createRun();
+    run.phase = 'upgrade';
+    run.pendingUpgrades = 0;
+    let nodes = researchBranches(run).flatMap((b) => b.nodes);
+    expect(nodes.find((n) => n.id === 'power')?.status).toBe('unaffordable');
+    expect(nodes.find((n) => n.id === 'sky-volley')?.status).toBe('locked');
+    run.upgrades = { power: 2, haste: 1, 'one-perfect-shot': 1 };
+    nodes = researchBranches(run).flatMap((b) => b.nodes);
+    expect(nodes.find((n) => n.id === 'power')?.status).toBe('learned');
+    expect(nodes.find((n) => n.id === 'sky-volley')?.status).toBe('excluded');
   });
 });

@@ -3,17 +3,6 @@ import type { PatronId, UpgradeDefinition } from '../types';
 export type Technology = Omit<UpgradeDefinition, 'patron' | 'category' | 'subtitle' | 'icon'>;
 const S = GAME.patrons.specializations;
 
-/** The existing capstone now follows one focused practice, with an equally priced alternative. */
-export const CAPSTONE_PARENTS: Record<PatronId, string> = {
-  'borte-chino': 'culling-bite',
-  'etugen-eke': 'measured-herds',
-  'khukhedei-mergen': 'wide-quiver',
-  golomt: 'carried-embers',
-  lus: 'reed-beds',
-  ongod: 'remembered-aim',
-  sulde: 'rallying-banner',
-  'burkhan-guardian': 'stone-shelter',
-};
 export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
   'borte-chino': [
     {

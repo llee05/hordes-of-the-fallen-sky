@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition, tapController } from './helpers';
+import { buyNode, openTitle, startExpedition, tapController } from './helpers';
 
 test('the animated miniature inspects without purchasing, reflects developments, and keeps the world frozen', async ({
   page,
@@ -25,10 +25,10 @@ test('the animated miniature inspects without purchasing, reflects developments,
       .locator('.camp-model')
       .evaluate((model) => model.getAnimations({ subtree: true }).length),
   ).toBeGreaterThan(0);
-  await page.locator('[data-node="archery-base"]').click();
+  await buyNode(page, 'archery-base');
   await expect(archery).toHaveAttribute('data-established', 'true');
   await expect(page.locator('[data-node="archery-base"]')).toBeFocused();
-  await page.locator('[data-node="archery-seasoned-bowyers"]').click();
+  await buyNode(page, 'archery-seasoned-bowyers');
   await expect(archery).toHaveAttribute('data-level', '1');
   await expect(archery.locator('.camp-supply')).toHaveCount(1);
   const after = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
@@ -130,6 +130,12 @@ test('keyboard and controller select miniatures before confirming a purchase', a
     'false',
   );
   await page.locator('[data-node="herd-base"]').focus();
+  await tapController(page, 0);
+  await expect(page.locator('[data-camp-site="herd"]')).toHaveAttribute(
+    'data-established',
+    'false',
+  );
+  await page.locator('.tree-purchase').focus();
   await tapController(page, 0);
   await expect(page.locator('[data-camp-site="herd"]')).toHaveAttribute('data-established', 'true');
   await expect(page.locator('[data-node="herd-base"]')).toBeFocused();

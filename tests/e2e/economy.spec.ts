@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { buyNode, inspectNode, openTitle, startExpedition } from './helpers';
 
 test('camp economy previews update only after buying and remain frozen while inspecting', async ({
   page,
@@ -12,25 +12,33 @@ test('camp economy previews update only after buying and remain frozen while ins
     scene.openBuildings();
   });
   await page.locator('[data-camp-site="herd"]').click();
+  if (!(await page.locator('.camp-economy').evaluate((el) => (el as HTMLDetailsElement).open)))
+    await page.locator('.camp-economy summary').click();
   const economy = page.getByRole('region', { name: 'Camp economy' });
   await expect(economy).toContainText('Food net -0.04/s');
-  const purchase = page.locator('[data-node="herd-base"]');
-  await expect(purchase.locator('.tree-node-forecast')).toContainText('Food net -0.04/s → +0.13/s');
+  await inspectNode(page, 'herd-base');
+  await expect(page.locator('.node-inspector .tree-node-forecast')).toContainText(
+    'Food net -0.04/s → +0.13/s',
+  );
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.locator('[data-camp-site="ger"]').click();
-  await expect(page.locator('[data-node="ger-hearthkeepers"] .tree-node-forecast')).toContainText(
+  await inspectNode(page, 'ger-hearthkeepers');
+  await expect(page.locator('.node-inspector .tree-node-forecast')).toContainText(
     'Food net -0.04/s → -0.19/s',
   );
   await page.locator('[data-camp-site="herd"]').click();
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
-  await purchase.click();
+  await buyNode(page, 'herd-base');
+  if (!(await page.locator('.camp-economy').evaluate((el) => (el as HTMLDetailsElement).open)))
+    await page.locator('.camp-economy summary').click();
   await expect(economy).toContainText('Food net +0.13/s');
-  await expect(purchase.locator('.tree-node-forecast')).toHaveCount(0);
-  await expect(page.locator('[data-node="herd-winter-stores"] .tree-node-forecast')).toContainText(
-    '+45 food now',
-  );
-  await page.locator('[data-node="herd-winter-stores"]').click();
+  await expect(page.locator('.node-inspector .tree-node-forecast')).toHaveCount(0);
+  await inspectNode(page, 'herd-winter-stores');
+  await expect(page.locator('.node-inspector .tree-node-forecast')).toContainText('+45 food now');
+  await buyNode(page, 'herd-winter-stores');
+  if (!(await page.locator('.camp-economy').evaluate((el) => (el as HTMLDetailsElement).open)))
+    await page.locator('.camp-economy summary').click();
   await expect(economy).toContainText('Food net +0.23/s');
   await expect(page.getByLabel('Camp resources')).toContainText('65');
   await page.screenshot({ path: 'test-results/economy-camp.png' });
@@ -105,7 +113,8 @@ test('food forecasts remain readable beside guidance and objectives at supported
     expect(overlaps, `resources overlap at ${viewport.width}`).toEqual([]);
     await page.keyboard.press('b');
     await page.locator('[data-camp-site="herd"]').click();
-    const preview = page.locator('[data-node="herd-base"] .tree-node-forecast');
+    await inspectNode(page, 'herd-base');
+    const preview = page.locator('.node-inspector .tree-node-forecast');
     await expect(preview).toBeVisible();
     expect(await preview.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
       true,

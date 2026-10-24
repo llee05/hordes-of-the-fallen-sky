@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { buyNode, inspectNode, openTitle, startExpedition } from './helpers';
 
-test('all eight patrons expose foundations, complementary practices, and gated capstones', async ({
+test('eight patron traditions offer focused routes and exclude only the chosen capstone alternatives', async ({
   page,
 }) => {
   await openTitle(page);
@@ -10,52 +10,44 @@ test('all eight patrons expose foundations, complementary practices, and gated c
     (window as any).__gloam.scene.run.pendingUpgrades = 10;
   });
   await page.keyboard.press('t');
-  for (const name of [
-    'Börte Chino',
-    'Etügen Eke',
-    'Khükhedei Mergen',
-    'Golomt',
-    'Lus',
-    'Ongod',
-    'Sülde',
-    'Guardian of Burkhan Khaldun',
-  ]) {
-    await expect(page.getByRole('heading', { name, exact: true })).toHaveCount(1);
-  }
-  await expect(page.locator('[data-tree-branch]')).toHaveCount(8);
-  await expect(page.locator('.tree-node[data-kind="foundation"]')).toHaveCount(8);
-  await expect(page.locator('.tree-node[data-kind="capstone"]')).toHaveCount(8);
-  await page.getByRole('button', { name: 'Construction', exact: true }).click();
+  await page.getByRole('button', { name: 'Patron overview' }).click();
+  await expect(page.locator('.patron-overview-card')).toHaveCount(8);
+  await inspectNode(page, 'caravan-foundations');
   await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
-  const base = page.locator('[data-node="caravan-foundations"]');
-  await base.click();
-  await expect(base).toContainText('1 / 2 ranks learned');
-  await expect(page.locator('[data-node="watchfires"]')).toHaveAttribute('data-status', 'locked');
-  await base.click();
+  await expect(page.locator('.tree-node[data-kind="capstone"]')).toHaveCount(2);
+  await buyNode(page, 'caravan-foundations');
+  await expect(page.locator('.node-rank-summary')).toHaveText('Rank 1 / 2');
   await expect(page.locator('[data-node="watchfires"]')).toHaveAttribute(
     'data-status',
     'available',
   );
-  await page.locator('[data-node="watchfires"]').click();
-  await expect(page.locator('[data-node="hold-the-passage"]')).toHaveAttribute(
-    'data-status',
-    'locked',
-  );
-  await page.locator('[data-node="stone-shelter"]').click();
-  await page.locator('[data-node="hold-the-passage"]').click();
+  await buyNode(page, 'caravan-foundations');
+  await buyNode(page, 'stone-shelter');
+  await inspectNode(page, 'hold-the-passage');
+  await expect(page.locator('.choice-comparison')).toContainText('A fortress on the road');
+  await expect(page.locator('.node-preview')).toContainText('Clan damage reduction');
+  await page.locator('.tree-purchase').click();
   await expect(page.locator('[data-node="hold-the-passage"]')).toHaveAttribute(
     'data-status',
     'learned',
   );
+  await expect(page.locator('[data-node="rolling-fortress"]')).toHaveAttribute(
+    'data-status',
+    'excluded',
+  );
+  await expect(page.locator('[data-node="watchfires"]')).toHaveAttribute(
+    'data-status',
+    'available',
+  );
   await page.screenshot({ path: 'test-results/patron-guardian-tree.png' });
   await page.keyboard.press('Escape');
   await page.keyboard.press('b');
-  await page.locator('[data-camp-site="archery"]').click();
-  await expect(page.locator('[data-node="archery-base"]')).toContainText('20 materials');
+  await inspectNode(page, 'archery-base');
+  await expect(page.locator('.node-price')).toContainText('20 materials');
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades)).toBe(5);
 });
 
-test('patrons can be mixed and purchased summon capstones create the actual travelling echoes', async ({
+test('mixing patrons and focused summon capstones creates the actual travelling echoes', async ({
   page,
 }) => {
   await openTitle(page);
@@ -64,22 +56,22 @@ test('patrons can be mixed and purchased summon capstones create the actual trav
     (window as any).__gloam.scene.run.pendingUpgrades = 7;
   });
   await page.keyboard.press('t');
-  await page.locator('[data-node="wolf-trail"]').click();
-  await page.getByRole('button', { name: 'Summoning', exact: true }).click();
-  await page.locator('[data-node="ancestral-companion"]').click();
-  await page.locator('[data-node="ancestral-companion"]').click();
-  await page.locator('[data-node="remembered-aim"]').click();
-  await page.locator('[data-node="spirit-thread"]').click();
-  await page.locator('[data-node="council-of-ancestors"]').click();
+  for (const id of [
+    'wolf-trail',
+    'ancestral-companion',
+    'ancestral-companion',
+    'remembered-aim',
+    'council-of-ancestors',
+  ])
+    await buyNode(page, id);
   await page.screenshot({ path: 'test-results/patron-ongod-tree.png' });
   await page.keyboard.press('Escape');
   await expect
     .poll(() =>
       page.evaluate(
         () =>
-          (window as any).__gloam.scene.patronSupport.spirits.filter(
-            (spirit: any) => spirit.image.visible,
-          ).length,
+          (window as any).__gloam.scene.patronSupport.spirits.filter((s: any) => s.image.visible)
+            .length,
       ),
     )
     .toBe(3);

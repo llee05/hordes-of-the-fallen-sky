@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { startExpedition } from './helpers';
+import { buyNode, startExpedition } from './helpers';
 
 test('companions acknowledge camp work and the chronicle retains the real Khan succession', async ({
   page,
@@ -9,7 +9,7 @@ test('companions acknowledge camp work and the chronicle retains the real Khan s
   await page.locator('[data-story-choice="share-work"]').click();
   await page.keyboard.press('b');
   await page.locator('[data-camp-site="archery"]').click();
-  await page.locator('[data-node="archery-base"]').click();
+  await buyNode(page, 'archery-base');
   await page.keyboard.press('Escape');
   await expect(page.locator('#companion-reaction')).toContainText('Saran:');
   await page.evaluate(() => {

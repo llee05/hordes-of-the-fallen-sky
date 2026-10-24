@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { buyNode, inspectNode, openTitle, startExpedition } from './helpers';
 
 test('camp previews every development and enforces resources, workers, and exclusive choices', async ({
   page,
@@ -15,13 +15,16 @@ test('camp previews every development and enforces resources, workers, and exclu
   await page.keyboard.press('b');
   await expect(page.locator('[data-camp-site]')).toHaveCount(8);
   await page.locator('[data-camp-site="archery"]').click();
-  await expect(page.locator('[data-node="archery-base"]')).toContainText('More families needed');
-  await expect(page.locator('[data-node="archery-fire-arrows"]')).toContainText(
+  await inspectNode(page, 'archery-base');
+  await expect(page.locator('.node-purchase-status')).toContainText('More families needed');
+  await inspectNode(page, 'archery-fire-arrows');
+  await expect(page.locator('.node-purchase-status')).toContainText(
     'Establish Archery grounds first',
   );
-  await expect(page.locator('[data-node="archery-fire-arrows"]')).toContainText('36 materials');
+  await expect(page.locator('.node-price')).toContainText('36 materials');
   await page.locator('[data-camp-site="sanctuary"]').click();
-  await expect(page.locator('[data-node="sanctuary-base"]')).toContainText('12 Spirit');
+  await inspectNode(page, 'sanctuary-base');
+  await expect(page.locator('.node-price')).toContainText('12 Spirit');
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.evaluate(() => (window as any).__gloam.scene.construct('archery'));
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
@@ -33,9 +36,9 @@ test('camp previews every development and enforces resources, workers, and exclu
   });
   await page.keyboard.press('b');
   await page.locator('[data-camp-site="archery"]').click();
-  await page.locator('[data-node="archery-base"]').click();
+  await buyNode(page, 'archery-base');
   await expect(page.locator('[data-node="archery-base"]')).toBeFocused();
-  await page.locator('[data-node="archery-fire-arrows"]').click();
+  await buyNode(page, 'archery-fire-arrows');
   await expect(page.locator('[data-node="archery-veteran-riders"]')).toHaveAttribute(
     'data-status',
     'excluded',
@@ -91,14 +94,15 @@ test('additional choices and deeper camp tiers work without new layout or purcha
   );
   const deeper = page.locator('[data-node="ger-field-medicine"]');
   await expect(deeper).toHaveAttribute('data-status', 'locked');
-  await expect(deeper).toContainText('Requires: Herb gardens');
-  await page.locator('[data-node="ger-herb-gardens"]').click();
+  await deeper.click();
+  await expect(page.locator('.node-prerequisites')).toContainText('Herb gardens');
+  await buyNode(page, 'ger-herb-gardens');
   await expect(page.locator('[data-node="ger-hearthkeepers"]')).toHaveAttribute(
     'data-status',
     'excluded',
   );
   await expect(deeper).toHaveAttribute('data-status', 'available');
-  await deeper.click();
+  await buyNode(page, 'ger-field-medicine');
   await expect(deeper).toHaveAttribute('data-status', 'learned');
   expect(
     await page.evaluate(() => ({
@@ -147,7 +151,7 @@ test('camp models fit small screens, find crafts, and retain scroll and focus on
   const wagon = page.locator('[data-node="wagon-base"]');
   await wagon.scrollIntoViewIfNeeded();
   const scroll = await page.locator('.tree-scroll').evaluate((element) => element.scrollTop);
-  await wagon.click();
+  await buyNode(page, 'wagon-base');
   await expect(wagon).toBeFocused();
   expect(await page.locator('.tree-scroll').evaluate((element) => element.scrollTop)).toBeCloseTo(
     scroll,

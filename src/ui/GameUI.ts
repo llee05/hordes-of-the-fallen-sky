@@ -45,11 +45,11 @@ export class GameUI {
   private campSelection: BuildingId = 'ger';
   private destinationSelection?: string;
 
-  private treeView(): TreeViewState {
-    let view = this.treeViews.get(this.phase);
+  private treeView(phase = this.phase): TreeViewState {
+    let view = this.treeViews.get(phase);
     if (!view) {
       view = { category: 'all', query: '' };
-      this.treeViews.set(this.phase, view);
+      this.treeViews.set(phase, view);
     }
     return view;
   }
@@ -445,6 +445,18 @@ export class GameUI {
     const scroll = preserveTree
       ? this.overlay.querySelector('.tree-scroll, .migration-scroll')?.scrollTop
       : undefined;
+    const scrolls = preserveTree
+      ? [...this.overlay.querySelectorAll<HTMLElement>('[data-scroll-key]')].map((el) => ({
+          key: el.dataset.scrollKey,
+          top: el.scrollTop,
+          left: el.scrollLeft,
+        }))
+      : [];
+    const disclosures = preserveTree
+      ? [...this.overlay.querySelectorAll<HTMLDetailsElement>('details[data-disclosure-key]')].map(
+          (el) => ({ key: el.dataset.disclosureKey, open: el.open }),
+        )
+      : [];
     const active = document.activeElement as HTMLElement | null;
     const focusKey = preserveTree ? active?.dataset.focusKey : undefined;
     const selection = active instanceof HTMLInputElement ? active.selectionStart : null;
@@ -549,13 +561,29 @@ export class GameUI {
       }
     }
     if (scroll !== undefined)
-      this.overlay.querySelector('.tree-scroll, .migration-scroll')!.scrollTop = scroll;
+      this.overlay.querySelector('.tree-scroll, .migration-scroll')?.scrollTo({ top: scroll });
+    for (const saved of scrolls) {
+      const el = [...this.overlay.querySelectorAll<HTMLElement>('[data-scroll-key]')].find(
+        (entry) => entry.dataset.scrollKey === saved.key,
+      );
+      el?.scrollTo({ top: saved.top, left: saved.left });
+    }
+    for (const saved of disclosures) {
+      const detail = [
+        ...this.overlay.querySelectorAll<HTMLDetailsElement>('details[data-disclosure-key]'),
+      ].find((el) => el.dataset.disclosureKey === saved.key);
+      if (detail) detail.open = saved.open;
+    }
     if (focusKey) {
       const target = [...this.overlay.querySelectorAll<HTMLElement>('[data-focus-key]')].find(
         (entry) => entry.dataset.focusKey === focusKey,
       );
       if (target) {
-        target.focus({ preventScroll: true });
+        const fallback =
+          target instanceof HTMLButtonElement && target.disabled
+            ? this.overlay.querySelector<HTMLElement>('.tree-node[aria-pressed="true"]')
+            : target;
+        fallback?.focus({ preventScroll: true });
         if (target instanceof HTMLInputElement && selection !== null)
           target.setSelectionRange(selection, selection);
         return;
@@ -564,7 +592,7 @@ export class GameUI {
     this.overlay.scrollTop = 0;
     this.overlay
       .querySelector<HTMLButtonElement>(
-        '[data-primary], [data-camp-site][aria-pressed="true"], [data-destination][aria-pressed="true"], .tree-node[aria-disabled="false"], [data-building]:not(:disabled), [data-route], [role="tab"][aria-selected="true"], [data-action="sound"]',
+        '[data-primary], [data-camp-site][aria-pressed="true"], [data-destination][aria-pressed="true"], .tree-node[aria-pressed="true"], [data-building]:not(:disabled), button[data-route], [role="tab"][aria-selected="true"], [data-action="sound"]',
       )
       ?.focus({ preventScroll: true });
     if (!this.overlay.contains(document.activeElement))
@@ -577,9 +605,50 @@ export class GameUI {
     const button = (event.target as Element).closest<HTMLButtonElement>('button');
     if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
     const action = button.dataset.action;
-    if (button.dataset.campSite && this.lastSnapshot && this.phase === 'building') {
+    if (button.dataset.progressionJump && this.lastSnapshot) {
+      const phase = button.dataset.progressionJump === 'camp' ? 'building' : 'upgrade';
+      const view = this.treeView(phase);
+      Object.assign(view, {
+        branch: button.dataset.branch,
+        node: button.dataset.targetNode,
+        category: 'all',
+        query: '',
+        overview: false,
+        recipes: false,
+      });
+      if (phase === 'building') {
+        this.campSelection = button.dataset.branch as BuildingId;
+        view.expanded = true;
+      }
+      if (this.phase === phase) this.renderPhase(this.lastSnapshot);
+      else this.scene.switchProgression(phase);
+      this.overlay.querySelector<HTMLButtonElement>('.tree-node[aria-pressed="true"]')?.focus();
+    } else if (button.dataset.treeSelect && this.lastSnapshot) {
+      this.treeView().node = button.dataset.treeSelect;
+      this.renderPhase(this.lastSnapshot);
+      this.overlay.querySelector('[data-scroll-key="node-details"]')?.scrollTo({ top: 0 });
+    } else if (button.dataset.treeBranchSelect && this.lastSnapshot) {
+      Object.assign(this.treeView(), {
+        branch: button.dataset.treeBranchSelect,
+        node: undefined,
+        overview: false,
+        recipes: false,
+      });
+      this.renderPhase(this.lastSnapshot);
+    } else if (button.hasAttribute('data-tree-overview') && this.lastSnapshot) {
+      Object.assign(this.treeView(), { overview: true, recipes: false });
+      this.renderPhase(this.lastSnapshot);
+    } else if (button.hasAttribute('data-tree-recipes') && this.lastSnapshot) {
+      Object.assign(this.treeView(), { recipes: !this.treeView().recipes, overview: false });
+      this.renderPhase(this.lastSnapshot);
+    } else if (button.hasAttribute('data-camp-expand') && this.lastSnapshot) {
+      this.treeView().expanded = !this.treeView().expanded;
+      this.renderPhase(this.lastSnapshot);
+    } else if (button.dataset.campSite && this.lastSnapshot && this.phase === 'building') {
       this.campSelection = button.dataset.campSite as BuildingId;
       this.treeView().query = '';
+      this.treeView().node = undefined;
+      this.treeView().recipes = false;
       this.renderPhase(this.lastSnapshot);
       this.overlay.querySelector('.tree-scroll')!.scrollTop = 0;
     } else if (button.dataset.destination && this.lastSnapshot && this.phase === 'route') {
@@ -587,6 +656,7 @@ export class GameUI {
       this.renderPhase(this.lastSnapshot);
     } else if (button.dataset.treeFilter && this.lastSnapshot) {
       this.treeView().category = button.dataset.treeFilter;
+      this.treeView().query = '';
       this.renderPhase(this.lastSnapshot);
     } else if (button.dataset.storyChoice) this.scene.chooseStory(button.dataset.storyChoice);
     else if (action === 'story-skip') this.scene.chooseStory();
@@ -660,9 +730,9 @@ export class GameUI {
   private menuButtons(): HTMLElement[] {
     return [
       ...this.overlay.querySelectorAll<HTMLElement>(
-        'button:not(:disabled), summary, [data-developer-command-input]',
+        'button:not(:disabled), summary, input:not(:disabled)',
       ),
-    ];
+    ].filter((el) => el.getClientRects().length > 0);
   }
   private handleMenuKey(event: KeyboardEvent): void {
     // Holding Confirm must not race through chapters or activate the next screen.
@@ -704,7 +774,8 @@ export class GameUI {
     ) {
       event.preventDefault();
       event.stopPropagation();
-      this.navigateMenu(['ArrowLeft', 'ArrowUp'].includes(event.key) ? 'previous' : 'next');
+      if (!this.navigateGraph(event.key))
+        this.navigateMenu(['ArrowLeft', 'ArrowUp'].includes(event.key) ? 'previous' : 'next');
       return;
     }
     const button = (event.target as Element).closest<HTMLButtonElement>('[role="tab"]');
@@ -746,5 +817,43 @@ export class GameUI {
       target?.focus();
       target?.scrollIntoView({ block: 'nearest' });
     }
+  }
+
+  /** Directional focus uses the graph's real edges, without buying a rank. Tab reaches the inspector. */
+  private navigateGraph(key: string): boolean {
+    const current = document.activeElement as HTMLButtonElement | null;
+    if (!current?.matches('.tree-node')) return false;
+    const graph = current.closest('.tree-graph')!;
+    const nodes = [...graph.querySelectorAll<HTMLButtonElement>('.tree-node')];
+    let choices: HTMLButtonElement[];
+    if (key === 'ArrowUp' || key === 'ArrowDown') {
+      const down = key === 'ArrowDown';
+      const edges = [...graph.querySelectorAll<SVGPathElement>('.tree-connections path')];
+      const ids = edges
+        .filter((e) => (down ? e.dataset.edgeFrom : e.dataset.edgeTo) === current.dataset.node)
+        .map((e) => (down ? e.dataset.edgeTo : e.dataset.edgeFrom));
+      choices = nodes.filter((n) => ids.includes(n.dataset.node));
+      choices.sort(
+        (a, b) =>
+          Math.abs(a.offsetLeft - current.offsetLeft) - Math.abs(b.offsetLeft - current.offsetLeft),
+      );
+    } else {
+      const row = nodes
+        .filter((n) => n.dataset.level === current.dataset.level)
+        .sort((a, b) => a.offsetLeft - b.offsetLeft);
+      const next = row.indexOf(current) + (key === 'ArrowRight' ? 1 : -1);
+      choices = row[next] ? [row[next]!] : [];
+    }
+    const target = choices[0];
+    if (target) {
+      const id = target.dataset.node;
+      target.click();
+      const refreshed = [...this.overlay.querySelectorAll<HTMLButtonElement>('.tree-node')].find(
+        (n) => n.dataset.node === id,
+      );
+      refreshed?.focus({ preventScroll: true });
+      refreshed?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+    return true;
   }
 }

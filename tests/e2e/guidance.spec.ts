@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { buyNode, openTitle, startExpedition } from './helpers';
 
 test('guidance follows riding, camp purchases, knowledge, formations, and the first crossing', async ({
   page,
@@ -14,7 +14,7 @@ test('guidance follows riding, camp purchases, knowledge, formations, and the fi
   await guide.getByRole('button', { name: /Develop camp/ }).click();
   const frozen = await page.evaluate(() => (window as any).__gloam.scene.run.elapsed);
   await page.locator('[data-camp-site="archery"]').click();
-  await page.locator('[data-node="archery-base"]').click();
+  await buyNode(page, 'archery-base');
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.elapsed)).toBe(frozen);
   await page.keyboard.press('Escape');
   await expect(guide).toContainText('Gather what the fallen leave');
@@ -27,7 +27,7 @@ test('guidance follows riding, camp purchases, knowledge, formations, and the fi
   });
   await expect(guide).toContainText('Put knowledge to work');
   await guide.getByRole('button', { name: /Patron tree/ }).click();
-  await page.locator('[data-node="power"]').click();
+  await buyNode(page, 'power');
   await page.keyboard.press('Escape');
   await expect(guide).toContainText('Give the riders a purpose');
   await guide.getByRole('button', { name: /Change formation/ }).click();

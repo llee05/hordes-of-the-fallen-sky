@@ -124,6 +124,7 @@ export class ArenaScene extends Phaser.Scene {
   private wheelZoomDelta = 0;
   private best = 0;
   private researchReturnPhase: 'playing' | 'journal' | 'paused' = 'playing';
+  private progressionStack: ('upgrade' | 'building')[] = [];
   private utilityReturnPhase: 'ready' | 'paused' = 'ready';
   private developerReturnPhase: RunState['phase'] = 'ready';
   private developerRun = false;
@@ -181,6 +182,7 @@ export class ArenaScene extends Phaser.Scene {
     this.hudTimer = 0;
     this.wheelZoomDelta = 0;
     this.researchReturnPhase = 'playing';
+    this.progressionStack = [];
     this.utilityReturnPhase = 'ready';
     this.supportTimer = 0;
     this.wagonTimer = 0;
@@ -608,6 +610,10 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   closePlanning(): void {
+    if (['upgrade', 'building'].includes(this.run.phase) && this.progressionStack.length) {
+      this.setPhase(this.progressionStack.pop()!);
+      return;
+    }
     if (this.run.phase === 'console') {
       this.setPhase(this.consoleReturnPhase);
       return;
@@ -642,6 +648,14 @@ export class ArenaScene extends Phaser.Scene {
     if (phase !== 'playing' && phase !== 'journal' && phase !== 'paused') return;
     this.researchReturnPhase = phase;
     this.setPhase('upgrade');
+  }
+
+  /** Recipe links change planning panels while simulation remains paused. Back returns to its source. */
+  switchProgression(phase: 'upgrade' | 'building'): void {
+    const current = this.run.phase;
+    if ((current !== 'upgrade' && current !== 'building') || current === phase) return;
+    this.progressionStack.push(current);
+    this.setPhase(phase);
   }
 
   openUtilityMenu(menu: 'settings' | 'help'): void {

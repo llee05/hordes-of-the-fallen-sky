@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { startExpedition, openTitle, tapController } from './helpers';
+import { buyNode, startExpedition, openTitle, tapController } from './helpers';
 
 test('controller starts a run, moves, dashes, pauses, and navigates menus', async ({ page }) => {
   await page.addInitScript(() => {
@@ -114,9 +114,9 @@ test('automatic attacks defeat enemies and collected XP banks research without i
   await expect(page.locator('#research-points')).toHaveText('1');
   await page.keyboard.press('t');
   await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
-  await expect(page.locator('[data-tree-branch]')).toHaveCount(8);
+  await expect(page.locator('[data-tree-branch-select]')).toHaveCount(8);
   await page.screenshot({ path: 'test-results/desktop-upgrade.png', fullPage: true });
-  await page.locator('[data-research="power"][data-rank="1"]').click();
+  await buyNode(page, 'power');
   await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
@@ -216,11 +216,11 @@ test('camp planning spends resources, unlocks riders and builds the Burning Temp
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
   await page.locator('[data-camp-site="archery"]').click();
-  await page.locator('[data-node="archery-base"]').click();
-  await page.locator('[data-node="archery-fire-arrows"]').click();
+  await buyNode(page, 'archery-base');
+  await buyNode(page, 'archery-fire-arrows');
   await page.locator('[data-camp-site="sanctuary"]').click();
-  await page.locator('[data-node="sanctuary-base"]').click();
-  await page.locator('[data-node="sanctuary-wind-shamans"]').click();
+  await buyNode(page, 'sanctuary-base');
+  await buyNode(page, 'sanctuary-wind-shamans');
   await expect(page.locator('#synergy')).toBeVisible();
   await expect(page.locator('#riders')).toHaveText('4');
   await expect(page.locator('#workers')).toHaveText('5 / 8');

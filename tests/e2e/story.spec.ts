@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { startExpedition, tapController } from './helpers';
+import { buyNode, startExpedition, tapController } from './helpers';
 
 async function beginStory(page: Page): Promise<void> {
   await page.goto('/?terrain=2d');
@@ -63,7 +63,7 @@ test('complete the two acts, all eight choices, three crossings, and a survivor-
   // Actual construction and specialization remain available throughout the campaign.
   await page.keyboard.press('b');
   await page.locator('[data-camp-site="archery"]').click();
-  await page.locator('[data-node="archery-base"]').click();
+  await buyNode(page, 'archery-base');
   await page.keyboard.press('Escape');
   await campTime(page, 45);
   await expect(page.getByRole('heading', { name: 'More mouths, more hands.' })).toBeVisible();
@@ -138,9 +138,9 @@ test('story cannot grant twice, and banked knowledge points survive a camp conve
   });
   expect(outcome).toEqual({ difference: 6, phase: 'playing', pending: 2, records: 1 });
   await page.keyboard.press('t');
-  await page.locator('[data-research="power"][data-rank="1"]').click();
+  await buyNode(page, 'power');
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'upgrade');
-  await page.locator('[data-research="power"][data-rank="2"]').click();
+  await buyNode(page, 'power');
   await page.keyboard.press('Escape');
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await page.keyboard.press('j');

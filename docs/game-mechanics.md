@@ -97,11 +97,11 @@ Final resolve damage = raw damage
                      × camp craft protection (1 before crafts)
 ```
 
-The three camp/formation bonuses together leave 28% of raw damage. Full Guardian research multiplies this by 0.648, leaving 18.144% before further camp crafts. Crossing a downward 20-point damage band removes one person and one horse per damage event, even if that event crosses several bands. Repairs can restore resolve, but do not resurrect casualties.
+The three camp/formation bonuses together leave 28% of raw damage. Two Guardian foundation ranks and Hold the passage multiply this by 0.648, leaving 18.144% before further camp crafts. Crossing a downward 20-point damage band removes one person and one horse per damage event, even if that event crosses several bands. Repairs can restore resolve, but do not resurrect casualties.
 
 ## 3. Spirit-stone / patron tech tree
 
-Collectible **spirit shards** carry XP; **Spirit** is a separate camp currency earned automatically on kills. Research is expedition progression, with **eight patrons, 32 technologies, and 40 ranks**. Patrons can be mixed freely. Their combat abilities are original game mechanics; see [the complete patron tree](patron-tech-tree.md) for every technology, stable ID, exact modifier, and interaction.
+Collectible **spirit shards** carry XP; **Spirit** is a separate camp currency earned automatically on kills. Research is expedition progression, with **eight patrons, 42 technologies, and 50 authored ranks (41 learnable ranks after choosing one capstone per patron)**. Patrons can be mixed freely. Their combat abilities are original game mechanics; see [the complete patron tree](patron-tech-tree.md) for every technology, stable ID, exact modifier, and interaction.
 
 ```mermaid
 flowchart TD
@@ -110,15 +110,17 @@ flowchart TD
     Shard --> Collect[Ride close enough to collect]
     Collect --> Level[Fill XP threshold and gain a level]
     Level --> Points[Bank 1 knowledge point without pausing combat]
-    Points --> Foundation[Choose any patron: foundation ranks 1 and 2]
+    Points --> Foundation[Choose any patron: foundation rank 1]
     Foundation --> A[Practice A: 1 point]
     Foundation --> B[Practice B: 1 point]
-    A --> Capstone[Capstone: 1 point, requires both practices]
-    B --> Capstone
+    A --> CapstoneA[Focused capstone A: 2 points, foundation rank 2]
+    B --> CapstoneB[Alternative capstone B: 2 points, foundation rank 2]
     Spirit --> Sanctuary[Spirit sanctuary and its chosen specialization]
 ```
 
-The XP threshold from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and so on. Excess XP carries over; a pickup can earn several levels and every earned point remains banked. Level-ups never open a popup or pause combat. Open the **Patron tech tree** with **T**, controller **LB**, the HUD, Pause, or the chronicle’s Traditions tab. Each rank costs **one knowledge point**. Both practices require foundation rank 2; the capstone requires both practices. A complete patron costs five points. There are no patron exclusions, random offers, or rerolls. Repeated percentage modifiers multiply except Lus's two additive slow ranks.
+The XP threshold from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and so on. Excess XP carries over; a pickup can earn several levels and every earned point remains banked. Level-ups never open a popup or pause combat. Open the **Patron tech tree** with **T**, controller **LB**, the HUD, Pause, or the chronicle’s Traditions tab. Foundations and practices cost **one knowledge point per rank**. Practices unlock after foundation rank 1. A capstone requires foundation rank 2 and one named practice, and costs **two points**. Choose one capstone per patron; mix practices and patrons freely. A focused route costs five points. There are no random offers or rerolls. Archery has three capstones: precision, piercing, and wide volleys. Repeated percentage modifiers multiply except Lus's two additive slow ranks.
+
+The table below outlines one capstone route per patron; the complete patron catalogue includes every alternative.
 
 | Patron                          | Playstyle                | Foundation → practices → capstone                                                                                    |
 | ------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
@@ -131,15 +133,15 @@ The XP threshold from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and 
 | **Sülde**                       | Army leadership          | Two accompanying riders → rider damage + caravan mobility → two more riders and resolve on kills.                    |
 | **Guardian of Burkhan Khaldun** | Defensive construction   | Material discounts and clan protection → faster Wagon circle + independent camp ward → further clan protection.      |
 
-Search and playstyle filters derive from the authored patrons; search ignores diacritics. The paused tree shows foundation/practice/capstone roles, rank progress, prerequisites, and learned/available/locked states. Purchases keep it open and preserve focus and scroll. Escape, T, controller B/LB, or the return button closes it with points unspent. Opening from Pause or the chronicle returns to that parent screen. Stored Spirit remains a separate camp currency.
+The tree opens one connected patron graph with compact navigation, a comparison overview, and an inspector. Search ignores diacritics. Click a node to inspect before/after values, prerequisite routes, costs, and exclusive alternatives; use the explicit Learn button to purchase. Text distinguishes learned, available, prerequisites missing, resources missing, and excluded states. Purchases keep the tree open and preserve focus and scroll. Combinations show existing interactions and link between patron and camp requirements while keeping the world paused. Escape, T, controller B/LB, or the return button closes it with points unspent. Opening from Pause or the chronicle returns to that parent screen. Stored Spirit remains a separate camp currency.
 
-Once all 40 ranks are mastered, subsequent points grant **20 food and 15 materials each**, and a living Khan is fully healed when those points are converted. Conversion cannot revive a fallen Khan during succession. Blocked but unlearned technologies do not count as mastery.
+Once all 41 reachable ranks are mastered (excluding capstone alternatives), subsequent points grant **20 food and 15 materials each**, and a living Khan is fully healed when those points are converted. Conversion cannot revive a fallen Khan during succession. Blocked but unlearned technologies do not count as mastery.
 
 Each enemy drops its defined XP independent of scaled health. Shards begin following inside the attraction radius and collect within 18 world units. Once attracted, they keep following. At the 500-shard pool limit, new XP merges into an existing active shard. Uncollected XP travels to the next camp on arrival.
 
 ## 4. Camp development and upgrade tree
 
-Press **B** to open the paused camp model. Select one of **eight building sites** in the painted landscape to inspect its developments. The catalog contains **37 developments**, or 45 nodes including establishment, with the selected building’s nodes shown in the side inspector. Search names and effects to highlight matching sites; costs, tiers, and local prerequisites derive from content definitions. Ghosted sites become solid on establishment, learned crafts add supplies, and household growth adds shelters. Ambient smoke, fire, grass, and banners respect reduced motion; simulation and character poses stay frozen. The five original branches have an exclusive specialization pair, a shared craft, and a deeper development for each specialization. The three new branches have complementary crafts with two-parent final upgrades. At most 27 developments can be learned together, because alternatives and their descendants are excluded.
+Press **B** to open the paused camp model. Select one of **eight building sites** in the painted landscape to inspect its developments. The catalog contains **37 developments**, or 45 nodes including establishment, with the selected building’s connected graph and persistent purchase inspector. Expand developments for more room, compare exclusive alternatives side by side, and follow combination requirements across both trees. Search names and effects to highlight matching sites; costs, tiers, and local prerequisites derive from content definitions. Ghosted sites become solid on establishment, learned crafts add supplies, specializations add painted props and craft emblems, and household growth adds shelters. Ambient smoke, fire, grass, and banners respect reduced motion; simulation and character poses stay frozen. The five original branches have an exclusive specialization pair, a shared craft, and a deeper development for each specialization. The three new branches have complementary crafts with two-parent final upgrades. At most 27 developments can be learned together, because alternatives and their descendants are excluded.
 
 Purchases are immediate and charged once. Every acquired building and effect travels with the clan. Construction is unavailable while packed. There is no fixed two-level cap, duplicate establishment, respecialization, or building upkeep. Buildings reserve workers on establishment; developments need no extra workers. Existing buildings keep working after population losses. The starting eight people cannot staff all eight branches: all bases need **13 workers**, and Hearthkeepers alone can raise population to fourteen.
 

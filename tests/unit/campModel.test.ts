@@ -10,7 +10,7 @@ describe('camp miniature and development inspector', () => {
     const run = createRun();
     run.phase = 'building';
     const before = structuredClone(run);
-    const html = buildingMenu(run, view, 'archery');
+    const html = buildingMenu(run, { ...view, node: 'archery-fire-arrows' }, 'archery');
     expect(html.match(/data-camp-site=/g)).toHaveLength(8);
     expect(html.match(/data-tree-branch=/g)).toHaveLength(1);
     expect(html).toContain('data-tree-branch="archery"');
@@ -25,7 +25,7 @@ describe('camp miniature and development inspector', () => {
     run.clan.spirit = 100;
     expect(buildStructure(run, 'archery')).toBe(true);
     expect(buildStructure(run, 'archery', 'fire-arrows')).toBe(true);
-    const html = buildingMenu(run, view, 'archery');
+    const html = buildingMenu(run, { ...view, node: 'archery-veteran-riders' }, 'archery');
     expect(html).toMatch(/data-camp-site="archery"[^>]*data-established="true"[^>]*data-level="1"/);
     expect(html).toMatch(/data-node="archery-veteran-riders"[^>]*data-status="excluded"/);
     expect(html).toContain('Another path chosen');
@@ -44,5 +44,17 @@ describe('camp miniature and development inspector', () => {
     expect(missing).not.toContain('data-node=');
     expect(missing).toContain('No matching sites');
     expect(buildingMenu(run, view, 'retired-id')).toContain('data-tree-branch="ger"');
+  });
+  it('compares exclusive alternatives and their closed descendants before purchase', () => {
+    const run = createRun();
+    const html = buildingMenu(run, { ...view, node: 'ger-hearthkeepers', expanded: true }, 'ger');
+    expect(html).toContain('choice-comparison');
+    expect(html).toContain('Closes: Refugee beacons, Household apprentices');
+    expect(html).toContain('camp-building-nav');
+    expect(html.match(/data-camp-site=/g)).toHaveLength(8);
+    run.phase = 'building';
+    run.clan.materials = 100;
+    buildStructure(run, 'ger', 'hearthkeepers');
+    expect(buildingMenu(run, view, 'ger')).toContain('data-camp-craft="hearthkeepers"');
   });
 });

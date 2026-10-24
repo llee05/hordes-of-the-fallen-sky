@@ -1,3 +1,4 @@
+import { buyNode } from '../e2e/helpers';
 import { expect, test } from '@playwright/test';
 import { DEVELOPER_LEVELS } from '../../src/game/dev/levels';
 
@@ -157,7 +158,7 @@ test('switching checkpoints clears old actors, hazards, boss state, succession, 
   });
   await expect(page.locator('#boss-bar')).toBeHidden();
   await page.keyboard.press('t');
-  await page.locator('[data-research="power"][data-rank="1"]').click();
+  await buyNode(page, 'power');
   await expect(page.locator('#research-points')).toHaveText('39');
 });
 

@@ -860,3 +860,236 @@
     padding-block: 8px;
   }
 }
+
+/* Development workspace keeps resources and the explicit purchase action in view. */
+.camp-estate-body {
+  grid-template-columns: minmax(220px, 0.6fr) minmax(0, 1.4fr);
+}
+.camp-inspector-tools {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  padding: 12px;
+  flex-wrap: wrap;
+}
+.camp-inspector-tools .tree-search-label {
+  flex: 1;
+  min-width: 140px;
+}
+.camp-tree-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.85fr);
+  min-height: 0;
+  flex: 1;
+}
+.camp-development-scroll {
+  padding: 18px 12px;
+  min-width: 0;
+}
+.camp-inspector .tree-node {
+  gap: 3px 5px;
+}
+.camp-inspector .tree-node strong {
+  font-size: 13px;
+}
+.camp-economy {
+  margin-bottom: 18px;
+  font-size: 11px;
+  color: #4f5f4f;
+}
+.camp-economy summary {
+  cursor: pointer;
+  padding: 8px;
+  border: 1px solid #bca477;
+  background: #eee0c0;
+}
+.camp-economy .economy-summary {
+  padding: 10px 4px;
+}
+.camp-estate[data-expanded='true'] .camp-estate-body {
+  grid-template-columns: 190px minmax(0, 1fr);
+}
+.camp-building-nav {
+  min-height: 0;
+}
+.camp-nav-site {
+  height: 118px;
+  position: relative;
+}
+.camp-building-nav .camp-site {
+  left: 50%;
+  top: 48%;
+  width: 150px;
+  height: 92px;
+  transform: translate(-50%, -50%);
+}
+.camp-building-nav .camp-site-miniature {
+  transform: scale(0.65);
+  transform-origin: center;
+}
+.camp-building-nav .camp-site-label {
+  min-width: 145px;
+  bottom: -2px;
+}
+.camp-building-nav .camp-site-label strong {
+  font-size: 13px;
+}
+.camp-building-nav .camp-site-ground {
+  opacity: 0.25;
+}
+.camp-recipes {
+  min-height: 0;
+}
+.camp-craft-emblem {
+  position: absolute;
+  left: 4px;
+  top: 3px;
+  width: 27px;
+  height: 30px;
+  padding: 3px;
+  color: #eccd88;
+  border: 1px solid #c09b59;
+  background: #283d49;
+  box-shadow: 0 2px 4px #172c3255;
+}
+.camp-craft-emblem .clan-mark {
+  width: 100%;
+  height: 100%;
+}
+.camp-craft-banner {
+  width: 42px;
+  height: 72px;
+  right: 2px;
+  top: -22px;
+}
+.camp-craft-horse {
+  width: 55px;
+  height: 58px;
+  right: -16px;
+  bottom: 12px;
+}
+.camp-craft-cart {
+  width: 52px;
+  height: 55px;
+  left: -18px;
+  bottom: 0;
+}
+.camp-craft-ger {
+  width: 54px;
+  height: 58px;
+  right: -18px;
+  top: -16px;
+}
+.camp-craft-pillar {
+  width: 34px;
+  height: 48px;
+  right: -8px;
+  bottom: 6px;
+}
+@media (max-width: 1100px) {
+  .camp-estate-body {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+  .camp-model .camp-site-miniature {
+    transform: scale(0.6);
+    transform-origin: center;
+  }
+  .camp-model .camp-site-label strong {
+    font-size: 11px;
+  }
+  .camp-model .camp-site-label small {
+    font-size: 8px;
+  }
+  .camp-model .camp-diorama {
+    top: 70px;
+    bottom: 40px;
+  }
+  .camp-model .camp-site {
+    position: relative;
+    left: 50%;
+    top: auto;
+    height: 110px;
+    width: 150px;
+    margin-top: 0;
+  }
+  .camp-model .camp-diorama {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .camp-model .camp-scenery {
+    display: none;
+  }
+  .camp-model-caption {
+    padding: 12px;
+  }
+  .camp-tree-workspace {
+    grid-template-columns: minmax(0, 1fr) 270px;
+  }
+}
+@media (max-width: 780px) {
+  .camp-estate-body,
+  .camp-estate[data-expanded='true'] .camp-estate-body {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+  }
+  .camp-model {
+    min-height: 290px;
+    flex-shrink: 0;
+  }
+  .camp-model .camp-site {
+    position: absolute;
+    left: var(--site-x);
+    top: var(--site-y);
+    width: 19%;
+    height: 21%;
+  }
+  .camp-model .camp-diorama {
+    inset: 30px 0 20px;
+    overflow: hidden;
+  }
+  .camp-model .camp-site-label {
+    min-width: 90px;
+  }
+  .camp-model .camp-site-miniature {
+    transform: scale(0.85);
+  }
+  .camp-model-caption {
+    display: none;
+  }
+  .camp-inspector {
+    overflow: visible;
+    min-height: auto;
+    flex-shrink: 0;
+  }
+  .camp-inspector-tools {
+    padding: 10px;
+  }
+  .camp-tree-workspace {
+    display: block;
+  }
+  .camp-tree-workspace .node-inspector {
+    min-height: 420px;
+    border-top: 2px solid #a58b61;
+    border-left: 0;
+  }
+  .camp-tree-workspace .node-inspector-scroll,
+  .camp-development-scroll {
+    overflow: visible;
+  }
+  .camp-building-nav {
+    display: flex;
+    flex-shrink: 0;
+    overflow-x: auto;
+    height: 125px;
+  }
+  .camp-nav-site {
+    flex: 0 0 160px;
+  }
+  .camp-estate .node-purchase {
+    bottom: 0;
+  }
+  .camp-recipes {
+    overflow: visible;
+  }
+}

@@ -1,3 +1,5 @@
+import { researchPreview } from '../game/state/progressionPreview';
+import { synergyContent } from './synergyContent';
 import { PATRONS } from '../game/data/patrons';
 import { UPGRADES } from '../game/data/upgrades';
 import { upgradeBlocker, upgradeCost, upgradeExcluded } from '../game/state/run';
@@ -8,7 +10,16 @@ import { progressionMenu, type TreeBranch, type TreeViewState } from './progress
 export function researchBranches(run: RunState): TreeBranch[] {
   return PATRONS.map((patron) => {
     const technologies = UPGRADES.filter((upgrade) => upgrade.patron === patron.id);
-    const total = technologies.reduce((sum, upgrade) => sum + upgrade.maxStacks, 0);
+    const choiceRanks = new Map<string, number>();
+    const total =
+      technologies.reduce((sum, upgrade) => {
+        if (!upgrade.exclusiveGroup) return sum + upgrade.maxStacks;
+        choiceRanks.set(
+          upgrade.exclusiveGroup,
+          Math.max(choiceRanks.get(upgrade.exclusiveGroup) ?? 0, upgrade.maxStacks),
+        );
+        return sum;
+      }, 0) + [...choiceRanks.values()].reduce((sum, count) => sum + count, 0);
     const learned = technologies.reduce((sum, upgrade) => sum + (run.upgrades[upgrade.id] ?? 0), 0);
     return {
       id: patron.id,
@@ -34,9 +45,33 @@ export function researchBranches(run: RunState): TreeBranch[] {
             ? 'learned'
             : upgradeExcluded(run, upgrade)
               ? 'excluded'
-              : blocker
+              : (upgrade.requires ?? []).some((r) => (run.upgrades[r.id] ?? 0) < r.rank)
                 ? 'locked'
-                : 'available',
+                : run.pendingUpgrades < upgradeCost(upgrade)
+                  ? 'unaffordable'
+                  : 'available',
+          ranks: { current: rank, max: upgrade.maxStacks },
+          icon: upgrade.icon,
+          choiceGroup: upgrade.exclusiveGroup,
+          price: { knowledge: upgradeCost(upgrade) },
+          preview: researchPreview(run, upgrade),
+          prerequisites: (upgrade.requires ?? []).map((r) => ({
+            id: r.id,
+            title: UPGRADES.find((u) => u.id === r.id)?.title ?? r.id,
+            rank: r.rank,
+            current: run.upgrades[r.id] ?? 0,
+          })),
+          excludes: upgrade.exclusiveGroup
+            ? UPGRADES.filter(
+                (other) =>
+                  other.id !== upgrade.id &&
+                  upgradeExcluded(
+                    { ...run, upgrades: { ...run.upgrades, [upgrade.id]: Math.max(1, rank) } },
+                    other,
+                  ) &&
+                  !upgradeExcluded(run, other),
+              ).map((other) => ({ id: other.id, title: other.title }))
+            : [],
           cost: mastered
             ? 'Mastered'
             : `${upgradeCost(upgrade)} knowledge point${upgradeCost(upgrade) === 1 ? '' : 's'}`,
@@ -77,6 +112,7 @@ export function researchMenu(run: RunState, view: TreeViewState): string {
       { label: 'Clan level', value: String(run.level) },
     ],
     branches: researchBranches(run),
+    recipes: synergyContent(run),
     notice:
       'Unspent points stay with the clan. Stored Spirit funds camp construction. These traditions begin afresh with each expedition.',
   });

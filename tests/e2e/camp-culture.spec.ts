@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { buyNode, openTitle, startExpedition } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await openTitle(page);
@@ -36,14 +36,14 @@ test('eight camp branches expose shared crafts and multi-parent mastery on narro
   await page.locator('[data-camp-site="felt"]').click();
   await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
   const before = await page.evaluate(() => (window as any).__gloam.scene.run.clan.materials);
-  await page.locator('[data-node="felt-base"]').click();
+  await buyNode(page, 'felt-base');
   const mastery = page.locator('[data-node="felt-master-feltmakers"]');
-  await page.locator('[data-node="felt-wool-sorting"]').click();
+  await buyNode(page, 'felt-wool-sorting');
   await expect(mastery).toHaveAttribute('data-status', 'locked');
-  await page.locator('[data-node="felt-weatherproof-covers"]').click();
+  await buyNode(page, 'felt-weatherproof-covers');
   await expect(mastery).toHaveAttribute('data-status', 'available');
-  await mastery.click();
-  await page.locator('[data-node="felt-pack-frames"]').click();
+  await buyNode(page, 'felt-master-feltmakers');
+  await buyNode(page, 'felt-pack-frames');
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.materials)).toBe(
     before - 144,
   );
@@ -63,7 +63,7 @@ test('specialization descendants are excluded while shared household crafts stay
   page,
 }) => {
   await page.locator('[data-camp-site="ger"]').click();
-  await page.locator('[data-node="ger-hearthkeepers"]').click();
+  await buyNode(page, 'ger-hearthkeepers');
   await expect(page.locator('[data-node="ger-household-apprentices"]')).toHaveAttribute(
     'data-status',
     'excluded',
@@ -72,8 +72,8 @@ test('specialization descendants are excluded while shared household crafts stay
     'data-status',
     'available',
   );
-  await page.locator('[data-node="ger-felt-linings"]').click();
-  await page.locator('[data-node="ger-hospitality-circle"]').click();
+  await buyNode(page, 'ger-felt-linings');
+  await buyNode(page, 'ger-hospitality-circle');
   await expect(page.locator('[data-node="ger-felt-linings"]')).toHaveAttribute(
     'data-status',
     'learned',
@@ -94,7 +94,7 @@ test('provisioning and relay upgrades follow the caravan and grant their arrival
     'relay-horse-relays',
   ]) {
     if (id.endsWith('-base')) await page.locator(`[data-camp-site="${id.split('-')[0]}"]`).click();
-    await page.locator(`[data-node="${id}"]`).click();
+    await buyNode(page, id);
   }
   const before = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;

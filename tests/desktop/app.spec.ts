@@ -1,3 +1,4 @@
+import { buyNode } from '../e2e/helpers';
 import { _electron as electron, expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -25,7 +26,7 @@ test('desktop migration offers named destinations and frozen, responsive travel 
     await page.getByRole('button', { name: /Skip intro/ }).click();
     await page.keyboard.press('b');
     await page.locator('[data-camp-site="archery"]').click();
-    await page.locator('[data-node="archery-base"]').click();
+    await buyNode(page, 'archery-base');
     await page.keyboard.press('Escape');
     await expect(page.locator('#migrate')).toBeEnabled({ timeout: 75000 });
     await page.keyboard.press('m');
@@ -192,7 +193,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect(page.locator('#field-guide')).toBeHidden();
     await page.keyboard.press('t');
     await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
-    await expect(page.locator('[data-tree-branch]')).toHaveCount(8);
+    await expect(page.locator('[data-tree-branch-select]')).toHaveCount(8);
     await expect(page.locator('#game-hud')).toHaveAttribute('inert', '');
     await page.screenshot({ path: 'test-results/native-tech-tree.png' });
     await page.keyboard.press('Escape');
@@ -200,15 +201,14 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect(page.getByRole('heading', { name: 'Build a people.' })).toBeVisible();
     await expect(page.locator('[data-camp-site]')).toHaveCount(8);
     await page.locator('[data-camp-site="herd"]').click();
+    await page.locator('.camp-economy summary').click();
     await expect(page.getByRole('region', { name: 'Camp economy' })).toContainText('Food net');
-    await expect(page.locator('[data-node="herd-base"] .tree-node-forecast')).toContainText(
-      'Food net',
-    );
+    await expect(page.locator('.node-inspector .tree-node-forecast')).toContainText('Food net');
     await page.screenshot({ path: 'test-results/native-economy-camp.png' });
     await page.locator('[data-camp-site="archery"]').click();
-    await page.locator('[data-node="archery-base"]').click();
+    await buyNode(page, 'archery-base');
     await page.locator('[data-camp-site="felt"]').click();
-    await page.locator('[data-node="felt-base"]').click();
+    await buyNode(page, 'felt-base');
     await expect(page.locator('[data-node="felt-base"]')).toHaveAttribute('data-status', 'learned');
     await page.screenshot({ path: 'test-results/native-camp-tree.png' });
     await expect(page.locator('#riders')).toHaveText('4');

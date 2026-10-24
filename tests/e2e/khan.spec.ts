@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { buyNode, openTitle, startExpedition } from './helpers';
 
 async function fall(page: Page) {
   await page.evaluate(() => {
@@ -137,7 +137,7 @@ test('pause and research freeze succession, and healing research cannot bypass t
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
   await page.getByRole('button', { name: 'Patron tech tree', exact: true }).click();
-  await page.locator('[data-node="vitality"]').click();
+  await buyNode(page, 'vitality');
   const state = await page.evaluate(() => (window as any).__gloam.scene.run);
   expect(state.health).toBe(0);
   expect(state.stats.maxHealth).toBe(120);

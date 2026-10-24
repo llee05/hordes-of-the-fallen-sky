@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition, tapController } from './helpers';
+import { buyNode, inspectNode, openTitle, startExpedition, tapController } from './helpers';
 
-test('banked research pauses only on opening the tree, spends exact ranks, and keeps unspent points', async ({
+test('inspection never spends points; explicit purchases use exact ranks and current-build previews', async ({
   page,
 }) => {
   await openTitle(page);
@@ -10,21 +10,22 @@ test('banked research pauses only on opening the tree, spends exact ranks, and k
     (window as any).__gloam.scene.run.pendingUpgrades = 3;
   });
   await page.keyboard.press('t');
-  await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
-  await expect(page.locator('[data-tree-branch]')).toHaveCount(8);
+  await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
+  await expect(page.locator('[data-tree-branch-select]')).toHaveCount(8);
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await page.waitForTimeout(250);
+  await inspectNode(page, 'power');
+  await expect(page.locator('.node-preview')).toContainText('Shared attack damage');
+  await expect(page.locator('.node-preview')).toContainText('20');
+  await page.waitForTimeout(200);
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
-  const first = page.locator('[data-node="power"]');
-  await expect(page.locator('[data-node="haste"]')).toHaveAttribute('aria-disabled', 'true');
-  await first.click();
-  await expect(first).toBeFocused();
-  await expect(first).toContainText('1 / 2 ranks learned');
-  await expect(first).toHaveAccessibleName(/foundation 1 \/ 2 ranks learned/);
-  await expect(page.locator('[data-node="haste"]')).toHaveAttribute('data-status', 'locked');
+  await buyNode(page, 'power');
+  await expect(page.locator('.node-rank-summary')).toHaveText('Rank 1 / 2');
+  await expect(page.locator('[data-node="haste"]')).toHaveAttribute('data-status', 'available');
+  await expect(page.locator('.tree-purchase')).toBeFocused();
+  await expect(page.locator('.node-preview')).toContainText('25');
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.research('power', 1); // A replayed action cannot buy another rank.
+    scene.research('power', 1);
     scene.research('power', 8);
     scene.research('missing', 1);
   });
@@ -36,16 +37,15 @@ test('banked research pauses only on opening the tree, spends exact ranks, and k
   ).toEqual({ points: 2, damage: 20 });
   await page.screenshot({ path: 'test-results/tradition-tech-tree.png' });
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#research-points')).toHaveText('2');
   await page.getByRole('button', { name: /Open patron tech tree/ }).click();
-  await expect(page.locator('[data-node="power"]')).toContainText('1 / 2 ranks learned');
+  await expect(page.locator('.node-rank-summary')).toHaveText('Rank 1 / 2');
   await page.keyboard.press('Escape');
   await page.evaluate(() => (window as any).__gloam.scene.research('power', 2));
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.upgrades.power)).toBe(1);
 });
 
-test('the tree is browsable without points, filters and searches safely, and returns to its paused parent', async ({
+test('overview, accent-insensitive search and graph navigation work without points and preserve paused parents', async ({
   page,
 }) => {
   await openTitle(page);
@@ -53,8 +53,14 @@ test('the tree is browsable without points, filters and searches safely, and ret
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Patron tech tree', exact: true }).click();
   await expect(page.locator('.tree-node[data-status="available"]')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Hunting', exact: true }).click();
-  await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Patron overview' }).click();
+  await expect(page.locator('.patron-overview-card')).toHaveCount(8);
+  await page.locator('[data-tree-branch-select="borte-chino"]').first().click();
+  await inspectNode(page, 'wolf-trail');
+  await expect(page.locator('.tree-purchase')).toBeDisabled();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.locator('[data-node="culling-bite"]')).toBeFocused();
+  await expect(page.locator('.node-route')).toContainText('2 knowledge points');
   const search = page.getByRole('searchbox', { name: 'Find a branch' });
   await search.pressSequentially('borte chino');
   await expect(search).toBeFocused();
@@ -78,7 +84,7 @@ test('the tree is browsable without points, filters and searches safely, and ret
   );
 });
 
-test('tree panels fit desktop, Steam Deck, and narrow screens and preserve scroll after research', async ({
+test('panels fit desktop, Steam Deck and narrow screens and preserve graph scroll after research', async ({
   page,
 }) => {
   await openTitle(page);
@@ -100,24 +106,17 @@ test('tree panels fit desktop, Steam Deck, and narrow screens and preserve scrol
     expect(panel.x + panel.width).toBeLessThanOrEqual(viewport.width + 1);
     expect(panel.y + panel.height).toBeLessThanOrEqual(viewport.height + 1);
     expect(
-      await page
-        .locator('.tree-scroll')
-        .evaluate((element) => element.scrollWidth <= element.clientWidth + 1),
+      await page.locator('.tree-main').evaluate((e) => e.scrollWidth <= e.clientWidth + 1),
     ).toBe(true);
   }
-  const vitality = page.locator('[data-node="vitality"]');
-  await vitality.scrollIntoViewIfNeeded();
-  const scroll = await page.locator('.tree-scroll').evaluate((element) => element.scrollTop);
-  await vitality.click();
-  await expect(vitality).toBeFocused();
-  expect(await page.locator('.tree-scroll').evaluate((element) => element.scrollTop)).toBeCloseTo(
-    scroll,
-    0,
-  );
+  await inspectNode(page, 'vitality');
+  const before = await page.locator('.tree-graph-viewport').evaluate((e) => e.scrollLeft);
+  await page.locator('.tree-purchase').click();
+  expect(await page.locator('.tree-graph-viewport').evaluate((e) => e.scrollLeft)).toBe(before);
   await page.screenshot({ path: 'test-results/mobile-tech-tree.png' });
 });
 
-test('controller opens the tree, learns a chosen rank once, and returns without spending other points', async ({
+test('controller confirms inspection, then purchases explicitly and retains unspent points', async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -137,10 +136,13 @@ test('controller opens the tree, learns a chosen rank once, and returns without 
   });
   await tapController(page, 4);
   await expect(page.locator('[data-node="wolf-trail"]')).toBeFocused();
+  await tapController(page, 0);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades)).toBe(2);
+  await page.locator('.tree-purchase').focus();
   await page.evaluate(() => {
     (window as any).testController.buttons[0].pressed = true;
   });
-  await expect(page.locator('[data-node="wolf-trail"]')).toContainText('1 / 2 ranks learned');
+  await expect(page.locator('.node-rank-summary')).toHaveText('Rank 1 / 2');
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades)).toBe(1);
   await page.evaluate(() => {
@@ -148,6 +150,32 @@ test('controller opens the tree, learns a chosen rank once, and returns without 
   });
   await tapController(page, 1);
   await expect(page.getByRole('dialog')).toBeHidden();
-  await tapController(page, 4);
-  await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
+});
+
+test('combination links cross camp and patron trees without resuming simulation, and Back restores the source', async ({
+  page,
+}) => {
+  await openTitle(page);
+  await startExpedition(page);
+  await page.keyboard.press('t');
+  await page.getByRole('button', { name: 'Combinations', exact: true }).click();
+  await expect(page.locator('[data-synergy]')).toHaveCount(5);
+  await expect(page.locator('[data-synergy="burning-tempest"]')).toContainText('Remaining route:');
+  const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run.clan));
+  await page
+    .locator('[data-synergy="burning-tempest"] [data-target-node="archery-fire-arrows"]')
+    .click();
+  await expect(page.locator('.node-inspector h3')).toHaveText('Fire arrows');
+  await expect(page.locator('.camp-estate')).toHaveAttribute('data-expanded', 'true');
+  await expect(page.locator('.node-route')).toContainText('60 materials');
+  expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
+    true,
+  );
+  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run.clan))).toBe(
+    before,
+  );
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-synergy]')).toHaveCount(5);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toBeHidden();
 });

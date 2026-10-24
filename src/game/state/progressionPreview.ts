@@ -25,6 +25,10 @@ function metrics(r: RunState): Metric[] {
   const rates = economyForecast(r),
     c = r.clan.campEffects;
   return [
+    { label: 'Clan population', value: r.clan.population },
+    { label: 'Herd', value: r.clan.herd },
+    { label: 'Food now', value: r.clan.food },
+    { label: 'Clan resolve now', value: r.clan.integrity },
     { label: 'Shared attack damage', value: r.stats.damage },
     {
       label: 'Damage above half momentum',

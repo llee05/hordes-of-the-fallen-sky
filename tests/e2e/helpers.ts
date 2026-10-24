@@ -47,3 +47,19 @@ export async function tapController(
     )
     .toBe(true);
 }
+
+/** Browse the authored branch, then inspect a node without spending anything. */
+export async function inspectNode(page: Page, id: string): Promise<void> {
+  if (!(await page.locator(`[data-node="${id}"]`).count())) {
+    const patron = page.locator(`[data-tree-branch-select][data-nodes~="${id}"]`);
+    if (await patron.count()) await patron.click();
+    else await page.locator(`[data-camp-site="${id.split('-')[0]}"]`).click();
+  }
+  await page.locator(`[data-node="${id}"]`).click();
+}
+
+/** All purchases use the explicit inspector button, including repeated ranks. */
+export async function buyNode(page: Page, id: string): Promise<void> {
+  await inspectNode(page, id);
+  await page.locator('.tree-purchase').click();
+}
