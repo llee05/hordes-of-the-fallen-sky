@@ -50,6 +50,45 @@ test('desktop developer selector fits native windows and launches clean test exp
     await page.locator('[data-developer-level="destination:3:orkhon-valley"]').click();
     await expect(page.locator('#location')).toHaveText('ORKHON VALLEY');
     await expect(page.locator('#developer-run')).toBeVisible();
+    await page.keyboard.press('F10');
+    const input = page.getByRole('textbox', { name: 'Command', exact: true });
+    await expect(input).toBeFocused();
+    await page.keyboard.type('god on');
+    await expect(input).toHaveValue('god on');
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button', { name: 'Khan invincibility: On' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    for (const size of [
+      { width: 1280, height: 800 },
+      { width: 960, height: 600 },
+    ]) {
+      await app.evaluate(
+        ({ BrowserWindow }, size) =>
+          BrowserWindow.getAllWindows()[0]!.setContentSize(size.width, size.height),
+        size,
+      );
+      await expect.poll(() => page.evaluate(() => innerWidth)).toBe(size.width);
+      await input.scrollIntoViewIfNeeded();
+      const bounds = (await input.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(size.width);
+      const footer = (await page.locator('.panel-footer').boundingBox())!;
+      expect(bounds.y + bounds.height).toBeLessThan(footer.y);
+      await page.screenshot({ path: `test-results/native-developer-console-${size.width}.png` });
+    }
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#developer-run')).toContainText('INVINCIBLE');
+    expect(
+      await page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        scene.invulnerable = 0;
+        const before = scene.run.health;
+        scene.takeDamage(100000);
+        return scene.run.health === before;
+      }),
+    ).toBe(true);
     await page.keyboard.press('F8');
     const frozen = await page.locator('#timer').textContent();
     await page.waitForTimeout(200);

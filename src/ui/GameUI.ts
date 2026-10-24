@@ -57,6 +57,9 @@ export class GameUI {
   private guideId = '';
   private lastMessage = '';
   private lastReaction = 0;
+  private developerRevision = -1;
+  private commandHistoryOffset = 0;
+  private commandHistoryDraft = '';
   private toastTimer?: number;
 
   constructor(
@@ -138,10 +141,31 @@ export class GameUI {
     this.overlay.addEventListener('keydown', (event) => this.handleMenuKey(event));
     this.overlay.addEventListener('input', (event) => {
       const input = event.target as HTMLInputElement;
+      if (import.meta.env.DEV && input.matches('[data-developer-command-input]')) {
+        this.commandHistoryOffset = 0;
+        return;
+      }
       if (!input.matches('[data-tree-search]') || !this.lastSnapshot) return;
       this.treeView().query = input.value;
       this.renderPhase(this.lastSnapshot);
     });
+    if (import.meta.env.DEV)
+      this.overlay.addEventListener('submit', (event) => {
+        if (
+          !(event.target instanceof HTMLFormElement) ||
+          !event.target.matches('[data-developer-command-form]')
+        )
+          return;
+        event.preventDefault();
+        const input = event.target.querySelector<HTMLInputElement>(
+          '[data-developer-command-input]',
+        )!;
+        const command = input.value;
+        input.value = '';
+        this.commandHistoryOffset = 0;
+        this.scene.executeDeveloperCommand(command);
+        input.focus({ preventScroll: true });
+      });
     const updateFullscreen = (fullscreen: boolean): void => {
       this.fullscreen = fullscreen;
       this.updateSettingsControls();
@@ -186,7 +210,14 @@ export class GameUI {
 
   private update(snapshot: HudSnapshot): void {
     this.lastSnapshot = snapshot;
-    if (import.meta.env.DEV) this.get('developer-run').hidden = !snapshot.developerRun;
+    if (import.meta.env.DEV) {
+      this.get('developer-run').hidden = !snapshot.developerRun;
+      this.text(
+        'developer-run',
+        snapshot.developerConsole?.invincible ? 'INVINCIBLE · F10' : 'DEVELOPER RUN · F8',
+      );
+      this.updateDeveloperConsole(snapshot);
+    }
     this.text('zoom-level', `${Math.round(snapshot.zoom * 100)}%`);
     (this.get('zoom-out') as HTMLButtonElement).disabled =
       snapshot.run.phase !== 'playing' || snapshot.zoom <= snapshot.minZoom + 0.0001;
@@ -363,6 +394,35 @@ export class GameUI {
     );
   }
 
+  private updateDeveloperConsole(snapshot: HudSnapshot): void {
+    if (!import.meta.env.DEV) return;
+    const tools = snapshot.developerConsole;
+    const output = this.overlay.querySelector<HTMLElement>('[data-developer-output]');
+    if (!tools || !output || tools.revision === this.developerRevision) return;
+    this.developerRevision = tools.revision;
+    const ids = new Set(tools.log.map((entry) => String(entry.id)));
+    for (const child of [...output.children])
+      if (!ids.has((child as HTMLElement).dataset.consoleEntry!)) child.remove();
+    const existing = new Set(
+      [...output.children].map((child) => (child as HTMLElement).dataset.consoleEntry),
+    );
+    for (const entry of tools.log) {
+      if (existing.has(String(entry.id))) continue;
+      const line = document.createElement('p');
+      line.dataset.consoleEntry = String(entry.id);
+      line.dataset.kind = entry.kind;
+      line.textContent = entry.kind === 'command' ? `> ${entry.text}` : entry.text;
+      output.append(line);
+    }
+    output.scrollTop = output.scrollHeight;
+    const toggle = this.overlay.querySelector<HTMLButtonElement>(
+      '[data-action="developer-invincible"]',
+    )!;
+    toggle.textContent = `Khan invincibility: ${tools.invincible ? 'On' : 'Off'}`;
+    toggle.setAttribute('aria-pressed', String(tools.invincible));
+    toggle.disabled = !tools.canCheat;
+  }
+
   destroy(): void {
     window.clearTimeout(this.toastTimer);
     this.motion.destroy();
@@ -461,10 +521,19 @@ export class GameUI {
       this.overlay.innerHTML = settingsMenu(this.platform.profile.muted, this.fullscreen);
     else if (run.phase === 'help') this.overlay.innerHTML = helpMenu(run.guidance.enabled);
     else if (import.meta.env.DEV && run.phase === 'developer')
-      this.overlay.innerHTML = developerMenu();
+      this.overlay.innerHTML = developerMenu(snapshot.developerConsole);
     else {
       const won = run.phase === 'won';
       this.overlay.innerHTML = `<section class="end-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">${won ? 'A PEOPLE, STILL ALIVE' : 'THE STEPPE WILL REMEMBER'}</p><h2 id="overlay-title">${won ? 'A sky worth saving.' : 'The banners fall.'}</h2><p class="panel-intro">${won ? `${run.clan.population} ${run.clan.population === 1 ? 'person' : 'people'} and ${run.clan.herd} ${run.clan.herd === 1 ? 'animal' : 'animals'} reach the mountain passage.<br>Your civilization lives to see another sky.` : 'The journey ends here. Another clan will take up the blue banner.'}</p><div class="end-stats"><div><strong>${formatTime(run.elapsed)}</strong><span>JOURNEY</span></div><div><strong>${run.clan.population}</strong><span>PEOPLE</span></div><div><strong>${run.clan.region + 1}/4</strong><span>PASTURES</span></div></div><nav class="main-menu"><button class="menu-button featured" data-action="restart" data-primary>RAISE THE BANNERS AGAIN <span>→</span></button>${won ? '<button class="menu-button" data-action="epilogue">Read the epilogue</button>' : ''}<button class="menu-button" data-action="story-log">Our remembered road</button>${quit}</nav></section>`;
+    }
+    if (import.meta.env.DEV && run.phase === 'developer') {
+      this.developerRevision = -1;
+      this.commandHistoryOffset = 0;
+      this.updateDeveloperConsole(snapshot);
+      if (snapshot.developerConsole?.focusInput) {
+        this.overlay.querySelector<HTMLInputElement>('[data-developer-command-input]')!.focus();
+        return;
+      }
     }
     if (scroll !== undefined)
       this.overlay.querySelector('.tree-scroll, .migration-scroll')!.scrollTop = scroll;
@@ -517,6 +586,8 @@ export class GameUI {
     else if (action === 'intro-back') this.scene.advanceIntro(-1);
     else if (action === 'intro-skip') this.scene.skipIntro();
     else if (import.meta.env.DEV && action === 'developer') this.scene.toggleDeveloperMenu();
+    else if (import.meta.env.DEV && action === 'developer-invincible')
+      this.scene.executeDeveloperCommand('invincible');
     else if (import.meta.env.DEV && button.dataset.developerLevel)
       this.scene.startDeveloperLevel(button.dataset.developerLevel);
     else if (action === 'begin') this.scene.startRun();
@@ -572,12 +643,37 @@ export class GameUI {
   }
 
   private menuButtons(): HTMLElement[] {
-    return [...this.overlay.querySelectorAll<HTMLElement>('button:not(:disabled), summary')];
+    return [
+      ...this.overlay.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), summary, [data-developer-command-input]',
+      ),
+    ];
   }
   private handleMenuKey(event: KeyboardEvent): void {
     // Holding Confirm must not race through chapters or activate the next screen.
     if (event.repeat && ['Enter', ' '].includes(event.key)) {
       event.preventDefault();
+      return;
+    }
+    if (
+      import.meta.env.DEV &&
+      this.phase === 'developer' &&
+      event.target instanceof HTMLInputElement &&
+      event.target.matches('[data-developer-command-input]') &&
+      ['ArrowUp', 'ArrowDown'].includes(event.key)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      const history = this.lastSnapshot?.developerConsole?.history ?? [];
+      if (!this.commandHistoryOffset) this.commandHistoryDraft = event.target.value;
+      this.commandHistoryOffset = Math.max(
+        0,
+        Math.min(history.length, this.commandHistoryOffset + (event.key === 'ArrowUp' ? 1 : -1)),
+      );
+      event.target.value = this.commandHistoryOffset
+        ? history[history.length - this.commandHistoryOffset]!
+        : this.commandHistoryDraft;
+      event.target.setSelectionRange(event.target.value.length, event.target.value.length);
       return;
     }
     if (this.phase === 'intro' && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {

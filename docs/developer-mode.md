@@ -1,4 +1,33 @@
-# Developer level checkpoints
+# Developer tools
+
+Press **F10** in a development build to open the compact, paused console with its
+command input focused. The console is also at the top of **Developer mode / F8**,
+alongside the full level selector.
+Type a command and press Enter, or click **Khan invincibility** to toggle it.
+Escape, F8, or F10 restores the exact previous screen. Up / Down recalls commands
+and restores the unfinished input after the newest entry. Holding Enter does not
+repeat a command. Keyboard typing does not trigger movement, gallop, or menus.
+
+Use `invincible on` (or `god on`) to ignore all damage to the Khan, including
+contact, hostile projectiles, and hazards. `invincible off` restores normal damage.
+This is a separate developer flag: it does not extend the normal hit/gallop
+protection timer or make the Khan blink continuously. The HUD displays **INVINCIBLE**
+while enabled. It does not resurrect a fallen Khan or prevent clan losses.
+
+Cheats require an expedition that has started and has not ended. Using a cheat in
+a normal expedition marks it as a developer run, preserving saved journey records.
+Invincibility and console history carry between developer checkpoints, and reset
+when starting a normal new run or reloading. They are never saved to the profile.
+The console, input bindings, and cheat effects are guarded by `import.meta.env.DEV`
+and are absent from production and packaged play.
+
+| Command                                 | Behaviour                                              |
+| --------------------------------------- | ------------------------------------------------------ |
+| `help`                                  | Lists commands and their usage.                        |
+| `invincible [on\|off]`, `god [on\|off]` | Protects the Khan; no argument toggles.                |
+| `heal`                                  | Restores the living Khan to full health.               |
+| `status`                                | Displays invincibility, Khan health, and clan resolve. |
+| `clear`                                 | Clears output while keeping command history.           |
 
 Developer console rules live in the renderer-independent `src/game/dev/commands.ts`.
 The command catalog includes `help`, `invincible [on|off]` (`god` is an alias),
@@ -7,6 +36,8 @@ Invincibility protects the Khan; the clan's damage, food, and journey rules cont
 Healing applies only to a living Khan and never refreshes Last Ember or skips
 succession. Commands validate their arguments, cap output at 80 entries and history
 at 40 commands, and retain history when output is cleared.
+
+## Level checkpoints
 
 Run `npm run dev` for Electron or `npm run dev:web` for the browser. Choose
 **Developer mode** at the title or pause menu, or press **F8** from any screen.

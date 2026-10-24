@@ -8,6 +8,101 @@
   line-height: 1.7;
 }
 
+.developer-console {
+  margin-top: 20px;
+  padding-block: 18px;
+  border-block: 1px solid var(--paper-line);
+}
+
+.developer-console-panel {
+  max-width: 760px;
+}
+
+.developer-console-panel .developer-console {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.developer-console-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.developer-console-heading h3 {
+  margin: 0;
+  font:
+    21px Georgia,
+    serif;
+}
+
+.developer-console-heading kbd,
+.developer-console-hint,
+.developer-command-form small {
+  color: var(--paper-muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.developer-log {
+  min-height: 5rem;
+  max-height: 11rem;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid #ac884f;
+  background: #182f35;
+  color: #f0e3c7;
+  font:
+    12px / 1.7 'IBM Plex Mono',
+    monospace;
+  overflow-wrap: anywhere;
+}
+
+.developer-log p {
+  margin: 0 0 5px;
+  white-space: pre-wrap;
+}
+
+.developer-log [data-kind='command'] {
+  color: #c9c586;
+}
+.developer-log [data-kind='error'] {
+  color: #ffb99c;
+}
+
+.developer-command-form label {
+  display: block;
+  margin-block: 12px 6px;
+  color: var(--paper-ink);
+  font-size: 12px;
+}
+
+.developer-command-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.developer-command-row input {
+  min-width: 0;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ac884f;
+  background: #182f35;
+  color: #f0e3c7;
+  font:
+    13px 'IBM Plex Mono',
+    monospace;
+}
+
+.developer-command-row input:focus-visible {
+  outline: 3px solid #a46b2c;
+  outline-offset: 2px;
+}
+
 .developer-group {
   margin-top: 24px;
 }

@@ -1,6 +1,7 @@
 import type { ClanLegacy } from './state/legacy';
 import type { GuidanceState } from './state/guidance';
 import type { StoryState } from './story/types';
+import type { DeveloperConsoleSnapshot } from './dev/commands';
 
 export type RunPhase =
   | 'intro'
@@ -189,6 +190,7 @@ export interface EnemyDefinition {
 
 export interface HudSnapshot {
   developerRun: boolean;
+  developerConsole?: DeveloperConsoleSnapshot;
   zoom: number;
   minZoom: number;
   maxZoom: number;

@@ -22,6 +22,7 @@ import { FORMATIONS, ROUTES } from '../data/clan';
 import { currentLocation } from '../state/journey';
 import { INTRO_SLIDES } from '../data/intro';
 import { createDeveloperRun, DEVELOPER_LEVELS } from '../dev/levels';
+import { createDeveloperTools, executeDeveloperCommand } from '../dev/commands';
 import { openNextStory, resolveStory } from '../state/story';
 import {
   advanceClan,
@@ -124,6 +125,8 @@ export class ArenaScene extends Phaser.Scene {
   private utilityReturnPhase: 'ready' | 'paused' = 'ready';
   private developerReturnPhase: RunState['phase'] = 'ready';
   private developerRun = false;
+  private developerTools = import.meta.env.DEV ? createDeveloperTools() : undefined;
+  private developerConsoleFocus = false;
   private introSlide = 0;
   private introStartsRun = false;
   private storiesEnabled = true;
@@ -155,6 +158,9 @@ export class ArenaScene extends Phaser.Scene {
         ? createDeveloperRun(data.developerLevel)
         : undefined;
     this.developerRun = !!developerRun;
+    // Keep testing preferences across checkpoints; a normal new run clears every cheat.
+    if (import.meta.env.DEV && !developerRun) this.developerTools = createDeveloperTools();
+    this.developerConsoleFocus = false;
     this.run = developerRun ?? createRun();
     if (!developerRun) {
       this.run.story.enabled = this.storiesEnabled;
@@ -248,7 +254,8 @@ export class ArenaScene extends Phaser.Scene {
     });
     this.gems = this.physics.add.group({ classType: Gem, maxSize: GAME.maxGems });
     this.hostileShots = this.physics.add.group({ classType: Projectile, maxSize: 180 });
-    this.physics.add.overlap(this.hostileShots, this.player, (shot) => {
+    // Phaser reports the individual sprite first when overlapping it with a group.
+    this.physics.add.overlap(this.player, this.hostileShots, (_player, shot) => {
       if (this.run.phase !== 'playing' || !(shot as Projectile).active) return;
       const damage = (shot as Projectile).damage;
       (shot as Projectile).disableBody(true, true);
@@ -288,11 +295,15 @@ export class ArenaScene extends Phaser.Scene {
         if (
           key !== 'ESC' &&
           key !== 'F8' &&
+          key !== 'F10' &&
           event.target instanceof HTMLElement &&
           event.target.closest('input, textarea, select')
         )
           return;
-        if (this.actionKeys.consume(event)) action();
+        if (this.actionKeys.consume(event)) {
+          if (key === 'F10') event.preventDefault();
+          action();
+        }
       });
     };
     bindAction('ESC', () => this.togglePause());
@@ -305,6 +316,7 @@ export class ArenaScene extends Phaser.Scene {
     if (import.meta.env.DEV) {
       bindAction('F8', () => this.toggleDeveloperMenu());
       bindAction('F9', () => this.landscape.cycleTerrainDebug());
+      bindAction('F10', () => this.toggleDeveloperMenu(true));
     }
     const bindZoom = (key: string, steps: number): void => {
       this.input.keyboard!.on(`keydown-${key}`, (event: KeyboardEvent) => {
@@ -469,13 +481,33 @@ export class ArenaScene extends Phaser.Scene {
     this.scene.restart({});
   }
 
-  toggleDeveloperMenu(): void {
+  toggleDeveloperMenu(focusConsole = false): void {
     if (!import.meta.env.DEV) return;
     if (this.run.phase === 'developer') this.setPhase(this.developerReturnPhase);
     else {
+      this.developerConsoleFocus = focusConsole;
       this.developerReturnPhase = this.run.phase;
       this.setPhase('developer');
     }
+  }
+
+  executeDeveloperCommand(input: string): void {
+    if (!import.meta.env.DEV || this.run.phase !== 'developer' || !this.developerTools) return;
+    const result = executeDeveloperCommand(
+      this.developerTools,
+      this.run,
+      input,
+      this.canUseDeveloperCheats(),
+    );
+    if (result.cheated) this.developerRun = true;
+    this.callbacks?.onHud(this.snapshot());
+  }
+
+  private canUseDeveloperCheats(): boolean {
+    const phase = ['settings', 'help'].includes(this.developerReturnPhase)
+      ? this.utilityReturnPhase
+      : this.developerReturnPhase;
+    return !this.run.legacy.outcome && !['ready', 'intro'].includes(phase);
   }
 
   startDeveloperLevel(id: string): void {
@@ -1264,6 +1296,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private takeDamage(amount: number): void {
     if (this.run.phase !== 'playing' || this.invulnerable > 0) return;
+    if (import.meta.env.DEV && this.developerTools?.invincible) return;
     const outcome = damageKhan(this.run, amount);
     if (!outcome) return;
     this.playerMotion.hit();
@@ -1344,6 +1377,9 @@ export class ArenaScene extends Phaser.Scene {
       this.physics.pause();
       this.tweens.pauseAll();
     }
+    // Capture changes above reset Phaser's global preventDefault flag.
+    if (import.meta.env.DEV && phase === 'developer') this.input.keyboard!.disableGlobalCapture();
+    else this.input.keyboard!.enableGlobalCapture();
     this.publishPhase();
   }
 
@@ -1356,6 +1392,14 @@ export class ArenaScene extends Phaser.Scene {
     const zoomLimits = cameraZoomLimits(this.cameras.main.width, this.cameras.main.height);
     return {
       developerRun: this.developerRun,
+      developerConsole:
+        import.meta.env.DEV && this.developerTools
+          ? {
+              ...this.developerTools,
+              focusInput: this.developerConsoleFocus,
+              canCheat: this.canUseDeveloperCheats(),
+            }
+          : undefined,
       zoom: this.cameras.main.zoom,
       minZoom: zoomLimits.min,
       maxZoom: zoomLimits.max,
