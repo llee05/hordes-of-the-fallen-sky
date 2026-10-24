@@ -133,21 +133,19 @@ describe('expandable progression views', () => {
     expect(branches).toHaveLength(PATRONS.length);
     expect(branches.flatMap((entry) => entry.nodes)).toHaveLength(UPGRADES.length);
     for (const branch of branches)
-      expect(treeLevels(branch.nodes).map((level) => level.length)).toEqual([1, 2, 1]);
+      expect(treeLevels(branch.nodes).map((level) => level.length)).toEqual(
+        branch.id === 'khukhedei-mergen' ? [1, 3, 3] : [1, 2, 2],
+      );
     const archer = branches.find((entry) => entry.id === 'khukhedei-mergen')!;
-    expect(archer.nodes.map((entry) => entry.status)).toEqual([
-      'available',
-      'locked',
-      'locked',
-      'locked',
-    ]);
+    expect(archer.nodes.find((n) => n.id === 'haste')?.status).toBe('available');
+    expect(archer.nodes.find((n) => n.id === 'sky-volley')?.status).toBe('locked');
     expect(archer.nodes[0]?.progress).toBe('1 / 2 ranks learned');
     run.upgrades.power = 2;
     expect(
       researchBranches(run)
-        .find((entry) => entry.id === archer.id)!
-        .nodes.map((entry) => entry.status),
-    ).toEqual(['learned', 'available', 'available', 'locked']);
+        .find((b) => b.id === archer.id)!
+        .nodes.find((n) => n.id === 'piercing-shaft')?.status,
+    ).toBe('available');
     run.pendingUpgrades = 0;
     expect(
       researchBranches(run)

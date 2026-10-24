@@ -15,6 +15,7 @@ export function developmentPreview(run: RunState, id: BuildingId, path?: string)
   preview.clan.spirit = Math.max(cost.spirit, preview.clan.spirit);
   if (!buildStructure(preview, id, path)) return undefined;
   return {
+    projected: preview,
     before: economyForecast(run),
     after: economyForecast(preview),
     foodGift: preview.clan.food - run.clan.food,

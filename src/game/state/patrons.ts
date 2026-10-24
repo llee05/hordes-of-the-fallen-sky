@@ -6,7 +6,7 @@ export function createPatronEffects(): PatronEffects {
   return {
     hunt: { movingDamage: 1, executeDamage: 1, gallopCooldown: 1, killHeal: 0 },
     land: { food: 1, materials: 1, consumption: 1, pastureUse: 1, pastureRecovery: 0 },
-    bow: { range: 0, pierce: 0 },
+    bow: { range: 0, pierce: 0, spread: 1 },
     hearth: { regeneration: 0, damageTaken: 1, revives: 0 },
     water: {
       slow: 0,

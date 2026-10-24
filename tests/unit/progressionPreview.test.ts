@@ -1,0 +1,60 @@
+import { describe, expect, it } from 'vitest';
+import { createRun, applyUpgrade, upgradeCost } from '../../src/game/state/run';
+import { UPGRADES } from '../../src/game/data/upgrades';
+import { researchPreview, campStatPreview } from '../../src/game/state/progressionPreview';
+import { buildStructure, clanDamageMultiplier } from '../../src/game/state/clan';
+const upgrade = (id: string) => UPGRADES.find((u) => u.id === id)!;
+describe('exact progression previews', () => {
+  it('projects the actual next rank without spending points or mutating any nested state', () => {
+    const run = createRun();
+    run.stats.damage = 20;
+    const before = structuredClone(run),
+      changes = researchPreview(run, upgrade('power'));
+    expect(changes.find((c) => c.label === 'Shared attack damage')).toMatchObject({
+      before: '20',
+      after: '25',
+    });
+    expect(run).toEqual(before);
+    run.upgrades['wolf-trail'] = 2;
+    run.clan.campEffects.multipliers.gallopCooldown = 0.9;
+    const gallop = researchPreview(run, upgrade('pursuit-gallop')).find(
+      (c) => c.label === 'Gallop cooldown',
+    );
+    expect(gallop).toMatchObject({ before: '2.7s', after: '2.025s' });
+  });
+  it('uses combined current protection and respects worker and prerequisite gates', () => {
+    const run = createRun();
+    run.phase = 'building';
+    run.clan.materials = 1000;
+    run.patrons.guardian.protection = 0.81;
+    expect(buildStructure(run, 'wagon')).toBe(true);
+    expect(clanDamageMultiplier(run)).toBeCloseTo(0.567);
+    const before = structuredClone(run),
+      changes = campStatPreview(run, 'wagon', 'felt-armor');
+    expect(changes.find((c) => c.label === 'Clan damage reduction')).toMatchObject({
+      before: '43.3%',
+      after: '71.65%',
+    });
+    expect(run).toEqual(before);
+    expect(campStatPreview(run, 'archery', 'resin-preparation')).toEqual([]);
+  });
+  it('preserves succession and handles wide-volley tradeoffs and capstone costs', () => {
+    const run = createRun();
+    run.pendingUpgrades = 10;
+    run.khan.successionRemaining = 5;
+    run.health = 0;
+    expect(
+      researchPreview(run, upgrade('vitality')).some((c) => c.label === 'Khan health now'),
+    ).toBe(false);
+    expect(applyUpgrade(run, upgrade('vitality'))).toBe(true);
+    expect(run.health).toBe(0);
+    run.upgrades.power = 2;
+    const changes = researchPreview(run, upgrade('wide-quiver'));
+    expect(changes.find((c) => c.label === 'Shared attack damage')?.improves).toBe(false);
+    expect(changes.find((c) => c.label === 'Khan arrows per volley')).toMatchObject({
+      before: '1',
+      after: '2',
+    });
+    expect(upgradeCost(upgrade('sky-volley'))).toBe(2);
+  });
+});

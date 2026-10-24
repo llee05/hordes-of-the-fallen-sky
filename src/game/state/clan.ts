@@ -214,6 +214,16 @@ export interface ClanProtection {
   invincible: boolean;
 }
 
+export function clanDamageMultiplier(run: RunState): number {
+  return (
+    (run.clan.formation === 'guard' ? 0.7 : 1) *
+    (hasDevelopment(run, 'wagon', 'felt-armor') ? 0.5 : 1) *
+    (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? 0.8 : 1) *
+    run.patrons.guardian.protection *
+    run.clan.campEffects.multipliers.clanProtection
+  );
+}
+
 export function damageClan(
   run: RunState,
   amount: number,
@@ -221,12 +231,7 @@ export function damageClan(
 ): void {
   if (protectionOptions?.invincible) return;
   const clan = run.clan;
-  const protection =
-    (clan.formation === 'guard' ? 0.7 : 1) *
-    (hasDevelopment(run, 'wagon', 'felt-armor') ? 0.5 : 1) *
-    (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? 0.8 : 1) *
-    run.patrons.guardian.protection *
-    clan.campEffects.multipliers.clanProtection;
+  const protection = clanDamageMultiplier(run);
   const previousPopulation = clan.population;
   const previous = clan.integrity;
   clan.integrity = Math.max(0, previous - amount * protection);

@@ -2,7 +2,7 @@ import { GAME } from '../config';
 import { PATRONS } from './patrons';
 import type { PatronId, UpgradeDefinition } from '../types';
 
-type Technology = Omit<UpgradeDefinition, 'patron' | 'category' | 'subtitle' | 'icon'>;
+import { CAPSTONE_PARENTS, SPECIALIZATIONS, type Technology } from './specializations';
 const P = GAME.patrons;
 const need = (id: string, rank = 1): { id: string; rank: number } => ({ id, rank });
 
@@ -384,11 +384,44 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
 
 export const UPGRADES: readonly UpgradeDefinition[] = PATHS.flatMap((path) => {
   const patron = PATRONS.find((entry) => entry.id === path.patron)!;
-  return path.technologies.map((technology) => ({
+  const foundation = path.technologies[0]!;
+  const originals = path.technologies.map((technology, index): Technology => {
+    if (index === 0) return { ...technology, kind: 'foundation' };
+    if (index < 3) return { ...technology, kind: 'practice', requires: [need(foundation.id)] };
+    return {
+      ...technology,
+      kind: 'capstone',
+      knowledgeCost: P.specializations.capstoneCost,
+      exclusiveGroup: 'capstone',
+      requires: [need(foundation.id, 2), need(CAPSTONE_PARENTS[path.patron])],
+      description:
+        technology.description +
+        (path.patron === 'khukhedei-mergen'
+          ? ' Friendly volley spacing widens a further 35%.'
+          : ''),
+      apply: (r) => {
+        technology.apply(r);
+        if (path.patron === 'khukhedei-mergen')
+          r.patrons.bow.spread *= P.specializations.stormSpread;
+      },
+    };
+  });
+  const alternatives = SPECIALIZATIONS[path.patron].map((technology): Technology =>
+    technology.kind === 'practice'
+      ? technology
+      : {
+          ...technology,
+          kind: 'capstone',
+          knowledgeCost: P.specializations.capstoneCost,
+          exclusiveGroup: 'capstone',
+          requires: [need(foundation.id, 2), ...(technology.requires ?? [])],
+        },
+  );
+  return [...originals, ...alternatives].map((technology) => ({
     ...technology,
     patron: patron.id,
     category: patron.playstyle,
     subtitle: patron.name,
-    icon: '◇',
+    icon: patron.symbol,
   }));
 });

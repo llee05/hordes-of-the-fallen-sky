@@ -1,6 +1,6 @@
 import { PATRONS } from '../game/data/patrons';
 import { UPGRADES } from '../game/data/upgrades';
-import { upgradeBlocker } from '../game/state/run';
+import { upgradeBlocker, upgradeCost, upgradeExcluded } from '../game/state/run';
 import type { RunState } from '../game/types';
 import { clanMark } from './artwork';
 import { progressionMenu, type TreeBranch, type TreeViewState } from './progressionTree';
@@ -30,11 +30,21 @@ export function researchBranches(run: RunState): TreeBranch[] {
           id: upgrade.id,
           title: upgrade.title,
           description: upgrade.description,
-          status: mastered ? 'learned' : blocker ? 'locked' : 'available',
-          cost: mastered ? 'Mastered' : '1 knowledge point',
+          status: mastered
+            ? 'learned'
+            : upgradeExcluded(run, upgrade)
+              ? 'excluded'
+              : blocker
+                ? 'locked'
+                : 'available',
+          cost: mastered
+            ? 'Mastered'
+            : `${upgradeCost(upgrade)} knowledge point${upgradeCost(upgrade) === 1 ? '' : 's'}`,
           reason: mastered ? 'Learned' : (blocker ?? `Learn rank ${next}`),
           progress: `${rank} / ${upgrade.maxStacks} ranks learned`,
-          kind: !upgrade.requires?.length ? 'foundation' : isParent ? 'practice' : 'capstone',
+          kind:
+            upgrade.kind ??
+            (!upgrade.requires?.length ? 'foundation' : isParent ? 'practice' : 'capstone'),
           requires: (upgrade.requires ?? [])
             .filter((requirement) => technologies.some((entry) => entry.id === requirement.id))
             .map((requirement) => requirement.id),
@@ -57,7 +67,7 @@ export function researchMenu(run: RunState, view: TreeViewState): string {
     allLabel: 'All patrons',
     view,
     introduction:
-      'Shape your expedition through patron traditions. Learn two foundation ranks, then both practices to unlock a capstone. Mix patrons freely. Each rank costs one knowledge point earned from spirit shards.',
+      'Shape your expedition through patron traditions. Practices unlock after one foundation rank. Two foundation ranks and a focused practice unlock a capstone. Choose one capstone per patron; mix patrons freely. Foundations and practices cost one knowledge point; capstones cost two.',
     summary: [
       { label: 'Knowledge points', value: String(run.pendingUpgrades) },
       {

@@ -62,13 +62,17 @@ export function upgradeBlocker(
   const stacks = run.upgrades[upgrade.id] ?? 0;
   if (rank <= stacks || stacks >= upgrade.maxStacks) return 'Already learned';
   if (!Number.isInteger(rank) || rank !== stacks + 1) return `Requires rank ${rank - 1}`;
+  if (upgradeExcluded(run, upgrade)) return 'Another specialization chosen';
   for (const requirement of upgrade.requires ?? []) {
     if ((run.upgrades[requirement.id] ?? 0) < requirement.rank) {
       const title = UPGRADES.find((entry) => entry.id === requirement.id)?.title ?? requirement.id;
       return `Requires ${title} rank ${requirement.rank}`;
     }
   }
-  if (run.pendingUpgrades < 1) return 'Earn a knowledge point by collecting spirit shards';
+  const cost = upgradeCost(upgrade);
+  if (!Number.isInteger(cost) || cost < 1) return 'Invalid research cost';
+  if (run.pendingUpgrades < cost)
+    return `Needs ${cost} knowledge point${cost === 1 ? '' : 's'} (${run.pendingUpgrades} available)`;
   return undefined;
 }
 
@@ -82,7 +86,7 @@ export function applyUpgrade(
   upgrade.apply(run);
   if (run.khan.successionRemaining > 0) run.health = 0;
   run.upgrades[upgrade.id] = stacks + 1;
-  run.pendingUpgrades -= 1;
+  run.pendingUpgrades -= upgradeCost(upgrade);
   completeGuidance(run, 'research');
   return true;
 }
@@ -91,7 +95,9 @@ export function applyUpgrade(
 export function redeemMasteredResearch(run: RunState): boolean {
   if (
     run.pendingUpgrades < 1 ||
-    UPGRADES.some((entry) => (run.upgrades[entry.id] ?? 0) < entry.maxStacks)
+    UPGRADES.some(
+      (entry) => !upgradeExcluded(run, entry) && (run.upgrades[entry.id] ?? 0) < entry.maxStacks,
+    )
   )
     return false;
   if (isKhanActive(run)) run.health = run.stats.maxHealth;
@@ -101,6 +107,34 @@ export function redeemMasteredResearch(run: RunState): boolean {
   run.clan.message =
     'Every tradition is mastered. Each knowledge point supplies 20 food and 15 materials.';
   return true;
+}
+
+export function upgradeCost(upgrade: UpgradeDefinition): number {
+  return upgrade.knowledgeCost ?? 1;
+}
+/** Groups are local to a patron. Exclusion propagates through dependent technologies. */
+export function upgradeExcluded(
+  run: RunState,
+  upgrade: UpgradeDefinition,
+  visited = new Set<string>(),
+): boolean {
+  if (visited.has(upgrade.id)) return false;
+  visited.add(upgrade.id);
+  if (
+    upgrade.exclusiveGroup &&
+    UPGRADES.some(
+      (other) =>
+        other.id !== upgrade.id &&
+        other.patron === upgrade.patron &&
+        other.exclusiveGroup === upgrade.exclusiveGroup &&
+        (run.upgrades[other.id] ?? 0) > 0,
+    )
+  )
+    return true;
+  return (upgrade.requires ?? []).some((requirement) => {
+    const parent = UPGRADES.find((entry) => entry.id === requirement.id);
+    return parent ? upgradeExcluded(run, parent, new Set(visited)) : false;
+  });
 }
 
 export function formatTime(seconds: number): string {

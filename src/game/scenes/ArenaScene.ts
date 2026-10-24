@@ -1194,7 +1194,11 @@ export class ArenaScene extends Phaser.Scene {
       const bolt = this.projectiles.get(x, y, 'bolt') as Projectile | null;
       if (!bolt) break;
       fired = true;
-      const angle = direction + (i - (count - 1) / 2) * (tempest ? 0.28 : 0.12);
+      const angle =
+        direction +
+        (i - (count - 1) / 2) *
+          (tempest ? 0.28 : 0.12) *
+          (ancestral ? 1 : this.run.patrons.bow.spread);
       bolt.enableBody(true, x, y, true, true);
       bolt.setData('terrain-previous', { x, y });
       bolt

@@ -130,7 +130,7 @@ export interface PatronEffects {
     pastureUse: number;
     pastureRecovery: number;
   };
-  bow: { range: number; pierce: number };
+  bow: { range: number; pierce: number; spread: number };
   hearth: { regeneration: number; damageTaken: number; revives: number };
   water: {
     slow: number;
@@ -171,6 +171,9 @@ export interface UpgradeDefinition {
   description: string;
   icon: string;
   maxStacks: number;
+  knowledgeCost?: number;
+  exclusiveGroup?: string;
+  kind?: 'foundation' | 'practice' | 'capstone';
   category: string;
   requires?: readonly { id: string; rank: number }[];
   apply: (run: RunState) => void;
