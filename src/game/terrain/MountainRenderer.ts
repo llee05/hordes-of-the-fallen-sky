@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GAME } from '../config';
 import { MountainTerrain } from './MountainTerrain';
 import { shadedColor, terrainSurface } from './terrainSurface';
+import { terrainRelief } from './terrainRelief';
 import {
   TERRAIN_MATERIALS,
   type TerrainArt,
@@ -12,11 +13,20 @@ import {
 
 interface RenderedChunk {
   container: Phaser.GameObjects.Container;
+  relief: Phaser.GameObjects.GameObject[];
   debug: Phaser.GameObjects.Graphics;
   data: TerrainChunk;
 }
 
-/** Terrain meshes remain flat world surfaces. Height affects materials, light, and cliff modules. */
+/** Initialize static geometry immediately; Phaser would otherwise defer projection until next frame. */
+class TerrainMesh extends Phaser.GameObjects.Mesh {
+  initializeGeometry(): void {
+    this.preUpdate(0, 0);
+    this.setActive(false);
+  }
+}
+
+/** Painted ground and contour ledges share the heightfield; traversal stays in ground coordinates. */
 export class MountainRenderer {
   readonly chunks = new Map<string, RenderedChunk>();
   debugMode: TerrainDebugMode = 'off';
@@ -53,7 +63,7 @@ export class MountainRenderer {
     const keys = new Set(wanted.map(({ column, row }) => `${column},${row}`));
     for (const [key, chunk] of this.chunks)
       if (!keys.has(key)) {
-        chunk.container.destroy(true);
+        this.destroyChunk(chunk);
         this.chunks.delete(key);
       }
     const missing = wanted.filter(({ column, row }) => !this.chunks.has(`${column},${row}`));
@@ -101,7 +111,7 @@ export class MountainRenderer {
     if (this.scene.game.renderer.type === Phaser.WEBGL) {
       for (const geometry of terrainSurface(this.terrain, data, this.art, this.textureSizes)) {
         const mesh = this.scene.add
-          .mesh(0, 0, geometry.texture)
+          .existing(new TerrainMesh(this.scene, 0, 0, geometry.texture))
           .setSize(data.width, data.height)
           .setName(`terrain-material-${geometry.material}`);
         mesh.setOrtho(data.width, data.height);
@@ -115,6 +125,8 @@ export class MountainRenderer {
           geometry.colors,
           geometry.alphas,
         );
+        // New chunks render in this frame, before Phaser's next mesh update.
+        mesh.initializeGeometry();
         container.add(mesh);
       }
     } else {
@@ -129,52 +141,58 @@ export class MountainRenderer {
       }
       container.add(placeholder);
     }
-    this.drawCliffs(container, data);
-    const debug = this.scene.add.graphics();
-    container.add(debug);
-    const chunk = { container, debug, data };
+    const relief = this.drawCliffs(data);
+    const debug = this.scene.add
+      .graphics({ x: container.x, y: container.y })
+      .setDepth(-17)
+      .setName('terrain-debug');
+    const chunk = { container, relief, debug, data };
     this.drawDebug(chunk);
     return chunk;
   }
 
-  private drawCliffs(container: Phaser.GameObjects.Container, data: TerrainChunk): void {
-    const faces = this.scene.add.graphics().setName('terrain-cliff-placeholders');
-    container.add(faces);
-    for (const cliff of data.cliffs) {
-      const x = cliff.x - container.x;
-      const y = cliff.y - container.y;
-      const frame = this.art.cliff.frames?.[cliff.mask];
-      if (this.art.cliff.texture && frame) {
-        container.add(
-          this.scene.add
-            .image(x + cliff.width / 2, y + cliff.height / 2, this.art.cliff.texture, frame)
-            .setDisplaySize(cliff.width, cliff.height)
-            .setName('terrain-cliff-module'),
+  private drawCliffs(data: TerrainChunk): Phaser.GameObjects.GameObject[] {
+    const objects: Phaser.GameObjects.GameObject[] = [];
+    for (const geometry of terrainRelief(this.terrain, data, this.art, this.textureSizes)) {
+      const depth = { shadow: -17.9, face: -17.8, rim: -17.7 }[geometry.part];
+      const x = data.x + data.width / 2;
+      const y = data.y + data.height / 2;
+      if (this.scene.game.renderer.type === Phaser.WEBGL) {
+        const mesh = this.scene.add
+          .existing(new TerrainMesh(this.scene, x, y, geometry.texture))
+          .setSize(data.width, data.height)
+          .setDepth(depth)
+          .setName(`terrain-cliff-${geometry.part}`);
+        mesh.setOrtho(data.width, data.height);
+        mesh.hideCCW = false;
+        mesh.addVertices(
+          geometry.vertices,
+          geometry.uvs,
+          geometry.indices,
+          false,
+          undefined,
+          geometry.colors,
+          geometry.alphas,
         );
-        continue;
-      }
-      // Flat placeholders follow the exact collision boundary; no new bitmap artwork is drawn.
-      faces
-        .fillStyle(shadedColor(this.art.cliff.color, cliff.shade), 0.75)
-        .lineStyle(2, this.art.cliff.rim, 0.8);
-      const thickness = 9;
-      if (cliff.mask & 1) {
-        faces.fillRect(x, y, cliff.width, thickness);
-        faces.lineBetween(x, y, x + cliff.width, y);
-      }
-      if (cliff.mask & 2) {
-        faces.fillRect(x + cliff.width - thickness, y, thickness, cliff.height);
-        faces.lineBetween(x + cliff.width, y, x + cliff.width, y + cliff.height);
-      }
-      if (cliff.mask & 4) {
-        faces.fillRect(x, y + cliff.height - thickness, cliff.width, thickness);
-        faces.lineBetween(x, y + cliff.height, x + cliff.width, y + cliff.height);
-      }
-      if (cliff.mask & 8) {
-        faces.fillRect(x, y, thickness, cliff.height);
-        faces.lineBetween(x, y, x, y + cliff.height);
+        mesh.initializeGeometry();
+        objects.push(mesh);
+      } else {
+        const graphic = this.scene.add.graphics({ x, y }).setDepth(depth);
+        for (let i = 0; i < geometry.indices.length; i += 3) {
+          const indices = geometry.indices.slice(i, i + 3);
+          const alpha = indices.reduce((sum, index) => sum + geometry.alphas[index]!, 0) / 3;
+          const [a, b, c] = indices.map((index) => ({
+            x: geometry.vertices[index * 2]!,
+            y: -geometry.vertices[index * 2 + 1]!,
+          }));
+          graphic
+            .fillStyle(geometry.colors[indices[0]!]!, alpha)
+            .fillTriangle(a!.x, a!.y, b!.x, b!.y, c!.x, c!.y);
+        }
+        objects.push(graphic.setName(`terrain-cliff-${geometry.part}`));
       }
     }
+    return objects;
   }
 
   private drawDebug(chunk: RenderedChunk): void {
@@ -202,8 +220,14 @@ export class MountainRenderer {
   }
 
   destroy(): void {
-    for (const chunk of this.chunks.values()) chunk.container.destroy(true);
+    for (const chunk of this.chunks.values()) this.destroyChunk(chunk);
     this.chunks.clear();
     this.label.destroy();
+  }
+
+  private destroyChunk(chunk: RenderedChunk): void {
+    chunk.container.destroy(true);
+    for (const object of chunk.relief) object.destroy();
+    chunk.debug.destroy();
   }
 }

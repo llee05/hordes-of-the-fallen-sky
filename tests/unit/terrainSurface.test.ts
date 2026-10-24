@@ -9,7 +9,7 @@ const art: TerrainArt = {
   materials: {
     grassland: { texture: 'grass', color: 0xa7ad72 },
     'rocky-soil': { texture: 'soil', color: 0xb49672 },
-    stone: { color: 0x92958e },
+    stone: { texture: 'soil', tint: 0x96c0ec, color: 0x92958e },
     tundra: { texture: 'tundra', color: 0xa3ad9c },
     snow: { texture: 'snow', color: 0xe2e9e8 },
   },
@@ -33,6 +33,7 @@ describe('terrain material meshes', () => {
       const layers = terrainSurface(terrain, chunk, art, sizes);
       expect(layers[0]?.material).toBe('grassland');
       for (const layer of layers) {
+        expect(layer.texture).not.toBe('__WHITE');
         const count = layer.vertices.length / 2;
         expect(layer.uvs.length).toBe(layer.vertices.length);
         expect(layer.alphas.length).toBe(count);

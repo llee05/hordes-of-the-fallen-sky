@@ -2,6 +2,7 @@ import { GAME } from '../config';
 import type { MountainTerrain } from './MountainTerrain';
 import { smoothstep } from './noise';
 import { terrainContours } from './terrainContours';
+import { appendTerrainPolygon } from './terrainPolygon';
 import { shadedColor, type TerrainLayerGeometry } from './terrainSurface';
 import type { TerrainArt, TerrainChunk, TerrainPoint } from './types';
 
@@ -22,6 +23,7 @@ export function terrainRelief(
   terrain: MountainTerrain,
   chunk: TerrainChunk,
   art: TerrainArt,
+  sizes: Readonly<Record<string, { width: number; height: number }>> = {},
 ): readonly CliffLayerGeometry[] {
   const style = GAME.terrain.relief;
   const levels: number[] = [];
@@ -32,7 +34,7 @@ export function terrainRelief(
   );
   const layers = (['shadow', 'face', 'rim'] as const).map((part): CliffLayerGeometry => ({
     part,
-    texture: '__WHITE',
+    texture: part === 'face' ? (art.materials.stone.texture ?? '__WHITE') : '__WHITE',
     vertices: [],
     uvs: [],
     indices: [],
@@ -71,6 +73,17 @@ export function terrainRelief(
     alphas: readonly number[],
   ) => {
     const base = layer.vertices.length / 2;
+    if (layer.part === 'face' && art.materials.stone.texture) {
+      const size = sizes[art.materials.stone.texture] ?? { width: 1254, height: 1254 };
+      appendTerrainPolygon(
+        layer,
+        [0, 1, 3, 2].map((i) => ({ ...points[i]!, color: colors[i]!, alpha: alphas[i]! })),
+        { x: chunk.x + chunk.width / 2, y: chunk.y + chunk.height / 2 },
+        size.width * art.tileScale,
+        size.height * art.tileScale,
+      );
+      return;
+    }
     for (let i = 0; i < 4; i++) {
       layer.vertices.push(
         points[i]!.x - chunk.x - chunk.width / 2,
@@ -86,6 +99,9 @@ export function terrainRelief(
     const a = pointAt(contour.a);
     const b = pointAt(contour.b);
     if (Math.max(a.strength, b.strength) < 0.015) continue;
+    const faceColor = art.materials.stone.texture
+      ? (art.materials.stone.tint ?? 0xffffff)
+      : art.cliff.color;
     quad(
       layers[0]!,
       [a.toe, b.toe, a.shadow, b.shadow],
@@ -96,10 +112,10 @@ export function terrainRelief(
       layers[1]!,
       [a, b, a.toe, b.toe],
       [
-        shadedColor(art.cliff.color, a.shade),
-        shadedColor(art.cliff.color, b.shade),
-        shadedColor(art.cliff.color, a.shade * 0.74),
-        shadedColor(art.cliff.color, b.shade * 0.74),
+        shadedColor(faceColor, a.shade),
+        shadedColor(faceColor, b.shade),
+        shadedColor(faceColor, a.shade * 0.74),
+        shadedColor(faceColor, b.shade * 0.74),
       ],
       [a.strength * 0.9, b.strength * 0.9, a.strength * 0.75, b.strength * 0.75],
     );

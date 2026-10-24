@@ -93,6 +93,36 @@ describe('heightfield relief presentation', () => {
     expect(GAME.terrain.surfaceStep).toBeLessThan(terrain.cellSize);
   });
 
+  it('wraps existing cliff-face textures without stretching UVs across tile seams', () => {
+    const terrain = new MountainTerrain(OTGONTENGER_MOUNTAINS, 1024);
+    terrain.height = (_x, y) => 0.8 - y / 450;
+    const painted: TerrainArt = {
+      ...art,
+      materials: {
+        ...art.materials,
+        stone: { ...art.materials.stone, texture: 'rock', tint: 0x96c0ec },
+      },
+    };
+    const layers = terrainRelief(terrain, terrain.getChunk(1, 0), painted, {
+      rock: { width: 1254, height: 1254 },
+    });
+    const face = layers.find((layer) => layer.part === 'face')!;
+    expect(face.texture).toBe('rock');
+    expect(face.uvs.every((uv) => uv >= 0 && uv <= 1)).toBe(true);
+    expect(face.uvs.some((uv) => uv === 0)).toBe(true);
+    expect(face.uvs.some((uv) => uv === 1)).toBe(true);
+    expect(face.indices.every((index) => index < face.alphas.length)).toBe(true);
+    for (let i = 0; i < face.vertices.length; i += 6) {
+      const xs = [0, 2, 4].map((offset) => face.vertices[i + offset]! + 768);
+      const us = [0, 2, 4].map((offset) => face.uvs[i + offset]!);
+      // The same world-to-texture scale holds on both sides of the 815.1-unit wrap.
+      expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(
+        (Math.max(...us) - Math.min(...us)) * 1254 * painted.tileScale,
+        6,
+      );
+    }
+  });
+
   it('lights upper-left-facing landforms and preserves a readable ambient floor', () => {
     const terrain = new MountainTerrain(OTGONTENGER_MOUNTAINS);
     terrain.height = (x, y) => 0.5 + (x + y) / 2000;

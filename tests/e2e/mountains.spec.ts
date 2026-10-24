@@ -14,6 +14,15 @@ async function openMountains(page: Page): Promise<void> {
 }
 
 async function settled(page: Page): Promise<void> {
+  // Camera.worldView updates after the scene update. Wait for a changed camera to
+  // reach the streamer before checking pending work from the previous view.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const scene = (window as any).__gloam.scene;
+        scene.events.once('postupdate', () => scene.events.once('postupdate', () => resolve()));
+      }),
+  );
   await expect
     .poll(
       () =>
@@ -40,6 +49,7 @@ test('mountain chunks blend existing materials, stream without seams or landform
       const scene = (window as any).__gloam.scene;
       const mountains = scene.landscape.mountains;
       const children = [...mountains.chunks.values()].flatMap((chunk: any) => chunk.container.list);
+      const relief = [...mountains.chunks.values()].flatMap((chunk: any) => chunk.relief);
       return {
         chunks: mountains.chunks.size,
         cached: mountains.terrain.cachedChunks,
@@ -56,6 +66,14 @@ test('mountain chunks blend existing materials, stream without seams or landform
             ),
         ).length,
         walls: scene.terrainCollision.walls.getLength(),
+        faces: relief.filter((item: any) => item.name === 'terrain-cliff-face').length,
+        paintedFaces: relief
+          .filter((item: any) => item.name === 'terrain-cliff-face')
+          .every((item: any) => item.texture.key === 'ground-eej-khairkhan'),
+        reliefDepths: relief.every((item: any) => item.depth > -18 && item.depth < -17),
+        oldGridOutlines: scene.children.list.filter(
+          (item: any) => item.name === 'terrain-cliff-placeholders',
+        ).length,
         debug: mountains.debugMode,
       };
     });
@@ -73,11 +91,18 @@ test('mountain chunks blend existing materials, stream without seams or landform
   expect(overview.missing).toBe(0);
   expect(overview.modelSprites).toBe(0);
   expect(overview.walls).toBeGreaterThan(0);
+  expect(overview.faces).toBeGreaterThan(20);
+  expect(overview.paintedFaces).toBe(true);
+  expect(overview.reliefDepths).toBe(true);
+  expect(overview.oldGridOutlines).toBe(0);
   await page.screenshot({ path: 'test-results/mountains/otgontenger-overview.png' });
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     (window as any).oldMountainChunks = [...scene.landscape.mountains.chunks.values()].map(
       (chunk: any) => chunk.container,
+    );
+    (window as any).oldMountainRelief = [...scene.landscape.mountains.chunks.values()].flatMap(
+      (chunk: any) => [...chunk.relief, chunk.debug],
     );
     scene.cameras.main.setZoom(1).centerOn(1100, 1100);
   });
@@ -86,7 +111,20 @@ test('mountain chunks blend existing materials, stream without seams or landform
   expect(
     await page.evaluate(() => (window as any).oldMountainChunks.some((chunk: any) => !chunk.scene)),
   ).toBe(true);
+  expect(
+    await page.evaluate(() =>
+      (window as any).oldMountainRelief.some((object: any) => !object.scene),
+    ),
+  ).toBe(true);
   await page.screenshot({ path: 'test-results/mountains/otgontenger-ranges.png' });
+  await page.evaluate(() => {
+    const scene = (window as any).__gloam.scene;
+    const position = scene.landscape.navigation.nearestWalkable({ x: 2050, y: 3000 });
+    scene.player.body.reset(position.x, position.y);
+    scene.cameras.main.centerOn(2050, 3000);
+  });
+  await settled(page);
+  await page.screenshot({ path: 'test-results/mountains/otgontenger-camp-edge.png' });
   await page.keyboard.press('Escape');
   const frozen = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.keyboard.down('F9');
@@ -161,6 +199,9 @@ test('cliffs stop a galloping Khan and are removed with streamed terrain on migr
     scene.player.body.reset(scene.camp.x, scene.camp.y + 100);
     (window as any).oldTerrainRenderer = scene.landscape.mountains;
     (window as any).oldTerrainWalls = scene.terrainCollision.walls.getChildren().slice();
+    (window as any).oldTerrainRelief = [...scene.landscape.mountains.chunks.values()].flatMap(
+      (chunk: any) => [...chunk.relief, chunk.debug],
+    );
     scene.run.clan.stageTime = 45;
     scene.openRoutes();
   });
@@ -177,6 +218,10 @@ test('cliffs stop a galloping Khan and are removed with streamed terrain on migr
         walls: scene.terrainCollision.walls.getLength(),
         oldChunks: (window as any).oldTerrainRenderer.chunks.size,
         oldWallsDestroyed: (window as any).oldTerrainWalls.every((wall: any) => !wall.scene),
+        oldReliefDestroyed: (window as any).oldTerrainRelief.every((object: any) => !object.scene),
+        cliffObjects: scene.children.list.filter((object: any) =>
+          object.name.startsWith('terrain-cliff-'),
+        ).length,
       };
     }),
   ).toEqual({
@@ -185,6 +230,8 @@ test('cliffs stop a galloping Khan and are removed with streamed terrain on migr
     walls: 0,
     oldChunks: 0,
     oldWallsDestroyed: true,
+    oldReliefDestroyed: true,
+    cliffObjects: 0,
   });
   expect(errors).toEqual([]);
 });

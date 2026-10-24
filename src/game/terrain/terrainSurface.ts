@@ -1,4 +1,6 @@
 import { MountainTerrain } from './MountainTerrain';
+import { GAME } from '../config';
+import { terrainLighting } from './terrainLighting';
 import { TERRAIN_MATERIALS, type TerrainArt, type TerrainChunk, type TerrainSample } from './types';
 
 export interface TerrainLayerGeometry {
@@ -34,12 +36,14 @@ export function terrainSurface(
   art: TerrainArt,
   sizes: Readonly<Record<string, { width: number; height: number }>>,
 ): readonly TerrainLayerGeometry[] {
-  const samples = new Map(chunk.vertices.map((sample) => [`${sample.x},${sample.y}`, sample]));
+  const original = new Map(chunk.vertices.map((sample) => [`${sample.x},${sample.y}`, sample]));
+  const samples = new Map<string, TerrainSample>();
   const sampleAt = (x: number, y: number): TerrainSample => {
     const key = `${x},${y}`;
     let sample = samples.get(key);
     if (!sample) {
-      sample = terrain.sample(x, y);
+      const source = original.get(key) ?? terrain.sample(x, y);
+      sample = { ...source, shade: terrainLighting(terrain, source) };
       samples.set(key, sample);
     }
     return sample;
@@ -50,8 +54,8 @@ export function terrainSurface(
     const dimensions = sizes[texture] ?? { width: 1254, height: 1254 };
     const repeatX = dimensions.width * art.tileScale;
     const repeatY = dimensions.height * art.tileScale;
-    const xs = coordinates(chunk.x, chunk.width, terrain.cellSize, repeatX);
-    const ys = coordinates(chunk.y, chunk.height, terrain.cellSize, repeatY);
+    const xs = coordinates(chunk.x, chunk.width, GAME.terrain.surfaceStep, repeatX);
+    const ys = coordinates(chunk.y, chunk.height, GAME.terrain.surfaceStep, repeatY);
     const geometry: TerrainLayerGeometry = {
       material,
       texture,
@@ -93,7 +97,10 @@ export function terrainSurface(
             definition.texture ? (sample.y - tileY) / repeatY : 0.5,
           );
           geometry.colors.push(
-            shadedColor(definition.texture ? 0xffffff : definition.color, sample.shade),
+            shadedColor(
+              definition.texture ? (definition.tint ?? 0xffffff) : definition.color,
+              sample.shade,
+            ),
           );
           geometry.alphas.push(alpha[corner]!);
         }

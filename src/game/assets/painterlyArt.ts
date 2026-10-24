@@ -10,17 +10,17 @@ const PROPS = new Set(['ger', 'cart', 'banner', 'sheep', 'rock', 'pillar']);
 export const CAMP_VISUAL_SCALE = GAME.camp.visualScale;
 /** World scale shared by the original ground and the supplied location tiles. */
 export const GROUND_TILE_SCALE = 0.65;
-/** Existing ground PNGs are temporary material swatches; missing stone/cliff art stays flat. */
+/** Reuse local painted ground swatches for blended slopes and contour cliff faces. */
 export const MOUNTAIN_TERRAIN_ART: TerrainArt = {
   tileScale: GROUND_TILE_SCALE,
   materials: {
     grassland: { texture: 'ground-mount-otgontenger', color: 0xa7ad72 },
     'rocky-soil': { texture: 'ground-eej-khairkhan', color: 0xb49672 },
-    stone: { color: 0x92958e },
+    stone: { texture: 'ground-eej-khairkhan', tint: 0x96c0ec, color: 0x92958e },
     tundra: { texture: 'ground-altai-tavan-bogd', color: 0xa3ad9c },
     snow: { texture: 'ground-khan-tengri', color: 0xe2e9e8 },
   },
-  cliff: { color: 0x5c625e, rim: 0xbbbca8 },
+  cliff: { color: 0x81877a, rim: 0xc5c5aa },
 };
 export const ART_WIDTH: Readonly<Record<string, number>> = {
   worker: 30,

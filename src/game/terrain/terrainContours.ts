@@ -41,7 +41,9 @@ export function terrainContours(
         ] as const) {
           const a = corners[start]!;
           const b = corners[end]!;
-          if (a.height >= elevation === b.height >= elevation) continue;
+          const aboveA = a.height >= elevation;
+          const aboveB = b.height >= elevation;
+          if (aboveA === aboveB) continue;
           const t = (elevation - a.height) / (b.height - a.height);
           crossings.set(edge, { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
         }

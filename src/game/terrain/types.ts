@@ -50,7 +50,7 @@ export interface TerrainCell extends TerrainBounds {
   blocked: boolean;
 }
 
-/** N/E/S/W bits describe exposed sides of a steep cell, for future cliff atlas frames. */
+/** N/E/S/W bits describe exposed sides of a steep traversal cell, retained as diagnostic metadata. */
 export interface CliffModule extends TerrainPoint {
   width: number;
   height: number;
@@ -74,6 +74,8 @@ export interface TerrainMaterialArt {
   /** An already loaded, locally bundled Phaser texture. Undefined uses a flat placeholder colour. */
   texture?: string;
   color: number;
+  /** Optional multiply tint for reusing a painted material in a cooler or warmer band. */
+  tint?: number;
 }
 
 export interface TerrainArt {
@@ -82,8 +84,5 @@ export interface TerrainArt {
   cliff: {
     color: number;
     rim: number;
-    /** Optional preloaded modular atlas. Keys are the exposed N/E/S/W bit masks, 1–15. */
-    texture?: string;
-    frames?: Readonly<Partial<Record<number, string>>>;
   };
 }

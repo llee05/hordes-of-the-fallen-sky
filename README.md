@@ -63,8 +63,9 @@ Every location has a distinct painted landscape: golden meadow, frozen river, sl
 Mount Otgontenger prototypes integrated mountain terrain: seeded ranges, foothills,
 plateaus, broad winding passes, and elevation-based grass, gravel, stone, tundra,
 and snow. Cliff boundaries shape riding and enemy routes around the open camp and
-caravan road. Camera-sized chunks reuse the existing 2D ground textures; exposed
-stone and modular cliff faces use placeholder colours pending painted artwork.
+caravan road. Camera-sized chunks reuse the existing 2D ground textures, with
+smooth contour ledges, painted rocky slopes, and upper-left relief lighting.
+Cliff faces reuse the rocky ground swatch pending dedicated painted cliff art.
 In development, choose Otgontenger with **F8** and press **F9** to cycle elevation,
 slope, and collision overlays. See [the mountain prototype](docs/mountain-terrain.md)
 for configuration, rendering, traversal, and limits.

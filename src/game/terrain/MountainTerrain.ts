@@ -16,7 +16,7 @@ export function terrainWeights(
 ): MaterialWeights {
   const bands = region.biome.bands.map(([low, high]) => smoothstep(low, high, elevation));
   const [soil = 0, stone = 0, tundra = 0, snow = 0] = bands;
-  const rock = smoothstep(0.32, 1.15, slope) * (1 - snow * 0.8);
+  const rock = smoothstep(0.75, 1.9, slope) * (0.8 - snow * 0.65);
   return [
     (1 - soil) * (1 - rock),
     (soil - stone) * (1 - rock),

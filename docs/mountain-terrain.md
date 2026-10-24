@@ -16,9 +16,10 @@ Elevation blends grassland, rocky soil, exposed stone, alpine tundra, and snow;
 steep slopes expose more stone. Surface normals produce upper-left illumination.
 No artwork, PNGs, sprite sheets, or stand-alone mountain models are generated.
 
-Steep cells supply N/E/S/W edge masks for modular cliff art. Until an atlas is
-provided, the renderer can use flat cliff and stone placeholder colours. The
-material system consumes the existing, locally bundled 2D ground textures.
+Steep traversal cells retain N/E/S/W edge masks as diagnostic metadata. Their
+square boundaries are visible only in the collision debug overlay. The normal
+view uses continuous elevation contours, textured rocky slopes, and shaded cliff
+faces, consuming only the existing, locally bundled 2D ground textures.
 
 `terrain/TerrainNavigation.ts` retains a coarse world traversal grid independently
 of visual chunk eviction. It merges steep cells into exact collision rectangles,
@@ -38,6 +39,11 @@ shadows from elevation contours on steep slopes. `terrainLighting.ts` combines
 broad landform normals with short upper-left horizon shadows. Their render spacing
 and ledge dimensions live in `GAME.terrain`; none changes collision or pass width.
 These helpers produce runtime geometry and colours, never bitmap artwork.
+The 32-unit visual sampling is finer than the 64-unit collision grid. A cliff
+ledge appears only on sufficiently steep, front-facing slopes; its strength fades
+at gentle ground and back-facing slopes. This avoids drawing complete outlines
+around hills or filling combat areas with decorative cliff bands. The heightfield,
+traversal thresholds, camp basin, and caravan corridor retain their original shapes.
 
 ## Playing and inspecting the sample
 
@@ -64,18 +70,32 @@ The existing Phaser Mesh renderer blends the bundled grass, gravel, tundra, and
 snow PNGs with continuous vertex alpha. Global texture coordinates and extra face
 splits at wrap boundaries preserve the original 1254-pixel PNGs without resizing
 them, creating bitmap artwork, or relying on power-of-two-only texture wrapping.
-Normals tint every material consistently. Surface geometry stays in the existing
-2D ground coordinate system; there are no standalone mountain meshes or models,
+Broad normals and soft horizon shadows tint every material consistently. Exposed
+stone reuses the Eej Khairkhan rocky swatch with a cooler multiply tint, rather
+than a featureless grey fill. Slope-driven stone exposure starts later and retains
+some underlying material, allowing grass and soil to reach the foothills.
+Surface geometry stays in the existing 2D ground coordinate system; there are
+no standalone mountain meshes or models,
 and actor ground anchors and physics sizes retain their established registration.
-Phaser's Canvas fallback uses flat material colours instead of textured meshes.
+Phaser's Canvas fallback uses flat material colours and triangular cliff shading
+instead of textured meshes.
+
+Contour faces, upper rims, and fading toe shadows occupy separate global render
+depths above all ground chunks, so neighbouring ground never covers a cliff
+crossing a chunk boundary. `terrainPolygon.ts` clips face polygons at texture
+wraps, preserving tint, opacity, and the source PNG's world scale. Static mesh
+projection initializes immediately, eliminating the blank frame while a new chunk
+waits for Phaser's update list. Eviction destroys ground, ledges, shadows, and debug
+objects together. Actor ground anchors and collision sizes remain unchanged.
 
 `MOUNTAIN_TERRAIN_ART` in `assets/painterlyArt.ts` maps the five material slots to
-existing loaded textures and placeholder colours. Exposed stone and cliff faces
-deliberately use flat placeholders. A future painted cliff atlas can assign
-`cliff.texture` and `cliff.frames[mask]`, with N=1, E=2, S=4, W=8 exposed-side bits;
-each registered module fits its 64-unit cell. The colour fallback already follows
-those same modules and collision boundaries. No asset generation pipeline is
-introduced. The sample replaces its former snowy-dome and foothill cutouts, and
+existing loaded textures, optional multiply tints, and fallback colours. The ledge
+face reuses the stone material; without its texture, it uses `cliff.color` as a
+placeholder. `cliff.rim` controls the restrained upper edge light. Dedicated cliff
+art remains a future improvement: painted face sections, rims, and inside/outside
+corners should follow the continuous contour directions rather than square cell
+masks. No asset generation pipeline is introduced. The sample replaces its former
+snowy-dome and foothill cutouts, and
 the former fixed meltwater spline is omitted until water follows generated valleys.
 Other locations retain their existing scenery and walkable surfaces.
 

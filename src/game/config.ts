@@ -18,7 +18,7 @@ export const GAME = {
       elevationInterval: 0.18,
       minSlope: 0.95,
       fullSlope: 1.8,
-      faceDepth: 26,
+      faceDepth: 38,
       shadowReach: 24,
     },
   },
