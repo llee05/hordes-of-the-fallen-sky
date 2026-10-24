@@ -19,10 +19,13 @@ import { RiverSurface } from './RiverSurface';
 import { MountainTerrain } from '../terrain/MountainTerrain';
 import { TerrainNavigation } from '../terrain/TerrainNavigation';
 import { MountainRenderer } from '../terrain/MountainRenderer';
+import { World3DRenderer } from '../world3d/World3DRenderer';
+import { wantsWorld3D } from '../world3d/worldProjection';
 
 /** Painted terrain and scenery; only ArenaScene owns simulation and collision geometry. */
 export class SteppeLandscape {
   mountains?: MountainRenderer;
+  world3d?: World3DRenderer;
   navigation?: TerrainNavigation;
   private readonly regional: Phaser.GameObjects.Container;
   private readonly ground: Phaser.GameObjects.TileSprite;
@@ -46,19 +49,28 @@ export class SteppeLandscape {
     this.wind = scene.add.graphics().setDepth(8000);
     this.atmosphere = scene.add.graphics().setDepth(9000);
     this.setRegion(0);
-    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.mountains?.destroy());
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.mountains?.destroy();
+      this.world3d?.destroy();
+    });
   }
 
   setRegion(region: number, location?: MigrationLocation): void {
     const id = location?.id ?? REGIONS[region]?.id ?? LOCATIONS[0]!.id;
     this.definition = LANDSCAPES[id];
     this.mountains?.destroy();
+    this.world3d?.destroy();
     this.mountains = undefined;
+    this.world3d = undefined;
+    this.scene.cameras.main.setAlpha(1);
     this.navigation = undefined;
     if (this.definition.mountains) {
       const terrain = new MountainTerrain(this.definition.mountains);
       this.navigation = new TerrainNavigation(terrain);
-      this.mountains = new MountainRenderer(this.scene, terrain, MOUNTAIN_TERRAIN_ART);
+      if (wantsWorld3D()) {
+        this.world3d = new World3DRenderer(this.scene, terrain);
+        this.scene.cameras.main.setAlpha(0);
+      } else this.mountains = new MountainRenderer(this.scene, terrain, MOUNTAIN_TERRAIN_ART);
     }
     this.regional.removeAll(true);
     this.river = undefined;
@@ -75,7 +87,7 @@ export class SteppeLandscape {
       this.regional.add(this.river.container);
     }
     const center = GAME.worldSize / 2;
-    for (const item of this.mountains ? [] : landscapeCover(id)) {
+    for (const item of definition.mountains ? [] : landscapeCover(id)) {
       const x = center + item.x;
       const y = center + item.y;
       if (
@@ -95,7 +107,7 @@ export class SteppeLandscape {
           .setDepth(100 + y),
       );
     }
-    for (const item of this.mountains ? [] : landscapeLandmarks(id)) {
+    for (const item of definition.mountains ? [] : landscapeLandmarks(id)) {
       // Large landforms read as painted relief behind combat; smaller trees keep ground sorting.
       const x = center + item.x;
       const y = center + item.y;
