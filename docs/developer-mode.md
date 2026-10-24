@@ -1,5 +1,13 @@
 # Developer level checkpoints
 
+Developer console rules live in the renderer-independent `src/game/dev/commands.ts`.
+The command catalog includes `help`, `invincible [on|off]` (`god` is an alias),
+`heal`, `status`, and `clear`. Omitting the invincibility argument toggles it.
+Invincibility protects the Khan; the clan's damage, food, and journey rules continue.
+Healing applies only to a living Khan and never refreshes Last Ember or skips
+succession. Commands validate their arguments, cap output at 80 entries and history
+at 40 commands, and retain history when output is cleared.
+
 Run `npm run dev` for Electron or `npm run dev:web` for the browser. Choose
 **Developer mode** at the title or pause menu, or press **F8** from any screen.
 The selector pauses the entire expedition. Escape, F8, and Back return to the
