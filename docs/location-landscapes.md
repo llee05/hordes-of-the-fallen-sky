@@ -41,7 +41,8 @@ canonical location ID. `LandscapeDefinition.groundTile` selects the PNG basename
 `painterlyArt.ts` preloads each unique tile once under `ground-<basename>`, using
 the app's asset base URL for both offline desktop and browser subpath builds.
 `GROUND_TILE_SCALE` displays ground at 0.65 world units per source pixel. The one
-world-sized tile sprite switches texture on arrival or developer checkpoint jumps.
+world-sized tile sprite switches texture on arrival; developer checkpoint jumps
+rebuild the scene with the selected terrain.
 These detailed tiles replace the flat color wash and generated grass, stone, and
 soil marks. Landmarks, scattered scenery, rivers, and chapter weather still layer
 above them. Locations without a tile retain the shared `steppe-ground.png` surface.

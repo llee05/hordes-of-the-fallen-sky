@@ -3,6 +3,8 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createServer } from 'vite';
+import { LANDSCAPES } from '../../src/game/data/landscapes';
+import { GAME } from '../../src/game/config';
 
 test('painted landscapes and destination previews remain readable in Electron', async () => {
   test.setTimeout(120000);
@@ -34,10 +36,12 @@ test('painted landscapes and destination previews remain readable in Electron', 
         'eej-khairkhan',
         'bogd-khan-uul',
         'altai-tavan-bogd',
+        'khan-tengri',
+        'altan-ovoo',
         'orkhon-valley',
         'golden-pasture',
         'silent-river',
-      ]) {
+      ] as const) {
         await page.keyboard.press('F8');
         const checkpoint = ['golden-pasture', 'silent-river'].includes(id)
           ? `chapter:${id}`
@@ -50,6 +54,35 @@ test('painted landscapes and destination previews remain readable in Electron', 
             return scene.textures.get('steppe-scenery').getFrameNames().length;
           }),
         ).toBe(12);
+        const tile = LANDSCAPES[id].groundTile;
+        expect(
+          await page.evaluate(() => {
+            const scene = (window as any).__gloam.scene;
+            const ground = scene.landscape.ground;
+            const previous = (window as any).nativeGround;
+            (window as any).nativeGround = ground;
+            return {
+              texture: ground.displayTexture.key,
+              scale: [ground.tileScaleX, ground.tileScaleY],
+              bounds: [ground.x, ground.y, ground.width, ground.height],
+              physical: Boolean(ground.body),
+              oldDestroyed: !previous || !previous.scene,
+              groundSprites: scene.children.list.filter((item: any) => item.type === 'TileSprite')
+                .length,
+              tiles: scene.textures
+                .getTextureKeys()
+                .filter((key: string) => key.startsWith('ground-')).length,
+            };
+          }),
+        ).toEqual({
+          texture: tile ? `ground-${tile}` : 'ground',
+          scale: [0.65, 0.65],
+          bounds: [0, 0, GAME.worldSize, GAME.worldSize],
+          physical: false,
+          oldDestroyed: true,
+          groundSprites: 1,
+          tiles: 5,
+        });
         await page.evaluate(() => {
           const scene = (window as any).__gloam.scene;
           if (!scene.landscape.definition.water) return;

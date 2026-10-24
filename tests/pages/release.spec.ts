@@ -50,6 +50,11 @@ test('production loads all local artwork under the Pages subpath without desktop
   ).toBe(true);
   for (const asset of [
     'steppe-ground.png',
+    'altai-tavan-bogd.png',
+    'altan-ovoo.png',
+    'bogd-khan-uul.png',
+    'khan-tengri.png',
+    'orkhon-valley.png',
     'steppe-mounted-motion.png',
     'steppe-clan-motion.png',
     'steppe-creature-motion.png',

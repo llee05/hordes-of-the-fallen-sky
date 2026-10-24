@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { openTitle, startExpedition, tapController } from './helpers';
+import { LANDSCAPES } from '../../src/game/data/landscapes';
 
 const places = [
   ['otgontenger', 'Mount Otgontenger', 'OTGONTENGER'],
@@ -20,6 +21,7 @@ for (const [id, name, short] of places)
       const scene = (window as any).__gloam.scene;
       scene.run.clan.stageTime = 45;
       scene.run.pendingUpgrades = 2;
+      (window as any).departureGround = scene.landscape.ground;
       scene.openRoutes();
     });
     const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
@@ -32,6 +34,10 @@ for (const [id, name, short] of places)
     );
     await page.locator('[data-route="river"]').click();
     await expect(page.locator('#objective')).toContainText(name);
+    // The departure camp keeps its terrain until crossing completion.
+    expect(
+      await page.evaluate(() => (window as any).__gloam.scene.landscape.ground.displayTexture.key),
+    ).toBe('ground');
     expect(await page.evaluate(() => (window as any).__gloam.scene.run.story.crossings)).toEqual(
       [],
     );
@@ -47,6 +53,15 @@ for (const [id, name, short] of places)
     expect(await page.evaluate(() => (window as any).__gloam.scene.landscape.regional.name)).toBe(
       `landscape-${id}`,
     );
+    const tile = LANDSCAPES[id].groundTile;
+    expect(
+      await page.evaluate(() => (window as any).__gloam.scene.landscape.ground.displayTexture.key),
+    ).toBe(tile ? `ground-${tile}` : 'ground');
+    expect(
+      await page.evaluate(
+        () => (window as any).__gloam.scene.landscape.ground === (window as any).departureGround,
+      ),
+    ).toBe(true);
     expect(
       await page.evaluate(() => (window as any).__gloam.scene.run.story.crossings[0].locationId),
     ).toBe(id);
