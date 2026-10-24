@@ -331,7 +331,7 @@ export class ArenaScene extends Phaser.Scene {
       });
       bindAction('F6', () => {
         const world = this.landscape.world3d;
-        if (world) world.setAngle(world.angle < 65 ? 65 : world.angle < 80 ? 80 : 55);
+        if (world) world.setAngle(world.angle < 48 ? 48 : world.angle < 60 ? 60 : 40);
       });
       bindAction('F10', () => this.toggleDeveloperConsole());
       bindAction('BACKTICK', () => this.toggleDeveloperConsole());
@@ -878,6 +878,10 @@ export class ArenaScene extends Phaser.Scene {
     if (movement.lengthSq() > 0) movement.normalize();
     else if (this.controllerMove.lengthSq() > 0) movement.copy(this.controllerMove);
     else movement.copy(this.touchMove);
+    if (this.landscape.world3d) {
+      const rotated = this.landscape.world3d.movement(movement.x, movement.y);
+      movement.set(rotated.x, rotated.y);
+    }
     const moving = movement.lengthSq() > 0.01;
     this.run.clan.momentum = Phaser.Math.Clamp(
       this.run.clan.momentum + dt * (moving ? 0.72 : -1.5),
@@ -891,7 +895,8 @@ export class ArenaScene extends Phaser.Scene {
     if (this.dashRemaining > 0) movement.copy(this.facing).scale(GAME.dash.speed);
     else movement.scale(this.run.stats.speed);
     this.player.setVelocity(movement.x, movement.y);
-    this.player.setFlipX(this.facing.x < 0);
+    const faceX = this.landscape.world3d?.screenX(this.facing.x, this.facing.y) ?? this.facing.x;
+    if (Math.abs(faceX) > 0.01) this.player.setFlipX(faceX < 0);
     this.player.setAlpha(
       this.invulnerable > 0 ? (Math.floor(this.run.elapsed * 20) % 2 ? 0.5 : 0.85) : 1,
     );
@@ -1064,7 +1069,10 @@ export class ArenaScene extends Phaser.Scene {
           this.physics.moveTo(enemy, waypoint.x, waypoint.y, speed);
         }
       }
-      enemy.setFlipX(enemy.x > target.x);
+      enemy.setFlipX(
+        (this.landscape.world3d?.screenX(enemy.x - target.x, enemy.y - target.y) ??
+          enemy.x - target.x) > 0,
+      );
       enemy.preparingAttack =
         ((behavior === 'ranged' || behavior === 'boss') &&
           distance < 650 &&
@@ -1122,7 +1130,11 @@ export class ArenaScene extends Phaser.Scene {
     );
     if (isKhanActive(this.run) && target) {
       this.playerMotion.attack();
-      if (this.player.body!.velocity.lengthSq() < 4) this.player.setFlipX(target.x < this.player.x);
+      if (this.player.body!.velocity.lengthSq() < 4)
+        this.player.setFlipX(
+          (this.landscape.world3d?.screenX(target.x - this.player.x, target.y - this.player.y) ??
+            target.x - this.player.x) < 0,
+        );
       this.shootVolley(
         this.player.x,
         this.player.y,
@@ -1143,7 +1155,11 @@ export class ArenaScene extends Phaser.Scene {
       );
       if (riderTarget) {
         this.riderMotions[i]!.attack();
-        if (this.riderSpeeds[i]! < 2) rider.setFlipX(riderTarget.x < rider.x);
+        if (this.riderSpeeds[i]! < 2)
+          rider.setFlipX(
+            (this.landscape.world3d?.screenX(riderTarget.x - rider.x, riderTarget.y - rider.y) ??
+              riderTarget.x - rider.x) < 0,
+          );
         this.shootVolley(
           rider.x,
           rider.y,
@@ -1668,7 +1684,8 @@ export class ArenaScene extends Phaser.Scene {
       const dx = rider.x - previousX;
       const dy = rider.y - previousY;
       this.riderSpeeds[i] = dt > 0 ? Math.hypot(dx, dy) / dt : 0;
-      if (Math.abs(dx) > 0.1) rider.setFlipX(dx < 0);
+      const screenDx = this.landscape.world3d?.screenX(dx, dy) ?? dx;
+      if (Math.abs(screenDx) > 0.1) rider.setFlipX(screenDx < 0);
       rider.setDepth(100 + rider.y);
       this.riderShadows[i]!.setPosition(rider.x + 7, rider.y + 4).setDepth(99 + rider.y);
     }

@@ -1,9 +1,10 @@
 import type { TerrainBounds } from '../terrain/types';
 
 export const WORLD_3D = {
-  angle: 65,
-  minAngle: 55,
-  maxAngle: 80,
+  angle: 48,
+  yaw: 30,
+  minAngle: 35,
+  maxAngle: 70,
   meshStep: 32,
   chunkBudget: 2,
   pixelRatio: 1.5,
@@ -29,9 +30,27 @@ export function projectGround(
   z: number,
   height: number,
   angle = WORLD_3D.angle as number,
+  yaw = WORLD_3D.yaw as number,
 ): { x: number; y: number } {
   const radians = (angle * Math.PI) / 180;
-  return { x, y: z * Math.sin(radians) - height * Math.cos(radians) };
+  const turn = (yaw * Math.PI) / 180;
+  return {
+    x: x * Math.cos(turn) - z * Math.sin(turn),
+    y: (x * Math.sin(turn) + z * Math.cos(turn)) * Math.sin(radians) - height * Math.cos(radians),
+  };
+}
+
+/** Screen-relative riding, with horizontal world speed preserved through camera rotation. */
+export function screenMovement(
+  x: number,
+  y: number,
+  yaw = WORLD_3D.yaw as number,
+): { x: number; y: number } {
+  const radians = (yaw * Math.PI) / 180;
+  return {
+    x: x * Math.cos(radians) + y * Math.sin(radians),
+    y: -x * Math.sin(radians) + y * Math.cos(radians),
+  };
 }
 
 export function groundView(
@@ -42,16 +61,17 @@ export function groundView(
   zoom: number,
   maxHeight: number,
   angle: number,
+  yaw: number = WORLD_3D.yaw,
 ): TerrainBounds {
   const radians = (angle * Math.PI) / 180;
   const span = height / zoom / Math.sin(radians);
   const relief = maxHeight / Math.tan(radians);
-  return {
-    x: x - width / zoom / 2,
-    y: z - span / 2 - relief,
-    width: width / zoom,
-    height: span + relief * 2,
-  };
+  const turn = (yaw * Math.PI) / 180;
+  const halfX =
+    (Math.abs(Math.cos(turn)) * width) / zoom / 2 + Math.abs(Math.sin(turn)) * (span / 2 + relief);
+  const halfZ =
+    (Math.abs(Math.sin(turn)) * width) / zoom / 2 + Math.abs(Math.cos(turn)) * (span / 2 + relief);
+  return { x: x - halfX, y: z - halfZ, width: halfX * 2, height: halfZ * 2 };
 }
 
 /** Explicit opt-in preserves the shipping renderer during the migration. */

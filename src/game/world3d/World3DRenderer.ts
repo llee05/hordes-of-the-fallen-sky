@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { GAME } from '../config';
 import { MOUNTAIN_TERRAIN_ART } from '../assets/painterlyArt';
 import { terrainDressing } from '../terrain/terrainDressing';
-import { WORLD_3D, groundView } from './worldProjection';
+import { WORLD_3D, groundView, projectGround, screenMovement } from './worldProjection';
 import { SpriteBridge } from './SpriteBridge';
 import { MountainHeightfield } from './MountainHeightfield';
 import type { TerrainNavigation } from '../terrain/TerrainNavigation';
@@ -31,6 +31,7 @@ export class World3DRenderer {
   readonly effects: GraphicsBridge;
   viewBounds?: TerrainBounds;
   angle: number = WORLD_3D.angle;
+  readonly yaw: number = WORLD_3D.yaw;
   debugMode: WorldDebugMode = 'off';
   terrainOnly = false;
   renderScale = 1;
@@ -120,6 +121,12 @@ export class World3DRenderer {
     if (Number.isFinite(angle))
       this.angle = Math.max(WORLD_3D.minAngle, Math.min(WORLD_3D.maxAngle, angle));
   }
+  movement(x: number, y: number): { x: number; y: number } {
+    return screenMovement(x, y, this.yaw);
+  }
+  screenX(x: number, y: number): number {
+    return projectGround(x, y, 0, this.angle, this.yaw).x;
+  }
   cycleDebug(): void {
     this.setDebug(
       WORLD_DEBUG_MODES[
@@ -171,6 +178,7 @@ export class World3DRenderer {
         ? elevation
         : Phaser.Math.Linear(this.focusHeight, elevation, 0.09);
     const radians = (this.angle * Math.PI) / 180;
+    const yaw = (this.yaw * Math.PI) / 180;
     Object.assign(this.camera, {
       left: -width / 2 / zoom,
       right: width / 2 / zoom,
@@ -178,9 +186,9 @@ export class World3DRenderer {
       bottom: -height / 2 / zoom,
     });
     this.camera.position.set(
-      x,
+      x + Math.sin(yaw) * Math.cos(radians) * 6000,
       this.focusHeight + Math.sin(radians) * 6000,
-      z + Math.cos(radians) * 6000,
+      z + Math.cos(yaw) * Math.cos(radians) * 6000,
     );
     this.camera.lookAt(x, this.focusHeight, z);
     this.camera.updateProjectionMatrix();
@@ -193,6 +201,7 @@ export class World3DRenderer {
       zoom,
       this.terrain.region.biome.heightScale,
       this.angle,
+      this.yaw,
     );
     this.viewBounds = view;
     const wanted = visibleWorldChunks(view, this.terrain.worldSize, this.terrain.chunkSize);
@@ -236,7 +245,7 @@ export class World3DRenderer {
     this.sprites.update(this.camera, view);
     this.timings.sprites = performance.now() - mark;
     mark = performance.now();
-    this.effects.update(view, this.angle);
+    this.effects.update(view, this.camera);
     this.timings.effects = performance.now() - mark;
     mark = performance.now();
     this.renderer.render(this.world, this.camera);

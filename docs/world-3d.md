@@ -16,8 +16,9 @@ Three's orthographic camera preserves apparent size regardless of depth
 Physics X/Y maps to render X/Z; render Y is elevation in the same world units.
 Combat distances, collision circles, targeting, and speeds remain in the horizontal
 simulation plane. The renderer never writes projected positions into physics.
-The camera shares Phaser's follow target and zoom, at a configurable 65° elevation
-(55–80°). The HUD stays in the DOM. Character crops preserve their logical atlas
+The camera shares Phaser's follow target and zoom, at a configurable 48° elevation
+(35–70°) and a fixed 30° azimuth. Riding directions follow the screen while combat
+distances stay in horizontal world coordinates. The HUD stays in the DOM. Character crops preserve their logical atlas
 canvas, ground origin, tint, rotation, flips, alpha, and active-time animations.
 Visible characters are batched by atlas with depth testing and alpha cutout.
 
@@ -57,14 +58,14 @@ material, sprite, effect, camera, and navigation adapters have separate modules
 under `src/game/world3d/`. Two additional chunk rows outside the physical world
 continue the backdrop while Arcade's world bounds remain unchanged.
 
-In development, F6 cycles 55°, 65°, and 80°. F7 hides props, characters, and the HUD;
+In development, F6 cycles 40°, 48°, and 60°. F7 hides props, characters, and the HUD;
 press it again to restore them. Backtick still opens the console in this view.
 F9 cycles wireframe, elevation, normal colours, slope, traversability, chunk bounds,
 and the actual collision cells. These tools continue working while paused.
 
 | Console command           | Effect                                          |
 | ------------------------- | ----------------------------------------------- |
-| `camera-angle 55`         | Set the orthographic camera elevation (55–80°)  |
+| `camera-angle 48`         | Set the orthographic camera elevation (35–70°)  |
 | `terrain-debug normals`   | Select a debug view; omit the argument to cycle |
 | `terrain-debug off`       | Restore painted materials                       |
 | `terrain-only on` / `off` | Isolate terrain or restore the scene            |

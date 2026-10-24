@@ -41,7 +41,7 @@ describe('developer console commands', () => {
     for (const command of [
       'terrain-only yes',
       'camera-angle NaN',
-      'camera-angle 54',
+      'camera-angle 34',
       'camera-angle 81',
       'camera-angle 65 80',
       'terrain-debug banana',

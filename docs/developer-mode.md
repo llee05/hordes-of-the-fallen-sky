@@ -9,7 +9,7 @@ alternate console shortcut. **F8** opens the separate level selector, which also
 retains an embedded console.
 
 The opt-in 3D terrain slice adds F6 for camera angle, F7 for terrain-only rendering,
-and expanded F9 overlays. Its console commands are `camera-angle 55..80`,
+and expanded F9 overlays. Its console commands are `camera-angle 35..70`,
 `terrain-debug [mode]`, and `terrain-only [on|off]`. See [the 3D terrain guide](world-3d.md)
 for enabling the prototype and inspecting its geometry.
 

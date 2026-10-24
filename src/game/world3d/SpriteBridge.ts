@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import * as THREE from 'three';
 import type { MountainTerrain } from '../terrain/MountainTerrain';
+import { projectGround, WORLD_3D } from './worldProjection';
 
 type Painted = Phaser.GameObjects.Image | Phaser.GameObjects.Sprite | Phaser.GameObjects.Text;
 
@@ -169,8 +170,7 @@ export class SpriteBridge {
     ];
     const tint = object instanceof Phaser.GameObjects.Text ? 0xffffff : object.tintTopLeft;
     this.color.setHex(tint);
-    const sine = Math.sin(camera.rotation.x);
-    const cosine = Math.cos(camera.rotation.x);
+    const basis = camera.matrixWorld.elements;
     for (let j = 0; j < 4; j++) {
       let [px, py] = points[j]! as [number, number];
       if (!(object instanceof Phaser.GameObjects.Text)) {
@@ -178,16 +178,41 @@ export class SpriteBridge {
         if (object.flipY) py = -(py + (object.displayOriginY * 2 - frame.realHeight));
       }
       // Matrix supplies parent scale and the existing attack/projectile rotations.
-      const dx = this.matrix.a * px + this.matrix.c * py;
-      const dy = this.matrix.b * px + this.matrix.d * py;
-      if (shadow)
+      let dx = this.matrix.a * px + this.matrix.c * py;
+      let dy = this.matrix.b * px + this.matrix.d * py;
+      if (object.texture.key === 'bolt' && 'body' in object && object.body) {
+        const body = object.body as Phaser.Physics.Arcade.Body;
+        if (body.velocity.lengthSq() > 0) {
+          const direction = projectGround(
+            body.velocity.x,
+            body.velocity.y,
+            0,
+            (Math.acos(basis[5]!) * 180) / Math.PI,
+            WORLD_3D.yaw,
+          );
+          const delta = Math.atan2(direction.y, direction.x) + Math.PI / 4 - object.rotation;
+          const old = dx;
+          dx = dx * Math.cos(delta) - dy * Math.sin(delta);
+          dy = old * Math.sin(delta) + dy * Math.cos(delta);
+        }
+      }
+      if (shadow) {
+        const yaw = (WORLD_3D.yaw * Math.PI) / 180;
+        const sx = x + dx * Math.cos(yaw) + dy * Math.sin(yaw);
+        const sz = z - dx * Math.sin(yaw) + dy * Math.cos(yaw);
         positions.setXYZ(
           i + j,
-          x + dx,
-          this.terrain.height(x + dx, z + dy) * this.terrain.region.biome.heightScale + 1,
-          z + dy,
+          sx,
+          this.terrain.height(sx, sz) * this.terrain.region.biome.heightScale + 1,
+          sz,
         );
-      else positions.setXYZ(i + j, x + dx, height - dy * cosine + 2, z - dy * sine);
+      } else
+        positions.setXYZ(
+          i + j,
+          x + dx * basis[0]! - dy * basis[4]!,
+          height + dx * basis[1]! - dy * basis[5]! + 2,
+          z + dx * basis[2]! - dy * basis[6]!,
+        );
       uvs.setXY(
         i + j,
         j === 0 || j === 3 ? (text ? 0 : frame.u0) : text ? 1 : frame.u1,

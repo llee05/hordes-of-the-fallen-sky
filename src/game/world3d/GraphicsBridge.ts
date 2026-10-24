@@ -63,7 +63,11 @@ export class GraphicsBridge {
     this.aura.frustumCulled = false;
   }
 
-  update(view: { x: number; y: number; width: number; height: number }, angle: number): void {
+  update(
+    view: { x: number; y: number; width: number; height: number },
+    camera: THREE.OrthographicCamera,
+  ): void {
+    const basis = camera.matrixWorld.elements;
     const circle = this.scene.children.list.find(
       (object) => object instanceof Phaser.GameObjects.Arc,
     ) as Phaser.GameObjects.Arc | undefined;
@@ -105,7 +109,7 @@ export class GraphicsBridge {
           };
       const signature = [
         object.alpha,
-        hurdle ? angle : object.x,
+        hurdle ? camera.quaternion.toArray().join(',') : object.x,
         hurdle ? 0 : object.y,
         bounds.x,
         bounds.y,
@@ -178,8 +182,12 @@ export class GraphicsBridge {
         const x = object.x + px;
         const z = object.y + py;
         if (hurdle) {
-          const radians = (angle * Math.PI) / 180;
-          positions.setXYZ(i, px, -py * Math.cos(radians) + 2, py * Math.sin(radians));
+          positions.setXYZ(
+            i,
+            px * basis[0]! - py * basis[4]!,
+            px * basis[1]! - py * basis[5]! + 2,
+            px * basis[2]! - py * basis[6]!,
+          );
         } else
           positions.setXYZ(
             i,

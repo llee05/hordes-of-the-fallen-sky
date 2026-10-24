@@ -93,7 +93,7 @@ test('3D terrain streams real walls, anchors painted sprites, and exposes paused
   await page.keyboard.press('F7');
   await expect(page.locator('#game-hud')).toBeVisible();
   await page.keyboard.press('F6');
-  expect(await page.evaluate(() => (window as any).__gloam.scene.landscape.world3d.angle)).toBe(65);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.landscape.world3d.angle)).toBe(60);
   await page.keyboard.press('F8');
   await page.locator('[data-developer-level="destination:2:orkhon-valley"]').click();
   await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(0);

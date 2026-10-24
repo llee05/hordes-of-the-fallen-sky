@@ -1,6 +1,6 @@
 import { isKhanActive } from '../state/khan';
 import type { RunState } from '../types';
-import { WORLD_DEBUG_MODES, type WorldDebugMode } from '../world3d/worldProjection';
+import { WORLD_3D, WORLD_DEBUG_MODES, type WorldDebugMode } from '../world3d/worldProjection';
 import {
   DEVELOPER_COMMAND_MAX_LENGTH,
   DEVELOPER_HISTORY_LIMIT,
@@ -42,7 +42,7 @@ export const DEVELOPER_COMMANDS = [
   },
   {
     name: 'camera-angle',
-    usage: 'camera-angle 55..80',
+    usage: 'camera-angle 35..70',
     description: 'Set the 3D orthographic camera elevation in degrees (F6 cycles).',
   },
 ] as const;
@@ -126,8 +126,8 @@ export function executeDeveloperCommand(
     (name === 'camera-angle' &&
       (args.length !== 1 ||
         !Number.isFinite(Number(args[0])) ||
-        Number(args[0]) < 55 ||
-        Number(args[0]) > 80)) ||
+        Number(args[0]) < WORLD_3D.minAngle ||
+        Number(args[0]) > WORLD_3D.maxAngle)) ||
     (![...toggles, 'terrain-debug', 'camera-angle'].includes(name!) && args.length > 0)
   ) {
     write(`Usage: ${definition.usage}`, 'error');
