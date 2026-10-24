@@ -17,26 +17,35 @@ test('mounted gaits and bow release animate without changing collision geometry'
 }) => {
   await page.keyboard.down('d');
   const samples = [];
-  for (let index = 0; index < 7; index++) {
-    await page.waitForTimeout(80);
-    samples.push(
-      await page.evaluate(() => {
-        const scene = (window as any).__gloam.scene;
-        const player = scene.player;
-        const crop = player.frame.data.spriteSourceSize;
-        return {
-          frame: player.frame.name,
-          rider: scene.riders[0].frame.name,
-          width: player.body.width,
-          height: player.body.height,
-          displayWidth: player.displayWidth,
-          anchor: crop.y + crop.h,
-          centerX: player.body.center.x - player.x,
-          centerY: player.body.center.y - player.y,
-        };
-      }),
-    );
-  }
+  // Sample until active-time animation has advanced, including on software renderers.
+  await expect
+    .poll(
+      async () => {
+        samples.push(
+          await page.evaluate(() => {
+            const scene = (window as any).__gloam.scene;
+            const player = scene.player;
+            const crop = player.frame.data.spriteSourceSize;
+            return {
+              frame: player.frame.name,
+              rider: scene.riders[0].frame.name,
+              width: player.body.width,
+              height: player.body.height,
+              displayWidth: player.displayWidth,
+              anchor: crop.y + crop.h,
+              centerX: player.body.center.x - player.x,
+              centerY: player.body.center.y - player.y,
+            };
+          }),
+        );
+        return (
+          new Set(samples.map((sample) => sample.frame)).size >= 3 &&
+          new Set(samples.map((sample) => sample.rider)).size >= 2
+        );
+      },
+      { timeout: 10000, intervals: [80, 120, 180] },
+    )
+    .toBe(true);
   await page.keyboard.up('d');
   expect(new Set(samples.map((sample) => sample.frame)).size).toBeGreaterThanOrEqual(3);
   expect(new Set(samples.map((sample) => sample.rider)).size).toBeGreaterThanOrEqual(2);
@@ -102,19 +111,24 @@ test('all creature clips advance and freeze with camp planning', async ({ page }
   });
   for (const body of initialBodies) expect(body.width).toBeCloseTo(body.expected, 8);
   const frames = new Map<string, Set<string>>();
-  for (let index = 0; index < 10; index++) {
-    await page.waitForTimeout(90);
-    const sample = await page.evaluate(() =>
-      (window as any).__gloam.scene.enemies
-        .getChildren()
-        .filter((enemy: any) => enemy.active)
-        .map((enemy: any) => [enemy.definition.texture, enemy.frame.name] as [string, string]),
-    );
-    for (const [kind, frame] of sample) {
-      if (!frames.has(kind)) frames.set(kind, new Set());
-      frames.get(kind)!.add(frame);
-    }
-  }
+  await expect
+    .poll(
+      async () => {
+        const sample = await page.evaluate(() =>
+          (window as any).__gloam.scene.enemies
+            .getChildren()
+            .filter((enemy: any) => enemy.active)
+            .map((enemy: any) => [enemy.definition.texture, enemy.frame.name] as [string, string]),
+        );
+        for (const [kind, frame] of sample) {
+          if (!frames.has(kind)) frames.set(kind, new Set());
+          frames.get(kind)!.add(frame);
+        }
+        return frames.size === 6 && [...frames.values()].every((seen) => seen.size >= 2);
+      },
+      { timeout: 10000, intervals: [90, 120, 180] },
+    )
+    .toBe(true);
   expect(frames.size).toBe(6);
   for (const seen of frames.values()) expect(seen.size).toBeGreaterThanOrEqual(2);
   await page.keyboard.press('b');
