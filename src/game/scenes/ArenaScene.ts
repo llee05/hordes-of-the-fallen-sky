@@ -250,6 +250,7 @@ export class ArenaScene extends Phaser.Scene {
       runChildUpdate: false,
     });
     this.terrainCollision = new TerrainCollision(this, this.player, this.enemies);
+    this.terrainCollision.setTerrain(this.landscape.navigation);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.terrainCollision.destroy());
     this.projectiles = this.physics.add.group({
       classType: Projectile,

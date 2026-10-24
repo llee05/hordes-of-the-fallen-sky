@@ -4,6 +4,7 @@ import { MOUNTAIN_TERRAIN_ART } from '../assets/painterlyArt';
 import type { WorldGeometry } from './mountainGeometry';
 import type { TerrainNavigation } from '../terrain/TerrainNavigation';
 import { WORLD_DEBUG_MODES, type WorldDebugMode } from './worldProjection';
+import type { ScenePalette } from '../data/worldRegions';
 export { WORLD_DEBUG_MODES, type WorldDebugMode } from './worldProjection';
 
 /** Reuses painted textures; all elevation, walls, lighting and shadows come from geometry. */
@@ -13,7 +14,7 @@ export class MountainMaterials {
   readonly debug = { value: 0 };
   private readonly textures: THREE.Texture[] = [];
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, palette?: ScenePalette) {
     const texture = (key: string): THREE.Texture => {
       const image = scene.textures.get(key).getSourceImage() as HTMLImageElement;
       const map = new THREE.Texture(image);
@@ -24,11 +25,22 @@ export class MountainMaterials {
       return map;
     };
     const maps = {
-      meadow: { value: texture(MOUNTAIN_TERRAIN_ART.materials.grassland.texture!) },
+      meadow: {
+        value: texture(
+          palette ? 'tapestry-meadow' : MOUNTAIN_TERRAIN_ART.materials.grassland.texture!,
+        ),
+      },
       soil: { value: texture(MOUNTAIN_TERRAIN_ART.materials['rocky-soil'].texture!) },
-      stone: { value: texture(MOUNTAIN_TERRAIN_ART.materials.stone.texture!) },
+      stone: {
+        value: texture(palette ? 'tapestry-stone' : MOUNTAIN_TERRAIN_ART.materials.stone.texture!),
+      },
       snow: { value: texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!) },
       worldDebug: this.debug,
+      usePalette: { value: palette ? 1 : 0 },
+      grassTint: { value: new THREE.Color(palette?.grass ?? 0xffffff) },
+      soilTint: { value: new THREE.Color(palette?.soil ?? 0xffffff) },
+      rockTint: { value: new THREE.Color(palette?.rock ?? 0xffffff) },
+      snowTint: { value: new THREE.Color(palette?.snow ?? 0xffffff) },
     };
     const make = (wall: boolean): THREE.MeshLambertMaterial => {
       const material = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
@@ -44,7 +56,8 @@ export class MountainMaterials {
           );
         shader.fragmentShader =
           `uniform sampler2D meadow; uniform sampler2D soil; uniform sampler2D stone; uniform sampler2D snow;
-          uniform int worldDebug; uniform int isWall; varying float traversal;
+          uniform int worldDebug; uniform int isWall; uniform int usePalette;
+          uniform vec3 grassTint; uniform vec3 soilTint; uniform vec3 rockTint; uniform vec3 snowTint; varying float traversal;
           varying vec3 worldPoint; varying vec3 worldNormal; varying vec4 materialA; varying vec3 materialB; varying float occlusion;
           vec3 painted(sampler2D map, vec2 uv) {
             return mix(texture2D(map,uv).rgb, texture2D(map,vec2(-uv.y,uv.x)*0.71+0.37).rgb,0.28);
@@ -65,6 +78,12 @@ export class MountainMaterials {
               rock*=vec3(0.63,0.76,0.82);
             }
             if(materialB.x+materialB.y>0.001 && isWall==0) white=texture2D(snow,uv).rgb*vec3(0.94,0.97,1.0);
+            if(usePalette==1) {
+              grass=grassTint*(0.85+dot(grass,vec3(0.22,0.65,0.13))*0.4);
+              dirt=soilTint*(0.87+dot(dirt,vec3(0.22,0.65,0.13))*0.35);
+              rock=rockTint*(0.55+dot(rock,vec3(0.22,0.65,0.13))*0.9);
+              white=snowTint*(0.93+dot(white,vec3(0.22,0.65,0.13))*0.1);
+            }
             float sum=dot(materialA,vec4(1.0))+dot(materialB,vec3(1.0));
             vec3 paintedColor=(grass*materialA.x+dirt*materialA.y+rock*materialA.z+grass*vec3(0.75,0.84,0.78)*materialA.w+
               white*materialB.x+white*vec3(0.67,0.84,0.91)*materialB.y+rock*materialB.z)/max(0.001,sum);

@@ -65,6 +65,13 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
   }
   scene.load.atlas('steppe-props', `${root}steppe-props.png`, `${root}steppe-props.json`);
   scene.load.atlas('steppe-scenery', `${root}steppe-scenery-v2.png`, `${root}steppe-scenery.json`);
+  scene.load.image('tapestry-meadow', `${root}tapestry-meadow-v3.png`);
+  scene.load.image('tapestry-stone', `${root}tapestry-stone-v3.png`);
+  scene.load.atlas(
+    'tapestry-scenery',
+    `${root}tapestry-scenery-v3.png`,
+    `${root}tapestry-scenery-v3.json`,
+  );
 }
 
 export function sceneryImage(

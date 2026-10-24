@@ -26,7 +26,7 @@ test('river styles have finite, bounded decoration behind actors and replace the
   test.setTimeout(90000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await expect(page.getByRole('button', { name: 'Developer mode F8' })).toBeVisible();
   for (const [checkpoint, kind, channels, name] of [
     ['chapter:golden-pasture', 'stream', 1, 'golden-pasture'],
@@ -69,7 +69,7 @@ test('current strokes follow active time, freeze in menus, and honor live reduce
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await expect(page.getByRole('button', { name: 'Developer mode F8' })).toBeVisible();
   await jump(page, 'destination:2:orkhon-valley');
   const moving = await flow(page);
@@ -95,7 +95,7 @@ test('current strokes follow active time, freeze in menus, and honor live reduce
 test('destination previews retain the same river branches and ice as the battlefield', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await expect(page.getByRole('button', { name: 'Developer mode F8' })).toBeVisible();
   await jump(page, 'chapter:golden-pasture');
   await page.keyboard.press('m');

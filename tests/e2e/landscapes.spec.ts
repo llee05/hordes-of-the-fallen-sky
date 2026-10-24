@@ -8,7 +8,7 @@ test('all twelve landscapes render bundled scenery, replace old props, and freez
   test.setTimeout(120000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await expect(page.getByRole('button', { name: 'Developer mode F8' })).toBeVisible();
   for (const place of LOCATIONS) {
     await page.keyboard.press('F8');
@@ -77,7 +77,7 @@ test('landscape identity survives chapter weather and revisiting does not accumu
   page,
 }) => {
   test.setTimeout(90000);
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-level="destination:2:eej-khairkhan"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();

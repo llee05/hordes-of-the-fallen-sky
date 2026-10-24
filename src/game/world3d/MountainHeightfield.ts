@@ -9,6 +9,7 @@ export interface HeightNode {
   base: number;
   rise: number;
   field: number;
+  layers?: readonly { field: number; rise: number }[];
 }
 
 /** A continuous mountain field with one fractured shelf, rather than repeated elevation rings. */
@@ -44,7 +45,7 @@ export class MountainHeightfield extends MountainTerrain {
     return clamp01(this.nodeValue(x, z).rise / (this.region.geometry?.shelf.rise || 1));
   }
 
-  private nodeValue(x: number, z: number): HeightNode {
+  protected nodeValue(x: number, z: number): HeightNode {
     const center = this.worldSize / 2;
     const protectedGround = this.protection(x, z);
     const raw = super.rawHeight(x, z);
@@ -90,6 +91,9 @@ export class MountainHeightfield extends MountainTerrain {
   get cachedHeightNodes(): number {
     return this.nodes.size;
   }
+  actorHeight(x: number, z: number): number {
+    return this.height(x, z);
+  }
 
   cellNodes(x: number, z: number): readonly [HeightNode, HeightNode, HeightNode, HeightNode] {
     const step = WORLD_3D.meshStep;
@@ -109,6 +113,21 @@ export class MountainHeightfield extends MountainTerrain {
     const weights = v <= u ? [1 - u, u - v, v] : [1 - v, u, v - u];
     const interpolate = (key: 'base' | 'rise' | 'field'): number =>
       vertices.reduce((sum, node, i) => sum + node[key] * weights[i]!, 0);
+    if (a.layers) {
+      let height = interpolate('base');
+      for (let layer = 0; layer < a.layers.length; layer++) {
+        const field = vertices.reduce(
+          (sum, node, i) => sum + node.layers![layer]!.field * weights[i]!,
+          0,
+        );
+        if (field >= 0)
+          height += vertices.reduce(
+            (sum, node, i) => sum + node.layers![layer]!.rise * weights[i]!,
+            0,
+          );
+      }
+      return height / this.region.biome.heightScale;
+    }
     return (
       (interpolate('base') + (interpolate('field') >= 0 ? interpolate('rise') : 0)) /
       this.region.biome.heightScale

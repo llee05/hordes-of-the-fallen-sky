@@ -1,108 +1,81 @@
-# Orthographic terrain vertical slice
+# Angled Living Steppe scenes
 
-The prototype keeps Phaser 3 as the simulation, input, animation, asset, and lifecycle
-owner. Three.js renders a second WebGL canvas underneath the existing DOM interface.
-Enable it with `http://localhost:5173/?terrain=3d`, then use F8 to visit Mount
-Otgontenger. `VITE_TERRAIN_RENDERER=3d npm run dev` also enables it in Electron;
-the same environment variable works at build time. Without the flag the original
-renderer remains playable. Other destinations retain the existing presentation.
+The main renderer now presents all twelve destinations as angled orthographic scenes.
+Run `npm run dev` or `npm run dev:web`; no developer flag is required. The previous
+presentation remains available with `?terrain=2d` in the browser, or
+`VITE_TERRAIN_RENDERER=2d npm run dev` in Electron. WebGL initialization failures
+also restore the previous renderer.
 
-Phaser's Mesh objects use a painter's display list and cannot provide depth-buffered
-terrain/sprite occlusion across the world. A separate Three renderer is a smaller
-change than replacing Arcade, the game engine, pooled actors, or the interface.
-Three's orthographic camera preserves apparent size regardless of depth
-([camera contract](https://threejs.org/docs/pages/OrthographicCamera.html)).
+Phaser owns simulation, Arcade physics, input, pooling, animation, menus, and asset
+loading. Three.js provides depth-buffered terrain underneath the existing DOM HUD.
+Physics X/Y maps to render X/Z; render Y is real elevation. Targeting distances,
+speeds, and hitboxes stay in horizontal world coordinates. Camera projection never
+writes screen positions into physics. The camera follows the Khan at 48° above
+horizontal with a fixed 30° azimuth, a modest look ahead, and a wider landscape view.
+Movement follows screen directions. Characters retain their existing painted frames,
+logical canvases, ground anchors, attack timing, and terrain contact shadows.
 
-Physics X/Y maps to render X/Z; render Y is elevation in the same world units.
-Combat distances, collision circles, targeting, and speeds remain in the horizontal
-simulation plane. The renderer never writes projected positions into physics.
-The camera shares Phaser's follow target and zoom, at a configurable 48° elevation
-(35–70°) and a fixed 30° azimuth. Riding directions follow the screen while combat
-distances stay in horizontal world coordinates. The HUD stays in the DOM. Character crops preserve their logical atlas
-canvas, ground origin, tint, rotation, flips, alpha, and active-time animations.
-Visible characters are batched by atlas with depth testing and alpha cutout.
+## Geography and rendering
 
-The trade-offs are a second WebGL context, an explicit bridge for Phaser graphics,
-and additional GPU texture uploads. The prototype requires WebGL 2; the original
-renderer remains available on older hardware. There is no engine rewrite, runtime
-asset download, or new generated artwork.
+`src/game/data/worldRegions.ts` defines each region's palette, snow line, vegetation,
+and connected geological masses. `ComposedTerrain` combines seeded coherent relief
+and fractured shelf boundaries with authored ramps and protected battle spaces.
+Multiple overlapping layers form shelves, ravines, peaks, and connected ranges.
+The camp occupies an open raised shelf with several broad approaches. The east
+caravan route remains connected. Mountain regions add snow at higher elevations;
+forests, volcanic steppe, rivers, and granite desert retain their distinct palettes.
+The original ridged-noise heightfield remains available independently for testing
+and the previous prototype.
 
-Implementation milestones: camera/sprite bridge; continuous mountain geometry,
-vertical cliff walls and materials; gameplay integration, tools, and validation.
+`sceneGeometry` clips global 32-unit triangles at every shelf boundary and adds
+actual vertical rock faces. Height queries interpolate those same triangles.
+Global normals and deterministic intersections keep neighboring chunks continuous.
+Cliff winding agrees with outward normals for correct directional lighting.
+Materials blend meadow, soil, exposed rock, scrub, scree, snow, and ice from slope
+and elevation. Painted surface images, triplanar rock mapping, directional sunlight,
+contact shading, bounded cast shadows, and distance fog reinforce the geometry.
+[New material and scenery assets and their prompts](angled-scene-art.md) live locally
+in `public/art/`; the original actor and camp atlases are retained.
 
-The 3D heightfield reuses seeded coherent/ridged noise, domain warping, protected
-camp/caravan masks, and winding valleys. A single fractured shelf has a broad
-graded approach. It does not quantize the range into concentric tiers. Mesh cells
-are split at the shelf boundary: upper and lower polygons share X/Z endpoints
-with a separate vertical wall between them. Normals are sampled in global
-coordinates on the appropriate side, so chunks share positions and lighting.
-Ground queries interpolate these same triangles, including partial boundary cells.
+`sceneDressing` places rubble below cliffs, shrubs on shelves, groves in suitable
+lower terrain, and sparse alpine conifers below the snow line. It excludes camp,
+caravan lanes, steep slopes, snowfields, and watercourses. Props use painted
+camera-facing atlas frames and depth testing rather than individual mountain sprites.
 
-Grass, soil, granite, tundra, snow, ice, and scree blend by elevation, slope, and
-shelter. Existing meadow, granite-desert, and snowy ground images supply the
-painted materials; cliff faces use triplanar rock mapping. Dual-scale sampling
-reduces obvious repeats. There are no generated terrain bitmaps. Directional
-sunlight, a bounded shadow map, ambient light, contact shading at wall feet, and
-subtle distance fog supply depth. Chunk-local props follow the shared landform
-rules. Geometry is built only on chunk entry and disposed on eviction.
+`WorldRiver` shares channel and crossing registration between terrain, dressing,
+`Water3D`, and character anchors. Channels carve through raised masses. Turquoise
+water and shoreline foam follow the existing regional splines. Instanced timber
+planks form crossings; actor feet meet their deck elevation. Frozen rivers omit
+wooden crossings. Water animation uses active gameplay seconds and freezes in menus.
+The channels remain shallow traversable decoration; this change adds no swimming rule.
 
-Navigation remains a resident horizontal flow field. Conservative 16-unit probes
-block steep slopes and wall discontinuities inside each collision cell. A tested
-route reaches the elevated shelf from the camp, and more than half the complete
-region is reachable; the remaining mountain slopes also serve as backdrop.
+Navigation uses resident horizontal flow fields with conservative slope and cliff
+probes. Traversable ramps connect the elevations. Arrows retain their original
+horizontal range and stop at vertical discontinuities. No ballistic or elevation
+damage rules are introduced.
 
-`MountainRegion.geometry` in `data/terrainBiomes.ts` authors shelf position,
-footprint, rise, fracture, flattening, ramp width, grade, and traversal slope limit.
-Regions without this optional geometry use continuous noise instead. The geometry,
-material, sprite, effect, camera, and navigation adapters have separate modules
-under `src/game/world3d/`. Two additional chunk rows outside the physical world
-continue the backdrop while Arcade's world bounds remain unchanged.
+## Tools and limits
 
-In development, F6 cycles 40°, 48°, and 60°. F7 hides props, characters, and the HUD;
-press it again to restore them. Backtick still opens the console in this view.
-F9 cycles wireframe, elevation, normal colours, slope, traversability, chunk bounds,
-and the actual collision cells. These tools continue working while paused.
+In development, F8 chooses any destination. Backtick opens the console directly.
+F6 cycles camera elevations, F7 isolates terrain, and F9 cycles wireframe,
+elevation, normals, slope, traversability, chunk bounds, and collision cells.
 
-| Console command           | Effect                                          |
-| ------------------------- | ----------------------------------------------- |
-| `camera-angle 48`         | Set the orthographic camera elevation (35–70°)  |
-| `terrain-debug normals`   | Select a debug view; omit the argument to cycle |
-| `terrain-debug off`       | Restore painted materials                       |
-| `terrain-only on` / `off` | Isolate terrain or restore the scene            |
+| Command                   | Effect                                  |
+| ------------------------- | --------------------------------------- |
+| `camera-angle 48`         | Set camera elevation, 35–70°            |
+| `terrain-debug slope`     | Select a debug view; no argument cycles |
+| `terrain-debug off`       | Restore painted materials               |
+| `terrain-only on` / `off` | Isolate terrain or restore the scene    |
 
-Existing Phaser hurdle drawings and ground warnings are replayed into cached
-effect textures. Characters use depth-tested atlas batches and their existing
-contact-shadow asset. Static scenery also casts sunlight shadows; the bounded
-1024px shadow map refreshes at most three times per second once chunks settle.
-Resident terrain submits two shared geometry batches; hurdle drawings share one
-cached atlas and batch. Chunk geometry is retained independently for navigation
-inspection and eviction. Frustum-based chunk selection and sprite culling bound
-the submitted scene. Shared batches rebuild only when the resident set changes.
-World rendering adapts between 50% and 100% pixel resolution on slow GPUs, with
-hysteresis before restoring detail; DOM text, HUD size, camera scale, and physics
-coordinates stay unchanged. The debug label reports the current pixel scale.
-Ground-following arrows keep horizontal speed and range, and stop at vertical
-discontinuities, including in collision callbacks. This prototype does not add
-ballistic trajectories or height-based damage bonuses.
+Geometry streams by visible chunks and is disposed on eviction. Resident terrain
+uses two shared mesh batches; actors batch by atlas, bridge planks use instancing,
+and a frustum test excludes offscreen chunks. Height and normal caches are bounded.
+Shadow maps update at a reduced rate once the view settles. Pixel resolution adapts
+on slow GPUs while HUD text and world dimensions retain their size.
 
-Validation covers deterministic generation, mesh/query agreement, seam positions
-and normals, vertical faces, connected ramps, arrow/wall interception, developer
-command validation, actual Arcade movement, elevated combat, depth occlusion,
-chunk lifecycle, and pooled render load. Browser and Electron tests exercise the
-same development entry point; `npm run check` verifies the shipping build.
-
-This remains an opt-in vertical slice. The other destinations keep their original
-renderer. Dedicated cliff, scrub, ice, and scree art would improve material quality;
-current variants reuse existing paintings. Shadows have deliberately limited range
-and resolution, and effects use a raster bridge rather than a full 3D particle
-system. Target hardware performance and longer playtests remain necessary before
-making this the default. The next step is to profile the slice on target hardware,
-then author geometry configurations and materials for the other mountain biomes.
-
-The full-capacity browser sample uses 350 enemies and exercises the 250-arrow pool.
-On this machine's SwiftShader software GPU it measured roughly 9 FPS at the minimum
-pixel scale. Simulation plus renderer CPU processing was below 20 ms in that
-sample, with about 20 draw calls and 14 textures. This is a resource-budget check,
-not a target-hardware frame-rate certification. The regression records software
-FPS and checks bounded CPU/resource use; hardware GPU runs also require 30 FPS.
-The measured software limit is a reason to keep the prototype behind its flag.
+This is a stylized 2.5D renderer: painted actors and vegetation remain billboards,
+with actual geometry for the terrain and crossings. Effects use the existing Phaser
+graphics bridge rather than a new particle engine. Broad approaches deliberately
+favor bullet-heaven movement over exact landscape realism. GPU performance and
+longer combat balance still require target-hardware playtesting; software GPU
+rendering is substantially slower and is not a frame-rate certification.

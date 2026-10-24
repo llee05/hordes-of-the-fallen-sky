@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 async function openMountains(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-level="destination:2:otgontenger"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();

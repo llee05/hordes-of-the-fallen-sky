@@ -79,13 +79,14 @@ In development, choose Otgontenger with **F8** and press **F9** to cycle elevati
 slope, cliff-placement, and traversal overlays. See [the mountain terrain guide](docs/mountain-terrain.md)
 for configuration, rendering, traversal, and limits.
 
-A true 3D terrain prototype is available behind a feature flag. Run
-`VITE_TERRAIN_RENDERER=3d npm run dev`, then choose Mount Otgontenger with F8.
-Browser preview also accepts `?terrain=3d`. It adds an orthographic Three.js world
-with actual height vertices, vertical rock walls, terrain shadows, and the existing
-painted characters anchored to the surface. Phaser retains physics and combat.
-F6 changes camera angle, F7 isolates terrain, and F9 cycles debug views. The old
-renderer remains the default during validation. See [the 3D slice guide](docs/world-3d.md).
+Angled 2.5D scenes are now the default across all twelve destinations. An orthographic
+Three.js world supplies genuine raised shelves, vertical cliff faces, snowfields,
+shadows, river gorges, and timber crossings. Existing painted characters and camps
+stand on the terrain while Phaser retains physics, combat, and animation. Riding
+follows screen directions. F6 changes camera angle, F7 isolates terrain, and F9
+cycles debug views in development. Use `?terrain=2d` in browser preview or
+`VITE_TERRAIN_RENDERER=2d npm run dev` for the previous presentation. See
+[the angled scene guide](docs/world-3d.md) and [painted asset prompts](docs/angled-scene-art.md).
 
 The Khan, allied archers, and all six creature designs have painted sprite animation: four gait or hovering frames and two attack poses each. Riding speed drives the gait, galloping quickens it, and actual volleys, charges, and strikes trigger release poses. Hits briefly tint the character; defeated enemies fade through a small visual pool after their collision bodies leave immediately. Character animation and these effects freeze in every paused run phase. See [the sprite sheets, registration, and generation prompts](docs/character-animation.md).
 

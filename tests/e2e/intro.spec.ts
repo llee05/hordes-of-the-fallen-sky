@@ -6,7 +6,7 @@ test('intro reads at the player’s pace with frozen simulation, back, completio
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused();
   await expect(page.locator('.intro-story')).toHaveCount(0);
   await page.waitForTimeout(300);
@@ -110,7 +110,7 @@ test('intro reads at the player’s pace with frozen simulation, back, completio
 
 for (const chapter of [0, 1, 2, 3, 4]) {
   test(`skip chapter ${chapter + 1} into gameplay with camp scenes off`, async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?terrain=2d');
     await page.getByRole('button', { name: 'Camp scenes: On' }).click();
     await page.getByRole('button', { name: /NEW GAME/ }).click();
     await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
@@ -140,7 +140,7 @@ for (const chapter of [0, 1, 2, 3, 4]) {
 test('replaying the introduction completes or skips back to the frozen title at every chapter', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Replay introduction' }).click();
   for (let chapter = 1; chapter < 5; chapter++) await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Enter');
@@ -167,7 +167,7 @@ test('replaying the introduction completes or skips back to the frozen title at 
 test('held keyboard confirmation completes the prologue without galloping or opening a menu', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await page.getByRole('button', { name: /NEW GAME/ }).click();
   for (let chapter = 1; chapter < 5; chapter++) await page.keyboard.press('ArrowRight');
@@ -197,7 +197,7 @@ test('controller starts, advances, skips, replays, and never leaks a held confir
     Object.defineProperty(navigator, 'getGamepads', { value: () => [state] });
   });
   const press = (index: number): Promise<void> => tapController(page, index);
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await press(0);
   await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
@@ -253,7 +253,7 @@ test('story works at Steam Deck size and disables painting motion on a live pref
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Replay introduction' }).click();
   await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
   await expect

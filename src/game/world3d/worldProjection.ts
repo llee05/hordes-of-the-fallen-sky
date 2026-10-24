@@ -2,6 +2,8 @@ import type { TerrainBounds } from '../terrain/types';
 
 export const WORLD_3D = {
   angle: 48,
+  worldScale: 0.8,
+  lookAhead: 170,
   yaw: 30,
   minAngle: 35,
   maxAngle: 70,
@@ -74,10 +76,10 @@ export function groundView(
   return { x: x - halfX, y: z - halfZ, width: halfX * 2, height: halfZ * 2 };
 }
 
-/** Explicit opt-in preserves the shipping renderer during the migration. */
+/** Angled scenes are the main presentation; the previous renderer stays available for compatibility. */
 export function wantsWorld3D(): boolean {
   return (
-    import.meta.env.VITE_TERRAIN_RENDERER === '3d' ||
-    (import.meta.env.DEV && new URLSearchParams(location.search).get('terrain') === '3d')
+    import.meta.env.VITE_TERRAIN_RENDERER !== '2d' &&
+    new URLSearchParams(location.search).get('terrain') !== '2d'
   );
 }

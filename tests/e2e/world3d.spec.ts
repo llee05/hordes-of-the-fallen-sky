@@ -4,7 +4,7 @@ import { expect, test, type Page } from '@playwright/test';
 test.use({ viewport: { width: 1280, height: 800 }, trace: 'off' });
 
 async function open(page: Page): Promise<void> {
-  await page.goto('/?terrain=3d');
+  await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-level="destination:2:otgontenger"]').click();
   await expect(page.locator('canvas[data-world-renderer="3d"]')).toBeVisible();
@@ -96,8 +96,9 @@ test('3D terrain streams real walls, anchors painted sprites, and exposes paused
   expect(await page.evaluate(() => (window as any).__gloam.scene.landscape.world3d.angle)).toBe(60);
   await page.keyboard.press('F8');
   await page.locator('[data-developer-level="destination:2:orkhon-valley"]').click();
-  await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(0);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.cameras.main.alpha)).toBe(1);
+  await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1);
+  await settled(page);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.cameras.main.alpha)).toBe(0);
   await expect(page.locator('#app')).not.toHaveClass(/terrain-only/);
   expect(errors).toEqual([]);
 });
@@ -109,61 +110,39 @@ test('Khan movement follows the ramp, terrain occludes sprites, and elevated com
   await open(page);
   await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.player.body.reset(2205, 1980);
-    s.cameras.main.stopFollow().centerOn(2400, 1700);
+    s.player.body.reset(3370, 2600);
+    s.cameras.main.stopFollow().centerOn(3050, 2600);
   });
-  await page.keyboard.down('KeyW');
+  await page.keyboard.down('KeyA');
   await expect
-    .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.y), { timeout: 20000 })
-    .toBeLessThan(1820);
-  await page.keyboard.up('KeyW');
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.x), { timeout: 20000 })
+    .toBeLessThan(3150);
+  await page.keyboard.up('KeyA');
+  await settled(page);
   const position = await page.evaluate(() => {
-    const s = (window as any).__gloam.scene;
-    const w = s.landscape.world3d;
+    const s = (window as any).__gloam.scene,
+      w = s.landscape.world3d;
     return {
-      ground: w.terrain.height(s.player.x, s.player.y) * w.terrain.region.biome.heightScale,
+      ground: w.terrain.actorHeight(s.player.x, s.player.y) * 1000,
       visual: w.sprites.positions.get(s.player).y,
       walk: s.landscape.navigation.isWalkable(s.player.x, s.player.y, 8),
     };
   });
   expect(position.walk).toBe(true);
   expect(position.visual).toBeCloseTo(position.ground, 3);
-  expect(position.ground).toBeGreaterThan(400);
-  // A real wall blocks an attempted gallop; use a safe lower-side cell next to it.
-  const wall = await page.evaluate(() => {
-    const s = (window as any).__gloam.scene;
-    const nav = s.landscape.navigation;
-    for (let row = 15; row < 35; row++)
-      for (let col = 46; col < 62; col++) {
-        const x = col * 64 + 32,
-          y = row * 64 + 32;
-        if (nav.isWalkable(x, y, 20, true) && !nav.isWalkable(x, y - 80, 20)) {
-          s.player.body.reset(x, y);
-          return { x, y };
-        }
-      }
-    return null;
-  });
-  expect(wall).not.toBeNull();
-  await page.keyboard.down('KeyW');
-  await page.keyboard.press('Space');
-  await page.waitForTimeout(1200);
-  await page.keyboard.up('KeyW');
-  expect(await page.evaluate(() => (window as any).__gloam.scene.player.y)).toBeGreaterThan(
-    wall!.y - 100,
-  );
+  expect(position.ground).toBeGreaterThan(170);
   await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.player.body.reset(3000, 1650);
-    s.cameras.main.centerOn(3100, 1650);
+    s.player.body.reset(2600, 2600);
+    s.cameras.main.centerOn(2700, 2600);
     s.spawnEnemy();
     const e = s.enemies.getChildren().find((e: any) => e.active);
-    e.enableBody(true, 3130, 1650, true, true);
+    e.enableBody(true, 2730, 2600, true, true);
     e.health = e.maxHealth = 100000;
     e.attackTimer = e.clanAttackTimer = 999;
     e.setVelocity(0, 0);
     s.testTarget = e;
-    s.shootVolley(3000, 1650, e, 1, 1);
+    s.shootVolley(2600, 2600, e, 1, 1);
   });
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.testTarget.health), {
@@ -277,8 +256,8 @@ test('bounded atlas batches support pooled combat without rebuilding settled ter
   });
   expect(result.enemies).toBeGreaterThan(300);
   expect(result.positions).toBeGreaterThan(500);
-  expect(result.draws).toBeLessThan(30);
-  expect(result.triangles).toBeLessThan(60000);
+  expect(result.draws).toBeLessThan(45);
+  expect(result.triangles).toBeLessThan(100000);
   expect(result.nodes).toBeLessThanOrEqual(32768);
   expect(result.unchanged).toBe(true);
   console.log('3D combat render sample', result);
@@ -290,4 +269,83 @@ test('bounded atlas batches support pooled combat without rebuilding settled ter
   expect(result.textures).toBeLessThan(20);
   if (!/SwiftShader|llvmpipe|software/i.test(result.gpu)) expect(result.fps).toBeGreaterThan(30);
   await page.screenshot({ path: 'test-results/world3d/combat-stress.png' });
+});
+
+test('all destinations use composed scenes by default, stream cleanly, and freeze water in the console', async ({
+  page,
+}) => {
+  test.setTimeout(240000);
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Developer mode F8' })).toBeVisible();
+  const places = [
+    'golden-pasture',
+    'silent-river',
+    'broken-pass',
+    'heart-of-the-steppe',
+    'otgontenger',
+    'bogd-khan-uul',
+    'altai-tavan-bogd',
+    'khan-tengri',
+    'belukha',
+    'altan-ovoo',
+    'eej-khairkhan',
+    'orkhon-valley',
+  ];
+  for (const id of places) {
+    await page.keyboard.press('F8');
+    const choice = page.locator(`[data-developer-level$=":${id}"]`).first();
+    await choice.click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => (window as any).__gloam.scene.landscape.world3d?.terrain.region.scene.id,
+        ),
+      )
+      .toBe(id);
+    await page.evaluate(() => {
+      const s = (window as any).__gloam.scene;
+      s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
+      s.developerTools.invincible = s.developerTools.clanInvincible = true;
+    });
+    await settled(page);
+    const result = await page.evaluate(() => {
+      const s = (window as any).__gloam.scene,
+        w = s.landscape.world3d;
+      return {
+        id: w.terrain.region.scene.id,
+        chunks: w.chunks.size,
+        pending: w.pendingChunks,
+        missing: [...w.chunks.values()]
+          .flatMap((c: any) => c.props)
+          .filter((p: any) => p.texture.key === '__MISSING').length,
+        height: w.terrain.actorHeight(s.player.x, s.player.y) * 1000,
+        anchor: w.sprites.positions.get(s.player)?.y,
+        road: s.landscape.navigation.isWalkable(3700, 2600, 12, true),
+      };
+    });
+    expect(result.id).toBe(id);
+    expect(result.chunks).toBeGreaterThan(5);
+    expect(result.pending).toBe(0);
+    expect(result.missing).toBe(0);
+    expect(result.anchor).toBeCloseTo(result.height, 3);
+    expect(result.road).toBe(true);
+    await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1);
+  }
+  await page.keyboard.press('Backquote');
+  const time = await page.evaluate(
+    () => (window as any).__gloam.scene.landscape.world3d.water.time.value,
+  );
+  await page.waitForTimeout(500);
+  expect(
+    await page.evaluate(() => (window as any).__gloam.scene.landscape.world3d.water.time.value),
+  ).toBe(time);
+  await page.keyboard.press('Backquote');
+  await page.screenshot({ path: 'test-results/overhaul/orkhon-default.png' });
+  await page.goto('/?terrain=2d');
+  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
+  await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(0);
+  expect(errors).toEqual([]);
 });

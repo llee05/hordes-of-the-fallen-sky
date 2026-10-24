@@ -4,7 +4,7 @@ import { DEVELOPER_LEVELS } from '../../src/game/dev/levels';
 test('developer mode freezes the expedition and returns to the exact title, intro, story, or menu', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await expect(page.locator('[data-developer-level]')).toHaveCount(DEVELOPER_LEVELS.length);
   await expect(page.getByRole('button', { name: 'Back ESC / F8' })).toBeFocused();
@@ -55,7 +55,7 @@ test('every developer checkpoint launches its real chapter, landscape, and cross
   test.setTimeout(180000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await expect(page.getByRole('button', { name: 'Developer mode F8' })).toBeVisible();
   for (const level of DEVELOPER_LEVELS) {
     await page.keyboard.press('F8');
@@ -95,7 +95,7 @@ test('every developer checkpoint launches its real chapter, landscape, and cross
 test('switching checkpoints clears old actors, hazards, boss state, succession, and research', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-level="chapter:heart-of-the-steppe"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
@@ -164,7 +164,7 @@ test('switching checkpoints clears old actors, hazards, boss state, succession, 
 test('developer outcomes leave saved records intact and a normal new game clears developer mode', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   const saved = await page.evaluate(() => ({
     profile: localStorage.getItem('gloam-profile'),
     best: localStorage.getItem('gloam-best'),
@@ -213,7 +213,7 @@ test('developer outcomes leave saved records intact and a normal new game clears
 
 test('developer choices and Back stay usable in a narrow viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
   expect(

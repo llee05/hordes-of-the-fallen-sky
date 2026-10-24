@@ -11,7 +11,10 @@ test('painted landscapes and destination previews remain readable in Electron', 
   const directory = await mkdtemp(join(tmpdir(), 'gloam-landscapes-'));
   const server = await createServer({ server: { host: '127.0.0.1', port: 0 } });
   await server.listen();
-  const environment = { ...process.env, GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]! };
+  const environment = {
+    ...process.env,
+    GLOAM_DEV_SERVER_URL: `${server.resolvedUrls!.local[0]!}?terrain=2d`,
+  };
   delete environment.ELECTRON_RUN_AS_NODE;
   const app = await electron.launch({
     args: [resolve('dist-desktop/desktop/main.js'), `--user-data-dir=${directory}`],

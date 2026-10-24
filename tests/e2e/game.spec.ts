@@ -408,7 +408,7 @@ test('desktop menus keep the battlefield edge to edge and return settings and he
   await openTitle(page);
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await expect(page.locator('#game-hud')).toBeHidden();
-  const frame = (await page.locator('canvas').boundingBox())!;
+  const frame = (await page.locator('#game-canvas > canvas:first-child').boundingBox())!;
   const viewport = page.viewportSize()!;
   expect(frame.x).toBe(0);
   expect(frame.y).toBe(0);

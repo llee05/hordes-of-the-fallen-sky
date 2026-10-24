@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import * as THREE from 'three';
-import type { MountainTerrain } from '../terrain/MountainTerrain';
+import type { MountainHeightfield } from './MountainHeightfield';
 import { projectGround, WORLD_3D } from './worldProjection';
 
 type Painted = Phaser.GameObjects.Image | Phaser.GameObjects.Sprite | Phaser.GameObjects.Text;
@@ -27,7 +27,7 @@ export class SpriteBridge {
   constructor(
     private readonly scene: Phaser.Scene,
     private readonly root: THREE.Group,
-    private readonly terrain: MountainTerrain,
+    private readonly terrain: MountainHeightfield,
   ) {}
 
   update(
@@ -139,7 +139,7 @@ export class SpriteBridge {
     const text = object instanceof Phaser.GameObjects.Text;
     const source = (text ? object.canvas : frame.source.image) as TexImageSource;
     const batch = this.batch(source);
-    if (['steppe-props', 'steppe-scenery'].includes(object.texture.key))
+    if (['steppe-props', 'steppe-scenery', 'tapestry-scenery'].includes(object.texture.key))
       batch.mesh.castShadow = true;
     const i = batch.count++ * 4;
     const geometry = batch.mesh.geometry;
@@ -155,7 +155,7 @@ export class SpriteBridge {
           : object.texture.key === 'gem'
             ? 12
             : 0;
-    const height = this.terrain.height(x, z) * this.terrain.region.biome.heightScale + lift;
+    const height = this.terrain.actorHeight(x, z) * this.terrain.region.biome.heightScale + lift;
     this.positions.set(object, { x, y: height, z });
     // Phaser's trim offsets refer to the shared logical canvas, not the crop.
     const left = (text ? 0 : frame.x) - object.displayOriginX;
@@ -203,7 +203,7 @@ export class SpriteBridge {
         positions.setXYZ(
           i + j,
           sx,
-          this.terrain.height(sx, sz) * this.terrain.region.biome.heightScale + 1,
+          this.terrain.actorHeight(sx, sz) * this.terrain.region.biome.heightScale + 1,
           sz,
         );
       } else

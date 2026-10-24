@@ -4,7 +4,7 @@ import { startExpedition } from './helpers';
 test('companions acknowledge camp work and the chronicle retains the real Khan succession', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await startExpedition(page);
   await page.locator('[data-story-choice="share-work"]').click();
   await page.keyboard.press('b');

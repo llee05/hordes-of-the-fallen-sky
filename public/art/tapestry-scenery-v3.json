@@ -1,0 +1,132 @@
+{
+  "frames": {
+    "pine": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 540
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 6,
+        "w": 512,
+        "h": 540
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 600
+      }
+    },
+    "larch": {
+      "frame": {
+        "x": 512,
+        "y": 0,
+        "w": 512,
+        "h": 540
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 6,
+        "w": 512,
+        "h": 540
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 600
+      }
+    },
+    "willow": {
+      "frame": {
+        "x": 1024,
+        "y": 0,
+        "w": 512,
+        "h": 540
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 6,
+        "w": 512,
+        "h": 540
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 600
+      }
+    },
+    "boulder": {
+      "frame": {
+        "x": 0,
+        "y": 540,
+        "w": 512,
+        "h": 484
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 100,
+        "w": 512,
+        "h": 484
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 600
+      }
+    },
+    "scrub": {
+      "frame": {
+        "x": 512,
+        "y": 540,
+        "w": 512,
+        "h": 484
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 100,
+        "w": 512,
+        "h": 484
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 600
+      }
+    },
+    "crag": {
+      "frame": {
+        "x": 1024,
+        "y": 540,
+        "w": 512,
+        "h": 484
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 100,
+        "w": 512,
+        "h": 484
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 600
+      }
+    }
+  },
+  "meta": {
+    "image": "tapestry-scenery-v3.png",
+    "size": {
+      "w": 1536,
+      "h": 1024
+    },
+    "scale": "1"
+  }
+}

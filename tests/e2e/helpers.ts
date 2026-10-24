@@ -1,7 +1,8 @@
 import { expect, type Page } from '@playwright/test';
 
+/** Flat-coordinate simulation regressions use the compatibility renderer; world3d.spec covers the default scenes. */
 export async function openTitle(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
 }
 

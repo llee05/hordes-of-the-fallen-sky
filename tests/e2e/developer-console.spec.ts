@@ -11,7 +11,7 @@ async function command(page: Page, text: string): Promise<void> {
 }
 
 async function checkpoint(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-level="chapter:broken-pass"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
@@ -145,7 +145,7 @@ test('console history, validation, focus, and narrow layouts work without changi
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await page.keyboard.press('F10');
   const input = page.getByRole('textbox', { name: 'Command', exact: true });
@@ -196,7 +196,7 @@ test('console history, validation, focus, and narrow layouts work without changi
 test('using cheats marks a normal run, preserves records, carries between checkpoints, and resets on New Game', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await page.getByRole('button', { name: /NEW GAME/ }).click();
   await page.getByRole('button', { name: /Skip intro/ }).click();
@@ -256,7 +256,7 @@ test('using cheats marks a normal run, preserves records, carries between checkp
 test('Up recalls saved commands after reload and checkpoints, while Down restores the draft', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/?terrain=2d');
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused();
   await page.keyboard.press('Backquote');
   await command(page, 'status');

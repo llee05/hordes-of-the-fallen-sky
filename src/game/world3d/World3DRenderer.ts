@@ -12,6 +12,10 @@ import { GraphicsBridge } from './GraphicsBridge';
 import { visibleWorldChunks, worldChunkBounds } from './worldChunks';
 import { mountainGeometry } from './mountainGeometry';
 import { MountainMaterials, WORLD_DEBUG_MODES, type WorldDebugMode } from './MountainMaterials';
+import { ComposedTerrain } from './ComposedTerrain';
+import { sceneGeometry } from './sceneGeometry';
+import { sceneDressing } from './sceneDressing';
+import { Water3D } from './Water3D';
 
 interface RenderChunk {
   group: THREE.Group;
@@ -29,6 +33,7 @@ export class World3DRenderer {
   readonly chunks = new Map<string, RenderChunk>();
   readonly materials: MountainMaterials;
   readonly effects: GraphicsBridge;
+  readonly water?: Water3D;
   viewBounds?: TerrainBounds;
   angle: number = WORLD_3D.angle;
   readonly yaw: number = WORLD_3D.yaw;
@@ -52,6 +57,9 @@ export class World3DRenderer {
     depthTest: false,
   });
   private readonly merged: THREE.Mesh<THREE.BufferGeometry, THREE.MeshLambertMaterial>[] = [];
+  private readonly frustum = new THREE.Frustum();
+  private readonly viewMatrix = new THREE.Matrix4();
+  private readonly chunkBox = new THREE.Box3();
   readonly timings = { sprites: 0, effects: 0, draw: 0 };
 
   constructor(
@@ -71,9 +79,11 @@ export class World3DRenderer {
       pointerEvents: 'none',
     });
     scene.game.canvas.parentElement!.append(this.renderer.domElement);
-    this.world.background = new THREE.Color(0xb1b6ab);
-    this.world.fog = new THREE.Fog(0xc5cdc6, 6100, 10000);
-    this.world.add(new THREE.HemisphereLight(0xe5e9df, 0x737b62, 1.5));
+    const palette = terrain instanceof ComposedTerrain ? terrain.region.scene.palette : undefined;
+    this.world.background = new THREE.Color(palette?.fog ?? 0xb1b6ab);
+    this.world.fog = new THREE.Fog(palette?.fog ?? 0xc5cdc6, 6300, 11200);
+    this.world.add(new THREE.HemisphereLight(0xe5e9df, 0x8a907e, 1.2));
+    this.world.add(new THREE.AmbientLight(0xd5decd, 0.45));
     this.sun.castShadow = true;
     Object.assign(this.sun.shadow.camera, {
       left: -2000,
@@ -87,7 +97,7 @@ export class World3DRenderer {
     this.sun.shadow.bias = -0.00015;
     this.sun.shadow.normalBias = 2;
     this.world.add(this.sun, this.sun.target, this.actors);
-    this.materials = new MountainMaterials(scene);
+    this.materials = new MountainMaterials(scene, palette);
     for (const material of [this.materials.surface, this.materials.wall]) {
       const mesh = new THREE.Mesh(new THREE.BufferGeometry(), material);
       mesh.castShadow = true;
@@ -97,6 +107,10 @@ export class World3DRenderer {
     }
     this.sprites = new SpriteBridge(scene, this.actors, terrain);
     this.effects = new GraphicsBridge(scene, this.actors, terrain);
+    if (terrain instanceof ComposedTerrain && terrain.river) {
+      this.water = new Water3D(terrain.river);
+      this.world.add(this.water.group);
+    }
     this.label = document.createElement('div');
     this.label.dataset.worldDebug = '';
     Object.assign(this.label.style, {
@@ -120,6 +134,9 @@ export class World3DRenderer {
   setAngle(angle: number): void {
     if (Number.isFinite(angle))
       this.angle = Math.max(WORLD_3D.minAngle, Math.min(WORLD_3D.maxAngle, angle));
+  }
+  updateActiveTime(elapsed: number): void {
+    this.water?.update(elapsed);
   }
   movement(x: number, y: number): { x: number; y: number } {
     return screenMovement(x, y, this.yaw);
@@ -164,21 +181,24 @@ export class World3DRenderer {
     const source = this.scene.cameras.main;
     // Phaser skips this when alpha=0. Keep its existing follow, bounds and input calculations.
     source.preRender();
-    const { width, height, zoom } = source;
+    const { width, height } = source;
+    const zoom = source.zoom * WORLD_3D.worldScale;
     if (this.width !== width || this.height !== height) {
       this.width = width;
       this.height = height;
       this.renderer.setSize(width, height);
     }
-    const x = source.midPoint.x;
-    const z = source.midPoint.y;
-    const elevation = this.terrain.height(x, z) * this.terrain.region.biome.heightScale;
+    const yaw = (this.yaw * Math.PI) / 180;
+    const x = source.midPoint.x - Math.sin(yaw) * WORLD_3D.lookAhead;
+    const z = source.midPoint.y - Math.cos(yaw) * WORLD_3D.lookAhead;
+    const elevation =
+      this.terrain.actorHeight(source.midPoint.x, source.midPoint.y) *
+      this.terrain.region.biome.heightScale;
     this.focusHeight =
       this.focusHeight === undefined
         ? elevation
         : Phaser.Math.Linear(this.focusHeight, elevation, 0.09);
     const radians = (this.angle * Math.PI) / 180;
-    const yaw = (this.yaw * Math.PI) / 180;
     Object.assign(this.camera, {
       left: -width / 2 / zoom,
       right: width / 2 / zoom,
@@ -193,18 +213,44 @@ export class World3DRenderer {
     this.camera.lookAt(x, this.focusHeight, z);
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld();
+    this.frustum.setFromProjectionMatrix(
+      this.viewMatrix.multiplyMatrices(
+        this.camera.projectionMatrix,
+        this.camera.matrixWorldInverse,
+      ),
+    );
     const view = groundView(
       x,
       z,
       width,
       height,
       zoom,
-      this.terrain.region.biome.heightScale,
+      this.terrain instanceof ComposedTerrain
+        ? this.terrain.reliefHeight
+        : this.terrain.region.biome.heightScale,
       this.angle,
       this.yaw,
     );
     this.viewBounds = view;
-    const wanted = visibleWorldChunks(view, this.terrain.worldSize, this.terrain.chunkSize);
+    const wanted = visibleWorldChunks(view, this.terrain.worldSize, this.terrain.chunkSize).filter(
+      ({ column, row }) => {
+        if (!(this.terrain instanceof ComposedTerrain)) return true;
+        const bounds = worldChunkBounds(
+          column,
+          row,
+          this.terrain.worldSize,
+          this.terrain.chunkSize,
+        );
+        const range = this.terrain.heightRange(bounds);
+        this.chunkBox.min.set(bounds.x - 240, range.min - 12, bounds.y - 240);
+        this.chunkBox.max.set(
+          bounds.x + bounds.width + 240,
+          range.max + 32,
+          bounds.y + bounds.height + 240,
+        );
+        return this.frustum.intersectsBox(this.chunkBox);
+      },
+    );
     const keys = new Set(wanted.map(({ column, row }) => `${column},${row}`));
     let changed = false;
     for (const [key, chunk] of this.chunks)
@@ -233,7 +279,7 @@ export class World3DRenderer {
       this.shadowTime = performance.now();
       this.shadowX = x;
       this.shadowZ = z;
-      this.sun.position.set(x - 1700, 2800, z - 1800);
+      this.sun.position.set(x - 1700, 2800, z + 1800);
       this.sun.target.position.set(x, 350, z);
       this.renderer.shadowMap.needsUpdate = true;
     }
@@ -275,7 +321,10 @@ export class World3DRenderer {
     const bounds = worldChunkBounds(column, row, this.terrain.worldSize, this.terrain.chunkSize);
     const { x, y: z } = bounds;
     const backdrop = x < 0 || z < 0 || x >= this.terrain.worldSize || z >= this.terrain.worldSize;
-    const data = mountainGeometry(this.terrain, bounds);
+    const data =
+      this.terrain instanceof ComposedTerrain
+        ? sceneGeometry(this.terrain, bounds)
+        : mountainGeometry(this.terrain, bounds);
     const group = new THREE.Group();
     group.name = `world-terrain-${column}-${row}`;
     for (const part of ['surface', 'walls'] as const) {
@@ -330,9 +379,34 @@ export class World3DRenderer {
     collision.name = 'arcade-collision-cells';
     group.add(collision);
     const props: Phaser.GameObjects.Image[] = [];
+    if (!backdrop && this.terrain instanceof ComposedTerrain)
+      for (const prop of sceneDressing(this.terrain, bounds)) {
+        const image = this.scene.add
+          .image(
+            prop.x,
+            prop.z,
+            'tapestry-scenery',
+            prop.kind === 'boulders' ? 'boulder' : prop.kind,
+          )
+          .setOrigin(0.5, 0.9)
+          .setDepth(100 + prop.z)
+          .setName(`scene-prop-${prop.kind}`)
+          .setFlipX(prop.flip);
+        image.setScale(prop.width / image.width);
+        props.push(
+          this.scene.add
+            .image(prop.x + 8, prop.z + 5, 'shadow')
+            .setDisplaySize(prop.width * 0.7, prop.width * 0.22)
+            .setAlpha(0.45)
+            .setDepth(99 + prop.z),
+          image,
+        );
+      }
     for (const prop of backdrop
       ? []
-      : terrainDressing(this.terrain, this.terrain.getChunk(column, row))) {
+      : this.terrain instanceof ComposedTerrain
+        ? []
+        : terrainDressing(this.terrain, this.terrain.getChunk(column, row))) {
       const art = MOUNTAIN_TERRAIN_ART.dressing![prop.kind];
       const width = art.width * prop.scale;
       const image = this.scene.add
@@ -401,6 +475,7 @@ export class World3DRenderer {
     this.chunks.clear();
     this.sprites.destroy();
     this.effects.destroy();
+    this.water?.destroy();
     for (const mesh of this.merged) mesh.geometry.dispose();
     this.collisionMaterial.dispose();
     this.materials.destroy();

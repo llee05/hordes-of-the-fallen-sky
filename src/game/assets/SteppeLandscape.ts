@@ -21,7 +21,8 @@ import { TerrainNavigation } from '../terrain/TerrainNavigation';
 import { MountainRenderer } from '../terrain/MountainRenderer';
 import { World3DRenderer } from '../world3d/World3DRenderer';
 import { wantsWorld3D } from '../world3d/worldProjection';
-import { MountainHeightfield } from '../world3d/MountainHeightfield';
+import { ComposedTerrain } from '../world3d/ComposedTerrain';
+import { composedRegion } from '../data/worldRegions';
 
 /** Painted terrain and scenery; only ArenaScene owns simulation and collision geometry. */
 export class SteppeLandscape {
@@ -65,15 +66,24 @@ export class SteppeLandscape {
     this.world3d = undefined;
     this.scene.cameras.main.setAlpha(1);
     this.navigation = undefined;
-    if (this.definition.mountains) {
-      const terrain = wantsWorld3D()
-        ? new MountainHeightfield(this.definition.mountains)
-        : new MountainTerrain(this.definition.mountains);
-      this.navigation = new TerrainNavigation(terrain);
-      if (terrain instanceof MountainHeightfield) {
+    if (wantsWorld3D() && this.scene.game.renderer.type === Phaser.WEBGL) {
+      try {
+        const terrain = new ComposedTerrain(composedRegion(id), this.definition.water);
+        this.navigation = new TerrainNavigation(terrain);
         this.world3d = new World3DRenderer(this.scene, terrain, this.navigation);
         this.scene.cameras.main.setAlpha(0);
-      } else this.mountains = new MountainRenderer(this.scene, terrain, MOUNTAIN_TERRAIN_ART);
+      } catch (error) {
+        console.warn(
+          'Angled world renderer unavailable; using the compatible terrain renderer.',
+          error,
+        );
+        this.navigation = undefined;
+      }
+    }
+    if (!this.world3d && this.definition.mountains) {
+      const terrain = new MountainTerrain(this.definition.mountains);
+      this.navigation = new TerrainNavigation(terrain);
+      this.mountains = new MountainRenderer(this.scene, terrain, MOUNTAIN_TERRAIN_ART);
     }
     this.regional.removeAll(true);
     this.river = undefined;
@@ -85,12 +95,12 @@ export class SteppeLandscape {
     this.ground.setTexture(definition.groundTile ? `ground-${definition.groundTile}` : 'ground');
     this.groundWash.setFillStyle(definition.ground, definition.groundTile ? 0 : definition.wash);
     this.drawSurface(id);
-    if (definition.water) {
+    if (definition.water && !this.world3d) {
       this.river = new RiverSurface(this.scene, id, definition.water);
       this.regional.add(this.river.container);
     }
     const center = GAME.worldSize / 2;
-    for (const item of definition.mountains ? [] : landscapeCover(id)) {
+    for (const item of definition.mountains || this.world3d ? [] : landscapeCover(id)) {
       const x = center + item.x;
       const y = center + item.y;
       if (
@@ -110,7 +120,7 @@ export class SteppeLandscape {
           .setDepth(100 + y),
       );
     }
-    for (const item of definition.mountains ? [] : landscapeLandmarks(id)) {
+    for (const item of definition.mountains || this.world3d ? [] : landscapeLandmarks(id)) {
       // Large landforms read as painted relief behind combat; smaller trees keep ground sorting.
       const x = center + item.x;
       const y = center + item.y;
@@ -247,6 +257,7 @@ export class SteppeLandscape {
     passageProgress = 0,
   ): void {
     this.river?.update(elapsed);
+    this.world3d?.updateActiveTime(elapsed);
     for (let i = 0; i < this.passage.length; i += 1) {
       const progress = Phaser.Math.Clamp(passageProgress, 0, 1);
       this.passage[i]!.setX(
