@@ -182,6 +182,12 @@ describe('expandable progression views', () => {
       nodes: [root, left, right, final],
     };
     expect(treeRoute(branch, final).price.knowledge).toBe(5);
+    expect(treeRoute(branch, final).nodes.map((n) => n.id)).toEqual([
+      'root',
+      'left',
+      'right',
+      'final',
+    ]);
     const html = branchMarkup(branch, { selectedNode: 'final' });
     expect(html).toContain('data-edge-from="left" data-edge-to="final"');
     expect(html).toContain('data-edge-from="right" data-edge-to="final"');

@@ -36,12 +36,15 @@ test('connected progression maps, camp comparisons, and recipe links fit native 
       { width: 1280, height: 800 },
       { width: 960, height: 600 },
     ]) {
-      await app.evaluate(
-        ({ BrowserWindow }, size) =>
-          BrowserWindow.getAllWindows()[0]!.setContentSize(size.width, size.height),
-        size,
-      );
-      await expect.poll(() => page.evaluate(() => innerWidth)).toBe(size.width);
+      await app.evaluate(({ BrowserWindow }, size) => {
+        const window = BrowserWindow.getAllWindows()[0]!;
+        // Fixed-size test windows avoid tiling window managers overriding content bounds.
+        window.setResizable(false);
+        window.setContentSize(size.width, size.height);
+      }, size);
+      await expect
+        .poll(() => page.evaluate(() => ({ width: innerWidth, height: innerHeight })))
+        .toEqual(size);
       await page.keyboard.press('t');
       await inspectNode(page, 'power');
       const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
@@ -50,7 +53,10 @@ test('connected progression maps, camp comparisons, and recipe links fit native 
         before,
       );
       await expect(page.locator('.node-route')).toContainText('5 knowledge points');
+      const title = (await page.locator('.node-inspector h3').boundingBox())!;
       const purchase = (await page.locator('.tree-purchase').boundingBox())!;
+      expect(title.y).toBeGreaterThan(0);
+      expect(title.y + title.height).toBeLessThan(purchase.y);
       expect(purchase.y + purchase.height).toBeLessThan(size.height);
       expect(purchase.x + purchase.width).toBeLessThan(size.width);
       await page.screenshot({ path: `test-results/native-patron-map-${size.width}.png` });

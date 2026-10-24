@@ -124,8 +124,10 @@ export function treeRoute(
   );
   const price: TreePrice = {};
   const nodes: TreeNode[] = [];
-  for (const [id, rank] of required) {
-    const node = branch.nodes.find((n) => n.id === id)!;
+  // A route is a valid purchase sequence, including shared parents before either child.
+  for (const node of treeLevels(branch.nodes).flat()) {
+    const rank = required.get(node.id);
+    if (rank === undefined) continue;
     const remaining = Math.max(
       0,
       rank - (node.ranks?.current ?? (node.status === 'learned' ? 1 : 0)),
@@ -236,7 +238,6 @@ export function nodeInspector(branch: TreeBranch, node: TreeNode): string {
  ${
    route.nodes.length > 1
      ? `<section class="node-route"><h4>Complete route to this upgrade</h4><p>${escapeHtml(priceText(route.price))}</p><div>${route.nodes
-         .reverse()
          .map(
            (n) =>
              `<button data-tree-select="${escapeHtml(n.id)}" data-focus-key="route-${escapeHtml(n.id)}">${escapeHtml(n.title)}</button>`,
@@ -246,7 +247,7 @@ export function nodeInspector(branch: TreeBranch, node: TreeNode): string {
  }
  ${alternatives.length ? `<section class="node-comparison"><h4>Choose a specialization</h4><p>One choice per group for this expedition.</p><div class="choice-comparison">${[node, ...alternatives].map((n) => `<article data-selected="${n.id === node.id}" data-status="${n.status}"><h5>${escapeHtml(n.title)}</h5><p>${escapeHtml(n.description)}</p><strong>${escapeHtml(n.cost)}</strong>${n.excludes?.length ? `<small>Closes: ${escapeHtml(n.excludes.map((e) => e.title).join(', '))}</small>` : ''}${n.id !== node.id ? `<button data-tree-select="${escapeHtml(n.id)}" data-focus-key="compare-${escapeHtml(n.id)}">Inspect alternative</button>` : '<small>Selected for inspection</small>'}</article>`).join('')}</div></section>` : ''}
  ${node.excludes?.length ? `<section class="node-exclusions"><h4>Choosing this closes</h4><p>Other branches remain open.</p><ul>${node.excludes.map((n) => `<li>${escapeHtml(n.title)}</li>`).join('')}</ul></section>` : ''}
- </div><div class="node-purchase"><p class="node-purchase-status" role="status">${escapeHtml(node.reason)}</p><strong class="node-price">${escapeHtml(node.cost)}</strong><button class="tree-purchase" data-focus-key="purchase-${escapeHtml(node.id)}" ${attributes} ${node.status === 'available' ? '' : 'disabled'} aria-disabled="${node.status !== 'available'}">${node.status === 'learned' ? 'Learned' : node.status === 'excluded' ? 'Path closed' : `Learn ${escapeHtml(node.title)}`}</button></div></section>`;
+ </div><div class="node-purchase"><p class="node-purchase-status" role="status">${escapeHtml(node.reason)}</p><strong class="node-price">${escapeHtml(node.cost)}</strong><button class="tree-purchase" data-focus-key="purchase-${escapeHtml(node.id)}" ${attributes} ${node.status === 'available' ? '' : 'disabled'} aria-disabled="${node.status !== 'available'}">${node.status === 'learned' ? 'Learned' : node.status === 'excluded' ? 'Path closed' : node.action.building && !node.action.path ? escapeHtml(node.title) : `Learn ${escapeHtml(node.title)}`}</button></div></section>`;
 }
 export function progressionMenu(options: {
   title: string;

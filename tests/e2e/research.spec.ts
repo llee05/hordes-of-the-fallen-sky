@@ -168,6 +168,11 @@ test('combination links cross camp and patron trees without resuming simulation,
   await expect(page.locator('.node-inspector h3')).toHaveText('Fire arrows');
   await expect(page.locator('.camp-estate')).toHaveAttribute('data-expanded', 'true');
   await expect(page.locator('.node-route')).toContainText('60 materials');
+  expect(
+    await page
+      .locator('.node-route [data-tree-select]')
+      .evaluateAll((nodes) => nodes.map((n) => (n as HTMLElement).dataset.treeSelect)),
+  ).toEqual(['archery-base', 'archery-fire-arrows']);
   expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
     true,
   );

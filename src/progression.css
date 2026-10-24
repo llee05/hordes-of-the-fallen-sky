@@ -775,3 +775,54 @@
     padding: 6px 14px;
   }
 }
+
+@media (max-height: 700px) and (min-width: 761px) {
+  .progression-panel .panel-heading {
+    padding: 12px 20px;
+  }
+  .progression-panel .panel-heading h2 {
+    font-size: 28px;
+    margin-top: 5px;
+  }
+  .progression-panel .panel-emblem {
+    width: 40px;
+    height: 40px;
+  }
+  .progression-panel .panel-emblem .clan-mark {
+    width: 30px;
+    height: 30px;
+  }
+  .progression-panel .tree-toolbar {
+    padding: 8px 20px;
+  }
+  .progression-panel .tree-summary strong {
+    font-size: 21px;
+  }
+  .progression-panel .panel-footer {
+    padding: 12px 20px;
+  }
+  .progression-panel .tree-bottom-note {
+    padding-block: 5px;
+  }
+  .node-inspector .node-portrait,
+  .node-inspector .node-portrait[data-capstone='true'] {
+    float: right;
+    width: 66px;
+    height: 62px;
+    margin: 0 0 8px 8px;
+  }
+  .node-inspector .node-portrait > .clan-mark {
+    width: 43px;
+    height: 43px;
+  }
+  .node-inspector .node-patron-seal {
+    width: 17px;
+    height: 17px;
+  }
+  .node-inspector h3 {
+    font-size: 21px;
+  }
+  .node-inspector .node-effect {
+    clear: both;
+  }
+}
