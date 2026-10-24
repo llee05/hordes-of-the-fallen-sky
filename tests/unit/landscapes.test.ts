@@ -22,6 +22,7 @@ describe('location scenery content', () => {
       'khan-tengri': 'khan-tengri',
       'orkhon-valley': 'orkhon-valley',
       otgontenger: 'mount-otgontenger',
+      belukha: 'mount-belukha',
     });
     for (const tile of Object.values(tiles)) {
       const png = await readFile(new URL(`../../public/art/${tile}.png`, import.meta.url));

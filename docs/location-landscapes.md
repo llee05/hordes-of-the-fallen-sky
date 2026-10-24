@@ -26,7 +26,7 @@ The atlas retains transparent gutters and a common ground registration; it adds 
 animation frames. [The complete generation prompt](location-scenery-prompt.md)
 records the built-in image generation tool and all subjects.
 
-Six user-supplied 1254 × 1254 terrain PNGs are bundled unchanged in `public/art/`:
+Seven user-supplied 1254 × 1254 terrain PNGs are bundled unchanged in `public/art/`:
 
 | Location          | Ground tile             | Surface                                              |
 | ----------------- | ----------------------- | ---------------------------------------------------- |
@@ -36,6 +36,7 @@ Six user-supplied 1254 × 1254 terrain PNGs are bundled unchanged in `public/art
 | Khan Tengri       | `khan-tengri.png`       | Snow, blue ice, exposed alpine rock                  |
 | Orkhon Valley     | `orkhon-valley.png`     | Green pasture, flowers, worn soil, pebbles           |
 | Mount Otgontenger | `mount-otgontenger.png` | Alpine grass, wildflowers, pale gravel, mossy stones |
+| Mount Belukha     | `mount-belukha.png`     | Dark woodland soil, moss, ferns, roots, and stones   |
 
 The supplied `bodg-khan-uul.png` is stored as `bogd-khan-uul.png` to match the
 canonical location ID. `LandscapeDefinition.groundTile` selects the PNG basename;

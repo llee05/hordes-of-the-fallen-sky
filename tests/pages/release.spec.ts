@@ -56,6 +56,7 @@ test('production loads all local artwork under the Pages subpath without desktop
     'khan-tengri.png',
     'orkhon-valley.png',
     'mount-otgontenger.png',
+    'mount-belukha.png',
     'steppe-mounted-motion.png',
     'steppe-clan-motion.png',
     'steppe-creature-motion.png',

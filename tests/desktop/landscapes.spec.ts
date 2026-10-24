@@ -35,6 +35,7 @@ test('painted landscapes and destination previews remain readable in Electron', 
       for (const id of [
         'eej-khairkhan',
         'otgontenger',
+        'belukha',
         'bogd-khan-uul',
         'altai-tavan-bogd',
         'khan-tengri',
@@ -82,7 +83,7 @@ test('painted landscapes and destination previews remain readable in Electron', 
           physical: false,
           oldDestroyed: true,
           groundSprites: 1,
-          tiles: 6,
+          tiles: 7,
         });
         await page.evaluate(() => {
           const scene = (window as any).__gloam.scene;

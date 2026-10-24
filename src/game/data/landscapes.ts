@@ -259,6 +259,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     description:
       'Paired white heights, cold milky water, and dark conifers frame a cool upland meadow.',
     surface: 'frost',
+    groundTile: 'mount-belukha',
     ground: 0xbac5b4,
     wash: 0.6,
     patch: 0xdde0cd,
