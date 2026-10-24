@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME } from '../config';
-import { paintedImage, sceneryImage } from './painterlyArt';
+import { GROUND_TILE_SCALE, paintedImage, sceneryImage } from './painterlyArt';
 import { LOCATIONS, REGIONS, type MigrationLocation } from '../data/clan';
 import { LANDSCAPES, type LandscapeDefinition } from '../data/landscapes';
 import { landscapeCover, landscapeRandom, isLandscapeClearing } from './landscapeLayout';
@@ -9,6 +9,7 @@ import { RiverSurface } from './RiverSurface';
 /** Walkable painted scenery; only ArenaScene owns simulation and collision geometry. */
 export class SteppeLandscape {
   private readonly regional: Phaser.GameObjects.Container;
+  private readonly ground: Phaser.GameObjects.TileSprite;
   private readonly groundWash: Phaser.GameObjects.Rectangle;
   private readonly atmosphere: Phaser.GameObjects.Graphics;
   private readonly wind: Phaser.GameObjects.Graphics;
@@ -19,7 +20,11 @@ export class SteppeLandscape {
 
   constructor(private readonly scene: Phaser.Scene) {
     const size = GAME.worldSize;
-    scene.add.tileSprite(0, 0, size, size, 'ground').setOrigin(0).setTileScale(0.65).setDepth(-20);
+    this.ground = scene.add
+      .tileSprite(0, 0, size, size, 'ground')
+      .setOrigin(0)
+      .setTileScale(GROUND_TILE_SCALE)
+      .setDepth(-20);
     this.groundWash = scene.add.rectangle(size / 2, size / 2, size, size, 0, 0).setDepth(-19);
     this.regional = scene.add.container(0, 0).setDepth(-10);
     this.wind = scene.add.graphics().setDepth(8000);
@@ -37,7 +42,8 @@ export class SteppeLandscape {
     this.passage = [];
     this.regional.setName(`landscape-${id}`);
     const definition = this.definition;
-    this.groundWash.setFillStyle(definition.ground, definition.wash);
+    this.ground.setTexture(definition.groundTile ? `ground-${definition.groundTile}` : 'ground');
+    this.groundWash.setFillStyle(definition.ground, definition.groundTile ? 0 : definition.wash);
     this.drawSurface(id);
     if (definition.water) {
       this.river = new RiverSurface(this.scene, id, definition.water);
@@ -82,6 +88,8 @@ export class SteppeLandscape {
 
   private drawSurface(id: MigrationLocation['id']): void {
     const definition = this.definition;
+    // Supplied tiles already contain grass, stones, snow, and soil. Keep their painted detail.
+    if (definition.groundTile) return;
     const random = landscapeRandom(id);
     const size = GAME.worldSize;
     const center = size / 2;

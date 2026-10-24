@@ -25,6 +25,8 @@ test('all twelve landscapes render bundled scenery, replace old props, and freez
           return {
             name: landscape.regional.name,
             title: landscape.definition.title,
+            ground: landscape.ground.displayTexture.key,
+            groundWash: landscape.groundWash.fillAlpha,
             water:
               landscape.regional.list.find((item: any) => item.name.startsWith('water-'))?.name ??
               null,
@@ -38,6 +40,8 @@ test('all twelve landscapes render bundled scenery, replace old props, and freez
       .toEqual({
         name: `landscape-${place.id}`,
         title: expected.title,
+        ground: expected.groundTile ? `ground-${expected.groundTile}` : 'ground',
+        groundWash: expected.groundTile ? 0 : expected.wash,
         water: expected.water ? `water-${expected.water.kind}` : null,
         missing: 0,
         physical: 0,

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFile } from 'node:fs/promises';
 import { LOCATIONS } from '../../src/game/data/clan';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
 import scenerySource from '/art/steppe-scenery.json?raw';
@@ -8,6 +9,26 @@ import { isLandscapeClearing, landscapeCover } from '../../src/game/assets/lands
 const atlas = JSON.parse(scenerySource) as typeof import('../../public/art/steppe-scenery.json');
 
 describe('location scenery content', () => {
+  it('bundles the five supplied terrain tiles for their matching locations', async () => {
+    const tiles = Object.fromEntries(
+      Object.entries(LANDSCAPES)
+        .filter(([, landscape]) => landscape.groundTile)
+        .map(([id, landscape]) => [id, landscape.groundTile]),
+    );
+    expect(tiles).toEqual({
+      'altai-tavan-bogd': 'altai-tavan-bogd',
+      'altan-ovoo': 'altan-ovoo',
+      'bogd-khan-uul': 'bogd-khan-uul',
+      'khan-tengri': 'khan-tengri',
+      'orkhon-valley': 'orkhon-valley',
+    });
+    for (const tile of Object.values(tiles)) {
+      const png = await readFile(new URL(`../../public/art/${tile}.png`, import.meta.url));
+      expect(png.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
+      expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1254, 1254]);
+    }
+  });
+
   it('reproduces bounded scenery while keeping the camp and complete caravan corridor clear', () => {
     for (const place of LOCATIONS) {
       const layout = landscapeCover(place.id);

@@ -26,6 +26,26 @@ The atlas retains transparent gutters and a common ground registration; it adds 
 animation frames. [The complete generation prompt](location-scenery-prompt.md)
 records the built-in image generation tool and all subjects.
 
+Five user-supplied 1254 × 1254 terrain PNGs are bundled unchanged in `public/art/`:
+
+| Location         | Ground tile            | Surface                                       |
+| ---------------- | ---------------------- | --------------------------------------------- |
+| Altai Tavan Bogd | `altai-tavan-bogd.png` | Alpine gravel, sage scrub, rocks, patchy snow |
+| Altan Ovoo       | `altan-ovoo.png`       | Rust soil, amber grasses, charcoal basalt     |
+| Bogd Khan Uul    | `bogd-khan-uul.png`    | Woodland soil, roots, moss, pine needles      |
+| Khan Tengri      | `khan-tengri.png`      | Snow, blue ice, exposed alpine rock           |
+| Orkhon Valley    | `orkhon-valley.png`    | Green pasture, flowers, worn soil, pebbles    |
+
+The supplied `bodg-khan-uul.png` is stored as `bogd-khan-uul.png` to match the
+canonical location ID. `LandscapeDefinition.groundTile` selects the PNG basename;
+`painterlyArt.ts` preloads each unique tile once under `ground-<basename>`, using
+the app's asset base URL for both offline desktop and browser subpath builds.
+`GROUND_TILE_SCALE` displays ground at 0.65 world units per source pixel. The one
+world-sized tile sprite switches texture on arrival or developer checkpoint jumps.
+These detailed tiles replace the flat color wash and generated grass, stone, and
+soil marks. Landmarks, scattered scenery, rivers, and chapter weather still layer
+above them. Locations without a tile retain the shared `steppe-ground.png` surface.
+
 `LandscapeDefinition` is renderer independent. It defines a quiet ground wash,
 surface marks, bounded vegetation counts, camp-relative landmark anchors and
 optional water splines. A missing water definition means dry ground. Landmark

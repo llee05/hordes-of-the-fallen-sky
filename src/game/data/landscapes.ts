@@ -26,6 +26,8 @@ export interface LandscapeDefinition {
   title: string;
   description: string;
   surface: 'meadow' | 'frost' | 'scree' | 'sand' | 'basalt';
+  /** Bundled PNG basename; replaces the shared grass, wash, and generated surface marks. */
+  groundTile?: string;
   ground: number;
   wash: number;
   patch: number;
@@ -179,6 +181,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     description:
       'Golden larch and deep sage pine groves shelter rolling green foothills and sunlit clearings.',
     surface: 'meadow',
+    groundTile: 'bogd-khan-uul',
     ground: 0x94a26f,
     wash: 0.48,
     patch: 0x687c59,
@@ -202,6 +205,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     description:
       'Five snowy crests and turquoise glacial seams overlook a silver-green gravel plain.',
     surface: 'scree',
+    groundTile: 'altai-tavan-bogd',
     ground: 0xb4bbb0,
     wash: 0.64,
     patch: 0xdce0cd,
@@ -234,6 +238,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     description:
       'A lone angular white pyramid towers over lavender scree and sharp blue-grey crags.',
     surface: 'scree',
+    groundTile: 'khan-tengri',
     ground: 0xb0adb4,
     wash: 0.7,
     patch: 0x88879a,
@@ -282,6 +287,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     description:
       'An old flat-topped volcanic cone stands above amber grass and scattered charcoal basalt.',
     surface: 'basalt',
+    groundTile: 'altan-ovoo',
     ground: 0xc2a169,
     wash: 0.38,
     patch: 0x706d56,
@@ -323,6 +329,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     description:
       'Blue-green river braids, willow clusters, reed beds, and lush sage grazing spread across the valley.',
     surface: 'meadow',
+    groundTile: 'orkhon-valley',
     ground: 0x9faf7c,
     wash: 0.48,
     patch: 0x7a956c,

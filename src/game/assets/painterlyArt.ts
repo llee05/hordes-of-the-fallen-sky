@@ -1,12 +1,14 @@
 import Phaser from 'phaser';
 import { GAME } from '../config';
 import { characterTexture, isCharacterKind, MOTION_SHEETS } from '../animation/CharacterMotion';
-import type { SceneryProp } from '../data/landscapes';
+import { LANDSCAPES, type SceneryProp } from '../data/landscapes';
 
 /** Two motion atlases and one prop atlas keep painted actors on shared textures. */
 const PROPS = new Set(['ger', 'cart', 'banner', 'sheep', 'rock', 'pillar']);
 /** Scales the camp presentation around its world anchor, independently of combat. */
 export const CAMP_VISUAL_SCALE = GAME.camp.visualScale;
+/** World scale shared by the original ground and the supplied location tiles. */
+export const GROUND_TILE_SCALE = 0.65;
 export const ART_WIDTH: Readonly<Record<string, number>> = {
   worker: 30,
   packhorse: 58,
@@ -35,6 +37,10 @@ export function artTexture(name: string): [string, string?] {
 export function preloadPainterlyArt(scene: Phaser.Scene): void {
   const root = `${import.meta.env.BASE_URL}art/`;
   scene.load.image('ground', `${root}steppe-ground.png`);
+  const tiles = new Set(Object.values(LANDSCAPES).map((landscape) => landscape.groundTile));
+  for (const tile of tiles) {
+    if (tile) scene.load.image(`ground-${tile}`, `${root}${tile}.png`);
+  }
   for (const sheet of MOTION_SHEETS) {
     const key = `steppe-${sheet}-motion`;
     scene.load.atlas(key, `${root}${key}.png`, `${root}${key}.json`);
