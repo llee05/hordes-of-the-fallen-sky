@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import * as THREE from 'three';
 import type { MountainHeightfield } from './MountainHeightfield';
+import { Fence3D } from './Fence3D';
 
 interface GraphicsCopy {
   canvas: HTMLCanvasElement;
@@ -17,6 +18,7 @@ export class GraphicsBridge {
   private readonly atlasTexture: THREE.CanvasTexture;
   private readonly hurdles: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>;
   private atlasDirty = true;
+  private readonly fence: Fence3D;
   hurdleCount = 0;
   private readonly aura = new THREE.Mesh(
     new THREE.RingGeometry(23, 24, 32).rotateX(-Math.PI / 2),
@@ -27,6 +29,7 @@ export class GraphicsBridge {
     private readonly root: THREE.Group,
     private readonly terrain: MountainHeightfield,
   ) {
+    this.fence = new Fence3D(root, terrain);
     this.atlas.width = 1024;
     this.atlas.height = 768;
     this.atlasTexture = new THREE.CanvasTexture(this.atlas);
@@ -67,6 +70,7 @@ export class GraphicsBridge {
     view: { x: number; y: number; width: number; height: number },
     camera: THREE.OrthographicCamera,
   ): void {
+    this.fence.update(this.scene.children.list);
     const basis = camera.matrixWorld.elements;
     const circle = this.scene.children.list.find(
       (object) => object instanceof Phaser.GameObjects.Arc,
@@ -86,6 +90,7 @@ export class GraphicsBridge {
     for (const object of this.scene.children.list) {
       if (
         !(object instanceof Phaser.GameObjects.Graphics) ||
+        object.getData('world-fence') ||
         object.depth < 0 ||
         (object.depth >= 8000 && object.depth < 9500) ||
         object.scrollFactorX === 0
@@ -234,6 +239,7 @@ export class GraphicsBridge {
     }
     this.hurdles.visible = this.hurdleCount > 0;
     this.hurdles.geometry.setDrawRange(0, this.hurdleCount * 6);
+    this.hurdleCount += this.fence.count;
     positions.needsUpdate = uvs.needsUpdate = true;
     if (this.atlasDirty) {
       this.atlasTexture.needsUpdate = true;
@@ -248,6 +254,7 @@ export class GraphicsBridge {
     this.root.remove(copy.mesh);
   }
   destroy(): void {
+    this.fence.destroy();
     for (const copy of this.copies.values()) this.release(copy);
     this.copies.clear();
     this.camera.destroy();

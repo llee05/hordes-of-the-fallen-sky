@@ -94,8 +94,10 @@ export class World3DRenderer {
       far: 6500,
     });
     this.sun.shadow.mapSize.set(WORLD_3D.shadowSize, WORLD_3D.shadowSize);
-    this.sun.shadow.bias = -0.00015;
-    this.sun.shadow.normalBias = 2;
+    // Depth bias is in shadow-camera units: these broad, nearly planar shelves
+    // need several world units of separation to avoid hardware-specific stippling.
+    this.sun.shadow.bias = -0.0015;
+    this.sun.shadow.normalBias = 6;
     this.world.add(this.sun, this.sun.target, this.actors);
     this.materials = new MountainMaterials(scene, palette);
     for (const material of [this.materials.surface, this.materials.wall]) {

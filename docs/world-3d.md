@@ -18,7 +18,7 @@ logical canvases, ground anchors, attack timing, and terrain contact shadows.
 ## Geography and rendering
 
 `src/game/data/worldRegions.ts` defines each region's palette, snow line, vegetation,
-and connected geological masses. `ComposedTerrain` combines seeded coherent relief
+and connected geological masses. `ComposedTerrain` combines domain-warped coherent relief, ridged noise,
 and fractured shelf boundaries with authored ramps and protected battle spaces.
 Multiple overlapping layers form shelves, ravines, peaks, and connected ranges.
 The camp occupies an open raised shelf with several broad approaches. The east
@@ -70,12 +70,27 @@ elevation, normals, slope, traversability, chunk bounds, and collision cells.
 Geometry streams by visible chunks and is disposed on eviction. Resident terrain
 uses two shared mesh batches; actors batch by atlas, bridge planks use instancing,
 and a frustum test excludes offscreen chunks. Height and normal caches are bounded.
-Shadow maps update at a reduced rate once the view settles. Pixel resolution adapts
+Shadow maps update at a reduced rate once the view settles; world-scale bias
+prevents self-shadow stippling on broad shelves. Pixel resolution adapts
 on slow GPUs while HUD text and world dimensions retain their size.
 
 This is a stylized 2.5D renderer: painted actors and vegetation remain billboards,
-with actual geometry for the terrain and crossings. Effects use the existing Phaser
+with actual geometry for terrain, crossings, and portable timber hurdles. Fence
+posts follow their individual ground endpoints and preserve camp movement, wear,
+and impact feedback. A restrained turquoise Khan silhouette passes the depth test
+only where terrain or scenery obscures him; visible painted pixels retain their
+normal appearance. Effects use the existing Phaser
 graphics bridge rather than a new particle engine. Broad approaches deliberately
 favor bullet-heaven movement over exact landscape realism. GPU performance and
 longer combat balance still require target-hardware playtesting; software GPU
 rendering is substantially slower and is not a frame-rate certification.
+
+Browser scene regressions exercise the default renderer across all twelve
+locations, screen-relative ramp movement, elevated combat, real terrain occlusion,
+console debug views, water pause behavior, resource budgets, and renderer teardown.
+Flat-coordinate simulation and compatibility-art regressions explicitly request
+`?terrain=2d`; they retain their original movement and pixel-space assumptions.
+Electron checks exercise the default view, offline production launch, migration,
+persistence, and both 1280×800 and 960×600 windows. Terrain unit tests cover mesh/query
+agreement, chunk seams and normals, cliff winding, connected caravan ground,
+water/bridge registration, and moving fence anchors.

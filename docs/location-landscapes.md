@@ -39,21 +39,22 @@ Eight user-supplied 1254 × 1254 terrain PNGs are bundled unchanged in `public/a
 | Mount Belukha     | `mount-belukha.png`     | Dark woodland soil, moss, ferns, roots, and stones   |
 | Eej Khairkhan     | `eej-khairkhan.png`     | Warm granite slabs, sandy gravel, sparse dry grass   |
 
+All twelve destinations now use the [angled scene renderer](world-3d.md) by default.
+Their geometry, palettes, vegetation, and snow lines live in
+`src/game/data/worldRegions.ts`; `ComposedTerrain` combines their masses with seeded
+relief and broad traversable approaches. The [new quiet paintings](angled-scene-art.md)
+provide meadow and granite materials plus an angled scenery atlas. Existing supplied
+ground PNGs remain bundled for soil, snow, previews, and the compatible renderer.
+
+The following tile, scenery, and `RiverSurface` descriptions document that compatible
+renderer, available with `?terrain=2d` or `VITE_TERRAIN_RENDERER=2d`.
 The supplied `bodg-khan-uul.png` is stored as `bogd-khan-uul.png` to match the
 canonical location ID. `LandscapeDefinition.groundTile` selects the PNG basename;
 `painterlyArt.ts` preloads each unique tile once under `ground-<basename>`, using
 the app's asset base URL for both offline desktop and browser subpath builds.
-`GROUND_TILE_SCALE` displays ground at 0.65 world units per source pixel. The one
-world-sized tile sprite switches texture on arrival; developer checkpoint jumps
-rebuild the scene with the selected terrain.
-These detailed tiles replace the flat color wash and generated grass, stone, and
-soil marks. Landmarks, scattered scenery, rivers, and chapter weather still layer
-above them. Locations without a tile retain the shared `steppe-ground.png` surface.
-
-Mount Otgontenger now opts into the [mountain terrain prototype](mountain-terrain.md).
-Its seed and biome generate the actual surface and cliffs instead of using the
-legacy mountain/foothill cutouts or fixed meltwater spline. Its supplied grass PNG
-remains the base terrain material. Other locations retain the scenery contract below.
+`GROUND_TILE_SCALE` displays ground at 0.65 world units per source pixel. A world-sized
+tile sprite switches texture on arrival. Otgontenger additionally uses the
+[stepped terrain prototype](mountain-terrain.md) in this compatible presentation.
 
 `LandscapeDefinition` is renderer independent. It defines a quiet ground wash,
 surface marks, bounded vegetation counts, camp-relative landmark anchors and

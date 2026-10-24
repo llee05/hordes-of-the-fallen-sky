@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import * as THREE from 'three';
 import type { MountainHeightfield } from './MountainHeightfield';
 import { projectGround, WORLD_3D } from './worldProjection';
+import { KhanOcclusion } from './KhanOcclusion';
 
 type Painted = Phaser.GameObjects.Image | Phaser.GameObjects.Sprite | Phaser.GameObjects.Text;
 
@@ -16,6 +17,7 @@ export class SpriteBridge {
   private readonly batches = new Map<TexImageSource, Batch>();
   private readonly textures = new Map<TexImageSource, THREE.Texture>();
   private readonly color = new THREE.Color();
+  private readonly occludedKhan: KhanOcclusion;
   private readonly matrix = new Phaser.GameObjects.Components.TransformMatrix();
   private readonly parent = new Phaser.GameObjects.Components.TransformMatrix();
   private readonly textValues = new WeakMap<Phaser.GameObjects.Text, string>();
@@ -28,13 +30,16 @@ export class SpriteBridge {
     private readonly scene: Phaser.Scene,
     private readonly root: THREE.Group,
     private readonly terrain: MountainHeightfield,
-  ) {}
+  ) {
+    this.occludedKhan = new KhanOcclusion(root);
+  }
 
   update(
     camera: THREE.OrthographicCamera,
     view: { x: number; y: number; width: number; height: number },
   ): void {
     for (const batch of this.batches.values()) batch.count = 0;
+    this.occludedKhan.mesh.visible = false;
     this.positions.clear();
     const visit = (objects: Phaser.GameObjects.GameObject[], alpha: number): void => {
       for (const object of objects) {
@@ -220,6 +225,7 @@ export class SpriteBridge {
       );
       colors.setXYZW(i + j, this.color.r, this.color.g, this.color.b, alpha);
     }
+    if (object.name === 'khan') this.occludedKhan.update(geometry, i, batch.mesh.material.map!);
     if (object instanceof Phaser.GameObjects.Text && this.textValues.get(object) !== object.text) {
       this.textures.get(source)!.needsUpdate = true;
       this.textValues.set(object, object.text);
@@ -227,6 +233,7 @@ export class SpriteBridge {
   }
 
   destroy(): void {
+    this.occludedKhan.destroy();
     for (const { mesh } of this.batches.values()) {
       mesh.geometry.dispose();
       mesh.material.dispose();

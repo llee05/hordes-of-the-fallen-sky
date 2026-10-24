@@ -133,7 +133,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     ).toEqual({ sandbox: true, contextIsolation: true, nodeIntegration: false });
     await page.screenshot({ path: 'test-results/native-desktop.png' });
     const arena = (await page.locator('#arena-wrap').boundingBox())!;
-    const canvas = (await page.locator('canvas').boundingBox())!;
+    const canvas = (await page.locator('#game-canvas > canvas:first-child').boundingBox())!;
     const viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
     expect(arena.x).toBe(0);
     expect(arena.y).toBe(0);

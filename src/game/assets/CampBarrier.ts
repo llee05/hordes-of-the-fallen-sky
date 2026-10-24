@@ -14,6 +14,9 @@ interface Hurdle {
   b: GroundPoint;
   middle: GroundPoint;
   impactRemaining: number;
+  height: number;
+  wood: number;
+  cloth?: number;
 }
 
 const MAX_HURDLES = 48;
@@ -36,6 +39,8 @@ export class CampBarrier {
       b: { x: 0, y: 0 },
       middle: { x: 0, y: 0 },
       impactRemaining: 0,
+      height: 25,
+      wood: 0x856342,
     }));
   }
 
@@ -104,6 +109,15 @@ export class CampBarrier {
     hurdle.image
       .setPosition(camp.x + hurdle.middle.x + kick, camp.y + hurdle.middle.y)
       .setDepth(100 + camp.y + Math.max(hurdle.a.y, hurdle.b.y));
+    hurdle.image.setData('world-fence', {
+      ax: camp.x + hurdle.a.x + kick,
+      az: camp.y + hurdle.a.y,
+      bx: camp.x + hurdle.b.x + kick,
+      bz: camp.y + hurdle.b.y,
+      height: hurdle.height,
+      wood: hurdle.wood,
+      cloth: hurdle.cloth,
+    });
     hurdle.shadow
       .setPosition(camp.x + hurdle.middle.x + 5, camp.y + hurdle.middle.y + 4)
       .setDepth(98 + camp.y + hurdle.middle.y);
@@ -117,6 +131,9 @@ export class CampBarrier {
     const hit = hurdle.impactRemaining > 0;
     const wood = hit ? 0xc59a60 : this.wear === 2 ? 0x65513d : 0x856342;
     const light = hit ? 0xf0cc86 : 0xb08b58;
+    hurdle.height = height;
+    hurdle.wood = wood;
+    hurdle.cloth = index % 3 === 0 ? (index % 2 === 0 ? 0x315d64 : 0x94523e) : undefined;
     const plank = (
       x1: number,
       y1: number,

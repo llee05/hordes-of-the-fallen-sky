@@ -59,6 +59,8 @@ test('3D terrain streams real walls, anchors painted sprites, and exposes paused
         ),
         hurdles: w.effects.hurdleCount,
         player: w.sprites.positions.get(s.player),
+        fence: w.actors.getObjectByName('camp-timber-hurdles')?.count,
+        silhouette: w.actors.getObjectByName('occluded-khan-silhouette')?.visible,
         h: w.terrain.height(s.player.x, s.player.y) * w.terrain.region.biome.heightScale,
       };
     });
@@ -67,6 +69,8 @@ test('3D terrain streams real walls, anchors painted sprites, and exposes paused
   expect(start.walls).toBeGreaterThan(0);
   expect(start.positions).toBeGreaterThan(30);
   expect(start.hurdles).toBeGreaterThan(20);
+  expect(start.fence).toBeGreaterThan(100);
+  expect(start.silhouette).toBe(true);
   expect(start.player.y).toBeCloseTo(start.h, 5);
   await page.keyboard.press('Backquote');
   const frozen = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));

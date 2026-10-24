@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createServer } from 'vite';
 
+test.use({ trace: 'off' });
+
 test('orthographic terrain and console run in the existing Electron shell at both desktop sizes', async () => {
   test.setTimeout(120000);
   const directory = await mkdtemp(join(tmpdir(), 'gloam-world3d-'));
@@ -11,7 +13,7 @@ test('orthographic terrain and console run in the existing Electron shell at bot
   await server.listen();
   const environment = {
     ...process.env,
-    GLOAM_DEV_SERVER_URL: `${server.resolvedUrls!.local[0]!}?terrain=3d`,
+    GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]!,
   };
   delete environment.ELECTRON_RUN_AS_NODE;
   const app = await electron.launch({
@@ -43,13 +45,13 @@ test('orthographic terrain and console run in the existing Electron shell at bot
       await page.keyboard.press('Backquote');
       const input = page.getByRole('textbox', { name: 'Command', exact: true });
       await expect(input).toBeFocused();
-      await input.fill('camera-angle 65');
+      await input.fill('camera-angle 48');
       await input.press('Enter');
       await page.keyboard.press('Backquote');
       await page.evaluate(() => {
         const s = (window as any).__gloam.scene;
-        s.player.body.reset(3000, 1650);
-        s.cameras.main.stopFollow().setZoom(0.7).centerOn(3100, 1850);
+        s.player.body.reset(2600, 2700);
+        s.cameras.main.stopFollow().setZoom(0.8).centerOn(2600, 2600);
       });
       await expect
         .poll(

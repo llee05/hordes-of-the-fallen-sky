@@ -1,5 +1,5 @@
 import type { ComposedRegion, SceneShelf } from '../data/worldRegions';
-import { coherentNoise, smoothstep } from '../terrain/noise';
+import { coherentNoise, fractalNoise, smoothstep } from '../terrain/noise';
 import type { TerrainBounds } from '../terrain/types';
 import { MountainHeightfield, type HeightNode } from './MountainHeightfield';
 import type { RiverDefinition } from '../assets/riverGeometry';
@@ -64,7 +64,11 @@ export class ComposedTerrain extends MountainHeightfield {
   protected override nodeValue(x: number, z: number): HeightNode {
     const scene = this.region.scene;
     const protection = this.protection(x, z);
-    const hill = (coherentNoise(x / 380, z / 380, this.seed + 41) - 0.5) * 20;
+    const wx = x + (coherentNoise(x / 1700, z / 1700, this.seed + 3) - 0.5) * 180;
+    const wz = z + (coherentNoise(x / 1700, z / 1700, this.seed + 7) - 0.5) * 180;
+    const ridge = fractalNoise(wx / 1000, wz / 600, this.seed + 19, true);
+    const hill =
+      (coherentNoise(wx / 380, wz / 380, this.seed + 41) - 0.5) * 20 + (ridge - 0.5) * 32;
     const riverDistance = this.river?.distance(x, z) ?? Infinity;
     const bank = this.river
       ? smoothstep(
@@ -97,6 +101,7 @@ export class ComposedTerrain extends MountainHeightfield {
       }
       const peak =
         (shelf.peak ?? 0) *
+        (0.55 + ridge * 0.45) *
         Math.pow(Math.max(0, Math.min(1, field / Math.min(shelf.width, shelf.depth))), 1.3);
       const height = shelf.rise + peak;
       base += height * ramp * grade * (1 - shelter) * bank;

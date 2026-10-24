@@ -240,6 +240,7 @@ export class ArenaScene extends Phaser.Scene {
       .setDepth(2);
     this.player = this.physics.add
       .sprite(center, center + 100, ...artTexture('player'))
+      .setName('khan')
       .setCollideWorldBounds(true);
     styleActor(this.player, 'player', ART_WIDTH.player!, 10);
     this.patronSupport = new PatronSupport(this, this.player);
