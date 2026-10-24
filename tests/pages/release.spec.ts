@@ -13,7 +13,8 @@ test('production loads all local artwork under the Pages subpath without desktop
     if (!response.ok()) failures.push(`${response.status()} ${response.url()}`);
   });
   await page.goto('./');
-  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused();
+  // Allow a cold software-rendered load to finish before checking title focus.
+  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused({ timeout: 15000 });
   await expect(page.getByRole('button', { name: 'Quit game', exact: true })).toHaveCount(0);
   expect(
     await page.evaluate(() => ({

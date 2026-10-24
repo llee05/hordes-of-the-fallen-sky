@@ -1,6 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openTitle, startExpedition } from './helpers';
 
+// Headless software rendering can need many wall-clock seconds for one active second.
+// Preserve exact combat assertions while allowing the real simulation to reach them.
+const activeExpect = expect.configure({ timeout: 20000 });
+
 async function placeAttacker(page: Page, x: number, y: number, speed: number): Promise<void> {
   await page.evaluate(
     ({ x, y, speed }) => {
@@ -40,6 +44,7 @@ async function siegeState(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
+  test.setTimeout(60000);
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
@@ -55,7 +60,7 @@ test('camp attackers stop outside the tents, repeat protected damage, freeze in 
   page,
 }) => {
   await placeAttacker(page, 0, -190, 90);
-  await expect.poll(async () => (await siegeState(page)).resolve).toBeCloseTo(96.85);
+  await activeExpect.poll(async () => (await siegeState(page)).resolve).toBeCloseTo(96.85);
   const first = await siegeState(page);
   expect(first).toMatchObject({
     active: true,
@@ -85,7 +90,9 @@ test('camp attackers stop outside the tents, repeat protected damage, freeze in 
   await page.waitForTimeout(200);
   expect(await siegeState(page)).toEqual(frozen);
   await page.keyboard.press('Escape');
-  await expect.poll(async () => (await siegeState(page)).resolve).toBeCloseTo(first.resolve - 3.15);
+  await activeExpect
+    .poll(async () => (await siegeState(page)).resolve)
+    .toBeCloseTo(first.resolve - 3.15);
   expect((await siegeState(page)).elapsed - first.elapsed).toBeGreaterThan(1.3);
   const defeated = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -182,13 +189,13 @@ test('attackers chase the caravan again and cannot damage it while it is out of 
   page,
 }) => {
   await placeAttacker(page, -118, 0, 0);
-  await expect.poll(async () => (await siegeState(page)).resolve).toBeCloseTo(96.85);
+  await activeExpect.poll(async () => (await siegeState(page)).resolve).toBeCloseTo(96.85);
   await page.evaluate(() => {
     (window as any).__gloam.scene.run.clan.stageTime = 45;
   });
   await page.keyboard.press('m');
   await page.locator('[data-route="river"]').click();
-  await expect
+  await activeExpect
     .poll(() =>
       page.evaluate(() => {
         const scene = (window as any).__gloam.scene;
