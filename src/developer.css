@@ -14,17 +14,7 @@
   border-block: 1px solid var(--paper-line);
 }
 
-.developer-console-panel {
-  max-width: 760px;
-}
-
-.developer-console-panel .developer-console {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: 0;
-}
-
-.developer-console-heading {
+.developer-console-toggles {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -32,14 +22,6 @@
   gap: 12px;
 }
 
-.developer-console-heading h3 {
-  margin: 0;
-  font:
-    21px Georgia,
-    serif;
-}
-
-.developer-console-heading kbd,
 .developer-console-hint,
 .developer-command-form small {
   color: var(--paper-muted);
@@ -101,6 +83,85 @@
 .developer-command-row input:focus-visible {
   outline: 3px solid #a46b2c;
   outline-offset: 2px;
+}
+
+.overlay.console-screen {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0;
+  background: #14262f20;
+  backdrop-filter: none;
+}
+
+.developer-overlay {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: min(64vh, 480px);
+  padding: 14px 20px 16px;
+  background: #14262ff5;
+  color: #f0e3c7;
+  border-bottom: 2px solid #ac884f;
+  box-shadow: 0 6px 24px #091b2c66;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.developer-overlay-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.developer-overlay-heading h2 {
+  margin: 0;
+  font:
+    17px 'IBM Plex Mono',
+    monospace;
+}
+
+.developer-overlay-heading span {
+  color: #c4c5b1;
+  font-size: 10px;
+}
+.developer-overlay-heading button {
+  margin-left: auto;
+}
+
+.developer-overlay .developer-console {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+}
+
+.developer-overlay .developer-console-toggles {
+  justify-content: flex-start;
+  gap: 8px;
+}
+.developer-overlay .secondary-button {
+  color: #f0e3c7;
+  border-color: #ac884f66;
+}
+.developer-overlay .secondary-button[aria-pressed='true'] {
+  background: #89957e40;
+}
+.developer-overlay .developer-console-hint,
+.developer-overlay .developer-command-form small {
+  color: #c4c5b1;
+}
+.developer-overlay .developer-command-form label {
+  color: #f0e3c7;
+}
+.developer-overlay .developer-log {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 11rem;
+}
+.developer-overlay .developer-command-form {
+  flex-shrink: 0;
 }
 
 .developer-group {

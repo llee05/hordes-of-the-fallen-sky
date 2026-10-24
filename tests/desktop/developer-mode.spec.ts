@@ -50,13 +50,21 @@ test('desktop developer selector fits native windows and launches clean test exp
     await page.locator('[data-developer-level="destination:3:orkhon-valley"]').click();
     await expect(page.locator('#location')).toHaveText('ORKHON VALLEY');
     await expect(page.locator('#developer-run')).toBeVisible();
-    await page.keyboard.press('F10');
+    await page.keyboard.press('Backquote');
+    await expect(page.locator('.developer-panel')).toHaveCount(0);
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'console');
     const input = page.getByRole('textbox', { name: 'Command', exact: true });
     await expect(input).toBeFocused();
     await page.keyboard.type('god on');
     await expect(input).toHaveValue('god on');
     await page.keyboard.press('Enter');
     await expect(page.getByRole('button', { name: 'Khan invincibility: On' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await input.fill('clan-invincible on');
+    await input.press('Enter');
+    await expect(page.getByRole('button', { name: 'Clan invincibility: On' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -74,11 +82,13 @@ test('desktop developer selector fits native windows and launches clean test exp
       const bounds = (await input.boundingBox())!;
       expect(bounds.x).toBeGreaterThanOrEqual(0);
       expect(bounds.x + bounds.width).toBeLessThanOrEqual(size.width);
-      const footer = (await page.locator('.panel-footer').boundingBox())!;
-      expect(bounds.y + bounds.height).toBeLessThan(footer.y);
+      const consoleBounds = (await page.locator('.developer-overlay').boundingBox())!;
+      expect(bounds.y + bounds.height).toBeLessThanOrEqual(consoleBounds.y + consoleBounds.height);
+      expect(consoleBounds.y).toBe(0);
+      expect(consoleBounds.height).toBeLessThan(size.height * 0.7);
       await page.screenshot({ path: `test-results/native-developer-console-${size.width}.png` });
     }
-    await page.keyboard.press('Escape');
+    await page.keyboard.press('Backquote');
     await expect(page.locator('#developer-run')).toContainText('INVINCIBLE');
     expect(
       await page.evaluate(() => {
@@ -86,7 +96,9 @@ test('desktop developer selector fits native windows and launches clean test exp
         scene.invulnerable = 0;
         const before = scene.run.health;
         scene.takeDamage(100000);
-        return scene.run.health === before;
+        const resolve = scene.run.clan.integrity;
+        scene.damageClan(100000);
+        return scene.run.health === before && scene.run.clan.integrity === resolve;
       }),
     ).toBe(true);
     await page.keyboard.press('F8');

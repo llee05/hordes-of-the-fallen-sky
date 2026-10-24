@@ -29,7 +29,7 @@ import type { GamePlatform } from '../platform/GamePlatform';
 import { buildingMenu, helpMenu, journalMenu, routeMenu, settingsMenu } from './menuContent';
 import type { JournalTab } from './menuContent';
 import { researchMenu } from './researchContent';
-import { developerMenu } from './developerContent';
+import { developerConsole, developerMenu } from './developerContent';
 import type { TreeViewState } from './progressionTree';
 
 const emblem = `<span class="clan-seal">${clanMark('spirit')}</span>`;
@@ -300,7 +300,11 @@ export class GameUI {
     this.text('riders', riderCount(run));
     this.text('workers', `${assignedWorkers(run)} / ${clan.population}`);
     this.text('power', Math.round(run.stats.damage));
-    this.number('integrity', Math.ceil(clan.integrity), `${Math.ceil(clan.integrity)}%`);
+    this.number(
+      'integrity',
+      Math.ceil(clan.integrity),
+      `${Math.ceil(clan.integrity)}%${import.meta.env.DEV && snapshot.developerConsole?.clanInvincible ? ' · INVINCIBLE' : ''}`,
+    );
     this.meter('integrity-fill', clan.integrity);
     this.text('pasture', `${Math.ceil(clan.pasture)}%`);
     this.meter('pasture-fill', clan.pasture);
@@ -421,6 +425,12 @@ export class GameUI {
     toggle.textContent = `Khan invincibility: ${tools.invincible ? 'On' : 'Off'}`;
     toggle.setAttribute('aria-pressed', String(tools.invincible));
     toggle.disabled = !tools.canCheat;
+    const clanToggle = this.overlay.querySelector<HTMLButtonElement>(
+      '[data-action="developer-clan-invincible"]',
+    )!;
+    clanToggle.textContent = `Clan invincibility: ${tools.clanInvincible ? 'On' : 'Off'}`;
+    clanToggle.setAttribute('aria-pressed', String(tools.clanInvincible));
+    clanToggle.disabled = !tools.canCheat;
   }
 
   destroy(): void {
@@ -469,7 +479,7 @@ export class GameUI {
     // Transfer focus before hiding or removing the focused menu control.
     if (run.phase === 'playing') this.get('arena-wrap').focus({ preventScroll: true });
     this.overlay.hidden = run.phase === 'playing';
-    this.overlay.className = `overlay ${run.phase === 'building' ? 'planning camp-planning' : run.phase === 'intro' ? 'intro-screen' : run.phase === 'ready' ? 'ready-screen' : ['route', 'journal', 'upgrade', 'settings', 'help', 'story', 'epilogue', 'story-log', 'developer'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
+    this.overlay.className = `overlay ${run.phase === 'console' ? 'console-screen' : run.phase === 'building' ? 'planning camp-planning' : run.phase === 'intro' ? 'intro-screen' : run.phase === 'ready' ? 'ready-screen' : ['route', 'journal', 'upgrade', 'settings', 'help', 'story', 'epilogue', 'story-log', 'developer'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
     if (run.phase === 'intro') this.overlay.setAttribute('aria-describedby', 'intro-caption');
     else this.overlay.removeAttribute('aria-describedby');
     const labels: Record<RunPhase, string> = {
@@ -487,6 +497,7 @@ export class GameUI {
       settings: 'SETTINGS',
       help: 'HOW TO PLAY',
       developer: import.meta.env.DEV ? 'DEVELOPER LEVEL SELECTOR' : '',
+      console: import.meta.env.DEV ? 'DEVELOPER CONSOLE' : '',
       dead: 'THE BANNERS FALL',
       won: 'THE CLAN IS SAVED',
     };
@@ -522,15 +533,17 @@ export class GameUI {
     else if (run.phase === 'help') this.overlay.innerHTML = helpMenu(run.guidance.enabled);
     else if (import.meta.env.DEV && run.phase === 'developer')
       this.overlay.innerHTML = developerMenu(snapshot.developerConsole);
+    else if (import.meta.env.DEV && run.phase === 'console')
+      this.overlay.innerHTML = developerConsole(snapshot.developerConsole);
     else {
       const won = run.phase === 'won';
       this.overlay.innerHTML = `<section class="end-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">${won ? 'A PEOPLE, STILL ALIVE' : 'THE STEPPE WILL REMEMBER'}</p><h2 id="overlay-title">${won ? 'A sky worth saving.' : 'The banners fall.'}</h2><p class="panel-intro">${won ? `${run.clan.population} ${run.clan.population === 1 ? 'person' : 'people'} and ${run.clan.herd} ${run.clan.herd === 1 ? 'animal' : 'animals'} reach the mountain passage.<br>Your civilization lives to see another sky.` : 'The journey ends here. Another clan will take up the blue banner.'}</p><div class="end-stats"><div><strong>${formatTime(run.elapsed)}</strong><span>JOURNEY</span></div><div><strong>${run.clan.population}</strong><span>PEOPLE</span></div><div><strong>${run.clan.region + 1}/4</strong><span>PASTURES</span></div></div><nav class="main-menu"><button class="menu-button featured" data-action="restart" data-primary>RAISE THE BANNERS AGAIN <span>→</span></button>${won ? '<button class="menu-button" data-action="epilogue">Read the epilogue</button>' : ''}<button class="menu-button" data-action="story-log">Our remembered road</button>${quit}</nav></section>`;
     }
-    if (import.meta.env.DEV && run.phase === 'developer') {
+    if (import.meta.env.DEV && ['developer', 'console'].includes(run.phase)) {
       this.developerRevision = -1;
       this.commandHistoryOffset = 0;
       this.updateDeveloperConsole(snapshot);
-      if (snapshot.developerConsole?.focusInput) {
+      if (run.phase === 'console') {
         this.overlay.querySelector<HTMLInputElement>('[data-developer-command-input]')!.focus();
         return;
       }
@@ -588,6 +601,8 @@ export class GameUI {
     else if (import.meta.env.DEV && action === 'developer') this.scene.toggleDeveloperMenu();
     else if (import.meta.env.DEV && action === 'developer-invincible')
       this.scene.executeDeveloperCommand('invincible');
+    else if (import.meta.env.DEV && action === 'developer-clan-invincible')
+      this.scene.executeDeveloperCommand('clan-invincible');
     else if (import.meta.env.DEV && button.dataset.developerLevel)
       this.scene.startDeveloperLevel(button.dataset.developerLevel);
     else if (action === 'begin') this.scene.startRun();
@@ -657,7 +672,7 @@ export class GameUI {
     }
     if (
       import.meta.env.DEV &&
-      this.phase === 'developer' &&
+      ['developer', 'console'].includes(this.phase) &&
       event.target instanceof HTMLInputElement &&
       event.target.matches('[data-developer-command-input]') &&
       ['ArrowUp', 'ArrowDown'].includes(event.key)

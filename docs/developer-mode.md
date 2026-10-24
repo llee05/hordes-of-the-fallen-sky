@@ -1,10 +1,15 @@
 # Developer tools
 
-Press **F10** in a development build to open the compact, paused console with its
-command input focused. The console is also at the top of **Developer mode / F8**,
-alongside the full level selector.
-Type a command and press Enter, or click **Khan invincibility** to toggle it.
-Escape, F8, or F10 restores the exact previous screen. Up / Down recalls commands
+Press **Backtick** (<kbd>&#96;</kbd>, below Escape on a US keyboard) in a development
+build to open the console directly over the battlefield. No developer-menu visit
+or developer checkpoint is required. The command input receives focus immediately;
+gameplay, physics, economy, and succession pause while the console is open.
+Backtick, Escape, or F10 closes it and restores the previous screen. **F10** is an
+alternate console shortcut. **F8** opens the separate level selector, which also
+retains an embedded console.
+
+Type a command and press Enter, or click the Khan/clan invincibility toggles.
+Up / Down recalls commands
 and restores the unfinished input after the newest entry. Holding Enter does not
 repeat a command. Keyboard typing does not trigger movement, gallop, or menus.
 
@@ -41,11 +46,18 @@ and are absent from production and packaged play.
 
 Developer console rules live in the renderer-independent `src/game/dev/commands.ts`.
 The command catalog includes `help`, `invincible [on|off]` (`god` is an alias),
-`heal`, `status`, and `clear`. Omitting the invincibility argument toggles it.
-Invincibility protects the Khan; the clan's damage, food, and journey rules continue.
+`clan-invincible [on|off]`, `heal`, `status`, and `clear`. Omitting either
+invincibility argument toggles that protection. Food and journey rules continue;
+clan losses require the separate clan toggle to be protected.
 Healing applies only to a living Khan and never refreshes Last Ember or skips
 succession. Commands validate their arguments, cap output at 80 entries and history
 at 40 commands, and retain history when output is cleared.
+The scene owns a separate `console` phase and its return phase, independently of
+the `developer` level-selector phase. Backtick is consumed once per native event,
+including repeat/replay handling, and does not insert a stray character when
+opening or closing the console. `GameUI` renders a dark console at the top of the
+screen while retaining the battlefield and HUD underneath. Both controls remain
+absent from production and packaged play.
 
 ## Level checkpoints
 

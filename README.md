@@ -29,10 +29,12 @@ skip the prologue and camp scenes and do not change your saved longest journey.
 Start a new run to return to normal play. The selector is absent from production
 and packaged builds. See [developer mode](docs/developer-mode.md) for checkpoint rules.
 
-Press **F10** for the paused developer command console. Use **`invincible on`**
-(or `god on`) to protect the Khan, `invincible off` to restore normal damage, and
-`help` to list commands. Invincibility carries between developer checkpoints and
-clears on a normal new run. Clan survival continues normally.
+Press **Backtick** (<kbd>&#96;</kbd>) to open the developer console directly over
+the game; **F10** is an alternate shortcut. Use **`invincible on`** (or `god on`)
+to protect the Khan and **`clan-invincible on`** to protect clan resolve, people,
+and livestock from attacks and starvation. Use `off` to restore normal losses,
+and `help` to list commands. Both toggles carry between developer checkpoints and
+clear on a normal new run. The console pauses gameplay while open.
 
 The packaged game includes its runtime, painted art, fonts, and synthesized sound. It makes no runtime asset downloads or AI calls. The desktop fills its window and provides fullscreen, quit, and durable native saves.
 

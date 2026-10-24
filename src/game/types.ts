@@ -18,6 +18,7 @@ export type RunPhase =
   | 'settings'
   | 'help'
   | 'developer'
+  | 'console'
   | 'dead'
   | 'won';
 export type JourneyStage = 'camp' | 'migration' | 'final';

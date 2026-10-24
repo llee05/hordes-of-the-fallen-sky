@@ -43,7 +43,6 @@ export interface DeveloperToolsState {
 }
 
 export interface DeveloperConsoleSnapshot extends DeveloperToolsState {
-  focusInput: boolean;
   canCheat: boolean;
 }
 

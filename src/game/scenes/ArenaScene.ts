@@ -127,7 +127,7 @@ export class ArenaScene extends Phaser.Scene {
   private developerReturnPhase: RunState['phase'] = 'ready';
   private developerRun = false;
   private developerTools = import.meta.env.DEV ? createDeveloperTools() : undefined;
-  private developerConsoleFocus = false;
+  private consoleReturnPhase: RunState['phase'] = 'ready';
   private introSlide = 0;
   private introStartsRun = false;
   private storiesEnabled = true;
@@ -161,7 +161,7 @@ export class ArenaScene extends Phaser.Scene {
     this.developerRun = !!developerRun;
     // Keep testing preferences across checkpoints; a normal new run clears every cheat.
     if (import.meta.env.DEV && !developerRun) this.developerTools = createDeveloperTools();
-    this.developerConsoleFocus = false;
+    this.consoleReturnPhase = 'ready';
     this.run = developerRun ?? createRun();
     if (!developerRun) {
       this.run.story.enabled = this.storiesEnabled;
@@ -297,12 +297,13 @@ export class ArenaScene extends Phaser.Scene {
           key !== 'ESC' &&
           key !== 'F8' &&
           key !== 'F10' &&
+          !(key === 'BACKTICK' && ['console', 'developer'].includes(this.run.phase)) &&
           event.target instanceof HTMLElement &&
           event.target.closest('input, textarea, select')
         )
           return;
+        if (key === 'F10' || key === 'BACKTICK') event.preventDefault();
         if (this.actionKeys.consume(event)) {
-          if (key === 'F10') event.preventDefault();
           action();
         }
       });
@@ -317,7 +318,8 @@ export class ArenaScene extends Phaser.Scene {
     if (import.meta.env.DEV) {
       bindAction('F8', () => this.toggleDeveloperMenu());
       bindAction('F9', () => this.landscape.cycleTerrainDebug());
-      bindAction('F10', () => this.toggleDeveloperMenu(true));
+      bindAction('F10', () => this.toggleDeveloperConsole());
+      bindAction('BACKTICK', () => this.toggleDeveloperConsole());
     }
     const bindZoom = (key: string, steps: number): void => {
       this.input.keyboard!.on(`keydown-${key}`, (event: KeyboardEvent) => {
@@ -482,18 +484,37 @@ export class ArenaScene extends Phaser.Scene {
     this.scene.restart({});
   }
 
-  toggleDeveloperMenu(focusConsole = false): void {
+  toggleDeveloperMenu(): void {
     if (!import.meta.env.DEV) return;
+    if (this.run.phase === 'console') {
+      if (this.consoleReturnPhase !== 'developer')
+        this.developerReturnPhase = this.consoleReturnPhase;
+      this.setPhase('developer');
+      return;
+    }
     if (this.run.phase === 'developer') this.setPhase(this.developerReturnPhase);
     else {
-      this.developerConsoleFocus = focusConsole;
       this.developerReturnPhase = this.run.phase;
       this.setPhase('developer');
     }
   }
 
+  toggleDeveloperConsole(): void {
+    if (!import.meta.env.DEV) return;
+    if (this.run.phase === 'console') this.setPhase(this.consoleReturnPhase);
+    else {
+      this.consoleReturnPhase = this.run.phase;
+      this.setPhase('console');
+    }
+  }
+
   executeDeveloperCommand(input: string): void {
-    if (!import.meta.env.DEV || this.run.phase !== 'developer' || !this.developerTools) return;
+    if (
+      !import.meta.env.DEV ||
+      !['developer', 'console'].includes(this.run.phase) ||
+      !this.developerTools
+    )
+      return;
     const result = executeDeveloperCommand(
       this.developerTools,
       this.run,
@@ -505,9 +526,10 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private canUseDeveloperCheats(): boolean {
-    const phase = ['settings', 'help'].includes(this.developerReturnPhase)
-      ? this.utilityReturnPhase
-      : this.developerReturnPhase;
+    let phase = this.run.phase;
+    if (phase === 'console') phase = this.consoleReturnPhase;
+    if (phase === 'developer') phase = this.developerReturnPhase;
+    if (['settings', 'help'].includes(phase)) phase = this.utilityReturnPhase;
     return !this.run.legacy.outcome && !['ready', 'intro'].includes(phase);
   }
 
@@ -530,9 +552,16 @@ export class ArenaScene extends Phaser.Scene {
     else if (this.run.phase === 'playing') this.setPhase('paused');
     else if (this.run.phase === 'paused') this.setPhase('playing');
     else if (
-      ['building', 'route', 'journal', 'upgrade', 'settings', 'help', 'developer'].includes(
-        this.run.phase,
-      )
+      [
+        'building',
+        'route',
+        'journal',
+        'upgrade',
+        'settings',
+        'help',
+        'developer',
+        'console',
+      ].includes(this.run.phase)
     )
       this.closePlanning();
   }
@@ -556,6 +585,10 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   closePlanning(): void {
+    if (this.run.phase === 'console') {
+      this.setPhase(this.consoleReturnPhase);
+      return;
+    }
     if (this.run.phase === 'developer') {
       this.setPhase(this.developerReturnPhase);
       return;
@@ -709,6 +742,7 @@ export class ArenaScene extends Phaser.Scene {
           'epilogue',
           'story-log',
           'developer',
+          'console',
         ].includes(this.run.phase))
     )
       this.togglePause();
@@ -1389,7 +1423,8 @@ export class ArenaScene extends Phaser.Scene {
       this.tweens.pauseAll();
     }
     // Capture changes above reset Phaser's global preventDefault flag.
-    if (import.meta.env.DEV && phase === 'developer') this.input.keyboard!.disableGlobalCapture();
+    if (import.meta.env.DEV && ['developer', 'console'].includes(phase))
+      this.input.keyboard!.disableGlobalCapture();
     else this.input.keyboard!.enableGlobalCapture();
     this.publishPhase();
   }
@@ -1407,7 +1442,6 @@ export class ArenaScene extends Phaser.Scene {
         import.meta.env.DEV && this.developerTools
           ? {
               ...this.developerTools,
-              focusInput: this.developerConsoleFocus,
               canCheat: this.canUseDeveloperCheats(),
             }
           : undefined,

@@ -53,6 +53,7 @@ describe('a civilization that moves', () => {
       'journal',
       'settings',
       'help',
+      'console',
       'dead',
       'won',
     ] as const) {
