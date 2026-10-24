@@ -1,5 +1,6 @@
 import { isKhanActive } from '../state/khan';
 import type { RunState } from '../types';
+import { WORLD_DEBUG_MODES, type WorldDebugMode } from '../world3d/worldProjection';
 
 export const DEVELOPER_COMMAND_MAX_LENGTH = 200;
 const LOG_LIMIT = 80;
@@ -25,7 +26,32 @@ export const DEVELOPER_COMMANDS = [
     description: 'Show invincibility, Khan health, and clan resolve.',
   },
   { name: 'clear', usage: 'clear', description: 'Clear console output; retain command history.' },
+  {
+    name: 'terrain-debug',
+    usage: 'terrain-debug [off|wireframe|elevation|normals|slope|traversal|chunks|collision]',
+    description: 'Inspect the 3D terrain; no argument cycles views (F9).',
+  },
+  {
+    name: 'terrain-only',
+    usage: 'terrain-only [on|off]',
+    description: 'Hide actors, props and HUD for terrain inspection (F7).',
+  },
+  {
+    name: 'camera-angle',
+    usage: 'camera-angle 55..80',
+    description: 'Set the 3D orthographic camera elevation in degrees (F6 cycles).',
+  },
 ] as const;
+
+export interface DeveloperTerrainControls {
+  readonly terrainOnly: boolean;
+  readonly angle: number;
+  readonly debugMode: WorldDebugMode;
+  setTerrainOnly: (value: boolean) => void;
+  setAngle: (angle: number) => void;
+  setDebug: (mode: WorldDebugMode) => void;
+  cycleDebug: () => void;
+}
 
 export interface DeveloperConsoleEntry {
   id: number;
@@ -63,6 +89,7 @@ export function executeDeveloperCommand(
   run: RunState,
   input: string,
   activeExpedition: boolean,
+  terrain?: DeveloperTerrainControls,
 ): { cheated: boolean } {
   const line = input.trim();
   if (!line) return { cheated: false };
@@ -85,10 +112,19 @@ export function executeDeveloperCommand(
     write(`Unknown command: ${command}. Type help for commands.`, 'error');
     return { cheated: false };
   }
+  const toggles = ['invincible', 'clan-invincible', 'terrain-only'];
   if (
-    (['invincible', 'clan-invincible'].includes(name!) &&
+    (toggles.includes(name!) &&
       (args.length > 1 || (args.length === 1 && !['on', 'off'].includes(args[0]!)))) ||
-    (!['invincible', 'clan-invincible'].includes(name!) && args.length > 0)
+    (name === 'terrain-debug' &&
+      (args.length > 1 ||
+        (args.length === 1 && !WORLD_DEBUG_MODES.includes(args[0] as WorldDebugMode)))) ||
+    (name === 'camera-angle' &&
+      (args.length !== 1 ||
+        !Number.isFinite(Number(args[0])) ||
+        Number(args[0]) < 55 ||
+        Number(args[0]) > 80)) ||
+    (![...toggles, 'terrain-debug', 'camera-angle'].includes(name!) && args.length > 0)
   ) {
     write(`Usage: ${definition.usage}`, 'error');
     return { cheated: false };
@@ -106,6 +142,20 @@ export function executeDeveloperCommand(
     );
   } else if (!activeExpedition) {
     write('Start an expedition or select a developer checkpoint first.', 'error');
+  } else if (['terrain-debug', 'terrain-only', 'camera-angle'].includes(name!)) {
+    if (!terrain)
+      write('Enable the 3D prototype with ?terrain=3d and visit Otgontenger first.', 'error');
+    else if (name === 'terrain-debug') {
+      if (args[0]) terrain.setDebug(args[0] as WorldDebugMode);
+      else terrain.cycleDebug();
+      write(`Terrain view: ${terrain.debugMode}.`);
+    } else if (name === 'terrain-only') {
+      terrain.setTerrainOnly(args[0] ? args[0] === 'on' : !terrain.terrainOnly);
+      write(`Terrain-only ${terrain.terrainOnly ? 'ON' : 'OFF'}. F7 restores the world and HUD.`);
+    } else {
+      terrain.setAngle(Number(args[0]));
+      write(`Camera elevation: ${terrain.angle} degrees.`);
+    }
   } else if (name === 'invincible') {
     state.invincible = args[0] ? args[0] === 'on' : !state.invincible;
     write(`Khan invincibility ${state.invincible ? 'ON' : 'OFF'}.`);

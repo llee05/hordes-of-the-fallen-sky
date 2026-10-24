@@ -49,3 +49,59 @@ Navigation remains a resident horizontal flow field. Conservative 16-unit probes
 block steep slopes and wall discontinuities inside each collision cell. A tested
 route reaches the elevated shelf from the camp, and more than half the complete
 region is reachable; the remaining mountain slopes also serve as backdrop.
+
+`MountainRegion.geometry` in `data/terrainBiomes.ts` authors shelf position,
+footprint, rise, fracture, flattening, ramp width, grade, and traversal slope limit.
+Regions without this optional geometry use continuous noise instead. The geometry,
+material, sprite, effect, camera, and navigation adapters have separate modules
+under `src/game/world3d/`. Two additional chunk rows outside the physical world
+continue the backdrop while Arcade's world bounds remain unchanged.
+
+In development, F6 cycles 55°, 65°, and 80°. F7 hides props, characters, and the HUD;
+press it again to restore them. Backtick still opens the console in this view.
+F9 cycles wireframe, elevation, normal colours, slope, traversability, chunk bounds,
+and the actual collision cells. These tools continue working while paused.
+
+| Console command           | Effect                                          |
+| ------------------------- | ----------------------------------------------- |
+| `camera-angle 55`         | Set the orthographic camera elevation (55–80°)  |
+| `terrain-debug normals`   | Select a debug view; omit the argument to cycle |
+| `terrain-debug off`       | Restore painted materials                       |
+| `terrain-only on` / `off` | Isolate terrain or restore the scene            |
+
+Existing Phaser hurdle drawings and ground warnings are replayed into cached
+effect textures. Characters use depth-tested atlas batches and their existing
+contact-shadow asset. Static scenery also casts sunlight shadows; the bounded
+1024px shadow map refreshes at most three times per second once chunks settle.
+Resident terrain submits two shared geometry batches; hurdle drawings share one
+cached atlas and batch. Chunk geometry is retained independently for navigation
+inspection and eviction. Frustum-based chunk selection and sprite culling bound
+the submitted scene. Shared batches rebuild only when the resident set changes.
+World rendering adapts between 50% and 100% pixel resolution on slow GPUs, with
+hysteresis before restoring detail; DOM text, HUD size, camera scale, and physics
+coordinates stay unchanged. The debug label reports the current pixel scale.
+Ground-following arrows keep horizontal speed and range, and stop at vertical
+discontinuities, including in collision callbacks. This prototype does not add
+ballistic trajectories or height-based damage bonuses.
+
+Validation covers deterministic generation, mesh/query agreement, seam positions
+and normals, vertical faces, connected ramps, arrow/wall interception, developer
+command validation, actual Arcade movement, elevated combat, depth occlusion,
+chunk lifecycle, and pooled render load. Browser and Electron tests exercise the
+same development entry point; `npm run check` verifies the shipping build.
+
+This remains an opt-in vertical slice. The other destinations keep their original
+renderer. Dedicated cliff, scrub, ice, and scree art would improve material quality;
+current variants reuse existing paintings. Shadows have deliberately limited range
+and resolution, and effects use a raster bridge rather than a full 3D particle
+system. Target hardware performance and longer playtests remain necessary before
+making this the default. The next step is to profile the slice on target hardware,
+then author geometry configurations and materials for the other mountain biomes.
+
+The full-capacity browser sample uses 350 enemies and exercises the 250-arrow pool.
+On this machine's SwiftShader software GPU it measured roughly 9 FPS at the minimum
+pixel scale. Simulation plus renderer CPU processing was below 20 ms in that
+sample, with about 20 draw calls and 14 textures. This is a resource-budget check,
+not a target-hardware frame-rate certification. The regression records software
+FPS and checks bounded CPU/resource use; hardware GPU runs also require 30 FPS.
+The measured software limit is a reason to keep the prototype behind its flag.

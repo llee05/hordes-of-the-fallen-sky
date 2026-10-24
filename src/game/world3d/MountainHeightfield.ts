@@ -1,6 +1,6 @@
 import { MountainTerrain } from '../terrain/MountainTerrain';
 import { clamp01, coherentNoise, mix, smoothstep } from '../terrain/noise';
-import type { TerrainCell, TerrainSample } from '../terrain/types';
+import type { MountainRegion, TerrainCell, TerrainSample } from '../terrain/types';
 import { WORLD_3D } from './worldProjection';
 
 export interface HeightNode {
@@ -16,24 +16,60 @@ export class MountainHeightfield extends MountainTerrain {
   private readonly nodes = new Map<string, HeightNode>();
   private readonly normals = new Map<string, readonly [number, number, number]>();
 
+  constructor(region: MountainRegion, worldSize?: number) {
+    super(region, worldSize);
+    const geometry = region.geometry;
+    if (geometry) {
+      const { shelf, ramp } = geometry;
+      if (
+        ![geometry.walkSlope, ...Object.values(shelf), ...Object.values(ramp)].every(
+          Number.isFinite,
+        ) ||
+        geometry.walkSlope <= 0 ||
+        shelf.width <= 0 ||
+        shelf.depth <= 0 ||
+        shelf.rise < 0 ||
+        shelf.flatten < 0 ||
+        shelf.flatten > 1 ||
+        ramp.wavelength <= 0 ||
+        ramp.length <= 0 ||
+        ramp.halfWidth <= 0 ||
+        ramp.shoulder <= ramp.halfWidth
+      )
+        throw new Error('Invalid 3D mountain shelf, ramp or traversal configuration');
+    }
+  }
+
+  override terraceStrength(x: number, z: number): number {
+    return clamp01(this.nodeValue(x, z).rise / (this.region.geometry?.shelf.rise || 1));
+  }
+
   private nodeValue(x: number, z: number): HeightNode {
     const center = this.worldSize / 2;
     const protectedGround = this.protection(x, z);
     const raw = super.rawHeight(x, z);
+    const geometry = this.region.geometry;
+    if (!geometry) return { x, z, base: raw * this.region.biome.heightScale, rise: 0, field: -1 };
+    const { shelf, ramp: approach } = geometry;
     const warp = coherentNoise(x / 260, z / 260, this.seed + 71) - 0.5;
     const field =
       1 -
-      Math.pow((x - center - 350) / 1180, 2) -
-      Math.pow((z - center + 1000) / 600, 2) +
-      warp * 0.16;
+      Math.pow((x - center - shelf.x) / shelf.width, 2) -
+      Math.pow((z - center - shelf.z) / shelf.depth, 2) +
+      warp * shelf.fracture;
     // A broad winding route grades from the camp basin to the western shelf.
     // Grade the base as well as removing the wall, so the approach really connects.
-    const rampX = center - 260 + Math.sin((z - center) / 450) * 140;
-    const ramp = 1 - smoothstep(180, 700, Math.abs(x - rampX));
-    const rampHeight = mix(0.2, 0.72, smoothstep(0, 1, (center - 300 - z) / 1200));
-    const rise = 230 * (1 - ramp) * (1 - protectedGround);
-    const flatten = smoothstep(-0.5, 0.45, field) * 0.7;
-    let base = mix(raw, 0.48 + (raw - 0.48) * 0.18, flatten);
+    const rampX =
+      center + approach.x + Math.sin((z - center) / approach.wavelength) * approach.bend;
+    const ramp = 1 - smoothstep(approach.halfWidth, approach.shoulder, Math.abs(x - rampX));
+    const rampHeight = mix(
+      this.region.biome.valleyElevation,
+      approach.elevation,
+      smoothstep(0, 1, (center + approach.start - z) / approach.length),
+    );
+    const rise = shelf.rise * (1 - ramp) * (1 - protectedGround);
+    const flatten = smoothstep(-0.5, 0.45, field) * shelf.flatten;
+    let base = mix(raw, shelf.elevation + (raw - shelf.elevation) * 0.18, flatten);
     base = mix(base, rampHeight, ramp);
     // Broad foothills survive below the shelf and the connected high ridges remain continuous.
     base = mix(base, this.region.biome.valleyElevation, protectedGround);
@@ -100,6 +136,10 @@ export class MountainHeightfield extends MountainTerrain {
   override sample(x: number, y: number): TerrainSample {
     const sample = super.sample(x, y);
     const { field, rise } = this.nodeValue(x, y);
+    sample.rawElevation = sample.elevation;
+    sample.level = this.region.biome.terraces.thresholds.filter(
+      (threshold) => sample.elevation >= threshold,
+    ).length;
     sample.cliff = (1 - smoothstep(0, 0.1, Math.abs(field))) * clamp01(rise / 160);
     sample.landform =
       this.protection(x, y) > 0.8
@@ -116,6 +156,13 @@ export class MountainHeightfield extends MountainTerrain {
     return sample;
   }
 
+  wallNormal(x: number, z: number): readonly [number, number, number] {
+    const dx = this.nodeValue(x + 8, z).field - this.nodeValue(x - 8, z).field;
+    const dz = this.nodeValue(x, z + 8).field - this.nodeValue(x, z - 8).field;
+    const length = Math.hypot(dx, dz) || 1;
+    return [-dx / length, 0, -dz / length];
+  }
+
   override cell(column: number, row: number): TerrainCell {
     const cell = super.cell(column, row);
     // Conservative 16-unit probes cover a vertical face anywhere inside the 64-unit cell.
@@ -127,10 +174,19 @@ export class MountainHeightfield extends MountainTerrain {
     const columns = Math.floor(cell.width / 16) + 1;
     let steep = false;
     for (let i = 0; i < heights.length; i++) {
-      if (i % columns && Math.abs(heights[i]! - heights[i - 1]!) / 16 > 0.85) steep = true;
-      if (i >= columns && Math.abs(heights[i]! - heights[i - columns]!) / 16 > 0.85) steep = true;
+      if (
+        i % columns &&
+        Math.abs(heights[i]! - heights[i - 1]!) / 16 > (this.region.geometry?.walkSlope ?? 0.85)
+      )
+        steep = true;
+      if (
+        i >= columns &&
+        Math.abs(heights[i]! - heights[i - columns]!) / 16 >
+          (this.region.geometry?.walkSlope ?? 0.85)
+      )
+        steep = true;
     }
-    cell.blocked = steep || cell.sample.slope > 0.85;
+    cell.blocked = steep || cell.sample.slope > (this.region.geometry?.walkSlope ?? 0.85);
     return cell;
   }
 }

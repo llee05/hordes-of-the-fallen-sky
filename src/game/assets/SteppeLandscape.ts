@@ -71,7 +71,7 @@ export class SteppeLandscape {
         : new MountainTerrain(this.definition.mountains);
       this.navigation = new TerrainNavigation(terrain);
       if (terrain instanceof MountainHeightfield) {
-        this.world3d = new World3DRenderer(this.scene, terrain);
+        this.world3d = new World3DRenderer(this.scene, terrain, this.navigation);
         this.scene.cameras.main.setAlpha(0);
       } else this.mountains = new MountainRenderer(this.scene, terrain, MOUNTAIN_TERRAIN_ART);
     }

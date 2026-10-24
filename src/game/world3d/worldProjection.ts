@@ -8,7 +8,20 @@ export const WORLD_3D = {
   chunkBudget: 2,
   pixelRatio: 1.5,
   shadowSize: 1024,
+  minRenderScale: 0.5,
 } as const;
+
+export const WORLD_DEBUG_MODES = [
+  'off',
+  'wireframe',
+  'elevation',
+  'normals',
+  'slope',
+  'traversal',
+  'chunks',
+  'collision',
+] as const;
+export type WorldDebugMode = (typeof WORLD_DEBUG_MODES)[number];
 
 /** Physics X/Y becomes render X/Z. Height never changes combat distances. */
 export function projectGround(

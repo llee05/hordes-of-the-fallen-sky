@@ -4,6 +4,29 @@ import type { MountainRegion } from '../terrain/types';
 /** A broad camp basin and two winding mountain passes, independent of story chapter. */
 export const OTGONTENGER_MOUNTAINS: MountainRegion = {
   seed: 'otgontenger-white-crown-v1',
+  geometry: {
+    walkSlope: 0.85,
+    shelf: {
+      x: 350,
+      z: -1000,
+      width: 1180,
+      depth: 600,
+      rise: 230,
+      fracture: 0.16,
+      elevation: 0.48,
+      flatten: 0.7,
+    },
+    ramp: {
+      x: -260,
+      bend: 140,
+      wavelength: 450,
+      halfWidth: 180,
+      shoulder: 700,
+      start: -300,
+      length: 1200,
+      elevation: 0.72,
+    },
+  },
   biome: {
     id: 'otgontenger-alpine',
     heightScale: 1150,

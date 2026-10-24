@@ -3,12 +3,44 @@ import { MountainHeightfield } from '../../src/game/world3d/MountainHeightfield'
 import { mountainGeometry } from '../../src/game/world3d/mountainGeometry';
 import { OTGONTENGER_MOUNTAINS } from '../../src/game/data/terrainBiomes';
 import { TerrainNavigation } from '../../src/game/terrain/TerrainNavigation';
+import { projectileTerrainClear } from '../../src/game/world3d/projectileTerrain';
 
 describe('three dimensional mountain slice', () => {
+  it('rejects invalid authored shelf and ramp dimensions', () => {
+    const region = structuredClone(OTGONTENGER_MOUNTAINS);
+    region.geometry!.shelf.depth = 0;
+    expect(() => new MountainHeightfield(region)).toThrow('Invalid 3D');
+    region.geometry!.shelf.depth = 600;
+    region.geometry!.ramp.shoulder = region.geometry!.ramp.halfWidth;
+    expect(() => new MountainHeightfield(region)).toThrow('Invalid 3D');
+  });
+  it('lets arrows follow slopes but stops them at a vertical rock wall', () => {
+    const terrain = new MountainHeightfield(OTGONTENGER_MOUNTAINS);
+    expect(projectileTerrainClear(terrain, { x: 2200, y: 1900 }, { x: 2220, y: 1800 })).toBe(true);
+    const walls = mountainGeometry(terrain, { x: 3584, y: 1536, width: 512, height: 512 }).walls;
+    const i = walls.positions.findIndex(
+      (_v, index) =>
+        index % 18 === 0 && walls.positions[index + 4]! - walls.positions[index + 1]! > 150,
+    );
+    expect(i).toBeGreaterThanOrEqual(0);
+    const x = walls.positions[i]!;
+    const z = walls.positions[i + 2]!;
+    const nx = walls.normals[i]!;
+    const nz = walls.normals[i + 2]!;
+    expect(
+      projectileTerrainClear(
+        terrain,
+        { x: x - nx * 20, y: z - nz * 20 },
+        { x: x + nx * 20, y: z + nz * 20 },
+      ),
+    ).toBe(false);
+  });
   it('is seeded, query-order independent, and interpolates the same triangles as the mesh', () => {
     const a = new MountainHeightfield(OTGONTENGER_MOUNTAINS);
     const b = new MountainHeightfield(OTGONTENGER_MOUNTAINS);
     b.height(4800, 300);
+    const other = new MountainHeightfield({ ...OTGONTENGER_MOUNTAINS, seed: 'another-range' });
+    expect(other.height(1200, 1300)).not.toBe(a.height(1200, 1300));
     for (const [x, z] of [
       [-10, 20],
       [1200, 1400],
@@ -33,8 +65,9 @@ describe('three dimensional mountain slice', () => {
 
   it('joins adjacent chunk positions and normals exactly, including clipped wall endpoints', () => {
     const terrain = new MountainHeightfield(OTGONTENGER_MOUNTAINS);
-    const a = mountainGeometry(terrain, { x: 2560, y: 1536, width: 512, height: 512 });
-    const b = mountainGeometry(terrain, { x: 3072, y: 1536, width: 512, height: 512 });
+    const a = mountainGeometry(terrain, { x: 2560, y: 2048, width: 512, height: 512 });
+    const b = mountainGeometry(terrain, { x: 3072, y: 2048, width: 512, height: 512 });
+    expect(a.walls.positions.length).toBeGreaterThan(0);
     const seam = (data: typeof a): string[] =>
       [
         ...new Set(

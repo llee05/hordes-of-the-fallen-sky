@@ -93,6 +93,12 @@ export class SpriteBridge {
       );
       mesh.frustumCulled = false; // CPU culling before batching, bounds change every frame.
       mesh.name = 'painted-sprite-batch';
+      mesh.castShadow = false;
+      mesh.customDepthMaterial = new THREE.MeshDepthMaterial({
+        map: texture,
+        alphaTest: 0.1,
+        depthPacking: THREE.RGBADepthPacking,
+      });
       this.root.add(mesh);
       batch = { mesh, capacity: 0, count: 0 };
       this.batches.set(source, batch);
@@ -104,13 +110,15 @@ export class SpriteBridge {
         ['position', 3],
         ['uv', 2],
         ['color', 4],
-      ] as const)
+      ] as const) {
+        const expanded = new Float32Array(batch.capacity * 4 * size);
+        const previous = geometry.getAttribute(name);
+        if (previous) expanded.set(previous.array);
         geometry.setAttribute(
           name,
-          new THREE.BufferAttribute(new Float32Array(batch.capacity * 4 * size), size).setUsage(
-            THREE.DynamicDrawUsage,
-          ),
+          new THREE.BufferAttribute(expanded, size).setUsage(THREE.DynamicDrawUsage),
         );
+      }
       const indices: number[] = [];
       for (let i = 0; i < batch.capacity; i++)
         indices.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3);
@@ -127,24 +135,37 @@ export class SpriteBridge {
     camera: THREE.OrthographicCamera,
   ): void {
     const frame = object.frame;
-    const source = frame.source.image as TexImageSource;
+    const text = object instanceof Phaser.GameObjects.Text;
+    const source = (text ? object.canvas : frame.source.image) as TexImageSource;
     const batch = this.batch(source);
+    if (['steppe-props', 'steppe-scenery'].includes(object.texture.key))
+      batch.mesh.castShadow = true;
     const i = batch.count++ * 4;
     const geometry = batch.mesh.geometry;
     const positions = geometry.getAttribute('position');
     const uvs = geometry.getAttribute('uv');
     const colors = geometry.getAttribute('color');
     const shadow = object.texture.key === 'shadow';
-    const height = this.terrain.height(x, z) * this.terrain.region.biome.heightScale;
+    const lift =
+      object instanceof Phaser.GameObjects.Text
+        ? object.displayHeight * 0.6
+        : object.depth === 9200
+          ? 30
+          : object.texture.key === 'gem'
+            ? 12
+            : 0;
+    const height = this.terrain.height(x, z) * this.terrain.region.biome.heightScale + lift;
     this.positions.set(object, { x, y: height, z });
     // Phaser's trim offsets refer to the shared logical canvas, not the crop.
-    const left = frame.x - object.displayOriginX;
-    const top = frame.y - object.displayOriginY;
+    const left = (text ? 0 : frame.x) - object.displayOriginX;
+    const top = (text ? 0 : frame.y) - object.displayOriginY;
+    const width = text ? object.width : frame.cutWidth;
+    const heightPixels = text ? object.height : frame.cutHeight;
     const points = [
       [left, top],
-      [left + frame.cutWidth, top],
-      [left + frame.cutWidth, top + frame.cutHeight],
-      [left, top + frame.cutHeight],
+      [left + width, top],
+      [left + width, top + heightPixels],
+      [left, top + heightPixels],
     ];
     const tint = object instanceof Phaser.GameObjects.Text ? 0xffffff : object.tintTopLeft;
     this.color.setHex(tint);
@@ -169,8 +190,8 @@ export class SpriteBridge {
       else positions.setXYZ(i + j, x + dx, height - dy * cosine + 2, z - dy * sine);
       uvs.setXY(
         i + j,
-        j === 0 || j === 3 ? frame.u0 : frame.u1,
-        j < 2 ? 1 - frame.v0 : 1 - frame.v1,
+        j === 0 || j === 3 ? (text ? 0 : frame.u0) : text ? 1 : frame.u1,
+        j < 2 ? (text ? 1 : 1 - frame.v0) : text ? 0 : 1 - frame.v1,
       );
       colors.setXYZW(i + j, this.color.r, this.color.g, this.color.b, alpha);
     }
@@ -184,6 +205,7 @@ export class SpriteBridge {
     for (const { mesh } of this.batches.values()) {
       mesh.geometry.dispose();
       mesh.material.dispose();
+      (mesh.customDepthMaterial as THREE.Material).dispose();
       this.root.remove(mesh);
     }
     for (const texture of this.textures.values()) texture.dispose();

@@ -6,6 +6,10 @@ import { terrainDressing } from '../terrain/terrainDressing';
 import { WORLD_3D, groundView } from './worldProjection';
 import { SpriteBridge } from './SpriteBridge';
 import { MountainHeightfield } from './MountainHeightfield';
+import type { TerrainNavigation } from '../terrain/TerrainNavigation';
+import type { TerrainBounds } from '../terrain/types';
+import { GraphicsBridge } from './GraphicsBridge';
+import { visibleWorldChunks, worldChunkBounds } from './worldChunks';
 import { mountainGeometry } from './mountainGeometry';
 import { MountainMaterials, WORLD_DEBUG_MODES, type WorldDebugMode } from './MountainMaterials';
 
@@ -13,6 +17,7 @@ interface RenderChunk {
   group: THREE.Group;
   props: Phaser.GameObjects.Image[];
   outline: THREE.Box3Helper;
+  collision: THREE.LineSegments;
 }
 
 /** Rendering adapter only. ArenaScene and Arcade retain authoritative horizontal positions. */
@@ -23,9 +28,12 @@ export class World3DRenderer {
   readonly sprites: SpriteBridge;
   readonly chunks = new Map<string, RenderChunk>();
   readonly materials: MountainMaterials;
+  readonly effects: GraphicsBridge;
+  viewBounds?: TerrainBounds;
   angle: number = WORLD_3D.angle;
   debugMode: WorldDebugMode = 'off';
   terrainOnly = false;
+  renderScale = 1;
   pendingChunks = 0;
   private readonly actors = new THREE.Group();
   private readonly sun = new THREE.DirectionalLight(0xffefd3, 1.7);
@@ -36,15 +44,24 @@ export class World3DRenderer {
   private shadowX = -Infinity;
   private shadowZ = -Infinity;
   private focusHeight?: number;
+  private shadowTime = 0;
+  private qualityTime = performance.now();
+  private readonly collisionMaterial = new THREE.LineBasicMaterial({
+    color: 0xff6655,
+    depthTest: false,
+  });
+  private readonly merged: THREE.Mesh<THREE.BufferGeometry, THREE.MeshLambertMaterial>[] = [];
+  readonly timings = { sprites: 0, effects: 0, draw: 0 };
 
   constructor(
     private readonly scene: Phaser.Scene,
     readonly terrain: MountainHeightfield,
+    readonly navigation: TerrainNavigation,
   ) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, WORLD_3D.pixelRatio));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    this.renderer.shadowMap.type = THREE.BasicShadowMap;
     this.renderer.shadowMap.autoUpdate = false;
     this.renderer.domElement.dataset.worldRenderer = '3d';
     Object.assign(this.renderer.domElement.style, {
@@ -70,7 +87,15 @@ export class World3DRenderer {
     this.sun.shadow.normalBias = 2;
     this.world.add(this.sun, this.sun.target, this.actors);
     this.materials = new MountainMaterials(scene);
+    for (const material of [this.materials.surface, this.materials.wall]) {
+      const mesh = new THREE.Mesh(new THREE.BufferGeometry(), material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      this.merged.push(mesh);
+      this.world.add(mesh);
+    }
     this.sprites = new SpriteBridge(scene, this.actors, terrain);
+    this.effects = new GraphicsBridge(scene, this.actors, terrain);
     this.label = document.createElement('div');
     this.label.dataset.worldDebug = '';
     Object.assign(this.label.style, {
@@ -110,6 +135,22 @@ export class World3DRenderer {
     this.terrainOnly = value;
     this.actors.visible = !value;
     document.querySelector('#app')?.classList.toggle('terrain-only', value);
+    this.renderer.shadowMap.needsUpdate = true;
+  }
+
+  /** Inspection query for depth validation; never used for combat targeting. */
+  occludes(point: { x: number; y: number; z: number }): boolean {
+    const target = new THREE.Vector3(point.x, point.y, point.z);
+    const screen = target.clone().project(this.camera);
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2(screen.x, screen.y), this.camera);
+    const hit = ray
+      .intersectObjects(
+        [...this.chunks.values()].map((chunk) => chunk.group),
+        true,
+      )
+      .find((hit) => hit.object instanceof THREE.Mesh);
+    return !!hit && hit.distance < ray.ray.origin.distanceTo(target) - 3;
   }
 
   private render(): void {
@@ -153,12 +194,15 @@ export class World3DRenderer {
       this.terrain.region.biome.heightScale,
       this.angle,
     );
-    const wanted = this.terrain.visibleChunks(view);
+    this.viewBounds = view;
+    const wanted = visibleWorldChunks(view, this.terrain.worldSize, this.terrain.chunkSize);
     const keys = new Set(wanted.map(({ column, row }) => `${column},${row}`));
+    let changed = false;
     for (const [key, chunk] of this.chunks)
       if (!keys.has(key)) {
         this.destroyChunk(chunk);
         this.chunks.delete(key);
+        changed = true;
       }
     const missing = wanted.filter(({ column, row }) => !this.chunks.has(`${column},${row}`));
     missing.sort(
@@ -166,44 +210,74 @@ export class World3DRenderer {
         Math.hypot((a.column + 0.5) * 512 - x, (a.row + 0.5) * 512 - z) -
         Math.hypot((b.column + 0.5) * 512 - x, (b.row + 0.5) * 512 - z),
     );
-    for (const { column, row } of missing.slice(0, WORLD_3D.chunkBudget))
+    for (const { column, row } of missing.slice(0, WORLD_3D.chunkBudget)) {
       this.addChunk(column, row);
+      changed = true;
+    }
+    if (changed) this.mergeTerrain();
     this.pendingChunks = Math.max(0, missing.length - WORLD_3D.chunkBudget);
-    if (missing.length || Math.hypot(x - this.shadowX, z - this.shadowZ) > 256) {
+    if (
+      missing.length ||
+      Math.hypot(x - this.shadowX, z - this.shadowZ) > 256 ||
+      performance.now() - this.shadowTime > 333
+    ) {
+      this.shadowTime = performance.now();
       this.shadowX = x;
       this.shadowZ = z;
       this.sun.position.set(x - 1700, 2800, z - 1800);
       this.sun.target.position.set(x, 350, z);
       this.renderer.shadowMap.needsUpdate = true;
     }
-    for (const chunk of this.chunks.values()) chunk.outline.visible = this.debugMode === 'chunks';
+    for (const chunk of this.chunks.values()) {
+      chunk.outline.visible = this.debugMode === 'chunks';
+      chunk.collision.visible = this.debugMode === 'collision';
+    }
+    let mark = performance.now();
     this.sprites.update(this.camera, view);
+    this.timings.sprites = performance.now() - mark;
+    mark = performance.now();
+    this.effects.update(view, this.angle);
+    this.timings.effects = performance.now() - mark;
+    mark = performance.now();
     this.renderer.render(this.world, this.camera);
+    this.timings.draw = performance.now() - mark;
+    // Bound fragment load on integrated/software GPUs without resizing the HUD or world units.
+    const now = performance.now();
+    if (this.pendingChunks === 0 && this.debugMode === 'off' && now - this.qualityTime > 2000) {
+      const fps = this.scene.game.loop.actualFps;
+      const scale =
+        fps > 0 && fps < 28
+          ? Math.max(WORLD_3D.minRenderScale, this.renderScale - 0.15)
+          : fps > 57 && now - this.qualityTime > 10000
+            ? Math.min(1, this.renderScale + 0.1)
+            : this.renderScale;
+      if (scale !== this.renderScale) {
+        this.renderScale = scale;
+        this.renderer.setPixelRatio(Math.min(devicePixelRatio, WORLD_3D.pixelRatio) * scale);
+        this.renderer.setSize(width, height);
+        this.qualityTime = now;
+      }
+    }
     this.label.style.display = this.debugMode === 'off' && !this.terrainOnly ? 'none' : 'block';
-    this.label.textContent = `3D · ${this.debugMode.toUpperCase()} · ${this.angle}° · F9 debug\n${this.chunks.size} chunks · ${this.pendingChunks} pending · ${this.renderer.info.render.calls} draws`;
+    this.label.textContent = `3D · ${this.debugMode.toUpperCase()} · ${this.angle}° · F9 debug\n${this.chunks.size} chunks · ${this.pendingChunks} pending · ${this.renderer.info.render.calls} draws · ${Math.round(this.renderScale * 100)}% pixels`;
   }
 
   private addChunk(column: number, row: number): void {
-    const size = this.terrain.chunkSize;
-    const x = column * size;
-    const z = row * size;
-    const bounds = {
-      x,
-      y: z,
-      width: Math.min(size, GAME.worldSize - x),
-      height: Math.min(size, GAME.worldSize - z),
-    };
+    const bounds = worldChunkBounds(column, row, this.terrain.worldSize, this.terrain.chunkSize);
+    const { x, y: z } = bounds;
+    const backdrop = x < 0 || z < 0 || x >= this.terrain.worldSize || z >= this.terrain.worldSize;
     const data = mountainGeometry(this.terrain, bounds);
     const group = new THREE.Group();
     group.name = `world-terrain-${column}-${row}`;
     for (const part of ['surface', 'walls'] as const) {
       const mesh = new THREE.Mesh(
-        this.materials.geometry(data[part]),
+        this.materials.geometry(data[part], this.navigation),
         part === 'surface' ? this.materials.surface : this.materials.wall,
       );
       mesh.name = part;
       mesh.castShadow = true;
       mesh.receiveShadow = true;
+      mesh.visible = false; // Retain chunk data; submit resident terrain in two draws below.
       group.add(mesh);
     }
     const outline = new THREE.Box3Helper(
@@ -216,8 +290,40 @@ export class World3DRenderer {
     outline.visible = false;
     group.add(outline);
     this.world.add(group);
+    const lines: number[] = [];
+    const cellSize = this.terrain.cellSize;
+    for (let j = z; !backdrop && j < z + bounds.height; j += cellSize)
+      for (let i = x; i < x + bounds.width; i += cellSize) {
+        const index = Math.floor(j / cellSize) * this.navigation.columns + Math.floor(i / cellSize);
+        if (!this.navigation.blocked[index]) continue;
+        const corners = [
+          [i, j],
+          [Math.min(i + cellSize, GAME.worldSize), j],
+          [Math.min(i + cellSize, GAME.worldSize), Math.min(j + cellSize, GAME.worldSize)],
+          [i, Math.min(j + cellSize, GAME.worldSize)],
+        ];
+        for (let k = 0; k < 4; k++)
+          for (const point of [corners[k]!, corners[(k + 1) % 4]!])
+            lines.push(
+              point[0]!,
+              this.terrain.height(point[0]!, point[1]!) * this.terrain.region.biome.heightScale + 6,
+              point[1]!,
+            );
+      }
+    const collision = new THREE.LineSegments(
+      new THREE.BufferGeometry().setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(lines, 3),
+      ),
+      this.collisionMaterial,
+    );
+    collision.visible = false;
+    collision.name = 'arcade-collision-cells';
+    group.add(collision);
     const props: Phaser.GameObjects.Image[] = [];
-    for (const prop of terrainDressing(this.terrain, this.terrain.getChunk(column, row))) {
+    for (const prop of backdrop
+      ? []
+      : terrainDressing(this.terrain, this.terrain.getChunk(column, row))) {
       const art = MOUNTAIN_TERRAIN_ART.dressing![prop.kind];
       const width = art.width * prop.scale;
       const image = this.scene.add
@@ -236,7 +342,35 @@ export class World3DRenderer {
         image,
       );
     }
-    this.chunks.set(`${column},${row}`, { group, props, outline });
+    this.chunks.set(`${column},${row}`, { group, props, outline, collision });
+  }
+
+  /** Rebuild only when the resident set changes. GPU batches retain deterministic chunk data. */
+  private mergeTerrain(): void {
+    for (let part = 0; part < 2; part++) {
+      const geometries = [...this.chunks.values()].map(
+        (chunk) => (chunk.group.children[part] as THREE.Mesh).geometry,
+      );
+      const merged = new THREE.BufferGeometry();
+      for (const name of ['position', 'normal', 'weightsA', 'weightsB', 'contact', 'blocked']) {
+        const size = geometries[0]?.getAttribute(name).itemSize ?? 1;
+        const length = geometries.reduce(
+          (sum, geometry) => sum + geometry.getAttribute(name).array.length,
+          0,
+        );
+        const array = new Float32Array(length);
+        let offset = 0;
+        for (const geometry of geometries) {
+          const values = geometry.getAttribute(name).array;
+          array.set(values, offset);
+          offset += values.length;
+        }
+        merged.setAttribute(name, new THREE.BufferAttribute(array, size));
+      }
+      merged.computeBoundingSphere();
+      this.merged[part]!.geometry.dispose();
+      this.merged[part]!.geometry = merged;
+    }
   }
 
   private destroyChunk(chunk: RenderChunk): void {
@@ -244,6 +378,7 @@ export class World3DRenderer {
       if (object instanceof THREE.Mesh) object.geometry.dispose();
     });
     chunk.outline.geometry.dispose();
+    chunk.collision.geometry.dispose();
     (chunk.outline.material as THREE.Material).dispose();
     this.world.remove(chunk.group);
     for (const prop of chunk.props) prop.destroy();
@@ -256,6 +391,9 @@ export class World3DRenderer {
     for (const chunk of this.chunks.values()) this.destroyChunk(chunk);
     this.chunks.clear();
     this.sprites.destroy();
+    this.effects.destroy();
+    for (const mesh of this.merged) mesh.geometry.dispose();
+    this.collisionMaterial.dispose();
     this.materials.destroy();
     this.sun.shadow.dispose();
     this.label.remove();

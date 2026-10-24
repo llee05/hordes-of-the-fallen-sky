@@ -89,6 +89,12 @@ canvas {
   image-rendering: auto;
   touch-action: none;
 }
+.terrain-only #game-hud,
+.terrain-only .screen-shade,
+.terrain-only #menu-record,
+.terrain-only:not([data-phase='console']):not([data-phase='developer']) #overlay {
+  visibility: hidden;
+}
 .screen-shade {
   position: absolute;
   z-index: 1;

@@ -2,8 +2,54 @@ import { describe, expect, it } from 'vitest';
 import { createDeveloperTools, executeDeveloperCommand } from '../../src/game/dev/commands';
 import { createRun } from '../../src/game/state/run';
 import { damageKhan } from '../../src/game/state/khan';
+import type { DeveloperTerrainControls } from '../../src/game/dev/commands';
 
 describe('developer console commands', () => {
+  it('validates terrain tools and delegates without changing the run or cheat flags', () => {
+    const tools = createDeveloperTools();
+    const run = createRun();
+    const before = structuredClone(run);
+    const terrain: DeveloperTerrainControls = {
+      terrainOnly: false,
+      angle: 65,
+      debugMode: 'off',
+      setTerrainOnly(value) {
+        Object.assign(this, { terrainOnly: value });
+      },
+      setAngle(angle) {
+        Object.assign(this, { angle });
+      },
+      setDebug(mode) {
+        Object.assign(this, { debugMode: mode });
+      },
+      cycleDebug() {
+        Object.assign(this, { debugMode: 'wireframe' });
+      },
+    };
+    for (const command of [
+      'terrain-only yes',
+      'camera-angle NaN',
+      'camera-angle 54',
+      'camera-angle 81',
+      'camera-angle 65 80',
+      'terrain-debug banana',
+    ]) {
+      executeDeveloperCommand(tools, run, command, true, terrain);
+      expect(tools.log.at(-1)?.kind).toBe('error');
+    }
+    executeDeveloperCommand(tools, run, 'terrain-debug normals', true, terrain);
+    expect(terrain.debugMode).toBe('normals');
+    executeDeveloperCommand(tools, run, 'camera-angle 55', true, terrain);
+    expect(terrain.angle).toBe(55);
+    executeDeveloperCommand(tools, run, 'terrain-only', true, terrain);
+    expect(terrain.terrainOnly).toBe(true);
+    executeDeveloperCommand(tools, run, 'terrain-only off', true, terrain);
+    expect(terrain.terrainOnly).toBe(false);
+    executeDeveloperCommand(tools, run, 'terrain-debug', true);
+    expect(tools.log.at(-1)?.kind).toBe('error');
+    expect(run).toEqual(before);
+    expect(tools.invincible).toBe(false);
+  });
   it('supports explicit invincibility settings, case-insensitive aliases, and toggling', () => {
     const tools = createDeveloperTools();
     const run = createRun();

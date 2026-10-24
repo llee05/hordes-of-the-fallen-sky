@@ -14,6 +14,7 @@ import { campShelters } from '../state/campLife';
 import { barrierContact, campBoundary } from '../state/campBarrier';
 import { SteppeLandscape } from '../assets/SteppeLandscape';
 import { TerrainCollision } from '../terrain/TerrainCollision';
+import { projectileTerrainClear } from '../world3d/projectileTerrain';
 import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
 import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
 import { GAME } from '../config';
@@ -257,7 +258,12 @@ export class ArenaScene extends Phaser.Scene {
     this.hostileShots = this.physics.add.group({ classType: Projectile, maxSize: 180 });
     // Phaser reports the individual sprite first when overlapping it with a group.
     this.physics.add.overlap(this.player, this.hostileShots, (_player, shot) => {
-      if (this.run.phase !== 'playing' || !(shot as Projectile).active) return;
+      if (
+        this.run.phase !== 'playing' ||
+        !(shot as Projectile).active ||
+        !this.projectileReaches(shot as Projectile)
+      )
+        return;
       const damage = (shot as Projectile).damage;
       (shot as Projectile).disableBody(true, true);
       this.takeDamage(damage);
@@ -302,7 +308,7 @@ export class ArenaScene extends Phaser.Scene {
           event.target.closest('input, textarea, select')
         )
           return;
-        if (key === 'F10' || key === 'BACKTICK') event.preventDefault();
+        if (['F6', 'F7', 'F9', 'F10', 'BACKTICK'].includes(key)) event.preventDefault();
         if (this.actionKeys.consume(event)) {
           action();
         }
@@ -318,6 +324,14 @@ export class ArenaScene extends Phaser.Scene {
     if (import.meta.env.DEV) {
       bindAction('F8', () => this.toggleDeveloperMenu());
       bindAction('F9', () => this.landscape.cycleTerrainDebug());
+      bindAction('F7', () => {
+        const world = this.landscape.world3d;
+        if (world) world.setTerrainOnly(!world.terrainOnly);
+      });
+      bindAction('F6', () => {
+        const world = this.landscape.world3d;
+        if (world) world.setAngle(world.angle < 65 ? 65 : world.angle < 80 ? 80 : 55);
+      });
       bindAction('F10', () => this.toggleDeveloperConsole());
       bindAction('BACKTICK', () => this.toggleDeveloperConsole());
     }
@@ -520,6 +534,7 @@ export class ArenaScene extends Phaser.Scene {
       this.run,
       input,
       this.canUseDeveloperCheats(),
+      this.landscape.world3d,
     );
     if (result.cheated) this.developerRun = true;
     this.callbacks?.onHud(this.snapshot());
@@ -921,7 +936,7 @@ export class ArenaScene extends Phaser.Scene {
     const anchor = !isKhanActive(this.run) || Math.random() < 0.45 ? this.camp : this.player;
     const viewWidth = camera.width / camera.zoom;
     const viewHeight = camera.height / camera.zoom;
-    const view = {
+    const view = this.landscape.world3d?.viewBounds ?? {
       x: camera.midPoint.x - viewWidth / 2,
       y: camera.midPoint.y - viewHeight / 2,
       width: viewWidth,
@@ -1013,11 +1028,17 @@ export class ArenaScene extends Phaser.Scene {
         attackingCamp || campDistance < playerDistance * 1.25 ? this.camp : this.player;
       const distance = target === this.camp ? campDistance : playerDistance;
       const behavior = enemy.definition.behavior;
+      const ranged = behavior === 'ranged' || behavior === 'boss';
+      const clearShot =
+        !this.landscape.world3d ||
+        !ranged ||
+        distance >= 650 ||
+        this.landscape.navigation!.lineClear(enemy, target, 0);
       let speed =
         enemy.definition.speed *
         (1 + clan.region * 0.1) *
         terrainSpeedMultiplier(this.run, Math.min(playerDistance, campDistance));
-      if ((behavior === 'ranged' || behavior === 'boss') && distance < 260) speed = 0;
+      if (ranged && distance < 260 && clearShot) speed = 0;
       if (attackingCamp) {
         // Hold outside the tents instead of walking (or charging) into their centre.
         enemy.setVelocity(0, 0);
@@ -1055,6 +1076,7 @@ export class ArenaScene extends Phaser.Scene {
       }
       if (
         (behavior === 'ranged' || behavior === 'boss') &&
+        clearShot &&
         enemy.attackTimer <= 0 &&
         distance < 650
       ) {
@@ -1150,6 +1172,7 @@ export class ArenaScene extends Phaser.Scene {
       fired = true;
       const angle = direction + (i - (count - 1) / 2) * (tempest ? 0.28 : 0.12);
       bolt.enableBody(true, x, y, true, true);
+      bolt.setData('terrain-previous', { x, y });
       bolt
         .setTexture('bolt')
         .setScale(1)
@@ -1183,6 +1206,7 @@ export class ArenaScene extends Phaser.Scene {
     const shot = this.hostileShots.get(enemy.x, enemy.y, 'gem') as Projectile | null;
     if (!shot) return;
     shot.enableBody(true, enemy.x, enemy.y, true, true);
+    shot.setData('terrain-previous', { x: enemy.x, y: enemy.y });
     shot
       .setTexture('gem')
       .setScale(1.1)
@@ -1204,6 +1228,19 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private updateProjectiles(dt: number): void {
+    const terrain = this.landscape.world3d?.terrain;
+    if (terrain)
+      for (const projectile of [
+        ...this.projectiles.getChildren(),
+        ...this.hostileShots.getChildren(),
+      ] as Projectile[]) {
+        if (!projectile.active) continue;
+        const previous = projectile.getData('terrain-previous') as
+          { x: number; y: number } | undefined;
+        if (previous && !projectileTerrainClear(terrain, previous, projectile))
+          projectile.disableBody(true, true);
+        projectile.setData('terrain-previous', { x: projectile.x, y: projectile.y });
+      }
     const boundary = campBoundary(this.run);
     for (const bolt of this.projectiles.getChildren() as Projectile[]) {
       if (!bolt.active) continue;
@@ -1236,13 +1273,29 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private hitEnemy(bolt: Projectile, enemy: Enemy): void {
-    if (this.run.phase !== 'playing' || !bolt.active || !enemy.active) return;
+    if (
+      this.run.phase !== 'playing' ||
+      !bolt.active ||
+      !enemy.active ||
+      !this.projectileReaches(bolt)
+    )
+      return;
     if (bolt.hitTargets.get(enemy) === enemy.spawnId) return;
     bolt.hitTargets.set(enemy, enemy.spawnId);
     if (bolt.pierces > 0) bolt.pierces -= 1;
     else bolt.disableBody(true, true);
     if (bolt.fire) enemy.burning = 2;
     this.damageEnemy(enemy, bolt.damage);
+  }
+
+  private projectileReaches(projectile: Projectile): boolean {
+    const terrain = this.landscape.world3d?.terrain;
+    const previous = projectile.getData('terrain-previous') as { x: number; y: number } | undefined;
+    if (terrain && previous && !projectileTerrainClear(terrain, previous, projectile)) {
+      projectile.disableBody(true, true);
+      return false;
+    }
+    return true;
   }
 
   private damageEnemy(enemy: Enemy, amount: number): void {

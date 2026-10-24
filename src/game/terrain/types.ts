@@ -37,6 +37,30 @@ export interface MountainBiome {
 export interface MountainRegion {
   seed: string;
   biome: MountainBiome;
+  /** Optional authored constraints for a 3D region. Offsets are relative to world centre. */
+  geometry?: {
+    walkSlope: number;
+    shelf: {
+      x: number;
+      z: number;
+      width: number;
+      depth: number;
+      rise: number;
+      fracture: number;
+      elevation: number;
+      flatten: number;
+    };
+    ramp: {
+      x: number;
+      bend: number;
+      wavelength: number;
+      halfWidth: number;
+      shoulder: number;
+      start: number;
+      length: number;
+      elevation: number;
+    };
+  };
 }
 
 export interface TerrainSample extends TerrainPoint {

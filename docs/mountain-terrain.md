@@ -1,5 +1,9 @@
 # Stepped mountain terrain
 
+This describes the retained Phaser presentation. The opt-in [3D terrain slice](world-3d.md)
+replaces its flat contour bands with actual height vertices, vertical rock walls,
+and depth-tested characters while retaining this renderer for comparison.
+
 Mount Otgontenger uses the existing Phaser renderer, locally bundled textures,
 and a deterministic five-tier heightfield. Mountains are continuous terrain with
 raised shelves, full cliff faces, and open valleys. They do not use mountain

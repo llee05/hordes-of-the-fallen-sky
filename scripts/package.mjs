@@ -21,6 +21,7 @@ try {
   const notices = await Promise.all(
     [
       ['Phaser', 'node_modules/phaser/LICENSE.md'],
+      ['Three.js', 'node_modules/three/LICENSE'],
       ['DM Sans', 'node_modules/@fontsource/dm-sans/LICENSE'],
       ['IBM Plex Mono', 'node_modules/@fontsource/ibm-plex-mono/LICENSE'],
     ].map(async ([name, file]) => `${name}\n${await readFile(file, 'utf8')}`),

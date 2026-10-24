@@ -1,6 +1,7 @@
 import { MountainHeightfield, type HeightNode } from './MountainHeightfield';
 import { WORLD_3D } from './worldProjection';
 import type { TerrainBounds } from '../terrain/types';
+import { coherentNoise } from '../terrain/noise';
 
 export interface WorldGeometry {
   positions: number[];
@@ -68,15 +69,17 @@ export function mountainGeometry(
     const snow =
       Math.max(0, Math.min(1, (elevation - 0.55) / 0.3)) * Math.pow(Math.max(0, n[1]!), 2);
     const rock = Math.min(1, (1 - Math.max(0, n[1]!)) * 3);
-    const soil = Math.max(0, 1 - (elevation - 0.2) / 0.2);
+    const soil = Math.min(1, Math.max(0, 1 - (elevation - 0.2) / 0.2));
+    const moisture = coherentNoise(node.x / 850, node.z / 850, terrain.seed + 101);
+    const grassFraction = 0.45 + moisture * 0.45;
     const tundra = 1 - soil;
     const sheltered = sample.depression * 0.2;
     const ice = Math.min(1, Math.max(0, (elevation - 0.83) / 0.15) * 0.6);
     const scree = !upper && Math.abs(node.field) < 0.13 ? 0.35 : 0;
     const s = Math.min(1, snow + sheltered * (1 - snow));
     geometry.weights.push(
-      (1 - s) * (1 - rock) * soil * 0.7,
-      (1 - s) * (1 - rock) * soil * 0.3,
+      (1 - s) * (1 - rock) * soil * grassFraction,
+      (1 - s) * (1 - rock) * soil * (1 - grassFraction),
       (1 - s) * rock,
       (1 - s) * (1 - rock) * tundra,
       s * (1 - ice),
@@ -119,8 +122,6 @@ export function mountainGeometry(
         // Face outward from the high polygon, with a true vertical normal.
         const high = triangle.find((node) => node.field >= 0)!;
         if ((q.z - p.z) * (high.x - p.x) - (q.x - p.x) * (high.z - p.z) > 0) [p, q] = [q, p];
-        const length = Math.hypot(q.x - p.x, q.z - p.z);
-        const normal = [(q.z - p.z) / length, 0, -(q.x - p.x) / length];
         for (const [node, upper] of [
           [p, false],
           [p, true],
@@ -129,7 +130,7 @@ export function mountainGeometry(
           [q, true],
           [q, false],
         ] as const)
-          emit(result.walls, node, upper, normal, upper ? 1 : 0.62);
+          emit(result.walls, node, upper, terrain.wallNormal(node.x, node.z), upper ? 1 : 0.62);
       }
     }
   return result;
