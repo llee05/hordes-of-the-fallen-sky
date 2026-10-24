@@ -25,8 +25,13 @@ export interface MountainBiome {
   caravan: { length: number; halfWidth: number; shoulder: number };
   /** Rise / run, independent of the render resolution. */
   cliffSlope: number;
-  /** Four overlapping elevation transitions separating five surface materials. */
-  bands: readonly (readonly [number, number])[];
+  terraces: {
+    thresholds: readonly number[];
+    heights: readonly number[];
+    materials: readonly MaterialWeights[];
+    transition: number;
+    rampWidth: number;
+  };
 }
 
 export interface MountainRegion {
@@ -35,6 +40,11 @@ export interface MountainRegion {
 }
 
 export interface TerrainSample extends TerrainPoint {
+  rawElevation: number;
+  level: number;
+  depression: number;
+  cliff: number;
+  landform: 'basin' | 'pass' | 'ravine' | 'ridge' | 'shelf' | 'summit' | 'cliff';
   elevation: number;
   slope: number;
   dx: number;
@@ -68,7 +78,7 @@ export interface TerrainChunk extends TerrainBounds {
   cliffs: readonly CliffModule[];
 }
 
-export type TerrainDebugMode = 'off' | 'elevation' | 'slope' | 'collision';
+export type TerrainDebugMode = 'off' | 'elevation' | 'slope' | 'cliffs' | 'collision';
 
 export interface TerrainMaterialArt {
   /** An already loaded, locally bundled Phaser texture. Undefined uses a flat placeholder colour. */

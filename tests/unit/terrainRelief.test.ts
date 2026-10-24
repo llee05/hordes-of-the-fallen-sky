@@ -85,7 +85,15 @@ describe('heightfield relief presentation', () => {
     flat.height = () => 0.52;
     expect(terrainRelief(flat, flat.getChunk(0, 0), art)).toEqual([]);
     const terrain = new MountainTerrain(OTGONTENGER_MOUNTAINS);
-    const chunk = terrain.getChunk(1, 1);
+    const chunk = (() => {
+      for (let row = 0; row < 11; row++)
+        for (let column = 0; column < 11; column++) {
+          const chunk = terrain.getChunk(column, row);
+          if (terrainRelief(terrain, chunk, art).some((layer) => layer.part === 'face'))
+            return chunk;
+        }
+      throw new Error('Expected a visible cliff in the mountain region');
+    })();
     const before = chunk.cells.map((cell) => cell.blocked);
     const relief = terrainRelief(terrain, chunk, art);
     expect(relief.find((layer) => layer.part === 'face')?.indices.length).toBeGreaterThan(0);

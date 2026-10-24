@@ -1,5 +1,13 @@
 # Mountain terrain prototype
 
+The Otgontenger biome now defines five shelf heights in `biome.terraces`: low
+rocky pasture, stone/scrub shelves, alpine terraces, snow-patched upper stone,
+and snow/ice summits. Four authored thresholds flatten the continuous source
+height into shelves with narrow steep transitions. Two connected mountain spines
+shape the ranges, while broad winding ravines and climbing ramps join the camp's
+open valley network. Materials use the tier, slope, and local concavity; sheltered
+depressions retain extra snow. These rules share global coordinates with navigation.
+
 The mountain generator is renderer independent. `terrain/noise.ts` hashes a string
 seed into continuous quintic value noise and four-octave coherent and ridged noise.
 `terrain/MountainTerrain.ts` domain-warps elongated ridges, blends broad foothills,

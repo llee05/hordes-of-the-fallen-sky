@@ -16,11 +16,18 @@ export const OTGONTENGER_MOUNTAINS: MountainRegion = {
     campRadius: 430,
     caravan: { length: 1530, halfWidth: 280, shoulder: 380 },
     cliffSlope: GAME.terrain.cliffSlope,
-    bands: [
-      [0.26, 0.4],
-      [0.4, 0.56],
-      [0.58, 0.74],
-      [0.74, 0.88],
-    ],
+    terraces: {
+      thresholds: [0.34, 0.48, 0.62, 0.76],
+      heights: [0.2, 0.36, 0.52, 0.7, 0.9],
+      transition: 0.04,
+      rampWidth: 300,
+      materials: [
+        [0.28, 0.72, 0, 0, 0],
+        [0.02, 0.05, 0.65, 0.28, 0],
+        [0, 0, 0.42, 0.52, 0.06],
+        [0, 0, 0.48, 0.06, 0.46],
+        [0, 0, 0.06, 0.02, 0.92],
+      ],
+    },
   },
 };

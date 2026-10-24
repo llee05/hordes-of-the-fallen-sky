@@ -8,6 +8,44 @@ import { GAME } from '../../src/game/config';
 const region = OTGONTENGER_MOUNTAINS;
 
 describe('seeded mountain terrain', () => {
+  it('forms five discrete shelf heights with gradual climbing ramps and snow collecting in depressions', () => {
+    const terrain = new MountainTerrain(region);
+    const levels = new Set<number>();
+    const forms = new Set<string>();
+    let shelves = 0;
+    for (let y = 32; y < GAME.worldSize; y += 96)
+      for (let x = 32; x < GAME.worldSize; x += 96) {
+        const sample = terrain.sample(x, y);
+        levels.add(sample.level);
+        forms.add(sample.landform);
+        const { thresholds, transition, heights } = region.biome.terraces;
+        if (
+          terrain.terraceStrength(x, y) === 1 &&
+          thresholds.every((threshold) => Math.abs(sample.rawElevation - threshold) > transition)
+        ) {
+          expect(sample.elevation).toBeCloseTo(heights[sample.level]!, 12);
+          shelves++;
+        }
+      }
+    expect([...levels].sort()).toEqual([0, 1, 2, 3, 4]);
+    expect(shelves).toBeGreaterThan(300);
+    for (const form of ['basin', 'pass', 'ridge', 'shelf', 'summit', 'cliff'])
+      expect(forms.has(form)).toBe(true);
+    expect(terrainWeights(0.7, 0, region, 1)[4]).toBeGreaterThan(
+      terrainWeights(0.7, 0, region, 0)[4],
+    );
+    expect(terrainWeights(0.9, 0, region)[4]).toBeGreaterThan(0.85);
+  });
+
+  it('rejects insufficient or overlapping elevation tiers', () => {
+    expect(
+      () =>
+        new MountainTerrain({
+          ...region,
+          biome: { ...region.biome, terraces: { ...region.biome.terraces, heights: [0.2, 0.6] } },
+        }),
+    ).toThrow('Mountain terraces');
+  });
   it('reproduces samples and chunks regardless of request order, including negative noise coordinates', () => {
     const a = new MountainTerrain(region);
     const b = new MountainTerrain(region);
