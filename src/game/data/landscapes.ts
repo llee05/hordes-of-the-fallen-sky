@@ -312,6 +312,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     description:
       'Warm sculpted granite, pale sand ribbons, and sparse dry grass surround a sheltered desert camp.',
     surface: 'sand',
+    groundTile: 'eej-khairkhan',
     ground: 0xd5b784,
     wash: 0.83,
     patch: 0xe9cca0,

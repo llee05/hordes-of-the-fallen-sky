@@ -83,7 +83,7 @@ test('painted landscapes and destination previews remain readable in Electron', 
           physical: false,
           oldDestroyed: true,
           groundSprites: 1,
-          tiles: 7,
+          tiles: 8,
         });
         await page.evaluate(() => {
           const scene = (window as any).__gloam.scene;
