@@ -14,8 +14,10 @@ and expanded F9 overlays. Its console commands are `camera-angle 55..80`,
 for enabling the prototype and inspecting its geometry.
 
 Type a command and press Enter, or click the Khan/clan invincibility toggles.
-Up / Down recalls commands
-and restores the unfinished input after the newest entry. Holding Enter does not
+Up recalls older commands; Down moves forward and restores unfinished input after
+the newest entry. The latest 40 commands survive closing the console, developer
+checkpoints, New Game, reloads, and app restarts. Commands are saved as recall text
+through the existing profile store and never execute automatically. Holding Enter does not
 repeat a command. Keyboard typing does not trigger movement, gallop, or menus.
 
 Use `invincible on` (or `god on`) to ignore all damage to the Khan, including
@@ -35,8 +37,9 @@ guard supplies them for cheats, and they are never written into run or save data
 
 Cheats require an expedition that has started and has not ended. Using a cheat in
 a normal expedition marks it as a developer run, preserving saved journey records.
-Invincibility and console history carry between developer checkpoints, and reset
-when starting a normal new run or reloading. They are never saved to the profile.
+Invincibility carries between developer checkpoints and resets when starting a
+normal new run or reloading. Cheat flags are never saved to the profile; command
+history is saved independently and remains available for recall.
 The console, input bindings, and cheat effects are guarded by `import.meta.env.DEV`
 and are absent from production and packaged play.
 

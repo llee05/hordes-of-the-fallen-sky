@@ -1,6 +1,7 @@
 import type { DesktopBridge } from '../shared/desktop';
 import { defaultProfile, normalizeProfile } from '../shared/profile';
 import type { PlayerProfile } from '../shared/profile';
+import { normalizeDeveloperHistory } from '../shared/developerHistory';
 
 export class GamePlatform {
   private pendingSave: Promise<void> = Promise.resolve();
@@ -38,8 +39,21 @@ export class GamePlatform {
     return this.save();
   }
 
+  saveDeveloperCommandHistory(commands: readonly string[]): Promise<void> {
+    if (!import.meta.env.DEV) return Promise.resolve();
+    const history = normalizeDeveloperHistory(commands);
+    if (history.length) this.profile.developerCommandHistory = history;
+    else delete this.profile.developerCommandHistory;
+    return this.save();
+  }
+
   private save(): Promise<void> {
-    const snapshot = { ...this.profile };
+    const snapshot = {
+      ...this.profile,
+      ...(this.profile.developerCommandHistory
+        ? { developerCommandHistory: [...this.profile.developerCommandHistory] }
+        : {}),
+    };
     // Serialize snapshots; an older write must never replace a newer score/setting.
     const operation = this.pendingSave
       .catch(() => undefined)

@@ -161,7 +161,8 @@ export class ArenaScene extends Phaser.Scene {
         : undefined;
     this.developerRun = !!developerRun;
     // Keep testing preferences across checkpoints; a normal new run clears every cheat.
-    if (import.meta.env.DEV && !developerRun) this.developerTools = createDeveloperTools();
+    if (import.meta.env.DEV && !developerRun)
+      this.developerTools = createDeveloperTools(this.platform.profile.developerCommandHistory);
     this.consoleReturnPhase = 'ready';
     this.run = developerRun ?? createRun();
     if (!developerRun) {
@@ -529,6 +530,7 @@ export class ArenaScene extends Phaser.Scene {
       !this.developerTools
     )
       return;
+    const previousCommand = this.developerTools.history.at(-1);
     const result = executeDeveloperCommand(
       this.developerTools,
       this.run,
@@ -537,6 +539,10 @@ export class ArenaScene extends Phaser.Scene {
       this.landscape.world3d,
     );
     if (result.cheated) this.developerRun = true;
+    if (this.developerTools.history.at(-1) !== previousCommand)
+      void this.platform
+        .saveDeveloperCommandHistory(this.developerTools.history)
+        .catch(() => this.callbacks?.onSaveError());
     this.callbacks?.onHud(this.snapshot());
   }
 

@@ -18,6 +18,34 @@ async function store(): Promise<ProfileStore> {
 }
 
 describe('native save files', () => {
+  it('round-trips bounded command recall without changing score or sound settings', async () => {
+    const profiles = await store();
+    await profiles.save({
+      version: 1,
+      bestSeconds: 77,
+      muted: true,
+      developerCommandHistory: ['god on', 'status'],
+    });
+    expect(await profiles.load()).toEqual({
+      version: 1,
+      bestSeconds: 77,
+      muted: true,
+      developerCommandHistory: ['god on', 'status'],
+    });
+    for (const developerCommandHistory of [
+      'status',
+      Array(41).fill('status'),
+      ['x'.repeat(201)],
+      ['status\nheal'],
+      [42],
+    ])
+      await expect(
+        profiles.save({ version: 1, bestSeconds: 77, muted: true, developerCommandHistory }),
+      ).rejects.toThrow('Invalid player profile');
+    expect(
+      normalizeProfile({ version: 1, bestSeconds: 77, muted: true, developerCommandHistory: 42 }),
+    ).toEqual({ version: 1, bestSeconds: 77, muted: true });
+  });
   it('starts clean when no save exists and round-trips a profile', async () => {
     const profiles = await store();
     expect(await profiles.load()).toEqual(defaultProfile());

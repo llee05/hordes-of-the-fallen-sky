@@ -5,6 +5,18 @@ import { damageKhan } from '../../src/game/state/khan';
 import type { DeveloperTerrainControls } from '../../src/game/dev/commands';
 
 describe('developer console commands', () => {
+  it('restores only bounded history, with fresh cheat flags and output', () => {
+    const history = ['god on', 'clan-invincible on'];
+    const tools = createDeveloperTools(history);
+    history.push('heal');
+    expect(tools.history).toEqual(['god on', 'clan-invincible on']);
+    expect(tools.invincible).toBe(false);
+    expect(tools.clanInvincible).toBe(false);
+    expect(tools.log).toEqual([]);
+    expect(
+      createDeveloperTools(Array.from({ length: 50 }, (_, i) => `unknown-${i}`)).history,
+    ).toHaveLength(40);
+  });
   it('validates terrain tools and delegates without changing the run or cheat flags', () => {
     const tools = createDeveloperTools();
     const run = createRun();

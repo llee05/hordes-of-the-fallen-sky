@@ -35,6 +35,9 @@ to protect the Khan and **`clan-invincible on`** to protect clan resolve, people
 and livestock from attacks and starvation. Use `off` to restore normal losses,
 and `help` to list commands. Both toggles carry between developer checkpoints and
 clear on a normal new run. The console pauses gameplay while open.
+Press **Up** to recall older commands and **Down** to move forward or restore your
+unfinished input. The latest 40 commands are remembered across checkpoints,
+new games, and app restarts; saved commands do not execute automatically.
 
 The packaged game includes its runtime, painted art, fonts, and synthesized sound. It makes no runtime asset downloads or AI calls. The desktop fills its window and provides fullscreen, quit, and durable native saves.
 

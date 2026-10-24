@@ -201,7 +201,9 @@ test('using cheats marks a normal run, preserves records, carries between checkp
   await page.getByRole('button', { name: /NEW GAME/ }).click();
   await page.getByRole('button', { name: /Skip intro/ }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
-  const saved = await page.evaluate(() => localStorage.getItem('gloam-profile'));
+  const saved = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('gloam-profile') ?? '{}').bestSeconds ?? 0,
+  );
   await page.keyboard.press('Backquote');
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'console');
   await expect(page.locator('.developer-panel')).toHaveCount(0);
@@ -216,7 +218,11 @@ test('using cheats marks a normal run, preserves records, carries between checkp
     scene.run.clan.integrity = 0;
   });
   await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem('gloam-profile'))).toBe(saved);
+  expect(
+    await page.evaluate(
+      () => JSON.parse(localStorage.getItem('gloam-profile') ?? '{}').bestSeconds ?? 0,
+    ),
+  ).toBe(saved);
   await page.keyboard.press('F8');
   await page.locator('[data-developer-level="chapter:golden-pasture"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
@@ -239,7 +245,50 @@ test('using cheats marks a normal run, preserves records, carries between checkp
         history: scene.developerTools.history,
       };
     }),
-  ).toEqual({ developer: false, invincible: false, clanInvincible: false, history: [] });
+  ).toEqual({
+    developer: false,
+    invincible: false,
+    clanInvincible: false,
+    history: ['clan-invincible on', 'god on', 'status'],
+  });
+});
+
+test('Up recalls saved commands after reload and checkpoints, while Down restores the draft', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused();
+  await page.keyboard.press('Backquote');
+  await command(page, 'status');
+  await command(page, 'help');
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => JSON.parse(localStorage.getItem('gloam-profile') ?? '{}').developerCommandHistory,
+      ),
+    )
+    .toEqual(['status', 'help']);
+  await page.reload();
+  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
+  await page.keyboard.press('Backquote');
+  const input = page.getByRole('textbox', { name: 'Command', exact: true });
+  await input.fill('unfinished');
+  await input.press('ArrowUp');
+  await expect(input).toHaveValue('help');
+  await input.press('ArrowUp');
+  await expect(input).toHaveValue('status');
+  await input.press('ArrowDown');
+  await input.press('ArrowDown');
+  await expect(input).toHaveValue('unfinished');
+  await page.keyboard.press('Backquote');
+  await page.keyboard.press('F8');
+  await page.locator('[data-developer-level="chapter:golden-pasture"]').click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await page.keyboard.press('Backquote');
+  await input.press('ArrowUp');
+  await expect(input).toHaveValue('help');
+  await input.press('ArrowUp');
+  await expect(input).toHaveValue('status');
 });
 
 test('clan invincibility prevents melee, projectile, hazard and starvation losses, independently of the Khan', async ({

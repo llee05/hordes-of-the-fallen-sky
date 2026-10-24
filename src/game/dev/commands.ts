@@ -1,10 +1,14 @@
 import { isKhanActive } from '../state/khan';
 import type { RunState } from '../types';
 import { WORLD_DEBUG_MODES, type WorldDebugMode } from '../world3d/worldProjection';
+import {
+  DEVELOPER_COMMAND_MAX_LENGTH,
+  DEVELOPER_HISTORY_LIMIT,
+  normalizeDeveloperHistory,
+} from '../../shared/developerHistory';
+export { DEVELOPER_COMMAND_MAX_LENGTH } from '../../shared/developerHistory';
 
-export const DEVELOPER_COMMAND_MAX_LENGTH = 200;
 const LOG_LIMIT = 80;
-const HISTORY_LIMIT = 40;
 
 export const DEVELOPER_COMMANDS = [
   { name: 'help', usage: 'help', description: 'List console commands.' },
@@ -72,12 +76,12 @@ export interface DeveloperConsoleSnapshot extends DeveloperToolsState {
   canCheat: boolean;
 }
 
-export function createDeveloperTools(): DeveloperToolsState {
+export function createDeveloperTools(history: readonly string[] = []): DeveloperToolsState {
   return {
     invincible: false,
     clanInvincible: false,
     log: [],
-    history: [],
+    history: normalizeDeveloperHistory(history),
     revision: 0,
     nextEntry: 0,
   };
@@ -104,7 +108,7 @@ export function executeDeveloperCommand(
   }
   write(line, 'command');
   if (state.history.at(-1) !== line) state.history.push(line);
-  state.history.splice(0, Math.max(0, state.history.length - HISTORY_LIMIT));
+  state.history.splice(0, Math.max(0, state.history.length - DEVELOPER_HISTORY_LIMIT));
   const [command, ...args] = line.toLowerCase().split(/\s+/);
   const name = command === 'god' ? 'invincible' : command;
   const definition = DEVELOPER_COMMANDS.find((entry) => entry.name === name);
