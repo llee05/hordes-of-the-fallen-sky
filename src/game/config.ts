@@ -3,6 +3,15 @@ export const GAME = {
   width: 960,
   height: 540,
   worldSize: 5200,
+  terrain: {
+    cellSize: 64,
+    chunkSize: 512,
+    maxCachedChunks: 48,
+    chunksPerFrame: 4,
+    actorClearance: 24,
+    cliffSlope: 1.6,
+    flowCacheSize: 3,
+  },
   camera: {
     defaultZoom: 1,
     minZoom: 0.6,
