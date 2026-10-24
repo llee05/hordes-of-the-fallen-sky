@@ -99,7 +99,11 @@ export class World3DRenderer {
     this.sun.shadow.bias = -0.0015;
     this.sun.shadow.normalBias = 6;
     this.world.add(this.sun, this.sun.target, this.actors);
-    this.materials = new MountainMaterials(scene, palette);
+    this.materials = new MountainMaterials(
+      scene,
+      palette,
+      Math.min(4, this.renderer.capabilities.getMaxAnisotropy()),
+    );
     for (const material of [this.materials.surface, this.materials.wall]) {
       const mesh = new THREE.Mesh(new THREE.BufferGeometry(), material);
       mesh.castShadow = true;

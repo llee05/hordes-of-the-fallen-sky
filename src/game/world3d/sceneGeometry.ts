@@ -1,5 +1,5 @@
 import type { TerrainBounds } from '../terrain/types';
-import { smoothstep } from '../terrain/noise';
+import { terrainHabitat, terrainMaterialWeights } from './terrainHabitat';
 import { ComposedTerrain } from './ComposedTerrain';
 import type { HeightNode } from './MountainHeightfield';
 import type { MountainGeometry, WorldGeometry } from './mountainGeometry';
@@ -61,24 +61,8 @@ export function sceneGeometry(terrain: ComposedTerrain, bounds: TerrainBounds): 
     geometry.positions.push(node.x, y, node.z);
     geometry.normals.push(...n);
     geometry.occlusion.push(ao);
-    const snow = terrain.snowAt(y, n[1]);
-    const rock = smoothstep(0.15, 0.7, 1 - n[1]);
-    const alpine = smoothstep(180, 500, y - terrain.region.scene.floor);
-    const dirt = terrain.region.scene.vegetation === 'desert' ? 0.85 : 0.18;
-    const grass = (1 - rock) * (1 - snow) * (1 - alpine * 0.55);
-    const scree =
-      mask === 0 && node.layers.some((layer) => Math.abs(layer.field) < 65 && layer.rise > 90)
-        ? 0.2
-        : 0;
-    geometry.weights.push(
-      grass * (1 - dirt),
-      grass * dirt,
-      (1 - snow) * rock,
-      (1 - snow) * (1 - rock) * alpine * 0.55,
-      snow * 0.9,
-      snow * 0.1,
-      scree,
-    );
+    const habitat = terrainHabitat(terrain, node.x, node.z, y, n[1]);
+    geometry.weights.push(...terrainMaterialWeights(terrain, y, n[1], habitat));
   };
   for (let z = bounds.y; z < bounds.y + bounds.height; z += WORLD_3D.meshStep)
     for (let x = bounds.x; x < bounds.x + bounds.width; x += WORLD_3D.meshStep) {
