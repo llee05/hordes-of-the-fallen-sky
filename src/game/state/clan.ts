@@ -209,7 +209,17 @@ export function beginMigration(
   return true;
 }
 
-export function damageClan(run: RunState, amount: number): void {
+/** Transient simulation options supplied by the scene, never stored in a run or profile. */
+export interface ClanProtection {
+  invincible: boolean;
+}
+
+export function damageClan(
+  run: RunState,
+  amount: number,
+  protectionOptions?: ClanProtection,
+): void {
+  if (protectionOptions?.invincible) return;
   const clan = run.clan;
   const protection =
     (clan.formation === 'guard' ? 0.7 : 1) *
@@ -240,7 +250,11 @@ export function damageClan(run: RunState, amount: number): void {
 }
 
 /** All economy and journey clocks stop outside the active simulation phase. */
-export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'saved' | undefined {
+export function advanceClan(
+  run: RunState,
+  dt: number,
+  protectionOptions?: ClanProtection,
+): 'arrived' | 'lost' | 'saved' | undefined {
   if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
   const clan = run.clan;
   const previousTime = clan.stageTime;
@@ -267,6 +281,7 @@ export function advanceClan(run: RunState, dt: number): 'arrived' | 'lost' | 'sa
     clan.region * 16 + clan.stageTime * (clan.stage === 'migration' ? 0.2 : 0.28),
   );
   if (
+    !protectionOptions?.invincible &&
     clan.food === 0 &&
     Math.floor(previousTime / GAME.clan.starvationInterval) <
       Math.floor(clan.stageTime / GAME.clan.starvationInterval)

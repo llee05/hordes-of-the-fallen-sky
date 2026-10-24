@@ -34,6 +34,7 @@ import {
   damageClan,
   hasDevelopment,
   riderCount,
+  type ClanProtection,
 } from '../state/clan';
 import { UPGRADES } from '../data/upgrades';
 import { Enemy, Gem, Projectile } from '../entities/actors';
@@ -740,7 +741,7 @@ export class ArenaScene extends Phaser.Scene {
     this.dashTimer = Math.max(0, this.dashTimer - dt);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
     this.dashRemaining = Math.max(0, this.dashRemaining - dt);
-    const outcome = advanceClan(this.run, dt);
+    const outcome = advanceClan(this.run, dt, this.clanProtection);
     if (outcome === 'lost') {
       this.finish('dead');
       return;
@@ -1012,7 +1013,7 @@ export class ArenaScene extends Phaser.Scene {
         (behavior === 'charger' && enemy.chargeTimer > 0 && enemy.chargeTimer < 0.2);
       if (attackingCamp && enemy.clanAttackTimer <= 0) {
         enemy.motion.attack();
-        damageClan(this.run, enemy.definition.damage * GAME.camp.enemyAttack.damageMultiplier);
+        this.damageClan(enemy.definition.damage * GAME.camp.enemyAttack.damageMultiplier);
         enemy.clanAttackTimer = GAME.camp.enemyAttack.interval;
         const impact = this.campBarrier.hit(this.camp, enemy);
         this.audio.play('barrier', impact);
@@ -1191,7 +1192,7 @@ export class ArenaScene extends Phaser.Scene {
       else if (
         Phaser.Math.Distance.Between(shot.x, shot.y, this.camp.x, this.camp.y) <= boundary.radius
       ) {
-        damageClan(this.run, shot.damage * 0.5);
+        this.damageClan(shot.damage * 0.5);
         const impact = this.campBarrier.hit(this.camp, shot);
         this.audio.play('barrier', impact);
         this.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
@@ -1309,6 +1310,16 @@ export class ArenaScene extends Phaser.Scene {
       this.run.clan.message = 'The last ember holds. Your Khan rides again.';
       this.burst(this.player.x, this.player.y, 0xf1c27b, 12);
     } else if (outcome === 'fallen') this.hideFallenKhan();
+  }
+
+  private get clanProtection(): ClanProtection | undefined {
+    return import.meta.env.DEV && this.developerTools?.clanInvincible
+      ? { invincible: true }
+      : undefined;
+  }
+
+  private damageClan(amount: number): void {
+    damageClan(this.run, amount, this.clanProtection);
   }
 
   private hideFallenKhan(): void {
@@ -1659,7 +1670,7 @@ export class ArenaScene extends Phaser.Scene {
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.player.x, this.player.y) < 70)
         this.takeDamage(20 * this.run.patrons.water.hazardDamage);
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.camp.x, this.camp.y) < 95)
-        damageClan(this.run, 8 * this.run.patrons.water.hazardDamage);
+        this.damageClan(8 * this.run.patrons.water.hazardDamage);
       hazard.warning.destroy();
       this.hazards.splice(i, 1);
     }

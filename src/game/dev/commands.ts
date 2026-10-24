@@ -12,6 +12,12 @@ export const DEVELOPER_COMMANDS = [
     usage: 'invincible [on|off]',
     description: 'Protect the Khan from all damage. Alias: god. No argument toggles.',
   },
+  {
+    name: 'clan-invincible',
+    usage: 'clan-invincible [on|off]',
+    description:
+      'Protect clan resolve, people, and livestock from attacks and starvation. No argument toggles.',
+  },
   { name: 'heal', usage: 'heal', description: 'Restore the living Khan to full health.' },
   {
     name: 'status',
@@ -29,6 +35,7 @@ export interface DeveloperConsoleEntry {
 
 export interface DeveloperToolsState {
   invincible: boolean;
+  clanInvincible: boolean;
   log: DeveloperConsoleEntry[];
   history: string[];
   revision: number;
@@ -41,7 +48,14 @@ export interface DeveloperConsoleSnapshot extends DeveloperToolsState {
 }
 
 export function createDeveloperTools(): DeveloperToolsState {
-  return { invincible: false, log: [], history: [], revision: 0, nextEntry: 0 };
+  return {
+    invincible: false,
+    clanInvincible: false,
+    log: [],
+    history: [],
+    revision: 0,
+    nextEntry: 0,
+  };
 }
 
 /** Explicit commands only. The scene supplies DEV access and the paused expedition context. */
@@ -73,21 +87,23 @@ export function executeDeveloperCommand(
     return { cheated: false };
   }
   if (
-    (name === 'invincible' &&
+    (['invincible', 'clan-invincible'].includes(name!) &&
       (args.length > 1 || (args.length === 1 && !['on', 'off'].includes(args[0]!)))) ||
-    (name !== 'invincible' && args.length > 0)
+    (!['invincible', 'clan-invincible'].includes(name!) && args.length > 0)
   ) {
     write(`Usage: ${definition.usage}`, 'error');
     return { cheated: false };
   }
   if (name === 'help') {
     for (const entry of DEVELOPER_COMMANDS) write(`${entry.usage} — ${entry.description}`);
-    write('Invincibility protects the Khan. Clan damage, food, and journey rules still apply.');
+    write(
+      'Khan and clan protection toggle independently. Food consumption and journey clocks continue.',
+    );
   } else if (name === 'clear') {
     state.log.length = 0;
   } else if (name === 'status') {
     write(
-      `Khan invincibility: ${state.invincible ? 'ON' : 'OFF'}. Health: ${Math.ceil(run.health)} / ${run.stats.maxHealth}. Clan resolve: ${Math.ceil(run.clan.integrity)}%.`,
+      `Khan invincibility: ${state.invincible ? 'ON' : 'OFF'}. Health: ${Math.ceil(run.health)} / ${run.stats.maxHealth}. Clan invincibility: ${state.clanInvincible ? 'ON' : 'OFF'}. Clan resolve: ${Math.ceil(run.clan.integrity)}%.`,
     );
   } else if (!activeExpedition) {
     write('Start an expedition or select a developer checkpoint first.', 'error');
@@ -95,6 +111,10 @@ export function executeDeveloperCommand(
     state.invincible = args[0] ? args[0] === 'on' : !state.invincible;
     write(`Khan invincibility ${state.invincible ? 'ON' : 'OFF'}.`);
     return { cheated: state.invincible };
+  } else if (name === 'clan-invincible') {
+    state.clanInvincible = args[0] ? args[0] === 'on' : !state.clanInvincible;
+    write(`Clan invincibility ${state.clanInvincible ? 'ON' : 'OFF'}.`);
+    return { cheated: state.clanInvincible };
   } else if (name === 'heal') {
     if (!isKhanActive(run)) {
       write('The Khan has fallen. Wait for succession before using heal.', 'error');

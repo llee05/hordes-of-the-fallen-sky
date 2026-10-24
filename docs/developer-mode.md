@@ -14,6 +14,15 @@ This is a separate developer flag: it does not extend the normal hit/gallop
 protection timer or make the Khan blink continuously. The HUD displays **INVINCIBLE**
 while enabled. It does not resurrect a fallen Khan or prevent clan losses.
 
+Use `clan-invincible on` to protect clan resolve, people, and livestock from
+attacks, hostile projectiles, hazards, and starvation losses. `clan-invincible off`
+restores normal losses; omitting the argument toggles it. This is independent of
+Khan invincibility. Food consumption, economy, and journey clocks continue, and
+protection does not replenish supplies or resurrect a lost clan. Both protection
+flags carry between developer checkpoints and reset on a normal new run.
+`state/clan.ts` accepts transient `ClanProtection` options; only the scene's DEV
+guard supplies them for cheats, and they are never written into run or save data.
+
 Cheats require an expedition that has started and has not ended. Using a cheat in
 a normal expedition marks it as a developer run, preserving saved journey records.
 Invincibility and console history carry between developer checkpoints, and reset
@@ -26,6 +35,7 @@ and are absent from production and packaged play.
 | `help`                                  | Lists commands and their usage.                        |
 | `invincible [on\|off]`, `god [on\|off]` | Protects the Khan; no argument toggles.                |
 | `heal`                                  | Restores the living Khan to full health.               |
+| `clan-invincible [on\|off]`             | Protects clan resolve, people, and livestock.          |
 | `status`                                | Displays invincibility, Khan health, and clan resolve. |
 | `clear`                                 | Clears output while keeping command history.           |
 

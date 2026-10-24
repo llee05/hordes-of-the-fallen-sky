@@ -28,6 +28,8 @@ describe('developer console commands', () => {
     for (const command of [
       'invincible yes',
       'god on off',
+      'clan-invincible yes',
+      'clan-invincible on off',
       'heal 999',
       'status on',
       'help god',
@@ -38,10 +40,30 @@ describe('developer console commands', () => {
       expect(tools.log.at(-1)?.kind).toBe('error');
     }
     executeDeveloperCommand(tools, run, 'invincible on', false);
+    executeDeveloperCommand(tools, run, 'clan-invincible on', false);
     executeDeveloperCommand(tools, run, 'heal', false);
     expect(tools.invincible).toBe(false);
+    expect(tools.clanInvincible).toBe(false);
     expect(run).toEqual(before);
     expect(tools.history.every((line) => line.length <= 200)).toBe(true);
+  });
+
+  it('toggles clan protection independently without replenishing resolve, people, or supplies', () => {
+    const tools = createDeveloperTools();
+    const run = createRun();
+    run.clan.integrity = 25;
+    const before = structuredClone(run);
+    expect(executeDeveloperCommand(tools, run, 'clan-invincible on', true).cheated).toBe(true);
+    expect(tools.clanInvincible).toBe(true);
+    expect(tools.invincible).toBe(false);
+    expect(run).toEqual(before);
+    executeDeveloperCommand(tools, run, 'god on', true);
+    executeDeveloperCommand(tools, run, 'clan-invincible off', true);
+    expect(tools.clanInvincible).toBe(false);
+    expect(tools.invincible).toBe(true);
+    executeDeveloperCommand(tools, run, 'clan-invincible', true);
+    executeDeveloperCommand(tools, run, 'status', true);
+    expect(tools.log.at(-1)?.text).toContain('Clan invincibility: ON');
   });
 
   it('heals a living Khan without granting revivals or bypassing succession', () => {
@@ -76,6 +98,7 @@ describe('developer console commands', () => {
     expect(tools.log.some((entry) => entry.text.includes('Alias: god'))).toBe(true);
     expect(createDeveloperTools()).toEqual({
       invincible: false,
+      clanInvincible: false,
       log: [],
       history: [],
       revision: 0,
