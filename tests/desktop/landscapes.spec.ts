@@ -34,6 +34,7 @@ test('painted landscapes and destination previews remain readable in Electron', 
       await expect.poll(() => page.evaluate(() => innerWidth)).toBe(size.width);
       for (const id of [
         'eej-khairkhan',
+        'otgontenger',
         'bogd-khan-uul',
         'altai-tavan-bogd',
         'khan-tengri',
@@ -81,7 +82,7 @@ test('painted landscapes and destination previews remain readable in Electron', 
           physical: false,
           oldDestroyed: true,
           groundSprites: 1,
-          tiles: 5,
+          tiles: 6,
         });
         await page.evaluate(() => {
           const scene = (window as any).__gloam.scene;

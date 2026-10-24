@@ -9,7 +9,7 @@ import { isLandscapeClearing, landscapeCover } from '../../src/game/assets/lands
 const atlas = JSON.parse(scenerySource) as typeof import('../../public/art/steppe-scenery.json');
 
 describe('location scenery content', () => {
-  it('bundles the five supplied terrain tiles for their matching locations', async () => {
+  it('bundles the supplied terrain tiles for their matching locations', async () => {
     const tiles = Object.fromEntries(
       Object.entries(LANDSCAPES)
         .filter(([, landscape]) => landscape.groundTile)
@@ -21,6 +21,7 @@ describe('location scenery content', () => {
       'bogd-khan-uul': 'bogd-khan-uul',
       'khan-tengri': 'khan-tengri',
       'orkhon-valley': 'orkhon-valley',
+      otgontenger: 'mount-otgontenger',
     });
     for (const tile of Object.values(tiles)) {
       const png = await readFile(new URL(`../../public/art/${tile}.png`, import.meta.url));

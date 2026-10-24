@@ -152,6 +152,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     description:
       'A broad snow crown rises over sage alpine turf, pale meltwater, and scattered larches.',
     surface: 'meadow',
+    groundTile: 'mount-otgontenger',
     ground: 0xabb39a,
     wash: 0.46,
     patch: 0xd2d3b5,
