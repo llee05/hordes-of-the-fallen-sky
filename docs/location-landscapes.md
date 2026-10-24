@@ -12,7 +12,7 @@ models. Existing cultural context remains in `data/clan.ts` and
 | Silent River        | Frosted gravel bars, broad steel-blue water, ice shelves, dry reeds   |
 | Broken Pass         | Dry fractured slate corridor, ochre scree, dark rock shoulders        |
 | Heart of the Steppe | Ash-sage basin, indigo mountain shoulders, blue banners, red eclipse  |
-| Otgontenger         | Broad white snow crown, alpine sage turf, larches, narrow meltwater   |
+| Otgontenger         | Seeded ranges and plateaus, winding grass passes, rocky slopes, snow  |
 | Bogd Khan Uul       | Sheltered green foothills with golden larch and deep sage pine groves |
 | Altai Tavan Bogd    | Five snowy crests, turquoise glacier seams, silver-green gravel       |
 | Khan Tengri         | Single sharp white pyramid, lavender scree, angular blue-grey crags   |
@@ -49,6 +49,11 @@ rebuild the scene with the selected terrain.
 These detailed tiles replace the flat color wash and generated grass, stone, and
 soil marks. Landmarks, scattered scenery, rivers, and chapter weather still layer
 above them. Locations without a tile retain the shared `steppe-ground.png` surface.
+
+Mount Otgontenger now opts into the [mountain terrain prototype](mountain-terrain.md).
+Its seed and biome generate the actual surface and cliffs instead of using the
+legacy mountain/foothill cutouts or fixed meltwater spline. Its supplied grass PNG
+remains the base terrain material. Other locations retain the scenery contract below.
 
 `LandscapeDefinition` is renderer independent. It defines a quiet ground wash,
 surface marks, bounded vegetation counts, camp-relative landmark anchors and

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GAME } from '../config';
 import { characterTexture, isCharacterKind, MOTION_SHEETS } from '../animation/CharacterMotion';
 import { LANDSCAPES, type SceneryProp } from '../data/landscapes';
+import type { TerrainArt } from '../terrain/types';
 
 /** Two motion atlases and one prop atlas keep painted actors on shared textures. */
 const PROPS = new Set(['ger', 'cart', 'banner', 'sheep', 'rock', 'pillar']);
@@ -9,6 +10,18 @@ const PROPS = new Set(['ger', 'cart', 'banner', 'sheep', 'rock', 'pillar']);
 export const CAMP_VISUAL_SCALE = GAME.camp.visualScale;
 /** World scale shared by the original ground and the supplied location tiles. */
 export const GROUND_TILE_SCALE = 0.65;
+/** Existing ground PNGs are temporary material swatches; missing stone/cliff art stays flat. */
+export const MOUNTAIN_TERRAIN_ART: TerrainArt = {
+  tileScale: GROUND_TILE_SCALE,
+  materials: {
+    grassland: { texture: 'ground-mount-otgontenger', color: 0xa7ad72 },
+    'rocky-soil': { texture: 'ground-eej-khairkhan', color: 0xb49672 },
+    stone: { color: 0x92958e },
+    tundra: { texture: 'ground-altai-tavan-bogd', color: 0xa3ad9c },
+    snow: { texture: 'ground-khan-tengri', color: 0xe2e9e8 },
+  },
+  cliff: { color: 0x5c625e, rim: 0xbbbca8 },
+};
 export const ART_WIDTH: Readonly<Record<string, number>> = {
   worker: 30,
   packhorse: 58,

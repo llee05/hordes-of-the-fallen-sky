@@ -13,6 +13,7 @@ import { CampBarrier } from '../assets/CampBarrier';
 import { campShelters } from '../state/campLife';
 import { barrierContact, campBoundary } from '../state/campBarrier';
 import { SteppeLandscape } from '../assets/SteppeLandscape';
+import { TerrainCollision } from '../terrain/TerrainCollision';
 import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
 import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
 import { GAME } from '../config';
@@ -73,6 +74,7 @@ export class ArenaScene extends Phaser.Scene {
   private hostileShots!: Phaser.Physics.Arcade.Group;
   private campLabel!: Phaser.GameObjects.Text;
   private landscape!: SteppeLandscape;
+  private terrainCollision!: TerrainCollision;
   private clanLife!: ClanLife;
   private campBarrier!: CampBarrier;
   private campPopulation = -1;
@@ -238,6 +240,8 @@ export class ArenaScene extends Phaser.Scene {
       maxSize: GAME.maxEnemies,
       runChildUpdate: false,
     });
+    this.terrainCollision = new TerrainCollision(this, this.player, this.enemies);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.terrainCollision.destroy());
     this.projectiles = this.physics.add.group({
       classType: Projectile,
       maxSize: GAME.maxProjectiles,
@@ -298,7 +302,10 @@ export class ArenaScene extends Phaser.Scene {
     bindAction('F', () => this.cycleFormation());
     bindAction('J', () => this.toggleJournal());
     bindAction('T', () => this.openResearch());
-    if (import.meta.env.DEV) bindAction('F8', () => this.toggleDeveloperMenu());
+    if (import.meta.env.DEV) {
+      bindAction('F8', () => this.toggleDeveloperMenu());
+      bindAction('F9', () => this.landscape.cycleTerrainDebug());
+    }
     const bindZoom = (key: string, steps: number): void => {
       this.input.keyboard!.on(`keydown-${key}`, (event: KeyboardEvent) => {
         if (
@@ -373,6 +380,7 @@ export class ArenaScene extends Phaser.Scene {
     this.tweens.pauseAll();
     if (developerRun) {
       this.landscape.setRegion(this.run.clan.region, currentLocation(this.run));
+      this.terrainCollision.setTerrain(this.landscape.navigation);
       this.campBarrier.relocate(this.run, this.camp);
       this.invulnerable = GAME.khan.returnProtection;
       this.beginExpedition();
@@ -639,6 +647,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
+    this.landscape.updateView(this.cameras.main);
     const controller = this.controller.poll();
     this.controllerMove.set(controller.x, controller.y);
     if (this.run.phase === 'intro') {
@@ -851,7 +860,22 @@ export class ArenaScene extends Phaser.Scene {
       width: viewWidth,
       height: viewHeight,
     };
-    const { x, y } = enemySpawnPosition(view, anchor, angle);
+    let point = enemySpawnPosition(view, anchor, angle);
+    const navigation = this.landscape.navigation;
+    if (navigation) {
+      let safe = navigation.nearestWalkable(point);
+      // Prefer connected ground beyond the view; never start a pooled actor inside a cliff.
+      for (let attempt = 0; attempt < 12; attempt++) {
+        const candidate = enemySpawnPosition(view, anchor, angle + (attempt * Math.PI) / 6);
+        if (navigation.isWalkable(candidate.x, candidate.y, GAME.terrain.actorClearance, true)) {
+          safe = candidate;
+          break;
+        }
+      }
+      if (!safe) return;
+      point = safe;
+    }
+    const { x, y } = point;
     if (
       isKhanActive(this.run) &&
       Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) < 200
@@ -941,7 +965,10 @@ export class ArenaScene extends Phaser.Scene {
         if (behavior === 'charger' && enemy.chargeTimer > 2.3) {
           const angle = enemy.getData('chargeAngle') as number;
           enemy.setVelocity(Math.cos(angle) * speed * 2.2, Math.sin(angle) * speed * 2.2);
-        } else this.physics.moveToObject(enemy, target, speed);
+        } else {
+          const waypoint = this.landscape.navigation?.waypoint(enemy, target) ?? target;
+          this.physics.moveTo(enemy, waypoint.x, waypoint.y, speed);
+        }
       }
       enemy.setFlipX(enemy.x > target.x);
       enemy.preparingAttack =
@@ -1479,10 +1506,17 @@ export class ArenaScene extends Phaser.Scene {
       }
       const previousX = rider.x;
       const previousY = rider.y;
-      rider.setPosition(
-        Phaser.Math.Linear(rider.x, x, Math.min(1, dt * 5)),
-        Phaser.Math.Linear(rider.y, y, Math.min(1, dt * 5)),
-      );
+      const navigation = this.landscape.navigation;
+      const desired =
+        navigation && !navigation.lineClear(rider, { x, y }, 18)
+          ? navigation.waypoint(rider, anchor)
+          : { x, y };
+      const next = {
+        x: Phaser.Math.Linear(rider.x, desired.x, Math.min(1, dt * 5)),
+        y: Phaser.Math.Linear(rider.y, desired.y, Math.min(1, dt * 5)),
+      };
+      const position = navigation?.slide(rider, next) ?? next;
+      rider.setPosition(position.x, position.y);
       const dx = rider.x - previousX;
       const dy = rider.y - previousY;
       this.riderSpeeds[i] = dt > 0 ? Math.hypot(dx, dy) / dt : 0;
@@ -1670,6 +1704,7 @@ export class ArenaScene extends Phaser.Scene {
     this.hazards = [];
     this.hazardTimer = 8;
     this.landscape.setRegion(this.run.clan.region, currentLocation(this.run));
+    this.terrainCollision.setTerrain(this.landscape.navigation);
     this.refreshCamp();
     this.campBarrier.relocate(this.run, this.camp);
     this.cameras.main.flash(500, 225, 215, 180);

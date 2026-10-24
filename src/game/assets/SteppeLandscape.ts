@@ -1,13 +1,29 @@
 import Phaser from 'phaser';
 import { GAME } from '../config';
-import { GROUND_TILE_SCALE, paintedImage, sceneryImage } from './painterlyArt';
+import {
+  GROUND_TILE_SCALE,
+  MOUNTAIN_TERRAIN_ART,
+  paintedImage,
+  sceneryImage,
+} from './painterlyArt';
 import { LOCATIONS, REGIONS, type MigrationLocation } from '../data/clan';
 import { LANDSCAPES, type LandscapeDefinition } from '../data/landscapes';
-import { landscapeCover, landscapeRandom, isLandscapeClearing } from './landscapeLayout';
+import {
+  landscapeCover,
+  landscapeRandom,
+  isLandscapeClearing,
+  landscapeLandmarks,
+  isLandscapeVegetation,
+} from './landscapeLayout';
 import { RiverSurface } from './RiverSurface';
+import { MountainTerrain } from '../terrain/MountainTerrain';
+import { TerrainNavigation } from '../terrain/TerrainNavigation';
+import { MountainRenderer } from '../terrain/MountainRenderer';
 
-/** Walkable painted scenery; only ArenaScene owns simulation and collision geometry. */
+/** Painted terrain and scenery; only ArenaScene owns simulation and collision geometry. */
 export class SteppeLandscape {
+  mountains?: MountainRenderer;
+  navigation?: TerrainNavigation;
   private readonly regional: Phaser.GameObjects.Container;
   private readonly ground: Phaser.GameObjects.TileSprite;
   private readonly groundWash: Phaser.GameObjects.Rectangle;
@@ -30,11 +46,20 @@ export class SteppeLandscape {
     this.wind = scene.add.graphics().setDepth(8000);
     this.atmosphere = scene.add.graphics().setDepth(9000);
     this.setRegion(0);
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.mountains?.destroy());
   }
 
   setRegion(region: number, location?: MigrationLocation): void {
     const id = location?.id ?? REGIONS[region]?.id ?? LOCATIONS[0]!.id;
     this.definition = LANDSCAPES[id];
+    this.mountains?.destroy();
+    this.mountains = undefined;
+    this.navigation = undefined;
+    if (this.definition.mountains) {
+      const terrain = new MountainTerrain(this.definition.mountains);
+      this.navigation = new TerrainNavigation(terrain);
+      this.mountains = new MountainRenderer(this.scene, terrain, MOUNTAIN_TERRAIN_ART);
+    }
     this.regional.removeAll(true);
     this.river = undefined;
     for (const prop of this.props) prop.destroy();
@@ -53,6 +78,12 @@ export class SteppeLandscape {
     for (const item of landscapeCover(id)) {
       const x = center + item.x;
       const y = center + item.y;
+      if (
+        this.navigation &&
+        (!this.navigation.isWalkable(x, y, item.width * 0.18) ||
+          this.navigation.terrain.height(x, y) > 0.58)
+      )
+        continue;
       this.props.push(
         this.scene.add
           .image(x + 9, y + 4, 'shadow')
@@ -64,11 +95,17 @@ export class SteppeLandscape {
           .setDepth(100 + y),
       );
     }
-    for (const item of definition.landmarks) {
+    for (const item of landscapeLandmarks(id)) {
       // Large landforms read as painted relief behind combat; smaller trees keep ground sorting.
       const x = center + item.x;
       const y = center + item.y;
-      const tree = ['pine', 'larch', 'willow', 'reeds'].includes(item.prop);
+      const tree = isLandscapeVegetation(item.prop);
+      if (
+        this.navigation &&
+        (!this.navigation.isWalkable(x, y, item.width * 0.18) ||
+          this.navigation.terrain.height(x, y) > 0.58)
+      )
+        continue;
       const shadow = this.scene.add
         .image(x + 15, y + 8, 'shadow')
         .setDisplaySize(item.width * 0.85, item.width * 0.19)
@@ -89,7 +126,7 @@ export class SteppeLandscape {
   private drawSurface(id: MigrationLocation['id']): void {
     const definition = this.definition;
     // Supplied tiles already contain grass, stones, snow, and soil. Keep their painted detail.
-    if (definition.groundTile) return;
+    if (definition.groundTile || definition.mountains) return;
     const random = landscapeRandom(id);
     const size = GAME.worldSize;
     const center = size / 2;
@@ -151,6 +188,15 @@ export class SteppeLandscape {
       if (isLandscapeClearing(x - center, y - center)) continue;
       marks.fillStyle(definition.patch, 0.23).fillEllipse(x, y, 3 + random() * 7, 2 + random() * 3);
     }
+  }
+
+  /** Camera work continues in menus; terrain has no simulation clock. */
+  updateView(camera: Phaser.Cameras.Scene2D.Camera): void {
+    this.mountains?.updateView(camera.worldView);
+  }
+
+  cycleTerrainDebug(): void {
+    this.mountains?.cycleDebug();
   }
 
   private drawPassage(): void {

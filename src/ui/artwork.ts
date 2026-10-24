@@ -4,6 +4,7 @@ import clanSource from '/art/steppe-clan-motion.json?raw';
 import scenerySource from '/art/steppe-scenery.json?raw';
 import type { BuildingDefinition } from '../game/data/clan';
 import { LANDSCAPES } from '../game/data/landscapes';
+import { landscapeLandmarks } from '../game/assets/landscapeLayout';
 import {
   riverChannels,
   riverOutline,
@@ -150,7 +151,7 @@ export function destinationIllustration(id: LocationId): string {
         })
         .join('')}</g>`
     : '';
-  const landmarks = landscape.landmarks
+  const landmarks = landscapeLandmarks(id)
     .map((item) => {
       const frame = scenery.frames[item.prop].frame;
       const width = item.width * 0.2;

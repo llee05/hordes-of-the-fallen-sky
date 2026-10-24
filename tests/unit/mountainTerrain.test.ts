@@ -97,6 +97,10 @@ describe('mountain traversal', () => {
         expect(navigation.isWalkable(x, center + y, 24, true)).toBe(true);
     const walkable = navigation.blocked.filter((value) => !value).length;
     expect(navigation.reachable.filter(Boolean).length / walkable).toBeGreaterThan(0.94);
+    for (let x = 128; x < GAME.worldSize - 128; x += 128) {
+      for (const offset of [-96, 0, 96])
+        expect(navigation.isWalkable(x, terrain.passCenter(x) + offset, 24, true)).toBe(true);
+    }
   });
 
   it('uses collision rectangles that cover exactly the steep cells and no quiet combat cells', () => {

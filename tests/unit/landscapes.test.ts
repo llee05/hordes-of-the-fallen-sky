@@ -4,11 +4,25 @@ import { LOCATIONS } from '../../src/game/data/clan';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
 import scenerySource from '/art/steppe-scenery.json?raw';
 import { GAME } from '../../src/game/config';
-import { isLandscapeClearing, landscapeCover } from '../../src/game/assets/landscapeLayout';
+import {
+  isLandscapeClearing,
+  landscapeCover,
+  landscapeLandmarks,
+  isLandscapeVegetation,
+} from '../../src/game/assets/landscapeLayout';
 
 const atlas = JSON.parse(scenerySource) as typeof import('../../public/art/steppe-scenery.json');
 
 describe('location scenery content', () => {
+  it('replaces mountain cutouts with integrated terrain in the sample region and its preview', () => {
+    expect(LANDSCAPES.otgontenger.mountains?.biome.id).toBe('otgontenger-alpine');
+    expect(
+      landscapeLandmarks('otgontenger').every((item) => isLandscapeVegetation(item.prop)),
+    ).toBe(true);
+    expect(landscapeCover('otgontenger').every((item) => isLandscapeVegetation(item.prop))).toBe(
+      true,
+    );
+  });
   it('bundles the supplied terrain tiles for their matching locations', async () => {
     const tiles = Object.fromEntries(
       Object.entries(LANDSCAPES)
@@ -42,7 +56,7 @@ describe('location scenery content', () => {
         expect(isLandscapeClearing(prop.x, prop.y)).toBe(false);
         expect(Math.abs(prop.x) + prop.width / 2).toBeLessThan(GAME.worldSize / 2);
         expect(Math.abs(prop.y) + prop.width / 2).toBeLessThan(GAME.worldSize / 2);
-        for (const landmark of LANDSCAPES[place.id].landmarks) {
+        for (const landmark of landscapeLandmarks(place.id)) {
           const overlaps =
             Math.abs(prop.x - landmark.x) < (prop.width + landmark.width) / 2 &&
             prop.y > landmark.y - landmark.width * 0.94 &&

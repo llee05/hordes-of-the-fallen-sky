@@ -45,22 +45,28 @@ export class TerrainNavigation {
     return row * this.columns + column;
   }
   private open(column: number, row: number): boolean {
+    const size = this.terrain.cellSize;
     return (
       column >= 0 &&
       row >= 0 &&
       column < this.columns &&
       row < this.rows &&
+      Math.min(size, this.terrain.worldSize - column * size) >= GAME.terrain.actorClearance * 2 &&
+      Math.min(size, this.terrain.worldSize - row * size) >= GAME.terrain.actorClearance * 2 &&
       !this.blocked[this.index(column, row)]
     );
   }
   private center(index: number): TerrainPoint {
     const size = this.terrain.cellSize;
     return {
-      x: Math.min(this.terrain.worldSize - size / 2, ((index % this.columns) + 0.5) * size),
-      y: Math.min(
-        this.terrain.worldSize - size / 2,
-        (Math.floor(index / this.columns) + 0.5) * size,
-      ),
+      x:
+        ((index % this.columns) * size +
+          Math.min(this.terrain.worldSize, ((index % this.columns) + 1) * size)) /
+        2,
+      y:
+        (Math.floor(index / this.columns) * size +
+          Math.min(this.terrain.worldSize, (Math.floor(index / this.columns) + 1) * size)) /
+        2,
     };
   }
 

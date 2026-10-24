@@ -11,6 +11,17 @@ export interface LandscapeProp {
   flip: boolean;
 }
 
+export function isLandscapeVegetation(prop: SceneryProp): boolean {
+  return ['pine', 'larch', 'willow', 'reeds'].includes(prop);
+}
+
+export function landscapeLandmarks(id: LocationId) {
+  const definition = LANDSCAPES[id];
+  return definition.landmarks.filter(
+    (landmark) => !definition.mountains || isLandscapeVegetation(landmark.prop),
+  );
+}
+
 /** Keep the camp and the complete eastbound caravan corridor clear of tall scenery. */
 export function isLandscapeClearing(x: number, y: number): boolean {
   return x > -280 && x < 1480 && y > -210 && y < 255;
@@ -35,6 +46,7 @@ export function landscapeCover(id: LocationId): readonly LandscapeProp[] {
   const half = GAME.worldSize / 2 - 120;
   const props: LandscapeProp[] = [];
   for (const cover of definition.cover) {
+    if (definition.mountains && !isLandscapeVegetation(cover.prop)) continue;
     for (let i = 0; i < cover.count; i += 1) {
       const width = cover.width[0] + random() * (cover.width[1] - cover.width[0]);
       for (let attempt = 0; attempt < 30; attempt += 1) {
@@ -50,7 +62,7 @@ export function landscapeCover(id: LocationId): readonly LandscapeProp[] {
         if (isRiverWater(channels, x, y, width * 0.2 + 14)) continue;
         // Keep complete painted silhouettes apart, including the space above their ground anchors.
         if (
-          definition.landmarks.some(
+          landscapeLandmarks(id).some(
             (landmark) =>
               Math.abs(x - landmark.x) < (width + landmark.width) / 2 + 16 &&
               y > landmark.y - landmark.width * 0.94 - 16 &&

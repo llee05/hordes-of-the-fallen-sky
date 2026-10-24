@@ -1,4 +1,6 @@
 import type { LocationId } from '../types';
+import type { MountainRegion } from '../terrain/types';
+import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
 
 export type SceneryProp =
   | 'larch'
@@ -28,6 +30,8 @@ export interface LandscapeDefinition {
   surface: 'meadow' | 'frost' | 'scree' | 'sand' | 'basalt';
   /** Bundled PNG basename; replaces the shared grass, wash, and generated surface marks. */
   groundTile?: string;
+  /** Opt-in heightfield terrain. Its ranges replace the legacy landform cutouts. */
+  mountains?: MountainRegion;
   ground: number;
   wash: number;
   patch: number;
@@ -150,9 +154,10 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
   otgontenger: {
     title: 'The white crown',
     description:
-      'A broad snow crown rises over sage alpine turf, pale meltwater, and scattered larches.',
+      'Winding grassy passes and larches give way to rocky shoulders, alpine plateaus, and snow-covered ridges.',
     surface: 'meadow',
     groundTile: 'mount-otgontenger',
+    mountains: OTGONTENGER_MOUNTAINS,
     ground: 0xabb39a,
     wash: 0.46,
     patch: 0xd2d3b5,
@@ -168,13 +173,6 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       landmark('larch', 415, -160, 160),
       landmark('foothill', -410, -110, 245),
     ],
-    water: {
-      kind: 'glacial',
-      width: 27,
-      color: 0xa5c4bb,
-      bank: 0xc3c7a6,
-      course: [-2600, -500, -650, -410, 300, -320, 900, -600, 2600, -450],
-    },
     air: { color: 0xc2d0c5, alpha: 0.04, particles: 'mist' },
   },
   'bogd-khan-uul': {

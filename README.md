@@ -60,6 +60,15 @@ The game now uses a stylized painterly 2.5D presentation: golden brushwork grass
 
 Every location has a distinct painted landscape: golden meadow, frozen river, slate pass, forested foothills, snowy peaks and glaciers, volcanic steppe, granite desert, and braided river pasture. Terrain colors, vegetation, watercourses, landmark silhouettes, and atmosphere follow the chosen place. Migration cards preview the same scenery before departure. See [the twelve-location landscape catalog](docs/location-landscapes.md).
 
+Mount Otgontenger prototypes integrated mountain terrain: seeded ranges, foothills,
+plateaus, broad winding passes, and elevation-based grass, gravel, stone, tundra,
+and snow. Cliff boundaries shape riding and enemy routes around the open camp and
+caravan road. Camera-sized chunks reuse the existing 2D ground textures; exposed
+stone and modular cliff faces use placeholder colours pending painted artwork.
+In development, choose Otgontenger with **F8** and press **F9** to cycle elevation,
+slope, and collision overlays. See [the mountain prototype](docs/mountain-terrain.md)
+for configuration, rendering, traversal, and limits.
+
 The Khan, allied archers, and all six creature designs have painted sprite animation: four gait or hovering frames and two attack poses each. Riding speed drives the gait, galloping quickens it, and actual volleys, charges, and strikes trigger release poses. Hits briefly tint the character; defeated enemies fade through a small visual pool after their collision bodies leave immediately. Character animation and these effects freeze in every paused run phase. See [the sprite sheets, registration, and generation prompts](docs/character-animation.md).
 
 ## Build, defend, migrate

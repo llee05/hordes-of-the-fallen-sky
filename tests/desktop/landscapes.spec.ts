@@ -85,13 +85,76 @@ test('painted landscapes and destination previews remain readable in Electron', 
           groundSprites: 1,
           tiles: 8,
         });
+        const mountains = Boolean(LANDSCAPES[id].mountains);
+        expect(
+          await page.evaluate(() => {
+            const scene = (window as any).__gloam.scene;
+            return {
+              enabled: Boolean(scene.landscape.mountains),
+              navigation: Boolean(scene.landscape.navigation),
+              boundaries: scene.terrainCollision.walls.getLength() > 0,
+            };
+          }),
+        ).toEqual({ enabled: mountains, navigation: mountains, boundaries: mountains });
         await page.evaluate(() => {
           const scene = (window as any).__gloam.scene;
+          if (scene.landscape.mountains) {
+            scene.cameras.main
+              .stopFollow()
+              .setZoom(0.6)
+              .centerOn(scene.camp.x - 550, scene.camp.y - 500);
+            return;
+          }
           if (!scene.landscape.definition.water) return;
           scene.cameras.main.stopFollow().centerOn(scene.camp.x, scene.camp.y - 240);
           scene.player.setPosition(scene.camp.x, scene.camp.y - 150);
         });
+        if (mountains)
+          await expect
+            .poll(
+              () =>
+                page.evaluate(
+                  () => (window as any).__gloam.scene.landscape.mountains.pendingChunks,
+                ),
+              { timeout: 15000 },
+            )
+            .toBe(0);
         await page.screenshot({ path: `test-results/landscapes/native-${id}-${size.width}.png` });
+        if (mountains) {
+          await page.keyboard.press('F9');
+          await expect
+            .poll(() =>
+              page.evaluate(() => (window as any).__gloam.scene.landscape.mountains.debugMode),
+            )
+            .toBe('elevation');
+          const resources = (await page.locator('.resource-hud').boundingBox())!;
+          for (const zoom of [0.6, 1.6]) {
+            await page.evaluate((zoom) => {
+              (window as any).__gloam.scene.cameras.main.setZoom(zoom);
+            }, zoom);
+            await expect
+              .poll(() =>
+                page.evaluate(() => (window as any).__gloam.scene.landscape.mountains.label.scaleX),
+              )
+              .toBeCloseTo(1 / zoom);
+            const label = await page.evaluate(() => {
+              const scene = (window as any).__gloam.scene;
+              const bounds = scene.landscape.mountains.label.getBounds();
+              const camera = scene.cameras.main;
+              return {
+                x: camera.width / 2 + (bounds.x - camera.width / 2) * camera.zoom,
+                y: camera.height / 2 + (bounds.y - camera.height / 2) * camera.zoom,
+                width: bounds.width * camera.zoom,
+              };
+            });
+            expect(label.y).toBeGreaterThan(resources.y + resources.height);
+            expect(label.x).toBeGreaterThan(0);
+            expect(label.x + label.width).toBeLessThan(size.width);
+            await page.screenshot({
+              path: `test-results/mountains/native-elevation-${size.width}-${zoom}.png`,
+            });
+          }
+        }
       }
       await page.keyboard.press('m');
       await page.locator('[data-destination="belukha"]').click();
