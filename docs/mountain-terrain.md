@@ -31,6 +31,14 @@ Unit tests cover deterministic seeds and chunk order, exact shared borders,
 bounded caches, material continuity, broad open corridors, connected ground,
 collision coverage, blocked spawn relocation, and paths around cliffs.
 
+The presentation helpers are independent of traversal. `terrainContours.ts` uses
+marching squares with a bilinear saddle decider and exact shared edge crossings.
+`terrainRelief.ts` builds front-facing ledges, feathered rims, and fading olive
+shadows from elevation contours on steep slopes. `terrainLighting.ts` combines
+broad landform normals with short upper-left horizon shadows. Their render spacing
+and ledge dimensions live in `GAME.terrain`; none changes collision or pass width.
+These helpers produce runtime geometry and colours, never bitmap artwork.
+
 ## Playing and inspecting the sample
 
 Mount Otgontenger opts into `LandscapeDefinition.mountains` in both normal

@@ -11,6 +11,16 @@ export const GAME = {
     actorClearance: 24,
     cliffSlope: 1.6,
     flowCacheSize: 3,
+    // Presentation resolution and ledges are independent of the traversal grid.
+    surfaceStep: 32,
+    relief: {
+      firstElevation: 0.34,
+      elevationInterval: 0.18,
+      minSlope: 0.95,
+      fullSlope: 1.8,
+      faceDepth: 26,
+      shadowReach: 24,
+    },
   },
   camera: {
     defaultZoom: 1,
