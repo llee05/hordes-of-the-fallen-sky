@@ -103,7 +103,10 @@ export class ComposedTerrain extends MountainHeightfield {
         (shelf.peak ?? 0) *
         (0.55 + ridge * 0.45) *
         Math.pow(Math.max(0, Math.min(1, field / Math.min(shelf.width, shelf.depth))), 1.3);
-      const height = shelf.rise + peak;
+      const weathering = shelf.camp
+        ? 1
+        : 1 + (coherentNoise(x / 240, z / 270, this.seed + 719) - 0.5) * 0.07;
+      const height = shelf.rise * weathering + peak;
       base += height * ramp * grade * (1 - shelter) * bank;
       return { field, rise: height * (1 - ramp) * (1 - shelter) };
     });
@@ -173,14 +176,14 @@ export class ComposedTerrain extends MountainHeightfield {
         bounds.y + bounds.height >= cz - ez &&
         bounds.y <= cz + ez
       )
-        max += shelf.rise + (shelf.peak ?? 0);
+        max += shelf.rise * 1.04 + (shelf.peak ?? 0);
     }
     return { min: this.region.scene.floor - 24, max };
   }
 
   get reliefHeight(): number {
     return this.region.scene.shelves.reduce(
-      (sum, shelf) => sum + shelf.rise + (shelf.peak ?? 0),
+      (sum, shelf) => sum + shelf.rise * 1.04 + (shelf.peak ?? 0),
       0,
     );
   }

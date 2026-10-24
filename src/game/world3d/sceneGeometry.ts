@@ -1,3 +1,4 @@
+import { appendCliffFace } from './cliffGeometry';
 import type { TerrainBounds } from '../terrain/types';
 import { terrainHabitat, terrainMaterialWeights } from './terrainHabitat';
 import { ComposedTerrain } from './ComposedTerrain';
@@ -118,21 +119,16 @@ export function sceneGeometry(terrain: ComposedTerrain, bounds: TerrainBounds): 
               const forward = (q.z - p.z) * normal[0] - (q.x - p.x) * normal[2] >= 0;
               const a = forward ? p : q;
               const b = forward ? q : p;
-              for (const [node, flags] of [
-                [a, lower],
-                [a, mask],
-                [b, mask],
-                [a, lower],
-                [b, mask],
-                [b, lower],
-              ] as const)
-                emit(
-                  walls,
-                  node,
-                  flags,
-                  terrain.cliffNormal(node.x, node.z, layer),
-                  flags === lower ? 0.72 : 1,
-                );
+              const anchor = (node: LayerNode) => {
+                const bottom =
+                  node.base +
+                  node.layers.reduce(
+                    (sum, value, i) => sum + (lower & (1 << i) ? value.rise : 0),
+                    0,
+                  );
+                return { x: node.x, z: node.z, bottom, top: bottom + node.layers[layer]!.rise };
+              };
+              appendCliffFace(walls, terrain, anchor(a), anchor(b), layer);
             }
           }
         }

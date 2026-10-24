@@ -42,7 +42,7 @@ export class World3DRenderer {
   renderScale = 1;
   pendingChunks = 0;
   private readonly actors = new THREE.Group();
-  private readonly sun = new THREE.DirectionalLight(0xffefd3, 1.7);
+  private readonly sun = new THREE.DirectionalLight(0xfff0db, 1.5);
   private readonly renderFrame = (): void => this.render();
   private readonly label: HTMLDivElement;
   private width = 0;
@@ -70,7 +70,7 @@ export class World3DRenderer {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, WORLD_3D.pixelRatio));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.BasicShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.shadowMap.autoUpdate = false;
     this.renderer.domElement.dataset.worldRenderer = '3d';
     Object.assign(this.renderer.domElement.style, {
@@ -83,7 +83,7 @@ export class World3DRenderer {
     this.world.background = new THREE.Color(palette?.fog ?? 0xb1b6ab);
     this.world.fog = new THREE.Fog(palette?.fog ?? 0xc5cdc6, 6300, 11200);
     this.world.add(new THREE.HemisphereLight(0xe5e9df, 0x8a907e, 1.2));
-    this.world.add(new THREE.AmbientLight(0xd5decd, 0.45));
+    this.world.add(new THREE.AmbientLight(0xd5decd, 0.55));
     this.sun.castShadow = true;
     Object.assign(this.sun.shadow.camera, {
       left: -2000,
@@ -98,6 +98,8 @@ export class World3DRenderer {
     // need several world units of separation to avoid hardware-specific stippling.
     this.sun.shadow.bias = -0.0015;
     this.sun.shadow.normalBias = 6;
+    this.sun.shadow.radius = 1.6;
+    this.sun.shadow.intensity = 0.72;
     this.world.add(this.sun, this.sun.target, this.actors);
     this.materials = new MountainMaterials(
       scene,
@@ -285,7 +287,7 @@ export class World3DRenderer {
       this.shadowTime = performance.now();
       this.shadowX = x;
       this.shadowZ = z;
-      this.sun.position.set(x - 1700, 2800, z + 1800);
+      this.sun.position.set(x - 1900, 3800, z + 1350);
       this.sun.target.position.set(x, 350, z);
       this.renderer.shadowMap.needsUpdate = true;
     }

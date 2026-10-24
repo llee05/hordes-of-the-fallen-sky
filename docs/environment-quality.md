@@ -37,3 +37,17 @@ apply restrained relative tint, preserving the source paintings' color variation
 Material tests check finite normalized coverage across biomes/elevations/slopes,
 coherent neighboring patches, wetter river margins, and unchanged terrain heights.
 The existing terrain tests continue checking exact surface queries and chunk seams.
+
+## Weathered cliffs and light
+
+`cliffGeometry.ts` subdivides exposed walls into four shallow relief bands, with
+seeded fractures and occasional projecting lips. Feet and rim anchors stay fixed;
+relief is bounded to eight world units inside the conservative collision clearance.
+Global sampling gives identical relief at shared chunk edges. Non-camp shelf heights
+vary gently along their ridges while the protected camp retains its level floor.
+Terrain queries and navigation continue using the same split surface mesh.
+
+Sunlight now produces shorter shadows, with bounded PCF filtering, reduced shadow
+intensity, and a little more ambient fill. Granite remains visible on shaded faces.
+The existing contact shadows still anchor characters and props. No camera or actor
+art changes are part of this pass.

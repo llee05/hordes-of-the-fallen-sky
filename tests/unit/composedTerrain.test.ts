@@ -55,16 +55,24 @@ describe('composed angled landscapes', () => {
       expect(terrain.height(x, z) * 1000).toBeCloseTo((p[i + 1]! + p[i + 4]! + p[i + 7]!) / 3, 5);
     }
     let max = 0;
-    for (let i = 0; i < data.walls.positions.length; i += 18) {
-      const p = data.walls.positions;
-      expect(p[i]).toBe(p[i + 3]);
-      expect(p[i + 2]).toBe(p[i + 5]);
-      max = Math.max(max, p[i + 4]! - p[i + 1]!);
-      const nx = data.walls.normals[i]!;
-      const nz = data.walls.normals[i + 2]!;
-      const crossX = (p[i + 4]! - p[i + 1]!) * (p[i + 8]! - p[i + 2]!);
-      const crossZ = -(p[i + 4]! - p[i + 1]!) * (p[i + 6]! - p[i]!);
-      expect(crossX * nx + crossZ * nz).toBeGreaterThanOrEqual(-1e-7);
+    const p = data.walls.positions;
+    for (let i = 0; i < p.length; i += 72) {
+      const heights = p.slice(i, i + 72).filter((_, j) => j % 3 === 1);
+      max = Math.max(max, Math.max(...heights) - Math.min(...heights));
+    }
+    for (let i = 0; i < p.length; i += 9) {
+      const ux = p[i + 3]! - p[i]!,
+        uy = p[i + 4]! - p[i + 1]!,
+        uz = p[i + 5]! - p[i + 2]!;
+      const vx = p[i + 6]! - p[i]!,
+        vy = p[i + 7]! - p[i + 1]!,
+        vz = p[i + 8]! - p[i + 2]!;
+      const n = data.walls.normals;
+      expect(
+        (uy * vz - uz * vy) * n[i]! +
+          (uz * vx - ux * vz) * n[i + 1]! +
+          (ux * vy - uy * vx) * n[i + 2]!,
+      ).toBeGreaterThanOrEqual(-1e-6);
     }
     expect(max).toBeGreaterThan(200);
     expect(data.surface.weights.every((n) => Number.isFinite(n) && n >= 0)).toBe(true);
