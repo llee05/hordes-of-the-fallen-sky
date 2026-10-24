@@ -21,6 +21,7 @@ import { TerrainNavigation } from '../terrain/TerrainNavigation';
 import { MountainRenderer } from '../terrain/MountainRenderer';
 import { World3DRenderer } from '../world3d/World3DRenderer';
 import { wantsWorld3D } from '../world3d/worldProjection';
+import { MountainHeightfield } from '../world3d/MountainHeightfield';
 
 /** Painted terrain and scenery; only ArenaScene owns simulation and collision geometry. */
 export class SteppeLandscape {
@@ -65,9 +66,11 @@ export class SteppeLandscape {
     this.scene.cameras.main.setAlpha(1);
     this.navigation = undefined;
     if (this.definition.mountains) {
-      const terrain = new MountainTerrain(this.definition.mountains);
+      const terrain = wantsWorld3D()
+        ? new MountainHeightfield(this.definition.mountains)
+        : new MountainTerrain(this.definition.mountains);
       this.navigation = new TerrainNavigation(terrain);
-      if (wantsWorld3D()) {
+      if (terrain instanceof MountainHeightfield) {
         this.world3d = new World3DRenderer(this.scene, terrain);
         this.scene.cameras.main.setAlpha(0);
       } else this.mountains = new MountainRenderer(this.scene, terrain, MOUNTAIN_TERRAIN_ART);
@@ -208,6 +211,7 @@ export class SteppeLandscape {
   }
 
   cycleTerrainDebug(): void {
+    this.world3d?.cycleDebug();
     this.mountains?.cycleDebug();
   }
 
