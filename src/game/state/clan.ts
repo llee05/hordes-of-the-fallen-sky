@@ -1,3 +1,9 @@
+import {
+  createCampEstate,
+  estateAssignedWorkers,
+  estateBuildingBlocker,
+  reserveBuildingSlot,
+} from './campEstate';
 import { rememberClan } from './legacy';
 import { GAME } from '../config';
 import { BUILDINGS, ROUTES } from '../data/clan';
@@ -11,6 +17,7 @@ import { isKhanActive } from './khan';
 export function createClan(): ClanState {
   return {
     campEffects: createCampEffects(),
+    estate: createCampEstate(),
     stage: 'camp',
     region: 0,
     stageTime: 0,
@@ -39,7 +46,7 @@ export function createClan(): ClanState {
 }
 
 export function assignedWorkers(run: RunState): number {
-  return BUILDINGS.reduce((sum, b) => sum + (run.clan.buildings[b.id] ? b.workers : 0), 0);
+  return estateAssignedWorkers(run);
 }
 
 export { hasDevelopment } from './camp';
@@ -112,7 +119,12 @@ export function buildingCost(
   };
 }
 
-export function buildingBlocker(run: RunState, id: BuildingId, path?: string): string | undefined {
+export function buildingBlocker(
+  run: RunState,
+  id: BuildingId,
+  path?: string,
+  slot?: number,
+): string | undefined {
   const definition = BUILDINGS.find((building) => building.id === id);
   if (!definition) return 'Unknown structure';
   const clan = run.clan;
@@ -127,17 +139,26 @@ export function buildingBlocker(run: RunState, id: BuildingId, path?: string): s
     if (hasDevelopment(run, id, path)) return 'Already learned';
     if (developmentExcluded(run, id, path)) return 'Another path chosen';
     for (const parent of development.requires ?? []) {
+      const parentNode = definition.paths.find((p) => p.id === parent);
+      if (!clan.estate && parentNode?.level && !parentNode.exclusiveGroup) continue;
       if (!hasDevelopment(run, id, parent))
         return `Requires ${definition.paths.find((entry) => entry.id === parent)?.title ?? parent}`;
     }
   }
+  const estateReason = estateBuildingBlocker(run, id, path, slot);
+  if (estateReason) return estateReason;
   const cost = buildingCost(run, id, path);
   if (clan.materials < cost.materials || clan.spirit < cost.spirit) return 'Gather more resources';
   return undefined;
 }
 
-export function buildStructure(run: RunState, id: BuildingId, path?: string): boolean {
-  if (run.phase !== 'building' || buildingBlocker(run, id, path)) return false;
+export function buildStructure(
+  run: RunState,
+  id: BuildingId,
+  path?: string,
+  slot?: number,
+): boolean {
+  if (run.phase !== 'building' || buildingBlocker(run, id, path, slot)) return false;
   const clan = run.clan;
   const definition = BUILDINGS.find((building) => building.id === id)!;
   const development = definition.paths.find((entry) => entry.id === path);
@@ -146,6 +167,7 @@ export function buildStructure(run: RunState, id: BuildingId, path?: string): bo
   completeGuidance(run, 'build');
   clan.materials -= cost.materials;
   clan.spirit -= cost.spirit;
+  if (path === undefined) reserveBuildingSlot(run, id, slot);
   clan.buildings[id] += 1;
   clan.identity[definition.doctrine] += 2;
   if (development) {

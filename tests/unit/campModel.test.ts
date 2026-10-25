@@ -20,6 +20,7 @@ describe('camp miniature and development inspector', () => {
 
   it('reflects actual purchases, resource blockers, and excluded descendants in the selected site', () => {
     const run = createRun();
+    delete run.clan.estate; // Legacy craft-price and effect contract.
     run.phase = 'building';
     run.clan.materials = 500;
     run.clan.spirit = 100;

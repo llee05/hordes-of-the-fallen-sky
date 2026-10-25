@@ -605,7 +605,13 @@ export class GameUI {
     const button = (event.target as Element).closest<HTMLButtonElement>('button');
     if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
     const action = button.dataset.action;
-    if (button.dataset.progressionJump && this.lastSnapshot) {
+    if (button.dataset.estateKind === 'encampment' || button.dataset.estateKind === 'internal') {
+      this.scene.improveEstate(
+        button.dataset.estateKind,
+        button.dataset.estateId!,
+        Number(button.dataset.estateRank),
+      );
+    } else if (button.dataset.progressionJump && this.lastSnapshot) {
       const phase = button.dataset.progressionJump === 'camp' ? 'building' : 'upgrade';
       const view = this.treeView(phase);
       Object.assign(view, {
@@ -698,7 +704,11 @@ export class GameUI {
     } else if (button.dataset.research)
       this.scene.research(button.dataset.research, Number(button.dataset.rank));
     else if (button.dataset.building)
-      this.scene.construct(button.dataset.building as BuildingId, button.dataset.path);
+      this.scene.construct(
+        button.dataset.building as BuildingId,
+        button.dataset.path,
+        button.dataset.slot === undefined ? undefined : Number(button.dataset.slot),
+      );
     else if (button.dataset.route)
       this.scene.chooseRoute(button.dataset.route, this.destinationSelection);
     else if (button.dataset.tab) this.selectJournalTab(button.dataset.tab as JournalTab);

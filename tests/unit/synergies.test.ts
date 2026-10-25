@@ -18,14 +18,19 @@ describe('discoverable combinations', () => {
     const costs = [
       buildingCost(run, 'archery'),
       buildingCost(run, 'archery', 'fire-arrows'),
+      buildingCost(run, 'archery', 'level-2'),
+      buildingCost(run, 'archery', 'level-3'),
       buildingCost(run, 'sanctuary'),
       buildingCost(run, 'sanctuary', 'wind-shamans'),
+      buildingCost(run, 'sanctuary', 'level-2'),
+      buildingCost(run, 'sanctuary', 'level-3'),
     ];
     expect(plan.price.materials).toBe(costs.reduce((sum, c) => sum + c.materials, 0));
     expect(plan.price.workers).toBe(5);
     expect(run).toEqual(before);
     expect(buildStructure(run, 'archery')).toBe(true);
-    expect(buildStructure(run, 'archery', 'veteran-riders')).toBe(true);
+    // A previously learned alternative still closes the recipe on legacy import.
+    run.clan.paths.archery = ['veteran-riders'];
     expect(synergyProgress(run, recipe).closed).toBe(true);
   });
   it('subtracts completed ranks and recognizes active combinations without another purchase', () => {

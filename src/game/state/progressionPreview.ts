@@ -102,7 +102,11 @@ function metrics(r: RunState): Metric[] {
     { label: 'Food net', value: rates.foodNet, unit: '/s' },
     { label: 'Material gathering', value: rates.materials, unit: '/s' },
     { label: 'Pasture depletion', value: pastureDepletion(r), unit: ' pp/s', lower: true },
-    { label: 'Spirit gained from kills', value: r.patrons.ancestors.spiritGain * 100, unit: '%' },
+    {
+      label: 'Spirit gained from kills',
+      value: r.patrons.ancestors.spiritGain * c.multipliers.spiritGain * 100,
+      unit: '%',
+    },
     { label: 'Shard attraction', value: r.stats.pickupRadius, unit: ' paces' },
     {
       label: 'Ancestral echoes',

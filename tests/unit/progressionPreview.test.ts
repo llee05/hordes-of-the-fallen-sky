@@ -24,6 +24,7 @@ describe('exact progression previews', () => {
   });
   it('uses combined current protection and respects worker and prerequisite gates', () => {
     const run = createRun();
+    delete run.clan.estate; // Legacy craft-price and effect contract.
     run.phase = 'building';
     run.clan.materials = 1000;
     run.patrons.guardian.protection = 0.81;

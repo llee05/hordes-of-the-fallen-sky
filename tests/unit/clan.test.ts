@@ -20,6 +20,8 @@ import type { RunState } from '../../src/game/types';
 
 function builder(): RunState {
   const run = createRun();
+  // A grandfathered camp snapshot; fresh-estate gates are tested in campEstate.test.ts.
+  delete run.clan.estate;
   run.phase = 'building';
   run.clan.materials = 500;
   run.clan.spirit = 500;

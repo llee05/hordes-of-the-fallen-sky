@@ -49,7 +49,15 @@ export type LocationId =
   | 'eej-khairkhan'
   | 'orkhon-valley';
 
+export interface CampEstate {
+  tier: number;
+  slots: (BuildingId | null)[];
+  internals: Record<string, number>;
+}
+
 export interface ClanState {
+  /** Portable infrastructure; optional only for legacy snapshots. */
+  estate?: CampEstate;
   campEffects: CampEffects;
   stage: JourneyStage;
   region: number;
@@ -91,6 +99,7 @@ export interface CampEffects {
     burnDamage: number;
     gallopCooldown: number;
     sanctuaryInterval: number;
+    spiritGain: number;
     wagonDamage: number;
   };
   bonuses: {

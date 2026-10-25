@@ -19,6 +19,7 @@ export function createCampEffects(): CampEffects {
       burnDamage: 1,
       gallopCooldown: 1,
       sanctuaryInterval: 1,
+      spiritGain: 1,
       wagonDamage: 1,
     },
     bonuses: {

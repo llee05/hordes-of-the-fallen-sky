@@ -12,6 +12,7 @@ import { routeMenu } from '../../src/ui/menuContent';
 describe('economy planning interfaces', () => {
   it('previews actual data-defined purchases without granting resources, guidance, or memories', () => {
     const run = createRun();
+    delete run.clan.estate; // Legacy craft-price and effect contract.
     run.phase = 'building';
     run.clan.materials = 5000;
     run.clan.spirit = 5000;

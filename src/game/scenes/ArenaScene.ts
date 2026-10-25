@@ -39,6 +39,7 @@ import {
 } from '../state/clan';
 import { UPGRADES } from '../data/upgrades';
 import { Enemy, Gem, Projectile } from '../entities/actors';
+import { purchaseEstate, type EstatePurchaseKind } from '../state/campEstate';
 import { applyUpgrade, createRun, gainExperience, redeemMasteredResearch } from '../state/run';
 import {
   advancePatrons,
@@ -664,9 +665,16 @@ export class ArenaScene extends Phaser.Scene {
     this.setPhase(menu);
   }
 
-  construct(id: BuildingId, path?: string): void {
+  improveEstate(kind: EstatePurchaseKind, id: string, rank: number): void {
+    if (!purchaseEstate(this.run, kind, id, rank)) return;
+    this.refreshCamp();
+    this.audio.play('build');
+    this.publishPhase();
+  }
+
+  construct(id: BuildingId, path?: string, slot?: number): void {
     const previousCooldown = gallopCooldown(this.run);
-    if (!buildStructure(this.run, id, path)) return;
+    if (!buildStructure(this.run, id, path, slot)) return;
     this.dashTimer *= gallopCooldown(this.run) / previousCooldown;
     this.refreshCamp();
     this.audio.play('build');
@@ -1359,7 +1367,11 @@ export class ArenaScene extends Phaser.Scene {
     this.audio.play('defeat', { x, y });
     this.enemyShadows.get(enemy)?.setVisible(false);
     this.run.kills += 1;
-    this.run.clan.spirit += value * 0.4 * this.run.patrons.ancestors.spiritGain;
+    this.run.clan.spirit +=
+      value *
+      0.4 *
+      this.run.patrons.ancestors.spiritGain *
+      this.run.clan.campEffects.multipliers.spiritGain;
     rewardPatronKill(this.run);
     if (enemy === this.boss) {
       this.run.clan.finalBossDefeated = true;

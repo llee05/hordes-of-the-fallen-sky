@@ -57,7 +57,7 @@ describe('expandable progression views', () => {
       run.phase = 'building';
       run.clan.materials = 500;
       const ger = campBranches(run).find((branch) => branch.id === 'ger')!;
-      expect(treeLevels(ger.nodes).map((level) => level.length)).toEqual([1, 4, 3]);
+      expect(treeLevels(ger.nodes).map((level) => level.length)).toEqual([1, 5, 4]);
       expect(ger.nodes.find((entry) => entry.id === 'ger-next-tier')?.status).toBe('locked');
       buildStructure(run, 'ger', 'hearthkeepers');
       const learned = campBranches(run).find((branch) => branch.id === 'ger')!;

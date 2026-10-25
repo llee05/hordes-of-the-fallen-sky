@@ -14,6 +14,8 @@ import { treeLevels } from '../../src/ui/progressionTree';
 
 function builder() {
   const run = createRun();
+  // A grandfathered camp snapshot; fresh-estate gates are tested in campEstate.test.ts.
+  delete run.clan.estate;
   run.phase = 'building';
   run.clan.materials = run.clan.spirit = 10000;
   run.clan.population = 30;
@@ -21,7 +23,7 @@ function builder() {
 }
 
 describe('Mongolian-inspired camp branches', () => {
-  it('authors eight valid, reachable branches and thirty-seven developments', () => {
+  it('authors eight valid, reachable branches and fifty-five level and craft developments', () => {
     expect(BUILDINGS.map((building) => building.id)).toEqual([
       'ger',
       'archery',
@@ -32,10 +34,10 @@ describe('Mongolian-inspired camp branches', () => {
       'provisions',
       'relay',
     ]);
-    expect(BUILDINGS.reduce((sum, building) => sum + building.paths.length, 0)).toBe(37);
-    expect(campBranches(createRun()).flatMap((branch) => branch.nodes)).toHaveLength(45);
+    expect(BUILDINGS.reduce((sum, building) => sum + building.paths.length, 0)).toBe(55);
+    expect(campBranches(createRun()).flatMap((branch) => branch.nodes)).toHaveLength(63);
     for (const branch of campBranches(createRun()))
-      expect(treeLevels(branch.nodes)).toHaveLength(3);
+      expect(treeLevels(branch.nodes).length).toBeGreaterThanOrEqual(3);
     for (const building of BUILDINGS) {
       expect(new Set(building.paths.map((path) => path.id)).size).toBe(building.paths.length);
       for (const target of building.paths) {

@@ -43,6 +43,7 @@ describe('portable camp development effects', () => {
     };
     try {
       const run = createRun();
+      delete run.clan.estate; // Legacy craft-price and effect contract.
       run.phase = 'building';
       run.clan.materials = 200;
       expect(buildStructure(run, 'archery', 'tested-mastery')).toBe(false);
@@ -58,6 +59,7 @@ describe('portable camp development effects', () => {
       expect(buildStructure(run, 'archery')).toBe(false);
       expect(run).toEqual(before);
       const alternate = createRun();
+      delete alternate.clan.estate;
       alternate.phase = 'building';
       alternate.clan.materials = 200;
       buildStructure(alternate, 'archery');

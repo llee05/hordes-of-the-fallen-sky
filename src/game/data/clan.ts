@@ -1,3 +1,4 @@
+import { extendCampBuilding } from './campEstate';
 import { GAME } from '../config';
 import type {
   BuildingId,
@@ -9,6 +10,11 @@ import type {
 } from '../types';
 
 export interface BuildingPathDefinition {
+  level?: number;
+  minTier?: number;
+  minLevel?: number;
+  workers?: number;
+  requiresBuildings?: readonly { building: BuildingId; level: number }[];
   effects?: CampEffectDefinition;
   id: string;
   title: string;
@@ -21,6 +27,9 @@ export interface BuildingPathDefinition {
 }
 
 export interface BuildingDefinition {
+  minTier?: number;
+  maxLevel?: number;
+  flavour?: string;
   effects?: CampEffectDefinition;
   id: BuildingId;
   title: string;
@@ -43,7 +52,7 @@ function welcomePeople(run: RunState, amount: number): void {
 
 const C = GAME.camp;
 
-export const BUILDINGS: readonly BuildingDefinition[] = [
+const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
   {
     id: 'ger',
     category: 'Survival',
@@ -503,6 +512,8 @@ export const BUILDINGS: readonly BuildingDefinition[] = [
     ],
   },
 ];
+
+export const BUILDINGS: readonly BuildingDefinition[] = ORIGINAL_BUILDINGS.map(extendCampBuilding);
 
 export const REGIONS = [
   {
