@@ -475,3 +475,23 @@ them. Seers seek firing positions around 370 units and mark a 75-unit danger zon
 for 1.2 seconds before it strikes. All ground roles obey the location's navigation.
 Archers skip targets occluded by terrain when a clear target is available. Camp
 perimeter contact continues to cancel movement and uses the existing attack clock.
+
+### Crossing encounters and geography
+
+Each approach now has an optional, warned encounter after 18% travel progress.
+River approaches carve a broad actual ford into the area's current materials and
+send six marked attackers from opposite banks. Ridge approaches add two weathered
+shoulders around the protected caravan corridor and an ambush of four marked
+attackers ahead. Blue-banner approaches send five raiders and a painted household
+escort that moves toward the caravan using terrain navigation when the Khan stays
+nearby and threats are cleared. Eight seconds of close enemy pressure scatters the
+optional escort; two protected seconds beside the column secures it.
+
+Defeating the river wave grants 12 additional resolve at arrival; clearing the ridge
+ambush grants 10 materials and six resolve; bringing the additional households in
+grants two people and six resolve. These benefits are bounded, once-only successful
+arrival transactions. The original route rewards, travel duration, provisions
+forecast, and victory conditions remain valid even if an optional encounter fails.
+There are no mandatory stops or narrow gates. A departure rebuilds the current
+landscape with route geography using the existing renderer, then safely places
+live actors on connected ground. Camp arrival restores the destination landscape.

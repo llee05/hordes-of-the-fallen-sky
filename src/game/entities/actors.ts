@@ -15,6 +15,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   chargeTimer = 0;
   burning = 0;
   objectiveId?: number;
+  crossingId?: string;
   tactics = createEnemyTactics();
   pinned = 0;
   lastGallop = -1;

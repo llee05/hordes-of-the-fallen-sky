@@ -14,6 +14,8 @@ import { campShelters } from '../state/campLife';
 import { barrierContact, campBoundary } from '../state/campBarrier';
 import { SteppeLandscape } from '../assets/SteppeLandscape';
 import { TerrainCollision } from '../terrain/TerrainCollision';
+import { advanceCrossingEncounter } from '../state/crossingEncounters';
+import { CROSSING_ENCOUNTERS } from '../data/crossings';
 import { advanceMountedCombat, spendMountedVolley, retreatShot } from '../state/mountedCombat';
 import {
   advanceCharge,
@@ -104,6 +106,7 @@ export class ArenaScene extends Phaser.Scene {
   private landscape!: SteppeLandscape;
   private terrainCollision!: TerrainCollision;
   private clanLife!: ClanLife;
+  private crossingMarkers!: FieldMarkers;
   private fieldMarkers!: FieldMarkers;
   private campBarrier!: CampBarrier;
   private campPopulation = -1;
@@ -238,6 +241,7 @@ export class ArenaScene extends Phaser.Scene {
     createPainterlyEffects(this);
     this.defeats = new DefeatSprites(this);
     this.fieldMarkers = new FieldMarkers(this);
+    this.crossingMarkers = new FieldMarkers(this);
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.landscape = new SteppeLandscape(this);
     const center = GAME.worldSize / 2;
@@ -757,6 +761,22 @@ export class ArenaScene extends Phaser.Scene {
       this.packedGers.push({ image, x, y });
     }
     this.packingRemaining = 2.4;
+    this.landscape.setRegion(this.run.clan.region, currentLocation(this.run), id);
+    const navigation = this.landscape.navigation;
+    this.terrainCollision.setTerrain(navigation);
+    if (navigation)
+      for (const actor of [
+        this.player,
+        ...this.enemies.getChildren(),
+        ...this.gems.getChildren(),
+      ] as (Enemy | Gem)[]) {
+        if (!actor.active) continue;
+        const safe = navigation.nearestWalkable(actor);
+        if (safe) {
+          actor.setPosition(safe.x, safe.y);
+          actor.body?.updateFromGameObject();
+        }
+      }
     this.refreshCamp();
     this.setPhase('playing');
     this.audio.play('depart');
@@ -930,6 +950,7 @@ export class ArenaScene extends Phaser.Scene {
     syncFieldState(this.run);
     if (advanceEncounters(this.run)) this.audio.play('encounter');
     this.updateFieldObjectives(dt);
+    this.updateCrossing(dt);
     this.updateEnemies(dt);
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
       this.finish('dead');
@@ -1045,7 +1066,13 @@ export class ArenaScene extends Phaser.Scene {
 
   private spawnEnemy(
     forced?: EnemyDefinition,
-    directive?: { point?: { x: number; y: number }; angle?: number; objectiveId?: number },
+    directive?: {
+      point?: { x: number; y: number };
+      angle?: number;
+      objectiveId?: number;
+      crossingId?: string;
+      campOnly?: boolean;
+    },
   ): boolean {
     if (this.enemies.countActive(true) >= GAME.maxEnemies) return false;
     const selection = encounterEnemy(this.run);
@@ -1058,7 +1085,10 @@ export class ArenaScene extends Phaser.Scene {
       (['warning', 'assault', 'elite'].includes(plan.phase)
         ? plan.angle + Phaser.Math.FloatBetween(-0.5, 0.5)
         : Phaser.Math.FloatBetween(0, Math.PI * 2));
-    const anchor = !isKhanActive(this.run) || Math.random() < 0.45 ? this.camp : this.player;
+    const anchor =
+      directive?.campOnly || !isKhanActive(this.run) || Math.random() < 0.45
+        ? this.camp
+        : this.player;
     const viewWidth = camera.width / camera.zoom;
     const viewHeight = camera.height / camera.zoom;
     const view = {
@@ -1136,6 +1166,7 @@ export class ArenaScene extends Phaser.Scene {
     enemy.lastGallop = -1;
     enemy.dangerTimer = GAME.tactics.seerEvery;
     enemy.objectiveId = directive?.objectiveId;
+    enemy.crossingId = directive?.crossingId;
     if (isBoss) {
       this.boss = enemy;
       this.run.clan.message =
@@ -1147,6 +1178,72 @@ export class ArenaScene extends Phaser.Scene {
     enemy.preparingAttack = false;
     if (!forced && selection.elite) this.run.encounters.eliteSpawned = true;
     return true;
+  }
+
+  private updateCrossing(dt: number): void {
+    const c = this.run.crossing,
+      nav = this.landscape.navigation;
+    if (this.run.clan.stage !== 'migration' || !c) {
+      this.crossingMarkers.update();
+      return;
+    }
+    let threats = 0;
+    if (c.escort)
+      for (const e of this.enemies.getChildren() as Enemy[])
+        if (e.active && Math.hypot(e.x - c.escort.x, e.y - c.escort.y) < 160) threats++;
+    if (advanceCrossingEncounter(this.run, dt, this.player, this.camp, threats))
+      this.audio.play('encounter');
+    if (c.phase === 'warning' && c.route === 'refuge' && !c.escort) {
+      const desired = { x: this.camp.x + 380, y: this.camp.y + 200 };
+      const point = nav?.nearestWalkable(desired) ?? desired;
+      c.escort = { x: point.x, y: point.y, progress: 0, exposure: 0, joined: false, lost: false };
+    }
+    const definition = CROSSING_ENCOUNTERS[c.route];
+    c.spawnDelay = Math.max(0, c.spawnDelay - dt);
+    if (c.phase === 'assault' && c.spawned < definition.guards && c.spawnDelay <= 0) {
+      const score = this.run.elapsed + this.run.clan.region * 80;
+      const id =
+        c.route === 'ridge'
+          ? c.spawned % 2
+            ? 'hollow-seer'
+            : 'brute'
+          : c.spawned % 2
+            ? 'ghost-rider'
+            : 'bat';
+      const enemy = ENEMIES.find((e) => e.id === id && e.unlockAt <= score) ?? ENEMIES[0]!;
+      const angle =
+        c.route === 'river'
+          ? c.spawned % 2
+            ? Math.PI / 2
+            : -Math.PI / 2
+          : c.route === 'ridge'
+            ? 0
+            : Math.PI;
+      if (this.spawnEnemy(enemy, { angle, crossingId: c.key, campOnly: true })) {
+        c.spawned++;
+        c.spawnDelay = GAME.crossings.spawnInterval;
+      } else c.spawnDelay = GAME.spawning.retryInterval;
+    }
+    const e = c.escort;
+    if (
+      e &&
+      !e.joined &&
+      !e.lost &&
+      isKhanActive(this.run) &&
+      threats === 0 &&
+      Math.hypot(e.x - this.player.x, e.y - this.player.y) < GAME.field.escortLeash
+    ) {
+      const to = nav?.waypoint(e, this.camp) ?? this.camp,
+        distance = Math.max(1, Math.hypot(to.x - e.x, to.y - e.y));
+      const step = Math.min(1, (GAME.field.escortSpeed * dt) / distance),
+        desired = { x: e.x + (to.x - e.x) * step, y: e.y + (to.y - e.y) * step };
+      Object.assign(e, nav?.slide(e, desired, 18) ?? desired);
+    }
+    this.crossingMarkers.update(
+      e && !e.joined && !e.lost
+        ? { kind: 'refugees', status: 'returning', x: e.x, y: e.y }
+        : undefined,
+    );
   }
 
   private updateFieldObjectives(dt: number): void {
@@ -1670,6 +1767,8 @@ export class ArenaScene extends Phaser.Scene {
     this.audio.play('defeat', { x, y });
     this.enemyShadows.get(enemy)?.setVisible(false);
     this.run.kills += 1;
+    if (this.run.crossing && enemy.crossingId === this.run.crossing.key)
+      this.run.crossing.defeated++;
     const objective = this.run.field.objective;
     if (
       objective?.status === 'available' &&

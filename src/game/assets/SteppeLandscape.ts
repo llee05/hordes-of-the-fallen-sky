@@ -22,7 +22,7 @@ import { MountainRenderer } from '../terrain/MountainRenderer';
 import { World3DRenderer } from '../world3d/World3DRenderer';
 import { wantsWorld3D } from '../world3d/worldProjection';
 import { ComposedTerrain } from '../world3d/ComposedTerrain';
-import { composedRegion } from '../data/worldRegions';
+import { crossingLandscape } from '../data/crossingLandscapes';
 
 /** Painted terrain and scenery; only ArenaScene owns simulation and collision geometry. */
 export class SteppeLandscape {
@@ -57,9 +57,10 @@ export class SteppeLandscape {
     });
   }
 
-  setRegion(region: number, location?: MigrationLocation): void {
+  setRegion(region: number, location?: MigrationLocation, route?: string): void {
     const id = location?.id ?? REGIONS[region]?.id ?? LOCATIONS[0]!.id;
-    this.definition = LANDSCAPES[id];
+    const composition = crossingLandscape(id, route);
+    this.definition = composition.landscape;
     this.mountains?.destroy();
     this.world3d?.destroy();
     this.mountains = undefined;
@@ -68,7 +69,7 @@ export class SteppeLandscape {
     this.navigation = undefined;
     if (wantsWorld3D() && this.scene.game.renderer.type === Phaser.WEBGL) {
       try {
-        const terrain = new ComposedTerrain(composedRegion(id), this.definition.water);
+        const terrain = new ComposedTerrain(composition.terrain, this.definition.water);
         this.navigation = new TerrainNavigation(terrain);
         this.world3d = new World3DRenderer(this.scene, terrain, this.navigation);
         this.scene.cameras.main.setAlpha(0);

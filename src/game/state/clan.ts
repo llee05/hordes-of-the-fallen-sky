@@ -5,6 +5,7 @@ import {
   reserveBuildingSlot,
 } from './campEstate';
 import { rememberClan } from './legacy';
+import { beginCrossingEncounter, settleCrossingEncounter } from './crossingEncounters';
 import { GAME } from '../config';
 import { BUILDINGS, ROUTES } from '../data/clan';
 import type { BuildingId, ClanState, Formation, RunState } from '../types';
@@ -217,6 +218,7 @@ export function beginMigration(
   clan.routeId = route.id;
   clan.destinationId = destination.id;
   clan.migrationProgress = 0;
+  beginCrossingEncounter(run);
   clan.identity[route.doctrine] += 2;
   clan.message = `The gers are packed for ${destination.name}. Stay close to the caravan and bring your people through.`;
   rememberClan(
@@ -332,6 +334,7 @@ export function advanceClan(
   }
   if (clan.population === 0 || clan.integrity === 0) return 'lost';
   if (clan.stage === 'migration' && clan.migrationProgress >= 1) {
+    settleCrossingEncounter(run);
     const route = ROUTES.find((r) => r.id === clan.routeId)!;
     const destination = arrivalLocation(run);
     clan.food = Math.max(0, clan.food + route.food + bonuses.arrivalFood);

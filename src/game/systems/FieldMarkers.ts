@@ -13,7 +13,7 @@ export class FieldMarkers {
     this.ring = scene.add.graphics().setDepth(4);
     this.warnings = scene.add.graphics().setDepth(5);
   }
-  update(objective?: FieldObjective): void {
+  update(objective?: Pick<FieldObjective, 'kind' | 'x' | 'y' | 'status'>): void {
     const visible = !!objective && ['available', 'returning'].includes(objective.status);
     this.ring.clear();
     if (!visible) {

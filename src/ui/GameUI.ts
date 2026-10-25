@@ -1,3 +1,4 @@
+import { CROSSING_ENCOUNTERS } from '../game/data/crossings';
 import { encounterPlan } from '../game/state/encounters';
 import { FIELD_OBJECTIVES } from '../game/data/fieldObjectives';
 import { GAME } from '../game/config';
@@ -296,6 +297,14 @@ export class GameUI {
       'encounter-status',
       `${encounter.title}${['warning', 'assault', 'elite'].includes(encounter.phase) ? ` · ${groundDirection} approach` : ''} · ${Math.ceil(encounter.remaining)}s`,
     );
+    const crossing = run.clan.stage === 'migration' ? run.crossing : undefined;
+    if (crossing) {
+      const c = CROSSING_ENCOUNTERS[crossing.route];
+      this.text(
+        'encounter-status',
+        `${c.title} · ${crossing.phase === 'waiting' ? 'Watch the approaches' : crossing.phase === 'warning' ? 'Attack approaching' : crossing.route === 'refuge' ? (crossing.escort?.joined ? 'Households secured' : crossing.escort?.lost ? 'Households scattered' : c.task) : `${crossing.defeated}/${c.guards} raiders defeated`} · ${c.reward}`,
+      );
+    }
     const objective = run.field.objective;
     const visibleObjective = !!objective && ['available', 'returning'].includes(objective.status);
     this.get('field-objective').hidden = !visibleObjective;

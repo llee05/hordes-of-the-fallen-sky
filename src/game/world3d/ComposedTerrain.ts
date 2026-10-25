@@ -101,7 +101,9 @@ export class ComposedTerrain extends MountainHeightfield {
         ? 1
         : 1 + (coherentNoise(x / 240, z / 270, this.seed + 719) - 0.5) * 0.07;
       const height = shelf.rise * weathering + peak;
-      const bankGrade = river ? smoothstep(8, 72 + (shelf.rise + (shelf.peak ?? 0)) * 2, shore) : 1;
+      const bankGrade = river
+        ? smoothstep(8, 72 + (shelf.rise + (shelf.peak ?? 0)) * (shelf.camp ? 3 : 2), shore)
+        : 1;
       base += height * ramp * grade * (1 - shelter) * bankGrade;
       const rise = height * (1 - ramp) * (1 - shelter) * bankGrade;
       // Round small cliff remnants into the riverbank rather than leaving dark slivers.
