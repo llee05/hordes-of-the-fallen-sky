@@ -36,13 +36,13 @@ With your Steamworks build account and SteamCMD/SDK installed, you can run the g
 
 To preserve existing profiles, the game retains its internal `Gloam/saves/profile.json` save path beneath the OS application-data directory. Keep Chromium caches and other Electron user-data files out of cloud synchronization.
 
-For an initial Auto-Cloud configuration, use a Windows `WinAppDataRoaming` root with subdirectory `Gloam/saves`, pattern `profile.json`, non-recursive, and cross-platform OS restriction. Configure root overrides for macOS `MacAppSupport` with `Gloam/saves`, and Linux `LinuxHome` with `.config/Gloam/saves`, using replacement paths as needed. For a customized Linux `XDG_CONFIG_HOME`, adjust the rule or adopt a fixed cloud-save location before release. See Valve's [Auto-Cloud configuration guide](https://partner.steamgames.com/doc/features/cloud).
+For an initial Auto-Cloud configuration, use a Windows `WinAppDataRoaming` root with subdirectory `Gloam/saves`, patterns `profile.json`, `expedition-*.json`, and `expedition-*.json.bak`, non-recursive (exclude `.tmp` files), and cross-platform OS restriction. Configure root overrides for macOS `MacAppSupport` with `Gloam/saves`, and Linux `LinuxHome` with `.config/Gloam/saves`, using replacement paths as needed. For a customized Linux `XDG_CONFIG_HOME`, adjust the rule or adopt a fixed cloud-save location before release. See Valve's [Auto-Cloud configuration guide](https://partner.steamgames.com/doc/features/cloud).
 
 The current profile is per OS user, rather than per Steam account. Before release, decide how saves should behave when several Steam accounts share a machine; SteamID-scoped profiles require actual Steamworks user identity. Cloud behavior must be tested with the real App ID across machines. The generator does not enable Steam Cloud in the partner portal.
 
 ## Steamworks integration
 
-The desktop bridge is intentionally small: profile load/save, native fullscreen, and quit. Steam achievements, stats, ownership checks, overlay activation, and Steam Input action manifests are not connected yet. Select and test a Steamworks binding against the pinned Electron runtime before adding these APIs to the main process and exposing narrow operations through the preload. Keep renderer Node integration disabled.
+The desktop bridge is intentionally small: profile load/save, four fixed expedition slots, a save-before-close handshake, native fullscreen, and quit. Steam achievements, stats, ownership checks, overlay activation, and Steam Input action manifests are not connected yet. Select and test a Steamworks binding against the pinned Electron runtime before adding these APIs to the main process and exposing narrow operations through the preload. Keep renderer Node integration disabled.
 
 Regular controllers already work through the standard Gamepad mapping. Steam Input can emulate that mapping; configure and test the appropriate controller layout in Steamworks. This does not replace physical controller and Steam Deck testing.
 

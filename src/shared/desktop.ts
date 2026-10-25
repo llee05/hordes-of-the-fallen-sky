@@ -9,6 +9,8 @@ export interface DesktopBridge {
   loadExpedition(slot: SaveSlot): Promise<ExpeditionSave>;
   saveExpedition(slot: SaveSlot, save: ExpeditionSave): Promise<void>;
   deleteExpedition(slot: SaveSlot): Promise<void>;
+  onCloseRequested(listener: () => void): () => void;
+  completeClose(saved: boolean): Promise<void>;
   toggleFullscreen(): Promise<boolean>;
   isFullscreen(): Promise<boolean>;
   quit(): Promise<void>;

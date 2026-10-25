@@ -10,6 +10,7 @@ import './story.css';
 import './progression.css';
 import './camp.css';
 import './migration.css';
+import './saves.css';
 if (import.meta.env.DEV) void import('./developer.css');
 import { createGame } from './game/createGame';
 import { ArenaScene } from './game/scenes/ArenaScene';
@@ -21,7 +22,11 @@ async function bootstrap(): Promise<void> {
   const scene = new ArenaScene(platform);
   const ui = new GameUI(document.querySelector<HTMLElement>('#app')!, scene, platform);
   const game = createGame(ui.canvasParent, scene);
+  const stopCloseListener = platform.desktop?.onCloseRequested(() => {
+    void scene.prepareToClose().then((saved) => platform.desktop?.completeClose(saved));
+  });
   game.events.once('destroy', () => ui.destroy());
+  game.events.once('destroy', () => stopCloseListener?.());
 
   // Local inspection and browser tests; this reference is removed from production.
   if (import.meta.env.DEV) Object.assign(window, { __gloam: { game, scene } });

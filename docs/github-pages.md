@@ -73,7 +73,9 @@ paths do not need changing.
 - Best journey time and sound preference use browser storage on that browser and
   origin. They are separate from desktop saves and are lost if site data is cleared.
   With storage disabled, the game still starts; preferences cannot persist.
-- Expeditions are not resumable. Reloading or closing the tab ends the current run.
+- Full expeditions can resume from three manual slots or the last completed autosave.
+  Browser saves use storage on this origin and disappear if site data is cleared.
+  Save before closing the tab; the desktop save-on-close handshake is unavailable here.
 - All artwork and fonts are served from the site. Sounds are synthesized locally.
   The initial asset download is approximately 34 MB; there is no offline cache or
   service worker.

@@ -56,7 +56,7 @@ The mountain passage visibly clears during the final three-minute defense. Survi
 
 The four named companions are voices within an abstract population. The prototype does not assign individual casualties. Below five people, camp scenes use a remnant account; an ending with losses avoids assuming which named people survived. A one-person ending uses singular narration. No scene forces a death to serve the plot.
 
-Defeat shows the actual journey result and leaves the memories available. A restart clears the story, choices, crossings, losses, and build. Only the existing longest-journey and sound preferences persist between app launches. Active expeditions and their transcripts are not resumable saves.
+Defeat shows the actual journey result and leaves the memories available. A restart clears the story, choices, crossings, losses, and build. Full expedition saves preserve active choices, resolved transcripts, crossings, losses, and clan memories across app launches. Loading does not resolve a choice or grant its benefit again. See [the expedition-save contract](expedition-saves.md).
 
 ## Implementation and scope
 

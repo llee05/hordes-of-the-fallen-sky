@@ -141,7 +141,7 @@ Choose a river crossing for food and horses, an exposed ridge for materials and 
 
 The journey's chapter pressures follow the clan through whichever camps it chooses. After the first crossing, the White Silence reduces grazing and caravan speed. After the second, the Earth That Walks brings ground eruptions that warn before striking. At the fictional Heart of the Steppe, the Red Eclipse weakens rituals and brings the Skybreaker. Protect your people for three minutes until the passage opens. **Victory depends on saving the clan; killing the boss is optional.** Defeating it restores resolve.
 
-In a story expedition, victory opens **A place beside the fire**, a skippable epilogue reflecting survivors, recorded losses, clan identity, the clerk's shared tally, and the Skybreaker's fate. Journey results follow, with the epilogue available to read again. Story choices and memories reset with each new expedition; they do not add permanent unlocks or a resumable save.
+In a story expedition, victory opens **A place beside the fire**, a skippable epilogue reflecting survivors, recorded losses, clan identity, the clerk's shared tally, and the Skybreaker's fate. Journey results follow, with the epilogue available to read again. Story choices and memories reset with each new expedition and are preserved when resuming a saved expedition; they do not add permanent unlocks.
 
 An expedition is intended to take about 15 minutes with roughly three minutes of growth per camp. Earlier departures shorten the journey; longer stays increase danger. This is a prototype balance, not a fixed time limit.
 
@@ -205,7 +205,11 @@ To preserve existing profiles, native saves retain the original internal **Gloam
 | Linux   | `${XDG_CONFIG_HOME:-~/.config}/Gloam/saves/profile.json` |
 | macOS   | `~/Library/Application Support/Gloam/saves/profile.json` |
 
-Longest journey and sound preference persist. Writes are validated, serialized, and atomically renamed. Native saves never use the install directory or localStorage. Browser preview saves remain separate. A run itself is not resumable after quitting.
+**Continue expedition** resumes the latest full save. **Saved expeditions**, on the title, pause, and results screens, offers three manual slots plus an autosave, with location, journey time, population, level, and save date. Overwriting, deleting, and loading over a live expedition require confirmation. Loaded expeditions open paused (or at their unresolved camp story); no simulation runs while the game is closed. **Save and return to title** keeps the current journey. **New Game** starts fresh; the existing **Continue clan camp** still carries only the portable camp into a fresh journey.
+
+Autosaves run every 30 active seconds, on pausing, after progression/story/travel checkpoints, and before a normal desktop close or Quit. Normal saves preserve the Khan and succession timer, research and unspent knowledge, resources and facilities, migration and objectives, story transcripts, enemies, projectiles, dropped XP, and ability/encounter cooldowns. Developer and cheated runs cannot overwrite normal saves. Manual slots remain available after defeat or victory.
+
+Profile preferences remain in `profile.json`; full saves use `expedition-auto.json` and `expedition-slot-1.json` through `expedition-slot-3.json` beside it. Writes are validated, queued, flushed, and atomically renamed, with a previous-save `.bak` recovery copy. Damaged or incompatible slots show their status; failed saves never report success. A failed close-time save lets you keep playing and retry or explicitly quit without saving. Native saves never use the install directory or localStorage. Browser preview saves remain separate. See [the save-system contract](docs/expedition-saves.md).
 
 ## Project map
 

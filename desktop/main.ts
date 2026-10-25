@@ -23,6 +23,36 @@ app.setPath('userData', userData ? resolve(userData) : join(app.getPath('appData
 let window: BrowserWindow | null = null;
 const profiles = new ProfileStore(join(app.getPath('userData'), 'saves'));
 let quitting = false;
+let rendererCloseReady = false;
+let closeRequested = false;
+let closeTimer: ReturnType<typeof setTimeout> | undefined;
+
+function requestClose(): void {
+  if (closeRequested || !window) return;
+  closeRequested = true;
+  window.webContents.send('app:prepare-close');
+  closeTimer = setTimeout(() => {
+    closeRequested = false;
+    if (!window) return;
+    void dialog
+      .showMessageBox(window, {
+        type: 'warning',
+        title: 'The game is still saving',
+        message:
+          'The game did not finish saving. Keep it open to retry, or quit using the last completed save.',
+        buttons: ['Keep open', 'Quit without saving'],
+        defaultId: 0,
+        cancelId: 0,
+      })
+      .then(({ response }) => {
+        if (response === 1) {
+          rendererCloseReady = false;
+          quitting = true;
+          app.quit();
+        }
+      });
+  }, 15000);
+}
 
 function trusted(event: IpcMainInvokeEvent): void {
   const expected = devUrl ?? pathToFileURL(indexFile).href;
@@ -92,6 +122,12 @@ async function createWindow(): Promise<void> {
     window?.webContents.send('window:fullscreen-changed', false),
   );
   window.once('ready-to-show', () => window?.show());
+  window.on('close', (event) => {
+    if (!quitting && rendererCloseReady && !window?.webContents.isCrashed()) {
+      event.preventDefault();
+      requestClose();
+    }
+  });
   window.on('closed', () => {
     window = null;
   });
@@ -138,10 +174,45 @@ ipcMain.handle('app:quit', (event) => {
   trusted(event);
   setImmediate(() => app.quit());
 });
+ipcMain.handle('app:close-ready', (event) => {
+  trusted(event);
+  rendererCloseReady = true;
+});
+ipcMain.handle('app:complete-close', async (event, saved: unknown) => {
+  trusted(event);
+  if (!closeRequested || typeof saved !== 'boolean') return;
+  clearTimeout(closeTimer);
+  closeRequested = false;
+  if (!saved) {
+    if (!window) return;
+    const { response } = await dialog.showMessageBox(window, {
+      type: 'warning',
+      title: 'The expedition could not be saved',
+      message:
+        'The last completed save is still available. Keep the game open to retry, or quit without saving the latest changes.',
+      buttons: ['Keep open', 'Quit without saving'],
+      defaultId: 0,
+      cancelId: 0,
+    });
+    if (response === 1) {
+      rendererCloseReady = false;
+      quitting = true;
+      setImmediate(() => app.quit());
+    }
+    return;
+  }
+  await profiles.flush();
+  quitting = true;
+  setImmediate(() => app.quit());
+});
 
 app.on('before-quit', (event) => {
   if (quitting) return;
   event.preventDefault();
+  if (rendererCloseReady && window && !window.webContents.isCrashed()) {
+    requestClose();
+    return;
+  }
   quitting = true;
   void profiles.flush().finally(() => app.quit());
 });

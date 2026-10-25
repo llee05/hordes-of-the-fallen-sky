@@ -45,7 +45,7 @@ import {
   type AreaThreat,
 } from '../state/areaThreats';
 import { GAME } from '../config';
-import { SKYBREAKER, encounterSpawnDelay } from '../data/enemies';
+import { ALL_ENEMIES, SKYBREAKER, encounterSpawnDelay } from '../data/enemies';
 import {
   advanceEncounters,
   encounterEnemy,
@@ -111,6 +111,14 @@ import { ActionKeys } from '../systems/ActionKeys';
 import { GamepadInput } from '../systems/GamepadInput';
 import type { GamePlatform } from '../../platform/GamePlatform';
 import type { BuildingId, EnemyDefinition, HudSnapshot, RunState } from '../types';
+import {
+  captureExpedition,
+  decodeExpedition,
+  type BodyArchive,
+  type ProjectileArchive,
+  type WorldArchive,
+} from '../state/expeditionArchive';
+import type { ExpeditionSave, SaveSlot } from '../../shared/expeditionSave';
 
 export interface ArenaCallbacks {
   onHud: (snapshot: HudSnapshot) => void;
@@ -202,6 +210,15 @@ export class ArenaScene extends Phaser.Scene {
   private touchMove = new Phaser.Math.Vector2();
   private dragOrigin?: Phaser.Math.Vector2;
   private joystick?: Phaser.GameObjects.Graphics;
+  private expeditionStarted = false;
+  private saveBusy = false;
+  private pendingSceneSave: Promise<boolean> = Promise.resolve(true);
+  private autosaveRemaining = 30;
+  private checkpointQueued = false;
+  private checkpointDirty = false;
+  private saveGeneration = 0;
+  private saveMenuReturn: 'ready' | 'paused' | 'dead' | 'won' = 'ready';
+  private saveMessage = '';
 
   constructor(private readonly platform: GamePlatform) {
     super('arena');
@@ -219,8 +236,15 @@ export class ArenaScene extends Phaser.Scene {
     preloadPainterlyArt(this);
   }
 
-  create(data?: { developerLevel?: string }): void {
+  create(data?: { developerLevel?: string; expedition?: ExpeditionSave }): void {
     this.audio.reset();
+    this.saveGeneration++;
+    this.expeditionStarted = false;
+    this.saveBusy = false;
+    this.autosaveRemaining = 30;
+    this.checkpointQueued = false;
+    this.checkpointDirty = false;
+    this.saveMessage = '';
     const developerRun =
       import.meta.env.DEV && data?.developerLevel
         ? createDeveloperRun(data.developerLevel)
@@ -491,7 +515,355 @@ export class ArenaScene extends Phaser.Scene {
       this.campBarrier.relocate(this.run, this.camp);
       this.invulnerable = GAME.khan.returnProtection;
       this.beginExpedition();
-    } else this.publishPhase();
+    } else if (data?.expedition) this.restoreExpedition(data.expedition);
+    else this.publishPhase();
+  }
+
+  get canSaveExpedition(): boolean {
+    return (
+      this.expeditionStarted &&
+      !this.developerRun &&
+      !this.run.legacy.outcome &&
+      this.run.clan.population > 0 &&
+      this.run.clan.integrity > 0
+    );
+  }
+
+  saveExpedition(slot: SaveSlot = 'auto'): Promise<boolean> {
+    if (!this.canSaveExpedition) return Promise.resolve(false);
+    const generation = this.saveGeneration;
+    const operation = this.pendingSceneSave
+      .catch(() => false)
+      .then(() => (generation === this.saveGeneration ? this.persistExpedition(slot) : false));
+    this.pendingSceneSave = operation;
+    return operation;
+  }
+
+  private async persistExpedition(slot: SaveSlot): Promise<boolean> {
+    if (!this.canSaveExpedition || this.saveBusy) return false;
+    const generation = this.saveGeneration;
+    this.saveBusy = true;
+    this.checkpointDirty = false;
+    this.saveMessage = 'Saving…';
+    if (this.run.phase === 'saves') this.publishPhase();
+    try {
+      const snapshot = captureExpedition(this.run, this.captureWorld());
+      await this.platform.saveExpedition(slot, snapshot);
+      if (generation !== this.saveGeneration) return true;
+      this.autosaveRemaining = 30;
+      this.saveMessage = slot === 'auto' ? 'Autosave complete.' : 'Expedition saved.';
+      return true;
+    } catch {
+      if (generation !== this.saveGeneration) return false;
+      this.saveMessage =
+        'Saving failed. Your previous save is still available. Check available storage and try again.';
+      this.callbacks?.onSaveError();
+      return false;
+    } finally {
+      if (generation === this.saveGeneration) {
+        this.saveBusy = false;
+        if (this.run.phase === 'saves') this.publishPhase();
+        if (this.checkpointDirty) this.requestCheckpoint();
+      }
+    }
+  }
+
+  openSaves(): void {
+    if (!['ready', 'paused', 'dead', 'won'].includes(this.run.phase)) return;
+    this.saveMenuReturn = this.run.phase as typeof this.saveMenuReturn;
+    this.saveMessage = this.platform.saveStorageError
+      ? 'Save storage could not be read. Try opening this menu again.'
+      : '';
+    this.setPhase('saves');
+    void this.platform
+      .refreshSaves()
+      .then(() => {
+        if (this.run.phase === 'saves') this.publishPhase();
+      })
+      .catch(() => {
+        this.saveMessage = 'Save storage could not be read.';
+        if (this.run.phase === 'saves') this.publishPhase();
+      });
+  }
+
+  async loadSavedExpedition(slot: SaveSlot): Promise<void> {
+    if (this.saveBusy) return;
+    this.saveBusy = true;
+    this.saveMessage = 'Loading…';
+    if (this.run.phase === 'saves') this.publishPhase();
+    try {
+      await this.loadExpedition(slot);
+    } catch (error) {
+      this.saveMessage = error instanceof Error ? error.message : 'This save could not be loaded.';
+      if (this.run.phase !== 'saves') {
+        this.saveMenuReturn = this.run.phase as typeof this.saveMenuReturn;
+        this.setPhase('saves');
+      }
+    } finally {
+      this.saveBusy = false;
+      if (this.run.phase === 'saves') this.publishPhase();
+    }
+  }
+
+  async deleteSavedExpedition(slot: SaveSlot): Promise<void> {
+    if (this.run.phase !== 'saves' || this.saveBusy) return;
+    this.saveBusy = true;
+    try {
+      await this.platform.deleteExpedition(slot);
+      this.saveMessage = 'Save deleted.';
+    } catch {
+      this.saveMessage = 'The save could not be deleted. Try again.';
+    } finally {
+      this.saveBusy = false;
+      this.publishPhase();
+    }
+  }
+
+  async saveAndReturnToTitle(): Promise<void> {
+    if (this.run.phase !== 'paused') return;
+    await this.platform.flush().catch(() => undefined);
+    if (this.canSaveExpedition && !(await this.saveExpedition())) return;
+    this.scene.restart({});
+  }
+
+  async prepareToClose(): Promise<boolean> {
+    if (this.run.phase === 'playing') this.setPhase('paused');
+    try {
+      await this.pendingSceneSave;
+      // A new write can recover from an earlier transient storage error.
+      await this.platform.flush().catch(() => undefined);
+      if (this.canSaveExpedition && !(await this.saveExpedition())) return false;
+      await this.platform.flush();
+      return true;
+    } catch {
+      this.callbacks?.onSaveError();
+      return false;
+    }
+  }
+
+  async loadExpedition(slot: SaveSlot): Promise<void> {
+    if (!['ready', 'paused', 'saves', 'dead', 'won'].includes(this.run.phase)) return;
+    const save = await this.platform.loadExpedition(slot);
+    // Validate completely before tearing down the current, still playable scene.
+    decodeExpedition(save);
+    this.audio.unlock();
+    this.scene.restart({ expedition: save });
+  }
+
+  private captureWorld(): WorldArchive {
+    const body = (
+      actor: Phaser.Physics.Arcade.Sprite | Phaser.Physics.Arcade.Image,
+    ): BodyArchive => ({
+      x: actor.x,
+      y: actor.y,
+      vx: actor.body!.velocity.x,
+      vy: actor.body!.velocity.y,
+      flip: actor.flipX,
+    });
+    const pool = this.enemies.getChildren() as Enemy[];
+    const shots = (group: Phaser.Physics.Arcade.Group): ProjectileArchive[] =>
+      (group.getChildren() as Projectile[])
+        .filter((p) => p.active)
+        .map((p) => ({
+          ...body(p),
+          damage: p.damage,
+          remaining: p.remaining,
+          fire: p.fire,
+          tempest: p.tempest,
+          turn: p.turn,
+          pierces: p.pierces,
+          pins: p.pins,
+          rotation: p.rotation,
+          tint: p.tintTopLeft,
+          previous: p.getData('terrain-previous') as { x: number; y: number } | undefined,
+          hits: [...p.hitTargets].map(([enemy, spawnId]) => ({
+            slot: pool.indexOf(enemy),
+            spawnId,
+          })),
+        }));
+    return {
+      player: { ...body(this.player), motion: this.playerMotion.capture() },
+      camp: { x: this.camp.x, y: this.camp.y },
+      facing: { x: this.facing.x, y: this.facing.y },
+      zoom: this.cameraZoom,
+      timers: {
+        spawnTimer: this.spawnTimer,
+        attackTimer: this.attackTimer,
+        dashTimer: this.dashTimer,
+        dashRemaining: this.dashRemaining,
+        invulnerable: this.invulnerable,
+        supportTimer: this.supportTimer,
+        wagonTimer: this.wagonTimer,
+        wardTimer: this.wardTimer,
+        hazardTimer: this.hazardTimer,
+      },
+      generations: pool.map((e) => e.spawnId),
+      enemies: pool.flatMap((e, slot) =>
+        e.active
+          ? [
+              {
+                ...body(e),
+                slot,
+                definition: e.definition.id,
+                state: {
+                  health: e.health,
+                  maxHealth: e.maxHealth,
+                  spawnId: e.spawnId,
+                  attackTimer: e.attackTimer,
+                  clanAttackTimer: e.clanAttackTimer,
+                  chargeTimer: e.chargeTimer,
+                  burning: e.burning,
+                  pinned: e.pinned,
+                  lastGallop: e.lastGallop,
+                  dangerTimer: e.dangerTimer,
+                  tacticalSlot: e.tacticalSlot,
+                  objectiveId: e.objectiveId,
+                  crossingId: e.crossingId,
+                  preparingAttack: e.preparingAttack,
+                  tactics: e.tactics,
+                },
+                motion: e.motion.capture(),
+              },
+            ]
+          : [],
+      ),
+      projectiles: shots(this.projectiles),
+      hostileShots: shots(this.hostileShots),
+      gems: (this.gems.getChildren() as Gem[])
+        .filter((g) => g.active)
+        .map((g) => ({ ...body(g), value: g.value, attracted: g.attracted })),
+      riders: this.riders.map((r, i) => ({
+        x: r.x,
+        y: r.y,
+        flip: r.flipX,
+        motion: this.riderMotions[i]!.capture(),
+      })),
+      support: this.patronSupport.capture(),
+      hazards: this.hazards.map(({ warning: _warning, ...hazard }) => hazard),
+      areaEncounter: this.areaEncounter,
+      areaThreats: this.areaThreats,
+    };
+  }
+
+  private restoreExpedition(save: ExpeditionSave): void {
+    const { run, world } = decodeExpedition(save);
+    this.run = run;
+    this.input.keyboard!.resetKeys();
+    this.expeditionStarted = true;
+    this.storiesEnabled = run.story.enabled;
+    this.guidanceEnabled = run.guidance.enabled;
+    Object.assign(this, world.timers);
+    this.areaEncounter = world.areaEncounter;
+    this.areaThreats = world.areaThreats;
+    this.landscape.setRegion(
+      run.clan.region,
+      currentLocation(run),
+      run.clan.stage === 'migration' ? run.clan.routeId : undefined,
+    );
+    this.terrainCollision.setTerrain(this.landscape.navigation);
+    this.camp.setPosition(world.camp.x, world.camp.y);
+    this.camp.setDepth(100 + world.camp.y);
+    this.campLabel
+      .setPosition(world.camp.x, world.camp.y - 112 * CAMP_VISUAL_SCALE)
+      .setText(run.clan.stage === 'migration' ? 'PROTECT THE CARAVAN  →' : 'YOUR CLAN');
+    this.refreshCamp();
+    this.campBarrier.relocate(run, this.camp);
+    this.player.enableBody(true, world.player.x, world.player.y, true, true);
+    this.player.setVelocity(world.player.vx, world.player.vy).setFlipX(world.player.flip);
+    this.facing.set(world.facing.x, world.facing.y);
+    this.playerMotion.restore(world.player.motion);
+    renderCharacter(this.player, this.playerMotion);
+    this.player.setDepth(100 + this.player.y);
+    this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
+    this.aura.setPosition(this.player.x, this.player.y);
+    if (!isKhanActive(run)) this.hideFallenKhan();
+    const pool = world.generations.map((spawnId, slot) => {
+      const enemy = this.enemies.create(0, 0, ...artTexture('wolf')) as Enemy;
+      const saved = world.enemies.find((e) => e.slot === slot);
+      if (!saved) {
+        enemy.spawnId = spawnId;
+        enemy.disableBody(true, true);
+        return enemy;
+      }
+      const definition = [...ALL_ENEMIES, SKYBREAKER].find((e) => e.id === saved.definition)!;
+      this.initializeEnemy(enemy, definition, saved.x, saved.y);
+      Object.assign(enemy, saved.state);
+      enemy.setVelocity(saved.vx, saved.vy).setFlipX(saved.flip);
+      enemy.motion.restore(saved.motion);
+      renderCharacter(enemy, enemy.motion);
+      enemy.setDepth(100 + enemy.y);
+      this.enemyShadows
+        .get(enemy)!
+        .setPosition(enemy.x + 6, enemy.y + 4)
+        .setDepth(99 + enemy.y);
+      return enemy;
+    });
+    const restoreShots = (
+      group: Phaser.Physics.Arcade.Group,
+      shots: ProjectileArchive[],
+      hostile: boolean,
+    ): void => {
+      for (const saved of shots) {
+        const p = group.get(saved.x, saved.y, hostile ? 'gem' : 'bolt') as Projectile;
+        p.enableBody(true, saved.x, saved.y, true, true);
+        const { x: _x, y: _y, vx, vy, flip, rotation, tint, previous, hits, ...state } = saved;
+        Object.assign(p, state);
+        p.setScale(hostile ? 1.1 : 1)
+          .setDepth(9200)
+          .setRotation(rotation)
+          .setTint(tint)
+          .setAlpha(1)
+          .setFlipX(flip)
+          .setVelocity(vx, vy);
+        const radius = hostile ? 5.4 / p.scaleX : 4.5;
+        p.setCircle(radius, p.width / 2 - radius, p.height / 2 - radius);
+        p.setData('terrain-previous', previous ?? { x: saved.x, y: saved.y });
+        p.hitTargets.clear();
+        for (const hit of hits) p.hitTargets.set(pool[hit.slot]!, hit.spawnId);
+      }
+    };
+    restoreShots(this.projectiles, world.projectiles, false);
+    restoreShots(this.hostileShots, world.hostileShots, true);
+    for (const saved of world.gems) {
+      const gem = this.gems.get(saved.x, saved.y, 'gem') as Gem;
+      gem.enableBody(true, saved.x, saved.y, true, true);
+      gem.setScale(0.85).setDepth(3).setVelocity(saved.vx, saved.vy);
+      gem.value = saved.value;
+      gem.attracted = saved.attracted;
+    }
+    world.riders.forEach((r, i) => {
+      this.riders[i]!.setPosition(r.x, r.y)
+        .setFlipX(r.flip)
+        .setVisible(i < riderCount(run))
+        .setDepth(100 + r.y);
+      this.riderShadows[i]!.setPosition(r.x + 7, r.y + 4)
+        .setVisible(i < riderCount(run))
+        .setDepth(99 + r.y);
+      this.riderMotions[i]!.restore(r.motion);
+      renderCharacter(this.riders[i]!, this.riderMotions[i]!);
+    });
+    this.patronSupport.restore(world.support);
+    this.hazards = world.hazards.map((h) => ({
+      ...h,
+      warning: this.add
+        .graphics()
+        .setDepth(5)
+        .lineStyle(2, 0xd49b79, 0.8)
+        .strokeCircle(h.x, h.y, h.radius ?? 90),
+    }));
+    this.spatial.rebuild(pool);
+    this.applyCameraZoom(world.zoom);
+    this.cameras.main.startFollow(this.player, true, 0.09, 0.09).setFollowOffset(0, 0);
+    this.cameras.main.centerOn(this.player.x, this.player.y);
+    this.updateAreaCombat(0);
+    this.fieldMarkers.update(run.field.objective);
+    if (run.crossing?.escort && !run.crossing.escort.lost && !run.crossing.escort.joined)
+      this.crossingMarkers.update({
+        ...run.crossing.escort,
+        kind: 'refugees',
+        status: 'returning',
+      });
+    this.setPhase(run.story.active ? 'story' : 'paused');
   }
 
   continueCamp(): void {
@@ -514,6 +886,22 @@ export class ArenaScene extends Phaser.Scene {
     void this.platform
       .saveCamp(captureCampArchive(this.run))
       .catch(() => this.callbacks?.onSaveError());
+    this.requestCheckpoint();
+  }
+
+  private requestCheckpoint(): void {
+    if (!this.canSaveExpedition) return;
+    this.checkpointDirty = true;
+    if (this.checkpointQueued) return;
+    this.checkpointQueued = true;
+    const generation = this.saveGeneration;
+    // Arrival and purchases finish all synchronous state/terrain changes before capture.
+    queueMicrotask(() => {
+      if (generation !== this.saveGeneration) return;
+      this.checkpointQueued = false;
+      this.autosaveRemaining = 0;
+      if (!this.saveBusy) void this.saveExpedition();
+    });
   }
 
   startRun(): void {
@@ -525,9 +913,12 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private beginExpedition(): void {
+    this.expeditionStarted = true;
+    this.autosaveRemaining = 0.5;
     this.cameras.main.setFollowOffset(0, 0);
     this.setPhase('playing');
     this.presentStory();
+    this.requestCheckpoint();
     this.audio.play('arrive');
   }
 
@@ -547,6 +938,7 @@ export class ArenaScene extends Phaser.Scene {
 
   chooseStory(choice?: string): void {
     if (this.run.phase !== 'story' || !resolveStory(this.run, choice)) return;
+    this.requestCheckpoint();
     // Check for a queued arrival beat before resuming any simulation.
     this.run.phase = 'playing';
     if (this.presentStory()) return;
@@ -665,6 +1057,10 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   togglePause(): void {
+    if (this.run.phase === 'saves') {
+      if (!this.saveBusy) this.setPhase(this.saveMenuReturn);
+      return;
+    }
     if (this.run.phase === 'intro') this.skipIntro();
     else if (this.run.phase === 'story') this.chooseStory();
     else if (this.run.phase === 'epilogue') this.closeEpilogue();
@@ -711,6 +1107,10 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   closePlanning(): void {
+    if (this.run.phase === 'saves') {
+      this.togglePause();
+      return;
+    }
     if (this.run.phase === 'building' && this.callbacks?.onCampBack?.()) return;
     if (['upgrade', 'building'].includes(this.run.phase) && this.progressionStack.length) {
       this.setPhase(this.progressionStack.pop()!);
@@ -786,6 +1186,7 @@ export class ArenaScene extends Phaser.Scene {
 
   chooseRoute(id: string, destinationId?: string): void {
     if (!beginMigration(this.run, id, destinationId)) return;
+    this.requestCheckpoint();
     for (const ger of this.camp.list) {
       if (!(ger instanceof Phaser.GameObjects.Image) || ger.name !== 'ger') continue;
       const x = ger.x * this.camp.scaleX;
@@ -888,6 +1289,7 @@ export class ArenaScene extends Phaser.Scene {
     const upgrade = UPGRADES.find((entry) => entry.id === id);
     const previousCooldown = gallopCooldown(this.run);
     if (this.run.phase !== 'upgrade' || !upgrade || !applyUpgrade(this.run, upgrade, rank)) return;
+    this.requestCheckpoint();
     this.audio.play('research');
     this.dashTimer *= gallopCooldown(this.run) / previousCooldown;
     this.run.clan.message = `${upgrade.title} — rank ${rank} learned.`;
@@ -1027,6 +1429,11 @@ export class ArenaScene extends Phaser.Scene {
     this.collectGems(dt);
     if (this.run.phase !== 'playing') return;
     this.updateAreaCombat(dt);
+    this.autosaveRemaining -= dt;
+    if (this.autosaveRemaining <= 0 && !this.saveBusy) {
+      this.autosaveRemaining = 30;
+      void this.saveExpedition();
+    }
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
       this.finish('dead');
       return;
@@ -1217,6 +1624,19 @@ export class ArenaScene extends Phaser.Scene {
       return false;
     const enemy = this.enemies.get(x, y, ...artTexture(definition.texture)) as Enemy | null;
     if (!enemy) return false;
+    this.initializeEnemy(enemy, definition, x, y);
+    enemy.objectiveId = directive?.objectiveId;
+    enemy.crossingId = directive?.crossingId;
+    if (isBoss)
+      this.run.clan.message =
+        'THE SKYBREAKER — hold the line. Your people are the victory condition.';
+    if (!forced && selection.elite) this.run.encounters.eliteSpawned = true;
+    if (!directive?.point) this.areaEncounter.arrivals++;
+    return true;
+  }
+
+  private initializeEnemy(enemy: Enemy, definition: EnemyDefinition, x: number, y: number): void {
+    const isBoss = definition.behavior === 'boss';
     enemy.enableBody(true, x, y, true, true);
     const width = (ART_WIDTH[definition.texture] ?? 50) * (definition.scale / (isBoss ? 4 : 2));
     styleActor(enemy, definition.texture, width, 5 * definition.scale);
@@ -1242,20 +1662,13 @@ export class ArenaScene extends Phaser.Scene {
     enemy.dangerTimer = definition.ability
       ? GAME.areaCombat.abilityEvery + (enemy.tacticalSlot % 7) * 0.15
       : GAME.tactics.seerEvery;
-    enemy.objectiveId = directive?.objectiveId;
-    enemy.crossingId = directive?.crossingId;
-    if (isBoss) {
-      this.boss = enemy;
-      this.run.clan.message =
-        'THE SKYBREAKER — hold the line. Your people are the victory condition.';
-    }
+    enemy.objectiveId = undefined;
+    enemy.crossingId = undefined;
+    if (isBoss) this.boss = enemy;
     if (!isCharacterKind(definition.texture))
       throw new Error(`Missing character animation: ${definition.texture}`);
     enemy.motion.reset(definition.texture, Math.random());
     enemy.preparingAttack = false;
-    if (!forced && selection.elite) this.run.encounters.eliteSpawned = true;
-    if (!directive?.point) this.areaEncounter.arrivals++;
-    return true;
   }
 
   private updateCrossing(dt: number): void {
@@ -2085,6 +2498,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private setPhase(phase: RunState['phase']): void {
+    const wasPlaying = this.run.phase === 'playing';
     this.run.phase = phase;
     this.audio.setPlaying(phase === 'playing', phase === 'building');
     this.wheelZoomDelta = 0;
@@ -2104,6 +2518,7 @@ export class ArenaScene extends Phaser.Scene {
       this.input.keyboard!.disableGlobalCapture();
     else this.input.keyboard!.enableGlobalCapture();
     this.publishPhase();
+    if (wasPlaying && phase === 'paused' && !this.saveBusy) void this.saveExpedition();
   }
 
   private campPressure(): string {
@@ -2155,6 +2570,12 @@ export class ArenaScene extends Phaser.Scene {
       : undefined;
     const zoomLimits = cameraZoomLimits(this.cameras.main.width, this.cameras.main.height);
     return {
+      saves: {
+        entries: this.platform.saves,
+        canSave: this.canSaveExpedition,
+        busy: this.saveBusy,
+        message: this.saveMessage,
+      },
       campPressure: this.campPressure(),
       fieldBearing,
       developerRun: this.developerRun,

@@ -1,0 +1,90 @@
+.save-menu {
+  width: min(760px, 95vw);
+  max-height: 90dvh;
+  overflow-y: auto;
+  padding: clamp(18px, 3vw, 36px);
+  background: var(--paper, #e0cfaa);
+  color: #302f25;
+  border: 1px solid #ac8e58;
+  box-shadow: 0 18px 80px #071c25a0;
+}
+.save-menu h2,
+.save-menu h3 {
+  font-family: Georgia, serif;
+}
+.save-menu .eyebrow {
+  color: #725231;
+}
+.save-menu h2 {
+  font-size: clamp(24px, 4vw, 36px);
+  margin: 8px 0 16px;
+}
+.save-menu p {
+  line-height: 1.5;
+}
+.save-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 0;
+  border-top: 1px solid #8e795847;
+}
+.save-slot h3 {
+  margin: 0 0 8px;
+}
+.save-slot p {
+  margin: 0 0 6px;
+}
+.save-slot time {
+  font-size: 12px;
+  color: #655e4a;
+}
+.save-slot nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 160px;
+  max-width: 240px;
+}
+.save-menu button {
+  min-height: 40px;
+}
+.save-menu button:focus-visible {
+  outline: 3px solid #386b77;
+  outline-offset: 3px;
+}
+.save-menu button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.save-menu footer {
+  border-top: 1px solid #8e795847;
+  padding-top: 12px;
+}
+.save-menu footer p {
+  font-size: 12px;
+}
+.save-message {
+  min-height: 24px;
+  color: #354e48;
+}
+.save-confirmation {
+  padding: 14px;
+  border: 1px solid #9b583d;
+  background: #c9ae7e55;
+  margin-bottom: 16px;
+}
+.save-confirmation button + button {
+  margin-left: 10px;
+}
+@media (max-width: 600px) {
+  .save-slot {
+    align-items: start;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .save-slot nav {
+    max-width: none;
+  }
+}

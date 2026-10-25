@@ -19,6 +19,8 @@ describe('platform command-history persistence', () => {
       },
       saveExpedition: async () => undefined,
       deleteExpedition: async () => undefined,
+      onCloseRequested: () => () => undefined,
+      completeClose: async () => undefined,
       toggleFullscreen: async () => false,
       isFullscreen: async () => false,
       quit: async () => undefined,

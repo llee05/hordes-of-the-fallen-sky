@@ -9,3 +9,5 @@ The profile's optional `camp` field stores a versioned, bounded record of portab
 `captureCampArchive` takes a portable camp record from a run. `runFromCampArchive` creates a fresh run, restores known facilities and their craft IDs, reconstructs each continuing effect once, and finally restores saved supplies. Replayed establishment/population/food callbacks cannot grant their gifts a second time. Unknown removed content is ignored, and conflicting specialisations cannot stack. The returned run has fresh battle, patron, journey-clock, and story state: this API is not a mid-battle resume mechanism.
 
 The scene decides when a normal run should save and when an explicit Continue action should load. Developer/cheated expeditions must not replace the normal camp checkpoint. Profile-store and archive unit tests exercise bounded validation, compatibility, independent copies, deterministic effect reconstruction, and native filesystem round trips.
+
+Full battlefield resumption is provided separately by [expedition saves](expedition-saves.md). The portable camp API keeps its fresh-expedition semantics and remains compatible with old profiles.

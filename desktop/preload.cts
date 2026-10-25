@@ -10,6 +10,13 @@ const bridge: DesktopBridge = {
   loadExpedition: (slot) => ipcRenderer.invoke('expedition:load', slot),
   saveExpedition: (slot, save) => ipcRenderer.invoke('expedition:save', slot, save),
   deleteExpedition: (slot) => ipcRenderer.invoke('expedition:delete', slot),
+  onCloseRequested: (listener) => {
+    const handler = (): void => listener();
+    ipcRenderer.on('app:prepare-close', handler);
+    void ipcRenderer.invoke('app:close-ready');
+    return () => ipcRenderer.removeListener('app:prepare-close', handler);
+  },
+  completeClose: (saved) => ipcRenderer.invoke('app:complete-close', saved),
   toggleFullscreen: () => ipcRenderer.invoke('window:toggle-fullscreen'),
   isFullscreen: () => ipcRenderer.invoke('window:is-fullscreen'),
   quit: () => ipcRenderer.invoke('app:quit'),

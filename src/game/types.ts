@@ -11,6 +11,7 @@ export type RunPhase =
   | 'ready'
   | 'playing'
   | 'paused'
+  | 'saves'
   | 'upgrade'
   | 'building'
   | 'route'
@@ -223,6 +224,12 @@ export interface EnemyDefinition {
 }
 
 export interface HudSnapshot {
+  saves?: {
+    entries: import('../shared/expeditionSave').SaveListing[];
+    canSave: boolean;
+    busy: boolean;
+    message: string;
+  };
   developerRun: boolean;
   developerConsole?: DeveloperConsoleSnapshot;
   zoom: number;
