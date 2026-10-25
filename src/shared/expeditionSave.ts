@@ -58,6 +58,7 @@ export function isExpeditionSave(value: unknown): value is ExpeditionSave {
     typeof savedAt === 'number' &&
     Number.isSafeInteger(savedAt) &&
     savedAt > 0 &&
+    savedAt <= 8_640_000_000_000_000 &&
     isRecord(summary) &&
     typeof summary.location === 'string' &&
     summary.location.length <= 80 &&

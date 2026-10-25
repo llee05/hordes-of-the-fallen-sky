@@ -8,6 +8,7 @@ import type { RunState } from '../types';
 import type { SpatialHash } from './SpatialHash';
 import { isKhanActive } from '../state/khan';
 import { campBoundary } from '../state/campBarrier';
+import type { SupportArchive } from '../state/expeditionArchive';
 
 interface GroundPosition {
   x: number;
@@ -48,6 +49,33 @@ export class PatronSupport {
       spirit.image.setPosition(position.x, position.y);
       spirit.shadow.setPosition(position.x, position.y);
     }
+  }
+
+  capture(): SupportArchive {
+    return {
+      ancestorTimer: this.ancestorTimer,
+      waterTimer: this.waterTimer,
+      guardianTimer: this.guardianTimer,
+      spirits: this.spirits.map(({ image, motion }) => ({
+        x: image.x,
+        y: image.y,
+        active: image.visible,
+        motion: motion.capture(),
+      })),
+    };
+  }
+
+  restore(state: SupportArchive): void {
+    this.ancestorTimer = state.ancestorTimer;
+    this.waterTimer = state.waterTimer;
+    this.guardianTimer = state.guardianTimer;
+    this.spirits.forEach((spirit, index) => {
+      const saved = state.spirits[index];
+      if (!saved) return;
+      spirit.image.setPosition(saved.x, saved.y).setVisible(saved.active);
+      spirit.shadow.setPosition(saved.x + 7, saved.y + 4).setVisible(saved.active);
+      spirit.motion.restore(saved.motion);
+    });
   }
 
   update(

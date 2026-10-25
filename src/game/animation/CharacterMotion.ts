@@ -14,6 +14,13 @@ const PROFILES = {
 export type CharacterKind = keyof typeof PROFILES;
 export const CHARACTER_KINDS = Object.keys(PROFILES) as CharacterKind[];
 export const MOTION_SHEETS = ['mounted', 'creature', 'clan'] as const;
+export interface MotionArchive {
+  cycle: number;
+  releaseRemaining: number;
+  hurtRemaining: number;
+  moving: boolean;
+  windingUp: boolean;
+}
 
 export function isCharacterKind(name: string): name is CharacterKind {
   return Object.hasOwn(PROFILES, name);
@@ -45,6 +52,15 @@ export class CharacterMotion {
     this.hurtRemaining = 0;
     this.moving = false;
     this.windingUp = false;
+  }
+
+  capture(): MotionArchive {
+    const { cycle, releaseRemaining, hurtRemaining, moving, windingUp } = this;
+    return { cycle, releaseRemaining, hurtRemaining, moving, windingUp };
+  }
+
+  restore(state: MotionArchive): void {
+    Object.assign(this, state);
   }
 
   advance(dt: number, speed: number, windingUp = false): void {
