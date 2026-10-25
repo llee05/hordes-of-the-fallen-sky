@@ -1,11 +1,10 @@
-# Playable story prototype
+# Playable story
 
-Hordes of the Fallen Sky implements the shared two-act expedition underlying
-[the revised story architecture](../story-architecture.md). The five-chapter prologue
+Hordes of the Fallen Sky implements the two-act expedition in
+[the story architecture](../story-architecture.md). The five-chapter prologue
 leads into camp construction, automatic mounted combat, three caravan crossings,
-a timed final defense, an epilogue, journey results, and a fresh run. The revised
-architecture proposes destination-specific conversations and ending callbacks;
-this guide describes the current playable adaptation.
+a timed final defense, an epilogue, journey results, and a fresh run. This guide
+describes what is playable now.
 
 ## Play
 
@@ -13,66 +12,114 @@ Use `npm run dev` for the desktop game, or `npm run build` followed by `npm star
 
 Leave **Camp scenes: On** at the title to play the story. Ride with WASD or arrows; attacks are automatic. Space gallops, B develops camp, M opens available migration routes, and Tab / J opens the chronicle. Menus and conversations pause combat, physics, economy, character animation, and journey clocks.
 
-## Two acts, eight memories
+## Two acts, eight scenes
 
-| Beat                      | Trigger                                      | Story work                                                                                |
-| ------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| A place beside the fire   | Start the expedition                         | Meet Saran, Boro, Erden, and Nara; share the work or watch                                |
-| More mouths, more hands   | Golden Pasture reaches 45 active seconds     | Prepare provisions or wagon supplies before choosing a route                              |
-| Voices across the ice     | Arrive at the first chosen camp              | Test the ground or gather the living voices; acknowledge rescued families when applicable |
-| A promise chosen          | Arrive at the second chosen camp             | Begin Act II and make the blue banner a shared promise                                    |
-| When the earth moves      | Second chosen camp reaches 15 active seconds | Mend the wheels or rest tired hands; acknowledge the clan's condition                     |
-| The court’s empty promise | Second chosen camp reaches 45 active seconds | Hear Erden's connection to the Iron Vow; share his tally or record his account            |
-| The narrow opening        | Arrive at Heart of the Steppe                | Organize the last watch or provisions while the passage is cleared                        |
-| Hold the road             | Final defense reaches 90 active seconds      | Carry the embers forward while the defenders hold the approach                            |
+**Act I · Gather the Scattered** asks whose knowledge and needs have a place beside
+the fire. **Act II · Carry the Living** asks how the clan keeps that promise when it
+becomes costly, through Erden's confession and the final passage.
+
+| Beat ID     | Scene                                                      | Trigger                                  | Story work                                                                               |
+| ----------- | ---------------------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `fire`      | A place beside the fire                                    | Start the expedition                     | Meet the cast; the starting tradition shapes the setting and Boro's worry                |
+| `departure` | More mouths, more hands                                    | Golden Pasture reaches 45 active seconds | Nara sees blue banners; fill the stores (Boro) or make room in the wagons (Saran, Erden) |
+| `river`     | Destination-specific (Silent River: Voices across the ice) | Arrive at the first chosen camp          | Local conflict; test and provide, or listen and keep people connected                    |
+| `promise`   | A promise chosen                                           | Arrive at the second chosen camp         | Act II begins; local framing for tying cloth into the banner                             |
+| `earth`     | Destination-specific (Broken Pass: When the earth moves)   | Second camp reaches 15 active seconds    | Local work under the Earth That Walks; prepare equipment or relieve tired hands          |
+| `court`     | The court’s empty promise                                  | Second camp reaches 45 active seconds    | Erden's confession; share the tally, record his account, or give the tally to Nara       |
+| `opening`   | The narrow opening                                         | Arrive at Heart of the Steppe            | Recalls the first camp's chosen lesson and who keeps the tally                           |
+| `road`      | Hold the road                                              | Final defense reaches 90 active seconds  | Nara takes the embers; recalls the second camp's chosen lesson                           |
 
 Each scene occurs once. Triggers follow active gameplay time and arrival, so reading a scene cannot consume pasture or advance the final defense. Construction, formations, route rewards, and earned traditions remain available between scenes. Opening a route cannot bypass an outstanding departure conversation.
 
-The first two crossings can visit any of the eight named destinations described in
-[the destination guide](migration-locations.md); Silent River and Broken Pass remain
-the respective defaults. Each named destination can appear in either intermediate
-slot, but cannot be revisited in the same expedition. Chapter weather, difficulty,
-and the act boundary follow the slot independently of the place. The third crossing
-always reaches the fictional Heart of the Steppe.
+The first crossing can reach Silent River or any of the eight named destinations in
+[the destination guide](migration-locations.md); the second can reach Broken Pass or
+any named destination not yet visited. Every eligible camp has its own scene in each
+slot it can occupy: a first-stop title, setting, disagreement, and two responses, and
+a second-stop banner framing, work scene, and two responses. Treatments live in
+`src/game/data/storyDestinations.ts`. The third crossing always reaches the fictional
+Heart of the Steppe.
 
-Current scene settings use the actual selected camp name. The first-arrival dialogue
-still assumes a river and ice, and later dialogue retains some Broken Pass imagery.
-The blueprint replaces those assumptions with local work and disagreements, while
-retaining the eight encounter triggers and once-only choices above. Its proposed
-titles, eight destination treatments, and ordered ending callbacks are not yet
-runtime dialogue.
+## The cast
 
-## Choices and memories
+| Companion | Voice                                                            | Arc                                                                     |
+| --------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Saran     | Hearthkeeper; measured, speaks in images of fire and cloth       | Carries everyone's care, and learns to let others carry hers            |
+| Boro      | Herder; terse and practical, thinks in grass, horses, and stores | Turns scarcity into shared judgment; distrusts Erden until the truth    |
+| Erden     | Keeper of the tally; formal and exact, hints at a larger past    | Hides his court service, then gives an accountable witness statement    |
+| Nara      | Youngest survivor; blunt questions, notices who is missing       | Takes on real responsibility and carries the embers through the passage |
 
-Each scene offers two responses. A response grants one modest benefit: 8 food, 6 materials, 4 spirit, or up to 5 clan resolve, and contributes one point toward the corresponding clan identity. Values live in `src/game/config.ts`. Benefits are granted once, and the record retains the actual resolved dialogue and selected response.
+Rescued households speak as **A newcomer** without an invented name, community, or
+belief. They appear only after an actual blue-banner rescue.
 
-Choose **Continue without choosing**, Escape, or controller B to move on neutrally. **Camp scenes: Off** at the title suppresses conversation interruptions and gifts, while keeping a record that the clan passed those milestones without a council. The preference lasts across restarts in the current app session.
+## Choices and consequences
 
-The chronicle's **Our story** tab contains the current run's memories. Expand a memory to read the transcript and decision. Controller navigation can focus and open these summaries. **Our remembered road** in the pause and end menus provides the same read-only record and returns to the menu it came from. Re-reading cannot grant rewards or resume an ended expedition.
+Each response grants one modest gift (8 food, 6 materials, 4 spirit, or up to 5 clan
+resolve) and one point toward the matching clan identity. Most responses before the
+final defense also carry a **lasting** camp effect, shown on the button and in the
+chronicle: for example, _Careful rations: 3% less food eaten_ or _Room in the wagons:
++1 person from each blue-banner rescue_. Lasting effects are applied once through
+`clan.campEffects` when the response is chosen. Values live in `GAME.story`; mappings
+by stable choice ID live in `src/game/data/storyConsequences.ts`.
+
+Responses also shift **companion trust**. Trust is derived from resolved records by
+`state/storyBonds.ts`, never stored separately, so saves and transcripts remain the
+single source. The chronicle's **Beside the fire** row shows each companion's current
+standing. Trust and earlier decisions change later dialogue and the ending:
+
+- Saran answers the departure dispute by recalling whether the clan shared work or named watches.
+- First arrivals acknowledge an actual rescue, an actual loss, or wagon room that went unused.
+- Boro's reaction to the confession recalls whether Erden repacked the wagons “like an army.”
+- The final approach recalls the first camp's chosen lesson and who keeps the tally.
+- Saran hands Nara the embers readily only if the clan has trusted Nara with real work.
+- The last stand recalls the second camp's chosen lesson.
+- Boro and Saran reconcile in the ending only if the clan honoured both of their priorities.
+
+Choose **Continue without choosing**, Escape, or controller B to move on neutrally; a
+skipped scene grants nothing and creates no later callback. **Camp scenes: Off** at the
+title suppresses conversations and gifts while recording that the clan passed those
+milestones without a council. The preference lasts across restarts in the current app session.
+
+The chronicle's **Our story** tab contains the current run's scenes. Expand one to read the transcript, decision, and lasting effect. **Our remembered road** in the pause and end menus provides the same read-only record and returns to the menu it came from. Re-reading cannot grant rewards or resume an ended expedition.
+
+## Lived history
+
+Validated camp purchases, departures, completed crossings, actual losses, and Khan
+succession add factual memories to the chronicle. A brief reaction may accompany a
+moment, voiced by the companion it concerns (`src/game/data/storyReactions.ts`):
+
+- **Camp work:** Boro reacts to herds, bows, and stores; Nara to felt and relays; Erden to wagons; Saran to gers and sanctuaries.
+- **Losses:** recorded by whoever keeps the tally after the court scene. From the third loss, Saran answers instead.
+- **Succession:** a first fall recalls a shared watch if the clan named one. A successor is greeted according to the chosen trait.
+
+Reactions are spaced by eight active seconds and freeze in menus. Only displayed reactions receive a retained transcript. Fewer than five survivors use the collective remembered-road voice. Camp scenes: Off keeps factual memories without companion speech. Records are bounded to the latest 96 moments and 64 Khans.
 
 ## Refuge and failure
 
-The mountain passage visibly clears during the final three-minute defense. Surviving with people and resolve reaches refuge even if the Skybreaker remains alive. The skippable epilogue reflects survivor and herd counts, actual population losses, clan identity, the shared-tally choice, and the boss's fate. It ends with the spare bowl and the promise of room beside the fire.
+The mountain passage visibly clears during the final three-minute defense. Surviving with people and resolve reaches refuge even if the Skybreaker remains alive. The skippable epilogue covers, in order:
 
-The four named companions are voices within an abstract population. The prototype does not assign individual casualties. Below five people, camp scenes use a remnant account; an ending with losses avoids assuming which named people survived. A one-person ending uses singular narration. No scene forces a death to serve the plot.
+1. The survivor and herd counts, the Skybreaker's fate, and any Khans who fell.
+2. Actual losses, or the spare bowl and any rescued households.
+3. One remembered image from each chosen camp, in visit order. Camps whose scenes were skipped are named only as halts.
+4. Companion outcomes from trust and the court decision.
+5. The clan identity.
 
-Defeat shows the actual journey result and leaves the memories available. A restart clears the story, choices, crossings, losses, and build. Full expedition saves preserve active choices, resolved transcripts, crossings, losses, and clan memories across app launches. Loading does not resolve a choice or grant its benefit again. See [the expedition-save contract](expedition-saves.md).
+It ends with the spare bowl and the promise of room beside the fire.
 
-## Implementation and scope
+The named companions are voices within an abstract population. The game never assigns individual casualties. Below five people, scenes use a remnant account and the ending omits named companions. After any loss, the ending speaks of companions' practices (“as Erden promised”) rather than placing all four at the new fire. A one-person ending uses singular narration. No scene forces a death to serve the plot.
 
-`src/game/data/story.ts` contains the cast, conditional scenes, choices, and epilogue. `src/game/state/story.ts` handles once-only progression; `ArenaScene` owns phase transitions and pause behavior. `src/ui/storyContent.ts` and `src/story.css` render manuscript conversations using the existing locally bundled paintings. No new runtime service, voice synthesis, or remote asset loading is involved.
+Defeat shows the actual journey result and leaves the memories available. A restart clears the story, choices, crossings, losses, and build. Full expedition saves preserve active choices, resolved transcripts, applied lasting effects, crossings, losses, and clan memories. Loading does not resolve a choice or grant its benefit again. See [the expedition-save contract](expedition-saves.md).
 
-The shared story is playable as a short prototype. Dialogue is text-based and the
-chapter structure is shared across runs, while intermediate destinations vary.
-Destination-specific dialogue and epilogue callbacks are the next narrative
-adaptation in the architecture. Individual companion agents, a longer campaign,
-permanent progression, and campaign save/resume remain future work. Unit and browser
-coverage checks chronology, choices, losses, banked knowledge points, all crossings,
-victory, defeat, memories, controller input, layout, and restart. Electron smoke
-coverage checks the offline story panel and the existing native platform flow.
+## Implementation
 
-## Life beneath the banner
+- `src/game/data/story.ts`: composes each scene once, on opening, from the cast, the chapter, the place, and the actual journey.
+- `src/game/data/storyDestinations.ts`: destination treatments.
+- `src/game/data/storyConsequences.ts`: trust shifts and lasting effects.
+- `src/game/data/storyReactions.ts`: lived-history reactions.
+- `src/game/state/story.ts`: once-only progression and gifts.
+- `src/game/state/storyBonds.ts`: derives trust.
+- `ArenaScene`: owns phase transitions and pause behavior.
+- `src/ui/storyContent.ts` and `src/story.css`: render manuscript conversations using the existing locally bundled paintings.
 
-Validated camp purchases, departures, completed crossings, actual losses, and Khan succession add factual memories to the chronicle. A brief companion reaction may accompany a moment; reactions are spaced by eight active seconds and freeze in menus. Only displayed reactions receive a retained transcript. Fewer than five survivors use the collective remembered-road voice. Camp scenes: Off keeps factual memories without companion speech. Records are bounded to the latest 96 moments and 64 Khans, showing totals when earlier records have left the view.
+No runtime service, voice synthesis, or remote asset loading is involved.
 
-Each Khan record retains the actual selection and fall times, regions, population at selection, and host victories during that tenure. Last Ember preserves the same Khan; succession adds one new record only after its active-time countdown finishes. Reading records never grants rewards or changes simulation.
+Unit coverage plays every ordered pair of eligible camps with two answer sets. It checks that no unvisited place is named, and covers rescue acknowledgment, callbacks, the third court response, lasting effects applied exactly once, trust-dependent endings, loss and remnant phrasing, fallen Khans, and reactions. Browser coverage checks the complete two-act run, the three-choice confession, the companion standings, controller input, layout, and restart.

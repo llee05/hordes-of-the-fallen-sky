@@ -12,8 +12,9 @@ its name should change more than the heading above the same conversation.
 [World lore](lore.md) supplies the setting and canonical prologue.
 [Migration destinations](docs/migration-locations.md) supplies the actual selection
 rules, cultural context, and sources. [The prototype guide](docs/story-prototype.md)
-records what is playable today. The destination scenes and callbacks below are
-**proposed writing**, with an implementation plan at the end of this document.
+records what is playable today. The destination scenes, callbacks, companion
+trust, and lasting consequences below are implemented; the delivery contract at
+the end of this document records how.
 
 **Premise:** Eight survivors carry a hearth away from the Sundering. They choose
 where to halt, whom to trust, and what they can promise before the next departure.
@@ -357,9 +358,10 @@ The place-specific scenes have prepared questions about limits, care, or authori
 they do not make his testimony conditional on visiting Orkhon or Khan Tengri.
 
 His confession changes the present relationship. The clan can place the tally in
-shared hands or hear and record the whole account. Both responses hold him to useful
-work and honest testimony. Neither grants him absolution on behalf of people who
-are absent. The court's human actions are established; Heaven's intentions remain
+shared hands, hear and record the whole account, or give the tally to Nara, whom the
+court never touched. All three responses hold him to useful work and honest testimony.
+None grants him absolution on behalf of people who are absent. Boro's reaction recalls
+whether Erden earlier repacked the wagons with suspicious skill. The court's human actions are established; Heaven's intentions remain
 uncertain.
 
 **Revelation:** The old order made people into a claim the court could keep. The
@@ -436,6 +438,30 @@ campaign in which all eight places have already been visited.
 | Ember vessel                    | Preserves a remnant of the lost home                         | Can pass between hands without ceasing to belong to the clan                    |
 | Court tally and iron standard   | Turn people and favor into permanent claims                  | Give the clan concrete practices to question and change                         |
 
+## Voices, trust, and consequence
+
+Each companion speaks in a recognizable register and wants something that conflicts
+with someone else:
+
+- **Saran** speaks in measured images of fire and cloth and wants room for whoever
+  comes, even at a cost.
+- **Boro** is terse and counts grass, horses, and stores. He wants the clan fed
+  before it promises anything.
+- **Erden** is formal and exact, and hides where he learned to count people.
+- **Nara** asks blunt questions, notices who is missing or overworked, and wants real
+  responsibility.
+
+Choices take sides in these tensions. Their effects persist in three ways:
+
+1. **Trust**, derived from the records, changes later lines and each companion's ending.
+2. A **lasting effect** applied once to the camp turns the decision into a practice
+   the clan keeps.
+3. **Callbacks** at the final approach, the last stand, and the epilogue repeat what
+   was actually chosen.
+
+A skipped scene creates none of these. Lasting effects stay small and visible on the
+button; no scene silently charges supplies.
+
 ## Writing and cultural boundaries
 
 - Ground real-place context in the [destination sources](docs/migration-locations.md#cultural-context-and-sources).
@@ -453,8 +479,8 @@ campaign in which all eight places have already been visited.
 
 ## Delivery and implementation contract
 
-This revision is a writing blueprint. It does not itself add dialogue variants,
-change the prologue, alter balance, or lengthen the expedition. Keep reading in
+This architecture keeps the prologue and the expedition length unchanged. Its only
+balance additions are the small lasting story effects in `GAME.story.lasting`. Keep reading in
 paused manuscript scenes, use existing local artwork initially, and retain immediate
 Skip, neutral continuation, and Camp scenes: Off. Any new artwork is separate work
 under the project's visual and animation guides.
@@ -501,13 +527,22 @@ undelivered dialogue does not become an event the clan remembers saying.
    place, invented rescue, named casualty, or earlier unchosen decision is asserted.
    Play the short expedition with story on and off before expanding its scope.
 
-### Current implementation and remaining adaptation
+### Current implementation
 
-The playable build already supports choosing destinations, local terrain and economy,
-actual camp names in story settings, completed-location records, eight once-only
-encounters, succession, a survivor-sensitive epilogue, and an animated final passage.
-Its first-arrival dialogue still uses the river-and-ice treatment at every camp;
-its later dialogue retains Broken Pass assumptions. Destination-specific disputes,
-ordered narrative callbacks, and the proposed display titles above remain to be
-implemented. The canonical intro, clan-survival objective, and current three-crossing
-length already support this architecture.
+The playable build implements this architecture:
+
+- Every eligible camp has its own destination-specific encounters, with stable choice IDs
+  (`src/game/data/storyDestinations.ts`).
+- The departure scene is a dispute over answering the blue banners.
+- Erden's court service is foreshadowed before his confession. A third court response
+  gives the tally to Nara.
+- The final approach, last stand, and epilogue recall the responses actually chosen,
+  in visit order.
+- Choices carry companion trust, derived from records in `state/storyBonds.ts`, and
+  optional small lasting camp effects from `data/storyConsequences.ts`. Neither adds
+  save fields.
+- Starting traditions, rescues, unused wagon room, losses, succession, and camp work
+  shape what the companions say.
+
+[The prototype guide](docs/story-prototype.md) documents the playable details.
+Individual companion casualties, voice acting, and new artwork remain future work.

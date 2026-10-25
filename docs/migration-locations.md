@@ -23,10 +23,11 @@ stop asks whose knowledge the clan will hear; a second tests its shared commitme
 through local work before Erden's confession. Destination and approach remain
 independent, and all roads converge on the fictional final passage.
 
-These scenes and their ending callbacks are proposed writing. The current build
-records actual destinations and uses their names in scene settings, but retains
-the original river and pass dialogue. [The prototype guide](story-prototype.md)
-lists the implemented encounters and distinguishes the remaining adaptation.
+The current build plays these treatments from `data/storyDestinations.ts`: each
+eligible camp has its own first-stop or second-stop scene, and the final approach,
+last stand, and epilogue recall the responses chosen there. Only completed crossings
+can be named, and only resolved scenes can be recalled. [The story guide](story-prototype.md)
+lists the encounters and their consequences.
 
 ## Content and simulation
 
