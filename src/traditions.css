@@ -50,3 +50,30 @@
     grid-template-columns: 1fr;
   }
 }
+.expedition-metrics {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid #9d875f70;
+  text-align: left;
+}
+.expedition-metrics summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.expedition-metrics dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+.expedition-metrics dl div {
+  display: grid;
+  gap: 4px;
+}
+.expedition-metrics dd {
+  margin: 0;
+  font-weight: 600;
+}
+.expedition-metrics p {
+  font-size: 12px;
+  line-height: 1.5;
+}

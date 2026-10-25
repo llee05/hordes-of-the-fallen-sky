@@ -1,3 +1,4 @@
+import { markExpedition } from './expeditionMetrics';
 import { BUILDINGS } from '../data/clan';
 import {
   ENCAMPMENT_TIERS,
@@ -164,5 +165,6 @@ export function purchaseEstate(
   else estate.internals[id] = rank;
   applyCampEffects(run.clan.campEffects, node.effects);
   run.clan.message = `${node.title} joins the travelling clan.`;
+  markExpedition(run, 'construction');
   return true;
 }

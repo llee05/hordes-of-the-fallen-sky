@@ -15,6 +15,7 @@ import { economyRates, crossingDuration, pastureDepletion } from './economy';
 import { arrivalLocation, availableDestinations } from './journey';
 import { completeGuidance } from './guidance';
 import { isKhanActive } from './khan';
+import { markExpedition, metricCasualties, metricStage } from './expeditionMetrics';
 
 export function createClan(): ClanState {
   return {
@@ -163,6 +164,7 @@ export function buildStructure(
   slot?: number,
 ): boolean {
   if (run.phase !== 'building' || buildingBlocker(run, id, path, slot)) return false;
+  markExpedition(run, 'construction');
   const clan = run.clan;
   const definition = BUILDINGS.find((building) => building.id === id)!;
   const development = definition.paths.find((entry) => entry.id === path);
@@ -213,6 +215,7 @@ export function beginMigration(
   const route = ROUTES.find((entry) => entry.id === routeId);
   const destination = availableDestinations(run).find((entry) => entry.id === destinationId);
   if (run.phase !== 'route' || !canMigrate(run) || !route || !destination) return false;
+  markExpedition(run, 'departure');
   const clan = run.clan;
   completeGuidance(run, 'depart');
   clan.stage = 'migration';
@@ -293,6 +296,7 @@ export function advanceClan(
   protectionOptions?: ClanProtection,
 ): 'arrived' | 'lost' | 'saved' | undefined {
   if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
+  metricStage(run);
   const clan = run.clan;
   const previousTime = clan.stageTime;
   const { bonuses } = clan.campEffects;
@@ -324,6 +328,7 @@ export function advanceClan(
       Math.floor(clan.stageTime / GAME.clan.starvationInterval)
   ) {
     const starvationLoss = Number(clan.population > 0);
+    metricCasualties(run, starvationLoss);
     if (clan.population > 0) run.story.peopleLost += 1;
     clan.population = Math.max(0, clan.population - 1);
     clan.herd = Math.max(0, clan.herd - 1);

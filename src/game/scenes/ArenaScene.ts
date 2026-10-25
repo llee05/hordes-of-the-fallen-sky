@@ -119,6 +119,7 @@ import {
   type WorldArchive,
 } from '../state/expeditionArchive';
 import type { ExpeditionSave, SaveSlot } from '../../shared/expeditionSave';
+import { markExpedition, metricStage, observeExpedition } from '../state/expeditionMetrics';
 
 export interface ArenaCallbacks {
   onHud: (snapshot: HudSnapshot) => void;
@@ -931,6 +932,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private beginExpedition(): void {
     this.expeditionStarted = true;
+    metricStage(this.run);
     this.autosaveRemaining = 0.5;
     this.cameras.main.setFollowOffset(0, 0);
     this.setPhase('playing');
@@ -1381,6 +1383,13 @@ export class ArenaScene extends Phaser.Scene {
     if (this.run.phase !== 'playing') return;
     if (this.presentStory()) return;
     const dt = Math.min(delta / 1000, 0.05);
+    observeExpedition(
+      this.run,
+      dt,
+      isKhanActive(this.run) && this.player.body!.velocity.length() > GAME.mounted.minimumSpeed,
+      isKhanActive(this.run) &&
+        Math.hypot(this.player.x - this.camp.x, this.player.y - this.camp.y) < 300,
+    );
     if (!isKhanActive(this.run) && this.player.active) {
       beginSuccession(this.run);
       this.hideFallenKhan();
@@ -2226,7 +2235,10 @@ export class ArenaScene extends Phaser.Scene {
         Math.sin(angle) * GAME.projectile.speed,
       );
     }
-    if (fired) this.audio.play('shoot', { x, y });
+    if (fired) {
+      markExpedition(this.run, 'fight');
+      this.audio.play('shoot', { x, y });
+    }
     return fired;
   }
 

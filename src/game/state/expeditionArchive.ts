@@ -7,6 +7,7 @@ import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
 import { SUCCESSORS } from '../data/successors';
 import { GAME } from '../config';
 import { currentLocation } from './journey';
+import { EXPEDITION_MILESTONES } from './expeditionMetrics';
 import type { RunState } from '../types';
 import type { Enemy } from '../entities/actors';
 import type { MotionArchive } from '../animation/CharacterMotion';
@@ -216,6 +217,23 @@ const overrides: Record<string, Rule> = {
 };
 const optional: Record<string, Record<string, Rule>> = {
   '': {
+    metrics: object({
+      stages: list(
+        object({
+          key: string,
+          location: string,
+          stage: oneOf(['camp', 'migration', 'final']),
+          startedAt: positive,
+          marks: object({}, Object.fromEntries(EXPEDITION_MILESTONES.map((id) => [id, positive]))),
+          damage: positive,
+          casualties: integer,
+          riding: positive,
+          guarding: positive,
+          travelling: positive,
+        }),
+        8,
+      ),
+    }),
     startingTradition: oneOf(STARTING_TRADITIONS.map((entry) => entry.id)),
     crossing: object(
       {

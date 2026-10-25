@@ -32,6 +32,17 @@ export const GAME = {
     spawnMargin: 60,
   },
   duration: 900,
+  pacing: {
+    sampleStep: 0.25,
+    maximumSeconds: 1100,
+    contactEvery: 8,
+    firstContact: 6,
+    riding: { departAt: 90, killEvery: 4, exposure: 0.35, ridingShare: 0.8 },
+    guarding: { departAt: 125, killEvery: 6, exposure: 0.12, ridingShare: 0.15 },
+    migrating: { departAt: 45, killEvery: 7, exposure: 0.45, ridingShare: 0.6 },
+    crossingExposure: 0.4,
+    finalExposure: 0.35,
+  },
   developer: {
     campDuration: 180,
     food: 1000,

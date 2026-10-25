@@ -12,6 +12,7 @@ import { completeGuidance } from './guidance';
 import { isKhanActive } from './khan';
 import type { RunState, UpgradeDefinition } from '../types';
 import { startingTradition, type StartingTraditionId } from '../data/clan';
+import { markExpedition } from './expeditionMetrics';
 
 export function xpForLevel(level: number): number {
   return 8 + (level - 1) * 6;
@@ -23,6 +24,7 @@ export function createRun(tradition: StartingTraditionId = 'shared-hearth'): Run
   clan.food = balance.food;
   clan.materials = balance.materials;
   return {
+    metrics: { stages: [] },
     startingTradition: tradition,
     legacy: createLegacy(),
     safety: createClanSafety(),
@@ -59,6 +61,7 @@ export function gainExperience(run: RunState, amount: number): boolean {
   if (amount > 0) completeGuidance(run, 'shards');
   let leveled = false;
   while (run.xp >= run.nextLevelXp) {
+    markExpedition(run, 'knowledge');
     run.xp -= run.nextLevelXp;
     run.level += 1;
     run.pendingUpgrades += 1;
@@ -98,6 +101,7 @@ export function applyUpgrade(
   const stacks = run.upgrades[upgrade.id] ?? 0;
   if (upgradeBlocker(run, upgrade, rank)) return false;
   upgrade.apply(run);
+  markExpedition(run, 'research');
   if (run.khan.successionRemaining > 0) run.health = 0;
   run.upgrades[upgrade.id] = stacks + 1;
   run.pendingUpgrades -= upgradeCost(upgrade);

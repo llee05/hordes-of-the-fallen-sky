@@ -1,4 +1,6 @@
 import { isKhanActive } from '../state/khan';
+import { expeditionMetricLines } from '../state/expeditionMetrics';
+import { pacingBenchmarkLines } from './pacingBenchmark';
 import type { RunState } from '../types';
 import { WORLD_3D, WORLD_DEBUG_MODES, type WorldDebugMode } from '../world3d/worldProjection';
 import {
@@ -11,6 +13,18 @@ export { DEVELOPER_COMMAND_MAX_LENGTH } from '../../shared/developerHistory';
 const LOG_LIMIT = 80;
 
 export const DEVELOPER_COMMANDS = [
+  {
+    name: 'benchmark',
+    usage: 'benchmark',
+    description:
+      'Compare twelve deterministic journey pressure scenarios; does not change this expedition.',
+  },
+  {
+    name: 'metrics',
+    usage: 'metrics',
+    description:
+      'Show expedition milestones and riding, guarding, travel, damage and casualties by stage.',
+  },
   { name: 'help', usage: 'help', description: 'List console commands.' },
   {
     name: 'invincible',
@@ -144,6 +158,14 @@ export function executeDeveloperCommand(
     write(
       `Khan invincibility: ${state.invincible ? 'ON' : 'OFF'}. Health: ${Math.ceil(run.health)} / ${run.stats.maxHealth}. Clan invincibility: ${state.clanInvincible ? 'ON' : 'OFF'}. Clan resolve: ${Math.ceil(run.clan.integrity)}%.`,
     );
+  } else if (name === 'metrics') {
+    const lines = expeditionMetricLines(run);
+    for (const line of lines.length ? lines : ['No expedition observations yet.']) write(line);
+  } else if (name === 'benchmark') {
+    write(
+      'Modelled combat exposure and XP cadence; physical combat and terrain require live playtests.',
+    );
+    for (const line of pacingBenchmarkLines()) write(line);
   } else if (!activeExpedition) {
     write('Start an expedition or select a developer checkpoint first.', 'error');
   } else if (['terrain-debug', 'terrain-only', 'camera-angle'].includes(name!)) {
