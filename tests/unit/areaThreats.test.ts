@@ -13,7 +13,11 @@ import {
   areaArrivalAngle,
 } from '../../src/game/state/areaEncounters';
 import { AREA_ENCOUNTERS } from '../../src/game/data/areaEncounters';
-import { areaSurface, habitatPreference } from '../../src/game/systems/AreaHabitat';
+import {
+  areaSurface,
+  habitatPreference,
+  areaRiverTangent,
+} from '../../src/game/systems/AreaHabitat';
 import { ComposedTerrain } from '../../src/game/world3d/ComposedTerrain';
 import { composedRegion } from '../../src/game/data/worldRegions';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
@@ -96,6 +100,16 @@ describe('bounded local terrain and spell threats', () => {
   });
 });
 describe('local rules follow the physical landscape', () => {
+  it('aligns bank approaches to the real curved river instead of an arbitrary compass direction', () => {
+    const id = 'orkhon-valley',
+      terrain = new ComposedTerrain(composedRegion(id), LANDSCAPES[id].water);
+    const bridge = terrain.river!.bridges[0]!,
+      angle = areaRiverTangent(terrain, id, { x: bridge.x, y: bridge.z }, 2.5);
+    expect(Math.abs(Math.cos(angle) * bridge.nz - Math.sin(angle) * bridge.nx)).toBeGreaterThan(
+      0.97,
+    );
+    expect(areaRiverTangent(undefined, 'eej-khairkhan', { x: 2600, y: 2600 }, 1.2)).toBe(1.2);
+  });
   it('teaches once, respects recovery, never banks bursts, and resets on actual migration/arrival', () => {
     const r = createRun();
     r.phase = 'playing';

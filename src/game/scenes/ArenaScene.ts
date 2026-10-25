@@ -30,7 +30,7 @@ import { projectileTerrainClear } from '../world3d/projectileTerrain';
 import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
 import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
 import { AREA_ENCOUNTERS, type AreaThreatKind } from '../data/areaEncounters';
-import { areaSurface, habitatPreference } from '../systems/AreaHabitat';
+import { areaSurface, habitatPreference, areaRiverTangent } from '../systems/AreaHabitat';
 import {
   createAreaEncounter,
   syncAreaEncounter,
@@ -1136,16 +1136,26 @@ export class ArenaScene extends Phaser.Scene {
     const isBoss = definition.behavior === 'boss';
     const plan = encounterPlan(this.run);
     const camera = this.cameras.main;
-    const angle =
-      directive?.angle ??
-      (['warning', 'assault', 'elite'].includes(plan.phase)
-        ? areaArrivalAngle(this.areaEncounter, this.run, plan.angle) +
-          Phaser.Math.FloatBetween(-0.35, 0.35)
-        : Phaser.Math.FloatBetween(0, Math.PI * 2));
     const anchor =
       directive?.campOnly || !isKhanActive(this.run) || Math.random() < 0.45
         ? this.camp
         : this.player;
+    const area = AREA_ENCOUNTERS[currentLocation(this.run).id];
+    const base =
+      area.pattern === 'banks'
+        ? areaRiverTangent(
+            this.landscape.navigation?.terrain,
+            currentLocation(this.run).id,
+            anchor,
+            plan.angle,
+          )
+        : plan.angle;
+    const angle =
+      directive?.angle ??
+      (['warning', 'assault', 'elite'].includes(plan.phase)
+        ? areaArrivalAngle(this.areaEncounter, this.run, base) +
+          Phaser.Math.FloatBetween(-0.35, 0.35)
+        : Phaser.Math.FloatBetween(0, Math.PI * 2));
     const viewWidth = camera.width / camera.zoom;
     const viewHeight = camera.height / camera.zoom;
     const view = {

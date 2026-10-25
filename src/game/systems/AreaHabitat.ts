@@ -93,3 +93,34 @@ export function areaSurface(
 export function habitatPreference(surface: AreaSurface, habitat: AreaHabitat): number {
   return habitat === 'ridge' ? Math.max(surface.ridge, surface.snow * 0.4) : surface[habitat];
 }
+
+/** Bank approaches follow the same curved course as the rendered water, including braided channels. */
+export function areaRiverTangent(
+  terrain: MountainTerrain | undefined,
+  id: LocationId,
+  anchor: { x: number; y: number },
+  fallback: number,
+): number {
+  const water = LANDSCAPES[id].water;
+  const channels =
+    terrain instanceof ComposedTerrain
+      ? terrain.river?.channels
+      : water
+        ? (rivers.get(id) ?? riverChannels(water))
+        : undefined;
+  if (!channels?.length) return fallback;
+  if (!terrain && water && !rivers.has(id)) rivers.set(id, channels);
+  const center = terrain?.worldSize ? terrain.worldSize / 2 : GAME.worldSize / 2;
+  let best = Infinity,
+    angle = fallback;
+  for (const channel of channels)
+    for (let i = 0; i < channel.sections.length; i += 4) {
+      const s = channel.sections[i]!,
+        distance = (anchor.x - center - s.x) ** 2 + (anchor.y - center - s.y) ** 2;
+      if (distance < best) {
+        best = distance;
+        angle = Math.atan2(-s.nx, s.ny);
+      }
+    }
+  return angle;
+}

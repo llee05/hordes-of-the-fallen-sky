@@ -110,3 +110,11 @@ also modestly reduces walking speed (bounded at 65%); charges retain terrain
 collision. Local actor-sized line sweeps avoid clipping corners, and blocked
 approaches re-centre before selecting a clear next cell. Twelve cached fields bound
 memory; hundreds of actors share them instead of requesting individual A* paths.
+
+Local enemy habitats reuse the renderer's grove, shore, snow and cliff-foot masks.
+Native spawn candidates prefer suitable connected ground outside the actual camera.
+Bank approaches derive their direction from the closest section of the rendered
+river, including braided channels, so their opposing approaches follow the water's
+curves. Location identity follows the physical landscape during crossings; a
+previewed destination cannot change the current enemy pool. See
+[area encounters](area-encounters.md) for local rosters and the bounded terrain rules.
