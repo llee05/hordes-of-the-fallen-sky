@@ -39,7 +39,7 @@ Press **Up** to recall older commands and **Down** to move forward or restore yo
 unfinished input. The latest 40 commands are remembered across checkpoints,
 new games, and app restarts; saved commands do not execute automatically.
 
-The packaged game includes its runtime, painted art, fonts, and synthesized sound. It makes no runtime asset downloads or AI calls. The desktop fills its window and provides fullscreen, quit, and durable native saves.
+The packaged game includes its runtime, painted art, fonts, and recorded sound. It makes no runtime asset downloads or AI calls. The desktop fills its window and provides fullscreen, quit, and durable native saves.
 
 For the static browser release, run `npm run build:web` and then `npm run test:pages`
 with Playwright Chromium installed. The production smoke tests use the GitHub Pages
@@ -60,9 +60,9 @@ The title cloth breathes gently, parchment menus settle into place, and illustra
 
 Press **Tab** or **J** (controller **View**) to open the clan chronicle. It pauses combat, physics, economy, and migration while you inspect the journey, buildings, workforce, formations, and learned traditions. Arrow keys switch its tabs; Escape or J returns to the battlefield. You can open camp development or choose an available migration route directly from the chronicle.
 
-The title and pause menus contain **Settings** and **How to play**. Sound preference saves automatically. Fullscreen is available in Settings or with F11 / Alt+Enter. Escape backs out to the menu you came from; closing Settings during a paused expedition keeps that expedition paused. Native Quit game is available in the main and pause menus. Keyboard, mouse, controller, and touch-preview actions use the same scene-owned run state.
+The title and pause menus contain **Settings** and **How to play**. Mute and separate music, ambience, combat, and interface levels save automatically. Settings also offers five recorded reference auditions. Fullscreen is available in Settings or with F11 / Alt+Enter. Escape backs out to the menu you came from; closing Settings during a paused expedition keeps that expedition paused. Native Quit game is available in the main and pause menus. Keyboard, mouse, controller, and touch-preview actions use the same scene-owned run state.
 
-The sound palette uses bowstring snaps, grounded hoofbeats, wood and leather impacts, rope twangs, harness bells, breathy clan horns, and warm plucked strings. Barricade hits sound at the struck panel; nearby action pans and fades with distance. Cart creaks accompany migration, with quiet gusts over the steppe. Distinct cues mark construction, research, departure, arrival, a fallen Khan, succession, and the expedition's outcome. World sounds stop in menus, while purchases and journey outcomes retain their brief cues. Muting fades existing voices as well as suppressing new ones. All 21 sounds are synthesized locally, with bounded mixing and no audio downloads. See [the sound design guide](docs/sound-design.md).
+The sound palette uses licensed recordings of recurve bows, real horse contacts, paper, leather, wood, metal, frame drums, wind, water, and campfire. Layered events choose shuffled takes with subtle variation; sound remains bounded during large battles. Four buses provide separate music, ambience, combat, and interface controls. Long environmental passages crossfade as biome, combat and camp context change; menus freeze movement cadence. All recordings and their CC0 provenance ship locally. Recorded music and additional horse, cloth, wildlife and region-specific material are explicit pending asset slots; no electronic fallback fills them. See [the audit](docs/audio-audit.md) and [the sound design guide](docs/sound-design.md) for the five references, licences, architecture, and remaining recording work.
 
 ## The Living Steppe Tapestry
 

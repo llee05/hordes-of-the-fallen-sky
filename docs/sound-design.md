@@ -1,42 +1,58 @@
 # Sounds of the travelling clan
 
-The sound direction translates the Living Steppe Tapestry's wood, felt, leather, brass, horses, and cold supernatural forms into short, tactile effects. Original horn and plucked-string phrases give the fictional clan a recurring musical voice. These are synthesized game materials; no external recordings, services, or runtime downloads are used.
+Read [the pre-upgrade audit](audio-audit.md) for the causes of the former electronic sound. The runtime now plays locally bundled recordings. There are no generated waveforms, oscillator substitutes, runtime audio downloads, or simulated traditional instruments.
 
-## Palette
+## The five reference sounds
 
-| Action                   | Sound materials                                                                    |
-| ------------------------ | ---------------------------------------------------------------------------------- |
-| Bow volley               | Softened, dry bowstring release, low wooden body, and a quiet feather rush         |
-| Riding / gallop          | Weighted hoof contacts with low drum body, dry wood, grass, and a brief cloth rush |
-| Khan hit                 | Leather and wood over a low membrane thud                                          |
-| Creature hit / defeat    | Dry bone and stone knocks, then an ash-like breath                                 |
-| Barricade hit            | Resonant timber crack, peg rattle, and rope twang at the struck panel              |
-| Spirit shard / knowledge | Small metal overtones and warm string plucks                                       |
-| Construction / research  | Mallet taps and lashings / a brief string phrase with a light metal accent         |
-| Departure / arrival      | A low two-part clan horn / open string notes and a gentle harness bell             |
-| Moving caravan           | Cart creaks, low rope resonance, wheel knocks, and small harness bells             |
-| Steppe air               | Infrequent, quiet filtered wind gusts                                              |
-| Hostile spell / thunder  | Air and reed-like resonance / a low rolling body with a sharp stone transient      |
-| Fallen Khan / successor  | A descending drum and string resonance / a returning horn and brighter pluck       |
-| Victory / clan loss      | A fuller version of the clan phrase / sparse fading wood, drum, and wind           |
+- **Bow volley:** four different recorded Scythian recurve releases, lightly supported by actual arrow fletching. A volley requests one event, regardless of projectile count. Variation stays within ±1.2% on the bow and ±1.5% on the quiet fletching.
+- **Enemy contact:** cut-fruit Foley for the contact, a dry wooden transient, and a quiet leather tail. Earth creatures use a harder wood/twig/metal combination. This is physical Foley design; dedicated stone/bone arrow impacts remain requested.
+- **Spiritual force:** a real frame-drum strike with a low-pass-filtered, recorded wind tail. Drum pitch is unchanged. These original fantasy cues do not reproduce a Tengri ceremony or pretend that a synthesized tone is a traditional instrument.
+- **Interface:** a short page-handling sound with a soft wooden contact. Construction layers recorded timber knocks and leather; research uses paper and a quiet wooden chime. Settings includes five reference auditions so the direction can be reviewed in the actual mixer.
+- **Environment:** three different 32-second open-field wind passages, with two 24-second water and fire passages. Random entry offsets, shuffled passage selection and overlapping 2.4-second fades avoid a single conspicuous short loop. The wind passages retain their natural movement; no generated noise bed is added.
 
-`src/game/audio/soundPalette.ts` defines all 21 cues as typed material layers. Strings use a damped delay loop excited by noise; wood, membrane, horn, and metal use different resonances, envelopes, and transients. Filtered noise supplies breath, grass, and cloth. Three reproducible variants vary tuning and excitation. Each mono PCM buffer renders at 24 kHz, with quiet endpoints, DC removal, and peak headroom, then caches on first use.
+The remaining event IDs use restrained arrangements of these recorded materials. They are continuity cues, not a completed bespoke sound library. Hooves are real horse contacts on hard dry earth. Cart creaks currently use recorded floor timber as a Foley proxy. Spirit pickup feedback is exceptionally quiet and limited to one event per 650 ms; minor pickups do not become a musical metronome.
 
-Bowstrings have their own short, heavily damped release rather than the sustained
-pluck used by musical cues. A 2.4 kHz excitation filter softens the initial edge,
-the wooden body sits lower, and the feather rush stays short and quiet. Each shot
-lasts 115 milliseconds including its silent buffer tail; most energy arrives in
-the first 30 milliseconds, with less than 3% remaining after 60 milliseconds.
-This keeps repeated volleys dry without a bright click or lingering musical note.
+## Recordings and licences
 
-## Mixing and lifecycle
+All supplied recordings are **CC0 1.0**. No attribution is required by that dedication; creators are credited here and in the distributed `public/audio/credits.json` by choice. The register records each output filename, original source path, source and output SHA-256, exact trim, filtering, gain, endpoint fades, duration and measured level. All game files are local Vorbis assets, approximately 3.6 MB in total. Positionable Foley is mono; environmental beds retain stereo. Sources delivered as Freesound public HQ MP3 previews are explicitly identified; they are not represented as lossless masters.
 
-`src/game/systems/Audio.ts` unlocks Web Audio through a user action. A shared output gain and compressor mix at most 16 live sources. Per-cue cooldowns and overlap limits restrain large volleys and crowds. Important clan signals can replace a quieter voice. World sources pan gently left or right and fade with distance from the living Khan, or from camp during succession. Barricade hits retain a quiet minimum level so a distant attack on the clan remains audible.
+| Creator                                         | Recording / primary licence source                                                                                 | Use                                                                                                                              |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Ben Jaszczak & Brian Nelson / Still North Media | [Medieval sound effects — Weapon Textures](https://opengameart.org/content/medieval-sound-effects-weapon-textures) | `Scythian Recurve Shoot.wav`, four separate releases                                                                             |
+| Vehicle                                         | [Fantasy Sound Effects (Tinysized SFX)](https://opengameart.org/content/fantasy-sound-effects-tinysized-sfx)       | Actual fletching, apple cuts, wood bowl/spoon, quiver leather, book pages, twigs, hammer on metal, floor creak and wooden chimes |
+| Thimras                                         | [Park ambiences](https://opengameart.org/content/park-ambiences)                                                   | Wind and river field recordings, edited into longer passages                                                                     |
+| Jaturo                                          | [classic drum](https://freesound.org/people/Jaturo/sounds/169605/)                                                 | Three frame-drum strikes, from the public HQ preview                                                                             |
+| Max_Headroom                                    | [Horse Galloping.wav](https://freesound.org/people/Max_Headroom/sounds/175356/)                                    | Five contacts from a real horse recording, public HQ preview                                                                     |
+| SKrafft                                         | [Campfire (Position 1)](https://freesound.org/people/SKrafft/sounds/681366/)                                       | Two quiet campfire passages, public HQ preview                                                                                   |
 
-`ArenaScene` emits sounds only after actual actions: a successful purchase, a fired volley, a hit, a defeat, a journey transition, or succession. Empty volleys stay silent. Hoof cadence follows distance ridden, speeds up during gallop, and stops while the Khan is fallen. Cart and wind timing uses active gameplay seconds. Pausing, story, planning, focus-loss pause, and ended phases fade existing world playback; world cues cannot start in those phases. Explicit construction, research, arrival, and outcome cues may play in their corresponding menus. These presentation timers never own or delay simulation values.
+The park recordings were made in Adelaide, Australia. They are general environmental proxies, not recordings of the Mongolian steppe. Do not present their incidental wildlife as geographically authentic. The source pack describes Vehicle's Foley as organic and unprocessed apart from normalization. The edits here trim, filter rumble/brightness, set conservative levels, fade endpoints and encode; there is no invented waveform or pitch-shifted imitation of an instrument.
 
-Mute suppresses new sounds and fades current voices over 15 milliseconds. Its existing native/browser preference persists. Restarts stop voices and reset presentation clocks while retaining one unlocked context and bounded buffer caches. Final scene destruction disconnects nodes and closes the context. A missing audio device or Web Audio API leaves gameplay operational.
+`python3 scripts/prepare-audio.py /path/to/raw-sources` reproduces the edits with FFmpeg. It performs no downloads. The raw directory contains `tiny/sfx-cc0/` from `tinysized.zip`, `weapons/` from the first Medieval Weapon Textures archive, `wind.wav`/`river.wav` from Park ambiences, and the documented `drum.mp3`, `horse.mp3`, `fire.mp3` HQ previews. The JSON register retains the provenance even when raw archives are outside the shipping repository. FFmpeg/Vorbis versions can change output bytes; review updated measurements and checksums after re-encoding.
+
+## Runtime contracts
+
+`audio/assets.ts` is the reusable manifest. Supplied and **needed** recordings are distinct. Needed files are never fetched; an unavailable primary recording makes its event silent. A missing optional tail can be omitted. Runtime failures remain in `GameAudio.diagnostics.failed`, and `needed` lists the unfilled manifest slots. No fallback tone is generated.
+
+`SampleBank` fetches local files without opening an audio device, at a maximum of four simultaneous requests. On a user gesture, the existing `GameAudio` context resumes and decodes at most three recordings at once. Each recording is fetched and decoded once per app session, shared by every event. No stale combat event is queued while loading. Failed downloads and decoding failures cannot interrupt simulation.
+
+`soundPalette.ts` authors event scope, channel, loudness, cooldown, overlap count, priority and sample layers. Each layer can choose takes, gain, a small delay/jitter, a tightly bounded rate range, filtering and an optional recorded tail duration. Sample bags exhaust all available takes without consecutive repeats at a bag boundary. Fixed-pitch drum and chime performances receive no random pitch shift. Layer gains are normalized within an event budget; randomized event gain varies only slightly.
+
+The mixer has independent **music, ambience, combat and interface** buses, a conservative master and a gentle output compressor. Settings changes ramp rather than jump, save through `GamePlatform` and the native validated profile store, and keep the existing mute preference independent. Zero disables new playback on its channel and fades current channel voices. Old profiles retain their original settings and acquire neutral/default mix preferences.
+
+The budget is **12 event groups, 7 combat groups, 28 total sample sources and 6 environmental sources**, including outgoing fades. Per-cue limits, cooldowns and a 22-per-second low-priority event budget suppress crowd spam. Priority plus estimated audibility controls event stealing; important clan feedback can replace a low-priority sound. Victims stop and disconnect before replacement, keeping physical source counts bounded. Bow volleys stay grouped; tiny continuous damage is already filtered by the scene's damage threshold. All cue gains leave headroom before bus/master levels and output compression.
+
+World contacts attenuate and pan relative to the Khan, or camp during succession. Barricade hits retain a quiet warning floor. Hooves follow distance actually ridden, not an automatic animation clock. Cart intervals vary. Combat activity gradually lowers environmental level and leaves room in the music bus; high-priority signals briefly duck ambience. Biome changes smoothly change wind colour and level and introduce/retire water passages. The frozen Silent River does not use running-water ambience. Camp management may retain a quiet wind/fire bed while world action and presentation cadence remain frozen. Other paused menus fade world playback. A presentation-only refresh timer keeps camp beds crossfading during long planning sessions; it never advances hooves, cart cadence, or simulation.
+
+Restart stops all sources and resets active presentation clocks while preserving one unlocked context, cached recordings and volume preferences. Final destruction disconnects nodes and closes the context. Missing devices leave the game playable.
+
+## Remaining recording work
+
+The manifest explicitly requests: soft grass and snow/scree horse contacts, close horse breath, occasional horse vocalisation, banner/felt flutter, grass rustle, geographically appropriate wildlife, dedicated stone impacts, rope/lashing Foley, performed nonverbal spirit breath, and natural rolling thunder. Cart-specific creaks and more timber/metal impacts would improve material distinction. Current earth/lightning/outcome arrangements reuse the reference recordings and should receive bespoke designs after listening review.
+
+Three music slots reserve **exploration, battle and camp stems** (`music-steppe.ogg`, `music-battle.ogg`, `music-camp.ogg`). Supply locally encoded, licensed stems of 18–60 seconds with a clean phrase start and fade-friendly tail; the current decoded-clip limit is 65 seconds. Music always starts at its authored beginning, with no random offset or pitch shift. They remain silent until licensed recordings are supplied. The music bus, state selection, fades and combat ducking are implemented; no crude synthesized score fills the gap. A composer brief should favour spacious recorded morin khuur, restrained percussion and, where artistically appropriate, licensed vocal performances. Obtain performer and recording rights as well as composition rights. The [UNESCO morin khuur entry](https://ich.unesco.org/en/RL/traditional-music-of-the-morin-khuur-00068) and [Mongolian Philharmonic's Morin Khuur Orchestra](https://philharmonic.mn/en/p/6/morin-khuur-ensemble) are musical/contextual references, not reusable recording licences. Keep the game's invented supernatural calamity distinct from living traditions.
+
+Next review: audition the five references on headphones and speakers at gameplay zoom; tune transient/body/tail balance against a dense late-game battle; check perceived loudness, low-frequency buildup and the audibility of quiet fire; then commission the missing region/horse/music recordings. Automated signal checks do not establish aesthetic excellence or replace a listening session.
 
 ## Verification
 
-`tests/unit/soundPalette.test.ts` checks every rendered cue for finite samples, audible energy, headroom, DC, endpoints, and repeatable variation, plus the bow release's short decay at 24, 44.1, and 48 kHz. `tests/unit/audio.test.ts` checks gating, mute, voice limits, cleanup, active-time cadence, and audio-device failure. `tests/e2e/audio.spec.ts` exercises real Web Audio buffers, scene actions, paused purchases, mute persistence, journey signals, succession, and context reuse. Run `npm run check`, the focused browser tests, and the Electron smoke test when changing playback or lifecycle behavior.
+Tests cover asset provenance/checksums, finite measured levels, tight pitch limits, nonrepeating selection, local loading and decode failures, mute and channel volume, source cleanup, dense simultaneous requests, priority stealing, active-time cadence, biome transitions and profile compatibility. Browser and Electron checks decode the actual locally bundled recordings, exercise real actions and settings, verify offline playback and persistence, and retain simulation pause and context lifecycle coverage. Run `npm run check` and the focused audio/settings browser and desktop checks when extending the palette.

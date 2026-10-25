@@ -159,21 +159,20 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect(page.locator('#food-outlook')).toContainText('Stores empty in ~');
     // Exercise the production Web Audio path without a development scene hook.
     await page.evaluate(() => {
-      const NativeAudioContext = window.AudioContext;
-      window.AudioContext = class extends NativeAudioContext {
-        constructor(options?: AudioContextOptions) {
-          super(options);
-          (window as any).nativeSoundContext = this;
-        }
-        createBufferSource(): AudioBufferSourceNode {
-          const source = super.createBufferSource();
-          const start = source.start.bind(source);
-          source.start = (when = 0) => {
-            (window as any).nativeSoundsPlayed = ((window as any).nativeSoundsPlayed ?? 0) + 1;
-            start(when);
-          };
-          return source;
-        }
+      const originalResume = AudioContext.prototype.resume;
+      AudioContext.prototype.resume = function () {
+        (window as any).nativeSoundContext = this;
+        return originalResume.call(this);
+      };
+      const originalSource = AudioContext.prototype.createBufferSource;
+      AudioContext.prototype.createBufferSource = function () {
+        const source = originalSource.call(this);
+        const start = source.start.bind(source);
+        source.start = (...args: Parameters<AudioBufferSourceNode['start']>) => {
+          (window as any).nativeSoundsPlayed = ((window as any).nativeSoundsPlayed ?? 0) + 1;
+          start(...args);
+        };
+        return source;
       };
     });
     await closeOverlayOrPause(page);

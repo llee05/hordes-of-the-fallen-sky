@@ -31,6 +31,8 @@ import type { JournalTab } from './menuContent';
 import { researchMenu } from './researchContent';
 import { developerConsole, developerMenu } from './developerContent';
 import type { TreeViewState } from './progressionTree';
+import { AUDIO_CHANNELS, normalizeAudioMix, type AudioChannel } from '../shared/audioSettings';
+import { AUDIO_REFERENCE_CUES, type SoundKind } from '../game/audio/soundPalette';
 
 const emblem = `<span class="clan-seal">${clanMark('spirit')}</span>`;
 
@@ -141,6 +143,17 @@ export class GameUI {
     this.overlay.addEventListener('keydown', (event) => this.handleMenuKey(event));
     this.overlay.addEventListener('input', (event) => {
       const input = event.target as HTMLInputElement;
+      if (input.matches('[data-audio-channel]')) {
+        const channel = input.dataset.audioChannel as AudioChannel;
+        if (AUDIO_CHANNELS.includes(channel)) {
+          this.scene.setAudioVolume(channel, Number(input.value) / 100);
+          const output = this.overlay.querySelector<HTMLOutputElement>(
+            `[data-audio-value="${channel}"]`,
+          );
+          if (output) output.value = `${input.value}%`;
+        }
+        return;
+      }
       if (import.meta.env.DEV && input.matches('[data-developer-command-input]')) {
         this.commandHistoryOffset = 0;
         return;
@@ -549,7 +562,11 @@ export class GameUI {
     } else if (run.phase === 'upgrade') this.overlay.innerHTML = researchMenu(run, this.treeView());
     else if (run.phase === 'journal') this.overlay.innerHTML = journalMenu(run, this.journalTab);
     else if (run.phase === 'settings')
-      this.overlay.innerHTML = settingsMenu(this.platform.profile.muted, this.fullscreen);
+      this.overlay.innerHTML = settingsMenu(
+        this.platform.profile.muted,
+        this.fullscreen,
+        normalizeAudioMix(this.platform.profile.audioMix),
+      );
     else if (run.phase === 'help') this.overlay.innerHTML = helpMenu(run.guidance.enabled);
     else if (import.meta.env.DEV && run.phase === 'developer')
       this.overlay.innerHTML = developerMenu(snapshot.developerConsole);
@@ -653,6 +670,22 @@ export class GameUI {
     const button = (event.target as Element).closest<HTMLButtonElement>('button');
     if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
     const action = button.dataset.action;
+    if (
+      button.dataset.audioReference &&
+      AUDIO_REFERENCE_CUES.includes(
+        button.dataset.audioReference as (typeof AUDIO_REFERENCE_CUES)[number],
+      )
+    ) {
+      this.scene.auditionAudio(button.dataset.audioReference as SoundKind);
+      return;
+    }
+    if (
+      action !== 'sound' &&
+      !button.dataset.building &&
+      !button.dataset.research &&
+      !button.dataset.estateKind
+    )
+      this.scene.playInterfaceSound();
     if (button.hasAttribute('data-camp-dismiss')) {
       this.closeCampPopup();
     } else if (action === 'exit-camp') {
@@ -875,6 +908,31 @@ export class GameUI {
     ].filter((el) => el.getClientRects().length > 0);
   }
   private handleMenuKey(event: KeyboardEvent): void {
+    if (event.target instanceof HTMLInputElement && event.target.matches('[data-audio-channel]')) {
+      const input = event.target;
+      if (
+        [
+          'ArrowLeft',
+          'ArrowDown',
+          'ArrowRight',
+          'ArrowUp',
+          'PageDown',
+          'PageUp',
+          'Home',
+          'End',
+        ].includes(event.key)
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.key === 'Home') input.value = input.min;
+        else if (event.key === 'End') input.value = input.max;
+        else if (['ArrowLeft', 'ArrowDown', 'PageDown'].includes(event.key))
+          input.stepDown(event.key === 'PageDown' ? 10 : 1);
+        else input.stepUp(event.key === 'PageUp' ? 10 : 1);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        return;
+      }
+    }
     // Holding Confirm must not race through chapters or activate the next screen.
     if (event.repeat && ['Enter', ' '].includes(event.key)) {
       event.preventDefault();

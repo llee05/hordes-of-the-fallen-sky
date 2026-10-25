@@ -67,4 +67,27 @@ describe('platform command-history persistence', () => {
     await expect(platform.saveDeveloperCommandHistory(['help'])).rejects.toThrow('unavailable');
     expect(platform.profile.developerCommandHistory).toEqual(['help']);
   });
+
+  it('saves independent mix snapshots with native profile data and retains mute separately', async () => {
+    const writes: PlayerProfile[] = [];
+    vi.stubGlobal('window', {
+      desktop: {
+        loadProfile: async () => ({ ...defaultProfile(), bestSeconds: 77 }),
+        saveProfile: async (profile: PlayerProfile) => {
+          writes.push(profile);
+        },
+      },
+    });
+    const platform = await GamePlatform.create();
+    const mix = { music: 0.2, ambience: 0.3, combat: 0.4, ui: 0.5 };
+    const first = platform.saveAudioMix(mix);
+    mix.music = 0;
+    await Promise.all([first, platform.saveMuted(true), platform.saveAudioMix(mix)]);
+    expect(writes[0]?.audioMix?.music).toBe(0.2);
+    expect(writes.at(-1)).toMatchObject({
+      bestSeconds: 77,
+      muted: true,
+      audioMix: { music: 0, ambience: 0.3, combat: 0.4, ui: 0.5 },
+    });
+  });
 });

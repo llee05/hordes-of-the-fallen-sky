@@ -9,6 +9,7 @@ import { heading, footer } from './panelContent';
 import { khanRecords } from './legacyContent';
 import { storyRecords } from './storyContent';
 import { arrivalLocation, currentLocation, locationAtChapter } from '../game/state/journey';
+import { AUDIO_CHANNELS, normalizeAudioMix, type AudioMix } from '../shared/audioSettings';
 
 export type JournalTab = 'journey' | 'clan' | 'traditions' | 'story';
 
@@ -59,8 +60,23 @@ export function journalMenu(run: RunState, tab: JournalTab): string {
   return `<section class="game-panel journal-dialog">${heading('THE CLAN CHRONICLE', 'A people on the move.')}<div class="journal-tabs" role="tablist" aria-label="Chronicle sections">${(['journey', 'clan', 'traditions', 'story'] as const).map((entry) => `<button role="tab" id="tab-${entry}" aria-selected="${entry === tab}" aria-controls="journal-page" tabindex="${entry === tab ? 0 : -1}" data-tab="${entry}">${entry === 'journey' ? 'The journey' : entry === 'clan' ? 'Your clan' : entry === 'story' ? 'Our story' : 'Traditions'}</button>`).join('')}</div><div class="panel-body" id="journal-page" role="tabpanel" aria-labelledby="tab-${tab}">${content}</div>${footer()}</section>`;
 }
 
-export function settingsMenu(muted: boolean, fullscreen: boolean): string {
-  return `<section class="game-panel utility-panel">${heading('MAKE YOURSELF AT HOME', 'Settings')}<div class="panel-body"><div class="setting-row"><div><h3>Sound</h3><p>Hooves, bowstrings, camp timber, and clan horns.</p></div><button class="setting-button" data-action="sound" aria-label="${muted ? 'Unmute sound' : 'Mute sound'}" aria-pressed="${!muted}">${muted ? 'Muted' : 'Enabled'}</button></div><div class="setting-row"><div><h3>Display</h3><p>F11 or Alt+Enter to toggle fullscreen.</p></div><button class="setting-button" data-action="fullscreen" aria-label="${fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}" aria-pressed="${fullscreen}">${fullscreen ? 'Fullscreen' : 'Windowed'}</button></div><p class="settings-note">Sound preference is saved automatically.</p></div>${footer('Back')}</section>`;
+export function settingsMenu(muted: boolean, fullscreen: boolean, settings?: AudioMix): string {
+  const mix = normalizeAudioMix(settings);
+  const labels = { music: 'Music', ambience: 'Ambience', combat: 'Combat', ui: 'Interface' };
+  return `<section class="game-panel utility-panel">${heading('MAKE YOURSELF AT HOME', 'Settings')}<div class="panel-body"><div class="setting-row"><div><h3>Sound</h3><p>Recorded bowstrings, horses, leather, timber, and open air.</p></div><button class="setting-button" data-action="sound" aria-label="${muted ? 'Unmute sound' : 'Mute sound'}" aria-pressed="${!muted}">${muted ? 'Muted' : 'Enabled'}</button></div><div class="audio-mix-controls" aria-label="Audio mix">${AUDIO_CHANNELS.map((channel) => `<label><span>${labels[channel]} <output data-audio-value="${channel}">${Math.round(mix[channel] * 100)}%</output></span><input type="range" min="0" max="100" step="1" value="${Math.round(mix[channel] * 100)}" data-audio-channel="${channel}" data-focus-key="audio-${channel}" aria-label="${labels[channel]} volume"/>${channel === 'music' ? '<small>Recorded score pending.</small>' : ''}</label>`).join('')}</div><details class="audio-reference-controls"><summary>Listen to the sound palette</summary><div>${[
+    ['shoot', 'Bow'],
+    ['impact', 'Impact'],
+    ['spell', 'Spirit'],
+    ['ui', 'Parchment'],
+    ['wind', 'Steppe wind'],
+  ]
+    .map(
+      ([id, label]) =>
+        `<button class="secondary-button" data-audio-reference="${id}" data-focus-key="reference-${id}">${label}</button>`,
+    )
+    .join(
+      '',
+    )}</div></details><div class="setting-row"><div><h3>Display</h3><p>F11 or Alt+Enter to toggle fullscreen.</p></div><button class="setting-button" data-action="fullscreen" aria-label="${fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}" aria-pressed="${fullscreen}">${fullscreen ? 'Fullscreen' : 'Windowed'}</button></div><p class="settings-note">Sound and mix preferences are saved automatically.</p></div>${footer('Back')}</section>`;
 }
 
 export function helpMenu(guidance = true): string {

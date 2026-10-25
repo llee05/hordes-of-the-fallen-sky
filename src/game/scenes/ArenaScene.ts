@@ -53,6 +53,10 @@ import { advanceSuccession, beginSuccession, damageKhan, isKhanActive } from '..
 import { PatronSupport } from '../systems/PatronSupport';
 import { completeGuidance } from '../state/guidance';
 import { GameAudio } from '../systems/Audio';
+import type { AudioChannel } from '../../shared/audioSettings';
+import { normalizeAudioMix } from '../../shared/audioSettings';
+import type { SoundKind } from '../audio/soundPalette';
+import { environmentForLocation } from '../audio/mixing';
 import { SpatialHash } from '../systems/SpatialHash';
 import { cameraZoomLimits, clampCameraZoom, enemySpawnPosition } from '../systems/CameraView';
 import { ActionKeys } from '../systems/ActionKeys';
@@ -146,6 +150,8 @@ export class ArenaScene extends Phaser.Scene {
   constructor(private readonly platform: GamePlatform) {
     super('arena');
     this.audio.muted = platform.profile.muted;
+    this.audio.setMix(normalizeAudioMix(platform.profile.audioMix));
+    void this.audio.prepare();
   }
 
   connect(callbacks: ArenaCallbacks): void {
@@ -770,6 +776,20 @@ export class ArenaScene extends Phaser.Scene {
     return this.audio.muted;
   }
 
+  setAudioVolume(channel: AudioChannel, value: number): void {
+    this.audio.setVolume(channel, value);
+    void this.platform.saveAudioMix(this.audio.volumes).catch(() => this.callbacks?.onSaveError());
+  }
+
+  playInterfaceSound(): void {
+    this.audio.unlock();
+    this.audio.play('ui');
+  }
+
+  auditionAudio(kind: SoundKind): void {
+    if (this.run.phase === 'settings') this.audio.audition(kind);
+  }
+
   dash(): void {
     if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.dashTimer > 0) return;
     this.dashRemaining = GAME.dash.duration;
@@ -878,6 +898,7 @@ export class ArenaScene extends Phaser.Scene {
       galloping: this.dashRemaining > 0,
       caravan: this.run.clan.stage === 'migration',
       region: this.run.clan.region,
+      environment: environmentForLocation(currentLocation(this.run)),
       listener: isKhanActive(this.run) ? this.player : this.camp,
       camp: this.camp,
     });
@@ -1390,7 +1411,8 @@ export class ArenaScene extends Phaser.Scene {
     if (amount >= 1) enemy.motion.hit();
     enemy.health -= amount;
     if (enemy.health > 0) {
-      if (amount >= 1) this.audio.play('impact', enemy);
+      if (amount >= 1)
+        this.audio.play(enemy.definition.texture === 'earth' ? 'stoneImpact' : 'impact', enemy);
       return;
     }
     const { x, y } = enemy;
@@ -1549,7 +1571,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private setPhase(phase: RunState['phase']): void {
     this.run.phase = phase;
-    this.audio.setPlaying(phase === 'playing');
+    this.audio.setPlaying(phase === 'playing', phase === 'building');
     this.wheelZoomDelta = 0;
     this.clearTouch();
     if (phase === 'playing') {
