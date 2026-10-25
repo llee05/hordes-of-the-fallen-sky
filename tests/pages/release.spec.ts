@@ -83,7 +83,7 @@ test('browser expedition builds, pauses, resumes, and retains its profile after 
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('./');
+  await page.goto('./?terrain=2d');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
   await expect
@@ -99,11 +99,14 @@ test('browser expedition builds, pauses, resumes, and retains its profile after 
   await page.getByRole('button', { name: /Share the work/ }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.keyboard.press('b');
+  await page.locator('[data-camp-slot="1"]').click();
   await page.locator('[data-camp-site="archery"]').click();
-  await page.locator('[data-node="archery-base"]').click();
+  await page.locator('.tree-purchase').click();
   const timer = await page.locator('#timer').textContent();
   await page.waitForTimeout(1200);
   await expect(page.locator('#timer')).toHaveText(timer!);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.camp-popup')).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#riders')).toHaveText('4');

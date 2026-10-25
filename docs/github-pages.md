@@ -20,7 +20,9 @@ executable instead. The smoke suite serves the production artifact at
 `http://127.0.0.1:4173/hordes-of-the-fallen-sky/`, matching a GitHub project site's
 subpath. It checks local assets and prologue paintings, the absence of development
 hooks and native capabilities, real camp purchases, menu pausing, sound preference
-persistence, and play with unavailable browser storage. Run `npm run check` and
+persistence, and play with unavailable browser storage. The gameplay smoke passes
+`?terrain=2d` because the default angled 3D terrain renderer exceeds CI's software
+WebGL time budget. Run `npm run check` and
 `npm run test:e2e` for the broader checks and development-browser regressions.
 
 For a manual production preview:
