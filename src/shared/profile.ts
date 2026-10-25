@@ -1,3 +1,4 @@
+import { isCampArchive, normalizeCampArchive, type CampArchive } from './campArchive.js';
 import { isDeveloperHistory, normalizeDeveloperHistory } from './developerHistory.js';
 
 export interface PlayerProfile {
@@ -5,6 +6,7 @@ export interface PlayerProfile {
   bestSeconds: number;
   muted: boolean;
   developerCommandHistory?: string[];
+  camp?: CampArchive;
 }
 
 export function defaultProfile(): PlayerProfile {
@@ -14,6 +16,7 @@ export function defaultProfile(): PlayerProfile {
 export function isProfile(value: unknown): value is PlayerProfile {
   return (
     isProfileCore(value) &&
+    (!('camp' in value) || value.camp === undefined || isCampArchive(value.camp)) &&
     (!('developerCommandHistory' in value) ||
       value.developerCommandHistory === undefined ||
       isDeveloperHistory(value.developerCommandHistory))
@@ -38,10 +41,12 @@ export function normalizeProfile(value: unknown): PlayerProfile {
   const history = normalizeDeveloperHistory(
     'developerCommandHistory' in value ? value.developerCommandHistory : undefined,
   );
+  const camp = normalizeCampArchive('camp' in value ? value.camp : undefined);
   return {
     version: 1,
     bestSeconds: value.bestSeconds,
     muted: value.muted,
     ...(history.length ? { developerCommandHistory: history } : {}),
+    ...(camp ? { camp } : {}),
   };
 }

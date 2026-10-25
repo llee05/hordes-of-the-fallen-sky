@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ProfileStore } from '../../desktop/profile';
+import { captureCampArchive } from '../../src/game/state/campArchive';
+import { createRun } from '../../src/game/state/run';
 import { defaultProfile, isProfile, normalizeProfile } from '../../src/shared/profile';
 
 const directories: string[] = [];
@@ -46,6 +48,17 @@ describe('native save files', () => {
       normalizeProfile({ version: 1, bestSeconds: 77, muted: true, developerCommandHistory: 42 }),
     ).toEqual({ version: 1, bestSeconds: 77, muted: true });
   });
+  it('atomically round-trips portable camp records and rejects a damaged camp without losing the last save', async () => {
+    const profiles = await store();
+    const camp = captureCampArchive(createRun());
+    await profiles.save({ version: 1, bestSeconds: 77, muted: true, camp });
+    expect(await profiles.load()).toEqual({ version: 1, bestSeconds: 77, muted: true, camp });
+    await expect(
+      profiles.save({ version: 1, bestSeconds: 77, muted: true, camp: { ...camp, tier: 99 } }),
+    ).rejects.toThrow('Invalid player profile');
+    expect((await profiles.load()).camp).toEqual(camp);
+  });
+
   it('starts clean when no save exists and round-trips a profile', async () => {
     const profiles = await store();
     expect(await profiles.load()).toEqual(defaultProfile());

@@ -1,3 +1,4 @@
+import type { CampArchive } from '../shared/campArchive';
 import type { DesktopBridge } from '../shared/desktop';
 import { defaultProfile, normalizeProfile } from '../shared/profile';
 import type { PlayerProfile } from '../shared/profile';
@@ -47,13 +48,13 @@ export class GamePlatform {
     return this.save();
   }
 
+  saveCamp(camp: CampArchive): Promise<void> {
+    this.profile.camp = structuredClone(camp);
+    return this.save();
+  }
+
   private save(): Promise<void> {
-    const snapshot = {
-      ...this.profile,
-      ...(this.profile.developerCommandHistory
-        ? { developerCommandHistory: [...this.profile.developerCommandHistory] }
-        : {}),
-    };
+    const snapshot = structuredClone(this.profile);
     // Serialize snapshots; an older write must never replace a newer score/setting.
     const operation = this.pendingSave
       .catch(() => undefined)
