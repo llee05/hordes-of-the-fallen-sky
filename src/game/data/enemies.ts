@@ -1,4 +1,5 @@
 import type { EnemyDefinition } from '../types';
+import { GAME } from '../config';
 
 /** Add an entry and a matching painted character clip to introduce another enemy. */
 export const ENEMIES: readonly EnemyDefinition[] = [
@@ -87,6 +88,19 @@ export const ENEMIES: readonly EnemyDefinition[] = [
 
 export function spawnInterval(elapsed: number): number {
   return Math.max(0.14, 0.85 - elapsed * 0.004);
+}
+
+/** Active-time pacing; a rejected placement retries without consuming an entire encounter slot. */
+export function encounterSpawnDelay(
+  stageTime: number,
+  region: number,
+  danger = 1,
+  spawned = true,
+): number {
+  if (!spawned) return GAME.spawning.retryInterval;
+  if (region === 0 && stageTime < GAME.spawning.openingDuration)
+    return GAME.spawning.openingInterval;
+  return spawnInterval(stageTime + region * 65) / danger;
 }
 
 export function chooseEnemy(elapsed: number, random = Math.random): EnemyDefinition {

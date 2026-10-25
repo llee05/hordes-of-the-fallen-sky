@@ -4,6 +4,7 @@ import { GAME } from '../config';
 import { MOUNTAIN_TERRAIN_ART } from '../assets/painterlyArt';
 import { terrainDressing } from '../terrain/terrainDressing';
 import { WORLD_3D, groundView, projectGround, screenMovement } from './worldProjection';
+import { withinProjectedView, type ProjectedGroundView } from '../systems/EnemySpawning';
 import { SpriteBridge } from './SpriteBridge';
 import { MountainHeightfield } from './MountainHeightfield';
 import type { TerrainNavigation } from '../terrain/TerrainNavigation';
@@ -35,6 +36,7 @@ export class World3DRenderer {
   readonly effects: GraphicsBridge;
   readonly water?: Water3D;
   viewBounds?: TerrainBounds;
+  spawnView?: ProjectedGroundView;
   angle: number = WORLD_3D.angle;
   readonly yaw: number = WORLD_3D.yaw;
   debugMode: WorldDebugMode = 'off';
@@ -168,6 +170,17 @@ export class World3DRenderer {
   screenX(x: number, y: number): number {
     return projectGround(x, y, 0, this.angle, this.yaw).x;
   }
+  nearView(point: { x: number; y: number }, padding = 0): boolean {
+    return (
+      !!this.spawnView &&
+      withinProjectedView(
+        this.spawnView,
+        point,
+        this.terrain.actorHeight(point.x, point.y) * this.terrain.region.biome.heightScale,
+        padding,
+      )
+    );
+  }
   cycleDebug(): void {
     this.setDebug(
       WORLD_DEBUG_MODES[
@@ -237,6 +250,13 @@ export class World3DRenderer {
     this.camera.lookAt(x, this.focusHeight, z);
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld();
+    this.spawnView = {
+      focus: { x, y: z, elevation: this.focusHeight },
+      width: width / zoom,
+      height: height / zoom,
+      angle: this.angle,
+      yaw: this.yaw,
+    };
     this.frustum.setFromProjectionMatrix(
       this.viewMatrix.multiplyMatrices(
         this.camera.projectionMatrix,

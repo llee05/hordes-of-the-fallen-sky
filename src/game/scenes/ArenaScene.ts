@@ -18,7 +18,8 @@ import { projectileTerrainClear } from '../world3d/projectileTerrain';
 import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
 import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
 import { GAME } from '../config';
-import { chooseEnemy, SKYBREAKER, spawnInterval } from '../data/enemies';
+import { chooseEnemy, SKYBREAKER, encounterSpawnDelay } from '../data/enemies';
+import { projectedEnemySpawnPosition } from '../systems/EnemySpawning';
 import { FORMATIONS, ROUTES } from '../data/clan';
 import { currentLocation } from '../state/journey';
 import { INTRO_SLIDES } from '../data/intro';
@@ -917,13 +918,15 @@ export class ArenaScene extends Phaser.Scene {
     if (this.attackTimer <= 0) this.fire();
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0) {
-      this.spawnEnemy();
-      this.spawnTimer =
-        spawnInterval(this.run.clan.stageTime + this.run.clan.region * 65) /
-        (this.run.clan.stage === 'migration'
+      const spawned = this.spawnEnemy();
+      this.spawnTimer = encounterSpawnDelay(
+        this.run.clan.stageTime,
+        this.run.clan.region,
+        this.run.clan.stage === 'migration'
           ? (ROUTES.find((r) => r.id === this.run.clan.routeId)?.danger ?? 1)
-          : 1);
-      if (this.run.clan.stageTime < 18 && this.run.clan.region === 0) this.spawnTimer = 2;
+          : 1,
+        spawned,
+      );
     }
     this.updateProjectiles(dt);
     this.collectGems(dt);
@@ -939,8 +942,7 @@ export class ArenaScene extends Phaser.Scene {
       !this.run.clan.finalBossSpawned &&
       this.run.clan.stageTime >= 20
     ) {
-      this.run.clan.finalBossSpawned = true;
-      this.spawnEnemy(SKYBREAKER);
+      if (this.spawnEnemy(SKYBREAKER)) this.run.clan.finalBossSpawned = true;
     }
     this.presentStory();
   }
@@ -1018,42 +1020,61 @@ export class ArenaScene extends Phaser.Scene {
     }
   }
 
-  private spawnEnemy(forced?: EnemyDefinition): void {
+  private spawnEnemy(forced?: EnemyDefinition): boolean {
+    if (this.enemies.countActive(true) >= GAME.maxEnemies) return false;
     const definition = forced ?? chooseEnemy(this.run.elapsed + this.run.clan.region * 80);
     const camera = this.cameras.main;
     const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
     const anchor = !isKhanActive(this.run) || Math.random() < 0.45 ? this.camp : this.player;
     const viewWidth = camera.width / camera.zoom;
     const viewHeight = camera.height / camera.zoom;
-    const view = this.landscape.world3d?.viewBounds ?? {
+    const view = {
       x: camera.midPoint.x - viewWidth / 2,
       y: camera.midPoint.y - viewHeight / 2,
       width: viewWidth,
       height: viewHeight,
     };
-    let point = enemySpawnPosition(view, anchor, angle);
     const navigation = this.landscape.navigation;
-    if (navigation) {
-      let safe = navigation.nearestWalkable(point);
-      // Prefer connected ground beyond the view; never start a pooled actor inside a cliff.
-      for (let attempt = 0; attempt < 12; attempt++) {
-        const candidate = enemySpawnPosition(view, anchor, angle + (attempt * Math.PI) / 6);
-        if (navigation.isWalkable(candidate.x, candidate.y, GAME.terrain.actorClearance, true)) {
-          safe = candidate;
-          break;
+    const world = this.landscape.world3d;
+    let point;
+    if (world?.spawnView && navigation) {
+      point = projectedEnemySpawnPosition(
+        world.spawnView,
+        anchor,
+        isKhanActive(this.run) ? this.player : undefined,
+        angle,
+        {
+          heightAt: (x, y) =>
+            world.terrain.actorHeight(x, y) * world.terrain.region.biome.heightScale,
+          walkable: (x, y) => navigation.isWalkable(x, y, GAME.terrain.actorClearance, true),
+        },
+      );
+      if (!point) return false;
+    } else {
+      point = enemySpawnPosition(view, anchor, angle);
+      if (navigation) {
+        let safe = navigation.nearestWalkable(point);
+        // Prefer connected ground beyond the view; never start a pooled actor inside a cliff.
+        for (let attempt = 0; attempt < 12; attempt++) {
+          const candidate = enemySpawnPosition(view, anchor, angle + (attempt * Math.PI) / 6);
+          if (navigation.isWalkable(candidate.x, candidate.y, GAME.terrain.actorClearance, true)) {
+            safe = candidate;
+            break;
+          }
         }
+        if (!safe) return false;
+        point = safe;
       }
-      if (!safe) return;
-      point = safe;
     }
     const { x, y } = point;
     if (
       isKhanActive(this.run) &&
-      Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) < 200
+      Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) <
+        GAME.spawning.minimumPlayerDistance
     )
-      return;
+      return false;
     const enemy = this.enemies.get(x, y, ...artTexture(definition.texture)) as Enemy | null;
-    if (!enemy) return;
+    if (!enemy) return false;
     enemy.enableBody(true, x, y, true, true);
     const width = (ART_WIDTH[definition.texture] ?? 50) * (definition.scale / (forced ? 4 : 2));
     styleActor(enemy, definition.texture, width, 5 * definition.scale);
@@ -1081,6 +1102,7 @@ export class ArenaScene extends Phaser.Scene {
       throw new Error(`Missing character animation: ${definition.texture}`);
     enemy.motion.reset(definition.texture, Math.random());
     enemy.preparingAttack = false;
+    return true;
   }
 
   private updateEnemies(dt: number): void {
@@ -1108,7 +1130,12 @@ export class ArenaScene extends Phaser.Scene {
       const playerDistance = khanActive
         ? Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y)
         : Infinity;
-      if (playerDistance > 1600 && campDistance > 1600 && enemy !== this.boss) {
+      if (
+        playerDistance > GAME.spawning.despawnDistance &&
+        campDistance > GAME.spawning.despawnDistance &&
+        enemy !== this.boss &&
+        !this.landscape.world3d?.nearView(enemy, GAME.spawning.viewRetentionMargin)
+      ) {
         enemy.disableBody(true, true);
         continue;
       }
