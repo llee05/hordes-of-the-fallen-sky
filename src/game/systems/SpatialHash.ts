@@ -20,12 +20,17 @@ export class SpatialHash<T extends SpatialItem> {
     }
   }
 
-  nearest(x: number, y: number, radius: number): T | undefined {
+  nearest(
+    x: number,
+    y: number,
+    radius: number,
+    accept: (item: T) => boolean = () => true,
+  ): T | undefined {
     let nearest: T | undefined;
     let best = radius * radius;
     this.forEachNearby(x, y, radius, (item) => {
       const distance = (item.x - x) ** 2 + (item.y - y) ** 2;
-      if (item.active && distance <= best) {
+      if (item.active && distance <= best && accept(item)) {
         nearest = item;
         best = distance;
       }

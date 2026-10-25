@@ -128,7 +128,8 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'An unbroken volley',
         maxStacks: 1,
         requires: [need('power')],
-        description: 'The mounted host’s firing interval falls by 15%.',
+        description:
+          'The mounted host’s firing interval falls by 15%. Every fourth host volley, accompanying riders loose paired arrows.',
         apply: (run) => {
           run.stats.attackInterval *= P.bow.interval;
         },
@@ -140,7 +141,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('power')],
         description:
-          'Friendly arrows pierce one additional enemy. A single arrow cannot hit the same creature twice.',
+          'Friendly arrows pierce one additional enemy. Charged Khan volleys briefly pin ordinary enemies and interrupt charges; one arrow cannot hit the same creature twice.',
         apply: (run) => {
           run.patrons.bow.pierce += P.bow.pierce;
         },
@@ -242,7 +243,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('watercourse')],
         description:
-          'Eruption warnings last one second longer. Eruptions deal half damage to Khan and clan.',
+          'Eruption warnings last one second longer and deal half damage. Galloping leaves a brief slowing wake on the ground.',
         apply: (run) => {
           run.patrons.water.warning += P.water.warning;
           run.patrons.water.hazardDamage *= P.water.hazardDamage;

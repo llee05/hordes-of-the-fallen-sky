@@ -154,6 +154,7 @@ export interface PatronEffects {
 }
 
 export interface RunState {
+  combat: import('./state/mountedCombat').MountedCombatState;
   encounters: import('./state/encounters').EncounterState;
   field: import('./state/fieldObjectives').FieldState;
   legacy: ClanLegacy;

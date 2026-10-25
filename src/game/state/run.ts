@@ -1,3 +1,4 @@
+import { createMountedCombat } from './mountedCombat';
 import { createEncounters } from './encounters';
 import { createFieldState } from './fieldObjectives';
 import { UPGRADES } from '../data/upgrades';
@@ -17,6 +18,7 @@ export function xpForLevel(level: number): number {
 export function createRun(): RunState {
   return {
     legacy: createLegacy(),
+    combat: createMountedCombat(),
     encounters: createEncounters(),
     field: createFieldState(),
     guidance: { enabled: true, completed: [] },

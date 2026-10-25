@@ -1,3 +1,4 @@
+import { createEnemyTactics } from '../systems/enemyTactics';
 import Phaser from 'phaser';
 import type { EnemyDefinition } from '../types';
 import { CharacterMotion } from '../animation/CharacterMotion';
@@ -14,6 +15,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   chargeTimer = 0;
   burning = 0;
   objectiveId?: number;
+  tactics = createEnemyTactics();
+  pinned = 0;
+  lastGallop = -1;
+  dangerTimer = 3;
+  tacticalSlot = 0;
 }
 
 export class Projectile extends Phaser.Physics.Arcade.Image {
@@ -23,6 +29,7 @@ export class Projectile extends Phaser.Physics.Arcade.Image {
   tempest = false;
   turn = 0;
   pierces = 0;
+  pins = false;
   readonly hitTargets = new Map<Enemy, number>();
 }
 

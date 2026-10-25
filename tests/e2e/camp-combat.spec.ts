@@ -143,9 +143,12 @@ test('every enemy can hold and animate a camp attack, including a charging rider
       const before = scene.enemies.countActive(true);
       for (let attempt = 0; attempt < 10 && scene.enemies.countActive(true) === before; attempt++)
         scene.spawnEnemy({ ...definition, damage: 0, health: 10000 });
-      const enemy = scene.boss;
+      const enemy = scene.enemies
+        .getChildren()
+        .find((e: any) => e.active && e.definition.id === definition.id);
       const angle = (index * Math.PI * 2) / definitions.length;
       enemy.setPosition(scene.camp.x + Math.cos(angle) * 118, scene.camp.y + Math.sin(angle) * 118);
+      enemy.health = enemy.maxHealth = 10000;
       enemy.chargeTimer = 2.9;
       enemy.setData('chargeAngle', angle + Math.PI);
       enemy.attackTimer = 0;
@@ -179,9 +182,12 @@ test('every enemy can hold and animate a camp attack, including a charging rider
       damage: (enemy: any, amount: number) => scene.damageEnemy(enemy, amount),
       volley: () => {},
     });
-    return scene.enemies.getChildren().map((enemy: any) => enemy.health);
+    return scene.enemies
+      .getChildren()
+      .map((enemy: any) => ({ health: enemy.health, id: enemy.definition.id }));
   });
-  for (const health of wardHealth) expect(health).toBeCloseTo(10000 - 16 * 0.65);
+  for (const enemy of wardHealth)
+    expect(enemy.health).toBeCloseTo(10000 - 16 * 0.65 * (enemy.id === 'brute' ? 0.8 : 1));
   await page.screenshot({ path: 'test-results/camp-under-attack.png' });
 });
 

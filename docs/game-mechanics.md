@@ -451,3 +451,27 @@ paid once. Migration abandons unfinished objectives without spending or granting
 anything; arrivals create fresh opportunities. Completed objectives enter the clan's
 existing chronicle. Data lives in `data/encounters.ts` and `data/fieldObjectives.ts`;
 independent rules live in their corresponding state modules.
+
+### Mounted skill and enemy roles
+
+Actual travelled ground, rather than movement input, now builds momentum at 0.28
+per second. Stopping, reversing abruptly, or pressing into a cliff loses momentum.
+After 3.5 seconds of sustained riding, the next successfully released Khan volley
+has 35% extra damage and one extra pierced target; a full projectile pool does not
+consume it. The HUD shows its charge. Feigned retreat adds 15% Khan volley damage
+when shooting behind while riding away from camp. Gallops push nearby enemies once
+per charge, sweeping against terrain rather than displacing them through walls.
+
+An unbroken volley additionally gives living riders paired arrows every fourth
+host volley. One shaft, two shadows makes charged Khan arrows pin ordinary enemies
+for 0.65 seconds and interrupt charges. Read the shifting ground leaves bounded,
+2.5-second slowing wakes during gallops. All use existing research IDs, costs,
+pools, and active gameplay time; no new research layer is required.
+
+Wolves take alternating flanking approaches before committing at close range.
+Hulks absorb 20% damage while unpinned. Ghost riders mark a fixed charge direction
+for 0.8 seconds, charge for 0.7, then recover for 1.8; cliffs and pinning interrupt
+them. Seers seek firing positions around 370 units and mark a 75-unit danger zone
+for 1.2 seconds before it strikes. All ground roles obey the location's navigation.
+Archers skip targets occluded by terrain when a clear target is available. Camp
+perimeter contact continues to cancel movement and uses the existing attack clock.

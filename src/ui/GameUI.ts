@@ -338,7 +338,12 @@ export class GameUI {
       'aria-label',
       `Open patron tech tree, ${run.pendingUpgrades} knowledge points`,
     );
-    this.text('momentum', `MOMENTUM ${Math.round(clan.momentum * 100)}%`);
+    this.text(
+      'momentum',
+      run.combat.ready
+        ? 'CHARGED VOLLEY READY'
+        : `MOMENTUM ${Math.round(clan.momentum * 100)}% · CHARGE ${Math.round((run.combat.rideSeconds / GAME.mounted.chargeSeconds) * 100)}%`,
+    );
     for (const id of ['population', 'herd', 'food', 'materials', 'spirit'] as const)
       this.number(id, Math.floor(clan[id]));
     this.get('food').classList.toggle('danger', clan.food < 15);

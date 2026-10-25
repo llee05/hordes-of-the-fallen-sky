@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { SpatialHash } from '../../src/game/systems/SpatialHash';
 
 describe('spatial targeting', () => {
+  it('can reject an occluded nearby target without ignoring a clear farther one', () => {
+    const grid = new SpatialHash();
+    const wallTarget = { x: 10, y: 0, active: true },
+      clearTarget = { x: 30, y: 0, active: true };
+    grid.rebuild([wallTarget, clearTarget]);
+    expect(grid.nearest(0, 0, 100, (e) => e !== wallTarget)).toBe(clearTarget);
+  });
   it('finds a target across cell boundaries and negative coordinates', () => {
     const grid = new SpatialHash(96);
     const closest = { x: -1, y: 0, active: true };
