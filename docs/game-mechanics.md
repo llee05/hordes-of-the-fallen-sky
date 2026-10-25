@@ -538,3 +538,13 @@ transitions. The current rendering reuses the existing painted animation clips.
 Inspect **Local threats** in destination planning or the chronicle’s Journey page
 for the two native enemies, their attacks, and the area counter. Reading or changing
 a preview never changes the simulation's current roster.
+
+### Starting traditions, pacing and final combat feedback
+
+The title's Starting tradition picker offers four preparations with different starting stores, riders, defence or scouting/mobility. Every research branch remains available. Full saves retain the choice; old saves and portable camp continuations use neutral ongoing modifiers. See [the preparation catalog](starting-traditions.md).
+
+The chronicle's Your clan tab and the result screen retain per-stage active-time milestones, resolve damage, casualties and riding/guard/travel observations. Developer `metrics` is read-only; `benchmark` compares twelve complete journey pressure models. See [the pacing contract](expedition-pacing.md) for assumptions and test scope.
+
+The Skybreaker cycles through advance, marked warning, one barrage and vulnerable recovery while changing camp approaches over three chapters. Two optional work parties each advance passage opening by 12 seconds. The clan can still survive the unchanged 180-second baseline without defeating the boss. See [the final-stand contract](final-stand.md).
+
+Combat adds bounded elite/armour markers, grouped offscreen warnings and retained major-loss explanations. Projectile contrast and cosmetic effect density are global saved preferences; neither changes hit areas or hides attack warnings. See [the readability contract](combat-readability.md).

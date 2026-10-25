@@ -4,6 +4,7 @@ import type { EnemyDefinition } from '../types';
 import { CharacterMotion } from '../animation/CharacterMotion';
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
+  elite = false;
   definition!: EnemyDefinition;
   health = 0;
   maxHealth = 0;
@@ -24,6 +25,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 }
 
 export class Projectile extends Phaser.Physics.Arcade.Image {
+  source?: string;
   barrage?: number;
   damage = 0;
   remaining = 0;

@@ -229,6 +229,10 @@ export interface EnemyDefinition {
 }
 
 export interface HudSnapshot {
+  combatReadability?: {
+    warnings: import('./systems/combatReadability').EdgeWarning[];
+    elites: import('./systems/combatReadability').EliteMarker[];
+  };
   saves?: {
     entries: import('../shared/expeditionSave').SaveListing[];
     canSave: boolean;

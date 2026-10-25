@@ -44,6 +44,12 @@ test('Back keeps the chosen arrangement ready for New Game without starting time
   await openTitle(page);
   await page.getByRole('button', { name: 'Starting tradition: Shared hearth' }).click();
   await page.locator('[data-starting-tradition="hearthkeepers"]').click();
+  await page.keyboard.press('F10');
+  await page.locator('[data-developer-command-input]').fill('god on');
+  await page.locator('[data-developer-command-input]').press('Enter');
+  await expect(page.getByRole('log')).toContainText('Start an expedition');
+  expect(await page.evaluate(() => (window as any).__gloam.scene.developerRun)).toBe(false);
+  await page.keyboard.press('F10');
   await page.keyboard.press('Escape');
   await expect(
     page.getByRole('button', { name: 'Starting tradition: Hearthkeepers' }),

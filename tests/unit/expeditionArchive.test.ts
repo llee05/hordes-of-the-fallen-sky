@@ -113,10 +113,21 @@ describe('full expedition snapshots', () => {
     state.lastCampBarrage = 2;
     state.works[0]!.progress = 2;
     const runtime = world();
-    runtime.hostileShots = [{ ...runtime.projectiles[0]!, barrage: 2 }];
+    runtime.hostileShots = [{ ...runtime.projectiles[0]!, barrage: 2, source: 'Skybreaker' }];
+    runtime.enemies[0]!.state.elite = true;
+    run.safety.lastMajorLoss = {
+      cause: 'attack',
+      at: 0,
+      amount: 20,
+      people: 1,
+      source: 'Skybreaker',
+    };
     const restored = decodeExpedition(captureExpedition(run, runtime));
     expect(restored.run.finalStand).toEqual(state);
     expect(restored.world.hostileShots[0]!.barrage).toBe(2);
+    expect(restored.world.hostileShots[0]!.source).toBe('Skybreaker');
+    expect(restored.world.enemies[0]!.state.elite).toBe(true);
+    expect(restored.run.safety.lastMajorLoss).toEqual(run.safety.lastMajorLoss);
   });
   it('round-trips every starting tradition without reapplying supplies or movement bonuses', () => {
     for (const entry of STARTING_TRADITIONS) {

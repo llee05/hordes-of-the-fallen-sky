@@ -12,6 +12,7 @@ import './camp.css';
 import './migration.css';
 import './saves.css';
 import './traditions.css';
+import './combat-readability.css';
 if (import.meta.env.DEV) void import('./developer.css');
 import { createGame } from './game/createGame';
 import { ArenaScene } from './game/scenes/ArenaScene';

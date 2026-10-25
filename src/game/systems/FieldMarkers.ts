@@ -13,9 +13,12 @@ export class FieldMarkers {
   private key = '';
   readonly warnings: Phaser.GameObjects.Graphics;
   private readonly ring: Phaser.GameObjects.Graphics;
-  constructor(private readonly scene: Phaser.Scene) {
+  constructor(
+    private readonly scene: Phaser.Scene,
+    warnings?: Phaser.GameObjects.Graphics,
+  ) {
     this.ring = scene.add.graphics().setDepth(4);
-    this.warnings = scene.add.graphics().setDepth(5);
+    this.warnings = warnings ?? scene.add.graphics().setDepth(5);
   }
   update(objective?: Pick<FieldObjective, 'kind' | 'x' | 'y' | 'status'>, dt = 0): void {
     const visible = !!objective && ['available', 'returning'].includes(objective.status);

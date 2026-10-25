@@ -1,3 +1,9 @@
+import { normalizeVisualSettings } from '../shared/visualSettings';
+import {
+  dangerWarningsContent,
+  eliteMarkersContent,
+  majorLossMessage,
+} from './combatReadabilityContent';
 import { finalChapter, passageBonus, passageProgress } from '../game/state/finalStand';
 import { expeditionMetricsContent } from './expeditionMetricsContent';
 import { SUCCESSORS } from '../game/data/successors';
@@ -116,10 +122,10 @@ export class GameUI {
           </section>
           <div class="expedition-clock"><strong id="timer">00:00</strong><span id="stage-label">ENCAMPMENT</span>${import.meta.env.DEV ? '<span id="developer-run" hidden>DEVELOPER RUN · F8</span>' : ''}</div>
           <nav class="hud-menu" aria-label="Game menus"><button id="journal" class="hud-menu-button" title="Clan chronicle (Tab / J)" aria-label="Open clan chronicle" aria-keyshortcuts="Tab J"><span>${clanMark('journal')}</span><kbd>TAB</kbd></button><button id="pause" class="hud-menu-button" aria-label="Pause" title="Pause (Escape)"><span>${clanMark('pause')}</span><kbd>ESC</kbd></button></nav>
-          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p class="act-heading" id="act-heading">ACT I · GATHER THE SCATTERED</p><p id="objective">Build the camp. Protect your people.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Crossing</span><b id="crossing">0%</b></div><div class="track"><div id="crossing-fill"></div></div></div><p class="objective-hint" id="migration-hint">New routes in 45s.</p><p id="camp-pressure" class="field-status" role="status"></p><p id="clan-losses" class="field-status"></p><p id="encounter-status" class="field-status" role="status"></p><p id="field-objective" class="field-status"></p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
+          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p class="act-heading" id="act-heading">ACT I · GATHER THE SCATTERED</p><p id="objective">Build the camp. Protect your people.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Crossing</span><b id="crossing">0%</b></div><div class="track"><div id="crossing-fill"></div></div></div><p class="objective-hint" id="migration-hint">New routes in 45s.</p><p id="camp-pressure" class="field-status" role="status"></p><p id="clan-losses" class="field-status"></p><p id="major-loss" class="major-loss" role="status" hidden></p><p id="encounter-status" class="field-status" role="status"></p><p id="field-objective" class="field-status"></p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
           <aside id="field-guide" class="field-guide hud-surface" aria-label="Expedition guidance" hidden></aside>
           <div class="zoom-controls hud-surface" role="group" aria-label="Battlefield zoom"><button id="zoom-out" aria-label="Zoom out" aria-keyshortcuts="-" title="Zoom out (− / LT)">−</button><button id="zoom-reset" aria-label="Reset battlefield zoom to 100%" aria-keyshortcuts="0" title="Reset zoom (0 / Right stick click)"><span id="zoom-level">100%</span></button><button id="zoom-in" aria-label="Zoom in" aria-keyshortcuts="+" title="Zoom in (+ / RT)">+</button></div>
-          <div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
+          <div id="danger-warnings" class="danger-warnings" aria-label="Offscreen danger warnings" role="list"></div><div id="elite-markers" class="elite-markers" aria-label="Elite and armoured enemies" role="list"></div><div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
           <div id="boss-bar" class="boss-bar" hidden><span id="boss-stage">THE SKYBREAKER</span><div class="track"><div id="boss-fill"></div></div></div>
           <aside id="successor-choice" class="successor-choice hud-surface" aria-label="Choose successor" hidden><strong>Who will carry the banner?</strong><p>The countdown continues. Choosing is optional.</p><div>${Object.entries(
             SUCCESSORS,
@@ -280,6 +286,21 @@ export class GameUI {
     (this.get('zoom-reset') as HTMLButtonElement).disabled = snapshot.run.phase !== 'playing';
     const { run, dashReady, dashCooldown, best, bossHealth, clanBearing } = snapshot;
     this.motion.setPlaying(run.phase === 'playing');
+    const combatVisible = run.phase === 'playing';
+    const warningMarkup = combatVisible
+      ? dangerWarningsContent(snapshot.combatReadability?.warnings ?? [])
+      : '';
+    const eliteMarkup = combatVisible
+      ? eliteMarkersContent(snapshot.combatReadability?.elites ?? [])
+      : '';
+    if (this.get('danger-warnings').innerHTML !== warningMarkup)
+      this.get('danger-warnings').innerHTML = warningMarkup;
+    if (this.get('elite-markers').innerHTML !== eliteMarkup)
+      this.get('elite-markers').innerHTML = eliteMarkup;
+    const majorLoss = majorLossMessage(run);
+    this.get('major-loss').hidden = !majorLoss;
+    this.text('major-loss', majorLoss);
+
     const clan = run.clan;
     const guide = currentGuidance(run);
     this.get('field-guide').hidden = !guide || (!isKhanActive(run) && this.root.clientWidth <= 600);
@@ -622,9 +643,12 @@ export class GameUI {
   private renderPhase(snapshot: HudSnapshot): void {
     const { run } = snapshot;
     const preserveTree =
-      run.phase === this.phase && ['upgrade', 'building', 'route', 'saves'].includes(run.phase);
+      run.phase === this.phase &&
+      ['upgrade', 'building', 'route', 'saves', 'traditions'].includes(run.phase);
     const scroll = preserveTree
-      ? this.overlay.querySelector('.tree-scroll, .migration-scroll')?.scrollTop
+      ? this.overlay.querySelector(
+          '.tree-scroll, .migration-scroll, .starting-traditions .panel-body',
+        )?.scrollTop
       : undefined;
     const scrolls = preserveTree
       ? [...this.overlay.querySelectorAll<HTMLElement>('[data-scroll-key]')].map((el) => ({
@@ -735,6 +759,7 @@ export class GameUI {
         this.platform.profile.muted,
         this.fullscreen,
         normalizeAudioMix(this.platform.profile.audioMix),
+        normalizeVisualSettings(this.platform.profile.visualSettings),
       );
     else if (run.phase === 'help') this.overlay.innerHTML = helpMenu(run.guidance.enabled);
     else if (import.meta.env.DEV && run.phase === 'developer')
@@ -755,7 +780,9 @@ export class GameUI {
       }
     }
     if (scroll !== undefined)
-      this.overlay.querySelector('.tree-scroll, .migration-scroll')?.scrollTo({ top: scroll });
+      this.overlay
+        .querySelector('.tree-scroll, .migration-scroll, .starting-traditions .panel-body')
+        ?.scrollTo({ top: scroll });
     for (const saved of scrolls) {
       const el = [...this.overlay.querySelectorAll<HTMLElement>('[data-scroll-key]')].find(
         (entry) => entry.dataset.scrollKey === saved.key,
@@ -1052,6 +1079,12 @@ export class GameUI {
     else if (action === 'sound') {
       this.scene.toggleAudio();
       this.updateSettingsControls();
+    } else if (
+      button.dataset.visualSetting === 'projectileContrast' ||
+      button.dataset.visualSetting === 'effectDensity'
+    ) {
+      this.scene.setVisualSetting(button.dataset.visualSetting);
+      this.updateSettingsControls();
     } else if (action === 'fullscreen') {
       if (this.platform.desktop) void this.platform.desktop.toggleFullscreen();
       else if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
@@ -1074,6 +1107,19 @@ export class GameUI {
   }
 
   private updateSettingsControls(): void {
+    const visuals = normalizeVisualSettings(this.platform.profile.visualSettings);
+    const contrast = this.overlay.querySelector<HTMLButtonElement>(
+      '[data-visual-setting="projectileContrast"]',
+    );
+    if (contrast) {
+      contrast.textContent = visuals.projectileContrast === 'high' ? 'High' : 'Standard';
+      contrast.setAttribute('aria-pressed', String(visuals.projectileContrast === 'high'));
+    }
+    const density = this.overlay.querySelector<HTMLButtonElement>(
+      '[data-visual-setting="effectDensity"]',
+    );
+    if (density) density.textContent = visuals.effectDensity;
+
     const sound = this.overlay.querySelector<HTMLButtonElement>('[data-action="sound"]');
     if (sound) {
       const muted = this.platform.profile.muted;

@@ -1,3 +1,14 @@
+import {
+  normalizeVisualSettings,
+  effectAmount,
+  type VisualSettings,
+} from '../../shared/visualSettings';
+import {
+  edgeWarnings,
+  incomingTime,
+  type ScreenDanger,
+  type EliteMarker,
+} from '../systems/combatReadability';
 import Phaser from 'phaser';
 import {
   ART_WIDTH,
@@ -229,9 +240,11 @@ export class ArenaScene extends Phaser.Scene {
   private saveGeneration = 0;
   private saveMenuReturn: 'ready' | 'paused' | 'dead' | 'won' = 'ready';
   private saveMessage = '';
+  private visualSettings: VisualSettings;
 
   constructor(private readonly platform: GamePlatform) {
     super('arena');
+    this.visualSettings = normalizeVisualSettings(platform.profile.visualSettings);
     this.audio.muted = platform.profile.muted;
     this.audio.setMix(normalizeAudioMix(platform.profile.audioMix));
     void this.audio.prepare();
@@ -310,7 +323,7 @@ export class ArenaScene extends Phaser.Scene {
     this.areaEffects = this.add.graphics().setDepth(5);
     this.defeats = new DefeatSprites(this);
     this.fieldMarkers = new FieldMarkers(this);
-    this.passageMarkers = [new FieldMarkers(this), new FieldMarkers(this)];
+    this.passageMarkers = [];
     this.crossingMarkers = new FieldMarkers(this);
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.landscape = new SteppeLandscape(this);
@@ -688,6 +701,7 @@ export class ArenaScene extends Phaser.Scene {
           tint: p.tintTopLeft,
           previous: p.getData('terrain-previous') as { x: number; y: number } | undefined,
           barrage: p.barrage,
+          source: p.source,
           hits: [...p.hitTargets].map(([enemy, spawnId]) => ({
             slot: pool.indexOf(enemy),
             spawnId,
@@ -719,6 +733,7 @@ export class ArenaScene extends Phaser.Scene {
                 definition: e.definition.id,
                 state: {
                   health: e.health,
+                  elite: e.elite,
                   maxHealth: e.maxHealth,
                   spawnId: e.spawnId,
                   attackTimer: e.attackTimer,
@@ -830,6 +845,7 @@ export class ArenaScene extends Phaser.Scene {
         const radius = hostile ? 5.4 / p.scaleX : 4.5;
         p.setCircle(radius, p.width / 2 - radius, p.height / 2 - radius);
         p.setData('terrain-previous', previous ?? { x: saved.x, y: saved.y });
+        if (hostile) this.styleHostileProjectile(p);
         p.hitTargets.clear();
         for (const hit of hits) p.hitTargets.set(pool[hit.slot]!, hit.spawnId);
       }
@@ -1072,7 +1088,7 @@ export class ArenaScene extends Phaser.Scene {
     if (phase === 'console') phase = this.consoleReturnPhase;
     if (phase === 'developer') phase = this.developerReturnPhase;
     if (['settings', 'help'].includes(phase)) phase = this.utilityReturnPhase;
-    return !this.run.legacy.outcome && !['ready', 'intro'].includes(phase);
+    return !this.run.legacy.outcome && !['ready', 'intro', 'traditions'].includes(phase);
   }
 
   startDeveloperLevel(id: string): void {
@@ -1290,6 +1306,119 @@ export class ArenaScene extends Phaser.Scene {
     this.guidanceEnabled = !this.run.guidance.enabled;
     this.run.guidance.enabled = this.guidanceEnabled;
     this.publishPhase();
+  }
+
+  setVisualSetting(key: keyof VisualSettings): void {
+    if (this.run.phase !== 'settings') return;
+    if (key === 'projectileContrast')
+      this.visualSettings.projectileContrast =
+        this.visualSettings.projectileContrast === 'high' ? 'standard' : 'high';
+    else
+      this.visualSettings.effectDensity =
+        this.visualSettings.effectDensity === 'full'
+          ? 'reduced'
+          : this.visualSettings.effectDensity === 'reduced'
+            ? 'minimal'
+            : 'full';
+    for (const shot of this.hostileShots.getChildren() as Projectile[])
+      if (shot.active) this.styleHostileProjectile(shot);
+    this.updateAreaCombat(0);
+    void this.platform
+      .saveVisualSettings(this.visualSettings)
+      .catch(() => this.callbacks?.onSaveError());
+  }
+
+  private styleHostileProjectile(shot: Projectile): void {
+    const high = this.visualSettings.projectileContrast === 'high';
+    shot
+      .setScale(high ? 1.45 : 1.1)
+      .setTint(high ? 0xffc36b : 0xb94948)
+      .setDepth(9200);
+    const radius = 5.4 / shot.scaleX;
+    shot.setCircle(radius, shot.width / 2 - radius, shot.height / 2 - radius);
+  }
+
+  private screenPoint(point: { x: number; y: number }): { x: number; y: number } {
+    if (this.landscape.world3d) return this.landscape.world3d.screenPoint(point);
+    const camera = this.cameras.main;
+    return {
+      x: camera.width / 2 + (point.x - camera.midPoint.x) * camera.zoom,
+      y: camera.height / 2 + (point.y - camera.midPoint.y) * camera.zoom,
+    };
+  }
+
+  private combatReadability(): {
+    warnings: ReturnType<typeof edgeWarnings>;
+    elites: EliteMarker[];
+  } {
+    const width = this.scale.width,
+      height = this.scale.height;
+    const threats: ScreenDanger[] = [],
+      elites: EliteMarker[] = [];
+    const campRadius = campBoundary(this.run).radius;
+    for (const [index, shot] of (this.hostileShots.getChildren() as Projectile[]).entries()) {
+      if (!shot.active) continue;
+      const p = this.screenPoint(shot),
+        body = shot.body!;
+      const playerHit = isKhanActive(this.run)
+        ? incomingTime(shot, body.velocity, this.player, 35)
+        : undefined;
+      const campHit = incomingTime(shot, body.velocity, this.camp, campRadius);
+      const eta = Math.min(playerHit ?? Infinity, campHit ?? Infinity);
+      if (eta <= Math.min(4, shot.remaining))
+        threats.push({
+          id: `shot-${index}`,
+          label:
+            playerHit !== undefined && playerHit <= (campHit ?? Infinity)
+              ? 'Incoming projectile'
+              : 'Camp under fire',
+          ...p,
+          eta,
+        });
+    }
+    for (const enemy of this.enemies.getChildren() as Enemy[]) {
+      if (!enemy.active) continue;
+      const p = this.screenPoint(enemy),
+        key = `${enemy.tacticalSlot}:${enemy.spawnId}`;
+      if (
+        (enemy.elite || enemy.definition.tacticalRole === 'bulwark') &&
+        enemy !== this.boss &&
+        p.x > 30 &&
+        p.x < width - 30 &&
+        p.y > 70 &&
+        p.y < height - 60
+      )
+        elites.push({
+          id: key,
+          x: p.x / width,
+          y: Math.max(
+            0.06,
+            (p.y - enemy.displayHeight * enemy.originY * this.cameraZoom - 8) / height,
+          ),
+          label: enemy.elite ? 'ELITE' : 'ARMOURED',
+          health: enemy.health / enemy.maxHealth,
+        });
+      if (enemy.tactics.phase === 'windup')
+        threats.push({ id: key, label: 'Charging enemy', ...p, eta: enemy.tactics.remaining });
+      else if (enemy === this.boss && this.run.finalStand?.phase === 'warning')
+        threats.push({
+          id: key,
+          label: 'Skybreaker barrage',
+          ...p,
+          eta: this.run.finalStand.remaining,
+        });
+      else if (
+        enemy.definition.behavior === 'ranged' &&
+        enemy.attackTimer > 0 &&
+        enemy.attackTimer < 0.8 &&
+        Math.min(
+          Math.hypot(enemy.x - this.player.x, enemy.y - this.player.y),
+          Math.hypot(enemy.x - this.camp.x, enemy.y - this.camp.y),
+        ) < 650
+      )
+        threats.push({ id: key, label: 'Ranged attack', ...p, eta: enemy.attackTimer });
+    }
+    return { warnings: edgeWarnings(threats, width, height), elites: elites.slice(0, 6) };
   }
 
   toggleAudio(): boolean {
@@ -1537,7 +1666,7 @@ export class ArenaScene extends Phaser.Scene {
     this.player.setDepth(100 + this.player.y);
     this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
     this.dustTimer -= dt;
-    if (moving && this.dustTimer <= 0) {
+    if (moving && effectAmount(this.visualSettings) > 0 && this.dustTimer <= 0) {
       const dust = this.add
         .image(this.player.x - this.facing.x * 14, this.player.y + 3, 'dust')
         .setDepth(98 + this.player.y)
@@ -1551,7 +1680,7 @@ export class ArenaScene extends Phaser.Scene {
         duration: 700,
         onComplete: () => dust.destroy(),
       });
-      this.dustTimer = 0.12;
+      this.dustTimer = 0.12 / Math.max(0.1, effectAmount(this.visualSettings));
     }
     this.aura.setPosition(this.player.x, this.player.y);
     // Scroll factor alone does not cancel camera zoom for the screen-space joystick.
@@ -1672,6 +1801,7 @@ export class ArenaScene extends Phaser.Scene {
     const enemy = this.enemies.get(x, y, ...artTexture(definition.texture)) as Enemy | null;
     if (!enemy) return false;
     this.initializeEnemy(enemy, definition, x, y);
+    enemy.elite ||= !forced && !!selection.elite;
     enemy.objectiveId = directive?.objectiveId;
     enemy.crossingId = directive?.crossingId;
     if (isBoss)
@@ -1694,6 +1824,7 @@ export class ArenaScene extends Phaser.Scene {
       .setDisplaySize(width * 0.9, width * 0.3)
       .setVisible(true);
     enemy.definition = definition;
+    enemy.elite = ['frost-mare', 'eclipse-giant'].includes(definition.id);
     enemy.health = definition.health * (isBoss ? 1 : 1 + this.run.elapsed / 1200);
     enemy.maxHealth = enemy.health;
     enemy.spawnId += 1;
@@ -1724,6 +1855,11 @@ export class ArenaScene extends Phaser.Scene {
       this.passageMarkers.forEach((marker) => marker.update());
       return;
     }
+    if (!this.passageMarkers.length)
+      this.passageMarkers = [
+        new FieldMarkers(this, this.fieldMarkers.warnings),
+        new FieldMarkers(this, this.fieldMarkers.warnings),
+      ];
     state.works.forEach((work, index) => {
       if (work.x === undefined || work.y === undefined) {
         const desired = {
@@ -1980,7 +2116,7 @@ export class ArenaScene extends Phaser.Scene {
         };
         target = this.landscape.navigation?.nearestWalkable(desired) ?? desired;
       }
-      const distance = target === this.camp ? campDistance : playerDistance;
+      const distance = Phaser.Math.Distance.Between(enemy.x, enemy.y, target.x, target.y);
       const behavior = enemy.definition.behavior;
       const ranged = behavior === 'ranged' || behavior === 'boss';
       const clearShot =
@@ -2016,6 +2152,7 @@ export class ArenaScene extends Phaser.Scene {
             : 1,
         );
       }
+      if (enemy.elite) warnings.lineStyle(3, 0xe0bc76, 0.85).strokeCircle(enemy.x, enemy.y, 30);
       if (enemy.pinned > 0 || (finale && finale.phase !== 'advance')) speed = 0;
       if (
         this.run.combat.trails.some(
@@ -2023,7 +2160,7 @@ export class ArenaScene extends Phaser.Scene {
         )
       )
         speed *= 1 - GAME.mounted.trailSlow;
-      if (ranged && distance < 260 && clearShot) speed = 0;
+      if (ranged && !finale && distance < 260 && clearShot) speed = 0;
       if (finale && finale.phase !== 'advance') {
         enemy.setVelocity(0, 0);
       } else if (attackingCamp) {
@@ -2084,7 +2221,8 @@ export class ArenaScene extends Phaser.Scene {
             tactical !== target && (!navigation || navigation.lineClear(enemy, tactical))
               ? tactical
               : (navigation?.waypoint(enemy, target, enemy.definition.navigation) ?? target);
-          const hold = ranged && clearShot && Math.abs(distance - GAME.tactics.seerRange) < 55;
+          const hold =
+            !finale && ranged && clearShot && Math.abs(distance - GAME.tactics.seerRange) < 55;
           if (hold || speed === 0) enemy.setVelocity(0, 0);
           else this.physics.moveTo(enemy, waypoint.x, waypoint.y, speed);
         }
@@ -2107,7 +2245,11 @@ export class ArenaScene extends Phaser.Scene {
           distance < GAME.areaCombat.abilityRange);
       if (attackingCamp && !finale && enemy.clanAttackTimer <= 0) {
         enemy.motion.attack();
-        this.damageClan(enemy.definition.damage * GAME.camp.enemyAttack.damageMultiplier);
+        this.damageClan(
+          enemy.definition.damage * GAME.camp.enemyAttack.damageMultiplier,
+          'attack',
+          enemy.definition.title ?? enemy.definition.id,
+        );
         enemy.clanAttackTimer = GAME.camp.enemyAttack.interval;
         const impact = this.campBarrier.hit(this.camp, enemy);
         this.audio.play('barrier', impact);
@@ -2310,6 +2452,7 @@ export class ArenaScene extends Phaser.Scene {
           (ancestral ? 1 : this.run.patrons.bow.spread);
       bolt.enableBody(true, x, y, true, true);
       bolt.barrage = undefined;
+      bolt.source = undefined;
       bolt.setData('terrain-previous', { x, y });
       bolt
         .setTexture('bolt')
@@ -2351,7 +2494,9 @@ export class ArenaScene extends Phaser.Scene {
     const shot = this.hostileShots.get(enemy.x, enemy.y, 'gem') as Projectile | null;
     if (!shot) return;
     shot.enableBody(true, enemy.x, enemy.y, true, true);
+    if (this.run.phase === 'playing') markExpedition(this.run, 'fight');
     shot.barrage = undefined;
+    shot.source = enemy.definition.title ?? enemy.definition.id;
     shot.setData('terrain-previous', { x: enemy.x, y: enemy.y });
     shot
       .setTexture('gem')
@@ -2371,6 +2516,7 @@ export class ArenaScene extends Phaser.Scene {
     shot.pins = false;
     shot.hitTargets.clear();
     shot.setVelocity(Math.cos(angle) * 125, Math.sin(angle) * 125);
+    this.styleHostileProjectile(shot);
     this.audio.play('spell', enemy);
     return shot;
   }
@@ -2411,7 +2557,8 @@ export class ArenaScene extends Phaser.Scene {
       else if (
         Phaser.Math.Distance.Between(shot.x, shot.y, this.camp.x, this.camp.y) <= boundary.radius
       ) {
-        if (acceptCampBarrage(this.run, shot.barrage)) this.damageClan(shot.damage * 0.5);
+        if (acceptCampBarrage(this.run, shot.barrage))
+          this.damageClan(shot.damage * 0.5, 'attack', shot.source);
         const impact = this.campBarrier.hit(this.camp, shot);
         this.audio.play('barrier', impact);
         this.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
@@ -2473,7 +2620,7 @@ export class ArenaScene extends Phaser.Scene {
     }
     const { x, y } = enemy;
     const value = enemy.definition.xp;
-    this.defeats.show(enemy);
+    if (effectAmount(this.visualSettings) > 0) this.defeats.show(enemy);
     enemy.disableBody(true, true);
     this.audio.play('defeat', { x, y });
     this.enemyShadows.get(enemy)?.setVisible(false);
@@ -2563,7 +2710,7 @@ export class ArenaScene extends Phaser.Scene {
     if (!outcome) return;
     this.playerMotion.hit();
     this.invulnerable = GAME.invulnerability;
-    this.cameras.main.shake(90, 0.003);
+    if (effectAmount(this.visualSettings) > 0) this.cameras.main.shake(90, 0.003);
     this.audio.play(outcome === 'fallen' ? 'fall' : 'hit');
     this.burst(this.player.x, this.player.y, 0xdd967c, 8);
     if (outcome === 'revived') {
@@ -2579,8 +2726,8 @@ export class ArenaScene extends Phaser.Scene {
       : undefined;
   }
 
-  private damageClan(amount: number, cause: ClanDamageCause = 'attack'): void {
-    damageClan(this.run, amount, this.clanProtection, cause);
+  private damageClan(amount: number, cause: ClanDamageCause = 'attack', source?: string): void {
+    damageClan(this.run, amount, this.clanProtection, cause, source);
   }
 
   selectSuccessor(trait: SuccessorTrait): void {
@@ -2717,6 +2864,7 @@ export class ArenaScene extends Phaser.Scene {
       : undefined;
     const zoomLimits = cameraZoomLimits(this.cameras.main.width, this.cameras.main.height);
     return {
+      combatReadability: this.combatReadability(),
       saves: {
         entries: this.platform.saves,
         canSave: this.canSaveExpedition,
@@ -2760,6 +2908,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private burst(x: number, y: number, color: number, count: number): void {
+    count = Math.ceil(count * effectAmount(this.visualSettings));
     // Short-lived feedback only; gameplay actors use bounded pools above.
     for (let i = 0; i < count; i += 1) {
       const spark = this.add
@@ -3061,6 +3210,14 @@ export class ArenaScene extends Phaser.Scene {
     });
     const graphics = this.areaEffects.clear();
     for (const threat of this.areaThreats.threats) this.drawAreaThreat(graphics, threat);
+    if (this.visualSettings.projectileContrast === 'high')
+      for (const shot of this.hostileShots.getChildren() as Projectile[])
+        if (shot.active)
+          graphics
+            .lineStyle(3, 0x352a25, 0.95)
+            .strokeCircle(shot.x, shot.y, 8.5)
+            .lineStyle(1.5, 0xffefba, 1)
+            .strokeCircle(shot.x, shot.y, 8.5);
   }
 
   private drawAreaThreat(graphics: Phaser.GameObjects.Graphics, threat: AreaThreat): void {

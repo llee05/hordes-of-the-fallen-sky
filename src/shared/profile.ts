@@ -1,12 +1,18 @@
 import { isCampArchive, normalizeCampArchive, type CampArchive } from './campArchive.js';
 import { isDeveloperHistory, normalizeDeveloperHistory } from './developerHistory.js';
 import { isAudioMix, normalizeAudioMix, type AudioMix } from './audioSettings.js';
+import {
+  isVisualSettings,
+  normalizeVisualSettings,
+  type VisualSettings,
+} from './visualSettings.js';
 
 export interface PlayerProfile {
   version: 1;
   bestSeconds: number;
   muted: boolean;
   audioMix?: AudioMix;
+  visualSettings?: VisualSettings;
   developerCommandHistory?: string[];
   camp?: CampArchive;
 }
@@ -18,6 +24,9 @@ export function defaultProfile(): PlayerProfile {
 export function isProfile(value: unknown): value is PlayerProfile {
   return (
     isProfileCore(value) &&
+    (!('visualSettings' in value) ||
+      value.visualSettings === undefined ||
+      isVisualSettings(value.visualSettings)) &&
     (!('audioMix' in value) || value.audioMix === undefined || isAudioMix(value.audioMix)) &&
     (!('camp' in value) || value.camp === undefined || isCampArchive(value.camp)) &&
     (!('developerCommandHistory' in value) ||
@@ -49,6 +58,9 @@ export function normalizeProfile(value: unknown): PlayerProfile {
     version: 1,
     bestSeconds: value.bestSeconds,
     muted: value.muted,
+    ...('visualSettings' in value && value.visualSettings !== undefined
+      ? { visualSettings: normalizeVisualSettings(value.visualSettings) }
+      : {}),
     ...('audioMix' in value && value.audioMix !== undefined
       ? { audioMix: normalizeAudioMix(value.audioMix) }
       : {}),

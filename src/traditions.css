@@ -77,3 +77,9 @@
   font-size: 12px;
   line-height: 1.5;
 }
+.starting-tradition-card[aria-pressed='true'] h3,
+.starting-tradition-card[aria-pressed='true'] p,
+.starting-tradition-card[aria-pressed='true'] strong,
+.starting-tradition-card[aria-pressed='true'] small {
+  color: inherit;
+}

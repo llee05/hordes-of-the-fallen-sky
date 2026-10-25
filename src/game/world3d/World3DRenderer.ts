@@ -170,6 +170,17 @@ export class World3DRenderer {
   screenX(x: number, y: number): number {
     return projectGround(x, y, 0, this.angle, this.yaw).x;
   }
+  screenPoint(point: { x: number; y: number }): { x: number; y: number } {
+    const p = new THREE.Vector3(
+      point.x,
+      this.terrain.actorHeight(point.x, point.y) * this.terrain.region.biome.heightScale,
+      point.y,
+    ).project(this.camera);
+    return {
+      x: ((p.x + 1) * this.scene.scale.width) / 2,
+      y: ((1 - p.y) * this.scene.scale.height) / 2,
+    };
+  }
   nearView(point: { x: number; y: number }, padding = 0): boolean {
     return (
       !!this.spawnView &&

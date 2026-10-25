@@ -4,6 +4,7 @@ import { defaultProfile, normalizeProfile } from '../shared/profile';
 import type { PlayerProfile } from '../shared/profile';
 import { normalizeDeveloperHistory } from '../shared/developerHistory';
 import { normalizeAudioMix, type AudioMix } from '../shared/audioSettings';
+import { normalizeVisualSettings, type VisualSettings } from '../shared/visualSettings';
 import {
   SAVE_SLOTS,
   isSaveSlot,
@@ -160,6 +161,11 @@ export class GamePlatform {
 
   saveAudioMix(mix: AudioMix): Promise<void> {
     this.profile.audioMix = normalizeAudioMix(mix);
+    return this.save();
+  }
+
+  saveVisualSettings(settings: VisualSettings): Promise<void> {
+    this.profile.visualSettings = normalizeVisualSettings(settings);
     return this.save();
   }
 

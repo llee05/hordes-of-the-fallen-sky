@@ -261,6 +261,7 @@ export function damageClan(
   amount: number,
   protectionOptions?: ClanProtection,
   cause: ClanDamageCause = 'attack',
+  source?: string,
 ): void {
   if (protectionOptions?.invincible || !Number.isFinite(amount) || amount <= 0) return;
   const clan = run.clan;
@@ -287,7 +288,13 @@ export function damageClan(
         'One fewer beneath the banner. The loss remains in the tally.',
       );
   }
-  recordClanDamage(run, cause, previous - clan.integrity, previousPopulation - clan.population);
+  recordClanDamage(
+    run,
+    cause,
+    previous - clan.integrity,
+    previousPopulation - clan.population,
+    source,
+  );
 }
 
 /** All economy and journey clocks stop outside the active simulation phase. */
@@ -335,8 +342,10 @@ export function advanceClan(
     clan.herd = Math.max(0, clan.herd - 1);
     run.safety.starvationLosses += starvationLoss;
     damageClan(run, 8, undefined, 'starvation');
-    if (run.safety.lastDamage?.cause === 'starvation')
+    if (run.safety.lastDamage?.cause === 'starvation') {
       run.safety.lastDamage.people += starvationLoss;
+      run.safety.lastMajorLoss = { ...run.safety.lastDamage };
+    }
     clan.message = 'The provisions are gone. Families and livestock are being lost.';
     rememberClan(
       run,

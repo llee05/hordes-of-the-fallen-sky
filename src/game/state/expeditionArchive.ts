@@ -43,10 +43,11 @@ export interface EnemyArchive extends BodyArchive {
     | 'crossingId'
     | 'preparingAttack'
     | 'tactics'
-  >;
+  > & { elite?: boolean };
   motion: MotionArchive;
 }
 export interface ProjectileArchive extends BodyArchive {
+  source?: string;
   barrage?: number;
   damage: number;
   remaining: number;
@@ -275,12 +276,24 @@ const optional: Record<string, Record<string, Rule>> = {
   encounters: { phase: oneOf(['probing', 'warning', 'assault', 'elite', 'recovery']) },
   combat: { previous: point, heading: point },
   safety: {
-    lastDamage: object({
-      cause: oneOf(['attack', 'starvation', 'eruption', 'seer', 'area']),
-      at: number,
-      amount: number,
-      people: number,
-    }),
+    lastDamage: object(
+      {
+        cause: oneOf(['attack', 'starvation', 'eruption', 'seer', 'area']),
+        at: number,
+        amount: number,
+        people: number,
+      },
+      { source: string },
+    ),
+    lastMajorLoss: object(
+      {
+        cause: oneOf(['attack', 'starvation', 'eruption', 'seer', 'area']),
+        at: number,
+        amount: number,
+        people: number,
+      },
+      { source: string },
+    ),
   },
   field: {
     objective: object({
@@ -334,7 +347,7 @@ const enemyState = object(
       { aim: point, direction: point },
     ),
   },
-  { objectiveId: integer, crossingId: string },
+  { objectiveId: integer, crossingId: string, elite: boolean },
 );
 const projectile = object(
   {
@@ -350,7 +363,7 @@ const projectile = object(
     tint: integer,
     hits: list(object({ slot: integer, spawnId: integer }), GAME.maxEnemies),
   },
-  { previous: point, barrage: integer },
+  { previous: point, barrage: integer, source: string },
 );
 const threat = object(
   {

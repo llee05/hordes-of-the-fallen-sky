@@ -96,6 +96,12 @@ The Khan, allied archers, and all six creature designs have painted sprite anima
 
 Choose **Starting tradition** at the title to compare Shared hearth, Outrider circle, Hearthkeepers, and Pathfinders. Their riders, protection, movement, and starting-store tradeoffs change the opening while every patron and facility remains available. The chosen preparation persists through the expedition and full saves. See [starting clan traditions](docs/starting-traditions.md).
 
+The final stand has three dramatic chapters, rotating Skybreaker approaches, marked windups, and four-second recovery windows. Optional work parties can open the passage up to 24 seconds sooner; survival still wins with the boss alive. See [the final-stand rules](docs/final-stand.md).
+
+Brass elite/armour labels, directional offscreen danger warnings, and brief named-cause clan-loss messages make crowded combat easier to read. Settings offers saved **Projectile contrast** and **Effect density** controls; Minimal keeps combat warnings visible while removing decorative bursts and dust. See [combat readability](docs/combat-readability.md).
+
+Per-stage expedition milestones appear in the chronicle and results. In development, `metrics` prints observations and `benchmark` compares all four starting arrangements under riding, guarding and early-migration schedules. The twelve full-journey pressure checks exercise real economy and progression with modelled combat exposure. See [pacing and balance checks](docs/expedition-pacing.md).
+
 ## Build, defend, migrate
 
 Camp scenes are **On** by default. Saran the hearthkeeper, Boro the herder, Erden the tally keeper, and Nara the youngest survivor travel through the story with the Blue Banner clan. Conversations pause the world and offer two responses, each with a displayed resource benefit. Escape / controller B continues without choosing. Turn **Camp scenes: Off** at the title for uninterrupted combat; this preference lasts through run restarts in the current app session.

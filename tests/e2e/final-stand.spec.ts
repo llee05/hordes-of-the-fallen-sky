@@ -41,4 +41,15 @@ test('Skybreaker warnings lead to one volley and a vulnerable paused-safe recove
   expect(state).toMatchObject({ warning: 'warning', phase: 'recovery', fired: 11, damage: 15 });
   expect(state.after).toBe(state.remaining);
   await expect(page.locator('#boss-stage')).toContainText('VULNERABLE');
+  const advancing = await page.evaluate(() => {
+    const s = (window as any).__gloam.scene;
+    for (const e of s.enemies.getChildren()) if (e !== s.boss) e.disableBody(true, true);
+    s.run.finalStand.phase = 'advance';
+    s.run.finalStand.approach = 2;
+    s.boss.setPosition(s.camp.x + 330, s.camp.y);
+    s.player.setPosition(s.camp.x + 320, s.camp.y);
+    s.updateEnemies(0.01);
+    return s.boss.body.velocity.length();
+  });
+  expect(advancing).toBeGreaterThan(0);
 });
