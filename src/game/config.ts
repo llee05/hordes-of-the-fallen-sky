@@ -10,13 +10,18 @@ export const GAME = {
     chunksPerFrame: 4,
     actorClearance: 24,
     cliffSlope: 1.6,
-    flowCacheSize: 3,
+    flowCacheSize: 12,
     // Presentation resolution and ledges are independent of the traversal grid.
     surfaceStep: 32,
     materialStep: 64,
     relief: {
       shadowReach: 40,
     },
+  },
+  navigation: {
+    ground: { slope: 2.4, snow: 0.8, stone: 0.15, water: 2.5 },
+    pack: { slope: 1.2, snow: 0.35, stone: 0.1, water: 1.8 },
+    heavy: { slope: 4, snow: 1.2, stone: 0.3, water: 4 },
   },
   camera: {
     defaultZoom: 1,

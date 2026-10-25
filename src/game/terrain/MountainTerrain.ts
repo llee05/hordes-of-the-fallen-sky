@@ -223,6 +223,11 @@ export class MountainTerrain {
     };
   }
 
+  /** Shallow water remains traversable; navigation can prefer dry ground. */
+  waterDepth(_x: number, _y: number): number {
+    return 0;
+  }
+
   isCliff(column: number, row: number): boolean {
     if (
       column < 0 ||

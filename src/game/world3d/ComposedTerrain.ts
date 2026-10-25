@@ -116,6 +116,17 @@ export class ComposedTerrain extends MountainHeightfield {
     return { x, z, base, rise: strongest.rise, field: strongest.field, layers };
   }
 
+  override waterDepth(x: number, z: number): number {
+    if (
+      !this.river ||
+      this.river.definition.kind === 'frozen' ||
+      this.river.bridgeHeight(x, z) !== undefined
+    )
+      return 0;
+    const water = this.river.sample(x, z);
+    return Math.max(0, Math.min(1, -water.shoreDistance / water.halfWidth));
+  }
+
   override rawHeight(x: number, z: number): number {
     return this.height(x, z);
   }

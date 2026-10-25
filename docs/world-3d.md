@@ -97,3 +97,16 @@ water/bridge registration, and moving fence anchors.
 
 See [the environmental quality pass](environment-quality.md) for the current material
 shader, cliff relief, shared bank geometry, vegetation masks, and quality scaling.
+
+## Terrain-aware pursuit
+
+Enemy pursuit uses reverse Dijkstra fields shared by destination cell and movement
+profile. Each location supplies its actual collision grid, slope, exposed stone,
+snow, and sampled river depth. Dry ramps and bridges are preferable to difficult
+slopes or riverbeds; frozen water has no wading penalty. Packs tolerate rough
+terrain better than heavy creatures. Shallow channels remain traversable and cost
+preferences never alter collision or strand a required route. Surface difficulty
+also modestly reduces walking speed (bounded at 65%); charges retain terrain
+collision. Local actor-sized line sweeps avoid clipping corners, and blocked
+approaches re-centre before selecting a clear next cell. Twelve cached fields bound
+memory; hundreds of actors share them instead of requesting individual A* paths.

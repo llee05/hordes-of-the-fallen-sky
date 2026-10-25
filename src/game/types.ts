@@ -198,6 +198,7 @@ export interface EnemyDefinition {
   unlockAt: number;
   weight: number;
   scale: number;
+  navigation?: 'ground' | 'pack' | 'heavy';
   behavior?: 'ranged' | 'charger' | 'boss';
 }
 

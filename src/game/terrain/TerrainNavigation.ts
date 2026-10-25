@@ -12,7 +12,40 @@ const NEIGHBORS = [
   [-1, 1],
   [-1, -1],
 ] as const;
-const UNREACHABLE = 0xffffffff;
+export type NavigationProfile = 'ground' | 'pack' | 'heavy';
+
+/** Small binary heap for shared reverse Dijkstra fields; no per-actor A* allocation. */
+class Frontier {
+  private items: { index: number; cost: number }[] = [];
+  push(index: number, cost: number): void {
+    const item = { index, cost };
+    let i = this.items.length;
+    this.items.push(item);
+    while (i > 0) {
+      const parent = (i - 1) >> 1;
+      if (this.items[parent]!.cost <= cost) break;
+      this.items[i] = this.items[parent]!;
+      i = parent;
+    }
+    this.items[i] = item;
+  }
+  pop(): { index: number; cost: number } | undefined {
+    const first = this.items[0],
+      last = this.items.pop();
+    if (!this.items.length || !last) return first;
+    let i = 0;
+    while (i * 2 + 1 < this.items.length) {
+      let child = i * 2 + 1;
+      if (child + 1 < this.items.length && this.items[child + 1]!.cost < this.items[child]!.cost)
+        child++;
+      if (this.items[child]!.cost >= last.cost) break;
+      this.items[i] = this.items[child]!;
+      i = child;
+    }
+    this.items[i] = last;
+    return first;
+  }
+}
 
 /** Coarse world navigation stays resident while visual chunks stream independently. */
 export class TerrainNavigation {
@@ -20,21 +53,37 @@ export class TerrainNavigation {
   readonly rows: number;
   readonly blocked: Uint8Array;
   readonly reachable: Uint8Array;
-  private readonly flows = new Map<number, Uint32Array>();
+  private readonly flows = new Map<string, Float64Array>();
+  private readonly costs: Record<NavigationProfile, Float32Array>;
 
   constructor(readonly terrain: MountainTerrain) {
     this.columns = this.rows = Math.ceil(terrain.worldSize / terrain.cellSize);
     this.blocked = new Uint8Array(this.columns * this.rows);
+    this.costs = Object.fromEntries(
+      ['ground', 'pack', 'heavy'].map((id) => [id, new Float32Array(this.blocked.length)]),
+    ) as Record<NavigationProfile, Float32Array>;
     for (let row = 0; row < this.rows; row++)
       for (let column = 0; column < this.columns; column++) {
-        this.blocked[this.index(column, row)] = Number(terrain.isCliff(column, row));
+        const cell = terrain.cell(column, row),
+          index = this.index(column, row);
+        this.blocked[index] = Number(cell.blocked);
+        const water = terrain.waterDepth(cell.sample.x, cell.sample.y);
+        for (const profile of ['ground', 'pack', 'heavy'] as const) {
+          const weights = GAME.navigation[profile];
+          this.costs[profile][index] =
+            1 +
+            Math.min(1, cell.sample.slope) * weights.slope +
+            cell.sample.weights[4] * weights.snow +
+            cell.sample.weights[2] * weights.stone +
+            water * weights.water;
+        }
       }
     const camp = this.index(
       Math.floor(terrain.worldSize / 2 / terrain.cellSize),
       Math.floor(terrain.worldSize / 2 / terrain.cellSize),
     );
-    const field = this.buildFlow(camp);
-    this.reachable = Uint8Array.from(field, (distance) => Number(distance !== UNREACHABLE));
+    const field = this.buildFlow(camp, 'ground');
+    this.reachable = Uint8Array.from(field, (distance) => Number(Number.isFinite(distance)));
   }
 
   get cachedFlows(): number {
@@ -146,26 +195,44 @@ export class TerrainNavigation {
     return true;
   }
 
-  /** Shared destination flow fields avoid hundreds of per-enemy A* searches. No diagonal corner cutting. */
-  waypoint(from: TerrainPoint, target: TerrainPoint): TerrainPoint {
+  /** Area-specific ground costs are resident with collision, independent of streamed scenery. */
+  travelCost(point: TerrainPoint, profile: NavigationProfile = 'ground'): number {
+    const x = Math.floor(point.x / this.terrain.cellSize),
+      y = Math.floor(point.y / this.terrain.cellSize);
+    return this.open(x, y) ? this.costs[profile][this.index(x, y)]! : Infinity;
+  }
+
+  private edgeCost(a: number, b: number, diagonal: boolean, profile: NavigationProfile): number {
+    return (this.costs[profile][a]! + this.costs[profile][b]!) * 0.5 * (diagonal ? Math.SQRT2 : 1);
+  }
+
+  /** Terrain-weighted shared destination fields; actor-sized local sweeps prevent corner snagging. */
+  waypoint(
+    from: TerrainPoint,
+    target: TerrainPoint,
+    profile: NavigationProfile = 'ground',
+  ): TerrainPoint {
     const safe = this.nearestWalkable(target);
     if (!safe) return from;
-    if (Math.hypot(safe.x - from.x, safe.y - from.y) < 192 && this.lineClear(from, safe))
+    if (Math.hypot(safe.x - from.x, safe.y - from.y) < 96 && this.lineClear(from, safe))
       return safe;
     const size = this.terrain.cellSize;
-    const column = Math.floor(from.x / size);
-    const row = Math.floor(from.y / size);
+    const column = Math.floor(from.x / size),
+      row = Math.floor(from.y / size);
     if (!this.open(column, row)) return this.nearestWalkable(from) ?? from;
     const destination = this.index(Math.floor(safe.x / size), Math.floor(safe.y / size));
-    let flow = this.flows.get(destination);
+    const key = `${profile}:${destination}`;
+    let flow = this.flows.get(key);
     if (!flow) {
-      flow = this.buildFlow(destination);
-      this.flows.set(destination, flow);
+      flow = this.buildFlow(destination, profile);
+      this.flows.set(key, flow);
       if (this.flows.size > GAME.terrain.flowCacheSize)
         this.flows.delete(this.flows.keys().next().value!);
     }
-    let next = this.index(column, row);
-    let distance = flow[next]!;
+    const current = this.index(column, row);
+    if (!Number.isFinite(flow[current])) return from;
+    let next = current,
+      best = Infinity;
     for (const [dx, dy] of NEIGHBORS) {
       if (
         !this.open(column + dx, row + dy) ||
@@ -173,34 +240,41 @@ export class TerrainNavigation {
       )
         continue;
       const index = this.index(column + dx, row + dy);
-      if (flow[index]! < distance) {
+      const cost = flow[index]! + this.edgeCost(current, index, !!(dx && dy), profile);
+      if (
+        flow[index]! < flow[current]! &&
+        cost < best &&
+        this.lineClear(from, this.center(index))
+      ) {
         next = index;
-        distance = flow[index]!;
+        best = cost;
       }
     }
+    // Re-centre within this cell if a collision left the actor too close to a corner.
     return next === destination ? safe : this.center(next);
   }
 
-  private buildFlow(destination: number): Uint32Array {
-    const field = new Uint32Array(this.blocked.length).fill(UNREACHABLE);
-    const queue = new Uint32Array(this.blocked.length);
-    let start = 0;
-    let end = 1;
-    queue[0] = destination;
+  private buildFlow(destination: number, profile: NavigationProfile): Float64Array {
+    const field = new Float64Array(this.blocked.length).fill(Infinity);
+    const queue = new Frontier();
+    queue.push(destination, 0);
     field[destination] = 0;
-    while (start < end) {
-      const index = queue[start++]!;
-      const column = index % this.columns;
-      const row = Math.floor(index / this.columns);
+    let item;
+    while ((item = queue.pop())) {
+      const { index, cost } = item;
+      if (cost > field[index]!) continue;
+      const column = index % this.columns,
+        row = Math.floor(index / this.columns);
       for (const [dx, dy] of NEIGHBORS) {
-        const cx = column + dx;
-        const cy = row + dy;
+        const cx = column + dx,
+          cy = row + dy;
         if (!this.open(cx, cy) || (dx && dy && (!this.open(cx, row) || !this.open(column, cy))))
           continue;
         const next = this.index(cx, cy);
-        if (field[next] !== UNREACHABLE) continue;
-        field[next] = field[index]! + 1;
-        queue[end++] = next;
+        const candidate = cost + this.edgeCost(index, next, !!(dx && dy), profile);
+        if (candidate >= field[next]!) continue;
+        field[next] = candidate;
+        queue.push(next, candidate);
       }
     }
     return field;

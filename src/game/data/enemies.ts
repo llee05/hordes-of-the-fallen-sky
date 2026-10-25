@@ -6,6 +6,7 @@ export const ENEMIES: readonly EnemyDefinition[] = [
   {
     id: 'wisp',
     texture: 'wolf',
+    navigation: 'pack',
     health: 25,
     speed: 49,
     damage: 10,
@@ -28,6 +29,7 @@ export const ENEMIES: readonly EnemyDefinition[] = [
   {
     id: 'brute',
     texture: 'earth',
+    navigation: 'heavy',
     health: 100,
     speed: 35,
     damage: 18,
@@ -75,6 +77,7 @@ export const ENEMIES: readonly EnemyDefinition[] = [
   {
     id: 'eclipse-giant',
     texture: 'earth',
+    navigation: 'heavy',
     health: 400,
     speed: 34,
     damage: 24,

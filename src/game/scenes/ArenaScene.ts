@@ -1153,7 +1153,14 @@ export class ArenaScene extends Phaser.Scene {
       let speed =
         enemy.definition.speed *
         (1 + clan.region * 0.1) *
-        terrainSpeedMultiplier(this.run, Math.min(playerDistance, campDistance));
+        terrainSpeedMultiplier(this.run, Math.min(playerDistance, campDistance)) *
+        Math.max(
+          0.65,
+          1 /
+            Math.sqrt(
+              this.landscape.navigation?.travelCost(enemy, enemy.definition.navigation) ?? 1,
+            ),
+        );
       if (ranged && distance < 260 && clearShot) speed = 0;
       if (attackingCamp) {
         // Hold outside the tents instead of walking (or charging) into their centre.
@@ -1170,7 +1177,9 @@ export class ArenaScene extends Phaser.Scene {
           const angle = enemy.getData('chargeAngle') as number;
           enemy.setVelocity(Math.cos(angle) * speed * 2.2, Math.sin(angle) * speed * 2.2);
         } else {
-          const waypoint = this.landscape.navigation?.waypoint(enemy, target) ?? target;
+          const waypoint =
+            this.landscape.navigation?.waypoint(enemy, target, enemy.definition.navigation) ??
+            target;
           this.physics.moveTo(enemy, waypoint.x, waypoint.y, speed);
         }
       }
