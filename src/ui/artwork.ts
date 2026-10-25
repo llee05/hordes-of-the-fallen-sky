@@ -99,6 +99,12 @@ export function campIllustration(name: NonNullable<BuildingDefinition['illustrat
   return atlasIllustration(atlas, frame);
 }
 
+/** Local enemy variants retain the existing painted archetype portrait. */
+export function enemyIllustration(name: string): string {
+  const frame = actors.frames[name as keyof typeof actors.frames]?.frame;
+  return frame ? atlasIllustration(actors, frame) : '';
+}
+
 function atlasIllustration(
   atlas: { meta: { image: string; size: { w: number; h: number } } },
   frame: { x: number; y: number; w: number; h: number },

@@ -48,7 +48,7 @@ unreturned, distinct from the traditions and honoured local powers described in
 schedules at most one pending terrain event during assault/featured-enemy phases.
 Recovery windows and migration do not launch environmental volleys. The first
 Golden Pasture opening stays gentle. Grove hunts split their approaches; river
-areas alternate banks; exposed shelves use crossfire. Connected, offscreen spawn
+areas alternate banks using the local tangent of the actual rendered watercourse; exposed shelves use crossfire. Connected, offscreen spawn
 candidates prefer the native habitat, with a valid open-ground fallback.
 
 `systems/AreaHabitat.ts` caches the same moisture, grove, shore, snow and cliff masks
@@ -72,3 +72,13 @@ Menus freeze clocks, damage, animation and ground fields. Departure and arrival
 clear fields tied to the previous terrain. Warnings reuse the existing graphics
 bridge, native enemies reuse painted motion atlases, and audio reuses the recorded
 spell/drum palette. No new runtime downloads or generated artwork are required.
+
+## Planning and readability
+
+`ui/areaContent.ts` renders the same read-only local threat section in destination
+previews and the chronicle. It lists both natives, their attack/cover behaviour,
+arrival-time unlock and counter, plus the shared roster. Portraits crop the existing
+locally bundled actor atlas through `ui/artwork.ts`; no extra raster asset is made.
+The battlefield teaches the rule once on entering the active area. The location
+and encounter HUD labels also expose the local rule as a tooltip. Normal warnings,
+projectile contrast, terrain collision and knowledge-point banking remain intact.

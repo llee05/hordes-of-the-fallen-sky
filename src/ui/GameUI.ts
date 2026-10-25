@@ -1,4 +1,6 @@
 import { SUCCESSORS } from '../game/data/successors';
+import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
+import { AREA_ENEMIES } from '../game/data/enemies';
 import { CROSSING_ENCOUNTERS } from '../game/data/crossings';
 import { encounterPlan } from '../game/state/encounters';
 import { FIELD_OBJECTIVES } from '../game/data/fieldObjectives';
@@ -328,19 +330,23 @@ export class GameUI {
       .closest('.vitals-hud')!
       .classList.toggle('choosing-khan', !khanActive);
     const encounter = encounterPlan(run);
-    const groundDirection = [
-      'East',
-      'Southeast',
-      'South',
-      'Southwest',
-      'West',
-      'Northwest',
-      'North',
-      'Northeast',
-    ][(Math.round(encounter.angle / (Math.PI / 4)) + 8) % 8];
+    const area = AREA_ENCOUNTERS[currentLocation(run).id];
+    this.get('encounter-status').title = `${area.title}. ${area.rule} ${area.counter}`;
+    this.get('location').title = `${area.title}: ${AREA_ENEMIES.filter(
+      (e) => e.home === currentLocation(run).id,
+    )
+      .map((e) => e.title)
+      .join(', ')}. Inspect local threats in the chronicle.`;
+    const approach = {
+      flanks: 'Alternating flanks',
+      banks: 'Both banks',
+      shelves: 'Ridge approaches',
+      shelter: 'Outcrop approaches',
+      crossfire: 'Crossfire approaches',
+    }[area.pattern];
     this.text(
       'encounter-status',
-      `${encounter.title}${['warning', 'assault', 'elite'].includes(encounter.phase) ? ` · ${groundDirection} approach` : ''} · ${Math.ceil(encounter.remaining)}s`,
+      `${encounter.title}${['warning', 'assault', 'elite'].includes(encounter.phase) ? ` · ${approach}` : ''} · ${Math.ceil(encounter.remaining)}s`,
     );
     const crossing = run.clan.stage === 'migration' ? run.crossing : undefined;
     if (crossing) {

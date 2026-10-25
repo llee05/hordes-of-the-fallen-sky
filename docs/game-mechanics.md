@@ -320,7 +320,7 @@ The starting barricade has a 108-unit ground radius, with enemies stopping withi
 | Eclipse giant, elite | `eclipse-giant` | 400         | 34    | 24     | 30 / 12              | 330                     | Ranged                     |
 | Skybreaker, boss     | `skybreaker`    | 3,600       | 42    | 26     | 160 / 64             | Final stand +20 seconds | Twelve-shot radial volleys |
 
-Enemy unlock score is `total elapsed seconds + region index ×80`, with region indices 0–3. Unlocks are not fixed real-time timestamps across all runs. Eligible normal enemies are drawn with weights 6, 3, 2, 3, 2, 1, 1 in the table order. Elites join that random pool rather than appear as unique scheduled encounters.
+The seven shared enemies use unlock score `total elapsed seconds + region index ×80`, with region indices 0–3. Unlocks are not fixed real-time timestamps across all runs. The legacy shared-only picker uses weights 6, 3, 2, 3, 2, 1, 1 in the table order. Normal encounter phases mix their shared composition with a 70% preference for eligible natives of the current physical location. Each area has two exclusive local variants; the second enters after 35 active seconds in the stage. Golden Pasture’s first 18 seconds retain introductory wolves. Local types never enter another area’s pool, including when a future destination is being previewed. See [area encounters](area-encounters.md) for all 24 names, terrain rules, abilities and the provisional art contract. Elites join that random pool rather than appear as unique scheduled encounters.
 
 Normal enemy health is multiplied by `1 + total elapsed / 1200`. Boss health stays at 3,600. Movement speed is multiplied by `1 + region index ×0.1`. Base spawn interval is `max(0.14, 0.85 − 0.004 × (stage time + region index ×65))`, divided by route danger during migration. The first 18 seconds in Golden Pasture override the interval to 2 seconds. Afterwards, encounter phase and remaining pasture multiply this base interval (see encounter rhythm below). Rejected placements or a full pool retry after 0.2 active seconds, without banking a burst. Up to 350 enemies may be active; 45% of spawn attempts anchor around camp and the rest around the Khan. During succession, all spawn attempts anchor around camp. In the angled renderer, arrivals use the actual orthographic camera edge and sampled terrain height, then require connected walkable ground and at least 200 units from the living Khan. Terrain-streaming bounds are not spawn bounds. Enemies farther than 1,600 units from both Khan and camp are retired only when also outside the camera’s 640-unit projected arrival margin; visible and approaching enemies survive at wide views. Boss arrival is recorded only after a body is successfully allocated.
 
@@ -514,3 +514,25 @@ unmodified successor returns automatically if no choice was made. These traits
 belong to that generation, appear in its chronicle record, and replace rather than
 stack across successors. Inherited research and camp progression stay intact, and
 Last Ember never refreshes. Menus freeze the countdown and reject choice inputs.
+
+### Local terrain and enemy identity
+
+All twelve locations have two native variants plus the shared unreturned roster.
+Groves and reeds conceal approaching stalkers as visible muted silhouettes; riding
+near them reveals their full colour. Local creatures prefer connected approaches
+suited to their habitat and move modestly faster there. River areas split bank
+approaches, woodland packs flank, and exposed shelves invite crossfire. These
+changes follow the chosen physical location independently of chapter hazards.
+
+Native attacks include spaced missile fans and marked frost, mire, stone, wind,
+cinder and rift strikes. Rings warn before release; defeating or pinning the caster
+cancels an unreleased spell. Some strikes leave short ground effects. Slows do not
+stack and do not remove gallop movement. Environmental volleys use appropriate
+water, snow, cliff-foot or exposed-ground masks, exclude the camp centre, and pause
+during recovery windows and migration. Enemy-cast abilities remain possible during
+crossings. All effects freeze in menus, have bounded counts, and clear on terrain
+transitions. The current rendering reuses the existing painted animation clips.
+
+Inspect **Local threats** in destination planning or the chronicle’s Journey page
+for the two native enemies, their attacks, and the area counter. Reading or changing
+a preview never changes the simulation's current roster.
