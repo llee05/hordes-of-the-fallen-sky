@@ -23,6 +23,8 @@ import {
   tacticalGoal,
   seerDangerRadius,
 } from '../systems/enemyTactics';
+import type { SuccessorTrait } from '../data/successors';
+import type { ClanDamageCause } from '../state/clanSafety';
 import { projectGround } from '../world3d/worldProjection';
 import { projectileTerrainClear } from '../world3d/projectileTerrain';
 import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
@@ -69,7 +71,14 @@ import {
   rewardPatronKill,
   terrainSpeedMultiplier,
 } from '../state/patrons';
-import { advanceSuccession, beginSuccession, damageKhan, isKhanActive } from '../state/khan';
+import {
+  advanceSuccession,
+  beginSuccession,
+  damageKhan,
+  isKhanActive,
+  chooseSuccessor,
+  khanSpeedMultiplier,
+} from '../state/khan';
 import { PatronSupport } from '../systems/PatronSupport';
 import { completeGuidance } from '../state/guidance';
 import { GameAudio } from '../systems/Audio';
@@ -360,6 +369,8 @@ export class ArenaScene extends Phaser.Scene {
     bindAction('B', () => this.openBuildings());
     bindAction('M', () => this.openRoutes());
     bindAction('F', () => this.cycleFormation());
+    bindAction('ONE', () => this.selectSuccessor('outrider'));
+    bindAction('TWO', () => this.selectSuccessor('hearthguard'));
     bindAction('J', () => this.toggleJournal());
     bindAction('T', () => this.openResearch());
     if (import.meta.env.DEV) {
@@ -893,6 +904,10 @@ export class ArenaScene extends Phaser.Scene {
       if (controller.zoomReset) this.changeZoom(0);
       else if (controller.zoomIn) this.changeZoom(1);
       else if (controller.zoomOut) this.changeZoom(-1);
+      if (!isKhanActive(this.run)) {
+        if (controller.previous) this.selectSuccessor('outrider');
+        else if (controller.next) this.selectSuccessor('hearthguard');
+      }
       if (controller.confirm) this.dash();
       if (controller.build) this.openBuildings();
       else if (controller.migrate) this.openRoutes();
@@ -1017,7 +1032,7 @@ export class ArenaScene extends Phaser.Scene {
       this.facing.copy(movement).normalize();
     }
     if (this.dashRemaining > 0) movement.copy(this.facing).scale(GAME.dash.speed);
-    else movement.scale(this.run.stats.speed);
+    else movement.scale(this.run.stats.speed * khanSpeedMultiplier(this.run));
     this.player.setVelocity(movement.x, movement.y);
     const faceX = this.landscape.world3d?.screenX(this.facing.x, this.facing.y) ?? this.facing.x;
     if (Math.abs(faceX) > 0.01) this.player.setFlipX(faceX < 0);
@@ -1243,6 +1258,7 @@ export class ArenaScene extends Phaser.Scene {
       e && !e.joined && !e.lost
         ? { kind: 'refugees', status: 'returning', x: e.x, y: e.y }
         : undefined,
+      dt,
     );
   }
 
@@ -1289,7 +1305,7 @@ export class ArenaScene extends Phaser.Scene {
       const desired = { x: o.x + (to.x - o.x) * step, y: o.y + (to.y - o.y) * step };
       Object.assign(o, nav?.slide(o, desired, 18) ?? desired);
     }
-    this.fieldMarkers.update(o);
+    this.fieldMarkers.update(o, dt);
   }
 
   private updateEnemies(dt: number): void {
@@ -1305,6 +1321,16 @@ export class ArenaScene extends Phaser.Scene {
       const shadow = this.enemyShadows.get(enemy);
       shadow?.setVisible(enemy.active);
       if (!enemy.active) continue;
+      const objective = this.run.field.objective;
+      if (
+        (objective?.kind === 'gathering' &&
+          objective.status === 'available' &&
+          enemy.objectiveId === objective.id) ||
+        (this.run.clan.stage === 'migration' &&
+          this.run.crossing &&
+          enemy.crossingId === this.run.crossing.key)
+      )
+        warnings.lineStyle(2, 0xdfbc74, 0.8).strokeCircle(enemy.x, enemy.y, 22);
       let campDistance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.camp.x, this.camp.y);
       const clearance = boundary.attackRange - 1;
       if (campDistance < clearance) {
@@ -1868,8 +1894,14 @@ export class ArenaScene extends Phaser.Scene {
       : undefined;
   }
 
-  private damageClan(amount: number): void {
-    damageClan(this.run, amount, this.clanProtection);
+  private damageClan(amount: number, cause: ClanDamageCause = 'attack'): void {
+    damageClan(this.run, amount, this.clanProtection, cause);
+  }
+
+  selectSuccessor(trait: SuccessorTrait): void {
+    if (!chooseSuccessor(this.run, trait)) return;
+    this.audio.play('ui');
+    this.callbacks?.onHud(this.snapshot());
   }
 
   private hideFallenKhan(): void {
@@ -1949,6 +1981,34 @@ export class ArenaScene extends Phaser.Scene {
     this.publishPhase();
   }
 
+  private campPressure(): string {
+    const sectors = new Array<number>(8).fill(0);
+    let incoming = 0,
+      attacking = 0;
+    const boundary = campBoundary(this.run);
+    for (const e of this.enemies.getChildren() as Enemy[]) {
+      if (!e.active) continue;
+      const dx = e.x - this.camp.x,
+        dy = e.y - this.camp.y,
+        distance = Math.hypot(dx, dy);
+      if (distance > 650) continue;
+      incoming++;
+      if (distance <= boundary.attackRange + 2) attacking++;
+      const screen = projectGround(
+        dx,
+        dy,
+        0,
+        this.landscape.world3d?.angle ?? 90,
+        this.landscape.world3d?.yaw ?? 0,
+      );
+      const sector = (Math.round(Math.atan2(screen.y, screen.x) / (Math.PI / 4)) + 8) % 8;
+      sectors[sector]! += e.definition.damage / Math.max(80, distance);
+    }
+    if (!incoming) return 'Camp approaches clear';
+    const strongest = sectors.indexOf(Math.max(...sectors));
+    return `${['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'][strongest]} Camp: ${incoming} approaching${attacking ? ` · ${attacking} at the barricade` : ''}`;
+  }
+
   private snapshot(): HudSnapshot {
     const dx = this.camp.x - this.player.x;
     const dy = this.camp.y - this.player.y;
@@ -1970,6 +2030,7 @@ export class ArenaScene extends Phaser.Scene {
       : undefined;
     const zoomLimits = cameraZoomLimits(this.cameras.main.width, this.cameras.main.height);
     return {
+      campPressure: this.campPressure(),
       fieldBearing,
       developerRun: this.developerRun,
       developerConsole:
@@ -2246,7 +2307,10 @@ export class ArenaScene extends Phaser.Scene {
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.player.x, this.player.y) < radius)
         this.takeDamage((hazard.damage ?? 20) * this.run.patrons.water.hazardDamage);
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.camp.x, this.camp.y) < radius + 25)
-        this.damageClan((hazard.source === 'seer' ? 5 : 8) * this.run.patrons.water.hazardDamage);
+        this.damageClan(
+          (hazard.source === 'seer' ? 5 : 8) * this.run.patrons.water.hazardDamage,
+          hazard.source === 'seer' ? 'seer' : 'eruption',
+        );
       hazard.warning.destroy();
       this.hazards.splice(i, 1);
     }

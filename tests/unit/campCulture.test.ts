@@ -126,7 +126,7 @@ describe('Mongolian-inspired camp branches', () => {
     expect(run.clan.population).toBe(41);
     expect(run.clan.herd).toBe(40);
     expect(run.health).toBe(45);
-    expect(run.clan.integrity).toBe(72);
+    expect(run.clan.integrity).toBe(76);
     expect(run.clan.campEffects).toEqual(effects);
     expect(run.clan.paths).toEqual(paths);
     expect(createRun().clan.paths).toEqual({});

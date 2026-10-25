@@ -1,3 +1,4 @@
+import { createClanSafety } from './clanSafety';
 import { createMountedCombat } from './mountedCombat';
 import { createEncounters } from './encounters';
 import { createFieldState } from './fieldObjectives';
@@ -18,6 +19,7 @@ export function xpForLevel(level: number): number {
 export function createRun(): RunState {
   return {
     legacy: createLegacy(),
+    safety: createClanSafety(),
     combat: createMountedCombat(),
     encounters: createEncounters(),
     field: createFieldState(),

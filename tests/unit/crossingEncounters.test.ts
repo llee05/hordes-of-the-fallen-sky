@@ -43,7 +43,7 @@ describe('distinct crossing encounters', () => {
       expect(settleCrossingEncounter(r)).toBe(false);
       expect(r).toEqual(paid);
       expect(r.clan.materials - materials).toBe(route === 'ridge' ? 10 : 0);
-      expect(r.clan.integrity).toBe(route === 'river' ? 62 : 56);
+      expect(r.clan.integrity).toBe(route === 'river' ? 66 : 60);
     }
   });
   it('requires a protected escort to join the caravan and keeps failed objectives optional', () => {

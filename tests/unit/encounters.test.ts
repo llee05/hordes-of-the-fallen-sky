@@ -31,6 +31,9 @@ describe('readable encounter pacing', () => {
     expect(r).toEqual(before);
     r.phase = 'playing';
     advanceEncounters(r);
+    r.elapsed = 52;
+    expect(encounterEnemy(r).elite).toBe(false);
+    r.elapsed = 56;
     expect(encounterEnemy(r).elite).toBe(true);
     expect(encounterEnemy(r).definition.id).toBe('brute');
     r.encounters.eliteSpawned = true;

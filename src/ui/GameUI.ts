@@ -1,3 +1,4 @@
+import { SUCCESSORS } from '../game/data/successors';
 import { CROSSING_ENCOUNTERS } from '../game/data/crossings';
 import { encounterPlan } from '../game/state/encounters';
 import { FIELD_OBJECTIVES } from '../game/data/fieldObjectives';
@@ -101,11 +102,21 @@ export class GameUI {
           </section>
           <div class="expedition-clock"><strong id="timer">00:00</strong><span id="stage-label">ENCAMPMENT</span>${import.meta.env.DEV ? '<span id="developer-run" hidden>DEVELOPER RUN · F8</span>' : ''}</div>
           <nav class="hud-menu" aria-label="Game menus"><button id="journal" class="hud-menu-button" title="Clan chronicle (Tab / J)" aria-label="Open clan chronicle" aria-keyshortcuts="Tab J"><span>${clanMark('journal')}</span><kbd>TAB</kbd></button><button id="pause" class="hud-menu-button" aria-label="Pause" title="Pause (Escape)"><span>${clanMark('pause')}</span><kbd>ESC</kbd></button></nav>
-          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p class="act-heading" id="act-heading">ACT I · GATHER THE SCATTERED</p><p id="objective">Build the camp. Protect your people.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Crossing</span><b id="crossing">0%</b></div><div class="track"><div id="crossing-fill"></div></div></div><p class="objective-hint" id="migration-hint">New routes in 45s.</p><p id="encounter-status" class="field-status" role="status"></p><p id="field-objective" class="field-status"></p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
+          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p class="act-heading" id="act-heading">ACT I · GATHER THE SCATTERED</p><p id="objective">Build the camp. Protect your people.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Crossing</span><b id="crossing">0%</b></div><div class="track"><div id="crossing-fill"></div></div></div><p class="objective-hint" id="migration-hint">New routes in 45s.</p><p id="camp-pressure" class="field-status" role="status"></p><p id="clan-losses" class="field-status"></p><p id="encounter-status" class="field-status" role="status"></p><p id="field-objective" class="field-status"></p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
           <aside id="field-guide" class="field-guide hud-surface" aria-label="Expedition guidance" hidden></aside>
           <div class="zoom-controls hud-surface" role="group" aria-label="Battlefield zoom"><button id="zoom-out" aria-label="Zoom out" aria-keyshortcuts="-" title="Zoom out (− / LT)">−</button><button id="zoom-reset" aria-label="Reset battlefield zoom to 100%" aria-keyshortcuts="0" title="Reset zoom (0 / Right stick click)"><span id="zoom-level">100%</span></button><button id="zoom-in" aria-label="Zoom in" aria-keyshortcuts="+" title="Zoom in (+ / RT)">+</button></div>
           <div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
           <div id="boss-bar" class="boss-bar" hidden><span>THE SKYBREAKER</span><div class="track"><div id="boss-fill"></div></div></div>
+          <aside id="successor-choice" class="successor-choice hud-surface" aria-label="Choose successor" hidden><strong>Who will carry the banner?</strong><p>The countdown continues. Choosing is optional.</p><div>${Object.entries(
+            SUCCESSORS,
+          )
+            .map(
+              ([id, s], i) =>
+                `<button data-successor="${id}" aria-pressed="false"><span>${i + 1}. ${s.title}</span><small>${s.description}</small></button>`,
+            )
+            .join(
+              '',
+            )}</div><small id="successor-selection">1 / 2 · controller left / right</small></aside>
           <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span>BOW <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
           <section class="tradition-hud" aria-label="Run progression"><span>TRADITION <b id="level">01</b> <small>· <span id="blessing-count">0</span> LEARNED</small></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small><button id="research" class="research-button" aria-label="Open patron tech tree" aria-keyshortcuts="T">Tech tree <kbd>T</kbd><span id="research-points">0</span></button></section>
           <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
@@ -127,6 +138,11 @@ export class GameUI {
     this.get('research').addEventListener('click', () => scene.openResearch());
     this.get('build').addEventListener('click', () => scene.openBuildings());
     this.get('migrate').addEventListener('click', () => scene.openRoutes());
+    this.get('successor-choice').addEventListener('click', (event) => {
+      const trait = (event.target as HTMLElement).closest<HTMLElement>('[data-successor]')?.dataset
+        .successor;
+      if (trait === 'outrider' || trait === 'hearthguard') scene.selectSuccessor(trait);
+    });
     this.get('formation').addEventListener('click', () => scene.cycleFormation());
     this.get('zoom-out').addEventListener('click', () => scene.changeZoom(-1));
     this.get('zoom-in').addEventListener('click', () => scene.changeZoom(1));
@@ -252,7 +268,7 @@ export class GameUI {
     this.motion.setPlaying(run.phase === 'playing');
     const clan = run.clan;
     const guide = currentGuidance(run);
-    this.get('field-guide').hidden = !guide;
+    this.get('field-guide').hidden = !guide || (!isKhanActive(run) && this.root.clientWidth <= 600);
     if ((guide?.id ?? '') !== this.guideId) {
       this.guideId = guide?.id ?? '';
       this.get('field-guide').innerHTML = guide ? guidanceContent(guide) : '';
@@ -275,6 +291,34 @@ export class GameUI {
       run.khan.generation > 1 ? `THE KHAN · ${run.khan.generation}` : 'THE KHAN',
     );
     this.get('khan-succession').hidden = run.khan.successionRemaining <= 0;
+    this.get('successor-choice').hidden = run.khan.successionRemaining <= 0;
+    for (const button of this.get('successor-choice').querySelectorAll<HTMLButtonElement>(
+      '[data-successor]',
+    )) {
+      button.disabled = run.phase !== 'playing' || !!run.khan.candidate;
+      button.setAttribute('aria-pressed', String(run.khan.candidate === button.dataset.successor));
+    }
+    this.text(
+      'successor-selection',
+      run.khan.candidate
+        ? `${SUCCESSORS[run.khan.candidate].title} chosen · inherits this expedition`
+        : '1 / 2 · controller left / right',
+    );
+    this.text('camp-pressure', snapshot.campPressure ?? '');
+    const last = run.safety.lastDamage,
+      causes = {
+        attack: 'Enemy attacks',
+        starvation: 'Starvation',
+        eruption: 'Ground eruption',
+        seer: 'Seer strike',
+      };
+    const recent = last && run.elapsed - last.at < 10;
+    this.text(
+      'clan-losses',
+      `Losses: ${run.safety.combatLosses} combat · ${run.safety.starvationLosses} hunger${recent ? ` · ${causes[last.cause]}: −${last.amount.toFixed(1)} resolve${last.people ? ` (${last.people} people)` : ''}` : ''}`,
+    );
+    this.get('clan-losses').hidden =
+      !recent && run.safety.combatLosses + run.safety.starvationLosses === 0;
     this.text(
       'khan-succession-countdown',
       `Returns ${clan.stage === 'migration' ? 'to the caravan' : 'at camp'} in ${Math.ceil(run.khan.successionRemaining)}s`,
@@ -433,6 +477,7 @@ export class GameUI {
     );
     this.text('best', best > 0 ? formatTime(best) : '— — : — —');
     this.text('clan-message', clan.message);
+    this.layoutGuidance();
     const reaction = currentReaction(run);
     this.get('companion-reaction').hidden = !reaction;
     this.text(
@@ -447,6 +492,38 @@ export class GameUI {
       if (reaction) this.lastReaction = reaction.sequence;
       this.showMessage();
     }
+  }
+
+  /** Narrow previews stack variable-height status text before guidance, leaving actions clear. */
+  private layoutGuidance(): void {
+    const guide = this.get('field-guide');
+    if (this.root.clientWidth > 600) {
+      this.get('successor-choice').style.removeProperty('top');
+      this.get('successor-choice').style.removeProperty('bottom');
+      guide.style.removeProperty('top');
+      guide.style.removeProperty('max-height');
+      guide.style.removeProperty('overflow-y');
+      return;
+    }
+    const choice = this.get('successor-choice');
+    if (!choice.hidden) {
+      choice.style.top = `${this.get('objective').closest<HTMLElement>('.objective-hud')!.getBoundingClientRect().bottom + 12}px`;
+      choice.style.bottom = 'auto';
+    } else {
+      choice.style.removeProperty('top');
+      choice.style.removeProperty('bottom');
+    }
+    if (guide.hidden) return;
+    const objective = this.get('objective').closest<HTMLElement>('.objective-hud')!;
+    const top = Math.max(332, objective.getBoundingClientRect().bottom + 12);
+    const bottom =
+      Math.min(
+        this.get('research').getBoundingClientRect().top,
+        this.get('dash').getBoundingClientRect().top,
+      ) - 12;
+    guide.style.top = `${top}px`;
+    guide.style.maxHeight = `${Math.max(48, bottom - top)}px`;
+    guide.style.overflowY = 'auto';
   }
 
   private showMessage(): void {

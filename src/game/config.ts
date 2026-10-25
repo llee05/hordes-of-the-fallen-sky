@@ -90,6 +90,7 @@ export const GAME = {
     riverGuards: 6,
     ridgeGuards: 4,
     refugeGuards: 5,
+    safeResolve: 4,
     riverResolve: 12,
     ridgeMaterials: 10,
     ridgeResolve: 6,
@@ -123,7 +124,13 @@ export const GAME = {
   projectile: { speed: 440, lifetime: 1.6, range: 440 },
   dash: { speed: 570, duration: 0.3, cooldown: 3 },
   invulnerability: 0.65,
-  khan: { successionDelay: 10, returnProtection: 3, campOffset: 90 },
+  khan: {
+    successionDelay: 10,
+    returnProtection: 3,
+    campOffset: 90,
+    outriderSpeed: 1.05,
+    hearthguardProtection: 0.92,
+  },
   locations: {
     otgontenger: { food: 0.85, materials: 1.25, mobility: 0.9, crossing: 1.15 },
     'bogd-khan-uul': { food: 1.1, materials: 1.15, mobility: 1, crossing: 1 },

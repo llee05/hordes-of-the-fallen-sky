@@ -123,7 +123,7 @@ describe('portable camp development effects', () => {
       population: 19,
       herd: 4,
       materials: 60,
-      integrity: 70,
+      integrity: 74,
       food: 77,
     });
     expect(run.health).toBe(55);

@@ -154,13 +154,19 @@ export interface PatronEffects {
 }
 
 export interface RunState {
+  safety: import('./state/clanSafety').ClanSafety;
   crossing?: import('./state/crossingEncounters').CrossingEncounter;
   combat: import('./state/mountedCombat').MountedCombatState;
   encounters: import('./state/encounters').EncounterState;
   field: import('./state/fieldObjectives').FieldState;
   legacy: ClanLegacy;
   guidance: GuidanceState;
-  khan: { generation: number; successionRemaining: number };
+  khan: {
+    generation: number;
+    successionRemaining: number;
+    candidate?: import('./data/successors').SuccessorTrait;
+    trait?: import('./data/successors').SuccessorTrait;
+  };
   phase: RunPhase;
   elapsed: number;
   health: number;
@@ -220,4 +226,5 @@ export interface HudSnapshot {
   bossHealth?: number;
   clanBearing: string;
   fieldBearing?: string;
+  campPressure?: string;
 }

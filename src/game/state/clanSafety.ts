@@ -1,0 +1,22 @@
+import type { RunState } from '../types';
+export type ClanDamageCause = 'attack' | 'starvation' | 'eruption' | 'seer';
+export interface ClanSafety {
+  combatLosses: number;
+  starvationLosses: number;
+  protectedCrossings: number;
+  lastDamage?: { cause: ClanDamageCause; at: number; amount: number; people: number };
+}
+export function createClanSafety(): ClanSafety {
+  return { combatLosses: 0, starvationLosses: 0, protectedCrossings: 0 };
+}
+export function recordClanDamage(
+  run: RunState,
+  cause: ClanDamageCause,
+  amount: number,
+  people: number,
+): void {
+  if (!Number.isFinite(amount) || amount <= 0) return;
+  run.safety.lastDamage = { cause, at: run.elapsed, amount, people };
+  if (cause === 'starvation') run.safety.starvationLosses += people;
+  else run.safety.combatLosses += people;
+}

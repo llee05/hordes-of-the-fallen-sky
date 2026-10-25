@@ -836,3 +836,93 @@
   font-size: 11px;
   line-height: 1.4;
 }
+
+.successor-choice {
+  position: absolute;
+  bottom: 180px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, calc(100% - 24px));
+  padding: 14px;
+  color: #e8d7b0;
+  pointer-events: auto;
+}
+.successor-choice > strong {
+  font:
+    18px Georgia,
+    serif;
+}
+.successor-choice p,
+.successor-choice > small {
+  font-size: 11px;
+  margin: 6px 0;
+}
+.successor-choice > div {
+  display: flex;
+  gap: 8px;
+}
+.successor-choice button {
+  flex: 1;
+  padding: 9px;
+  color: #f0dfb7;
+  background: #203c3d;
+  border: 1px solid #bd9c63;
+  text-align: left;
+}
+.successor-choice button small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+}
+.successor-choice button[aria-pressed='true'] {
+  border-color: #eed8a0;
+  background: #4a513d;
+}
+.successor-choice button:focus-visible {
+  outline: 2px solid #f2dfae;
+  outline-offset: 3px;
+}
+
+.game-hud:has(.choosing-khan) .chronicle-toast {
+  visibility: hidden;
+}
+@media (min-width: 601px) and (max-width: 1100px) and (max-height: 680px) {
+  .successor-choice {
+    top: 140px;
+    bottom: auto;
+    width: clamp(160px, calc(100vw - 640px), 340px);
+    padding: 10px;
+  }
+}
+@media (min-width: 601px) and (max-width: 900px) and (max-height: 680px) {
+  .successor-choice > strong {
+    font-size: 14px;
+  }
+  .successor-choice > p {
+    display: none;
+  }
+  .successor-choice > div {
+    flex-direction: column;
+    margin-top: 5px;
+    gap: 4px;
+  }
+  .successor-choice button {
+    padding: 5px;
+    font-size: 11px;
+  }
+  .successor-choice button small,
+  .successor-choice > small {
+    font-size: 9px;
+    margin-top: 2px;
+  }
+}
+@media (max-width: 600px) {
+  .successor-choice {
+    top: 332px;
+    bottom: auto;
+  }
+  .vitals-hud.choosing-khan + .tradition-hud {
+    bottom: 250px;
+    translate: none;
+  }
+}

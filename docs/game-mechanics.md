@@ -227,7 +227,7 @@ See [the complete camp tree](camp-upgrade-tree.md) for all eight branch diagrams
 
 The Khan starts with 100 health, 190 movement speed, 16 damage, a 0.6-second firing interval, 85 shard attraction radius, and one arrow per volley. Attacks automatically choose the nearest available enemy within targeting range; there is no manual aim or attack input.
 
-Momentum rises by 0.72/second while moving and falls by 1.5/second while stopped, clamped to 0–1. Full momentum takes about 1.39 seconds. Before research/crafts, Khan targeting range is `440 + 120 × momentum`; personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum gives 560 targeting range and +30% personal damage.
+Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Before research/crafts, Khan targeting range is `440 + 120 × momentum`; personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum gives 560 targeting range and +30% personal damage.
 
 Accompanying riders each fire one arrow per host volley, at 60% of the shared damage stat, or 90% with Veteran riders. Their targeting range starts at 440; Khükhedei Mergen adds up to 60 and Horn-and-sinew bowyers adds 30 to Khan and rider targeting range. Sülde multiplies rider damage by 1.25; Arban drills adds ×1.2 and a ×0.9 host firing interval. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
 
@@ -322,9 +322,9 @@ The starting barricade has a 108-unit ground radius, with enemies stopping withi
 
 Enemy unlock score is `total elapsed seconds + region index ×80`, with region indices 0–3. Unlocks are not fixed real-time timestamps across all runs. Eligible normal enemies are drawn with weights 6, 3, 2, 3, 2, 1, 1 in the table order. Elites join that random pool rather than appear as unique scheduled encounters.
 
-Normal enemy health is multiplied by `1 + total elapsed / 1200`. Boss health stays at 3,600. Movement speed is multiplied by `1 + region index ×0.1`. Spawn interval is `max(0.14, 0.85 − 0.004 × (stage time + region index ×65))`, divided by route danger during migration. The first 18 seconds in Golden Pasture override the interval to 2 seconds. Rejected placements or a full pool retry after 0.2 active seconds, without banking a burst. Up to 350 enemies may be active; 45% of spawn attempts anchor around camp and the rest around the Khan. During succession, all spawn attempts anchor around camp. In the angled renderer, arrivals use the actual orthographic camera edge and sampled terrain height, then require connected walkable ground and at least 200 units from the living Khan. Terrain-streaming bounds are not spawn bounds. Enemies farther than 1,600 units from both Khan and camp are retired only when also outside the camera’s 640-unit projected arrival margin; visible and approaching enemies survive at wide views. Boss arrival is recorded only after a body is successfully allocated.
+Normal enemy health is multiplied by `1 + total elapsed / 1200`. Boss health stays at 3,600. Movement speed is multiplied by `1 + region index ×0.1`. Base spawn interval is `max(0.14, 0.85 − 0.004 × (stage time + region index ×65))`, divided by route danger during migration. The first 18 seconds in Golden Pasture override the interval to 2 seconds. Afterwards, encounter phase and remaining pasture multiply this base interval (see encounter rhythm below). Rejected placements or a full pool retry after 0.2 active seconds, without banking a burst. Up to 350 enemies may be active; 45% of spawn attempts anchor around camp and the rest around the Khan. During succession, all spawn attempts anchor around camp. In the angled renderer, arrivals use the actual orthographic camera edge and sampled terrain height, then require connected walkable ground and at least 200 units from the living Khan. Terrain-streaming bounds are not spawn bounds. Enemies farther than 1,600 units from both Khan and camp are retired only when also outside the camera’s 640-unit projected arrival margin; visible and approaching enemies survive at wide views. Boss arrival is recorded only after a body is successfully allocated.
 
-Chargers commit to a direction every 3 seconds and move at 2.2× speed for 0.7 seconds. Ranged creatures stop closing within 260 units and fire within 650: one projectile every 3.5 seconds, or a 12-projectile ring every 2.5 seconds for the boss, after an initial attack delay. Hostile projectiles move at 125 units/second, last 5 seconds, and damage the Khan for the listed damage or clan for half that raw damage. Shots entering the barricade are consumed at its outer edge and show a local impact. Enemy contact damages the Khan for the listed value. At the barricade, enemies deal `listed damage ×0.45` raw resolve damage on arrival and every 1.5 active seconds thereafter, subject to their remaining attack cooldown and the clan's usual protection. Menus freeze these attacks and cooldowns. Reaching camp grants no kill, Spirit, or XP reward; defeating the attacker does.
+Chargers mark a committed direction for 0.8 seconds, move at 2.2× speed for 0.7 seconds, then recover for 1.8 seconds. Terrain and pinning interrupt their charges. Ranged creatures stop closing within 260 units and fire within 650: one projectile every 3.5 seconds, or a 12-projectile ring every 2.5 seconds for the boss, after an initial attack delay. Hostile projectiles move at 125 units/second, last 5 seconds, and damage the Khan for the listed damage or clan for half that raw damage. Shots entering the barricade are consumed at its outer edge and show a local impact. Enemy contact damages the Khan for the listed value. At the barricade, enemies deal `listed damage ×0.45` raw resolve damage on arrival and every 1.5 active seconds thereafter, subject to their remaining attack cooldown and the clan's usual protection. Menus freeze these attacks and cooldowns. Reaching camp grants no kill, Spirit, or XP reward; defeating the attacker does.
 
 **Ground eruptions:** begin in Broken Pass and persist at the mountain. A warning is placed at the Khan's position with 2 seconds to escape. An eruption deals 20 Khan damage within 70 units and 8 raw clan damage if camp is within 95. The first warning follows an 8-second hazard timer; subsequent warnings occur every 10 seconds in the pass or 6 at the mountain. Gallop invulnerability can protect the Khan, while clan protection follows its usual multipliers.
 
@@ -395,7 +395,7 @@ Touch preview supports dragging the battlefield to ride and tapping command butt
 
 Simulation, physics, economy, migration, combat animations, cooldowns, and the run timer advance only during active play. Title, prologue, story, epilogue, records, pause, traditions, camp development, routes, chronicle, settings, help, defeat, and victory stop them. Losing window focus pauses active combat. UI motion respects the operating system's reduced-motion preference; menus and values respond without waiting for animation.
 
-Only **longest journey time** and **sound preference** persist to the profile. A run cannot be resumed after quitting. New expeditions reset resources, buildings, traditions, identity, story records, casualties, and crossings. The camp-scene preference survives run restarts within the app session. There is no permanent spirit-stone wallet, permanent meta-tech tree, achievement system, Steamworks progression, or campaign save in this prototype.
+The profile retains longest journey, audio settings, developer command history, and the portable camp checkpoint described below. A battle cannot be resumed after quitting. New expeditions reset resources, buildings, traditions, identity, story records, casualties, and crossings. The camp-scene preference survives run restarts within the app session. There is no permanent spirit-stone wallet, permanent meta-tech tree, achievement system, Steamworks progression, or campaign save in this prototype.
 
 The desktop game runs offline with local assets and native, validated, atomic saves. Browser preview has separate saves. The technology stack is TypeScript, Phaser 3, Vite, and Electron; there is no runtime AI service or backend.
 
@@ -495,3 +495,22 @@ forecast, and victory conditions remain valid even if an optional encounter fail
 There are no mandatory stops or narrow gates. A departure rebuilds the current
 landscape with route geography using the existing renderer, then safely places
 live actors on connected ground. Camp arrival restores the destination landscape.
+
+### Protecting the people and choosing a successor
+
+The HUD reports the strongest nearby camp threat in screen direction, incoming
+enemy count, and attackers at the barricade. Recent resolve damage names its cause:
+attacks, starvation, eruptions, or seer strikes. Cumulative combat and hunger
+casualties remain distinct. The chronicle retains actual losses and successful
+rescues. Completing a crossing without losing any people grants four additional
+resolve and records **Every household arrived**. Recruiting refugees cannot erase
+a casualty for this check; rewards never repeat or apply on a failed crossing.
+
+During the existing ten-active-second succession, choose **The outrider** (Khan
+riding speed +5%) or **The hearthguard** (Khan damage taken −8%). Click the compact
+HUD choices, press 1 / 2, or use controller left / right. A preference is accepted
+once and takes effect only when the countdown finishes. Choosing is optional; an
+unmodified successor returns automatically if no choice was made. These traits
+belong to that generation, appear in its chronicle record, and replace rather than
+stack across successors. Inherited research and camp progression stay intact, and
+Last Ember never refreshes. Menus freeze the countdown and reject choice inputs.

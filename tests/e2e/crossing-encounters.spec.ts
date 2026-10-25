@@ -62,9 +62,9 @@ for (const route of ['river', 'ridge', 'refuge'])
     expect(result).toMatchObject({ route, paid: true, phase: 'camp', region: 1 });
     expect(result.defeated).toBe(result.spawned);
     expect(result.spawned).toBeGreaterThanOrEqual(4);
-    if (route === 'river') expect(result.resolve).toBe(74);
+    if (route === 'river') expect(result.resolve).toBe(78);
     if (route === 'ridge') {
-      expect(result.resolve).toBe(68);
+      expect(result.resolve).toBe(72);
       expect(result.materials).toBeGreaterThanOrEqual(38);
     }
     if (route === 'refuge') expect(result.people).toBe(18);

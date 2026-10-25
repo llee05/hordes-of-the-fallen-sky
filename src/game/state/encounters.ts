@@ -59,7 +59,10 @@ export function advanceEncounters(run: RunState): boolean {
 export function encounterEnemy(run: RunState, random = Math.random) {
   const plan = encounterPlan(run),
     score = run.elapsed + run.clan.region * 80;
-  const elite = plan.phase === 'elite' && !run.encounters.eliteSpawned;
+  const elite =
+    plan.phase === 'elite' &&
+    !run.encounters.eliteSpawned &&
+    ENCOUNTER_ELITES.some((id) => !!unlockedEnemy(id, score));
   const ids = elite ? ENCOUNTER_ELITES : plan.enemies;
   const available = ids.flatMap((id) => {
     const e = unlockedEnemy(id, score);

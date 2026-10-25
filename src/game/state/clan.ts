@@ -4,6 +4,7 @@ import {
   estateBuildingBlocker,
   reserveBuildingSlot,
 } from './campEstate';
+import { recordClanDamage, type ClanDamageCause } from './clanSafety';
 import { rememberClan } from './legacy';
 import { beginCrossingEncounter, settleCrossingEncounter } from './crossingEncounters';
 import { GAME } from '../config';
@@ -253,8 +254,9 @@ export function damageClan(
   run: RunState,
   amount: number,
   protectionOptions?: ClanProtection,
+  cause: ClanDamageCause = 'attack',
 ): void {
-  if (protectionOptions?.invincible) return;
+  if (protectionOptions?.invincible || !Number.isFinite(amount) || amount <= 0) return;
   const clan = run.clan;
   const protection = clanDamageMultiplier(run);
   const previousPopulation = clan.population;
@@ -269,7 +271,9 @@ export function damageClan(
       rememberClan(
         run,
         'A place left empty',
-        'An attack cost the clan a person. The surviving households carried on.',
+        cause === 'starvation'
+          ? 'Empty provisions cost the clan a person. The surviving households carried on.'
+          : `${cause === 'eruption' ? 'A ground eruption' : cause === 'seer' ? 'A seer’s strike' : 'An attack'} cost the clan a person. The surviving households carried on.`,
         {
           speaker: 'erden',
           text: 'One fewer at the fire. I will keep the loss in the tally, where we can all see it.',
@@ -277,6 +281,7 @@ export function damageClan(
         'One fewer beneath the banner. The loss remains in the tally.',
       );
   }
+  recordClanDamage(run, cause, previous - clan.integrity, previousPopulation - clan.population);
 }
 
 /** All economy and journey clocks stop outside the active simulation phase. */
@@ -316,10 +321,14 @@ export function advanceClan(
     Math.floor(previousTime / GAME.clan.starvationInterval) <
       Math.floor(clan.stageTime / GAME.clan.starvationInterval)
   ) {
+    const starvationLoss = Number(clan.population > 0);
     if (clan.population > 0) run.story.peopleLost += 1;
     clan.population = Math.max(0, clan.population - 1);
     clan.herd = Math.max(0, clan.herd - 1);
-    damageClan(run, 8);
+    run.safety.starvationLosses += starvationLoss;
+    damageClan(run, 8, undefined, 'starvation');
+    if (run.safety.lastDamage?.cause === 'starvation')
+      run.safety.lastDamage.people += starvationLoss;
     clan.message = 'The provisions are gone. Families and livestock are being lost.';
     rememberClan(
       run,

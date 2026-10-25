@@ -4,6 +4,7 @@ import type { StoryLine } from '../story/types';
 import { currentLocation } from './journey';
 
 export interface KhanRecord {
+  trait?: import('../data/successors').SuccessorTrait;
   generation: number;
   chosenAt: number;
   region: number;
@@ -105,6 +106,7 @@ export function rememberFallenKhan(run: RunState): void {
 export function rememberChosenKhan(run: RunState): void {
   run.legacy.khans.push({
     generation: run.khan.generation,
+    ...(run.khan.trait ? { trait: run.khan.trait } : {}),
     chosenAt: run.elapsed,
     region: run.clan.region,
     locationId: currentLocation(run).id,

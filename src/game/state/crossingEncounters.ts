@@ -12,6 +12,7 @@ export interface CrossingEncounter {
   spawned: number;
   defeated: number;
   paid: boolean;
+  lossesAtDeparture: number;
   escort?: {
     x: number;
     y: number;
@@ -35,6 +36,7 @@ export function beginCrossingEncounter(run: RunState): void {
     spawned: 0,
     defeated: 0,
     paid: false,
+    lossesAtDeparture: run.story.peopleLost,
     spawnDelay: 0,
   };
 }
@@ -106,6 +108,17 @@ export function settleCrossingEncounter(run: RunState): boolean {
     return false;
   c.paid = true;
   c.phase = 'ended';
+  if (run.story.peopleLost === c.lossesAtDeparture) {
+    run.safety.protectedCrossings++;
+    run.clan.integrity = Math.min(100, run.clan.integrity + GAME.crossings.safeResolve);
+    rememberClan(
+      run,
+      'Every household arrived',
+      `No people were lost on the crossing. The clan recovered ${GAME.crossings.safeResolve} additional resolve.`,
+      { speaker: 'nara', text: 'I counted again. Every household that left is still here.' },
+      'Every household that departed reached the next camp.',
+    );
+  }
   const success =
     c.route === 'refuge'
       ? !!c.escort?.joined

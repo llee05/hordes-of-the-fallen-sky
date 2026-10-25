@@ -1,3 +1,4 @@
+import { SUCCESSORS } from '../game/data/successors';
 import { COMPANIONS } from '../game/data/story';
 import { REGIONS } from '../game/data/clan';
 import { locationById } from '../game/state/journey';
@@ -17,7 +18,7 @@ export function khanRecords(run: RunState): string {
             : run.legacy.outcome === 'dead' || run.phase === 'dead'
               ? 'With the clan at the journey’s end'
               : 'Carries the banner';
-      return `<li><strong>Khan ${khan.generation}</strong><span>${state}</span><small>${formatTime(khan.chosenAt)}–${formatTime(end)} · ${formatTime(end - khan.chosenAt)} in the saddle · ${Math.max(0, kills)} banished by the host</small><small>Chosen in ${(khan.locationId && locationById(khan.locationId)?.name) || REGIONS[khan.region]!.name} with ${khan.people} ${khan.people === 1 ? 'person' : 'people'}</small></li>`;
+      return `<li><strong>Khan ${khan.generation}${khan.trait ? ` · ${SUCCESSORS[khan.trait].title}` : ''}</strong><span>${state}</span><small>${formatTime(khan.chosenAt)}–${formatTime(end)} · ${formatTime(end - khan.chosenAt)} in the saddle · ${Math.max(0, kills)} banished by the host</small><small>Chosen in ${(khan.locationId && locationById(khan.locationId)?.name) || REGIONS[khan.region]!.name} with ${khan.people} ${khan.people === 1 ? 'person' : 'people'}</small></li>`;
     })
     .join('')}</ol></section>`;
 }
