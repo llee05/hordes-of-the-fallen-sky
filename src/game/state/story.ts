@@ -1,5 +1,7 @@
 import { GAME } from '../config';
 import { STORY_ORDER, storyEncounter } from '../data/story';
+import { storyConsequence } from '../data/storyConsequences';
+import { applyCampEffects } from './camp';
 import type { RunState } from '../types';
 import type { StoryBeat, StoryState } from '../story/types';
 
@@ -65,6 +67,7 @@ export function resolveStory(run: RunState, choiceId?: string): boolean {
       run.clan.integrity = Math.min(100, run.clan.integrity + amount);
     else run.clan[selected.benefit] += amount;
     run.clan.identity[selected.doctrine] += GAME.story.identityPerChoice;
+    applyCampEffects(run.clan.campEffects, storyConsequence(selected.id)?.lasting?.effects);
     run.clan.message = selected.response;
   }
   run.story.records.push({

@@ -5,6 +5,8 @@ import { storyEncounter } from '../../src/game/data/story';
 import { advanceClan, beginMigration, damageClan } from '../../src/game/state/clan';
 import { createRun } from '../../src/game/state/run';
 import { openNextStory, resolveStory } from '../../src/game/state/story';
+import { STORY_CONSEQUENCES, storyConsequence } from '../../src/game/data/storyConsequences';
+import { companionBonds, companionStanding } from '../../src/game/state/storyBonds';
 
 describe('the two-act expedition', () => {
   it('uses a remnant account when too few survivors remain for the named cast', () => {
@@ -118,5 +120,44 @@ describe('the two-act expedition', () => {
     expect(epilogueText(run).join(' ')).toContain('Iron Horde');
     run.clan.identity.wander = 12;
     expect(epilogueText(run).join(' ')).toContain('Wandering Nation');
+  });
+});
+
+describe('story consequences', () => {
+  it('applies a lasting camp effect once and derives companion trust from the records', () => {
+    const run = createRun();
+    run.phase = 'playing';
+    const before = run.clan.campEffects.multipliers.materialProduction;
+    openNextStory(run);
+    expect(resolveStory(run, 'share-work')).toBe(true);
+    expect(run.clan.campEffects.multipliers.materialProduction).toBeCloseTo(
+      before * GAME.story.lasting.sharedLabour,
+    );
+    expect(resolveStory(run, 'share-work')).toBe(false);
+    expect(run.clan.campEffects.multipliers.materialProduction).toBeCloseTo(
+      before * GAME.story.lasting.sharedLabour,
+    );
+    expect(companionBonds(run)).toEqual({ saran: 1, boro: 0, erden: 0, nara: 1 });
+    expect(companionStanding(run, 'boro')).toBe('steady');
+  });
+
+  it('grants nothing lasting for skipped or uninterrupted scenes', () => {
+    const run = createRun();
+    run.phase = 'playing';
+    const effects = structuredClone(run.clan.campEffects);
+    openNextStory(run);
+    resolveStory(run);
+    run.story.enabled = false;
+    run.clan.stageTime = 45;
+    openNextStory(run);
+    expect(run.clan.campEffects).toEqual(effects);
+    expect(companionBonds(run)).toEqual({ saran: 0, boro: 0, erden: 0, nara: 0 });
+  });
+
+  it('ignores unknown or inherited choice identifiers from older or altered saves', () => {
+    expect(storyConsequence('constructor')).toBeUndefined();
+    expect(storyConsequence('no-such-choice')).toBeUndefined();
+    for (const consequence of Object.values(STORY_CONSEQUENCES))
+      expect(consequence.lasting?.label ?? '').not.toMatch(/NaN|undefined/);
   });
 });

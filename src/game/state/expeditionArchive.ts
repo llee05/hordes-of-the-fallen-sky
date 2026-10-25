@@ -130,7 +130,10 @@ const motion = object({
 });
 const location = oneOf(LOCATIONS.map((l) => l.id));
 const trait = oneOf(Object.keys(SUCCESSORS));
-const line = object({ speaker: oneOf(['saran', 'boro', 'erden', 'nara', 'clan']), text: string });
+const line = object({
+  speaker: oneOf(['saran', 'boro', 'erden', 'nara', 'newcomer', 'clan']),
+  text: string,
+});
 const choice = object({
   id: string,
   label: string,

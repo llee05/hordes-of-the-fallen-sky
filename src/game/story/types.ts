@@ -2,7 +2,9 @@ import type { Doctrine, LocationId } from '../types';
 
 export type StoryBeat =
   'fire' | 'departure' | 'river' | 'promise' | 'earth' | 'court' | 'opening' | 'road';
-export type Speaker = 'saran' | 'boro' | 'erden' | 'nara' | 'clan';
+export type Companion = 'saran' | 'boro' | 'erden' | 'nara';
+/** `newcomer` speaks for rescued households without inventing an individual identity. */
+export type Speaker = Companion | 'newcomer' | 'clan';
 export type StoryBenefit = 'food' | 'materials' | 'spirit' | 'resolve';
 
 export interface StoryLine {

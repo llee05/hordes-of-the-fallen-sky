@@ -23,6 +23,7 @@ export const COMPANIONS: Record<
   boro: { name: 'Boro', role: 'Herder', mark: 'horse' },
   erden: { name: 'Erden', role: 'Keeper of the tally', mark: 'journal' },
   nara: { name: 'Nara', role: 'Youngest survivor', mark: 'banner' },
+  newcomer: { name: 'A newcomer', role: 'Rescued household', mark: 'banner' },
   clan: { name: 'The remembered road', role: 'Survivor’s account', mark: 'journal' },
 };
 
