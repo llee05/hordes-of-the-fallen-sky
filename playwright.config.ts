@@ -1,14 +1,18 @@
 import { defineConfig } from '@playwright/test';
+import { testGraphics } from './playwright.graphics';
+
+const graphics = testGraphics();
 
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
   workers: 1,
   outputDir: 'test-results/browser',
+  globalSetup: graphics.headless ? undefined : './tests/support/checkGraphics.ts',
   use: {
+    ...graphics,
     baseURL: 'http://127.0.0.1:5173',
     viewport: { width: 1440, height: 1000 },
-    launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE },
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },
