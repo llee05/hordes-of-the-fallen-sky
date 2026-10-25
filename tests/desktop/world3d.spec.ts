@@ -1,4 +1,5 @@
-import { _electron as electron, expect, test } from '@playwright/test';
+import { launchElectron } from '../support/electron';
+import { expect, test } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -16,7 +17,7 @@ test('orthographic terrain and console run in the existing Electron shell at bot
     GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]!,
   };
   delete environment.ELECTRON_RUN_AS_NODE;
-  const app = await electron.launch({
+  const app = await launchElectron({
     args: [resolve('dist-desktop/desktop/main.js'), `--user-data-dir=${directory}`],
     env: environment,
   });

@@ -1,4 +1,5 @@
-import { _electron as electron, expect, test } from '@playwright/test';
+import { launchElectron } from '../support/electron';
+import { expect, test } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createServer } from 'vite';
@@ -11,7 +12,7 @@ test('Golden Pasture art review, water pause, and pooled combat retain native re
   await server.listen();
   const env = { ...process.env, GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]! };
   delete env.ELECTRON_RUN_AS_NODE;
-  const app = await electron.launch({
+  const app = await launchElectron({
     args: [resolve('dist-desktop/desktop/main.js'), `--user-data-dir=${directory}`],
     env,
   });

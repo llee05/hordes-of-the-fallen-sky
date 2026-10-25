@@ -279,7 +279,10 @@ behavior locally, use `E2E_HEADLESS=1`, for example:
 E2E_HEADLESS=1 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 ```
 
-The switch also applies to `test:pages`.
+The switch also applies to `test:pages`. Desktop tests use the game's Electron
+runtime, with the same local GPU flags and renderer check. For Electron, `CI` or
+`E2E_HEADLESS=1` disables those overrides and checks; native windows still require
+a display session or Xvfb on Linux.
 
 Browser tests cover keyboard, controller, touch, combat, traditions, planning, the Burning Tempest, caravan damage, route rewards, remote camp defense, three crossings, clan-survival victory, full-window layout, and paused chronicle/settings/help navigation. Electron tests exercise the offline build, layout, native save persistence, sandboxing, fullscreen, and quit using isolated saves. Tests never use normal save files. Linux needs a display session or Xvfb for Electron.
 
