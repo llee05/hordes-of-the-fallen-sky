@@ -1,0 +1,16 @@
+Recorded-audio palette for Hordes of the Fallen Sky
+
+All supplied audio recordings: Creative Commons Zero 1.0 Universal (CC0-1.0).
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Creators: Vehicle; Ben Jaszczak and Brian Nelson / Still North Media;
+Thimras; Jaturo; Max_Headroom; SKrafft.
+
+See credits.json for per-file authorship, primary source and licence links,
+original filenames, source/output hashes, and all edits. CC0 attribution is
+voluntary. No endorsement by any creator is implied.
+
+Some sources are public Freesound HQ previews, not lossless masters. Trimmed,
+filtered, gain-adjusted and faded copies are bundled here. The field recordings
+are general environmental proxies, not recordings of historical rites or a
+claim of geographical authenticity. Music recordings have not been supplied.

@@ -1,15 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GameAudio } from '../../src/game/systems/Audio';
 import { SOUND_KINDS } from '../../src/game/audio/soundPalette';
+import { AUDIO_LIMITS } from '../../src/game/audio/mixing';
+import { AUDIO_ASSETS } from '../../src/game/audio/assets';
 
 class Parameter {
   value = 0;
-  cancelScheduledValues() {}
+  ramps: number[] = [];
+  cancelAndHoldAtTime = vi.fn();
   setValueAtTime(value: number) {
     this.value = value;
   }
   linearRampToValueAtTime(value: number) {
     this.value = value;
+    this.ramps.push(value);
   }
 }
 class Node {
@@ -20,15 +24,19 @@ class Node {
 }
 class Source extends Node {
   buffer?: { duration: number };
+  playbackRate = new Parameter();
   onended: (() => void) | null = null;
   started = Infinity;
   stopped = Infinity;
+  duration = Infinity;
   ended = false;
   constructor(private readonly context: Context) {
     super();
+    this.playbackRate.value = 1;
   }
-  start(time: number) {
+  start(time: number, _offset = 0, duration = this.buffer?.duration ?? 0) {
     this.started = time;
+    this.duration = duration / this.playbackRate.value;
   }
   stop(time = this.context.currentTime) {
     this.stopped = time;
@@ -40,6 +48,7 @@ class Context {
   currentTime = 0;
   destination = new Node();
   sources: Source[] = [];
+  decoded = 0;
   constructor() {
     Context.latest = this;
   }
@@ -55,6 +64,9 @@ class Context {
   createStereoPanner() {
     return Object.assign(new Node(), { pan: new Parameter() });
   }
+  createBiquadFilter() {
+    return Object.assign(new Node(), { type: 'lowpass', frequency: new Parameter() });
+  }
   createDynamicsCompressor() {
     return Object.assign(new Node(), {
       threshold: new Parameter(),
@@ -64,13 +76,11 @@ class Context {
       release: new Parameter(),
     });
   }
-  createBuffer(_channels: number, length: number, rate: number) {
-    const samples = new Float32Array(length);
-    return {
-      duration: length / rate,
-      copyToChannel: (pcm: Float32Array) => samples.set(pcm),
-      samples,
-    };
+  async decodeAudioData(bytes: ArrayBuffer) {
+    this.decoded++;
+    const name = new TextDecoder().decode(bytes);
+    if (name.includes('broken')) throw new Error('Bad recording');
+    return { duration: /wind|fire|river/.test(name) ? 32 : 0.5, sampleRate: 44100 };
   }
   createBufferSource() {
     const source = new Source(this);
@@ -79,111 +89,196 @@ class Context {
   }
   advance(seconds: number) {
     this.currentTime += seconds;
-    for (const source of this.sources)
-      if (
-        !source.ended &&
-        this.currentTime >=
-          Math.min(source.stopped, source.started + (source.buffer?.duration ?? 0))
-      ) {
-        source.ended = true;
-        source.onended?.();
+    for (const s of this.sources)
+      if (!s.ended && this.currentTime >= Math.min(s.stopped, s.started + s.duration)) {
+        s.ended = true;
+        s.onended?.();
       }
   }
   active() {
-    return this.sources.filter((source) => !source.ended && source.stopped > this.currentTime);
+    return this.sources.filter((s) => !s.ended && s.stopped > this.currentTime);
   }
 }
-
-beforeEach(() => vi.stubGlobal('AudioContext', Context));
+const fetcher = vi.fn(async (path: string) => ({
+  ok: true,
+  arrayBuffer: async () => new TextEncoder().encode(path).buffer,
+}));
+beforeEach(() => {
+  vi.stubGlobal('AudioContext', Context);
+  vi.stubGlobal('fetch', fetcher);
+  fetcher.mockClear();
+});
 afterEach(() => vi.unstubAllGlobals());
+async function prepared() {
+  const audio = new GameAudio(() => 0.42);
+  audio.unlock();
+  await audio.ready();
+  audio.setPlaying(true);
+  return audio;
+}
+const state = {
+  speed: 190,
+  galloping: false,
+  caravan: false,
+  region: 0,
+  listener: { x: 0, y: 0 },
+  camp: { x: 0, y: 0 },
+};
 
-describe('bounded steppe audio playback', () => {
-  it('requires a gesture, gates world sounds, permits purchase cues, and cancels existing voices on pause and mute', () => {
+describe('recorded, layered and bounded steppe audio', () => {
+  it('preloads only local supplied files without creating an audio device and decodes exactly once', async () => {
+    const audio = new GameAudio();
+    await audio.prepare();
+    expect(audio.diagnostics.ready).toBe(0);
+    expect(fetcher).toHaveBeenCalledTimes(
+      Object.values(AUDIO_ASSETS).filter((a) => a.status === 'ready').length,
+    );
+    expect(
+      fetcher.mock.calls.every(([url]) => url.startsWith('./audio/') || url.startsWith('/audio/')),
+    ).toBe(true);
+    audio.unlock();
+    await audio.ready();
+    const context = Context.latest;
+    const decoded = context.decoded;
+    audio.unlock();
+    await audio.ready();
+    expect(Context.latest).toBe(context);
+    expect(context.decoded).toBe(decoded);
+    expect(audio.diagnostics.ready).toBe(decoded);
+    audio.destroy();
+  });
+  it('requires loading and an unlocked device, gates world cues, and cleans every layer on pause/mute', async () => {
     const audio = new GameAudio();
     expect(audio.play('shoot')).toBe(false);
     audio.unlock();
-    const context = Context.latest;
+    expect(audio.play('shoot')).toBe(false);
+    await audio.ready();
     expect(audio.play('shoot')).toBe(false);
     audio.setPlaying(true);
     expect(audio.play('shoot')).toBe(true);
     expect(audio.play('shoot')).toBe(false);
-    context.advance(0.1);
-    expect(audio.play('shoot')).toBe(true);
+    const context = Context.latest;
+    expect(context.active()).toHaveLength(2);
     audio.setPlaying(false);
-    expect(audio.play('shoot')).toBe(false);
-    context.advance(0.02);
+    context.advance(0.04);
     expect(context.active()).toHaveLength(0);
-    expect(context.sources.every((source) => source.disconnect.mock.calls.length > 0)).toBe(true);
     expect(audio.play('build')).toBe(true);
     audio.muted = true;
-    context.advance(0.02);
+    context.advance(0.08);
     expect(context.active()).toHaveLength(0);
     expect(audio.play('research')).toBe(false);
     audio.muted = false;
     audio.unlock();
     expect(Context.latest).toBe(context);
     expect(audio.play('research')).toBe(true);
-    audio.destroy();
-    expect(context.state).toBe('closed');
-    expect(audio.play('build')).toBe(false);
-  });
-
-  it('caps voices under a burst, preserves important signals, and releases every source on reset', () => {
-    const audio = new GameAudio();
-    audio.unlock();
-    audio.setPlaying(true);
-    const context = Context.latest;
-    for (const kind of SOUND_KINDS.filter((kind) => kind !== 'victory')) {
-      audio.play(kind);
-      expect(context.active().length).toBeLessThanOrEqual(16);
-    }
-    expect(audio.play('victory')).toBe(true);
-    expect(context.active().length).toBeLessThanOrEqual(16);
     audio.reset();
     expect(context.active()).toHaveLength(0);
-    expect(context.sources.every((source) => source.disconnect.mock.calls.length > 0)).toBe(true);
-    audio.setPlaying(true);
-    expect(audio.play('shoot')).toBe(true);
+    expect(context.sources.every((s) => s.disconnect.mock.calls.length > 0)).toBe(true);
+    audio.destroy();
+    expect(context.state).toBe('closed');
+  });
+  it('survives missing and corrupt files silently, and never fetches requested-but-unsupplied recordings', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => ({
+        ok: !path.includes('bow-'),
+        status: 404,
+        arrayBuffer: async () =>
+          new TextEncoder().encode(path.includes('paper-') ? 'broken' : path).buffer,
+      })),
+    );
+    const audio = await prepared();
+    expect(audio.diagnostics.failed).toHaveProperty('bow1');
+    expect(audio.diagnostics.failed).toHaveProperty('paper1');
+    // A missing primary recording stays silent; there is no generated replacement.
+    expect(audio.play('shoot')).toBe(false);
+    expect(Context.latest.sources.every((s) => s.buffer)).toBe(true);
+    expect(audio.diagnostics.needed).toContain('music-steppe.ogg');
+    expect(audio.play('impact')).toBe(true);
     audio.destroy();
   });
-
-  it('drives hoof cadence from active movement, gallops faster, and does not catch up after a menu', () => {
-    const ride = (speed: number): number => {
-      const audio = new GameAudio();
-      audio.unlock();
-      audio.setPlaying(true);
-      const context = Context.latest;
-      const state = {
-        speed,
-        galloping: speed > 190,
-        caravan: false,
-        region: 0,
-        listener: { x: 0, y: 0 },
-        camp: { x: 0, y: 0 },
-      };
-      for (let i = 0; i < 30; i++) {
-        audio.update(0.05, state);
-        context.advance(0.05);
-      }
-      const beats = context.sources.length;
-      audio.setPlaying(false);
-      context.advance(60);
-      audio.update(60, state);
-      expect(context.sources).toHaveLength(beats);
-      audio.setPlaying(true);
-      audio.update(0.05, state);
-      expect(context.sources).toHaveLength(beats + 1);
-      audio.destroy();
-      return beats;
-    };
-    expect(ride(570)).toBeGreaterThan(ride(190));
+  it('keeps independent channel gains and silence-at-zero; invalid values cannot poison the mixer', async () => {
+    const audio = await prepared();
+    audio.setVolume('combat', 0);
+    expect(audio.play('shoot')).toBe(false);
+    expect(audio.play('ui')).toBe(true);
+    audio.setVolume('ui', 0);
+    Context.latest.advance(0.04);
+    expect(Context.latest.active()).toHaveLength(0);
+    audio.setVolume('ambience', 3);
+    audio.setVolume('music', -0.5);
+    audio.setVolume('combat', NaN);
+    expect(audio.volumes).toMatchObject({ ambience: 1, music: 0, combat: 0, ui: 0 });
+    const copy = audio.volumes;
+    copy.combat = 1;
+    expect(audio.volumes.combat).toBe(0);
+    audio.destroy();
   });
-
-  it('keeps audio optional when no device or Web Audio API is available', () => {
+  it('bounds thousands of simultaneous requests, prioritises important events, and caches decoded samples', async () => {
+    const audio = await prepared(),
+      context = Context.latest,
+      decoded = context.decoded;
+    const crowd = SOUND_KINDS.filter((kind) => kind !== 'victory');
+    for (let i = 0; i < 1200; i++) {
+      audio.play(crowd[i % crowd.length]!);
+      expect(context.active().length).toBeLessThanOrEqual(AUDIO_LIMITS.sources);
+      expect(audio.diagnostics.events).toBeLessThanOrEqual(AUDIO_LIMITS.events);
+    }
+    context.advance(0.2);
+    expect(audio.play('victory')).toBe(true);
+    expect(context.decoded).toBe(decoded);
+    expect(context.active().length).toBeLessThanOrEqual(AUDIO_LIMITS.sources);
+    audio.reset();
+    expect(context.active()).toHaveLength(0);
+    audio.destroy();
+  });
+  it('uses active movement for hooves, freezes presentation clocks in menus, and retains only bounded fading beds', async () => {
+    const audio = await prepared(),
+      context = Context.latest;
+    let accepted = 0;
+    const play = audio.play.bind(audio);
+    audio.play = (...args) => {
+      const ok = play(...args);
+      if (ok && args[0] === 'hoof') accepted++;
+      return ok;
+    };
+    for (let i = 0; i < 30; i++) {
+      audio.update(0.05, state);
+      context.advance(0.05);
+    }
+    expect(accepted).toBeGreaterThan(2);
+    expect(audio.diagnostics.beds).toBeLessThanOrEqual(AUDIO_LIMITS.beds);
+    const slow = accepted;
+    audio.reset();
+    audio.setPlaying(true);
+    accepted = 0;
+    for (let i = 0; i < 30; i++) {
+      audio.update(0.05, { ...state, speed: 570, galloping: true });
+      context.advance(0.05);
+    }
+    expect(accepted).toBeGreaterThan(slow);
+    audio.setPlaying(false);
+    const count = accepted;
+    context.advance(60);
+    audio.update(60, state);
+    expect(accepted).toBe(count);
+    audio.setPlaying(true);
+    audio.update(0.05, state);
+    expect(accepted).toBe(count + 1);
+    for (const environment of ['river', 'mountain', 'forest', 'desert', 'steppe'] as const) {
+      audio.update(0.1, { ...state, speed: 0, environment });
+      context.advance(3);
+      expect(audio.diagnostics.beds).toBeLessThanOrEqual(AUDIO_LIMITS.beds);
+    }
+    audio.reset();
+    expect(context.active()).toHaveLength(0);
+    audio.destroy();
+  });
+  it('keeps gameplay operational when the device or Web Audio API is unavailable', () => {
     vi.stubGlobal('AudioContext', undefined);
-    const unavailable = new GameAudio();
-    expect(() => unavailable.unlock()).not.toThrow();
-    expect(unavailable.play('build')).toBe(false);
+    const audio = new GameAudio();
+    expect(() => audio.unlock()).not.toThrow();
+    expect(audio.play('build')).toBe(false);
     vi.stubGlobal(
       'AudioContext',
       class {
@@ -192,9 +287,29 @@ describe('bounded steppe audio playback', () => {
         }
       },
     );
-    const failed = new GameAudio();
-    expect(() => failed.unlock()).not.toThrow();
-    expect(() => failed.destroy()).not.toThrow();
-    expect(failed.play('build')).toBe(false);
+    expect(() => new GameAudio().unlock()).not.toThrow();
+  });
+  it('crossfades camp ambience beyond a whole passage without advancing movement clocks', async () => {
+    vi.useFakeTimers();
+    const audio = await prepared(),
+      context = Context.latest;
+    try {
+      audio.setPlaying(false, true);
+      context.advance(0.2);
+      const first = context.sources.length;
+      for (let i = 0; i < 30; i++) {
+        context.advance(1.5);
+        vi.advanceTimersByTime(1500);
+        expect(audio.diagnostics.beds).toBeLessThanOrEqual(AUDIO_LIMITS.beds);
+      }
+      expect(context.sources.length).toBeGreaterThan(first);
+      expect(audio.diagnostics.events).toBe(0);
+      audio.reset();
+      expect(vi.getTimerCount()).toBe(0);
+      expect(context.active()).toHaveLength(0);
+    } finally {
+      audio.destroy();
+      vi.useRealTimers();
+    }
   });
 });
