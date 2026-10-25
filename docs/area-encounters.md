@@ -22,8 +22,8 @@ pool and projectile limits still apply.
 This pass reuses the existing registered painted animation clips with palette
 accents and varied scale; it does not supply 24 new creature paintings. Native
 prowlers flank, local bulwarks retain armour, and skirmishers/callers fire spaced
-fans. `data/areaEncounters.ts` authors the local terrain-rule catalogue; subsequent
-runtime modules consume its hazard and habitat metadata. These are invented
+fans. `data/areaEncounters.ts` authors the local terrain-rule catalogue. Runtime modules
+consume its habitat, attack and warning metadata. These are invented
 unreturned, distinct from the traditions and honoured local powers described in
 `lore.md`. The extinct volcanic scenery at Altan Ovoo is not active lava.
 
@@ -41,3 +41,34 @@ unreturned, distinct from the traditions and honoured local powers described in
 | Altan Ovoo          | Basalt carapace; Cinderwing           |
 | Eej Khairkhan       | Sandglass stalker; Granite hollow     |
 | Orkhon Valley       | Reed prowler; Silt caller             |
+
+## Terrain rules and native abilities
+
+`state/areaEncounters.ts` teaches the local rule after two active seconds and
+schedules at most one pending terrain event during assault/featured-enemy phases.
+Recovery windows and migration do not launch environmental volleys. The first
+Golden Pasture opening stays gentle. Grove hunts split their approaches; river
+areas alternate banks; exposed shelves use crossfire. Connected, offscreen spawn
+candidates prefer the native habitat, with a valid open-ground fallback.
+
+`systems/AreaHabitat.ts` caches the same moisture, grove, shore, snow and cliff masks
+used by the rendered terrain. Stalkers remain visible as muted silhouettes in
+suitable cover and reveal within 340 units of the Khan or camp. Native movement
+has a modest bonus in suitable terrain. Real bridge decks are excluded from bank
+pooling; dry granite shelter is excluded from Eej Khairkhan's environmental blasts.
+Rockfall selects cliff feet; frost selects water margins or snow; all selected
+points remain walkable and environmental volleys leave the camp centre clear.
+
+Native casters can mark frost, mire, rockfall, crosswind, cinder and rift attacks.
+Rings fill inward for 1.8–2.1 seconds before release; damaging warnings have a
+consistent warm outline. Frost and mire leave short slowing patches. Cinders
+briefly scorch ground after impact. These are ground threats, never collision
+walls. Slows do not stack, and gallops remain available to escape them.
+
+`state/areaThreats.ts` contains the pure lifecycle: at most fourteen threats, two per
+caster incarnation and three environmental threats. Defeat, pinning or pooled reuse
+cancels an unreleased spell; released ground effects expire through active seconds.
+Menus freeze clocks, damage, animation and ground fields. Departure and arrival
+clear fields tied to the previous terrain. Warnings reuse the existing graphics
+bridge, native enemies reuse painted motion atlases, and audio reuses the recorded
+spell/drum palette. No new runtime downloads or generated artwork are required.

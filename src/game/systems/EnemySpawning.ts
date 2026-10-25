@@ -16,6 +16,7 @@ export interface ProjectedGroundView {
 export interface SpawnGround {
   heightAt(x: number, y: number): number;
   walkable(x: number, y: number): boolean;
+  preference?(x: number, y: number): number;
 }
 
 export function withinProjectedView(
@@ -56,6 +57,8 @@ export function projectedEnemySpawnPosition(
     p.y <= GAME.worldSize - padding &&
     (!player || Math.hypot(p.x - player.x, p.y - player.y) >= C.minimumPlayerDistance) &&
     ground.walkable(p.x, p.y);
+  let preferred: Point | undefined,
+    preference = -Infinity;
   let fallback: Point | undefined;
   let farthest = -1;
   for (let attempt = 0; attempt < C.directions; attempt++) {
@@ -110,8 +113,16 @@ export function projectedEnemySpawnPosition(
         !inside(point) &&
         valid(point) &&
         (distance <= C.despawnDistance || inside(point, C.viewRetentionMargin))
-      )
-        return point;
+      ) {
+        if (!ground.preference) return point;
+        const score = ground.preference(point.x, point.y);
+        if (score > preference) {
+          preference = score;
+          preferred = point;
+        }
+        if (score >= 0.75) return point;
+        break;
+      }
     }
   }
   // If the whole playable world fits on screen there is no invisible ground. Use a distant valid edge.
@@ -121,5 +132,5 @@ export function projectedEnemySpawnPosition(
     { x: padding, y: GAME.worldSize - padding },
     { x: GAME.worldSize - padding, y: GAME.worldSize - padding },
   ].every((p) => inside(p, 0));
-  return worldVisible ? fallback : undefined;
+  return preferred ?? (worldVisible ? fallback : undefined);
 }

@@ -273,7 +273,7 @@ export function damageClan(
         'A place left empty',
         cause === 'starvation'
           ? 'Empty provisions cost the clan a person. The surviving households carried on.'
-          : `${cause === 'eruption' ? 'A ground eruption' : cause === 'seer' ? 'A seer’s strike' : 'An attack'} cost the clan a person. The surviving households carried on.`,
+          : `${cause === 'eruption' ? 'A ground eruption' : cause === 'seer' ? 'A seer’s strike' : cause === 'area' ? 'A local terrain or spell strike' : 'An attack'} cost the clan a person. The surviving households carried on.`,
         {
           speaker: 'erden',
           text: 'One fewer at the fire. I will keep the loss in the tally, where we can all see it.',

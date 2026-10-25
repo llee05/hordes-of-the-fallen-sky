@@ -1,5 +1,5 @@
 import type { RunState } from '../types';
-export type ClanDamageCause = 'attack' | 'starvation' | 'eruption' | 'seer';
+export type ClanDamageCause = 'attack' | 'starvation' | 'eruption' | 'seer' | 'area';
 export interface ClanSafety {
   combatLosses: number;
   starvationLosses: number;

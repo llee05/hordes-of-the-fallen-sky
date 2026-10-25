@@ -27,6 +27,27 @@ const camera = (
 });
 
 describe('projected enemy arrivals', () => {
+  it('prefers a native habitat without admitting visible or disconnected ground, and falls back safely when none exists', () => {
+    const preferred = projectedEnemySpawnPosition(camera(), camp, player, 0, {
+      ...flat,
+      preference: (_x, y) => (y < 2300 ? 1 : 0),
+    })!;
+    expect(preferred.y).toBeLessThan(2300);
+    expect(withinProjectedView(camera(), preferred, 215)).toBe(false);
+    const fallback = projectedEnemySpawnPosition(camera(), camp, player, 0, {
+      ...flat,
+      preference: () => 0,
+    })!;
+    expect(fallback).toBeDefined();
+    expect(withinProjectedView(camera(), fallback, 215)).toBe(false);
+    expect(
+      projectedEnemySpawnPosition(camera(), camp, player, 0, {
+        ...flat,
+        walkable: () => false,
+        preference: () => 1,
+      }),
+    ).toBeUndefined();
+  });
   it('places arrivals at the real rotated camera edge at desktop sizes and zoom levels', () => {
     for (const [width, height] of [
       [960, 600],

@@ -311,6 +311,7 @@ export class GameUI {
         starvation: 'Starvation',
         eruption: 'Ground eruption',
         seer: 'Seer strike',
+        area: 'Local terrain or spell',
       };
     const recent = last && run.elapsed - last.at < 10;
     this.text(
