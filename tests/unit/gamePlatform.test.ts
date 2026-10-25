@@ -13,6 +13,12 @@ describe('platform command-history persistence', () => {
       saveProfile: async (profile) => {
         writes.push(profile);
       },
+      listExpeditions: async () => [],
+      loadExpedition: async () => {
+        throw new Error('empty');
+      },
+      saveExpedition: async () => undefined,
+      deleteExpedition: async () => undefined,
       toggleFullscreen: async () => false,
       isFullscreen: async () => false,
       quit: async () => undefined,

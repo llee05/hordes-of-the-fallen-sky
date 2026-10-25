@@ -3,6 +3,7 @@ import type { IpcMainInvokeEvent } from 'electron';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { ProfileStore } from './profile.js';
+import { isSaveSlot } from '../src/shared/expeditionSave.js';
 
 const directory = fileURLToPath(new URL('.', import.meta.url));
 const indexFile = resolve(directory, '../../dist/index.html');
@@ -105,6 +106,25 @@ ipcMain.handle('profile:load', (event) => {
 ipcMain.handle('profile:save', (event, value: unknown) => {
   trusted(event);
   return profiles.save(value);
+});
+ipcMain.handle('expedition:list', (event) => {
+  trusted(event);
+  return profiles.listExpeditions();
+});
+ipcMain.handle('expedition:load', (event, slot: unknown) => {
+  trusted(event);
+  if (!isSaveSlot(slot)) throw new Error('Invalid save slot');
+  return profiles.loadExpedition(slot);
+});
+ipcMain.handle('expedition:save', (event, slot: unknown, save: unknown) => {
+  trusted(event);
+  if (!isSaveSlot(slot)) throw new Error('Invalid save slot');
+  return profiles.saveExpedition(slot, save);
+});
+ipcMain.handle('expedition:delete', (event, slot: unknown) => {
+  trusted(event);
+  if (!isSaveSlot(slot)) throw new Error('Invalid save slot');
+  return profiles.deleteExpedition(slot);
 });
 ipcMain.handle('window:toggle-fullscreen', (event) => {
   trusted(event);
