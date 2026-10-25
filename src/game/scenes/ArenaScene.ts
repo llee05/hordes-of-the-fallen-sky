@@ -120,6 +120,13 @@ import {
 } from '../state/expeditionArchive';
 import type { ExpeditionSave, SaveSlot } from '../../shared/expeditionSave';
 import { markExpedition, metricStage, observeExpedition } from '../state/expeditionMetrics';
+import {
+  syncFinalStand,
+  advanceFinalStand,
+  finalChapter,
+  passageProgress,
+  acceptCampBarrage,
+} from '../state/finalStand';
 
 export interface ArenaCallbacks {
   onHud: (snapshot: HudSnapshot) => void;
@@ -148,6 +155,7 @@ export class ArenaScene extends Phaser.Scene {
   private areaEncounter = createAreaEncounter();
   private areaThreats = createAreaThreats();
   private fieldMarkers!: FieldMarkers;
+  private passageMarkers: FieldMarkers[] = [];
   private campBarrier!: CampBarrier;
   private campPopulation = -1;
   private campHerd = -1;
@@ -302,6 +310,7 @@ export class ArenaScene extends Phaser.Scene {
     this.areaEffects = this.add.graphics().setDepth(5);
     this.defeats = new DefeatSprites(this);
     this.fieldMarkers = new FieldMarkers(this);
+    this.passageMarkers = [new FieldMarkers(this), new FieldMarkers(this)];
     this.crossingMarkers = new FieldMarkers(this);
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.landscape = new SteppeLandscape(this);
@@ -678,6 +687,7 @@ export class ArenaScene extends Phaser.Scene {
           rotation: p.rotation,
           tint: p.tintTopLeft,
           previous: p.getData('terrain-previous') as { x: number; y: number } | undefined,
+          barrage: p.barrage,
           hits: [...p.hitTargets].map(([enemy, spawnId]) => ({
             slot: pool.indexOf(enemy),
             spawnId,
@@ -858,6 +868,7 @@ export class ArenaScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09).setFollowOffset(0, 0);
     this.cameras.main.centerOn(this.player.x, this.player.y);
     this.updateAreaCombat(0);
+    this.updateFinalStand(0);
     this.fieldMarkers.update(run.field.objective);
     if (run.crossing?.escort && !run.crossing.escort.lost && !run.crossing.escort.joined)
       this.crossingMarkers.update({
@@ -1434,6 +1445,7 @@ export class ArenaScene extends Phaser.Scene {
     if (advanceEncounters(this.run)) this.audio.play('encounter');
     this.updateFieldObjectives(dt);
     this.updateCrossing(dt);
+    this.updateFinalStand(dt);
     this.updateEnemies(dt);
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
       this.finish('dead');
@@ -1706,6 +1718,78 @@ export class ArenaScene extends Phaser.Scene {
     enemy.preparingAttack = false;
   }
 
+  private updateFinalStand(dt: number): void {
+    const state = syncFinalStand(this.run);
+    if (!state) {
+      this.passageMarkers.forEach((marker) => marker.update());
+      return;
+    }
+    state.works.forEach((work, index) => {
+      if (work.x === undefined || work.y === undefined) {
+        const desired = {
+          x: this.camp.x + (index ? 1 : -1) * GAME.finalStand.workOffset,
+          y: this.camp.y + 180,
+        };
+        const point = this.landscape.navigation?.nearestWalkable(desired) ?? desired;
+        work.x = point.x;
+        work.y = point.y;
+      }
+      const unlocked = this.run.clan.stageTime >= GAME.finalStand.workUnlockAt[index]!;
+      this.passageMarkers[index]!.update(
+        {
+          kind: 'refugees',
+          x: work.x,
+          y: work.y,
+          status: work.done ? 'complete' : unlocked ? 'available' : 'abandoned',
+        },
+        dt,
+      );
+    });
+    const contested = state.works.map((work) =>
+      (this.enemies.getChildren() as Enemy[]).some(
+        (e) => e.active && Math.hypot(e.x - work.x!, e.y - work.y!) < GAME.finalStand.contestRadius,
+      ),
+    );
+    const event = advanceFinalStand(this.run, dt, !!this.boss?.active, this.player, contested);
+    const boss = this.boss;
+    if (!boss?.active) return;
+    const chapter = finalChapter(this.run);
+    if (event === 'warning') {
+      const angle = (state.approach * Math.PI) / 2;
+      state.aim =
+        chapter === 0 && isKhanActive(this.run)
+          ? { x: this.player.x, y: this.player.y }
+          : { x: this.camp.x + Math.cos(angle) * 80, y: this.camp.y + Math.sin(angle) * 80 };
+      this.run.clan.message =
+        chapter === 0
+          ? 'The Skybreaker draws breath. Move away from the marked line.'
+          : 'The Skybreaker turns toward another approach. Guard the warned side.';
+      this.audio.play('encounter', boss);
+    }
+    if (event === 'release' && state.aim) {
+      const direction = Math.atan2(state.aim.y - boss.y, state.aim.x - boss.x);
+      const count = GAME.finalStand.barrageShots[chapter];
+      for (let index = 0; index < count; index++) {
+        const shot = this.fireHostile(
+          boss,
+          direction + (index / (count - 1) - 0.5) * GAME.finalStand.barrageSpread,
+        );
+        if (shot) {
+          shot.barrage = state.cycle;
+          shot.damage *= GAME.finalStand.barrageDamage;
+        }
+      }
+      boss.motion.attack();
+      this.run.clan.message = 'The Skybreaker falters. Its exposed form takes 50% more damage.';
+      if (chapter > 0)
+        for (let i = 0; i < GAME.finalStand.assaultCount; i++)
+          this.spawnEnemy(
+            supportingAreaEnemy(this.run, state.cycle + i, [i ? 'hollow-seer' : 'ghost-rider']),
+            { angle: (state.approach * Math.PI) / 2 + (i ? 0.3 : -0.3), campOnly: true },
+          );
+    }
+  }
+
   private updateCrossing(dt: number): void {
     const c = this.run.crossing,
       nav = this.landscape.navigation;
@@ -1849,6 +1933,14 @@ export class ArenaScene extends Phaser.Scene {
       )
         warnings.lineStyle(2, 0xdfbc74, 0.8).strokeCircle(enemy.x, enemy.y, 22);
       let campDistance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.camp.x, this.camp.y);
+      const finaleWarning = enemy === this.boss ? this.run.finalStand : undefined;
+      if (finaleWarning?.phase === 'warning' && finaleWarning.aim)
+        warnings
+          .lineStyle(4, 0xdc976a, 0.85)
+          .lineBetween(enemy.x, enemy.y, finaleWarning.aim.x, finaleWarning.aim.y)
+          .strokeCircle(finaleWarning.aim.x, finaleWarning.aim.y, 70);
+      if (finaleWarning?.phase === 'recovery')
+        warnings.lineStyle(3, 0xf0d194, 0.8).strokeCircle(enemy.x, enemy.y, 52);
       const clearance = boundary.attackRange - 1;
       if (campDistance < clearance) {
         // Moving or expanding hurdles push attackers out instead of covering them.
@@ -1877,8 +1969,17 @@ export class ArenaScene extends Phaser.Scene {
         continue;
       }
       const attackingCamp = campDistance <= boundary.attackRange;
-      const target =
+      let target: { x: number; y: number } =
         attackingCamp || campDistance < playerDistance * 1.25 ? this.camp : this.player;
+      const finale = enemy.definition.behavior === 'boss' ? this.run.finalStand : undefined;
+      if (finale) {
+        const angle = (finale.approach * Math.PI) / 2;
+        const desired = {
+          x: this.camp.x + Math.cos(angle) * (boundary.attackRange + 180),
+          y: this.camp.y + Math.sin(angle) * (boundary.attackRange + 180),
+        };
+        target = this.landscape.navigation?.nearestWalkable(desired) ?? desired;
+      }
       const distance = target === this.camp ? campDistance : playerDistance;
       const behavior = enemy.definition.behavior;
       const ranged = behavior === 'ranged' || behavior === 'boss';
@@ -1915,7 +2016,7 @@ export class ArenaScene extends Phaser.Scene {
             : 1,
         );
       }
-      if (enemy.pinned > 0) speed = 0;
+      if (enemy.pinned > 0 || (finale && finale.phase !== 'advance')) speed = 0;
       if (
         this.run.combat.trails.some(
           (t) => Math.hypot(enemy.x - t.x, enemy.y - t.y) < GAME.mounted.trailRadius,
@@ -1923,7 +2024,9 @@ export class ArenaScene extends Phaser.Scene {
       )
         speed *= 1 - GAME.mounted.trailSlow;
       if (ranged && distance < 260 && clearShot) speed = 0;
-      if (attackingCamp) {
+      if (finale && finale.phase !== 'advance') {
+        enemy.setVelocity(0, 0);
+      } else if (attackingCamp) {
         // Hold outside the tents instead of walking (or charging) into their centre.
         enemy.setVelocity(0, 0);
         enemy.chargeTimer = 0;
@@ -1991,6 +2094,7 @@ export class ArenaScene extends Phaser.Scene {
           enemy.x - target.x) > 0,
       );
       enemy.preparingAttack =
+        finale?.phase === 'warning' ||
         ((behavior === 'ranged' || behavior === 'boss') &&
           distance < 650 &&
           enemy.attackTimer > 0 &&
@@ -2001,7 +2105,7 @@ export class ArenaScene extends Phaser.Scene {
           enemy.dangerTimer > 0 &&
           enemy.dangerTimer < 0.4 &&
           distance < GAME.areaCombat.abilityRange);
-      if (attackingCamp && enemy.clanAttackTimer <= 0) {
+      if (attackingCamp && !finale && enemy.clanAttackTimer <= 0) {
         enemy.motion.attack();
         this.damageClan(enemy.definition.damage * GAME.camp.enemyAttack.damageMultiplier);
         enemy.clanAttackTimer = GAME.camp.enemyAttack.interval;
@@ -2010,7 +2114,7 @@ export class ArenaScene extends Phaser.Scene {
         this.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
       }
       if (
-        (behavior === 'ranged' || behavior === 'boss') &&
+        (behavior === 'ranged' || (behavior === 'boss' && !finale)) &&
         clearShot &&
         enemy.pinned <= 0 &&
         enemy.attackTimer <= 0 &&
@@ -2205,6 +2309,7 @@ export class ArenaScene extends Phaser.Scene {
           (tempest ? 0.28 : 0.12) *
           (ancestral ? 1 : this.run.patrons.bow.spread);
       bolt.enableBody(true, x, y, true, true);
+      bolt.barrage = undefined;
       bolt.setData('terrain-previous', { x, y });
       bolt
         .setTexture('bolt')
@@ -2242,10 +2347,11 @@ export class ArenaScene extends Phaser.Scene {
     return fired;
   }
 
-  private fireHostile(enemy: Enemy, angle: number): void {
+  private fireHostile(enemy: Enemy, angle: number): Projectile | undefined {
     const shot = this.hostileShots.get(enemy.x, enemy.y, 'gem') as Projectile | null;
     if (!shot) return;
     shot.enableBody(true, enemy.x, enemy.y, true, true);
+    shot.barrage = undefined;
     shot.setData('terrain-previous', { x: enemy.x, y: enemy.y });
     shot
       .setTexture('gem')
@@ -2266,6 +2372,7 @@ export class ArenaScene extends Phaser.Scene {
     shot.hitTargets.clear();
     shot.setVelocity(Math.cos(angle) * 125, Math.sin(angle) * 125);
     this.audio.play('spell', enemy);
+    return shot;
   }
 
   private updateProjectiles(dt: number): void {
@@ -2304,7 +2411,7 @@ export class ArenaScene extends Phaser.Scene {
       else if (
         Phaser.Math.Distance.Between(shot.x, shot.y, this.camp.x, this.camp.y) <= boundary.radius
       ) {
-        this.damageClan(shot.damage * 0.5);
+        if (acceptCampBarrage(this.run, shot.barrage)) this.damageClan(shot.damage * 0.5);
         const impact = this.campBarrier.hit(this.camp, shot);
         this.audio.play('barrier', impact);
         this.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
@@ -2346,6 +2453,8 @@ export class ArenaScene extends Phaser.Scene {
 
   private damageEnemy(enemy: Enemy, amount: number): void {
     if (!enemy.active) return;
+    if (enemy === this.boss && this.run.finalStand?.phase === 'recovery')
+      amount *= GAME.finalStand.vulnerableDamage;
     amount *= friendlyDamageMultiplier(
       this.run,
       enemy.maxHealth > 0 ? enemy.health / enemy.maxHealth : 1,
@@ -2797,7 +2906,7 @@ export class ArenaScene extends Phaser.Scene {
       this.run.elapsed,
       clan.region,
       this.cameras.main,
-      clan.stage === 'final' ? clan.stageTime / GAME.clan.finalDuration : 0,
+      clan.stage === 'final' ? passageProgress(this.run) : 0,
     );
     this.updateHazards(dt);
   }

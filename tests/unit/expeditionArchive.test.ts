@@ -10,6 +10,7 @@ import { openNextStory, resolveStory } from '../../src/game/state/story';
 import { CharacterMotion } from '../../src/game/animation/CharacterMotion';
 import { createAreaEncounter, syncAreaEncounter } from '../../src/game/state/areaEncounters';
 import { STARTING_TRADITIONS } from '../../src/game/data/clan';
+import { syncFinalStand } from '../../src/game/state/finalStand';
 
 function world(): WorldArchive {
   const motion = new CharacterMotion('player').capture();
@@ -99,6 +100,24 @@ function world(): WorldArchive {
   };
 }
 describe('full expedition snapshots', () => {
+  it('preserves final warnings, work progress and already-braced barrage identities', () => {
+    const run = createRun();
+    run.clan.stage = 'final';
+    run.clan.region = 3;
+    const state = syncFinalStand(run)!;
+    state.phase = 'warning';
+    state.remaining = 0.8;
+    state.cycle = 3;
+    state.approach = 3;
+    state.aim = { x: 2500, y: 2600 };
+    state.lastCampBarrage = 2;
+    state.works[0]!.progress = 2;
+    const runtime = world();
+    runtime.hostileShots = [{ ...runtime.projectiles[0]!, barrage: 2 }];
+    const restored = decodeExpedition(captureExpedition(run, runtime));
+    expect(restored.run.finalStand).toEqual(state);
+    expect(restored.world.hostileShots[0]!.barrage).toBe(2);
+  });
   it('round-trips every starting tradition without reapplying supplies or movement bonuses', () => {
     for (const entry of STARTING_TRADITIONS) {
       const run = createRun(entry.id);

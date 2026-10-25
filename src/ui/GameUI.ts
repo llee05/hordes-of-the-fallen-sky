@@ -1,3 +1,4 @@
+import { finalChapter, passageBonus, passageProgress } from '../game/state/finalStand';
 import { expeditionMetricsContent } from './expeditionMetricsContent';
 import { SUCCESSORS } from '../game/data/successors';
 import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
@@ -119,7 +120,7 @@ export class GameUI {
           <aside id="field-guide" class="field-guide hud-surface" aria-label="Expedition guidance" hidden></aside>
           <div class="zoom-controls hud-surface" role="group" aria-label="Battlefield zoom"><button id="zoom-out" aria-label="Zoom out" aria-keyshortcuts="-" title="Zoom out (− / LT)">−</button><button id="zoom-reset" aria-label="Reset battlefield zoom to 100%" aria-keyshortcuts="0" title="Reset zoom (0 / Right stick click)"><span id="zoom-level">100%</span></button><button id="zoom-in" aria-label="Zoom in" aria-keyshortcuts="+" title="Zoom in (+ / RT)">+</button></div>
           <div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
-          <div id="boss-bar" class="boss-bar" hidden><span>THE SKYBREAKER</span><div class="track"><div id="boss-fill"></div></div></div>
+          <div id="boss-bar" class="boss-bar" hidden><span id="boss-stage">THE SKYBREAKER</span><div class="track"><div id="boss-fill"></div></div></div>
           <aside id="successor-choice" class="successor-choice hud-surface" aria-label="Choose successor" hidden><strong>Who will carry the banner?</strong><p>The countdown continues. Choosing is optional.</p><div>${Object.entries(
             SUCCESSORS,
           )
@@ -375,6 +376,27 @@ export class GameUI {
         'field-objective',
         `Optional ${snapshot.fieldBearing ?? ''}: ${FIELD_OBJECTIVES[objective.kind].title} · ${objective.status === 'returning' ? 'Escort to camp' : FIELD_OBJECTIVES[objective.kind].instruction} ${FIELD_OBJECTIVES[objective.kind].reward}${objective.kind === 'gathering' ? ` · ${objective.defeated}/${GAME.field.guards}` : ''}`,
       );
+    if (clan.stage === 'final') {
+      const finale = run.finalStand;
+      const chapter = ['Gather the households', 'Hold the approaches', 'Carry the living'][
+        finalChapter(run)
+      ];
+      this.text(
+        'boss-stage',
+        `THE SKYBREAKER · ${chapter}${finale?.phase === 'warning' ? ' · ATTACK IN ' + finale.remaining.toFixed(1) + 's' : finale?.phase === 'recovery' ? ' · VULNERABLE +50%' : ''}`,
+      );
+      const pending = finale?.works.findIndex(
+        (work, i) => !work.done && clan.stageTime >= GAME.finalStand.workUnlockAt[i]!,
+      );
+      if (pending !== undefined && pending >= 0) {
+        const work = finale!.works[pending]!;
+        this.text(
+          'field-objective',
+          `Optional: help work party ${pending + 1}. Stand beside the marked workers for ${GAME.finalStand.workSeconds}s with enemies clear (${work.progress.toFixed(1)}s). Each party opens the passage ${GAME.finalStand.workBonus}s sooner.`,
+        );
+        this.get('field-objective').hidden = false;
+      }
+    }
     const region = currentLocation(run);
     if (
       snapshot.saves?.message.includes('complete') ||
@@ -462,8 +484,7 @@ export class GameUI {
           : 'Grow the camp. Keep your people alive.',
     );
     this.get('migration-progress').hidden = clan.stage === 'camp';
-    const progress =
-      clan.stage === 'final' ? clan.stageTime / GAME.clan.finalDuration : clan.migrationProgress;
+    const progress = clan.stage === 'final' ? passageProgress(run) : clan.migrationProgress;
     this.text('progress-label', clan.stage === 'final' ? 'Passage opens' : 'Crossing');
     this.text('crossing', `${Math.min(100, Math.round(progress * 100))}%`);
     this.meter('crossing-fill', progress * 100);
@@ -472,7 +493,7 @@ export class GameUI {
       clan.stage === 'migration'
         ? 'Defend the wagons on the journey east.'
         : clan.stage === 'final'
-          ? `${formatTime(Math.max(0, GAME.clan.finalDuration - clan.stageTime))} until the passage opens.`
+          ? `${formatTime(Math.max(0, GAME.clan.finalDuration - clan.stageTime - passageBonus(run)))} until the passage opens.`
           : canMigrate(run)
             ? 'Fresh pastures await. Pack up with M.'
             : `New routes in ${Math.ceil(GAME.clan.minimumCamp - clan.stageTime)}s. Develop the camp with B.`,

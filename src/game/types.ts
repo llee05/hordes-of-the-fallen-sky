@@ -156,6 +156,7 @@ export interface PatronEffects {
 }
 
 export interface RunState {
+  finalStand?: import('./state/finalStand').FinalStandState;
   metrics?: import('./state/expeditionMetrics').ExpeditionMetrics;
   /** Missing only in expeditions saved before starting arrangements were introduced. */
   startingTradition?: keyof typeof import('./config').GAME.clan.starts;

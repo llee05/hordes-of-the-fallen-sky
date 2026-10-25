@@ -47,6 +47,7 @@ export interface EnemyArchive extends BodyArchive {
   motion: MotionArchive;
 }
 export interface ProjectileArchive extends BodyArchive {
+  barrage?: number;
   damage: number;
   remaining: number;
   fire: boolean;
@@ -217,6 +218,16 @@ const overrides: Record<string, Rule> = {
 };
 const optional: Record<string, Record<string, Rule>> = {
   '': {
+    finalStand: object(
+      {
+        phase: oneOf(['advance', 'warning', 'recovery']),
+        remaining: positive,
+        cycle: integer,
+        approach: oneOf([0, 1, 2, 3]),
+        works: list(object({ progress: positive, done: boolean }, { x: number, y: number }), 2),
+      },
+      { aim: point, lastCampBarrage: integer },
+    ),
     metrics: object({
       stages: list(
         object({
@@ -339,7 +350,7 @@ const projectile = object(
     tint: integer,
     hits: list(object({ slot: integer, spawnId: integer }), GAME.maxEnemies),
   },
-  { previous: point },
+  { previous: point, barrage: integer },
 );
 const threat = object(
   {

@@ -24,6 +24,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 }
 
 export class Projectile extends Phaser.Physics.Arcade.Image {
+  barrage?: number;
   damage = 0;
   remaining = 0;
   fire = false;

@@ -16,6 +16,7 @@ import { arrivalLocation, availableDestinations } from './journey';
 import { completeGuidance } from './guidance';
 import { isKhanActive } from './khan';
 import { markExpedition, metricCasualties, metricStage } from './expeditionMetrics';
+import { passageProgress } from './finalStand';
 
 export function createClan(): ClanState {
   return {
@@ -398,7 +399,7 @@ export function advanceClan(
     );
     return 'arrived';
   }
-  if (clan.stage === 'final' && clan.stageTime >= GAME.clan.finalDuration) return 'saved';
+  if (clan.stage === 'final' && passageProgress(run) >= 1) return 'saved';
 }
 
 export function clanDoctrine(run: RunState): string {
