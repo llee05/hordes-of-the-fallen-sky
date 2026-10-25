@@ -51,7 +51,7 @@ describe('the clan’s lived history', () => {
     buildStructure(run, 'archery');
     buildStructure(run, 'archery');
     expect(run.legacy.memories).toHaveLength(1);
-    expect(currentReaction(run)?.line?.speaker).toBe('saran');
+    expect(currentReaction(run)?.line?.speaker).toBe('boro');
     const quote = currentReaction(run)!.line!.text;
     run.elapsed = 10;
     damageClan(run, 40);
@@ -117,5 +117,55 @@ describe('the clan’s lived history', () => {
     run.legacy.outcome = 'won';
     run.phase = 'story-log';
     expect(khanRecords(run)).toContain('Carried the banner to refuge');
+  });
+});
+
+describe('companion reactions to lived history', () => {
+  const choose = (run: ReturnType<typeof createRun>, id: string) =>
+    run.story.records.push({
+      encounter: { id: 'fire', act: 1, title: '', image: '', setting: '', lines: [], choices: [] },
+      choice: {
+        id,
+        label: '',
+        description: '',
+        response: '',
+        benefit: 'resolve',
+        doctrine: 'iron',
+      },
+      status: 'chosen',
+      elapsed: 0,
+      population: 8,
+    });
+
+  it('lets the companion whose work a building serves react to it', () => {
+    const run = createRun();
+    run.phase = 'building';
+    buildStructure(run, 'herd');
+    expect(currentReaction(run)?.line?.speaker).toBe('boro');
+  });
+
+  it('voices a Khan’s fall through the clan’s choices and a successor through their trait', () => {
+    const run = createRun();
+    run.phase = 'playing';
+    choose(run, 'share-watch');
+    run.health = 0;
+    beginSuccession(run);
+    expect(currentReaction(run)?.line?.text).toContain('hold without one rider');
+    run.khan.candidate = 'outrider';
+    run.elapsed = 20;
+    advanceSuccession(run, GAME.khan.successionDelay);
+    expect(currentReaction(run)?.line?.speaker).toBe('boro');
+    expect(currentReaction(run)?.line?.text).toContain('outrider');
+  });
+
+  it('gives the tally’s keeper the words for a loss, and grief to repeated losses', () => {
+    const run = createRun();
+    choose(run, 'nara-tally');
+    damageClan(run, 40);
+    expect(currentReaction(run)?.line?.speaker).toBe('nara');
+    run.story.peopleLost = 2;
+    run.elapsed = 100;
+    damageClan(run, 40);
+    expect(currentReaction(run)?.line?.speaker).toBe('saran');
   });
 });

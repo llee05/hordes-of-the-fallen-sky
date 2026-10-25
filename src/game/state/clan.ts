@@ -6,6 +6,7 @@ import {
 } from './campEstate';
 import { recordClanDamage, type ClanDamageCause } from './clanSafety';
 import { rememberClan } from './legacy';
+import { buildingReaction, lossReaction } from '../data/storyReactions';
 import { beginCrossingEncounter, settleCrossingEncounter } from './crossingEncounters';
 import { GAME } from '../config';
 import { BUILDINGS, ROUTES, startingTradition } from '../data/clan';
@@ -193,10 +194,7 @@ export function buildStructure(
     run,
     development?.title ?? definition.title,
     `${development ? 'Learned' : 'Established'} for the travelling camp.`,
-    {
-      speaker: 'saran',
-      text: 'Give each new craft a place beside the hearth. These are skills we can carry.',
-    },
+    buildingReaction(id),
     'The remaining hands make room for another craft.',
   );
   return true;
@@ -281,10 +279,7 @@ export function damageClan(
         cause === 'starvation'
           ? 'Empty provisions cost the clan a person. The surviving households carried on.'
           : `${cause === 'eruption' ? 'A ground eruption' : cause === 'seer' ? 'A seer’s strike' : cause === 'area' ? 'A local terrain or spell strike' : 'An attack'} cost the clan a person. The surviving households carried on.`,
-        {
-          speaker: 'erden',
-          text: 'One fewer at the fire. I will keep the loss in the tally, where we can all see it.',
-        },
+        lossReaction(run),
         'One fewer beneath the banner. The loss remains in the tally.',
       );
   }

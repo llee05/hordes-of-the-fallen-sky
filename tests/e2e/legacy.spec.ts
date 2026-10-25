@@ -11,7 +11,7 @@ test('companions acknowledge camp work and the chronicle retains the real Khan s
   await selectCampBuilding(page, 'archery');
   await buyNode(page, 'archery-base');
   await closeOverlayOrPause(page);
-  await expect(page.locator('#companion-reaction')).toContainText('Saran:');
+  await expect(page.locator('#companion-reaction')).toContainText('Boro:');
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.spawnTimer = 999;
@@ -46,7 +46,7 @@ test('companions acknowledge camp work and the chronicle retains the real Khan s
   await expect(page.locator('.clan-memories')).toContainText('Khan 2 took the banner');
   await page.locator('.clan-memory summary').first().click();
   await expect(page.locator('.clan-memory').first()).toContainText(
-    'Give each new craft a place beside the hearth',
+    'Good bows. Better if we never need them.',
   );
   await page.screenshot({ path: 'test-results/clan-lived-history.png' });
 });

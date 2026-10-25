@@ -2,6 +2,7 @@ import { GAME } from '../config';
 import type { LocationId, RunState } from '../types';
 import type { StoryLine } from '../story/types';
 import { currentLocation } from './journey';
+import { chosenKhanReaction, fallenKhanReaction } from '../data/storyReactions';
 
 export interface KhanRecord {
   trait?: import('../data/successors').SuccessorTrait;
@@ -95,10 +96,7 @@ export function rememberFallenKhan(run: RunState): void {
     run,
     `Khan ${run.khan.generation} fell`,
     'The clan began choosing another leader while its defenses fought on.',
-    {
-      speaker: 'saran',
-      text: 'Keep the banner where the people can see it. The road still needs a Khan.',
-    },
+    fallenKhanReaction(run),
     'The banner remains with the people while another Khan is chosen.',
   );
 }
@@ -118,10 +116,7 @@ export function rememberChosenKhan(run: RunState): void {
     run,
     `Khan ${run.khan.generation} took the banner`,
     `${run.clan.population} people carried their buildings, traditions, and journey forward.`,
-    {
-      speaker: 'erden',
-      text: 'A new hand carries the banner. The people and everything they have learned remain.',
-    },
+    chosenKhanReaction(run),
     'Another hand takes the banner. The remaining people carry their learning onward.',
   );
 }
