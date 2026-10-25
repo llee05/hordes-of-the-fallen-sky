@@ -9,6 +9,7 @@ import { beginMigration } from '../../src/game/state/clan';
 import { openNextStory, resolveStory } from '../../src/game/state/story';
 import { CharacterMotion } from '../../src/game/animation/CharacterMotion';
 import { createAreaEncounter, syncAreaEncounter } from '../../src/game/state/areaEncounters';
+import { STARTING_TRADITIONS } from '../../src/game/data/clan';
 
 function world(): WorldArchive {
   const motion = new CharacterMotion('player').capture();
@@ -98,6 +99,20 @@ function world(): WorldArchive {
   };
 }
 describe('full expedition snapshots', () => {
+  it('round-trips every starting tradition without reapplying supplies or movement bonuses', () => {
+    for (const entry of STARTING_TRADITIONS) {
+      const run = createRun(entry.id);
+      run.clan.food -= 5;
+      run.clan.materials -= 3;
+      expect(decodeExpedition(captureExpedition(run, world())).run).toEqual({
+        ...run,
+        phase: 'paused',
+      });
+    }
+    const legacy = captureExpedition(createRun(), world());
+    delete legacy.run.startingTradition;
+    expect(decodeExpedition(legacy).run.startingTradition).toBeUndefined();
+  });
   it('round-trips exact progression, live actors, projectile hit references, dropped XP and cooldowns', () => {
     const run = createRun();
     run.phase = 'playing';

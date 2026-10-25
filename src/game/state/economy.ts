@@ -1,5 +1,5 @@
 import { GAME } from '../config';
-import { ROUTES, type MigrationLocation } from '../data/clan';
+import { ROUTES, startingTradition, type MigrationLocation } from '../data/clan';
 import type { RunState } from '../types';
 import { hasDevelopment } from './camp';
 import { arrivalLocation, currentLocation } from './journey';
@@ -32,7 +32,8 @@ export function migrationMobility(run: RunState): number {
     (run.clan.region === 1 ? 0.8 : 1) *
     run.patrons.banner.mobility *
     run.clan.campEffects.multipliers.mobility *
-    currentLocation(run).balance.mobility
+    currentLocation(run).balance.mobility *
+    startingTradition(run.startingTradition).balance.mobility
   );
 }
 

@@ -9,6 +9,7 @@ export type RunPhase =
   | 'epilogue'
   | 'story-log'
   | 'ready'
+  | 'traditions'
   | 'playing'
   | 'paused'
   | 'saves'
@@ -155,6 +156,8 @@ export interface PatronEffects {
 }
 
 export interface RunState {
+  /** Missing only in expeditions saved before starting arrangements were introduced. */
+  startingTradition?: keyof typeof import('./config').GAME.clan.starts;
   safety: import('./state/clanSafety').ClanSafety;
   crossing?: import('./state/crossingEncounters').CrossingEncounter;
   combat: import('./state/mountedCombat').MountedCombatState;

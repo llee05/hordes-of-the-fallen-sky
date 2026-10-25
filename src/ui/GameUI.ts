@@ -9,7 +9,7 @@ import { saveMenu, type SaveConfirmation } from './saveContent';
 import { isSaveSlot } from '../shared/expeditionSave';
 import { clanMark } from './artwork';
 import { UIMotion } from './Motion';
-import { FORMATIONS } from '../game/data/clan';
+import { FORMATIONS, startingTradition } from '../game/data/clan';
 import { arrivalLocation, availableDestinations, currentLocation } from '../game/state/journey';
 import { INTRO_SLIDES, introImageUrl } from '../game/data/intro';
 import { introMenu } from './introContent';
@@ -34,7 +34,14 @@ import { formatTime } from '../game/state/run';
 import { isKhanActive } from '../game/state/khan';
 import type { BuildingId, HudSnapshot, RunPhase } from '../game/types';
 import type { GamePlatform } from '../platform/GamePlatform';
-import { buildingMenu, helpMenu, journalMenu, routeMenu, settingsMenu } from './menuContent';
+import {
+  buildingMenu,
+  helpMenu,
+  journalMenu,
+  routeMenu,
+  settingsMenu,
+  startingTraditionMenu,
+} from './menuContent';
 import type { JournalTab } from './menuContent';
 import { researchMenu } from './researchContent';
 import { developerConsole, developerMenu } from './developerContent';
@@ -643,7 +650,7 @@ export class GameUI {
     // Transfer focus before hiding or removing the focused menu control.
     if (run.phase === 'playing') this.get('arena-wrap').focus({ preventScroll: true });
     this.overlay.hidden = run.phase === 'playing';
-    this.overlay.className = `overlay ${run.phase === 'console' ? 'console-screen' : run.phase === 'building' ? 'planning camp-planning' : run.phase === 'intro' ? 'intro-screen' : run.phase === 'ready' ? 'ready-screen' : ['route', 'journal', 'upgrade', 'settings', 'help', 'story', 'epilogue', 'story-log', 'developer', 'saves'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
+    this.overlay.className = `overlay ${run.phase === 'console' ? 'console-screen' : run.phase === 'building' ? 'planning camp-planning' : run.phase === 'intro' ? 'intro-screen' : run.phase === 'ready' ? 'ready-screen' : ['route', 'journal', 'upgrade', 'settings', 'help', 'story', 'epilogue', 'story-log', 'developer', 'saves', 'traditions'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
     if (run.phase === 'intro') this.overlay.setAttribute('aria-describedby', 'intro-caption');
     else this.overlay.removeAttribute('aria-describedby');
     const labels: Record<RunPhase, string> = {
@@ -652,6 +659,7 @@ export class GameUI {
       epilogue: 'A PLACE BESIDE THE FIRE',
       'story-log': 'OUR REMEMBERED ROAD',
       ready: 'THE SKY IS WAITING',
+      traditions: 'STARTING CLAN TRADITION',
       playing: 'THE CLAN ENDURES',
       paused: 'EXPEDITION PAUSED',
       saves: 'SAVED EXPEDITIONS',
@@ -682,13 +690,14 @@ export class GameUI {
       ? '<button class="menu-button" data-action="developer">Developer mode <kbd>F8</kbd></button>'
       : '';
     if (run.phase === 'intro') this.overlay.innerHTML = introMenu(snapshot.introSlide);
+    else if (run.phase === 'traditions') this.overlay.innerHTML = startingTraditionMenu(run);
     else if (run.phase === 'saves')
       this.overlay.innerHTML = saveMenu(snapshot, this.saveConfirmation);
     else if (run.phase === 'story') this.overlay.innerHTML = storyMenu(run);
     else if (run.phase === 'epilogue') this.overlay.innerHTML = epilogueMenu(run);
     else if (run.phase === 'story-log') this.overlay.innerHTML = storyLogMenu(run);
     else if (run.phase === 'ready') {
-      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu">${latestSave ? `<button class="menu-button featured" data-action="continue-expedition" data-slot="${latestSave.slot}" data-primary>CONTINUE EXPEDITION <span>→</span></button>` : ''}<button class="menu-button featured" data-action="begin" data-primary>NEW GAME <span>→</span></button>${this.platform.profile.camp ? '<button class="menu-button" data-action="continue-camp" title="Carry your saved camp and stores into a fresh expedition. Patron research and combat restart.">Continue clan camp</button>' : ''}${savedMenu}<button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${developer}${quit}</nav><button class="story-preference" data-action="story-mode" aria-pressed="${run.story.enabled}">Camp scenes: ${run.story.enabled ? 'On' : 'Off'}</button><p class="title-caption">Two acts. Four pastures. One people to carry through.</p></section>`;
+      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu">${latestSave ? `<button class="menu-button featured" data-action="continue-expedition" data-slot="${latestSave.slot}" data-primary>CONTINUE EXPEDITION <span>→</span></button>` : ''}<button class="menu-button featured" data-action="begin" data-primary>NEW GAME <span>→</span></button>${this.platform.profile.camp ? '<button class="menu-button" data-action="continue-camp" title="Carry your saved camp and stores into a fresh expedition. Patron research and combat restart.">Continue clan camp</button>' : ''}${savedMenu}<button class="menu-button" data-action="starting-traditions">Starting tradition: ${startingTradition(run.startingTradition).title}</button><button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${developer}${quit}</nav><button class="story-preference" data-action="story-mode" aria-pressed="${run.story.enabled}">Camp scenes: ${run.story.enabled ? 'On' : 'Off'}</button><p class="title-caption">Two acts. Four pastures. One people to carry through.</p></section>`;
     } else if (run.phase === 'paused') {
       this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">Your people will be here when you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="research">Patron tech tree</button><button class="menu-button" data-action="restart">Start a new run</button>${savedMenu}<button class="menu-button" data-action="save-title">${snapshot.developerRun ? 'Return to title' : 'Save and return to title'}</button><button class="menu-button" data-action="story-log">Our remembered road</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${developer}${quit}</nav></section>`;
     } else if (run.phase === 'building')
@@ -976,6 +985,9 @@ export class GameUI {
       this.scene.executeDeveloperCommand('clan-invincible');
     else if (import.meta.env.DEV && button.dataset.developerLevel)
       this.scene.startDeveloperLevel(button.dataset.developerLevel);
+    else if (action === 'starting-traditions') this.scene.openStartingTraditions();
+    else if (button.dataset.startingTradition)
+      this.scene.selectStartingTradition(button.dataset.startingTradition);
     else if (action === 'begin') this.scene.startRun();
     else if (action === 'saves') {
       this.saveConfirmation = undefined;

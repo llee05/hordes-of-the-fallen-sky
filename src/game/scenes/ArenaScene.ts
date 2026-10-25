@@ -60,7 +60,7 @@ import {
 } from '../state/fieldObjectives';
 import { FieldMarkers } from '../systems/FieldMarkers';
 import { projectedEnemySpawnPosition } from '../systems/EnemySpawning';
-import { FORMATIONS, ROUTES } from '../data/clan';
+import { FORMATIONS, ROUTES, STARTING_TRADITIONS, type StartingTraditionId } from '../data/clan';
 import { currentLocation } from '../state/journey';
 import { INTRO_SLIDES } from '../data/intro';
 import { createDeveloperRun, DEVELOPER_LEVELS } from '../dev/levels';
@@ -203,6 +203,7 @@ export class ArenaScene extends Phaser.Scene {
   private consoleReturnPhase: RunState['phase'] = 'ready';
   private introSlide = 0;
   private introStartsRun = false;
+  private startingTraditionId: StartingTraditionId = 'shared-hearth';
   private storiesEnabled = true;
   private guidanceEnabled = true;
   private storyLogReturn: 'paused' | 'won' | 'dead' = 'paused';
@@ -254,7 +255,7 @@ export class ArenaScene extends Phaser.Scene {
     if (import.meta.env.DEV && !developerRun)
       this.developerTools = createDeveloperTools(this.platform.profile.developerCommandHistory);
     this.consoleReturnPhase = 'ready';
-    this.run = developerRun ?? createRun();
+    this.run = developerRun ?? createRun(this.startingTraditionId);
     if (!developerRun) {
       this.run.story.enabled = this.storiesEnabled;
       this.run.guidance.enabled = this.guidanceEnabled;
@@ -904,8 +905,24 @@ export class ArenaScene extends Phaser.Scene {
     });
   }
 
+  openStartingTraditions(): void {
+    if (this.run.phase === 'ready') this.setPhase('traditions');
+  }
+
+  selectStartingTradition(id: string): void {
+    if (this.run.phase !== 'traditions' || !STARTING_TRADITIONS.some((entry) => entry.id === id))
+      return;
+    this.startingTraditionId = id as StartingTraditionId;
+    this.run = createRun(this.startingTraditionId);
+    this.run.phase = 'traditions';
+    this.run.story.enabled = this.storiesEnabled;
+    this.run.guidance.enabled = this.guidanceEnabled;
+    this.refreshCamp();
+    this.publishPhase();
+  }
+
   startRun(): void {
-    if (this.run.phase !== 'ready') return;
+    if (!['ready', 'traditions'].includes(this.run.phase)) return;
     this.audio.unlock();
     this.introSlide = 0;
     this.introStartsRun = true;
@@ -1057,6 +1074,10 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   togglePause(): void {
+    if (this.run.phase === 'traditions') {
+      this.setPhase('ready');
+      return;
+    }
     if (this.run.phase === 'saves') {
       if (!this.saveBusy) this.setPhase(this.saveMenuReturn);
       return;
@@ -1107,6 +1128,10 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   closePlanning(): void {
+    if (this.run.phase === 'traditions') {
+      this.setPhase('ready');
+      return;
+    }
     if (this.run.phase === 'saves') {
       this.togglePause();
       return;
@@ -1326,6 +1351,7 @@ export class ArenaScene extends Phaser.Scene {
           'story',
           'epilogue',
           'story-log',
+          'traditions',
           'developer',
           'console',
         ].includes(this.run.phase))

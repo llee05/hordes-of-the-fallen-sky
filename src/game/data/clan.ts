@@ -9,6 +9,52 @@ import type {
   RunState,
 } from '../types';
 
+export type StartingTraditionId = keyof typeof GAME.clan.starts;
+export const STARTING_TRADITIONS = [
+  {
+    id: 'shared-hearth',
+    title: 'Shared hearth',
+    icon: 'ger',
+    description: 'Share the remaining stores evenly. A flexible beginning for the eight survivors.',
+    role: 'Balanced stores and a free choice of opening.',
+  },
+  {
+    id: 'outriders',
+    title: 'Outrider circle',
+    icon: 'bow',
+    description:
+      'Another rider takes the field, but mounting the escort leaves fewer provisions and tools.',
+    role: 'Fight early; recover supplies before the crossing.',
+  },
+  {
+    id: 'hearthkeepers',
+    title: 'Hearthkeepers',
+    icon: 'sanctuary',
+    description:
+      'Spend tools reinforcing the households. The clan withstands more damage while new facilities take longer to establish.',
+    role: 'A safer camp; a slower construction opening.',
+  },
+  {
+    id: 'pathfinders',
+    title: 'Pathfinders',
+    icon: 'banner',
+    description:
+      'Pack lightly and keep the scouts moving. Gather farther afield and bring the caravan through faster.',
+    role: 'Faster scouting and travel; leaner starting stores.',
+  },
+] as const satisfies readonly {
+  id: StartingTraditionId;
+  title: string;
+  icon: string;
+  description: string;
+  role: string;
+}[];
+
+export function startingTradition(id: RunState['startingTradition']) {
+  const definition = STARTING_TRADITIONS.find((entry) => entry.id === id) ?? STARTING_TRADITIONS[0];
+  return { ...definition, balance: GAME.clan.starts[definition.id] };
+}
+
 export interface BuildingPathDefinition {
   level?: number;
   minTier?: number;

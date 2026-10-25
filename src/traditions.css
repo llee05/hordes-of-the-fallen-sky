@@ -1,0 +1,52 @@
+.starting-traditions {
+  width: min(1040px, 95vw);
+}
+.starting-tradition-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.starting-tradition-card {
+  display: block;
+  text-align: left;
+  padding: 18px;
+  border: 1px solid #9d875f;
+  background: #d9c69d80;
+  color: #343329;
+}
+.starting-tradition-card[aria-pressed='true'] {
+  background: #294e55;
+  color: #f1e5c8;
+  border-color: #b99752;
+  box-shadow: inset 0 0 0 2px #b99752;
+}
+.starting-tradition-card > span {
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+.starting-tradition-card h3 {
+  font:
+    23px Georgia,
+    serif;
+  margin: 9px 0;
+}
+.starting-tradition-card p {
+  line-height: 1.5;
+}
+.starting-tradition-card small {
+  display: block;
+  line-height: 1.5;
+}
+.starting-tradition-card:focus-visible {
+  outline: 3px solid #c99b48;
+  outline-offset: 3px;
+}
+.starting-tradition-card .tradition-perks {
+  font-weight: 600;
+}
+@media (max-width: 620px) {
+  .starting-tradition-grid {
+    grid-template-columns: 1fr;
+  }
+}

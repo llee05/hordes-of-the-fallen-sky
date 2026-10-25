@@ -8,7 +8,7 @@ import { recordClanDamage, type ClanDamageCause } from './clanSafety';
 import { rememberClan } from './legacy';
 import { beginCrossingEncounter, settleCrossingEncounter } from './crossingEncounters';
 import { GAME } from '../config';
-import { BUILDINGS, ROUTES } from '../data/clan';
+import { BUILDINGS, ROUTES, startingTradition } from '../data/clan';
 import type { BuildingId, ClanState, Formation, RunState } from '../types';
 import { applyCampEffects, createCampEffects, hasDevelopment } from './camp';
 import { economyRates, crossingDuration, pastureDepletion } from './economy';
@@ -78,6 +78,7 @@ export function riderCount(run: RunState): number {
   return Math.min(
     16,
     1 +
+      startingTradition(run.startingTradition).balance.riders +
       (clan.buildings.archery ? 3 : 0) +
       (hasDevelopment(run, 'archery', 'veteran-riders') ? 3 : 0) +
       run.patrons.banner.riders +
@@ -246,7 +247,8 @@ export function clanDamageMultiplier(run: RunState): number {
     (hasDevelopment(run, 'wagon', 'felt-armor') ? 0.5 : 1) *
     (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? 0.8 : 1) *
     run.patrons.guardian.protection *
-    run.clan.campEffects.multipliers.clanProtection
+    run.clan.campEffects.multipliers.clanProtection *
+    startingTradition(run.startingTradition).balance.protection
   );
 }
 

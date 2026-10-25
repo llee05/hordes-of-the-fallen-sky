@@ -2,7 +2,7 @@ import { isExpeditionSave, isRecord, type ExpeditionSave } from '../../shared/ex
 import { createRun } from './run';
 import { ALL_ENEMIES, SKYBREAKER } from '../data/enemies';
 import { UPGRADES } from '../data/upgrades';
-import { BUILDINGS, ROUTES, LOCATIONS } from '../data/clan';
+import { BUILDINGS, ROUTES, LOCATIONS, STARTING_TRADITIONS } from '../data/clan';
 import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
 import { SUCCESSORS } from '../data/successors';
 import { GAME } from '../config';
@@ -216,6 +216,7 @@ const overrides: Record<string, Rule> = {
 };
 const optional: Record<string, Record<string, Rule>> = {
   '': {
+    startingTradition: oneOf(STARTING_TRADITIONS.map((entry) => entry.id)),
     crossing: object(
       {
         key: string,

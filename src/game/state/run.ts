@@ -11,13 +11,19 @@ import { createStory } from './story';
 import { completeGuidance } from './guidance';
 import { isKhanActive } from './khan';
 import type { RunState, UpgradeDefinition } from '../types';
+import { startingTradition, type StartingTraditionId } from '../data/clan';
 
 export function xpForLevel(level: number): number {
   return 8 + (level - 1) * 6;
 }
 
-export function createRun(): RunState {
+export function createRun(tradition: StartingTraditionId = 'shared-hearth'): RunState {
+  const { balance } = startingTradition(tradition);
+  const clan = createClan();
+  clan.food = balance.food;
+  clan.materials = balance.materials;
   return {
+    startingTradition: tradition,
     legacy: createLegacy(),
     safety: createClanSafety(),
     combat: createMountedCombat(),
@@ -34,15 +40,15 @@ export function createRun(): RunState {
     nextLevelXp: xpForLevel(1),
     pendingUpgrades: 0,
     upgrades: {},
-    clan: createClan(),
+    clan,
     story: createStory(),
     patrons: createPatronEffects(),
     stats: {
       maxHealth: GAME.player.health,
-      speed: GAME.player.speed,
+      speed: GAME.player.speed * balance.speed,
       damage: GAME.player.damage,
       attackInterval: GAME.player.attackInterval,
-      pickupRadius: GAME.player.pickupRadius,
+      pickupRadius: GAME.player.pickupRadius * balance.pickup,
       projectiles: 1,
     },
   };
