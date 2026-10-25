@@ -5,6 +5,8 @@ import {
   unlockedEnemy,
   type EncounterPhase,
 } from '../data/encounters';
+import { AREA_ENCOUNTERS } from '../data/areaEncounters';
+import { areaRoster } from '../data/enemies';
 import { chooseEnemy } from '../data/enemies';
 import type { RunState } from '../types';
 import { currentLocation } from './journey';
@@ -40,6 +42,7 @@ export function encounterPlan(run: RunState) {
     interval: run.clan.stageTime < intro ? 1 : phase.interval * (0.8 + run.clan.pasture * 0.002),
     angle,
     enemies: phase.enemies as readonly string[],
+    area: AREA_ENCOUNTERS[currentLocation(run).id],
   };
 }
 /** Returns a transition once, on active simulation time; opening menus cannot consume warnings. */
@@ -68,6 +71,16 @@ export function encounterEnemy(run: RunState, random = Math.random) {
     const e = unlockedEnemy(id, score);
     return e ? [e] : [];
   });
+  const locals = areaRoster(currentLocation(run).id, score, run.clan.stageTime).filter(
+    (e) => !!e.home,
+  );
+  const gentleOpening = run.clan.region === 0 && run.clan.stageTime < GAME.spawning.openingDuration;
+  if (!elite && !gentleOpening && locals.length && random() < GAME.areaEnemies.localShare) {
+    return {
+      definition: locals[Math.min(locals.length - 1, Math.floor(random() * locals.length))]!,
+      elite: false,
+    };
+  }
   return {
     definition: available.length
       ? available[
@@ -76,4 +89,14 @@ export function encounterEnemy(run: RunState, random = Math.random) {
       : chooseEnemy(score, random),
     elite,
   };
+}
+
+/** Crossing waves and gatherings retain familiar enemies while admitting natives of the physical area. */
+export function supportingAreaEnemy(run: RunState, index: number, preferred: readonly string[]) {
+  const score = run.elapsed + run.clan.region * 80;
+  const local = areaRoster(currentLocation(run).id, score, run.clan.stageTime).filter(
+    (e) => !!e.home,
+  );
+  if (index % 3 === 0 && local.length) return local[Math.floor(index / 3) % local.length]!;
+  return preferred.map((id) => unlockedEnemy(id, score)).find(Boolean) ?? chooseEnemy(score);
 }

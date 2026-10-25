@@ -199,6 +199,16 @@ export interface UpgradeDefinition {
 }
 
 export interface EnemyDefinition {
+  title?: string;
+  home?: LocationId;
+  localUnlockAt?: number;
+  tint?: number;
+  habitat?: import('./data/areaEncounters').AreaHabitat;
+  concealed?: boolean;
+  tacticalRole?: 'pack' | 'skirmisher' | 'bulwark';
+  armor?: number;
+  ability?: { kind: import('./data/areaEncounters').AreaThreatKind; count: number };
+  volley?: { shots: number; spread: number; interval: number };
   id: string;
   texture: string;
   health: number;

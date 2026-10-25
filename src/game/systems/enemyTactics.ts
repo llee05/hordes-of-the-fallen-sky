@@ -22,7 +22,11 @@ export function tacticalGoal(
   time: number,
 ): Point {
   const distance = Math.hypot(target.x - from.x, target.y - from.y);
-  if (definition.id === 'wisp' && distance > 300 && distance < 800) {
+  if (
+    (definition.tacticalRole === 'pack' || definition.id === 'wisp') &&
+    distance > 300 &&
+    distance < 800
+  ) {
     const side = slot % 2 ? 1 : -1,
       dx = (from.x - target.x) / distance,
       dy = (from.y - target.y) / distance;
@@ -37,8 +41,14 @@ export function tacticalGoal(
       dy = (from.y - target.y) / distance;
     const turn = Math.sin(Math.floor(time / 6) + slot) * 0.35;
     return {
-      x: target.x + (dx - dy * turn) * GAME.tactics.seerRange,
-      y: target.y + (dy + dx * turn) * GAME.tactics.seerRange,
+      x:
+        target.x +
+        (dx - dy * turn) *
+          (definition.tacticalRole === 'skirmisher' ? 280 : GAME.tactics.seerRange),
+      y:
+        target.y +
+        (dy + dx * turn) *
+          (definition.tacticalRole === 'skirmisher' ? 280 : GAME.tactics.seerRange),
     };
   }
   return target;

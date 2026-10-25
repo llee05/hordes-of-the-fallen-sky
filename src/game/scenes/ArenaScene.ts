@@ -31,7 +31,12 @@ import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
 import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
 import { GAME } from '../config';
 import { SKYBREAKER, encounterSpawnDelay } from '../data/enemies';
-import { advanceEncounters, encounterEnemy, encounterPlan } from '../state/encounters';
+import {
+  advanceEncounters,
+  encounterEnemy,
+  encounterPlan,
+  supportingAreaEnemy,
+} from '../state/encounters';
 import {
   syncFieldState,
   fieldObjectiveDue,
@@ -39,7 +44,6 @@ import {
   advanceFieldObjective,
 } from '../state/fieldObjectives';
 import { FieldMarkers } from '../systems/FieldMarkers';
-import { ENEMIES } from '../data/enemies';
 import { projectedEnemySpawnPosition } from '../systems/EnemySpawning';
 import { FORMATIONS, ROUTES } from '../data/clan';
 import { currentLocation } from '../state/journey';
@@ -1160,7 +1164,7 @@ export class ArenaScene extends Phaser.Scene {
     enemy.enableBody(true, x, y, true, true);
     const width = (ART_WIDTH[definition.texture] ?? 50) * (definition.scale / (isBoss ? 4 : 2));
     styleActor(enemy, definition.texture, width, 5 * definition.scale);
-    enemy.clearTint();
+    enemy.setTint(definition.tint ?? 0xffffff);
     if (!this.enemyShadows.has(enemy)) this.enemyShadows.set(enemy, this.add.image(x, y, 'shadow'));
     this.enemyShadows
       .get(enemy)!
@@ -1216,7 +1220,6 @@ export class ArenaScene extends Phaser.Scene {
     const definition = CROSSING_ENCOUNTERS[c.route];
     c.spawnDelay = Math.max(0, c.spawnDelay - dt);
     if (c.phase === 'assault' && c.spawned < definition.guards && c.spawnDelay <= 0) {
-      const score = this.run.elapsed + this.run.clan.region * 80;
       const id =
         c.route === 'ridge'
           ? c.spawned % 2
@@ -1225,7 +1228,7 @@ export class ArenaScene extends Phaser.Scene {
           : c.spawned % 2
             ? 'ghost-rider'
             : 'bat';
-      const enemy = ENEMIES.find((e) => e.id === id && e.unlockAt <= score) ?? ENEMIES[0]!;
+      const enemy = supportingAreaEnemy(this.run, c.spawned, [id]);
       const angle =
         c.route === 'river'
           ? c.spawned % 2
@@ -1286,7 +1289,14 @@ export class ArenaScene extends Phaser.Scene {
       const angle = (o.guards * Math.PI * 2) / GAME.field.guards;
       const desired = { x: o.x + Math.cos(angle) * 85, y: o.y + Math.sin(angle) * 85 };
       const point = nav ? nav.nearestWalkable(desired) : desired;
-      if (point && this.spawnEnemy(ENEMIES[0], { point, objectiveId: o.id })) o.guards++;
+      if (
+        point &&
+        this.spawnEnemy(supportingAreaEnemy(this.run, o.guards, ['wisp']), {
+          point,
+          objectiveId: o.id,
+        })
+      )
+        o.guards++;
     }
     let threats = 0;
     if (o)
@@ -1479,11 +1489,17 @@ export class ArenaScene extends Phaser.Scene {
         distance < 650
       ) {
         const angle = Math.atan2(target.y - enemy.y, target.x - enemy.x);
-        const count = behavior === 'boss' ? 12 : 1;
+        const count = behavior === 'boss' ? 12 : (enemy.definition.volley?.shots ?? 1);
         enemy.motion.attack();
         for (let i = 0; i < count; i += 1)
-          this.fireHostile(enemy, angle + (i * Math.PI * 2) / count);
-        enemy.attackTimer = behavior === 'boss' ? 2.5 : 3.5;
+          this.fireHostile(
+            enemy,
+            angle +
+              (behavior === 'boss'
+                ? (i * Math.PI * 2) / count
+                : (i - (count - 1) / 2) * (enemy.definition.volley?.spread ?? 0)),
+          );
+        enemy.attackTimer = behavior === 'boss' ? 2.5 : (enemy.definition.volley?.interval ?? 3.5);
       }
       if (
         enemy.definition.id === 'hollow-seer' &&
@@ -1778,7 +1794,11 @@ export class ArenaScene extends Phaser.Scene {
       this.run,
       enemy.maxHealth > 0 ? enemy.health / enemy.maxHealth : 1,
     );
-    if (enemy.definition.id === 'brute' && enemy.pinned <= 0) amount *= GAME.tactics.heavyArmor;
+    if (
+      (enemy.definition.armor !== undefined || enemy.definition.id === 'brute') &&
+      enemy.pinned <= 0
+    )
+      amount *= enemy.definition.armor ?? GAME.tactics.heavyArmor;
     if (amount >= 1) enemy.motion.hit();
     enemy.health -= amount;
     if (enemy.health > 0) {
@@ -2269,7 +2289,7 @@ export class ArenaScene extends Phaser.Scene {
             ? 0xffad67
             : enemy.definition.id === 'frost-mare'
               ? 0xb1efff
-              : 0xffffff,
+              : (enemy.definition.tint ?? 0xffffff),
       );
     }
     this.defeats.update(dt);
