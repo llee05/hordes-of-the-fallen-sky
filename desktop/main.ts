@@ -16,6 +16,9 @@ if (devUrl) {
 }
 
 app.setName('Hordes of the Fallen Sky');
+// Electron's Wayland app id does not inherit Chromium's --class switch.
+const windowClass = app.commandLine.getSwitchValue('class');
+if (process.platform === 'linux' && windowClass) app.setDesktopName(windowClass);
 // Standard Chromium switch gives tests their own profile without touching real saves.
 const userData = app.commandLine.getSwitchValue('user-data-dir');
 app.setPath('userData', userData ? resolve(userData) : join(app.getPath('appData'), 'Gloam'));

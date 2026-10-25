@@ -272,6 +272,12 @@ OpenGL backend and selects Wayland when `WAYLAND_DISPLAY` is set. Test windows k
 rendering when covered or on another workspace; keep the display session available.
 The renderer strings are printed before testing, and software fallback fails early.
 
+Headed test windows use the class/app id `bh-e2e-test`; set `E2E_WINDOW_CLASS` to
+override it. On Hyprland, an optional local window rule can match that class and
+send windows silently to a dedicated workspace (for example, workspace 9).
+Routing and focus behavior depend on your compositor's local rules; desktop
+configuration is not installed by the test suite.
+
 `CI` keeps the existing headless software-rendered browser behavior. For the same
 behavior locally, use `E2E_HEADLESS=1`, for example:
 

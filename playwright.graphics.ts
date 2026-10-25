@@ -14,6 +14,7 @@ export function testGraphics(
               '--use-angle=gl',
             ]
           : []),
+        `--class=${environment.E2E_WINDOW_CLASS || 'bh-e2e-test'}`,
         '--enable-gpu',
         '--ignore-gpu-blocklist',
         '--disable-background-timer-throttling',

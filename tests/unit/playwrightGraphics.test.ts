@@ -14,6 +14,7 @@ describe('Playwright graphics policy', () => {
         '--ozone-platform=wayland',
         '--use-gl=angle',
         '--use-angle=gl',
+        '--class=bh-e2e-test',
         '--enable-gpu',
         '--ignore-gpu-blocklist',
         '--disable-background-timer-throttling',
@@ -32,6 +33,12 @@ describe('Playwright graphics policy', () => {
       expect(graphics.launchOptions.executablePath).toBeUndefined();
     },
   );
+
+  it('lets a local compositor rule target a custom test window class', () => {
+    const graphics = testGraphics({ E2E_WINDOW_CLASS: 'custom-game-checks' }, 'linux');
+    expect(graphics.launchOptions.args).toContain('--class=custom-game-checks');
+    expect(graphics.launchOptions.args).not.toContain('--class=bh-e2e-test');
+  });
 
   it('does not force Wayland on X11 or Linux GL flags on other platforms', () => {
     expect(testGraphics({}, 'linux').launchOptions.args).not.toContain('--ozone-platform=wayland');
