@@ -265,3 +265,33 @@
   margin-top: 7px;
   font-size: 12px;
 }
+/* Companion standings derived from the clan's choices. */
+.story-bonds {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.story-bonds li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid #9f815144;
+  border-left: 3px solid #8a7a55;
+  background: #d7bf8b22;
+  color: #35443d;
+}
+.story-bonds li[data-standing='close'] {
+  border-left-color: #2f7f86;
+}
+.story-bonds li[data-standing='strained'] {
+  border-left-color: #a2463a;
+}
+.story-bonds small {
+  display: block;
+  font-size: 12px;
+  color: var(--paper-muted);
+}

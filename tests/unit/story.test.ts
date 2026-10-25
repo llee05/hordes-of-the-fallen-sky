@@ -345,3 +345,63 @@ describe('destination-specific scenes', () => {
     expect(sceneText(storyEncounter(run, 'promise'))).toContain('3 Khans’ hands');
   });
 });
+
+describe('the ending', () => {
+  it('remembers both camps in visit order from the responses actually chosen', () => {
+    const run = journey('altan-ovoo', 'eej-khairkhan', ANSWERS.listening);
+    const ending = epilogueText(run).join(' ');
+    expect(ending.indexOf('At Altan Ovoo')).toBeGreaterThan(-1);
+    expect(ending.indexOf('At Altan Ovoo')).toBeLessThan(ending.indexOf('At Eej Khairkhan'));
+    expect(ending).toContain('carry the carriers');
+    const silent = journey('altan-ovoo', 'eej-khairkhan');
+    const quiet = epilogueText(silent).join(' ');
+    expect(quiet).toContain('passed through Altan Ovoo and Eej Khairkhan');
+    expect(quiet).not.toMatch(/learned/);
+  });
+
+  it('follows trust and the court decision to different companion endings', () => {
+    const listening = epilogueText(journey('belukha', 'orkhon-valley', ANSWERS.listening)).join(
+      ' ',
+    );
+    expect(listening).toContain('families answer for themselves');
+    expect(listening).toContain('lights the new hearth herself');
+    expect(listening).not.toContain('fills the spare bowl himself');
+    // Boro and Saran reconcile only when the clan has honoured both of their priorities.
+    const balanced = epilogueText(
+      journey('belukha', 'orkhon-valley', {
+        fire: 'share-work',
+        departure: 'pack-food',
+        river: 'test-river',
+        promise: 'promise-guard',
+        earth: 'rest-hands',
+        court: 'hear-erden',
+        opening: 'share-last-meal',
+      }),
+    ).join(' ');
+    expect(balanced).toContain('fills the spare bowl himself');
+    expect(balanced).toContain('a warning, not a scripture');
+    const practical = epilogueText(journey('belukha', 'orkhon-valley', ANSWERS.practical)).join(
+      ' ',
+    );
+    expect(practical).toContain('Nara keeps the tally now');
+    expect(practical).not.toContain('fills the spare bowl himself');
+  });
+
+  it('speaks of practices instead of placing the named cast at the fire after losses', () => {
+    const run = journey('khan-tengri', 'broken-pass', ANSWERS.listening);
+    run.story.peopleLost = 2;
+    const ending = epilogueText(run).join(' ');
+    expect(ending).toContain('as Erden promised');
+    expect(ending).not.toMatch(
+      /Nara sets|Saran feeds|Saran lets|Saran sets|Boro walks|Erden reads/,
+    );
+  });
+
+  it('acknowledges fallen Khans, including one whose successor is still being chosen', () => {
+    const run = createRun();
+    expect(epilogueText(run).join(' ')).not.toMatch(/Khans? fell/);
+    run.khan.generation = 2;
+    run.khan.successionRemaining = 3;
+    expect(epilogueText(run).join(' ')).toContain('2 Khans fell keeping the road');
+  });
+});

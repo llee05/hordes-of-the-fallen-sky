@@ -88,6 +88,7 @@ test('complete the two acts, all eight choices, three crossings, and a survivor-
   await choose(page, 'mend-wheels');
   await campTime(page, 45);
   await expect(page.getByRole('heading', { name: 'The court’s empty promise.' })).toBeVisible();
+  await expect(page.locator('[data-story-choice]')).toHaveCount(3);
   await page.screenshot({ path: 'test-results/story-confession.png' });
   await choose(page, 'trust-erden');
   await cross(page, 'ridge', 3);
@@ -110,6 +111,7 @@ test('complete the two acts, all eight choices, three crossings, and a survivor-
   await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
   await page.getByRole('button', { name: 'Our remembered road' }).click();
   await expect(page.locator('.story-memory')).toHaveCount(8);
+  await expect(page.locator('.story-bonds li')).toHaveCount(4);
   await page.locator('.story-memory summary').first().click();
   await expect(page.locator('.story-memory').first()).toContainText('Share the work');
   await closeOverlayOrPause(page);

@@ -1,7 +1,7 @@
 import { GAME } from '../config';
 import { clanDoctrine } from '../state/clan';
-import { currentLocation } from '../state/journey';
-import { companionBonds, storyChoice } from '../state/storyBonds';
+import { currentLocation, locationById } from '../state/journey';
+import { companionBonds, companionStanding, storyChoice } from '../state/storyBonds';
 import { firstStop, secondStop, type StoryResponse } from './storyDestinations';
 import type { LocationId, RunState } from '../types';
 import type { StoryBeat, StoryChoice, StoryEncounter, StoryLine, Speaker } from '../story/types';
@@ -305,7 +305,7 @@ function court(c: StoryContext): Omit<StoryEncounter, 'id'> {
       ),
       line(
         'boro',
-        c.bonds.erden >= GAME.story.bonds.close
+        c.chose('departure') === 'pack-tools'
           ? 'I knew you had loaded wagons for an army. I didn’t think it was that army.'
           : 'You were there. And you let us trust your numbers.',
       ),
@@ -523,16 +523,105 @@ export function storyEncounter(run: RunState, id: StoryBeat): StoryEncounter {
   return scene;
 }
 
+function locationName(id: LocationId | undefined): string | undefined {
+  return id && locationById(id)?.name.replace(/^The /, 'the ');
+}
+
+/** One remembered image from each chosen camp, in visit order. No companion names. */
+function rememberedRoads(run: RunState): string | undefined {
+  const firstId = stopAt(run, 1);
+  const secondId = stopAt(run, 2);
+  const firstKey = { 'test-river': 'test', 'keep-names': 'listen' }[
+    storyChoice(run, 'river') ?? ''
+  ] as 'test' | 'listen' | undefined;
+  const secondKey = { 'mend-wheels': 'mend', 'rest-hands': 'rest' }[
+    storyChoice(run, 'earth') ?? ''
+  ] as 'mend' | 'rest' | undefined;
+  const images: string[] = [];
+  const unspoken: string[] = [];
+  if (firstId) {
+    if (firstKey) images.push(firstStop(firstId).remembered[firstKey]);
+    else unspoken.push(locationName(firstId)!);
+  }
+  if (secondId) {
+    if (secondKey) images.push(secondStop(secondId).remembered[secondKey]);
+    else unspoken.push(locationName(secondId)!);
+  }
+  if (unspoken.length)
+    images.push(
+      `The road also passed through ${unspoken.join(' and ')}, remembered as a halt and a departure.`,
+    );
+  return images.length ? images.join(' ') : undefined;
+}
+
+/**
+ * Companion outcomes follow trust and the court decision. After any loss, the ending speaks
+ * of their practices rather than placing all four named companions at the new fire.
+ */
+function companionsEnding(run: RunState): string {
+  const court = storyChoice(run, 'court');
+  const close = (companion: 'saran' | 'boro' | 'erden' | 'nara') =>
+    companionStanding(run, companion) === 'close';
+  const strained = (companion: 'boro' | 'erden') =>
+    companionStanding(run, companion) === 'strained';
+  if (run.story.peopleLost > 0) {
+    return [
+      close('nara')
+        ? 'The embers came through the passage in young hands.'
+        : 'The covered embers came through the passage.',
+      close('saran') && close('boro')
+        ? 'The spare bowl is filled before anyone eats, the way Saran asked and Boro made possible.'
+        : 'The spare bowl waits beside the new hearth.',
+      court === 'trust-erden'
+        ? 'The tally is read aloud, as Erden promised, and the families answer for themselves.'
+        : court === 'hear-erden'
+          ? 'The account of the courtyard is kept beside the songs: a warning, not a scripture.'
+          : court === 'nara-tally'
+            ? 'The tally is kept by younger hands now, and checked by older ones.'
+            : 'Someone counts the gers twice and says the number aloud, as Erden taught.',
+    ].join(' ');
+  }
+  return [
+    close('nara')
+      ? 'Nara sets down the ember vessel she carried through the passage and lights the new hearth herself.'
+      : 'Nara sets down the covered ember vessel and asks who will be coming next.',
+    close('saran')
+      ? 'Saran lets someone else feed the fire, and sits.'
+      : 'Saran feeds the new fire, as she always has.',
+    close('boro') && close('saran')
+      ? 'Boro, who once asked what they could feed a stranger, fills the spare bowl himself.'
+      : strained('boro')
+        ? 'Boro counts the horses twice when he thinks nobody is looking. He is not wrong to.'
+        : close('boro')
+          ? 'Boro walks the new pasture and declares, grudgingly, that it will do.'
+          : 'Boro checks the grass and says nothing, which from Boro is praise.',
+    court === 'trust-erden'
+      ? 'Erden reads the tally aloud, and the families answer for themselves.'
+      : court === 'hear-erden'
+        ? 'Erden’s account of the courtyard is kept beside the songs: a warning, not a scripture.'
+        : court === 'nara-tally'
+          ? 'Nara keeps the tally now. Erden checks her sums, and she lets him.'
+          : strained('erden')
+            ? 'Erden works at the edge of the firelight, counting, still unsure of his welcome.'
+            : 'Erden counts the gers twice, and says the number aloud.',
+  ].join(' ');
+}
+
 export function epilogueText(run: RunState): readonly string[] {
   const clan = run.clan;
   const identity = clanDoctrine(run);
   const single = clan.population === 1;
-  const sharedTally = run.story.records.some((record) => record.choice?.id === 'trust-erden');
+  const few = clan.population < 5;
+  const fallen = run.khan.generation - 1 + (run.khan.successionRemaining > 0 ? 1 : 0);
+  const rescued = run.story.crossings.some((crossing) => crossing.route === 'refuge');
+  const roads = rememberedRoads(run);
   return [
-    `${clan.population} ${single ? 'person' : 'people'} and ${clan.herd} ${clan.herd === 1 ? 'animal' : 'animals'} reach the sheltered valley. ${clan.finalBossDefeated ? 'The Skybreaker has fallen behind them.' : 'The Skybreaker still walks beyond the mountain.'} The passage has given the living a road through.`,
+    `${clan.population} ${single ? 'person' : 'people'} and ${clan.herd} ${clan.herd === 1 ? 'animal' : 'animals'} reach the sheltered valley. ${clan.finalBossDefeated ? 'The Skybreaker has fallen behind them.' : 'The Skybreaker still walks beyond the mountain.'}${fallen > 0 ? ` ${fallen} ${fallen === 1 ? 'Khan' : 'Khans'} fell keeping the road; the banner came through in other hands.` : ''} The passage has given the living a road through.`,
     run.story.peopleLost > 0
       ? `The ${single ? 'last survivor remembers' : 'survivors remember'} the ${run.story.peopleLost} ${run.story.peopleLost === 1 ? 'person' : 'people'} lost along the road. Their names have a place beside the fire.`
-      : 'Saran sets the spare bowl beside the new hearth. The carried embers catch in fresh kindling.',
+      : `Saran sets the spare bowl beside the new hearth. The carried embers catch in fresh kindling.${rescued ? ' The households gathered under the blue banners raise their gers beside the first two.' : ''}`,
+    ...(roads ? [roads] : []),
+    ...(few ? [] : [companionsEnding(run)]),
     single
       ? `The tally carries the clan’s name: ${identity}. Its promise belongs to the next camp as well.`
       : identity === 'The Iron Horde'
@@ -542,11 +631,11 @@ export function epilogueText(run: RunState): readonly string[] {
           : identity === 'The Wandering Nation'
             ? 'The Wandering Nation leaves room between its gers for more arrivals. The next task is learning how many the pasture can support.'
             : 'The households raise their gers around a common fire. Their people are still taking shape.',
-    run.story.peopleLost > 0 || clan.population < 5
-      ? `${single ? 'The last survivor lights' : 'The remaining hands light'} a hearth from the carried embers. A spare bowl waits beside it.`
-      : sharedTally
-        ? 'Erden reads the tally aloud, and the families answer for themselves. Nara brings another bowl.'
-        : 'Nara sets down the covered ember vessel and asks who will be coming next.',
+    ...(few
+      ? [
+          `${single ? 'The last survivor lights' : 'The remaining hands light'} a hearth from the carried embers. A spare bowl waits beside it.`,
+        ]
+      : []),
     'Keep a place beside the fire. Someone is still coming home.',
   ];
 }

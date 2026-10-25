@@ -7,6 +7,37 @@ import type { RunState } from '../game/types';
 import type { StoryLine } from '../game/story/types';
 import { clanMark } from './artwork';
 import { storyConsequence } from '../game/data/storyConsequences';
+import { COMPANION_IDS, companionStanding, type Standing } from '../game/state/storyBonds';
+import type { Companion } from '../game/story/types';
+
+const STANDINGS: Record<Companion, Record<Standing, string>> = {
+  saran: {
+    close: 'Lets others share the hearth',
+    steady: 'Keeps the hearth',
+    strained: 'Carries too much alone',
+  },
+  boro: {
+    close: 'Trusts your counsel',
+    steady: 'Watching the grass',
+    strained: 'Doubts the tally',
+  },
+  erden: {
+    close: 'Answers openly',
+    steady: 'Keeps careful counts',
+    strained: 'Works at the edge of the firelight',
+  },
+  nara: { close: 'Carries real work', steady: 'Asks who is missing', strained: 'Feels overlooked' },
+};
+
+/** Derived from the choices actually made; hidden when too few remain to name the cast. */
+function besideTheFire(run: RunState): string {
+  if (run.clan.population < 5 || !run.story.records.some((record) => record.choice)) return '';
+  return `<ul class="story-bonds" aria-label="Beside the fire">${COMPANION_IDS.map((id) => {
+    const companion = COMPANIONS[id];
+    const standing = companionStanding(run, id);
+    return `<li data-standing="${standing}"><span class="speaker-seal">${clanMark(companion.mark)}</span><span><strong>${companion.name}</strong><small>${STANDINGS[id][standing]}</small></span></li>`;
+  }).join('')}</ul>`;
+}
 
 function lastingNote(choiceId: string): string {
   const lasting = storyConsequence(choiceId)?.lasting;
@@ -34,7 +65,7 @@ export function storyMenu(run: RunState): string {
 
 export function storyRecords(run: RunState): string {
   const act = storyAct(run.clan.region);
-  return `<div class="story-records"><div class="story-record-heading"><p class="eyebrow">ACT ${act.number === 1 ? 'I' : 'II'} · ${act.title.toUpperCase()}</p><h3>The cloth we carry.</h3><p>${run.story.records.length} of 8 camp memories · ${run.story.crossings.length} crossings · ${run.story.peopleLost} ${run.story.peopleLost === 1 ? 'person' : 'people'} lost</p></div>${run.story.records.length ? run.story.records.map((record) => `<details class="story-memory"><summary><span>${record.encounter.act === 1 ? 'I' : 'II'} · ${record.encounter.title}</span><small>${formatTime(record.elapsed)} · ${record.population} ${record.population === 1 ? 'person' : 'people'}</small></summary><div class="story-memory-body">${record.status === 'passed' ? '<p>The clan travelled on without pausing for a camp conversation.</p>' : `<p class="story-setting">${record.encounter.setting}</p>${speeches(record.encounter.lines)}`}<p class="story-memory-choice"><strong>${record.choice?.label ?? (record.status === 'passed' ? 'Camp scenes were off.' : 'We continued without choosing.')}</strong>${record.choice ? `<br>${record.choice.response}${storyConsequence(record.choice.id)?.lasting ? `<br><small>Lasting: ${storyConsequence(record.choice.id)!.lasting!.label}</small>` : ''}` : ''}</p></div></details>`).join('') : '<p class="journal-callout">The first memory begins when you lead your people out onto the steppe.</p>'}${khanRecords(run)}${clanMemories(run)}</div>`;
+  return `<div class="story-records"><div class="story-record-heading"><p class="eyebrow">ACT ${act.number === 1 ? 'I' : 'II'} · ${act.title.toUpperCase()}</p><h3>The cloth we carry.</h3><p>${run.story.records.length} of 8 camp memories · ${run.story.crossings.length} crossings · ${run.story.peopleLost} ${run.story.peopleLost === 1 ? 'person' : 'people'} lost</p></div>${besideTheFire(run)}${run.story.records.length ? run.story.records.map((record) => `<details class="story-memory"><summary><span>${record.encounter.act === 1 ? 'I' : 'II'} · ${record.encounter.title}</span><small>${formatTime(record.elapsed)} · ${record.population} ${record.population === 1 ? 'person' : 'people'}</small></summary><div class="story-memory-body">${record.status === 'passed' ? '<p>The clan travelled on without pausing for a camp conversation.</p>' : `<p class="story-setting">${record.encounter.setting}</p>${speeches(record.encounter.lines)}`}<p class="story-memory-choice"><strong>${record.choice?.label ?? (record.status === 'passed' ? 'Camp scenes were off.' : 'We continued without choosing.')}</strong>${record.choice ? `<br>${record.choice.response}${storyConsequence(record.choice.id)?.lasting ? `<br><small>Lasting: ${storyConsequence(record.choice.id)!.lasting!.label}</small>` : ''}` : ''}</p></div></details>`).join('') : '<p class="journal-callout">The first memory begins when you lead your people out onto the steppe.</p>'}${khanRecords(run)}${clanMemories(run)}</div>`;
 }
 
 export function storyLogMenu(run: RunState): string {
