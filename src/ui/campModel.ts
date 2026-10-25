@@ -1,34 +1,35 @@
-import { encampment } from '../game/state/campEstate';
 import { BUILDINGS } from '../game/data/clan';
+import { ENCAMPMENT_TIERS, INTERNAL_DEVELOPMENTS } from '../game/data/campEstate';
+import { buildingLevel, campSlots, encampment } from '../game/state/campEstate';
 import { currentLocation } from '../game/state/journey';
-import { assignedWorkers, burningTempest } from '../game/state/clan';
+import { assignedWorkers } from '../game/state/clan';
 import { campShelters } from '../game/state/campLife';
 import type { BuildingId, RunState } from '../game/types';
 import { BUILDING_MARKS, campProp, campResident, clanMark } from './artwork';
-import { campBranches } from './campContent';
-import { developmentOutlook, economySummary } from './economyContent';
-import { footer } from './panelContent';
+import { economySummary } from './economyContent';
 import { synergyContent } from './synergyContent';
 import {
-  branchMarkup,
-  nodeInspector,
-  selectedNode,
-  escapeHtml,
-  searchText,
-  type TreeViewState,
-} from './progressionTree';
+  buildingBonuses,
+  buildingChoice,
+  campBuildingBranch,
+  campNodeDetails,
+  campPath,
+  effectDescriptions,
+  estateBranch,
+  nextCampNode,
+} from './campPopups';
+import { escapeHtml, searchText, type TreeViewState } from './progressionTree';
 
-// Presentation coordinates in the miniature, independent of combat distances.
-const SITES: Partial<Record<BuildingId, readonly [number, number]>> = {
-  ger: [47, 31],
-  archery: [20, 45],
-  herd: [23, 74],
-  sanctuary: [73, 26],
-  wagon: [77, 73],
-  felt: [20, 22],
-  provisions: [49, 77],
-  relay: [84, 48],
-};
+const CAMP_PLOTS: readonly (readonly [number, number])[] = [
+  [24, 39],
+  [77, 35],
+  [18, 69],
+  [81, 70],
+  [48, 77],
+  [48, 15],
+  [12, 88],
+  [89, 88],
+];
 
 function prop(name: Parameters<typeof campProp>[0], className = ''): string {
   return `<span class="camp-object ${className}">${campProp(name)}</span>`;
@@ -94,49 +95,128 @@ function campScenery(run: RunState): string {
 }
 
 export function buildingMenu(run: RunState, view: TreeViewState, selected: string): string {
-  const branches = campBranches(run);
+  const tier = encampment(run),
+    slots = campSlots(run);
+  const selectedBuilding = BUILDINGS.find((b) => b.id === selected) ?? BUILDINGS[0]!;
+  const selectedSlot = slots.indexOf(selectedBuilding.id);
+  const position = CAMP_PLOTS[view.campTarget === 'slot' ? (view.campSlot ?? 1) : selectedSlot] ?? [
+    50, 39,
+  ];
+  const anchor =
+    view.campTarget === 'encampment' || view.campTarget === 'internal' ? [50, 39] : position;
   const query = searchText(view.query.trim());
-  const matches = branches.filter((branch) =>
+  const matches = BUILDINGS.filter((b) =>
     searchText(
-      [
-        branch.title,
-        branch.description,
-        ...branch.nodes.flatMap((node) => [node.title, node.description]),
-      ].join(' '),
+      [b.id, b.title, b.description, ...b.paths.map((p) => `${p.title} ${p.description}`)].join(
+        ' ',
+      ),
     ).includes(query),
   );
-  const branch =
-    (query
-      ? (matches.find((entry) => entry.id === selected) ?? matches[0])
-      : branches.find((entry) => entry.id === selected)) ?? branches[0]!;
-  const summary = [
-    ['grain', String(Math.floor(run.clan.food)), 'Food'],
-    ['materials', String(Math.floor(run.clan.materials)), 'Materials'],
-    ['spirit', String(Math.floor(run.clan.spirit)), 'Spirit'],
+  let popup = '';
+  if (view.campPopup) {
+    let content = '',
+      title = '',
+      mark = 'ger';
+    if (view.campTarget === 'slot' || view.campTarget === 'search') {
+      const locked = view.campTarget === 'slot' && (view.campSlot ?? 0) >= tier.slots;
+      title =
+        view.campTarget === 'search'
+          ? 'Find a place in camp'
+          : `Building plot ${(view.campSlot ?? 0) + 1}`;
+      content = locked
+        ? `<p>This plot opens with ${escapeHtml(ENCAMPMENT_TIERS[Math.min(4, (view.campSlot ?? 1) - 1)]!.title)}.</p><button data-camp-encampment class="secondary-button">Inspect the Clan Encampment</button>`
+        : `<p>${view.campTarget === 'search' ? 'Select a facility to inspect its place and improvements.' : 'Choose a portable facility for this plot. Its workers and supplies are reserved only when you construct it.'}</p><div class="camp-building-choices">${matches
+            .filter((b) => view.campTarget === 'search' || !run.clan.buildings[b.id])
+            .map((b) =>
+              buildingChoice(run, b.id, view.campTarget === 'slot' ? view.campSlot : undefined),
+            )
+            .join(
+              '',
+            )}</div>${!matches.length ? '<p role="status">No matching crafts. Clear your search to explore the camp.</p>' : ''}`;
+    } else if (view.recipes) {
+      title = 'Traditions that work together';
+      content = synergyContent(run);
+      mark = 'spirit';
+    } else if (view.campTarget === 'economy') {
+      title = 'Provisions & gathering';
+      content = economySummary(run);
+      mark = 'grain';
+    } else {
+      const kind =
+        view.campTarget === 'internal'
+          ? 'internal'
+          : view.campTarget === 'encampment'
+            ? 'encampment'
+            : undefined;
+      const branch = kind
+        ? estateBranch(run, kind, view.campInternal)
+        : campBuildingBranch(run, selectedBuilding.id);
+      const current =
+        kind === 'encampment'
+          ? tier.tier
+          : kind === 'internal'
+            ? (run.clan.estate?.internals[view.campInternal ?? ''] ?? 0)
+            : buildingLevel(run, selectedBuilding.id);
+      const node =
+        branch.nodes.find((n) => n.id === view.node) ??
+        (kind
+          ? branch.nodes[Math.min(branch.nodes.length - 1, current)]!
+          : nextCampNode(branch, run, selectedBuilding.id));
+      const max = kind ? branch.nodes.length : (selectedBuilding.maxLevel ?? 3);
+      const levelDefinition = !kind
+        ? selectedBuilding.paths.find(
+            (p) => `${selectedBuilding.id}-${p.id}` === node.id && p.level,
+          )
+        : undefined;
+      const displayedNode = levelDefinition
+        ? {
+            ...node,
+            description: `${node.description} ${effectDescriptions(levelDefinition.effects).join(' · ')}`,
+          }
+        : node;
+      title = branch.title;
+      mark = node.icon ?? 'ger';
+      const bonuses = kind
+        ? effectDescriptions(run.clan.campEffects)
+        : buildingBonuses(run, selectedBuilding.id);
+      content = `${kind === 'encampment' ? `<p class="camp-tier-tally">${slots.filter(Boolean).length} / ${tier.slots} building plots · ${Object.values(run.clan.estate?.internals ?? {}).filter((v) => v > 0).length} / ${tier.internalSlots} internal developments</p>` : ''}
+        <button class="camp-foldout-toggle" data-camp-foldout data-focus-key="camp-foldout" aria-expanded="${!!view.expanded}">${view.expanded ? 'Fold away the upgrade path' : 'Unfold levels & specialisations'}</button>
+        ${view.expanded ? campPath(branch, node, kind ? undefined : selectedBuilding.id) : ''}
+        ${campNodeDetails(displayedNode, `${kind === 'encampment' ? 'Camp tier' : 'Building level'} ${current} / ${max}`, bonuses, kind ? 'Organisation and knowledge travel with the households.' : (selectedBuilding.flavour ?? ''), !kind && !run.clan.buildings[selectedBuilding.id] ? view.campSlot : undefined)}
+        ${kind === 'encampment' ? `<details class="camp-internal-choices" data-disclosure-key="camp-internals"><summary>Internal camp developments</summary><p>These use their own allowance and never occupy a building plot.</p>${INTERNAL_DEVELOPMENTS.map((d) => `<button data-camp-internal="${d.id}" data-focus-key="internal-${d.id}">${clanMark(d.icon)}<span>${escapeHtml(d.title)}<small>Level ${run.clan.estate?.internals[d.id] ?? 0} / ${d.ranks.length}</small></span></button>`).join('')}</details>` : ''}`;
+    }
+    popup = `<section class="camp-popup${view.expanded || view.recipes ? ' camp-popup-foldout' : ''}" id="camp-inspector" aria-label="${escapeHtml(title)}" style="--popup-x:${anchor[0]! > 55 ? Math.max(2, anchor[0]! - 42) : anchor[0]! + 7}%;--popup-y:${Math.max(3, anchor[1]! - 20)}%"><header class="camp-popup-heading">${clanMark(mark)}<h3>${escapeHtml(title)}</h3><button data-camp-dismiss data-focus-key="camp-popup-close" aria-label="Close parchment popup">×</button></header><div class="camp-popup-body" data-scroll-key="camp-popup">${content}</div></section>`;
+  }
+  const plot = (id: BuildingId | null, index: number) => {
+    const [x, y] = CAMP_PLOTS[index] ?? [15 + (index % 4) * 23, 82];
+    const unlocked = index < tier.slots;
+    if (!id)
+      return `<button class="camp-site camp-empty-plot" data-camp-slot="${index}" data-focus-key="plot-${index}" data-unlocked="${unlocked}" style="--site-x:${x}%;--site-y:${y}%" aria-label="${unlocked ? 'Empty' : 'Locked'} building plot ${index + 1}"><span class="camp-site-ground" aria-hidden="true"></span><span class="camp-plot-mark">${unlocked ? '+' : '◇'}</span><span class="camp-site-label"><strong>${unlocked ? 'Choose a facility' : 'Unclaimed ground'}</strong><small>${unlocked ? 'Empty building plot' : `Camp tier ${index}`}</small></span></button>`;
+    const b = BUILDINGS.find((b) => b.id === id)!,
+      level = buildingLevel(run, id);
+    return `<button class="camp-site" data-camp-site="${id}" data-camp-plot="${index}" data-focus-key="site-${id}" data-established="true" data-level="${level}" data-match="${matches.includes(b)}" aria-pressed="${view.campPopup && view.campTarget === 'building' && selectedBuilding.id === id}" style="--site-x:${x}%;--site-y:${y}%;z-index:${Math.round(y)}" aria-label="${escapeHtml(b.title)}. Level ${level}. Inspect improvements."><span class="camp-site-ground" aria-hidden="true"></span><span class="camp-site-miniature" aria-hidden="true">${structure(id, run)}</span><span class="camp-site-label"><strong>${escapeHtml(b.title)}</strong><small>Level ${level} / ${b.maxLevel ?? 3}</small></span></button>`;
+  };
+  return `<section class="game-panel camp-estate immersive-camp" data-region="${run.clan.region}"><header class="camp-estate-heading"><div class="camp-estate-title">${clanMark('banner')}<div><p class="eyebrow">BLUE BANNER CLAN · ${escapeHtml(currentLocation(run).short)}</p><h2 id="overlay-title">Build a people.</h2></div></div><div class="camp-stores" aria-label="Camp resources">${[
+    ['grain', run.clan.food, 'Food'],
+    ['materials', run.clan.materials, 'Materials'],
+    ['spirit', run.clan.spirit, 'Spirit'],
     ['people', `${assignedWorkers(run)} / ${run.clan.population}`, 'Workers'],
-  ];
-  const inspectedBranch = {
-    ...branch,
-    nodes: branch.nodes.map((node) => ({
-      ...node,
-      forecast: developmentOutlook(run, branch.id as BuildingId, node.action.path),
-    })),
-  };
-  const site = (entry: typeof branch, index: number): string => {
-    const id = entry.id as BuildingId;
-    const [x, y] = SITES[id] ?? [15 + (index % 4) * 23, 25 + Math.floor(index / 4) * 42];
-    const established = run.clan.buildings[id] > 0;
-    const learned = run.clan.paths[id]?.length ?? 0;
-    const available = entry.nodes.some((node) => node.status === 'available');
-    const status = established ? `${learned} learned` : available ? 'Establish' : 'Unestablished';
-    return `<button class="camp-site" data-camp-site="${escapeHtml(id)}" data-focus-key="site-${escapeHtml(id)}" data-established="${established}" data-match="${matches.includes(entry)}" data-level="${learned}" aria-pressed="${entry.id === branch.id}" aria-controls="camp-inspector" aria-label="${escapeHtml(entry.title)}. ${status}. Inspect developments." style="--site-x:${x}%;--site-y:${y}%;z-index:${Math.round(y)}"><span class="camp-site-ground" aria-hidden="true"></span><span class="camp-site-miniature" aria-hidden="true">${structure(id, run)}</span><span class="camp-site-label"><strong>${escapeHtml(entry.title)}</strong><small>${established ? '◆' : '+'} ${status}${available && established ? ' · Develop' : ''}</small></span></button>`;
-  };
-  return `<section class="game-panel camp-estate" data-region="${run.clan.region}" data-expanded="${!!view.expanded}">
-    <header class="camp-estate-heading"><div class="camp-estate-title">${clanMark('banner')}<div><p class="eyebrow">BLUE BANNER CLAN · ${escapeHtml(currentLocation(run).short)}</p><h2 id="overlay-title">Build a people.</h2></div></div>${encampment(run).tier < 5 ? `<button data-estate-kind="encampment" data-estate-id="encampment-${encampment(run).tier + 1}" data-estate-rank="${encampment(run).tier + 1}">Improve encampment</button>` : ''}<div class="camp-stores" aria-label="Camp resources">${summary.map(([mark, value, label]) => `<span>${clanMark(mark!)}<span><strong>${value}</strong><small>${label}</small></span></span>`).join('')}</div><button class="panel-close" data-action="back" aria-label="Close panel" title="Close (Escape)">×</button></header>
-    <div class="camp-estate-body">
-      ${view.expanded ? `<nav class="camp-building-nav patron-navigation" aria-label="Camp buildings" data-scroll-key="camp-nav">${branches.map((entry, i) => `<div class="camp-nav-site">${site(entry, i)}</div>`).join('')}</nav>` : `<div class="camp-model" role="group" aria-label="Camp model. Select a building to inspect its developments."><div class="camp-model-caption"><p class="eyebrow">A HOME WE CARRY</p><p>Every hearth. Every craft. Your people.</p></div><div class="camp-diorama">${campScenery(run)}${branches.map(site).join('')}</div><div class="camp-model-key"><span>◆ Established</span><span>+ Building site</span><span>Select a place to develop it</span></div></div>`}
-      <aside class="camp-inspector" id="camp-inspector" aria-label="Building developments"><div class="camp-inspector-tools"><label class="tree-search-label">Find in camp<input type="search" data-tree-search data-focus-key="tree-search" placeholder="Search buildings & crafts" value="${escapeHtml(view.query)}" /></label><div class="tree-view-tools"><button data-camp-expand data-focus-key="camp-expand" aria-pressed="${!!view.expanded}">${view.expanded ? 'Show camp' : 'Expand developments'}</button><button data-tree-recipes data-focus-key="tree-recipes" aria-pressed="${!!view.recipes}">Combinations</button></div>${query ? `<p class="camp-search-result" role="status">${matches.length ? `${matches.length} matching site${matches.length === 1 ? '' : 's'}` : 'No matching sites. Clear your search to explore the camp.'}</p>` : ''}</div>
-        ${view.recipes ? `<div class="panel-body tree-scroll camp-recipes" data-scroll-key="camp-recipes">${synergyContent(run)}</div>` : `<div class="camp-tree-workspace"><div class="panel-body tree-scroll camp-development-scroll" data-scroll-key="camp-map"><details class="camp-economy" data-disclosure-key="camp-economy"><summary>Provisions & gathering</summary>${economySummary(run)}</details>${!query || matches.length ? branchMarkup(inspectedBranch, { selectedNode: view.node }) : '<p class="tree-empty">No matching crafts.</p>'}<p class="camp-carry-note">${clanMark('wagon')}Buildings and learned crafts travel with your clan.</p>${burningTempest(run) ? '<p class="tree-notice">Burning Tempest learned — Fire arrows and Wind shamans combine in every volley.</p>' : ''}</div>${!query || matches.length ? nodeInspector(inspectedBranch, selectedNode(inspectedBranch, view.node)) : ''}</div>`}
-      </aside>
-    </div>${footer()}</section>`;
+  ]
+    .map(
+      ([mark, value, label]) =>
+        `<span>${clanMark(String(mark))}<span><strong>${typeof value === 'number' ? Math.floor(value) : value}</strong><small>${label}</small></span></span>`,
+    )
+    .join(
+      '',
+    )}</div><button class="panel-close" data-action="exit-camp" aria-label="Leave camp management">×</button></header>
+    <div class="camp-model camp-scene" role="group" aria-label="Painted nomadic camp"><div class="camp-scene-tools"><label class="tree-search-label">Find in camp<input type="search" data-tree-search data-focus-key="tree-search" value="${escapeHtml(view.query)}" placeholder="Find a building or craft"/></label><button data-camp-economy data-focus-key="camp-economy">Provisions</button><button data-tree-recipes data-focus-key="tree-recipes">Combinations</button></div><div class="camp-diorama">${campScenery(run)}<button class="camp-site camp-central" data-camp-encampment data-focus-key="camp-encampment" aria-pressed="${view.campPopup && view.campTarget === 'encampment'}" aria-label="Clan Encampment. ${escapeHtml(tier.title)}. Tier ${tier.tier} of 5."><span class="camp-site-ground"></span><span class="camp-site-miniature">${prop('ger', 'camp-main-ger')}${prop('banner', 'camp-central-banner')}${Array.from({ length: tier.tier - 1 }, (_, i) => `<i class="camp-supply" style="--supply:${i}"></i>`).join('')}</span><span class="camp-site-label"><strong>${escapeHtml(tier.title)}</strong><small>Clan Encampment · Tier ${tier.tier} / 5</small></span></button>${slots.map(plot).join('')}${INTERNAL_DEVELOPMENTS.filter(
+      (d) => (run.clan.estate?.internals[d.id] ?? 0) > 0,
+    )
+      .map(
+        (d, i) =>
+          `<button class="camp-internal-marker" data-camp-internal="${d.id}" data-focus-key="marker-${d.id}" style="left:${35 + i * 6}%;top:57%" aria-label="${escapeHtml(d.title)}. Inspect internal development.">${clanMark(d.icon)}</button>`,
+      )
+      .join(
+        '',
+      )}</div>${popup}<p class="camp-scene-caption">A home we carry. Select a building or an empty plot.</p></div><footer class="panel-footer"><span class="paused-note">Ⅱ &nbsp; THE WORLD IS PAUSED</span><button class="secondary-button" data-action="exit-camp">Return to the steppe <kbd>ESC</kbd></button></footer></section>`;
 }

@@ -4,6 +4,8 @@ import { UPGRADES } from '../../src/game/data/upgrades';
 import { createRun, applyUpgrade } from '../../src/game/state/run';
 import { buildingCost, buildStructure } from '../../src/game/state/clan';
 import { synergyProgress } from '../../src/game/state/synergies';
+import { ENCAMPMENT_TIERS } from '../../src/game/data/campEstate';
+import { estateCost } from '../../src/game/state/campEstate';
 
 describe('discoverable combinations', () => {
   it('includes missing camp establishments, current discounts, workers, and exclusive ancestors', () => {
@@ -24,14 +26,40 @@ describe('discoverable combinations', () => {
       buildingCost(run, 'sanctuary', 'wind-shamans'),
       buildingCost(run, 'sanctuary', 'level-2'),
       buildingCost(run, 'sanctuary', 'level-3'),
+      buildingCost(run, 'ger', 'level-2'),
+      buildingCost(run, 'ger', 'level-3'),
+      ...ENCAMPMENT_TIERS.slice(1, 4).map((tier) => estateCost(run, tier)),
     ];
     expect(plan.price.materials).toBe(costs.reduce((sum, c) => sum + c.materials, 0));
+    expect(plan.price.spirit).toBe(costs.reduce((sum, c) => sum + c.spirit, 0));
     expect(plan.price.workers).toBe(5);
     expect(run).toEqual(before);
     expect(buildStructure(run, 'archery')).toBe(true);
     // A previously learned alternative still closes the recipe on legacy import.
     run.clan.paths.archery = ['veteran-riders'];
     expect(synergyProgress(run, recipe).closed).toBe(true);
+  });
+  it('does not charge imported camps for level gates or camp tiers introduced later', () => {
+    const run = createRun();
+    delete run.clan.estate;
+    const recipe = SYNERGIES[0]!;
+    const costs = [
+      buildingCost(run, 'archery'),
+      buildingCost(run, 'archery', 'fire-arrows'),
+      buildingCost(run, 'sanctuary'),
+      buildingCost(run, 'sanctuary', 'wind-shamans'),
+    ];
+    expect(synergyProgress(run, recipe).price.materials).toBe(
+      costs.reduce((sum, c) => sum + c.materials, 0),
+    );
+    run.clan.buildings.archery = 2;
+    run.clan.buildings.sanctuary = 2;
+    run.clan.paths.archery = ['fire-arrows'];
+    run.clan.paths.sanctuary = ['wind-shamans'];
+    expect(synergyProgress(run, recipe)).toMatchObject({
+      complete: true,
+      price: { materials: 0, spirit: 0, workers: 0 },
+    });
   });
   it('subtracts completed ranks and recognizes active combinations without another purchase', () => {
     const run = createRun();

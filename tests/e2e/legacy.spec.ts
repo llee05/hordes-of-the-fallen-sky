@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { buyNode, startExpedition } from './helpers';
+import { selectCampBuilding, closeOverlayOrPause, buyNode, startExpedition } from './helpers';
 
 test('companions acknowledge camp work and the chronicle retains the real Khan succession', async ({
   page,
@@ -8,9 +8,9 @@ test('companions acknowledge camp work and the chronicle retains the real Khan s
   await startExpedition(page);
   await page.locator('[data-story-choice="share-work"]').click();
   await page.keyboard.press('b');
-  await page.locator('[data-camp-site="archery"]').click();
+  await selectCampBuilding(page, 'archery');
   await buyNode(page, 'archery-base');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.locator('#companion-reaction')).toContainText('Saran:');
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -34,7 +34,7 @@ test('companions acknowledge camp work and the chronicle retains the real Khan s
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run.legacy))).toBe(
     before,
   );
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.evaluate(() => {
     (window as any).__gloam.scene.run.khan.successionRemaining = 0.1;
   });

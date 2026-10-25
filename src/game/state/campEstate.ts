@@ -88,10 +88,8 @@ export function estateBuildingBlocker(
     if (!available.includes(null))
       return 'No building slots available — improve the Clan Encampment';
   }
-  if (
-    estateAssignedWorkers(run) + (path === undefined ? b.workers : (node?.workers ?? 0)) >
-    run.clan.population
-  )
+  const workers = path === undefined ? b.workers : (node?.workers ?? 0);
+  if (workers > 0 && estateAssignedWorkers(run) + workers > run.clan.population)
     return 'More families needed';
   return undefined;
 }
@@ -143,7 +141,7 @@ export function estateBlocker(
       encampment(run).internalSlots
   )
     return 'No internal development slots available';
-  if (estateAssignedWorkers(run) + node.workers > run.clan.population)
+  if (node.workers > 0 && estateAssignedWorkers(run) + node.workers > run.clan.population)
     return 'More families needed';
   const cost = estateCost(run, node);
   if (run.clan.materials < cost.materials || run.clan.spirit < cost.spirit)

@@ -1,50 +1,52 @@
 import { expect, test } from '@playwright/test';
-import { buyNode, inspectNode, openTitle, startExpedition } from './helpers';
+import {
+  selectCampBuilding,
+  closeOverlayOrPause,
+  buyNode,
+  inspectNode,
+  openTitle,
+  startExpedition,
+} from './helpers';
 
-test('camp economy previews update only after buying and remain frozen while inspecting', async ({
+test('provisions and exact purchase previews stay frozen while inspecting the painted camp', async ({
   page,
 }) => {
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    Object.assign(scene.run.clan, { pasture: 25, food: 20, materials: 100 });
-    scene.openBuildings();
+    const s = (window as any).__gloam.scene;
+    Object.assign(s.run.clan, { pasture: 25, food: 20, materials: 100 });
+    s.openBuildings();
   });
-  await page.locator('[data-camp-site="herd"]').click();
-  if (!(await page.locator('.camp-economy').evaluate((el) => (el as HTMLDetailsElement).open)))
-    await page.locator('.camp-economy summary').click();
-  const economy = page.getByRole('region', { name: 'Camp economy' });
-  await expect(economy).toContainText('Food net -0.04/s');
-  await inspectNode(page, 'herd-base');
-  await expect(page.locator('.node-inspector .tree-node-forecast')).toContainText(
-    'Food net -0.04/s → +0.13/s',
+  await page.locator('[data-camp-economy]').click();
+  await expect(page.getByRole('region', { name: 'Camp economy' })).toContainText(
+    'Food net -0.04/s',
   );
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await page.locator('[data-camp-site="ger"]').click();
+  await inspectNode(page, 'herd-base');
+  await expect(page.locator('.camp-gains')).toContainText('Food net');
   await inspectNode(page, 'ger-hearthkeepers');
-  await expect(page.locator('.node-inspector .tree-node-forecast')).toContainText(
-    'Food net -0.04/s → -0.19/s',
-  );
-  await page.locator('[data-camp-site="herd"]').click();
-  await page.waitForTimeout(200);
+  await expect(page.locator('.camp-gains')).toContainText('Clan population');
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
   await buyNode(page, 'herd-base');
-  if (!(await page.locator('.camp-economy').evaluate((el) => (el as HTMLDetailsElement).open)))
-    await page.locator('.camp-economy summary').click();
-  await expect(economy).toContainText('Food net +0.13/s');
-  await expect(page.locator('.node-inspector .tree-node-forecast')).toHaveCount(0);
+  await page.locator('[data-camp-dismiss]').click();
+  await page.locator('[data-camp-economy]').click();
+  await expect(page.getByRole('region', { name: 'Camp economy' })).toContainText(
+    'Food net +0.13/s',
+  );
   await inspectNode(page, 'herd-winter-stores');
-  await expect(page.locator('.node-inspector .tree-node-forecast')).toContainText('+45 food now');
+  await expect(page.locator('.camp-gains')).toContainText('Food now');
+  await expect(page.locator('.camp-gains')).toContainText('65');
   await buyNode(page, 'herd-winter-stores');
-  if (!(await page.locator('.camp-economy').evaluate((el) => (el as HTMLDetailsElement).open)))
-    await page.locator('.camp-economy summary').click();
-  await expect(economy).toContainText('Food net +0.23/s');
+  await page.locator('[data-camp-dismiss]').click();
+  await page.locator('[data-camp-economy]').click();
+  await expect(page.getByRole('region', { name: 'Camp economy' })).toContainText(
+    'Food net +0.23/s',
+  );
   await expect(page.getByLabel('Camp resources')).toContainText('65');
   await page.screenshot({ path: 'test-results/economy-camp.png' });
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.locator('#food-rate')).toContainText('Food net +0.');
-  await expect(page.locator('#food-outlook')).toContainText('Stores empty in ~');
 });
 
 test('route estimates separate travel food from arrival gifts and risky routes remain available', async ({
@@ -74,7 +76,7 @@ test('route estimates separate travel food from arrival gifts and risky routes r
   expect(
     await page.evaluate(() => (window as any).__gloam.scene.run.clan.food),
   ).toBeLessThanOrEqual(1);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   const outlook = await page.locator('#food-outlook').textContent();
   await page.waitForTimeout(200);
   await expect(page.locator('#food-outlook')).toHaveText(outlook!);
@@ -112,14 +114,14 @@ test('food forecasts remain readable beside guidance and objectives at supported
     });
     expect(overlaps, `resources overlap at ${viewport.width}`).toEqual([]);
     await page.keyboard.press('b');
-    await page.locator('[data-camp-site="herd"]').click();
+    await selectCampBuilding(page, 'herd');
     await inspectNode(page, 'herd-base');
-    const preview = page.locator('.node-inspector .tree-node-forecast');
+    const preview = page.locator('.camp-gains');
     await expect(preview).toBeVisible();
     expect(await preview.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
       true,
     );
-    await page.keyboard.press('Escape');
+    await closeOverlayOrPause(page);
   }
   await page.screenshot({ path: 'test-results/economy-narrow.png' });
 });

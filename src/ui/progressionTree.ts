@@ -54,6 +54,11 @@ export interface TreeViewState {
   overview?: boolean;
   recipes?: boolean;
   expanded?: boolean;
+  campPopup?: boolean;
+  campTarget?: 'building' | 'encampment' | 'internal' | 'slot' | 'search' | 'economy';
+  campSlot?: number;
+  campInternal?: string;
+  campFocus?: string;
 }
 export function escapeHtml(value: string): string {
   return value.replace(

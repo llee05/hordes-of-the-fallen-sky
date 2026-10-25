@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { buyNode, startExpedition, tapController } from './helpers';
+import {
+  selectCampBuilding,
+  closeOverlayOrPause,
+  buyNode,
+  startExpedition,
+  tapController,
+} from './helpers';
 
 async function beginStory(page: Page): Promise<void> {
   await page.goto('/?terrain=2d');
@@ -62,9 +68,9 @@ test('complete the two acts, all eight choices, three crossings, and a survivor-
   await choose(page, 'share-work');
   // Actual construction and specialization remain available throughout the campaign.
   await page.keyboard.press('b');
-  await page.locator('[data-camp-site="archery"]').click();
+  await selectCampBuilding(page, 'archery');
   await buyNode(page, 'archery-base');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await campTime(page, 45);
   await expect(page.getByRole('heading', { name: 'More mouths, more hands.' })).toBeVisible();
   await choose(page, 'pack-food');
@@ -106,13 +112,13 @@ test('complete the two acts, all eight choices, three crossings, and a survivor-
   await expect(page.locator('.story-memory')).toHaveCount(8);
   await page.locator('.story-memory summary').first().click();
   await expect(page.locator('.story-memory').first()).toContainText('Share the work');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'won');
   expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
     true,
   );
   await page.getByRole('button', { name: 'Read the epilogue' }).click();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: /RAISE THE BANNERS AGAIN/ }).click();
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.story.records.length)).toBe(0);
@@ -141,15 +147,15 @@ test('story cannot grant twice, and banked knowledge points survive a camp conve
   await buyNode(page, 'power');
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'upgrade');
   await buyNode(page, 'power');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await page.keyboard.press('j');
   await page.getByRole('tab', { name: 'Our story' }).click();
   await expect(page.locator('.story-memory')).toHaveCount(1);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.evaluate(() => (window as any).__gloam.scene.finish('dead'));
   await page.getByRole('button', { name: 'Our remembered road' }).click();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'dead');
   expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
     true,
@@ -173,14 +179,14 @@ test('camp panels fit desktop and narrow previews, skip neutrally, and freeze al
     expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
     await expect(page.getByRole('button', { name: /Continue without choosing/ })).toBeVisible();
   }
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.story.records[0].status)).toBe(
     'skipped',
   );
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   // A remnant scene must not offer work to companions whose survival is unknown.
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.evaluate(() => {
     const run = (window as any).__gloam.scene.run;
@@ -192,8 +198,8 @@ test('camp panels fit desktop and narrow previews, skip neutrally, and freeze al
   await expect(page.locator('.story-body')).toContainText('1 survivor remains');
   await expect(page.locator('.story-body')).not.toContainText(/Saran|Nara|Erden|Boro/);
   await page.screenshot({ path: 'test-results/story-remnant.png' });
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Our remembered road' }).click();
   await page.emulateMedia({ reducedMotion: 'reduce' });
   expect(
@@ -201,7 +207,7 @@ test('camp panels fit desktop and narrow previews, skip neutrally, and freeze al
       .locator('.game-panel')
       .evaluate((panel) => panel.getAnimations({ subtree: true }).length),
   ).toBe(0);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'paused');
 });
 

@@ -7,9 +7,17 @@ export async function openTitle(page: Page): Promise<void> {
 }
 
 /** Start through the real New Game and prologue actions, leaving camp-scene preferences intact. */
-export async function startExpedition(page: Page): Promise<void> {
+export async function startExpedition(
+  page: Page,
+  options: { legacyCamp?: boolean } = {},
+): Promise<void> {
   await page.getByRole('button', { name: /NEW GAME/ }).click();
   await page.getByRole('button', { name: /Skip intro/ }).click();
+  // Existing simulation contracts include pre-estate camps; the estate suite uses fresh rules.
+  if (options.legacyCamp !== false)
+    await page.evaluate(() => {
+      delete (window as any).__gloam.scene.run.clan.estate;
+    });
 }
 
 /** A synthetic tap must span a sampled press and release, even on a slow render frame. */
@@ -50,11 +58,18 @@ export async function tapController(
 
 /** Browse the authored branch, then inspect a node without spending anything. */
 export async function inspectNode(page: Page, id: string): Promise<void> {
-  if (!(await page.locator(`[data-node="${id}"]`).count())) {
-    const patron = page.locator(`[data-tree-branch-select][data-nodes~="${id}"]`);
-    if (await patron.count()) await patron.click();
-    else await page.locator(`[data-camp-site="${id.split('-')[0]}"]`).click();
+  if (await page.locator('.immersive-camp').count()) {
+    const building = id.split('-')[0]!;
+    await selectCampBuilding(page, building);
+    const node = page.locator(`[data-node="${id}"]`);
+    const craft = page.locator('.camp-crafts');
+    if (await node.evaluate((el) => !!el.closest('details:not([open])')))
+      await craft.locator('summary').click();
+    await node.click();
+    return;
   }
+  if (!(await page.locator(`[data-node="${id}"]`).count()))
+    await page.locator(`[data-tree-branch-select][data-nodes~="${id}"]`).click();
   await page.locator(`[data-node="${id}"]`).click();
 }
 
@@ -62,4 +77,25 @@ export async function inspectNode(page: Page, id: string): Promise<void> {
 export async function buyNode(page: Page, id: string): Promise<void> {
   await inspectNode(page, id);
   await page.locator('.tree-purchase').click();
+}
+
+/** Select through the painted scene, using search for an as-yet unbuilt facility. */
+export async function selectCampBuilding(page: Page, id: string, unfold = true): Promise<void> {
+  if (await page.locator('[data-camp-dismiss]').count())
+    await page.locator('[data-camp-dismiss]').click();
+  if (!(await page.locator(`[data-camp-site="${id}"]`).count()))
+    await page.getByRole('searchbox', { name: 'Find in camp' }).fill(id);
+  await page.locator(`[data-camp-site="${id}"]`).click();
+  if (
+    unfold &&
+    (await page.locator('[data-camp-foldout]').getAttribute('aria-expanded')) === 'false'
+  )
+    await page.locator('[data-camp-foldout]').click();
+}
+
+/** Root camp management has its own exit; Escape first dismisses the anchored parchment. */
+export async function closeOverlayOrPause(page: Page): Promise<void> {
+  if (await page.locator('.immersive-camp').isVisible())
+    await page.locator('[data-action="exit-camp"]').first().click();
+  else await page.keyboard.press('Escape');
 }

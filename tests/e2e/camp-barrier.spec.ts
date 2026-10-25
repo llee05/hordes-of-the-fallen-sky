@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { buyNode, openTitle, startExpedition } from './helpers';
+import {
+  selectCampBuilding,
+  closeOverlayOrPause,
+  buyNode,
+  openTitle,
+  startExpedition,
+} from './helpers';
 
 async function barrierState(page: Page) {
   return page.evaluate(() => {
@@ -68,7 +74,7 @@ test('wooden hurdles receive local melee and missile impacts, with feedback froz
   expect(struck[0]!.x).toBeGreaterThan(2600 + 100);
   await page.waitForTimeout(250);
   expect(await barrierState(page)).toEqual(frozen);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect
     .poll(async () => (await barrierState(page)).pieces.every((piece) => piece.impact === 0))
     .toBe(true);
@@ -96,10 +102,10 @@ test('the barricade encloses new crafts and households while both attack and war
   });
   await expect.poll(async () => (await barrierState(page)).radius).toBeGreaterThan(108);
   await page.keyboard.press('b');
-  await page.locator('[data-camp-site="felt"]').click();
+  await selectCampBuilding(page, 'felt');
   await buyNode(page, 'felt-base');
   await expect(page.locator('[data-node="felt-base"]')).toHaveAttribute('data-status', 'learned');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   const expanded = await barrierState(page);
   expect(expanded.radius).toBe(200);
   expect(expanded.pieces).toHaveLength(48);
@@ -160,11 +166,11 @@ test('the same bounded barrier follows the caravan, freezes, redeploys on arriva
       return (window as any).frontAttacker.x - scene.camp.x;
     }),
   ).toBeCloseTo(119);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   const frozen = await barrierState(page);
   await page.waitForTimeout(200);
   expect(await barrierState(page)).toEqual(frozen);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.screenshot({ path: 'test-results/caravan-barrier.png' });
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -189,7 +195,7 @@ test('the same bounded barrier follows the caravan, freezes, redeploys on arriva
     expect(Math.abs(piece.x - 2600)).toBeLessThanOrEqual(arrived.radius);
     expect(Math.abs(piece.y - 2600)).toBeLessThanOrEqual(arrived.radius);
   }
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Start a new run' }).click();
   await startExpedition(page);
   const restarted = await barrierState(page);

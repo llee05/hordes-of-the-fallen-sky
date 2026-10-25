@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { buyNode, startExpedition, openTitle, tapController } from './helpers';
+import {
+  selectCampBuilding,
+  closeOverlayOrPause,
+  buyNode,
+  startExpedition,
+  openTitle,
+  tapController,
+} from './helpers';
 
 test('controller starts a run, moves, dashes, pauses, and navigates menus', async ({ page }) => {
   await page.addInitScript(() => {
@@ -58,7 +65,7 @@ test('starts, moves, dashes, pauses, resumes, and resets a run', async ({ page }
   await page.getByRole('button', { name: /NEW GAME/ }).focus();
   await page.keyboard.press('Space');
   await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('dialog')).toBeHidden();
   const before = await page.evaluate(() => (window as any).__gloam.scene.player.x);
   await page.keyboard.down('d');
@@ -71,14 +78,14 @@ test('starts, moves, dashes, pauses, resumes, and resets a run', async ({ page }
   }
   await page.keyboard.press('Space');
   await expect(page.locator('#dash-label')).toContainText('RECHARGING');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
   const pausedTime = await page.evaluate(() => (window as any).__gloam.scene.run.elapsed);
   await page.waitForTimeout(400);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.elapsed)).toBe(pausedTime);
   await page.getByRole('button', { name: /RETURN TO THE STEPPE/ }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Start a new run' }).click();
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await expect(page.locator('#timer')).toHaveText('00:00');
@@ -118,7 +125,7 @@ test('automatic attacks defeat enemies and collected XP banks research without i
   await page.screenshot({ path: 'test-results/desktop-upgrade.png', fullPage: true });
   await buyNode(page, 'power');
   await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#blessing-count')).toHaveText('1');
   await expect(page.locator('#level')).toHaveText('02');
@@ -215,10 +222,10 @@ test('camp planning spends resources, unlocks riders and builds the Burning Temp
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
-  await page.locator('[data-camp-site="archery"]').click();
+  await selectCampBuilding(page, 'archery');
   await buyNode(page, 'archery-base');
   await buyNode(page, 'archery-fire-arrows');
-  await page.locator('[data-camp-site="sanctuary"]').click();
+  await selectCampBuilding(page, 'sanctuary');
   await buyNode(page, 'sanctuary-base');
   await buyNode(page, 'sanctuary-wind-shamans');
   await expect(page.locator('#synergy')).toBeVisible();
@@ -226,7 +233,7 @@ test('camp planning spends resources, unlocks riders and builds the Burning Temp
   await expect(page.locator('#workers')).toHaveText('5 / 8');
   await expect(page.locator('#materials')).toHaveText('190');
   await page.screenshot({ path: 'test-results/camp-development.png', fullPage: true });
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.keyboard.press('f');
   await expect(page.locator('#formation-name')).toHaveText('Encirclement');
@@ -420,20 +427,20 @@ test('desktop menus keep the battlefield edge to edge and return settings and he
   await page.getByRole('button', { name: 'How to play', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'How to play', exact: true })).toBeVisible();
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('help');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await expect(page.locator('#timer')).toHaveText('00:00');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await startExpedition(page);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('paused');
   await page.getByRole('button', { name: /RETURN TO THE STEPPE/ }).click();
@@ -475,7 +482,7 @@ test('the clan chronicle pauses the expedition, supports keyboard tabs, and open
   await page.screenshot({ path: 'test-results/clan-chronicle.png' });
   await page.getByRole('button', { name: /Develop the camp/ }).click();
   await expect(page.getByRole('heading', { name: 'Build a people.' })).toBeVisible();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.keyboard.press('j');
   await expect(page.getByRole('heading', { name: 'A people on the move.' })).toBeVisible();

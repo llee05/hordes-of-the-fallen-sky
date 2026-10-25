@@ -131,7 +131,8 @@ export function buildingBlocker(
   if (clan.stage === 'migration') return 'Unpack at the next pasture';
   if (path === undefined) {
     if (clan.buildings[id]) return 'Already established';
-    if (assignedWorkers(run) + definition.workers > clan.population) return 'More families needed';
+    if (definition.workers > 0 && assignedWorkers(run) + definition.workers > clan.population)
+      return 'More families needed';
   } else {
     const development = definition.paths.find((entry) => entry.id === path);
     if (!development) return 'Unknown development';

@@ -1,3 +1,4 @@
+import { closeOverlayOrPause } from './helpers';
 import { buyNode } from '../e2e/helpers';
 import { expect, test } from '@playwright/test';
 import { DEVELOPER_LEVELS } from '../../src/game/dev/levels';
@@ -12,7 +13,7 @@ test('developer mode freezes the expedition and returns to the exact title, intr
   const frozen = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(frozen);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await page.getByRole('button', { name: /NEW GAME/ }).click();
   await page.keyboard.press('ArrowRight');
@@ -31,22 +32,22 @@ test('developer mode freezes the expedition and returns to the exact title, intr
   await expect(page.locator('.story-panel')).toBeVisible();
   const encounter = await page.locator('#overlay-title').textContent();
   await page.keyboard.press('F8');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.locator('#overlay-title')).toHaveText(encounter!);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('dialog')).toBeHidden();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
   await page.getByRole('button', { name: 'Patron tech tree', exact: true }).click();
   await page.locator('[data-tree-search]').fill('bow');
   await page.keyboard.press('F8');
   await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'Patron tech tree', exact: true })).toBeVisible();
   await expect(page.locator('[data-tree-search]')).toHaveValue('bow');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
 });
 
@@ -179,7 +180,7 @@ test('developer outcomes leave saved records intact and a normal new game clears
   await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
   await expect(page.locator('#best')).toHaveText('— — : — —');
   await page.keyboard.press('F8');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
   await page.keyboard.press('F8');
   await page.locator('[data-developer-level="chapter:broken-pass"]').click();

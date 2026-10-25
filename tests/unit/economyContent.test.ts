@@ -73,9 +73,13 @@ describe('economy planning interfaces', () => {
       'Crossing food (route range)',
     );
     const before = structuredClone(run);
-    const html = buildingMenu(run, { category: 'all', query: '' }, 'herd');
+    const html = buildingMenu(
+      run,
+      { category: 'all', query: '', campPopup: true, campTarget: 'economy' },
+      'herd',
+    );
     expect(html).toContain('aria-label="Camp economy"');
-    expect(html).toContain('tree-node-forecast');
+    expect(html).toContain('camp-popup');
     expect(html).toContain('changing pasture');
     expect(run).toEqual(before);
   });

@@ -53,7 +53,7 @@ describe('durable portable camp records', () => {
   it('retains known legacy craft IDs, ignores removed content, and never imports contradictory choices', () => {
     const saved = captureCampArchive(createRun());
     saved.buildings.push('archery', 'removed-facility');
-    saved.paths.archery = ['fire-arrows', 'veteran-riders', 'removed-craft'];
+    saved.paths.archery = ['fire-arrows', 'veteran-riders', 'arban-drills', 'removed-craft'];
     const restored = runFromCampArchive(saved)!;
     expect(restored.clan.paths.archery).toEqual(['fire-arrows']);
     expect(restored.clan.estate?.slots).toContain('archery');

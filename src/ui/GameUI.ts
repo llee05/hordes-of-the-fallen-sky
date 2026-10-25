@@ -147,6 +147,13 @@ export class GameUI {
       }
       if (!input.matches('[data-tree-search]') || !this.lastSnapshot) return;
       this.treeView().query = input.value;
+      if (this.phase === 'building')
+        Object.assign(this.treeView(), {
+          campPopup: !!input.value.trim(),
+          campTarget: 'search',
+          recipes: false,
+          expanded: false,
+        });
       this.renderPhase(this.lastSnapshot);
     });
     if (import.meta.env.DEV)
@@ -181,6 +188,7 @@ export class GameUI {
       onHud: (snapshot) => this.update(snapshot),
       onPhase: (snapshot) => this.renderPhase(snapshot),
       onMenuInput: (action) => this.navigateMenu(action),
+      onCampBack: () => this.closeCampPopup(),
       onSaveError: () => {
         this.get('save-alert').hidden = false;
       },
@@ -529,7 +537,7 @@ export class GameUI {
     else if (run.phase === 'epilogue') this.overlay.innerHTML = epilogueMenu(run);
     else if (run.phase === 'story-log') this.overlay.innerHTML = storyLogMenu(run);
     else if (run.phase === 'ready') {
-      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu"><button class="menu-button featured" data-action="begin" data-primary>NEW GAME <span>→</span></button><button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${developer}${quit}</nav><button class="story-preference" data-action="story-mode" aria-pressed="${run.story.enabled}">Camp scenes: ${run.story.enabled ? 'On' : 'Off'}</button><p class="title-caption">Two acts. Four pastures. One people to carry through.</p></section>`;
+      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu"><button class="menu-button featured" data-action="begin" data-primary>NEW GAME <span>→</span></button>${this.platform.profile.camp ? '<button class="menu-button" data-action="continue-camp" title="Carry your saved camp and stores into a fresh expedition. Patron research and combat restart.">Continue clan camp</button>' : ''}<button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${developer}${quit}</nav><button class="story-preference" data-action="story-mode" aria-pressed="${run.story.enabled}">Camp scenes: ${run.story.enabled ? 'On' : 'Off'}</button><p class="title-caption">Two acts. Four pastures. One people to carry through.</p></section>`;
     } else if (run.phase === 'paused') {
       this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">Your people will be here when you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="research">Patron tech tree</button><button class="menu-button" data-action="restart">Start a new run</button><button class="menu-button" data-action="story-log">Our remembered road</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${developer}${quit}</nav></section>`;
     } else if (run.phase === 'building')
@@ -579,9 +587,18 @@ export class GameUI {
         (entry) => entry.dataset.focusKey === focusKey,
       );
       if (target) {
+        const popup =
+          run.phase === 'building' && this.treeView().campPopup
+            ? this.overlay.querySelector<HTMLElement>('.camp-popup')
+            : null;
+        if (popup && !(target instanceof HTMLInputElement) && !popup.contains(target)) {
+          popup.querySelector<HTMLElement>('[data-camp-dismiss]')?.focus({ preventScroll: true });
+          return;
+        }
         const fallback =
           target instanceof HTMLButtonElement && target.disabled
-            ? this.overlay.querySelector<HTMLElement>('.tree-node[aria-pressed="true"]')
+            ? (popup?.querySelector<HTMLElement>('[data-camp-dismiss]') ??
+              this.overlay.querySelector<HTMLElement>('.tree-node[aria-pressed="true"]'))
             : target;
         fallback?.focus({ preventScroll: true });
         if (target instanceof HTMLInputElement && selection !== null)
@@ -590,9 +607,18 @@ export class GameUI {
       }
     }
     this.overlay.scrollTop = 0;
+    if (run.phase === 'building' && this.treeView().campPopup) {
+      const preferred =
+        this.overlay.querySelector<HTMLElement>('.camp-popup .tree-purchase:not(:disabled)') ??
+        this.overlay.querySelector<HTMLElement>('.camp-popup [data-camp-dismiss]');
+      if (preferred) {
+        preferred.focus({ preventScroll: true });
+        return;
+      }
+    }
     this.overlay
       .querySelector<HTMLButtonElement>(
-        '[data-primary], [data-camp-site][aria-pressed="true"], [data-destination][aria-pressed="true"], .tree-node[aria-pressed="true"], [data-building]:not(:disabled), button[data-route], [role="tab"][aria-selected="true"], [data-action="sound"]',
+        '[data-primary], [data-camp-site][aria-pressed="true"], [data-destination][aria-pressed="true"], [data-camp-encampment], .tree-node[aria-pressed="true"], [data-building]:not(:disabled), button[data-route], [role="tab"][aria-selected="true"], [data-action="sound"]',
       )
       ?.focus({ preventScroll: true });
     if (!this.overlay.contains(document.activeElement))
@@ -601,11 +627,85 @@ export class GameUI {
         ?.focus({ preventScroll: true });
   }
 
+  private closeCampPopup(): boolean {
+    if (this.phase !== 'building' || !this.lastSnapshot || !this.treeView().campPopup) return false;
+    const focus =
+      this.treeView().campTarget === 'building'
+        ? `site-${this.campSelection}`
+        : this.treeView().campFocus;
+    Object.assign(this.treeView(), {
+      campPopup: false,
+      expanded: false,
+      recipes: false,
+      query: '',
+    });
+    this.renderPhase(this.lastSnapshot);
+    const anchor = [...this.overlay.querySelectorAll<HTMLElement>('[data-focus-key]')].find(
+      (el) => el.dataset.focusKey === focus,
+    );
+    (anchor ?? this.overlay.querySelector<HTMLElement>('[data-camp-encampment]'))?.focus({
+      preventScroll: true,
+    });
+    return true;
+  }
+
   private handleMenuClick(event: MouseEvent): void {
     const button = (event.target as Element).closest<HTMLButtonElement>('button');
     if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
     const action = button.dataset.action;
-    if (button.dataset.estateKind === 'encampment' || button.dataset.estateKind === 'internal') {
+    if (button.hasAttribute('data-camp-dismiss')) {
+      this.closeCampPopup();
+    } else if (action === 'exit-camp') {
+      this.scene.closeCamp();
+    } else if (button.hasAttribute('data-camp-encampment') && this.lastSnapshot) {
+      Object.assign(this.treeView(), {
+        campPopup: true,
+        campTarget: 'encampment',
+        node: undefined,
+        recipes: false,
+        expanded: false,
+        campFocus: 'camp-encampment',
+      });
+      this.renderPhase(this.lastSnapshot);
+    } else if (button.dataset.campInternal && this.lastSnapshot) {
+      Object.assign(this.treeView(), {
+        campPopup: true,
+        campTarget: 'internal',
+        campInternal: button.dataset.campInternal,
+        node: undefined,
+        recipes: false,
+        expanded: false,
+        campFocus: button.dataset.focusKey,
+      });
+      this.renderPhase(this.lastSnapshot);
+    } else if (button.dataset.campSlot !== undefined && this.lastSnapshot) {
+      Object.assign(this.treeView(), {
+        campPopup: true,
+        campTarget: 'slot',
+        campSlot: Number(button.dataset.campSlot),
+        node: undefined,
+        recipes: false,
+        expanded: false,
+        campFocus: button.dataset.focusKey,
+      });
+      this.renderPhase(this.lastSnapshot);
+    } else if (button.hasAttribute('data-camp-economy') && this.lastSnapshot) {
+      Object.assign(this.treeView(), {
+        campPopup: true,
+        campTarget: 'economy',
+        expanded: false,
+        recipes: false,
+        campFocus: button.dataset.focusKey,
+      });
+      this.renderPhase(this.lastSnapshot);
+    } else if (button.hasAttribute('data-camp-foldout') && this.lastSnapshot) {
+      this.treeView().expanded = !this.treeView().expanded;
+      this.renderPhase(this.lastSnapshot);
+    } else if (
+      button.dataset.estateKind === 'encampment' ||
+      button.dataset.estateKind === 'internal'
+    ) {
+      this.treeView().node = undefined;
       this.scene.improveEstate(
         button.dataset.estateKind,
         button.dataset.estateId!,
@@ -625,10 +725,16 @@ export class GameUI {
       if (phase === 'building') {
         this.campSelection = button.dataset.branch as BuildingId;
         view.expanded = true;
+        view.campPopup = true;
+        view.campTarget = 'building';
       }
       if (this.phase === phase) this.renderPhase(this.lastSnapshot);
       else this.scene.switchProgression(phase);
-      this.overlay.querySelector<HTMLButtonElement>('.tree-node[aria-pressed="true"]')?.focus();
+      this.overlay
+        .querySelector<HTMLButtonElement>(
+          '.tree-node[aria-pressed="true"], .camp-path-node[aria-pressed="true"]',
+        )
+        ?.focus();
     } else if (button.dataset.treeSelect && this.lastSnapshot) {
       this.treeView().node = button.dataset.treeSelect;
       this.renderPhase(this.lastSnapshot);
@@ -645,7 +751,18 @@ export class GameUI {
       Object.assign(this.treeView(), { overview: true, recipes: false });
       this.renderPhase(this.lastSnapshot);
     } else if (button.hasAttribute('data-tree-recipes') && this.lastSnapshot) {
-      Object.assign(this.treeView(), { recipes: !this.treeView().recipes, overview: false });
+      Object.assign(this.treeView(), {
+        recipes: !this.treeView().recipes,
+        overview: false,
+        ...(this.phase === 'building'
+          ? {
+              campPopup: true,
+              campTarget: 'building',
+              expanded: true,
+              campFocus: button.dataset.focusKey,
+            }
+          : {}),
+      });
       this.renderPhase(this.lastSnapshot);
     } else if (button.hasAttribute('data-camp-expand') && this.lastSnapshot) {
       this.treeView().expanded = !this.treeView().expanded;
@@ -654,9 +771,16 @@ export class GameUI {
       this.campSelection = button.dataset.campSite as BuildingId;
       this.treeView().query = '';
       this.treeView().node = undefined;
-      this.treeView().recipes = false;
+      Object.assign(this.treeView(), {
+        campPopup: true,
+        campTarget: 'building',
+        expanded: false,
+        recipes: false,
+        campSlot:
+          button.dataset.campPlot === undefined ? undefined : Number(button.dataset.campPlot),
+        campFocus: button.dataset.focusKey,
+      });
       this.renderPhase(this.lastSnapshot);
-      this.overlay.querySelector('.tree-scroll')!.scrollTop = 0;
     } else if (button.dataset.destination && this.lastSnapshot && this.phase === 'route') {
       this.destinationSelection = button.dataset.destination;
       this.renderPhase(this.lastSnapshot);
@@ -682,6 +806,7 @@ export class GameUI {
     else if (import.meta.env.DEV && button.dataset.developerLevel)
       this.scene.startDeveloperLevel(button.dataset.developerLevel);
     else if (action === 'begin') this.scene.startRun();
+    else if (action === 'continue-camp') this.scene.continueCamp();
     else if (action === 'guidance') this.scene.toggleGuidance();
     else if (action === 'resume') this.scene.togglePause();
     else if (action === 'restart') this.scene.restart();
@@ -703,13 +828,14 @@ export class GameUI {
           .catch(() => undefined);
     } else if (button.dataset.research)
       this.scene.research(button.dataset.research, Number(button.dataset.rank));
-    else if (button.dataset.building)
+    else if (button.dataset.building) {
+      this.treeView().node = undefined;
       this.scene.construct(
         button.dataset.building as BuildingId,
         button.dataset.path,
         button.dataset.slot === undefined ? undefined : Number(button.dataset.slot),
       );
-    else if (button.dataset.route)
+    } else if (button.dataset.route)
       this.scene.chooseRoute(button.dataset.route, this.destinationSelection);
     else if (button.dataset.tab) this.selectJournalTab(button.dataset.tab as JournalTab);
   }
@@ -738,8 +864,12 @@ export class GameUI {
   }
 
   private menuButtons(): HTMLElement[] {
+    const scope =
+      this.phase === 'building' && this.treeView().campPopup
+        ? (this.overlay.querySelector('.camp-popup') ?? this.overlay)
+        : this.overlay;
     return [
-      ...this.overlay.querySelectorAll<HTMLElement>(
+      ...scope.querySelectorAll<HTMLElement>(
         'button:not(:disabled), summary, input:not(:disabled)',
       ),
     ].filter((el) => el.getClientRects().length > 0);
@@ -805,7 +935,14 @@ export class GameUI {
     const buttons = this.menuButtons().filter((entry) => entry.tabIndex >= 0);
     const first = buttons[0];
     const last = buttons.at(-1);
-    if (event.shiftKey && document.activeElement === first) {
+    if (
+      this.phase === 'building' &&
+      this.treeView().campPopup &&
+      !buttons.some((entry) => entry === document.activeElement)
+    ) {
+      event.preventDefault();
+      (event.shiftKey ? last : first)?.focus();
+    } else if (event.shiftKey && document.activeElement === first) {
       event.preventDefault();
       last?.focus();
     } else if (!event.shiftKey && document.activeElement === last) {

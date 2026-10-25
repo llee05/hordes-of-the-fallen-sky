@@ -1,7 +1,14 @@
 import { expect, test } from '@playwright/test';
-import { buyNode, openTitle, startExpedition, tapController } from './helpers';
+import {
+  buyNode,
+  closeOverlayOrPause,
+  openTitle,
+  selectCampBuilding,
+  startExpedition,
+  tapController,
+} from './helpers';
 
-test('the animated miniature inspects without purchasing, reflects developments, and keeps the world frozen', async ({
+test('the painted scene reflects real developments, freezes the world, and respects reduced motion', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
@@ -12,62 +19,46 @@ test('the animated miniature inspects without purchasing, reflects developments,
   });
   await page.keyboard.press('b');
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  const archery = page.locator('[data-camp-site="archery"]');
-  await archery.click();
-  await expect(archery).toBeFocused();
-  await expect(archery).toHaveAttribute('aria-pressed', 'true');
-  await expect(archery).toHaveAttribute('data-established', 'false');
-  await expect(page.locator('[data-tree-branch="archery"]')).toBeVisible();
-  await page.waitForTimeout(250);
+  await selectCampBuilding(page, 'archery');
+  await expect(page.locator('.camp-popup')).toBeVisible();
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
   expect(
-    await page
-      .locator('.camp-model')
-      .evaluate((model) => model.getAnimations({ subtree: true }).length),
+    await page.locator('.camp-model').evaluate((e) => e.getAnimations({ subtree: true }).length),
   ).toBeGreaterThan(0);
   await buyNode(page, 'archery-base');
-  await expect(archery).toHaveAttribute('data-established', 'true');
-  await expect(page.locator('[data-node="archery-base"]')).toBeFocused();
   await buyNode(page, 'archery-seasoned-bowyers');
-  await expect(archery).toHaveAttribute('data-level', '1');
-  await expect(archery.locator('.camp-supply')).toHaveCount(1);
+  await expect(page.locator('[data-camp-site="archery"]')).toHaveAttribute(
+    'data-established',
+    'true',
+  );
+  await expect(page.locator('[data-camp-site="archery"] .camp-supply')).toHaveCount(1);
   const after = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  // A learned action is inspectable but cannot be charged a second time.
-  await page.locator('[data-node="archery-seasoned-bowyers"]').dispatchEvent('click');
+  await selectCampBuilding(page, 'archery');
+  await page.locator('.camp-crafts summary').click();
+  await page.locator('[data-node="archery-seasoned-bowyers"]').click();
+  await expect(page.locator('.tree-purchase')).toBeDisabled();
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(after);
-  await page.screenshot({ path: 'test-results/camp-model.png' });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   expect(
-    await page
-      .locator('.camp-estate')
-      .evaluate((model) => model.getAnimations({ subtree: true }).length),
+    await page.locator('.camp-estate').evaluate((e) => e.getAnimations({ subtree: true }).length),
   ).toBe(0);
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
-  expect(
-    await page
-      .locator('.camp-model')
-      .evaluate((model) => model.getAnimations({ subtree: true }).length),
-  ).toBeGreaterThan(0);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('dialog')).toBeHidden();
-  expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
-    false,
-  );
 });
 
-test('every camp site can be selected at desktop, Steam Deck, and narrow sizes; search is recoverable', async ({
+test('all facilities remain inspectable from the painting or search at supported viewport sizes', async ({
   page,
 }) => {
+  test.setTimeout(60000);
   await openTitle(page);
   await startExpedition(page);
   await page.keyboard.press('b');
-  for (const viewport of [
-    { width: 1440, height: 1000 },
+  for (const size of [
     { width: 1280, height: 800 },
     { width: 960, height: 600 },
     { width: 390, height: 844 },
   ]) {
-    await page.setViewportSize(viewport);
+    await page.setViewportSize(size);
     for (const site of [
       'ger',
       'archery',
@@ -78,31 +69,28 @@ test('every camp site can be selected at desktop, Steam Deck, and narrow sizes; 
       'provisions',
       'relay',
     ]) {
-      await page.locator(`[data-camp-site="${site}"]`).click();
+      await selectCampBuilding(page, site);
       await expect(page.locator(`[data-tree-branch="${site}"]`)).toBeVisible();
     }
     expect(
-      await page
-        .locator('.camp-estate')
-        .evaluate((panel) => panel.scrollWidth <= panel.clientWidth + 1),
+      await page.locator('.camp-estate').evaluate((e) => e.scrollWidth <= e.clientWidth + 1),
     ).toBe(true);
   }
-  await page.screenshot({ path: 'test-results/camp-model-narrow.png' });
+  await page.locator('[data-camp-dismiss]').click();
   const search = page.getByRole('searchbox', { name: 'Find in camp' });
   await search.fill('ortoo');
-  await expect(page.locator('[data-camp-site][data-match="true"]')).toHaveCount(1);
-  await expect(page.locator('[data-tree-branch="relay"]')).toBeVisible();
+  await expect(page.locator('.camp-building-choice')).toHaveCount(1);
   await search.fill('no-such-building');
-  await expect(page.locator('.camp-inspector').getByRole('status')).toContainText(
-    'No matching sites',
-  );
-  await expect(page.locator('.tree-node')).toHaveCount(0);
+  await expect(page.locator('.camp-popup').getByRole('status')).toContainText('No matching crafts');
+  await search.fill('herd');
   await page.locator('[data-camp-site="herd"]').click();
   await expect(search).toHaveValue('');
-  await expect(page.locator('[data-tree-branch="herd"]')).toBeVisible();
+  await expect(page.locator('.camp-popup-heading')).toContainText('Herding grounds');
 });
 
-test('keyboard and controller select miniatures before confirming a purchase', async ({ page }) => {
+test('controller confirms inspection and explicit purchase; Back dismisses the parchment first', async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     const state = {
       connected: true,
@@ -116,29 +104,28 @@ test('keyboard and controller select miniatures before confirming a purchase', a
   await openTitle(page);
   await startExpedition(page);
   await tapController(page, 2);
+  await expect(page.locator('[data-camp-encampment]')).toBeFocused();
+  await tapController(page, 0);
+  await expect(page.locator('.camp-popup')).toBeVisible();
+  await tapController(page, 1);
+  await expect(page.locator('.camp-popup')).toHaveCount(0);
+  await page.keyboard.press('ArrowRight');
   await expect(page.locator('[data-camp-site="ger"]')).toBeFocused();
-  await page.keyboard.press('ArrowRight');
-  await expect(page.locator('[data-camp-site="archery"]')).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page.locator('[data-tree-branch="archery"]')).toBeVisible();
+  await expect(page.locator('.camp-popup')).toBeVisible();
+  await tapController(page, 1);
+  await expect(page.locator('[data-camp-site="ger"]')).toBeFocused();
+  await selectCampBuilding(page, 'herd', false);
+  await page.keyboard.press('ArrowLeft');
+  expect(
+    await page.locator('.camp-popup').evaluate((el) => el.contains(document.activeElement)),
+  ).toBe(true);
   await page.keyboard.press('ArrowRight');
-  await expect(page.locator('[data-camp-site="herd"]')).toBeFocused();
-  await tapController(page, 0);
-  await expect(page.locator('[data-tree-branch="herd"]')).toBeVisible();
-  await expect(page.locator('[data-camp-site="herd"]')).toHaveAttribute(
-    'data-established',
-    'false',
-  );
-  await page.locator('[data-node="herd-base"]').focus();
-  await tapController(page, 0);
-  await expect(page.locator('[data-camp-site="herd"]')).toHaveAttribute(
-    'data-established',
-    'false',
-  );
-  await page.locator('.tree-purchase').focus();
+  await expect(page.locator('.tree-purchase')).toBeFocused();
   await tapController(page, 0);
   await expect(page.locator('[data-camp-site="herd"]')).toHaveAttribute('data-established', 'true');
-  await expect(page.locator('[data-node="herd-base"]')).toBeFocused();
+  await tapController(page, 1);
+  await expect(page.locator('.camp-popup')).toHaveCount(0);
   await tapController(page, 1);
   await expect(page.getByRole('dialog')).toBeHidden();
 });

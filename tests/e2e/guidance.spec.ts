@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { buyNode, openTitle, startExpedition } from './helpers';
+import {
+  selectCampBuilding,
+  closeOverlayOrPause,
+  buyNode,
+  openTitle,
+  startExpedition,
+} from './helpers';
 
 test('guidance follows riding, camp purchases, knowledge, formations, and the first crossing', async ({
   page,
@@ -13,10 +19,10 @@ test('guidance follows riding, camp purchases, knowledge, formations, and the fi
   await page.keyboard.up('d');
   await guide.getByRole('button', { name: /Develop camp/ }).click();
   const frozen = await page.evaluate(() => (window as any).__gloam.scene.run.elapsed);
-  await page.locator('[data-camp-site="archery"]').click();
+  await selectCampBuilding(page, 'archery');
   await buyNode(page, 'archery-base');
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.elapsed)).toBe(frozen);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(guide).toContainText('Gather what the fallen leave');
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -28,7 +34,7 @@ test('guidance follows riding, camp purchases, knowledge, formations, and the fi
   await expect(guide).toContainText('Put knowledge to work');
   await guide.getByRole('button', { name: /Patron tree/ }).click();
   await buyNode(page, 'power');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(guide).toContainText('Give the riders a purpose');
   await guide.getByRole('button', { name: /Change formation/ }).click();
   await page.evaluate(() => {
@@ -56,15 +62,15 @@ test('tips can be hidden and restored while danger warnings remain visible', asy
     run.clan.routeId = 'river';
   });
   await expect(page.locator('#clan-warning')).toContainText('Starvation');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'How to play' }).click();
   await page.getByRole('button', { name: 'Show guidance' }).click();
   await expect(page.getByRole('button', { name: 'Hide guidance' })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
+  await closeOverlayOrPause(page);
   await expect(page.locator('#field-guide')).toBeVisible();
   await page.screenshot({ path: 'test-results/first-crossing-guidance.png' });
 });

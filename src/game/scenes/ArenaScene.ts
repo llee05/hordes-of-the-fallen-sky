@@ -39,6 +39,7 @@ import {
 } from '../state/clan';
 import { UPGRADES } from '../data/upgrades';
 import { Enemy, Gem, Projectile } from '../entities/actors';
+import { captureCampArchive, runFromCampArchive } from '../state/campArchive';
 import { purchaseEstate, type EstatePurchaseKind } from '../state/campEstate';
 import { applyUpgrade, createRun, gainExperience, redeemMasteredResearch } from '../state/run';
 import {
@@ -64,6 +65,7 @@ export interface ArenaCallbacks {
   onPhase: (snapshot: HudSnapshot) => void;
   onMenuInput: (action: 'next' | 'previous' | 'confirm') => void;
   onSaveError: () => void;
+  onCampBack?: () => boolean;
 }
 
 export class ArenaScene extends Phaser.Scene {
@@ -422,6 +424,28 @@ export class ArenaScene extends Phaser.Scene {
     } else this.publishPhase();
   }
 
+  continueCamp(): void {
+    if (this.run.phase !== 'ready') return;
+    const restored = runFromCampArchive(this.platform.profile.camp);
+    if (!restored) return;
+    this.run = restored;
+    this.run.story.enabled = this.storiesEnabled;
+    this.run.guidance.enabled = this.guidanceEnabled;
+    this.developerRun = false;
+    if (import.meta.env.DEV)
+      this.developerTools = createDeveloperTools(this.platform.profile.developerCommandHistory);
+    this.refreshCamp();
+    this.audio.unlock();
+    this.beginExpedition();
+  }
+
+  private saveCamp(): void {
+    if (this.developerRun) return;
+    void this.platform
+      .saveCamp(captureCampArchive(this.run))
+      .catch(() => this.callbacks?.onSaveError());
+  }
+
   startRun(): void {
     if (this.run.phase !== 'ready') return;
     this.audio.unlock();
@@ -610,7 +634,14 @@ export class ArenaScene extends Phaser.Scene {
     else if (this.run.phase === 'route') this.closePlanning();
   }
 
+  closeCamp(): void {
+    if (this.run.phase !== 'building') return;
+    this.callbacks?.onCampBack?.();
+    this.closePlanning();
+  }
+
   closePlanning(): void {
+    if (this.run.phase === 'building' && this.callbacks?.onCampBack?.()) return;
     if (['upgrade', 'building'].includes(this.run.phase) && this.progressionStack.length) {
       this.setPhase(this.progressionStack.pop()!);
       return;
@@ -667,6 +698,7 @@ export class ArenaScene extends Phaser.Scene {
 
   improveEstate(kind: EstatePurchaseKind, id: string, rank: number): void {
     if (!purchaseEstate(this.run, kind, id, rank)) return;
+    this.saveCamp();
     this.refreshCamp();
     this.audio.play('build');
     this.publishPhase();
@@ -675,6 +707,7 @@ export class ArenaScene extends Phaser.Scene {
   construct(id: BuildingId, path?: string, slot?: number): void {
     const previousCooldown = gallopCooldown(this.run);
     if (!buildStructure(this.run, id, path, slot)) return;
+    this.saveCamp();
     this.dashTimer *= gallopCooldown(this.run) / previousCooldown;
     this.refreshCamp();
     this.audio.play('build');
@@ -1883,6 +1916,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private arrive(): void {
+    this.saveCamp();
     const center = GAME.worldSize / 2;
     // Each crossing leads to a new handcrafted arena; structures travel with the clan.
     this.clanLife.relocate();

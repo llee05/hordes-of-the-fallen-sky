@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { startExpedition, openTitle } from './helpers';
+import { closeOverlayOrPause, startExpedition, openTitle } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await openTitle(page);
@@ -54,7 +54,7 @@ test('mounted gaits and bow release animate without changing collision geometry'
     expect(Math.abs(sample.centerX)).toBeLessThan(0.1);
     expect(Math.abs(sample.centerY)).toBeLessThan(0.1);
   }
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   const paused = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     return { frame: scene.player.frame.name, x: scene.player.x, y: scene.player.y };
@@ -66,7 +66,7 @@ test('mounted gaits and bow release animate without changing collision geometry'
       return { frame: scene.player.frame.name, x: scene.player.x, y: scene.player.y };
     }),
   ).toEqual(paused);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.spawnTimer = 999;
@@ -193,7 +193,7 @@ test('defeat sprites stay bounded, pause, and preserve immediate body removal, X
       return { alpha: echo.alpha, y: echo.y, scale: echo.scaleY };
     }),
   ).toEqual(result.echo);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.defeats.images.countActive(true)))
     .toBe(0);

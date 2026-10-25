@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition, tapController } from './helpers';
+import { closeOverlayOrPause, openTitle, startExpedition, tapController } from './helpers';
 
 // Keep the full input/layout checks within budget on software-rendered Chromium.
 test.beforeEach(() => test.setTimeout(60000));
@@ -73,7 +73,7 @@ test('menus ignore zoom input and search remains editable; the chosen view survi
     Object.assign(window, { ignoredZoomEvent: event });
     (window as any).__gloam.scene.input.keyboard.emit('keydown-PLUS', event);
   });
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   // Phaser may replay the same event after a menu closes; it must remain ignored.
   await page.evaluate(() => {
     (window as any).__gloam.scene.input.keyboard.emit(
@@ -82,7 +82,7 @@ test('menus ignore zoom input and search remains editable; the chosen view survi
     );
   });
   await expect(page.locator('#zoom-level')).toHaveText('90%');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Start a new run' }).click();
   await startExpedition(page);
   await expect(page.locator('#zoom-level')).toHaveText('90%');

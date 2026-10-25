@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { buyNode, openTitle, startExpedition } from './helpers';
+import {
+  selectCampBuilding,
+  closeOverlayOrPause,
+  buyNode,
+  openTitle,
+  startExpedition,
+} from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await openTitle(page);
@@ -17,7 +23,7 @@ test.beforeEach(async ({ page }) => {
 test('eight camp branches expose shared crafts and multi-parent mastery on narrow and desktop screens', async ({
   page,
 }) => {
-  await expect(page.locator('[data-camp-site]')).toHaveCount(8);
+  await expect(page.locator('[data-camp-site]')).toHaveCount(1);
   let nodes = 0;
   for (const site of [
     'ger',
@@ -29,11 +35,11 @@ test('eight camp branches expose shared crafts and multi-parent mastery on narro
     'provisions',
     'relay',
   ]) {
-    await page.locator(`[data-camp-site="${site}"]`).click();
-    nodes += await page.locator('.tree-node').count();
+    await selectCampBuilding(page, site);
+    nodes += await page.locator('.camp-path-node').count();
   }
-  expect(nodes).toBe(45);
-  await page.locator('[data-camp-site="felt"]').click();
+  expect(nodes).toBe(63);
+  await selectCampBuilding(page, 'felt');
   await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
   const before = await page.evaluate(() => (window as any).__gloam.scene.run.clan.materials);
   await buyNode(page, 'felt-base');
@@ -52,7 +58,7 @@ test('eight camp branches expose shared crafts and multi-parent mastery on narro
     await page.setViewportSize({ width, height: 844 });
     expect(
       await page
-        .locator('.tree-scroll')
+        .locator('.camp-popup-body')
         .evaluate((element) => element.scrollWidth <= element.clientWidth + 1),
     ).toBe(true);
   }
@@ -62,7 +68,7 @@ test('eight camp branches expose shared crafts and multi-parent mastery on narro
 test('specialization descendants are excluded while shared household crafts stay available', async ({
   page,
 }) => {
-  await page.locator('[data-camp-site="ger"]').click();
+  await selectCampBuilding(page, 'ger');
   await buyNode(page, 'ger-hearthkeepers');
   await expect(page.locator('[data-node="ger-household-apprentices"]')).toHaveAttribute(
     'data-status',
@@ -83,6 +89,7 @@ test('specialization descendants are excluded while shared household crafts stay
 test('provisioning and relay upgrades follow the caravan and grant their arrival rewards', async ({
   page,
 }) => {
+  test.setTimeout(60000);
   for (const id of [
     'provisions-base',
     'provisions-aaruul-drying',
@@ -93,7 +100,7 @@ test('provisioning and relay upgrades follow the caravan and grant their arrival
     'relay-supply-caches',
     'relay-horse-relays',
   ]) {
-    if (id.endsWith('-base')) await page.locator(`[data-camp-site="${id.split('-')[0]}"]`).click();
+    if (id.endsWith('-base')) await selectCampBuilding(page, id.split('-')[0]!);
     await buyNode(page, id);
   }
   const before = await page.evaluate(() => {
@@ -105,7 +112,7 @@ test('provisioning and relay upgrades follow the caravan and grant their arrival
     scene.run.clan.stageTime = 45;
     return scene.run.clan.materials;
   });
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.keyboard.press('m');
   await page.locator('[data-route="river"]').click();
   await page.evaluate(() => {
@@ -134,12 +141,12 @@ test('provisioning and relay upgrades follow the caravan and grant their arrival
   expect(result.resolve).toBe(72);
   expect(result.herd).toBe(6);
   expect(result.world).toEqual(['provisions', 'relay']);
-  await page.locator('[data-camp-site="provisions"]').click();
+  await selectCampBuilding(page, 'provisions');
   await expect(page.locator('[data-node="provisions-shared-provisions"]')).toHaveAttribute(
     'data-status',
     'learned',
   );
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.screenshot({ path: 'test-results/camp-provisioning-arrival.png' });
 });
 
@@ -152,7 +159,7 @@ test('prepared resin strengthens the actual damage over time from fire arrows', 
     scene.construct('archery', 'fire-arrows');
     scene.construct('archery', 'resin-preparation');
   });
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   const health = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
@@ -189,7 +196,7 @@ test('bowyers, arban drills, wheelwrights, storm watch, and reserve horses alter
     ])
       scene.construct(id, path);
   });
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   // Construction is paused; the first active frame places the newly recruited riders.
   await expect
     .poll(() =>

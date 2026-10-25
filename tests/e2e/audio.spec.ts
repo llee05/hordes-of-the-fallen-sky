@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { buyNode, openTitle, startExpedition } from './helpers';
+import {
+  selectCampBuilding,
+  closeOverlayOrPause,
+  buyNode,
+  openTitle,
+  startExpedition,
+} from './helpers';
 
 async function heard(page: Page): Promise<string[]> {
   return page.evaluate(() => (window as any).heardSounds);
@@ -110,7 +116,7 @@ test('camp work and research sound in menus while world cues and cadence are sto
     const scene = (window as any).__gloam.scene;
     return { time: scene.run.elapsed, wind: scene.audio.windTimer, hoof: scene.audio.hoofDistance };
   });
-  await page.locator('[data-camp-site="archery"]').click();
+  await selectCampBuilding(page, 'archery');
   await buyNode(page, 'archery-base');
   expect(await heard(page)).toContain('build');
   expect(await page.evaluate(() => (window as any).__gloam.scene.audio.play('shoot'))).toBe(false);
@@ -125,7 +131,7 @@ test('camp work and research sound in menus while world cues and cadence are sto
       };
     }),
   ).toEqual(frozen);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.evaluate(() => {
     (window as any).__gloam.scene.run.pendingUpgrades = 1;
   });
@@ -183,7 +189,7 @@ test('the journey and successive Khans have distinct cues, with one audio contex
 test('muting cancels a playing cue, persists, and unmuting restores audio without resuming a paused game', async ({
   page,
 }) => {
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   expect(await page.evaluate(() => (window as any).__gloam.scene.audio.play('victory'))).toBe(true);
   await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
@@ -195,14 +201,14 @@ test('muting cancels a playing cue, persists, and unmuting restores audio withou
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Unmute sound', exact: true }).click();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await startExpedition(page);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('paused');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.keyboard.down('d');
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.audio.lastPlayed.has('hoof')))

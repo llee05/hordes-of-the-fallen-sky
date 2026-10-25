@@ -1,4 +1,4 @@
-import { buyNode } from '../e2e/helpers';
+import { buyNode, inspectNode, selectCampBuilding, closeOverlayOrPause } from '../e2e/helpers';
 import { _electron as electron, expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -25,9 +25,9 @@ test('desktop migration offers named destinations and frozen, responsive travel 
     await page.getByRole('button', { name: /NEW GAME/ }).click();
     await page.getByRole('button', { name: /Skip intro/ }).click();
     await page.keyboard.press('b');
-    await page.locator('[data-camp-site="archery"]').click();
+    await selectCampBuilding(page, 'archery');
     await buyNode(page, 'archery-base');
-    await page.keyboard.press('Escape');
+    await closeOverlayOrPause(page);
     await expect(page.locator('#migrate')).toBeEnabled({ timeout: 75000 });
     await page.keyboard.press('m');
     await expect(page.locator('[data-destination]')).toHaveCount(9);
@@ -54,7 +54,7 @@ test('desktop migration offers named destinations and frozen, responsive travel 
       await page.screenshot({ path: `test-results/native-destinations-${size.width}.png` });
     }
     await expect(page.locator('#timer')).toHaveText(frozen!);
-    await page.keyboard.press('Escape');
+    await closeOverlayOrPause(page);
     await expect(page.getByRole('dialog')).toBeHidden();
   } finally {
     await app.close();
@@ -107,7 +107,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
         )
         .toBe(1536);
     }
-    await page.keyboard.press('Escape');
+    await closeOverlayOrPause(page);
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();
     await expect(page).toHaveTitle('Hordes of the Fallen Sky · A people, not a place.');
@@ -146,7 +146,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
-    await page.keyboard.press('Escape');
+    await closeOverlayOrPause(page);
     await page.getByRole('button', { name: /NEW GAME/ }).click();
     await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
     await page.getByRole('button', { name: /Skip intro/ }).click();
@@ -176,14 +176,14 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
         }
       };
     });
-    await page.keyboard.press('Escape');
+    await closeOverlayOrPause(page);
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByRole('button', { name: 'Unmute sound', exact: true }).click();
     await expect
       .poll(() => page.evaluate(() => (window as any).nativeSoundContext?.state))
       .toBe('running');
-    await page.keyboard.press('Escape');
-    await page.keyboard.press('Escape');
+    await closeOverlayOrPause(page);
+    await closeOverlayOrPause(page);
     await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
     await expect(page.locator('#zoom-level')).toHaveText('90%');
     await page.getByRole('button', { name: 'Reset battlefield zoom to 100%' }).click();
@@ -196,23 +196,22 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect(page.locator('[data-tree-branch-select]')).toHaveCount(8);
     await expect(page.locator('#game-hud')).toHaveAttribute('inert', '');
     await page.screenshot({ path: 'test-results/native-tech-tree.png' });
-    await page.keyboard.press('Escape');
+    await closeOverlayOrPause(page);
     await page.keyboard.press('b');
     await expect(page.getByRole('heading', { name: 'Build a people.' })).toBeVisible();
-    await expect(page.locator('[data-camp-site]')).toHaveCount(8);
-    await page.locator('[data-camp-site="herd"]').click();
-    await page.locator('.camp-economy summary').click();
+    await expect(page.locator('[data-camp-site]')).toHaveCount(1);
+    await page.locator('[data-camp-economy]').click();
     await expect(page.getByRole('region', { name: 'Camp economy' })).toContainText('Food net');
-    await expect(page.locator('.node-inspector .tree-node-forecast')).toContainText('Food net');
+    await expect(page.locator('.camp-popup')).toContainText('Food net');
     await page.screenshot({ path: 'test-results/native-economy-camp.png' });
-    await page.locator('[data-camp-site="archery"]').click();
+    await selectCampBuilding(page, 'archery');
     await buyNode(page, 'archery-base');
-    await page.locator('[data-camp-site="felt"]').click();
-    await buyNode(page, 'felt-base');
-    await expect(page.locator('[data-node="felt-base"]')).toHaveAttribute('data-status', 'learned');
+    await inspectNode(page, 'felt-base');
+    await expect(page.locator('.tree-purchase')).toBeDisabled();
+    await expect(page.locator('.node-purchase-status')).toContainText('camp tier 2');
     await page.screenshot({ path: 'test-results/native-camp-tree.png' });
     await expect(page.locator('#riders')).toHaveText('4');
-    await page.keyboard.press('Escape');
+    await closeOverlayOrPause(page);
     await expect(page.getByRole('dialog')).toBeHidden();
     for (const size of [
       { width: 1280, height: 800 },
@@ -244,7 +243,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect
       .poll(() => page.evaluate(() => (window as any).nativeSoundsPlayed ?? 0))
       .toBeGreaterThan(0);
-    await page.keyboard.press('Escape');
+    await closeOverlayOrPause(page);
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
     // CDP keyboard events do not reach Electron's native before-input-event hook.
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
@@ -268,11 +267,14 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
       await desktop.saveProfile({ ...profile, bestSeconds: 88 });
     });
     await app.close();
-    expect(JSON.parse(await readFile(join(directory, 'saves/profile.json'), 'utf8'))).toEqual({
-      version: 1,
-      bestSeconds: 88,
-      muted: true,
-    });
+    expect(JSON.parse(await readFile(join(directory, 'saves/profile.json'), 'utf8'))).toMatchObject(
+      {
+        version: 1,
+        bestSeconds: 88,
+        muted: true,
+        camp: { tier: 1, buildings: ['ger', 'archery'] },
+      },
+    );
     app = await launch();
     page = await app.firstWindow();
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
@@ -280,7 +282,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect(page.locator('#best')).toHaveText('01:28');
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
-    await page.keyboard.press('Escape');
+    await closeOverlayOrPause(page);
     const closed = app.waitForEvent('close');
     await page.locator('#overlay').getByRole('button', { name: 'Quit game', exact: true }).click();
     await closed;

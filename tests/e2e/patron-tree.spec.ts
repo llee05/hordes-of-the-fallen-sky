@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { buyNode, inspectNode, openTitle, startExpedition } from './helpers';
+import { closeOverlayOrPause, buyNode, inspectNode, openTitle, startExpedition } from './helpers';
 
 test('eight patron traditions offer focused routes and exclude only the chosen capstone alternatives', async ({
   page,
@@ -40,7 +40,7 @@ test('eight patron traditions offer focused routes and exclude only the chosen c
     'available',
   );
   await page.screenshot({ path: 'test-results/patron-guardian-tree.png' });
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.keyboard.press('b');
   await inspectNode(page, 'archery-base');
   await expect(page.locator('.node-price')).toContainText('20 materials');
@@ -65,7 +65,7 @@ test('mixing patrons and focused summon capstones creates the actual travelling 
   ])
     await buyNode(page, id);
   await page.screenshot({ path: 'test-results/patron-ongod-tree.png' });
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect
     .poll(() =>
       page.evaluate(
@@ -82,7 +82,7 @@ test('mixing patrons and focused summon capstones creates the actual travelling 
       echoes: (window as any).__gloam.scene.run.patrons.ancestors.count,
     })),
   ).toEqual({ points: 1, hunting: 1.15, echoes: 3 });
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Start a new run', exact: true }).click();
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await expect

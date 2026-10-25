@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { startExpedition, openTitle } from './helpers';
+import { closeOverlayOrPause, startExpedition, openTitle } from './helpers';
 
 test.use({ reducedMotion: 'no-preference' });
 
@@ -7,7 +7,7 @@ test('animated menus accept actions immediately and do not replay their entrance
   page,
 }) => {
   await openTitle(page);
-  await startExpedition(page);
+  await startExpedition(page, { legacyCamp: false });
   // Exercise input in the same task that creates the entrance, before its first
   // rendered frame. Actions and simulation phases must never wait for motion.
   const result = await page.evaluate(() => {
@@ -17,8 +17,8 @@ test('animated menus accept actions immediately and do not replay their entrance
     const panel = document.querySelector('.game-panel')!;
     const entering = panel.getAnimations().some((animation) => animation.playState === 'running');
     const paused = scene.physics.world.isPaused;
+    document.querySelector<HTMLButtonElement>('[data-camp-slot="1"]')!.click();
     document.querySelector<HTMLButtonElement>('[data-camp-site="archery"]')!.click();
-    document.querySelector<HTMLButtonElement>('[data-node="archery-base"]')!.click();
     document.querySelector<HTMLButtonElement>('.tree-purchase')!.click();
     const refreshed = document.querySelector('.game-panel')!;
     const repeatedEntrance = refreshed.getAnimations().length;
@@ -75,7 +75,7 @@ test('HUD feedback stays bounded, cancels on pause, and responds to live reduced
   expect(feedback.displayed).toBe(feedback.initial + 8);
   expect(feedback.running).toBe(1);
   expect(feedback.pausedAnimations).toBe(0);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.run.clan.materials += 5;
@@ -107,7 +107,7 @@ test('HUD feedback stays bounded, cancels on pause, and responds to live reduced
   expect(reduced.displayed).toBe(reduced.actual);
   expect(reduced.animations).toBe(0);
   expect(reduced.paused).toBe(true);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   expect(

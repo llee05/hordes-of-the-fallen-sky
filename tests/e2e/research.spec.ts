@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { buyNode, inspectNode, openTitle, startExpedition, tapController } from './helpers';
+import {
+  closeOverlayOrPause,
+  buyNode,
+  inspectNode,
+  openTitle,
+  startExpedition,
+  tapController,
+} from './helpers';
 
 test('inspection never spends points; explicit purchases use exact ranks and current-build previews', async ({
   page,
@@ -36,11 +43,11 @@ test('inspection never spends points; explicit purchases use exact ranks and cur
     })),
   ).toEqual({ points: 2, damage: 20 });
   await page.screenshot({ path: 'test-results/tradition-tech-tree.png' });
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.locator('#research-points')).toHaveText('2');
   await page.getByRole('button', { name: /Open patron tech tree/ }).click();
   await expect(page.locator('.node-rank-summary')).toHaveText('Rank 1 / 2');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.evaluate(() => (window as any).__gloam.scene.research('power', 2));
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.upgrades.power)).toBe(1);
 });
@@ -50,7 +57,7 @@ test('overview, accent-insensitive search and graph navigation work without poin
 }) => {
   await openTitle(page);
   await startExpedition(page);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Patron tech tree', exact: true }).click();
   await expect(page.locator('.tree-node[data-status="available"]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Patron overview' }).click();
@@ -68,16 +75,16 @@ test('overview, accent-insensitive search and graph navigation work without poin
   await search.fill('no such technology');
   await expect(page.getByRole('status').filter({ hasText: 'No branches match' })).toBeVisible();
   await search.fill('');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
   expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
     true,
   );
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.keyboard.press('j');
   await page.getByRole('tab', { name: 'Traditions', exact: true }).click();
   await page.getByRole('button', { name: /Open tech tree/ }).click();
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('tab', { name: 'Traditions', exact: true })).toHaveAttribute(
     'aria-selected',
     'true',
@@ -165,22 +172,18 @@ test('combination links cross camp and patron trees without resuming simulation,
   await page
     .locator('[data-synergy="burning-tempest"] [data-target-node="archery-fire-arrows"]')
     .click();
-  await expect(page.locator('.node-inspector h3')).toHaveText('Fire arrows');
-  await expect(page.locator('.camp-estate')).toHaveAttribute('data-expanded', 'true');
-  await expect(page.locator('.node-route')).toContainText('60 materials');
-  expect(
-    await page
-      .locator('.node-route [data-tree-select]')
-      .evaluateAll((nodes) => nodes.map((n) => (n as HTMLElement).dataset.treeSelect)),
-  ).toEqual(['archery-base', 'archery-fire-arrows']);
+  await expect(page.locator('.camp-popup-copy h3')).toHaveText('Fire arrows');
+  await expect(page.locator('.camp-popup-foldout')).toBeVisible();
+  await expect(page.locator('.node-price')).toContainText('36 materials');
+  await expect(page.locator('[data-node="archery-veteran-riders"]')).toBeVisible();
   expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
     true,
   );
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run.clan))).toBe(
     before,
   );
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.locator('[data-synergy]')).toHaveCount(5);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('dialog')).toBeHidden();
 });

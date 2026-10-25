@@ -3,7 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createServer } from 'vite';
-import { buyNode, inspectNode } from '../e2e/helpers';
+import { buyNode, inspectNode, closeOverlayOrPause } from '../e2e/helpers';
 
 test.use({ trace: 'off' });
 
@@ -64,8 +64,8 @@ test('connected progression maps, camp comparisons, and recipe links fit native 
       await page
         .locator('[data-synergy="burning-tempest"] [data-target-node="archery-fire-arrows"]')
         .click();
-      await expect(page.locator('.choice-comparison')).toContainText('Veteran riders');
-      await expect(page.locator('.camp-estate')).toHaveAttribute('data-expanded', 'true');
+      await expect(page.locator('.camp-popup-foldout')).toContainText('Veteran riders');
+      await expect(page.locator('.camp-popup')).toBeVisible();
       const campPurchase = (await page.locator('.tree-purchase').boundingBox())!;
       expect(campPurchase.y + campPurchase.height).toBeLessThan(size.height);
       expect(campPurchase.x + campPurchase.width).toBeLessThan(size.width);
@@ -73,18 +73,19 @@ test('connected progression maps, camp comparisons, and recipe links fit native 
         await page.locator('.camp-estate').evaluate((el) => el.scrollWidth <= el.clientWidth),
       ).toBe(true);
       await page.screenshot({ path: `test-results/native-camp-map-${size.width}.png` });
-      await page.keyboard.press('Escape');
+      await closeOverlayOrPause(page);
       await expect(page.locator('[data-synergy]')).toHaveCount(5);
       await page.keyboard.press('Escape');
       await expect(page.getByRole('dialog')).toBeHidden();
     }
     await page.keyboard.press('b');
     await buyNode(page, 'archery-base');
-    await buyNode(page, 'archery-fire-arrows');
-    await expect(page.locator('[data-camp-craft="fire-arrows"]')).toHaveCount(1);
+    // This fresh camp has not yet earned its fourth-tier military specialisation.
+    await inspectNode(page, 'archery-fire-arrows');
+    await expect(page.locator('.tree-purchase')).toBeDisabled();
     await expect(page.locator('[data-node="archery-arban-drills"]')).toHaveAttribute(
       'data-status',
-      'excluded',
+      'locked',
     );
     expect(errors).toEqual([]);
   } finally {

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { closeOverlayOrPause, openTitle, startExpedition } from './helpers';
 
 // Headless software rendering can need many wall-clock seconds for one active second.
 // Preserve exact combat assertions while allowing the real simulation to reach them.
@@ -89,7 +89,7 @@ test('camp attackers stop outside the tents, repeat protected damage, freeze in 
   const frozen = await siegeState(page);
   await page.waitForTimeout(200);
   expect(await siegeState(page)).toEqual(frozen);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await activeExpect
     .poll(async () => (await siegeState(page)).resolve)
     .toBeCloseTo(first.resolve - 3.15);

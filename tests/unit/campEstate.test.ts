@@ -109,6 +109,23 @@ describe('portable clan estate progression', () => {
     expect(run.clan.campEffects).toEqual(effects);
     expect(buildingLevel(run, 'archery')).toBe(2);
   });
+  it('keeps existing workplaces usable after casualties while blocking new worker reservations', () => {
+    const run = richCamp();
+    raiseCamp(run, 3);
+    expect(buildStructure(run, 'herd')).toBe(true);
+    expect(purchaseEstate(run, 'internal', 'clan-council', 1)).toBe(true);
+    run.clan.population = 1;
+    expect(assignedWorkers(run)).toBeGreaterThan(run.clan.population);
+    expect(buildStructure(run, 'herd', 'level-2')).toBe(true);
+    expect(purchaseEstate(run, 'internal', 'clan-council', 2)).toBe(true);
+    expect(purchaseEstate(run, 'encampment', 'encampment-4', 4)).toBe(false);
+    // This tier still requires Family gers level 3, but does not require new workers.
+    expect(buildStructure(run, 'ger', 'level-3')).toBe(true);
+    run.clan.population = 1;
+    expect(purchaseEstate(run, 'encampment', 'encampment-4', 4)).toBe(true);
+    expect(buildingBlocker(run, 'archery')).toBe('More families needed');
+    expect(estateBlocker(run, 'internal', 'master-craftsmen', 1)).toBe('More families needed');
+  });
   it('authors multiple facility levels while retaining every original facility and stable craft IDs', () => {
     expect(BUILDINGS).toHaveLength(8);
     for (const b of BUILDINGS) {

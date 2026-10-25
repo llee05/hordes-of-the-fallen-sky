@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { buyNode, openTitle, startExpedition } from './helpers';
+import { closeOverlayOrPause, buyNode, openTitle, startExpedition } from './helpers';
 
 async function fall(page: Page) {
   await page.evaluate(() => {
@@ -132,7 +132,7 @@ test('pause and research freeze succession, and healing research cannot bypass t
     scene.run.patrons.hearth.regeneration = 100;
   });
   await fall(page);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
@@ -142,8 +142,8 @@ test('pause and research freeze succession, and healing research cannot bypass t
   expect(state.health).toBe(0);
   expect(state.stats.maxHealth).toBe(120);
   expect(state.khan.successionRemaining).toBe(JSON.parse(before).khan.successionRemaining);
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
+  await closeOverlayOrPause(page);
   await chooseSoon(page, 2);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.health)).toBe(120);
 });

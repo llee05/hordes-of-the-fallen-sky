@@ -1,6 +1,6 @@
 # Hordes of the Fallen Sky — game mechanics brief
 
-This is a reference for the **implemented prototype**, checked against the game code on 23 October 2026. It covers the expedition, resources, combat, spirit progression, camp upgrade tree, migration, enemies, story, and persistence. Values are current balance, not promises for the final release. All times below are active gameplay seconds; menus freeze the world.
+This is a reference for the **implemented prototype**, checked against the game code on 25 October 2026. It covers the expedition, resources, combat, spirit progression, camp upgrade tree, migration, enemies, story, and persistence. Values are current balance, not promises for the final release. All times below are active gameplay seconds; menus freeze the world.
 
 ## 1. The expedition
 
@@ -141,9 +141,13 @@ Each enemy drops its defined XP independent of scaled health. Shards begin follo
 
 ## 4. Camp development and upgrade tree
 
-Press **B** to open the paused camp model. Select one of **eight building sites** in the painted landscape to inspect its developments. The catalog contains **37 developments**, or 45 nodes including establishment, with the selected building’s connected graph and persistent purchase inspector. Expand developments for more room, compare exclusive alternatives side by side, and follow combination requirements across both trees. Search names and effects to highlight matching sites; costs, tiers, and local prerequisites derive from content definitions. Ghosted sites become solid on establishment, learned crafts add supplies, specializations add painted props and craft emblems, and household growth adds shelters. Ambient smoke, fire, grass, and banners respect reduced motion; simulation and character poses stay frozen. The five original branches have an exclusive specialization pair, a shared craft, and a deeper development for each specialization. The three new branches have complementary crafts with two-parent final upgrades. At most 27 developments can be learned together, because alternatives and their descendants are excluded.
+Press **B** to open one painted, paused nomadic camp. Click a building or plot to open a nearby parchment with its level, description, benefits, exact costs, requirements, and explicit purchase action. Unfold its vertical level path or exclusive specialisations when needed; there are no permanent side panels. Search, provisions, and combinations use temporary parchments. Escape or controller Back dismisses the parchment first, then leaves the camp. The explicit Return button leaves immediately. Ambient smoke, fire, grass, and banners respect reduced motion; simulation and character poses stay frozen.
 
-Purchases are immediate and charged once. Every acquired building and effect travels with the clan. Construction is unavailable while packed. There is no fixed two-level cap, duplicate establishment, respecialization, or building upkeep. Buildings reserve workers on establishment; developments need no extra workers. Existing buildings keep working after population losses. The starting eight people cannot staff all eight branches: all bases need **13 workers**, and Hearthkeepers alone can raise population to fourteen.
+The central **Clan Encampment** has five tiers, from Wandering Clan to Imperial Ordo, unlocking **2, 3, 4, 5, then 6 building plots**. Family gers occupy the first plot permanently. All eight facility types remain available; a clan chooses which facilities to establish within its unlocked space. Facilities have three levels; archery, sanctuary, wagons, and feltmakers have an exclusive fourth-level specialisation. The catalogue retains the 37 original crafts and adds 16 common level upgrades and two felt choices, for **55 developments / 63 facility nodes including establishment**. Ancestor exclusions and shared, multi-parent crafts still apply.
+
+The encampment also unlocks an independent allowance of **1, 2, 3, 4, then 6 internal developments**. Clan Council, Ancestral Hearth, Master Craftsmen, War Council, Supply Organisation, and Travelling Merchants each have two ranks with actual continuing gameplay effects. These reserve workers, but never building plots. Higher camp tiers require improved Family gers; higher facility levels require the appropriate camp tier. See [the portable camp guide](nomadic-camp.md) for definitions, exact costs, and effects.
+
+Purchases are immediate, validated, and charged once. Every acquired tier, facility, craft, internal rank, and effect travels with the clan. Construction is unavailable while packed. There is no duplicate establishment, demolition, respecialisation, or building upkeep. Bases and new internal developments reserve workers; zero-worker improvements remain usable after population losses. Existing camps without the new estate fields retain their prior craft rules and facilities on import.
 
 | Building                 | Establishment cost      | Workers | Core effect and development direction                                                                                                                   |
 | ------------------------ | ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -156,7 +160,7 @@ Purchases are immediate and charged once. Every acquired building and effect tra
 | **Provisioning ger**     | 28 materials            | 2       | +25 food and food production ×1.15; aaruul, borts, hospitality, and shared arrival provisions.                                                          |
 | **Örtöö relay**          | 30 materials            | 1       | Migration mobility ×1.08; scouts, supplies, family messengers, and fresh horses on arrival.                                                             |
 
-Establishing all absent bases costs **170 materials +12 Spirit** before patron discounts. The base Family gers definition would cost 18 materials and welcome six people, but cannot be purchased again in a normal run. Original specializations cost 1.5× base resources, rounded up: 27 for gers, 36 for archery, 30 for herding, 30 +18 Spirit for the sanctuary, and 39 for wagons. The new crafts have explicit individual prices. Guardian discounts multiply every material price by 0.9 per foundation rank, rounded up; Spirit and worker requirements stay unchanged.
+The seven initially absent base definitions total **170 materials +12 Spirit** before patron discounts; they cannot all fit within the six-plot allowance in a new clan. The base Family gers definition would cost 18 materials and welcome six people, but cannot be purchased again in a normal run. Original specializations cost 1.5× base resources, rounded up: 27 for gers, 36 for archery, 30 for herding, 30 +18 Spirit for the sanctuary, and 39 for wagons. The new crafts have explicit individual prices. Guardian discounts multiply every material price by 0.9 per foundation rank, rounded up; Spirit and worker requirements stay unchanged.
 
 ```mermaid
 flowchart TD
@@ -215,7 +219,7 @@ Lightning looks for targets within 520 of Khan, then camp, and affects a 70-unit
 
 Arrival benefits are paid once, after completing the crossing, including the third crossing. They add to route rewards and never repeat in the final stand. Food and material production stop while travelling; consumption reductions and mobility continue. Khan recovery uses active time during travel; resolve recovery requires a stationary camp. Population and horses remain capped at 120 and forty.
 
-See [the complete camp tree](camp-upgrade-tree.md) for all eight branch diagrams, stable IDs, interaction examples, and sourced cultural context. The shared inspector and typed camp-effect definitions support further development siblings and tiers without new layout code. New building miniatures can supply presentation coordinates and assemblies independently of their gameplay definition.
+See [the complete camp tree](camp-upgrade-tree.md) for all eight branch diagrams, stable IDs, interaction examples, and sourced cultural context. Shared node data and typed camp effects support further level steps, specialisations, and internal ranks without changing the popup or purchase code. New building miniatures can supply presentation coordinates and assemblies independently of their gameplay definition.
 
 ## 5. Mounted combat and formations
 
@@ -422,3 +426,5 @@ See [the progression UI guide](progression-ui.md) for adding technologies, build
 ### Battlefield zoom
 
 During active play, use + / −, number-pad + / −, the mouse wheel, or controller RT / LT to change the camera in 10% steps from 60% to 160%. Click the displayed percentage, press 0, or click the right stick to reset to 100%. The scene retains the zoom across expedition restarts within the app session. Menus ignore battlefield zoom input. HUD dimensions, movement, combat ranges, and collision bodies retain their world values; enemy spawn placement accounts for the zoomed visible area. Very large windows raise the minimum zoom enough to keep the view inside the world.
+
+Portable camp checkpoints save after successful purchases and completed migrations through the native profile store. **Continue clan camp** restores camp organisation and supplies into a fresh expedition, reconstructing continuing benefits once. **New Game** starts a fresh clan. This is not a mid-battle resume; see [the checkpoint contract](camp-checkpoints.md).

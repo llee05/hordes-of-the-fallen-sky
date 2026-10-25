@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { buyNode, openTitle, startExpedition } from './helpers';
+import {
+  selectCampBuilding,
+  closeOverlayOrPause,
+  buyNode,
+  openTitle,
+  startExpedition,
+} from './helpers';
 
 test('people work, households and herd reflect growth and losses, and menus freeze their activity', async ({
   page,
@@ -21,9 +27,9 @@ test('people work, households and herd reflect growth and losses, and menus free
     });
   await expect.poll(visible).toEqual({ people: 8, horses: 3 });
   await page.keyboard.press('b');
-  await page.locator('[data-camp-site="felt"]').click();
+  await selectCampBuilding(page, 'felt');
   await buyNode(page, 'felt-base');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   const before = await page.evaluate(
     () => (window as any).__gloam.scene.clanLife.workers[0].image.x,
   );
@@ -44,7 +50,7 @@ test('people work, households and herd reflect growth and losses, and menus free
   const paused = await snapshot();
   await page.waitForTimeout(250);
   expect(await snapshot()).toEqual(paused);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.run.clan.population = 24;
@@ -87,11 +93,11 @@ test('packing begins immediately, pauses with the world, and arrival relocates t
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.packedGers.length))
     .toBeGreaterThan(0);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.stage)).toBe('migration');
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   const remaining = await page.evaluate(() => (window as any).__gloam.scene.packingRemaining);
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => (window as any).__gloam.scene.packingRemaining)).toBe(remaining);
-  await page.keyboard.press('Escape');
+  await closeOverlayOrPause(page);
   await page.screenshot({ path: 'test-results/packing-caravan.png' });
   await page.evaluate(() => {
     (window as any).__gloam.scene.run.clan.stageTime = 100;

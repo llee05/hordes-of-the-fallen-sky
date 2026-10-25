@@ -32,12 +32,25 @@ export function runFromCampArchive(value: unknown): RunState | undefined {
   for (const definition of BUILDINGS) {
     const built = owned.has(definition.id),
       requested = new Set(value.paths[definition.id] ?? []),
-      groups = new Set<string>();
+      groups = new Map<string, string>();
+    for (const path of definition.paths)
+      if (requested.has(path.id) && path.exclusiveGroup && !groups.has(path.exclusiveGroup))
+        groups.set(path.exclusiveGroup, path.id);
+    const closed = (id: string, visited = new Set<string>()): boolean => {
+      if (visited.has(id)) return false;
+      visited.add(id);
+      const path = definition.paths.find((p) => p.id === id);
+      return !!(
+        path &&
+        ((path.exclusiveGroup &&
+          groups.has(path.exclusiveGroup) &&
+          groups.get(path.exclusiveGroup) !== path.id) ||
+          path.requires?.some((parent) => closed(parent, visited)))
+      );
+    };
     const learned = definition.paths.filter((path) => {
       if (!built || !requested.has(path.id)) return false;
-      if (path.exclusiveGroup && groups.has(path.exclusiveGroup)) return false;
-      if (path.exclusiveGroup) groups.add(path.exclusiveGroup);
-      return true;
+      return !closed(path.id);
     });
     run.clan.buildings[definition.id] = built ? 1 + learned.length : 0;
     if (!built) continue;
