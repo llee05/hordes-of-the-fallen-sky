@@ -13,6 +13,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   clanAttackTimer = 0;
   chargeTimer = 0;
   burning = 0;
+  objectiveId?: number;
 }
 
 export class Projectile extends Phaser.Physics.Arcade.Image {

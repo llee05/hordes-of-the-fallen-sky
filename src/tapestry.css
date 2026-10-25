@@ -829,3 +829,10 @@
     font-size: 15px;
   }
 }
+
+.field-status {
+  margin: 6px 0 0;
+  color: #e2cf9f;
+  font-size: 11px;
+  line-height: 1.4;
+}

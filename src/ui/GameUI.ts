@@ -1,3 +1,5 @@
+import { encounterPlan } from '../game/state/encounters';
+import { FIELD_OBJECTIVES } from '../game/data/fieldObjectives';
 import { GAME } from '../game/config';
 import { clanMark } from './artwork';
 import { UIMotion } from './Motion';
@@ -98,7 +100,7 @@ export class GameUI {
           </section>
           <div class="expedition-clock"><strong id="timer">00:00</strong><span id="stage-label">ENCAMPMENT</span>${import.meta.env.DEV ? '<span id="developer-run" hidden>DEVELOPER RUN · F8</span>' : ''}</div>
           <nav class="hud-menu" aria-label="Game menus"><button id="journal" class="hud-menu-button" title="Clan chronicle (Tab / J)" aria-label="Open clan chronicle" aria-keyshortcuts="Tab J"><span>${clanMark('journal')}</span><kbd>TAB</kbd></button><button id="pause" class="hud-menu-button" aria-label="Pause" title="Pause (Escape)"><span>${clanMark('pause')}</span><kbd>ESC</kbd></button></nav>
-          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p class="act-heading" id="act-heading">ACT I · GATHER THE SCATTERED</p><p id="objective">Build the camp. Protect your people.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Crossing</span><b id="crossing">0%</b></div><div class="track"><div id="crossing-fill"></div></div></div><p class="objective-hint" id="migration-hint">New routes in 45s.</p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
+          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p class="act-heading" id="act-heading">ACT I · GATHER THE SCATTERED</p><p id="objective">Build the camp. Protect your people.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Crossing</span><b id="crossing">0%</b></div><div class="track"><div id="crossing-fill"></div></div></div><p class="objective-hint" id="migration-hint">New routes in 45s.</p><p id="encounter-status" class="field-status" role="status"></p><p id="field-objective" class="field-status"></p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
           <aside id="field-guide" class="field-guide hud-surface" aria-label="Expedition guidance" hidden></aside>
           <div class="zoom-controls hud-surface" role="group" aria-label="Battlefield zoom"><button id="zoom-out" aria-label="Zoom out" aria-keyshortcuts="-" title="Zoom out (− / LT)">−</button><button id="zoom-reset" aria-label="Reset battlefield zoom to 100%" aria-keyshortcuts="0" title="Reset zoom (0 / Right stick click)"><span id="zoom-level">100%</span></button><button id="zoom-in" aria-label="Zoom in" aria-keyshortcuts="+" title="Zoom in (+ / RT)">+</button></div>
           <div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
@@ -279,6 +281,29 @@ export class GameUI {
     this.get('khan-succession')
       .closest('.vitals-hud')!
       .classList.toggle('choosing-khan', !khanActive);
+    const encounter = encounterPlan(run);
+    const groundDirection = [
+      'East',
+      'Southeast',
+      'South',
+      'Southwest',
+      'West',
+      'Northwest',
+      'North',
+      'Northeast',
+    ][(Math.round(encounter.angle / (Math.PI / 4)) + 8) % 8];
+    this.text(
+      'encounter-status',
+      `${encounter.title}${['warning', 'assault', 'elite'].includes(encounter.phase) ? ` · ${groundDirection} approach` : ''} · ${Math.ceil(encounter.remaining)}s`,
+    );
+    const objective = run.field.objective;
+    const visibleObjective = !!objective && ['available', 'returning'].includes(objective.status);
+    this.get('field-objective').hidden = !visibleObjective;
+    if (visibleObjective)
+      this.text(
+        'field-objective',
+        `Optional ${snapshot.fieldBearing ?? ''}: ${FIELD_OBJECTIVES[objective.kind].title} · ${objective.status === 'returning' ? 'Escort to camp' : FIELD_OBJECTIVES[objective.kind].instruction} ${FIELD_OBJECTIVES[objective.kind].reward}${objective.kind === 'gathering' ? ` · ${objective.defeated}/${GAME.field.guards}` : ''}`,
+      );
     const region = currentLocation(run);
     this.text('timer', formatTime(run.elapsed));
     this.text('level', run.level.toString().padStart(2, '0'));

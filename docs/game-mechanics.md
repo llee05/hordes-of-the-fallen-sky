@@ -428,3 +428,26 @@ See [the progression UI guide](progression-ui.md) for adding technologies, build
 During active play, use + / −, number-pad + / −, the mouse wheel, or controller RT / LT to change the camera in 10% steps from 60% to 160%. Click the displayed percentage, press 0, or click the right stick to reset to 100%. The scene retains the zoom across expedition restarts within the app session. Menus ignore battlefield zoom input. HUD dimensions, movement, combat ranges, and collision bodies retain their world values; enemy spawn placement accounts for the zoomed visible area. Very large windows raise the minimum zoom enough to keep the view inside the world.
 
 Portable camp checkpoints save after successful purchases and completed migrations through the native profile store. **Continue clan camp** restores camp organisation and supplies into a fresh expedition, reconstructing continuing benefits once. **New Game** starts a fresh clan. This is not a mid-battle resume; see [the checkpoint contract](camp-checkpoints.md).
+
+### Encounter rhythm and field opportunities
+
+After the gentle 18-second opening, each stage cycles through 8 seconds of warning,
+26 seconds of coordinated assault, a 12-second featured-enemy window, and 24 seconds
+of reduced pressure. The warned compass approach stays consistent through that
+cycle. A recorded frame-drum cue and HUD text announce warnings. Enemy compositions
+respect their existing unlocks; a featured enemy is committed only after successful
+placement. Depleted pasture increases pressure. Pool/placement failures retry without
+banking waves. Simulation and warning consumption stop in menus.
+
+Each ordinary camp offers at most two optional field objectives, beginning at 20
+active seconds and spaced 35 seconds after completion. Reused painted miniatures
+and a HUD bearing identify their location on connected nearby ground. Clear a cart
+and remain nearby for two seconds for 18 food and 12 materials; escort a loose herd
+home for three horses and eight food; bring households home for two people and six
+resolve; defeat three marked gathering raiders for ten Spirit and twelve materials.
+Escorts pause if threatened, if the Khan leaves them behind, or during succession.
+They use the area's navigation rather than crossing cliffs. Rewards are capped and
+paid once. Migration abandons unfinished objectives without spending or granting
+anything; arrivals create fresh opportunities. Completed objectives enter the clan's
+existing chronicle. Data lives in `data/encounters.ts` and `data/fieldObjectives.ts`;
+independent rules live in their corresponding state modules.

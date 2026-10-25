@@ -14,11 +14,21 @@ import { campShelters } from '../state/campLife';
 import { barrierContact, campBoundary } from '../state/campBarrier';
 import { SteppeLandscape } from '../assets/SteppeLandscape';
 import { TerrainCollision } from '../terrain/TerrainCollision';
+import { projectGround } from '../world3d/worldProjection';
 import { projectileTerrainClear } from '../world3d/projectileTerrain';
 import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
 import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
 import { GAME } from '../config';
-import { chooseEnemy, SKYBREAKER, encounterSpawnDelay } from '../data/enemies';
+import { SKYBREAKER, encounterSpawnDelay } from '../data/enemies';
+import { advanceEncounters, encounterEnemy, encounterPlan } from '../state/encounters';
+import {
+  syncFieldState,
+  fieldObjectiveDue,
+  startFieldObjective,
+  advanceFieldObjective,
+} from '../state/fieldObjectives';
+import { FieldMarkers } from '../systems/FieldMarkers';
+import { ENEMIES } from '../data/enemies';
 import { projectedEnemySpawnPosition } from '../systems/EnemySpawning';
 import { FORMATIONS, ROUTES } from '../data/clan';
 import { currentLocation } from '../state/journey';
@@ -87,6 +97,7 @@ export class ArenaScene extends Phaser.Scene {
   private landscape!: SteppeLandscape;
   private terrainCollision!: TerrainCollision;
   private clanLife!: ClanLife;
+  private fieldMarkers!: FieldMarkers;
   private campBarrier!: CampBarrier;
   private campPopulation = -1;
   private campHerd = -1;
@@ -216,6 +227,7 @@ export class ArenaScene extends Phaser.Scene {
 
     createPainterlyEffects(this);
     this.defeats = new DefeatSprites(this);
+    this.fieldMarkers = new FieldMarkers(this);
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.landscape = new SteppeLandscape(this);
     const center = GAME.worldSize / 2;
@@ -903,6 +915,9 @@ export class ArenaScene extends Phaser.Scene {
       listener: isKhanActive(this.run) ? this.player : this.camp,
       camp: this.camp,
     });
+    syncFieldState(this.run);
+    if (advanceEncounters(this.run)) this.audio.play('encounter');
+    this.updateFieldObjectives(dt);
     this.updateEnemies(dt);
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
       this.finish('dead');
@@ -919,14 +934,15 @@ export class ArenaScene extends Phaser.Scene {
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0) {
       const spawned = this.spawnEnemy();
-      this.spawnTimer = encounterSpawnDelay(
-        this.run.clan.stageTime,
-        this.run.clan.region,
-        this.run.clan.stage === 'migration'
-          ? (ROUTES.find((r) => r.id === this.run.clan.routeId)?.danger ?? 1)
-          : 1,
-        spawned,
-      );
+      this.spawnTimer =
+        encounterSpawnDelay(
+          this.run.clan.stageTime,
+          this.run.clan.region,
+          this.run.clan.stage === 'migration'
+            ? (ROUTES.find((r) => r.id === this.run.clan.routeId)?.danger ?? 1)
+            : 1,
+          spawned,
+        ) * (spawned ? encounterPlan(this.run).interval : 1);
     }
     this.updateProjectiles(dt);
     this.collectGems(dt);
@@ -1020,11 +1036,21 @@ export class ArenaScene extends Phaser.Scene {
     }
   }
 
-  private spawnEnemy(forced?: EnemyDefinition): boolean {
+  private spawnEnemy(
+    forced?: EnemyDefinition,
+    directive?: { point?: { x: number; y: number }; angle?: number; objectiveId?: number },
+  ): boolean {
     if (this.enemies.countActive(true) >= GAME.maxEnemies) return false;
-    const definition = forced ?? chooseEnemy(this.run.elapsed + this.run.clan.region * 80);
+    const selection = encounterEnemy(this.run);
+    const definition = forced ?? selection.definition;
+    const isBoss = definition.behavior === 'boss';
+    const plan = encounterPlan(this.run);
     const camera = this.cameras.main;
-    const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+    const angle =
+      directive?.angle ??
+      (['warning', 'assault', 'elite'].includes(plan.phase)
+        ? plan.angle + Phaser.Math.FloatBetween(-0.5, 0.5)
+        : Phaser.Math.FloatBetween(0, Math.PI * 2));
     const anchor = !isKhanActive(this.run) || Math.random() < 0.45 ? this.camp : this.player;
     const viewWidth = camera.width / camera.zoom;
     const viewHeight = camera.height / camera.zoom;
@@ -1037,7 +1063,11 @@ export class ArenaScene extends Phaser.Scene {
     const navigation = this.landscape.navigation;
     const world = this.landscape.world3d;
     let point;
-    if (world?.spawnView && navigation) {
+    if (directive?.point) {
+      point = directive.point;
+      if (navigation && !navigation.isWalkable(point.x, point.y, GAME.terrain.actorClearance, true))
+        return false;
+    } else if (world?.spawnView && navigation) {
       point = projectedEnemySpawnPosition(
         world.spawnView,
         anchor,
@@ -1076,7 +1106,7 @@ export class ArenaScene extends Phaser.Scene {
     const enemy = this.enemies.get(x, y, ...artTexture(definition.texture)) as Enemy | null;
     if (!enemy) return false;
     enemy.enableBody(true, x, y, true, true);
-    const width = (ART_WIDTH[definition.texture] ?? 50) * (definition.scale / (forced ? 4 : 2));
+    const width = (ART_WIDTH[definition.texture] ?? 50) * (definition.scale / (isBoss ? 4 : 2));
     styleActor(enemy, definition.texture, width, 5 * definition.scale);
     enemy.clearTint();
     if (!this.enemyShadows.has(enemy)) this.enemyShadows.set(enemy, this.add.image(x, y, 'shadow'));
@@ -1085,7 +1115,7 @@ export class ArenaScene extends Phaser.Scene {
       .setDisplaySize(width * 0.9, width * 0.3)
       .setVisible(true);
     enemy.definition = definition;
-    enemy.health = definition.health * (forced ? 1 : 1 + this.run.elapsed / 1200);
+    enemy.health = definition.health * (isBoss ? 1 : 1 + this.run.elapsed / 1200);
     enemy.maxHealth = enemy.health;
     enemy.spawnId += 1;
     enemy.setAlpha(1).setAngle(0).setVelocity(0, 0);
@@ -1093,7 +1123,8 @@ export class ArenaScene extends Phaser.Scene {
     enemy.clanAttackTimer = 0;
     enemy.chargeTimer = 0;
     enemy.burning = 0;
-    if (forced) {
+    enemy.objectiveId = directive?.objectiveId;
+    if (isBoss) {
       this.boss = enemy;
       this.run.clan.message =
         'THE SKYBREAKER — hold the line. Your people are the victory condition.';
@@ -1102,7 +1133,54 @@ export class ArenaScene extends Phaser.Scene {
       throw new Error(`Missing character animation: ${definition.texture}`);
     enemy.motion.reset(definition.texture, Math.random());
     enemy.preparingAttack = false;
+    if (!forced && selection.elite) this.run.encounters.eliteSpawned = true;
     return true;
+  }
+
+  private updateFieldObjectives(dt: number): void {
+    const run = this.run,
+      nav = this.landscape.navigation;
+    if (fieldObjectiveDue(run)) {
+      for (let i = 0; i < 12; i++) {
+        const angle = run.field.issued * 1.7 + (i * Math.PI) / 6;
+        const desired = {
+          x: this.camp.x + Math.cos(angle) * GAME.field.radius,
+          y: this.camp.y + Math.sin(angle) * GAME.field.radius,
+        };
+        const point = nav ? nav.nearestWalkable(desired) : desired;
+        if (
+          point &&
+          Math.hypot(point.x - desired.x, point.y - desired.y) < 160 &&
+          startFieldObjective(run, point)
+        )
+          break;
+      }
+    }
+    const o = run.field.objective;
+    if (o && o.status === 'available' && o.kind === 'gathering' && o.guards < GAME.field.guards) {
+      const angle = (o.guards * Math.PI * 2) / GAME.field.guards;
+      const desired = { x: o.x + Math.cos(angle) * 85, y: o.y + Math.sin(angle) * 85 };
+      const point = nav ? nav.nearestWalkable(desired) : desired;
+      if (point && this.spawnEnemy(ENEMIES[0], { point, objectiveId: o.id })) o.guards++;
+    }
+    let threats = 0;
+    if (o)
+      for (const e of this.enemies.getChildren() as Enemy[])
+        if (e.active && Math.hypot(e.x - o.x, e.y - o.y) < 180) threats++;
+    advanceFieldObjective(run, dt, this.player, this.camp, threats);
+    if (
+      o?.status === 'returning' &&
+      isKhanActive(run) &&
+      Math.hypot(o.x - this.player.x, o.y - this.player.y) < GAME.field.escortLeash &&
+      threats === 0
+    ) {
+      const to = nav?.waypoint(o, this.camp) ?? this.camp;
+      const distance = Math.hypot(to.x - o.x, to.y - o.y);
+      const step = Math.min(1, (GAME.field.escortSpeed * dt) / Math.max(1, distance));
+      const desired = { x: o.x + (to.x - o.x) * step, y: o.y + (to.y - o.y) * step };
+      Object.assign(o, nav?.slide(o, desired, 18) ?? desired);
+    }
+    this.fieldMarkers.update(o);
   }
 
   private updateEnemies(dt: number): void {
@@ -1458,6 +1536,13 @@ export class ArenaScene extends Phaser.Scene {
     this.audio.play('defeat', { x, y });
     this.enemyShadows.get(enemy)?.setVisible(false);
     this.run.kills += 1;
+    const objective = this.run.field.objective;
+    if (
+      objective?.status === 'available' &&
+      objective.kind === 'gathering' &&
+      enemy.objectiveId === objective.id
+    )
+      objective.defeated++;
     this.run.clan.spirit +=
       value *
       0.4 *
@@ -1633,8 +1718,22 @@ export class ArenaScene extends Phaser.Scene {
     const direction = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'][
       (Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) + 8) % 8
     ]!;
+    const objective = this.run.field.objective;
+    const offset = objective
+      ? projectGround(
+          objective.x - this.player.x,
+          objective.y - this.player.y,
+          0,
+          this.landscape.world3d?.angle ?? 90,
+          this.landscape.world3d?.yaw ?? 0,
+        )
+      : undefined;
+    const fieldBearing = offset
+      ? `${['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'][(Math.round(Math.atan2(offset.y, offset.x) / (Math.PI / 4)) + 8) % 8]} ${Math.round(Math.hypot(objective!.x - this.player.x, objective!.y - this.player.y))} paces`
+      : undefined;
     const zoomLimits = cameraZoomLimits(this.cameras.main.width, this.cameras.main.height);
     return {
+      fieldBearing,
       developerRun: this.developerRun,
       developerConsole:
         import.meta.env.DEV && this.developerTools

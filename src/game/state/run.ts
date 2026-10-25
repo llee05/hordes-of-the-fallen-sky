@@ -1,3 +1,5 @@
+import { createEncounters } from './encounters';
+import { createFieldState } from './fieldObjectives';
 import { UPGRADES } from '../data/upgrades';
 import { GAME } from '../config';
 import { createLegacy } from './legacy';
@@ -15,6 +17,8 @@ export function xpForLevel(level: number): number {
 export function createRun(): RunState {
   return {
     legacy: createLegacy(),
+    encounters: createEncounters(),
+    field: createFieldState(),
     guidance: { enabled: true, completed: [] },
     khan: { generation: 1, successionRemaining: 0 },
     phase: 'ready',

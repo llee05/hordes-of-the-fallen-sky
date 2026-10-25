@@ -154,6 +154,8 @@ export interface PatronEffects {
 }
 
 export interface RunState {
+  encounters: import('./state/encounters').EncounterState;
+  field: import('./state/fieldObjectives').FieldState;
   legacy: ClanLegacy;
   guidance: GuidanceState;
   khan: { generation: number; successionRemaining: number };
@@ -215,4 +217,5 @@ export interface HudSnapshot {
   best: number;
   bossHealth?: number;
   clanBearing: string;
+  fieldBearing?: string;
 }

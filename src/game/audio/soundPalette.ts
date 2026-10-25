@@ -52,6 +52,7 @@ const signal = (volume: number, layers: SoundLayer[], priority = 4): SoundCue =>
 });
 /** Recorded Foley, conservative layered gains. Event IDs preserve existing scene integration. */
 export const SOUND_CUES = {
+  encounter: signal(0.2, [layer(DRUM, 0.65), layer(LEATHER, 0.08, { delay: 0.15 })], 4),
   shoot: world(0.32, 0.11, 2, [
     layer(BOW, 0.82, { rate: 0.012 }),
     layer(['feather'], 0.12, { delay: 0.008, jitter: 0.006, rate: 0.015 }),
