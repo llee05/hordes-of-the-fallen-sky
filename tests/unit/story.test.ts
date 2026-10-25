@@ -7,6 +7,8 @@ import { createRun } from '../../src/game/state/run';
 import { openNextStory, resolveStory } from '../../src/game/state/story';
 import { STORY_CONSEQUENCES, storyConsequence } from '../../src/game/data/storyConsequences';
 import { companionBonds, companionStanding } from '../../src/game/state/storyBonds';
+import type { LocationId } from '../../src/game/types';
+import type { StoryBeat, StoryEncounter } from '../../src/game/story/types';
 
 describe('the two-act expedition', () => {
   it('uses a remnant account when too few survivors remain for the named cast', () => {
@@ -159,5 +161,187 @@ describe('story consequences', () => {
     expect(storyConsequence('no-such-choice')).toBeUndefined();
     for (const consequence of Object.values(STORY_CONSEQUENCES))
       expect(consequence.lasting?.label ?? '').not.toMatch(/NaN|undefined/);
+  });
+});
+
+const NAMED: readonly LocationId[] = [
+  'otgontenger',
+  'bogd-khan-uul',
+  'altai-tavan-bogd',
+  'khan-tengri',
+  'belukha',
+  'altan-ovoo',
+  'eej-khairkhan',
+  'orkhon-valley',
+];
+const PLACE_WORDS: Record<LocationId, RegExp | undefined> = {
+  'golden-pasture': undefined,
+  'silent-river': /Silent River/,
+  'broken-pass': /Broken Pass/,
+  'heart-of-the-steppe': undefined,
+  otgontenger: /Otgontenger/,
+  'bogd-khan-uul': /Bogd Khan Uul/,
+  'altai-tavan-bogd': /Tavan Bogd/,
+  'khan-tengri': /Khan Tengri/,
+  belukha: /Belukha/,
+  'altan-ovoo': /Altan Ovoo/,
+  'eej-khairkhan': /Eej Khairkhan/,
+  'orkhon-valley': /Orkhon/,
+};
+
+function sceneText(encounter: StoryEncounter): string {
+  return [
+    encounter.title,
+    encounter.setting,
+    ...encounter.lines.map((entry) => entry.text),
+    ...encounter.choices.flatMap((option) => [option.label, option.description, option.response]),
+  ].join(' ');
+}
+
+/** Plays the eight beats through two chosen camps, answering with the given choices. */
+function journey(
+  first: LocationId,
+  second: LocationId,
+  answers: Partial<Record<StoryBeat, string>> = {},
+  route = 'river',
+) {
+  const run = createRun();
+  run.phase = 'playing';
+  const settle = () => {
+    while (openNextStory(run)) resolveStory(run, answers[run.story.active!.id]);
+  };
+  const arrive = (region: number, locationId: LocationId, via = 'river') => {
+    run.story.crossings.push({ route: via, region, population: run.clan.population, locationId });
+    run.clan.region = region;
+    run.clan.locationId = locationId;
+    run.clan.stage = region === 3 ? 'final' : 'camp';
+    run.clan.stageTime = 0;
+    settle();
+  };
+  settle();
+  run.clan.stageTime = 45;
+  settle();
+  arrive(1, first, route);
+  arrive(2, second);
+  run.clan.stageTime = GAME.story.campBeatDelay;
+  settle();
+  run.clan.stageTime = 45;
+  settle();
+  arrive(3, 'heart-of-the-steppe');
+  run.clan.stageTime = GAME.story.finalBeatTime;
+  settle();
+  return run;
+}
+
+const ANSWERS: Record<string, Partial<Record<StoryBeat, string>>> = {
+  practical: {
+    fire: 'share-watch',
+    departure: 'pack-food',
+    river: 'test-river',
+    promise: 'promise-guard',
+    earth: 'mend-wheels',
+    court: 'nara-tally',
+    opening: 'hold-watch',
+    road: 'hold-together',
+  },
+  listening: {
+    fire: 'share-work',
+    departure: 'pack-tools',
+    river: 'keep-names',
+    promise: 'promise-remember',
+    earth: 'rest-hands',
+    court: 'trust-erden',
+    opening: 'share-last-meal',
+    road: 'carry-song',
+  },
+};
+
+describe('destination-specific scenes', () => {
+  it('gives every eligible first and second camp its own scene and keeps the original titles', () => {
+    const firstTitles = new Set<string>();
+    const secondTitles = new Set<string>();
+    for (const id of ['silent-river', ...NAMED] as LocationId[]) {
+      const run = createRun();
+      run.clan.region = 1;
+      run.clan.locationId = id;
+      firstTitles.add(storyEncounter(run, 'river').title);
+    }
+    for (const id of ['broken-pass', ...NAMED] as LocationId[]) {
+      const run = createRun();
+      run.clan.region = 2;
+      run.clan.locationId = id;
+      secondTitles.add(storyEncounter(run, 'earth').title);
+      expect(storyEncounter(run, 'promise').title).toBe('A promise chosen.');
+    }
+    expect(firstTitles.size).toBe(9);
+    expect(secondTitles.size).toBe(9);
+    expect(firstTitles).toContain('Voices across the ice.');
+    expect(secondTitles).toContain('When the earth moves.');
+    expect(firstTitles).not.toContain('Whose road is this?');
+  });
+
+  it('never names an unvisited place across every ordered pair of camps and both answer sets', () => {
+    const firsts: LocationId[] = ['silent-river', ...NAMED];
+    const seconds: LocationId[] = ['broken-pass', ...NAMED];
+    for (const first of firsts)
+      for (const second of seconds) {
+        if (first === second) continue;
+        for (const answers of Object.values(ANSWERS)) {
+          const run = journey(first, second, answers);
+          expect(run.story.records.map((record) => record.encounter.id)).toEqual(STORY_ORDER);
+          const text = [
+            ...run.story.records.map((record) => sceneText(record.encounter)),
+            ...epilogueText(run),
+          ].join(' ');
+          for (const [id, pattern] of Object.entries(PLACE_WORDS))
+            if (pattern && id !== first && id !== second) expect(text).not.toMatch(pattern);
+          expect(text).not.toMatch(/undefined|NaN|\$\{/);
+        }
+      }
+  });
+
+  it('recalls the response actually chosen at each camp during the final defense', () => {
+    const run = journey('eej-khairkhan', 'orkhon-valley', ANSWERS.listening);
+    const opening = sceneText(run.story.records[6]!.encounter);
+    const road = sceneText(run.story.records[7]!.encounter);
+    expect(opening).toContain('We did it at Eej Khairkhan');
+    expect(opening).toContain('households have the tally');
+    expect(road).toContain('rested by the Orkhon');
+    const skipped = journey('eej-khairkhan', 'orkhon-valley');
+    expect(sceneText(skipped.story.records[6]!.encounter)).not.toMatch(/Eej Khairkhan/);
+    expect(sceneText(skipped.story.records[7]!.encounter)).not.toMatch(/Orkhon/);
+  });
+
+  it('acknowledges a rescue only when the first crossing actually answered the blue banners', () => {
+    const rescued = journey('belukha', 'broken-pass', ANSWERS.listening, 'refuge');
+    const arrival = rescued.story.records[2]!.encounter;
+    expect(arrival.lines.some((entry) => entry.speaker === 'newcomer')).toBe(true);
+    expect(sceneText(arrival)).toContain('room we made in the wagons is full');
+    const unanswered = journey('belukha', 'broken-pass', ANSWERS.listening);
+    expect(
+      unanswered.story.records[2]!.encounter.lines.map((entry) => entry.speaker),
+    ).not.toContain('newcomer');
+    expect(sceneText(unanswered.story.records[2]!.encounter)).toContain('nobody is sleeping in it');
+  });
+
+  it('lets the clan hand the court tally to Nara, with a lasting effect and later callback', () => {
+    const run = journey('otgontenger', 'khan-tengri', ANSWERS.practical);
+    expect(run.story.records[5]!.choice?.id).toBe('nara-tally');
+    expect(sceneText(run.story.records[6]!.encounter)).toContain('I have the tally');
+    expect(companionBonds(run).nara).toBeGreaterThanOrEqual(GAME.story.bonds.close);
+    expect(run.clan.campEffects.multipliers.clanProtection).toBeLessThan(1);
+  });
+
+  it('reflects the starting tradition and actual succession without inventing either', () => {
+    const run = createRun();
+    run.startingTradition = 'outriders';
+    expect(storyEncounter(run, 'fire').setting).toContain('second rider');
+    run.startingTradition = 'pathfinders';
+    expect(storyEncounter(run, 'fire').setting).toContain('travel faster');
+    run.clan.region = 2;
+    run.clan.locationId = 'broken-pass';
+    expect(sceneText(storyEncounter(run, 'promise'))).not.toMatch(/Khans’ hands/);
+    run.khan.generation = 3;
+    expect(sceneText(storyEncounter(run, 'promise'))).toContain('3 Khans’ hands');
   });
 });

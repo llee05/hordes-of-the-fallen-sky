@@ -76,7 +76,7 @@ test('complete the two acts, all eight choices, three crossings, and a survivor-
   await choose(page, 'pack-food');
   await cross(page, 'refuge', 1);
   await expect(page.getByRole('heading', { name: 'Voices across the ice.' })).toBeVisible();
-  await expect(page.locator('.story-dialogue')).toContainText('families we brought through');
+  await expect(page.locator('.story-dialogue')).toContainText('came in under your banner');
   await choose(page, 'keep-names');
   await campTime(page, 45);
   await cross(page, 'river', 2);
