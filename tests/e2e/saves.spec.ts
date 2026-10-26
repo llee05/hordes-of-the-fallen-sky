@@ -43,7 +43,7 @@ test('manual saves survive reload and restore the exact paused battle, XP, resea
     gem.attracted = true;
     s.dashTimer = 2.8;
     s.invulnerable = 0.4;
-    s.patronSupport.waterTimer = 2.2;
+    s.patronSupport.restore({ ...s.patronSupport.capture(), waterTimer: 2.2 });
   });
   await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
   await page.getByRole('button', { name: 'Save to Slot 1', exact: true }).click();
@@ -52,6 +52,7 @@ test('manual saves survive reload and restore the exact paused battle, XP, resea
     JSON.parse(localStorage.getItem('gloam-expedition-slot-1')!),
   );
   expect(saved.run.pendingUpgrades).toBe(4);
+  expect(saved.world.support.waterTimer).toBe(2.2);
   await page.setViewportSize({ width: 960, height: 600 });
   expect(await page.locator('.save-menu').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
     true,
