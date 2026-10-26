@@ -7,6 +7,12 @@ import {
 } from '../data/campEstate';
 import type { BuildingId, CampEstate, RunState } from '../types';
 import { applyCampEffects, hasDevelopment } from './camp';
+import { rememberClan } from './legacy';
+import {
+  ENCAMPMENT_REMNANT,
+  INTERNAL_DEVELOPMENT_REMNANT,
+  estateReaction,
+} from '../data/storyReactions';
 
 export function createCampEstate(): CampEstate {
   return { tier: 1, slots: ['ger', null, null, null, null, null], internals: {} };
@@ -166,5 +172,15 @@ export function purchaseEstate(
   applyCampEffects(run.clan.campEffects, node.effects);
   run.clan.message = `${node.title} joins the travelling clan.`;
   markExpedition(run, 'construction');
+  const tier = encampment(run);
+  rememberClan(
+    run,
+    node.title,
+    kind === 'encampment'
+      ? `The camp grew to ${tier.slots} building plots and ${tier.internalSlots} internal development slots.`
+      : `${rank === 1 ? 'Organised' : 'Deepened'} within the travelling camp.`,
+    estateReaction(kind, id, rank),
+    kind === 'encampment' ? ENCAMPMENT_REMNANT : INTERNAL_DEVELOPMENT_REMNANT,
+  );
   return true;
 }

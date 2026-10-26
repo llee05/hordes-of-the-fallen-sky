@@ -35,7 +35,7 @@ An internal first rank costs 24 materials, 4 Spirit, and one reserved worker. It
 
 - `data/campEstate.ts` authors tiers, internal developments, and facility level extensions. Existing facilities and crafts remain in `data/clan.ts`.
 - `GAME.camp.estate` holds new balance values, costs, slot allowances, and effect strengths.
-- `state/campEstate.ts` derives facility levels, validates plot/tier/building/worker requirements, and purchases central or internal improvements.
+- `state/campEstate.ts` derives facility levels, validates plot/tier/building/worker requirements, and purchases central or internal improvements. Each successful purchase adds one chronicle memory titled with the tier or rank; rejected purchases record nothing. Reactions come from `estateReaction` in `data/storyReactions.ts` and follow the shared memory bounds, reaction spacing, remnant voice, and Camp scenes setting described in [the story guide](story-prototype.md#lived-history).
 - `state/clan.ts` still validates and charges facility purchases. Plot assignment happens only after all blockers pass. Replayed purchases cannot charge again.
 - `state/camp.ts` applies typed effects once. Economy, patron stacking, targeting, protection, support fire, and arrival rewards consume the existing effect state. Spirit multipliers now include camp effects.
 

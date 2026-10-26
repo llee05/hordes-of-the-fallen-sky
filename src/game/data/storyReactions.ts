@@ -203,6 +203,110 @@ export function buildingReaction(id: BuildingId, pathId?: string): StoryLine {
 
 export const BUILDING_REMNANT = 'Even with so few hands, the clan makes room for one more craft.';
 
+/**
+ * A larger ordo is the clan's own accountable practice: open counts, shared work,
+ * and a camp that still folds onto the wagons. It never becomes a court's claim.
+ * Keyed by the encampment tier reached; the starting Wandering Clan is never bought.
+ */
+const ENCAMPMENT_REACTIONS: Record<number, StoryLine> = {
+  2: {
+    speaker: 'erden',
+    text: 'A tally kept in the open, where anyone can check it. That is the only kind I will keep now.',
+  },
+  3: {
+    speaker: 'boro',
+    text: 'Full stores and a guarded circle. And we can still pack it all by morning.',
+  },
+  4: {
+    speaker: 'nara',
+    text: 'It’s bigger, and it still packs onto the wagons. Everyone knows which load is theirs.',
+  },
+  5: {
+    speaker: 'erden',
+    text: 'The court called its halls eternal. This ordo answers to the people who carry it, and it moves when they do.',
+  },
+};
+
+/**
+ * Each internal path speaks through the companion whose concern it is, with a
+ * first-rank and an experienced-rank line:
+ * governance → Boro (shared judgment over scarce stores), remembrance → Saran,
+ * craft → Nara, warfare → Boro, logistics → Erden, travelling exchange → Nara.
+ */
+const INTERNAL_REACTIONS: Record<string, readonly [StoryLine, StoryLine]> = {
+  'clan-council': [
+    {
+      speaker: 'boro',
+      text: 'Everyone hears what the stores hold before we decide. Then nobody eats in the dark.',
+    },
+    {
+      speaker: 'boro',
+      text: 'The council argues less and decides better. I can live with being outvoted.',
+    },
+  ],
+  'ancestral-hearth': [
+    {
+      speaker: 'saran',
+      text: 'Say their names into the fire. What we carry for them weighs less when we share it.',
+    },
+    {
+      speaker: 'saran',
+      text: 'The young ones know the names now. The hearth remembers when I cannot.',
+    },
+  ],
+  'master-craftsmen': [
+    {
+      speaker: 'nara',
+      text: 'They’re teaching me to stitch felt. I’ve only pricked myself twice.',
+    },
+    { speaker: 'nara', text: 'Now I teach the new ones. That’s how it stays with us.' },
+  ],
+  'war-council': [
+    {
+      speaker: 'boro',
+      text: 'We drill together, so every rider knows the call. Better that than one rider’s orders.',
+    },
+    {
+      speaker: 'boro',
+      text: 'The riders hold their lines without me shouting. Good. I would rather count horses.',
+    },
+  ],
+  'supply-organisation': [
+    {
+      speaker: 'erden',
+      text: 'Every sack has a mark and a keeper. Anyone may read the list.',
+    },
+    {
+      speaker: 'erden',
+      text: 'The lists balance at every crossing now. I check them twice anyway.',
+    },
+  ],
+  'travelling-merchants': [
+    {
+      speaker: 'nara',
+      text: 'Traders on the road! I asked them where they’ve been. Everywhere, they said.',
+    },
+    {
+      speaker: 'nara',
+      text: 'The traders wait for us now. They say our camp keeps its word.',
+    },
+  ],
+};
+
+/** Choose the voice for a validated encampment tier or internal development rank. */
+export function estateReaction(
+  kind: 'encampment' | 'internal',
+  id: string,
+  rank: number,
+): StoryLine | undefined {
+  return kind === 'encampment' ? ENCAMPMENT_REACTIONS[rank] : INTERNAL_REACTIONS[id]?.[rank - 1];
+}
+
+export const ENCAMPMENT_REMNANT =
+  'However few remain, the camp grows a little and still folds onto the wagons.';
+export const INTERNAL_DEVELOPMENT_REMNANT =
+  'However few remain, the new work is taken up and kept.';
+
 /** The record-keeper speaks for a loss; who keeps the record depends on the court scene. */
 export function lossReaction(run: RunState, peopleLost: number): StoryLine {
   if (run.story.peopleLost >= 3)
