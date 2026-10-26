@@ -2,7 +2,13 @@ import { GAME } from '../config';
 import type { LocationId, RunState } from '../types';
 import type { StoryLine } from '../story/types';
 import { currentLocation } from './journey';
-import { chosenKhanReaction, fallenKhanReaction } from '../data/storyReactions';
+import {
+  CHOSEN_KHAN_REMNANT,
+  FALLEN_KHAN_REMNANT,
+  chosenKhanReaction,
+  clanVoiceLine,
+  fallenKhanReaction,
+} from '../data/storyReactions';
 
 export interface KhanRecord {
   trait?: import('../data/successors').SuccessorTrait;
@@ -57,11 +63,7 @@ export function rememberClan(
   const legacy = run.legacy;
   const canSpeak =
     run.clan.population > 0 && run.story.enabled && run.elapsed >= legacy.reactionUntil;
-  const line = canSpeak
-    ? run.clan.population < 5
-      ? { speaker: 'clan' as const, text: remnant }
-      : reaction
-    : undefined;
+  const line = canSpeak ? (run.clan.population < 5 ? clanVoiceLine(remnant) : reaction) : undefined;
   legacy.totalMemories += 1;
   legacy.memories.push({
     sequence: legacy.totalMemories,
@@ -97,7 +99,7 @@ export function rememberFallenKhan(run: RunState): void {
     `Khan ${run.khan.generation} fell`,
     'The clan began choosing another leader while its defenses fought on.',
     fallenKhanReaction(run),
-    'The banner remains with the people while another Khan is chosen.',
+    FALLEN_KHAN_REMNANT,
   );
 }
 
@@ -117,6 +119,6 @@ export function rememberChosenKhan(run: RunState): void {
     `Khan ${run.khan.generation} took the banner`,
     `${run.clan.population} people carried their buildings, traditions, and journey forward.`,
     chosenKhanReaction(run),
-    'Another hand takes the banner. The remaining people carry their learning onward.',
+    CHOSEN_KHAN_REMNANT,
   );
 }

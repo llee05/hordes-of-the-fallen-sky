@@ -1,5 +1,6 @@
 import { GAME } from '../config';
 import { FIELD_OBJECTIVES, type FieldObjectiveKind } from '../data/fieldObjectives';
+import { FIELD_OBJECTIVE_REMNANT, fieldObjectiveReaction } from '../data/storyReactions';
 import type { RunState } from '../types';
 import { currentLocation } from './journey';
 import { rememberClan } from './legacy';
@@ -85,11 +86,8 @@ export function completeFieldObjective(run: RunState): boolean {
     run,
     definition.title,
     `${definition.instruction} Secured: ${definition.reward}.`,
-    {
-      speaker: 'boro',
-      text: 'Another journey made together. Bring what we found beside the fire.',
-    },
-    'The remaining hands bring the rescued supplies and travellers into camp.',
+    fieldObjectiveReaction(run, objective.kind),
+    FIELD_OBJECTIVE_REMNANT,
   );
   return true;
 }

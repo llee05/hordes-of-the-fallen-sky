@@ -1,6 +1,8 @@
 import { choseStory } from '../state/storyBonds';
 import type { BuildingId, RunState } from '../types';
 import type { StoryLine } from '../story/types';
+import type { CrossingRoute } from './crossings';
+import type { FieldObjectiveKind } from './fieldObjectives';
 
 /**
  * Choose reactions when recording a moment so later choices cannot rewrite its transcript.
@@ -85,4 +87,94 @@ export function skybreakerReaction(): StoryLine {
     speaker: 'boro',
     text: 'It is down. Let the little ones see it lying still, then back to the wagons. We are not through yet.',
   };
+}
+
+// ---------------------------------------------------------------------------
+// Journey and camp moment voices, recorded by state/clan.ts, state/legacy.ts,
+// state/crossingEncounters.ts, and state/fieldObjectives.ts. Each moment pairs
+// its companion reaction with the collective remnant voice heard when fewer
+// than five survivors remain. Factual chronicle titles and details stay at the
+// call sites; every spoken word lives here.
+// ---------------------------------------------------------------------------
+
+/** Boro counts the households before the caravan moves. */
+export function departureReaction(_run: RunState): StoryLine {
+  return {
+    speaker: 'boro',
+    text: 'Count the households before we move. Keep the packs balanced and the herd beside us.',
+  };
+}
+
+export const DEPARTURE_REMNANT = 'The remaining hands load the wagons and count before leaving.';
+
+/** Boro keeps the remaining stores close when the provisions run out. */
+export function starvationReaction(_run: RunState): StoryLine {
+  return {
+    speaker: 'boro',
+    text: 'There is nothing left to share. Keep the remaining stores close when we find them.',
+  };
+}
+
+export const STARVATION_REMNANT =
+  'Empty stores cost another life. The remaining people keep moving.';
+
+/** Nara makes room for arrived households; a quieter arrival belongs to Saran. */
+export function arrivalReaction(_run: RunState, arrivedPeople: number): StoryLine {
+  return arrivedPeople
+    ? {
+        speaker: 'nara',
+        text: 'Move the bowls closer. There are more people to make room for.',
+      }
+    : {
+        speaker: 'saran',
+        text: 'Set the covered embers down gently. We can make a hearth here.',
+      };
+}
+
+export const ARRIVAL_REMNANT = 'Those who reached the pasture make another small hearth.';
+
+/** Nara counts the caravan again when every household that left is still here. */
+export function safeCrossingReaction(_run: RunState): StoryLine {
+  return {
+    speaker: 'nara',
+    text: 'I counted again. Every household that left is still here.',
+  };
+}
+
+export const SAFE_CROSSING_REMNANT = 'Every household that departed reached the next camp.';
+
+/** Saran claims what a completed crossing objective protected for the camp. */
+export function crossingObjectiveReaction(_run: RunState, _route: CrossingRoute): StoryLine {
+  return {
+    speaker: 'saran',
+    text: 'Count everyone who came through. What you protected belongs beside our fire.',
+  };
+}
+
+export const CROSSING_OBJECTIVE_REMNANT = 'The people who came through count what they saved.';
+
+/** Boro brings a completed field objective back beside the fire. */
+export function fieldObjectiveReaction(_run: RunState, _kind: FieldObjectiveKind): StoryLine {
+  return {
+    speaker: 'boro',
+    text: 'Another journey made together. Bring what we found beside the fire.',
+  };
+}
+
+export const FIELD_OBJECTIVE_REMNANT =
+  'The remaining hands bring the rescued supplies and travellers into camp.';
+
+// --- Succession remnants ----------------------------------------------------
+// The succession reactions above pair with these collective voices in
+// state/legacy.ts.
+
+export const FALLEN_KHAN_REMNANT =
+  'The banner remains with the people while another Khan is chosen.';
+
+export const CHOSEN_KHAN_REMNANT =
+  'Another hand takes the banner. The remaining people carry their learning onward.';
+
+/** The collective remembered-road voice that stands in below five survivors. */
+export function clanVoiceLine(text: string): StoryLine {
+  return { speaker: 'clan', text };
 }

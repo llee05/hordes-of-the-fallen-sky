@@ -6,7 +6,16 @@ import {
 } from './campEstate';
 import { recordClanDamage, type ClanDamageCause } from './clanSafety';
 import { rememberClan } from './legacy';
-import { buildingReaction, lossReaction } from '../data/storyReactions';
+import {
+  ARRIVAL_REMNANT,
+  DEPARTURE_REMNANT,
+  STARVATION_REMNANT,
+  arrivalReaction,
+  buildingReaction,
+  departureReaction,
+  lossReaction,
+  starvationReaction,
+} from '../data/storyReactions';
 import { beginCrossingEncounter, settleCrossingEncounter } from './crossingEncounters';
 import { GAME } from '../config';
 import { BUILDINGS, ROUTES, startingTradition } from '../data/clan';
@@ -229,11 +238,8 @@ export function beginMigration(
     run,
     'The camp packed for the road',
     `${clan.population} people set out toward ${destination.name} along ${route.title}.`,
-    {
-      speaker: 'boro',
-      text: 'Count the households before we move. Keep the packs balanced and the herd beside us.',
-    },
-    'The remaining hands load the wagons and count before leaving.',
+    departureReaction(run),
+    DEPARTURE_REMNANT,
   );
   return true;
 }
@@ -346,11 +352,8 @@ export function advanceClan(
       run,
       'The provisions ran out',
       'Starvation cost a person and livestock; low resolve may bring further losses.',
-      {
-        speaker: 'boro',
-        text: 'There is nothing left to share. Keep the remaining stores close when we find them.',
-      },
-      'Empty stores cost another life. The remaining people keep moving.',
+      starvationReaction(run),
+      STARVATION_REMNANT,
     );
   }
   if (clan.population === 0 || clan.integrity === 0) return 'lost';
@@ -390,16 +393,8 @@ export function advanceClan(
       run,
       arrivedPeople ? 'New households at the fire' : 'The caravan arrived',
       `${clan.population} people reached ${destination.name} by ${route.title}.`,
-      arrivedPeople
-        ? {
-            speaker: 'nara',
-            text: 'Move the bowls closer. There are more people to make room for.',
-          }
-        : {
-            speaker: 'saran',
-            text: 'Set the covered embers down gently. We can make a hearth here.',
-          },
-      'Those who reached the pasture make another small hearth.',
+      arrivalReaction(run, arrivedPeople),
+      ARRIVAL_REMNANT,
     );
     return 'arrived';
   }
