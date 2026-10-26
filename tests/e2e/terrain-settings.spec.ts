@@ -89,7 +89,7 @@ for (const scenario of [
     await page.getByRole('button', { name: 'Back ESC', exact: true }).click();
     await page.keyboard.press('F8');
     await page.locator(`[data-developer-level="${scenario.level}"]`).click();
-    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.evaluate(() => {
       const s = (window as any).__gloam.scene;
