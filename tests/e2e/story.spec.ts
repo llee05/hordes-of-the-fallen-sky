@@ -130,6 +130,8 @@ test('complete the two acts, all eight choices, three crossings, and a survivor-
 test('story cannot grant twice, and banked knowledge points survive a camp conversation', async ({
   page,
 }) => {
+  // Two research purchases and both memory menus exhaust 30s on CI's software renderer.
+  test.setTimeout(60000);
   await beginStory(page);
   const outcome = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -216,6 +218,8 @@ test('camp panels fit desktop and narrow previews, skip neutrally, and freeze al
 test('controller chooses, skips, reads memories, and returns to the paused expedition', async ({
   page,
 }) => {
+  // Story setup plus sampled controller edges can exceed 30s on a busy software renderer.
+  test.setTimeout(60000);
   await page.addInitScript(() => {
     const pad = {
       connected: true,
@@ -241,8 +245,14 @@ test('controller chooses, skips, reads memories, and returns to the paused exped
   await press(9);
   await press(13);
   await expect(page.getByRole('button', { name: 'Patron tech tree', exact: true })).toBeFocused();
-  await press(13);
-  await press(13);
+  // f780c79 added save actions to Pause; follow focus to the target instead of counting presses.
+  const memories = page.getByRole('button', { name: 'Our remembered road', exact: true });
+  const buttons = await page.locator('.pause-menu button').count();
+  for (let step = 0; step < buttons; step++) {
+    if (await memories.evaluate((button) => button === document.activeElement)) break;
+    await press(13);
+  }
+  await expect(memories).toBeFocused();
   await press(0);
   await expect(page.getByRole('heading', { name: 'Our remembered road.' })).toBeVisible();
   await press(12);
