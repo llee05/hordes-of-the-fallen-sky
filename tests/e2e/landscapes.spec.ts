@@ -1,11 +1,18 @@
 import { expect, test } from '@playwright/test';
 import { LOCATIONS } from '../../src/game/data/clan';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
+import { sceneFrames } from './helpers';
+
+// Readback filmstrips add substantial work to software-rendered terrain frames.
+test.use({ trace: 'off' });
+
+// These checks inspect Phaser ground/prop objects, exclusive to the 2D compatibility renderer.
 
 test('all twelve landscapes render bundled scenery, replace old props, and freeze in menus', async ({
   page,
 }) => {
-  test.setTimeout(120000);
+  // Budget each of the twelve scene rebuilds independently of local GPU speed.
+  test.setTimeout(LOCATIONS.length * 30000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/?terrain=2d');
@@ -49,6 +56,7 @@ test('all twelve landscapes render bundled scenery, replace old props, and freez
       });
     await page.screenshot({ path: `test-results/landscapes/${place.id}.png` });
     await page.keyboard.press('Escape');
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'paused');
     const frozen = await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       (window as any).oldScenery = [...scene.landscape.props, ...scene.landscape.regional.list];
@@ -58,7 +66,7 @@ test('all twelve landscapes render bundled scenery, replace old props, and freez
         wind: [...scene.landscape.wind.commandBuffer],
       };
     });
-    await page.waitForTimeout(100);
+    await sceneFrames(page);
     expect(
       await page.evaluate(() => {
         const scene = (window as any).__gloam.scene;

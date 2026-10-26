@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { openTitle, sceneFrames, startExpedition } from './helpers';
 
 test('native spell warnings cancel on pinning, pause in menus, and leave bounded non-stacking ground effects', async ({
   page,
@@ -32,10 +32,11 @@ test('native spell warnings cancel on pinning, pause in menus, and leave bounded
   });
   expect(warned).toEqual({ count: 2, released: false });
   await page.locator('#build').click();
+  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'building');
   const frozen = await page.evaluate(() =>
     structuredClone((window as any).__gloam.scene.areaThreats),
   );
-  await page.waitForTimeout(300);
+  await sceneFrames(page);
   expect(await page.evaluate(() => (window as any).__gloam.scene.areaThreats)).toEqual(frozen);
   await page.locator('[data-action="exit-camp"]').first().click();
   const effects = await page.evaluate(async () => {
@@ -70,6 +71,11 @@ for (const location of ['bogd-khan-uul', 'otgontenger', 'orkhon-valley', 'eej-kh
     await page.goto('/');
     await page.getByRole('button', { name: 'Developer mode F8' }).click();
     await page.locator(`[data-developer-level="destination:2:${location}"]`).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
+    await expect
+      .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.locationId))
+      .toBe(location);
     await expect
       .poll(
         () => page.evaluate(() => (window as any).__gloam.scene.landscape.world3d?.pendingChunks),
@@ -121,6 +127,11 @@ test('terrain rules warn on real cliff-foot ground and woodland concealment reve
   await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-level="destination:2:otgontenger"]').click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.locationId))
+    .toBe('otgontenger');
   await expect
     .poll(
       () => page.evaluate(() => (window as any).__gloam.scene.landscape.world3d?.pendingChunks),
@@ -164,6 +175,11 @@ test('terrain rules warn on real cliff-foot ground and woodland concealment reve
   expect(rock.count).toBeLessThanOrEqual(3);
   await page.keyboard.press('F8');
   await page.locator('[data-developer-level="destination:2:bogd-khan-uul"]').click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.locationId))
+    .toBe('bogd-khan-uul');
   await expect
     .poll(
       () => page.evaluate(() => (window as any).__gloam.scene.landscape.world3d?.pendingChunks),

@@ -1,4 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
+import { sceneFrames } from './helpers';
+
+// The chunk meshes and debug overlays below belong to the 2D compatibility renderer.
+// Avoid trace filmstrips reading back every software-rendered terrain frame.
+test.use({ trace: 'off' });
 
 async function openMountains(page: Page): Promise<void> {
   await page.goto('/?terrain=2d');
@@ -16,13 +21,7 @@ async function openMountains(page: Page): Promise<void> {
 async function settled(page: Page): Promise<void> {
   // Camera.worldView updates after the scene update. Wait for a changed camera to
   // reach the streamer before checking pending work from the previous view.
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        const scene = (window as any).__gloam.scene;
-        scene.events.once('postupdate', () => scene.events.once('postupdate', () => resolve()));
-      }),
-  );
+  await sceneFrames(page);
   await expect
     .poll(
       () =>
@@ -35,7 +34,8 @@ async function settled(page: Page): Promise<void> {
 test('mountain chunks blend existing materials, stream without seams or landform sprites, and expose paused debug overlays', async ({
   page,
 }) => {
-  test.setTimeout(120000);
+  // Overview streaming, three camera views and nine debug views each require real renders.
+  test.setTimeout(240000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await openMountains(page);
@@ -150,10 +150,11 @@ test('mountain chunks blend existing materials, stream without seams or landform
   await settled(page);
   await page.screenshot({ path: 'test-results/mountains/otgontenger-camp-edge.png' });
   await page.keyboard.press('Escape');
+  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'paused');
   const frozen = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.keyboard.down('F9');
   await expect.poll(async () => (await inspect()).debug).toBe('elevation');
-  await page.waitForTimeout(120);
+  await sceneFrames(page);
   await page.keyboard.up('F9');
   expect((await inspect()).debug).toBe('elevation');
   for (const mode of ['elevation', 'slope', 'cliffs', 'collision', 'off']) {
@@ -206,11 +207,12 @@ test('cliffs stop a galloping Khan and are removed with streamed terrain on migr
   expect(position).toBeGreaterThan(wall.start);
   expect(position).toBeLessThanOrEqual(wall.x - 9);
   await page.keyboard.press('Escape');
+  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'paused');
   const before = await page.evaluate(() => ({
     elapsed: (window as any).__gloam.scene.run.elapsed,
     x: (window as any).__gloam.scene.player.x,
   }));
-  await page.waitForTimeout(150);
+  await sceneFrames(page);
   expect(
     await page.evaluate(() => ({
       elapsed: (window as any).__gloam.scene.run.elapsed,

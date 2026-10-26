@@ -297,17 +297,17 @@ runtime, with the same local GPU flags and renderer check. For Electron, `CI` or
 `E2E_HEADLESS=1` disables those overrides and checks; native windows still require
 a display session or Xvfb on Linux.
 
-Shared browser helpers use the compatibility 2D terrain by default, keeping CI's
-software-rendered workload unchanged. To exercise those same regressions in the
-default angled 3D view on a local GPU, run:
+Shared browser helpers use the compatibility 2D terrain by default, including on
+software-rendered CI. To exercise those same regressions in the default angled 3D
+view on a local GPU, run:
 
 ```sh
 E2E_TERRAIN=3d E2E_PORT=5244 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 ```
 
-Specs that explicitly select a renderer retain that selection: `world3d` tests
-always cover 3D, while the `landscapes`, `mountains`, and `rivers` diagnostics
-inspect the compatibility renderer's Phaser objects and stay in 2D.
+Specs with explicit renderer URLs retain that selection. The `world3d` suite
+exercises 3D and its 2D fallback; the `landscapes`, `mountains`, and `rivers`
+diagnostics inspect the compatibility renderer's Phaser objects and stay in 2D.
 
 Each browser test run starts its own server, so several checkouts on one host
 need distinct ports. Set `E2E_PORT` (default 5173) to move the `test:e2e` dev

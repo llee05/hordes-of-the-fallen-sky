@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
+import { LANDSCAPES } from '../../src/game/data/landscapes';
+import { sceneFrames } from './helpers';
 
 // Trace filmstrips repeatedly read both GPU canvases and distort the render load sample.
 test.use({ viewport: { width: 1280, height: 800 }, trace: 'off' });
@@ -20,13 +22,7 @@ async function open(page: Page): Promise<void> {
   await settled(page);
 }
 async function settled(page: Page): Promise<void> {
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        const s = (window as any).__gloam.scene;
-        s.events.once('postupdate', () => s.events.once('postupdate', () => resolve()));
-      }),
-  );
+  await sceneFrames(page);
   await expect
     .poll(
       () => page.evaluate(() => (window as any).__gloam.scene.landscape.world3d?.pendingChunks),
@@ -76,6 +72,7 @@ test('3D terrain streams real walls, anchors painted sprites, and exposes paused
   expect(start.silhouette).toBe(true);
   expect(start.player.y).toBeCloseTo(start.h, 5);
   await page.keyboard.press('Backquote');
+  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'console');
   const frozen = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   for (const mode of [
     'wireframe',
@@ -100,9 +97,13 @@ test('3D terrain streams real walls, anchors painted sprites, and exposes paused
   await page.keyboard.press('F7');
   await expect(page.locator('#game-hud')).toBeVisible();
   await page.keyboard.press('F6');
-  expect(await page.evaluate(() => (window as any).__gloam.scene.landscape.world3d.angle)).toBe(60);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.landscape.world3d.angle))
+    .toBe(60);
   await page.keyboard.press('F8');
   await page.locator('[data-developer-level="destination:2:orkhon-valley"]').click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(page.locator('#location')).toHaveText('ORKHON VALLEY');
   await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1);
   await settled(page);
   expect(await page.evaluate(() => (window as any).__gloam.scene.cameras.main.alpha)).toBe(0);
@@ -212,7 +213,10 @@ test('bounded atlas batches support pooled combat without rebuilding settled ter
     s.shootVolley(s.player.x, s.player.y, target, 250, 0.01);
   });
   await settled(page);
-  await page.waitForTimeout(7500);
+  const elapsed = await page.evaluate(() => (window as any).__gloam.scene.run.elapsed);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.elapsed), { timeout: 60000 })
+    .toBeGreaterThan(elapsed + 2);
   const result = await page.evaluate(async () => {
     const s = (window as any).__gloam.scene;
     const w = s.landscape.world3d;
@@ -278,33 +282,34 @@ test('bounded atlas batches support pooled combat without rebuilding settled ter
   await page.screenshot({ path: 'test-results/world3d/combat-stress.png' });
 });
 
-test('all destinations use composed scenes by default, stream cleanly, and freeze water in the console', async ({
-  page,
-}) => {
-  test.setTimeout(240000);
-  const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Developer mode F8' })).toBeVisible();
-  const places = [
-    'golden-pasture',
-    'silent-river',
-    'broken-pass',
-    'heart-of-the-steppe',
-    'otgontenger',
-    'bogd-khan-uul',
-    'altai-tavan-bogd',
-    'khan-tengri',
-    'belukha',
-    'altan-ovoo',
-    'eej-khairkhan',
-    'orkhon-valley',
-  ];
-  for (const id of places) {
+const places = [
+  'golden-pasture',
+  'silent-river',
+  'broken-pass',
+  'heart-of-the-steppe',
+  'otgontenger',
+  'bogd-khan-uul',
+  'altai-tavan-bogd',
+  'khan-tengri',
+  'belukha',
+  'altan-ovoo',
+  'eej-khairkhan',
+  'orkhon-valley',
+] as const;
+
+// Each destination has its own render/stream budget on software-rendered CI.
+for (const id of places) {
+  test(`default 3D ${id} streams cleanly and freezes water in the console`, async ({ page }) => {
+    test.setTimeout(120000);
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: 'Developer mode F8' })).toBeVisible();
     await page.keyboard.press('F8');
     const choice = page.locator(`[data-developer-level$=":${id}"]`).first();
     await choice.click();
     await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
     await expect
       .poll(() =>
         page.evaluate(
@@ -340,17 +345,54 @@ test('all destinations use composed scenes by default, stream cleanly, and freez
     expect(result.anchor).toBeCloseTo(result.height, 3);
     expect(result.road).toBe(true);
     await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1);
-  }
-  await page.keyboard.press('Backquote');
-  const time = await page.evaluate(
-    () => (window as any).__gloam.scene.landscape.world3d.water.time.value,
-  );
-  await page.waitForTimeout(500);
-  expect(
-    await page.evaluate(() => (window as any).__gloam.scene.landscape.world3d.water.time.value),
-  ).toBe(time);
-  await page.keyboard.press('Backquote');
-  await page.screenshot({ path: 'test-results/overhaul/orkhon-default.png' });
+    await page.keyboard.press('Backquote');
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'console');
+    const frozenState = () =>
+      page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        return {
+          run: JSON.stringify(scene.run),
+          water: scene.landscape.world3d.water?.time.value ?? null,
+        };
+      });
+    const frozen = await frozenState();
+    if (LANDSCAPES[id].water) expect(frozen.water).toEqual(expect.any(Number));
+    else expect(frozen.water).toBeNull();
+    await sceneFrames(page);
+    expect(await frozenState()).toEqual(frozen);
+    await page.keyboard.press('Backquote');
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
+    await page.screenshot({ path: `test-results/overhaul/${id}-default.png` });
+    // Keep the original repeated-restart cleanup coverage with independent scene budgets.
+    await page.evaluate(() => {
+      (window as any).previousWorld = (window as any).__gloam.scene.landscape.world3d;
+    });
+    await page.keyboard.press('F8');
+    await page.locator('[data-developer-level="chapter:golden-pasture"]').click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const world = (window as any).__gloam.scene.landscape.world3d;
+          return world !== (window as any).previousWorld && world?.terrain.region.scene.id;
+        }),
+      )
+      .toBe('golden-pasture');
+    expect(
+      await page.evaluate(() => ({
+        chunks: (window as any).previousWorld.chunks.size,
+        connected: (window as any).previousWorld.renderer.domElement.isConnected,
+      })),
+    ).toEqual({ chunks: 0, connected: false });
+    await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1);
+    expect(errors).toEqual([]);
+  });
+}
+
+test('the explicit 2D compatibility view has no 3D canvas', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/?terrain=2d');
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(0);
