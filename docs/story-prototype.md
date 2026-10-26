@@ -108,7 +108,7 @@ The mountain passage visibly clears during the final three-minute defense. Survi
 
 It ends with the spare bowl and the promise of room beside the fire.
 
-The named companions are voices within an abstract population. The game never assigns individual casualties. Below five people, scenes use a remnant account and the ending omits named companions. After any loss, the ending speaks of companions' practices (“as Erden promised”) rather than placing all four at the new fire. A one-person ending uses singular narration. No scene forces a death to serve the plot.
+The named companions are voices within an abstract population. The game never assigns individual casualties. Below five people, scenes use a remnant account and the ending omits named companions. At the two chosen camps, that account is the destination’s own `remnant` line, written to hold for a single survivor. After any loss, the ending speaks of companions' practices (“as Erden promised”) rather than placing all four at the new fire. A one-person ending uses singular narration. No scene forces a death to serve the plot.
 
 Defeat shows the actual journey result and leaves the memories available. A restart clears the story, choices, crossings, losses, and build. Full expedition saves preserve active choices, resolved transcripts, applied lasting effects, crossings, losses, and clan memories. Loading does not resolve a choice or grant its benefit again. See [the expedition-save contract](expedition-saves.md).
 

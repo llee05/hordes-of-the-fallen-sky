@@ -21,6 +21,11 @@ export interface FirstStop {
   image: string;
   setting: string;
   lines: readonly StoryLine[];
+  /**
+   * The collective account below five survivors. It names no companion and must read
+   * truthfully for a single survivor, using only imagery from this treatment.
+   */
+  remnant: string;
   /** Practical testing and provisioning (`test-river`). */
   test: StoryResponse;
   /** Listening and keeping people connected (`keep-names`). */
@@ -39,6 +44,11 @@ export interface SecondStop {
   image: string;
   setting: string;
   lines: readonly StoryLine[];
+  /**
+   * The collective account below five survivors. It names no companion and must read
+   * truthfully for a single survivor, using only imagery from this treatment.
+   */
+  remnant: string;
   /** Preparing travelling equipment (`mend-wheels`). */
   mend: StoryResponse;
   /** Relieving tired hands (`rest-hands`). */
@@ -69,6 +79,8 @@ export const FIRST_STOPS: Partial<Record<LocationId, FirstStop>> = {
         'I know that kind of promise. It asks for obedience first and offers safety later.',
       ),
     ],
+    remnant:
+      'Winter has come in the wrong season, and a familiar voice calls from past the ice. Whoever remains must choose between that voice and the bank where the reeds bend.',
     test: respond(
       'Trust the tested ground',
       'Boro tries the bank with a pole for a ford and winter feed.',
@@ -106,6 +118,8 @@ export const FIRST_STOPS: Partial<Record<LocationId, FirstStop>> = {
       ),
       say('erden', 'A number everyone has heard is harder to bend. I count that… in its favour.'),
     ],
+    remnant:
+      'The summit shines over grass too thin for the herd, with the White Silence lying on it in patches. Whoever remains must count what is really here before promising anything.',
     test: respond(
       'Walk the slopes with Boro',
       'Measure the grazing and dry what the herd can’t eat.',
@@ -145,6 +159,8 @@ export const FIRST_STOPS: Partial<Record<LocationId, FirstStop>> = {
         'The court built walls against every season. It was very comfortable, right up until the sky tore.',
       ),
     ],
+    remnant:
+      'Wooded slopes break the wind, and for once the gers stand still at night. It would be easy to stay. Whoever remains must decide how to spend the shelter.',
     test: respond(
       'Fill the travelling stores',
       'Use the sheltered days to pack before anyone fully unpacks.',
@@ -182,6 +198,8 @@ export const FIRST_STOPS: Partial<Record<LocationId, FirstStop>> = {
       say('erden', 'I have taken bearings to all five. Numbers do not argue.'),
       say('saran', 'Numbers don’t. People do. So let each of us say what we saw, and why.'),
     ],
+    remnant:
+      'Five peaks line the horizon, and over one of them a cloud has not moved all day. Whoever remains must pick a landmark and decide what to make of the stillness.',
     test: respond(
       'Ride out and look',
       'Boro and one rider try the nearest approach before the arguing goes on.',
@@ -222,6 +240,8 @@ export const FIRST_STOPS: Partial<Record<LocationId, FirstStop>> = {
       ),
       say('erden', 'At court, a title was how you made people obey. We called that order.'),
     ],
+    remnant:
+      'A sharp summit stands over a hard, sparse camp. There are too few riders for every patrol, and the wagons need a plan that does not wait on any one of them.',
     test: respond(
       'Write a plan the wagons can follow',
       'Boro sets the order of march and the stores for each leg.',
@@ -261,6 +281,8 @@ export const FIRST_STOPS: Partial<Record<LocationId, FirstStop>> = {
       ),
       say('boro', 'Guests still guard their stores. Something has been at the sacks.'),
     ],
+    remnant:
+      'White summits rise over a cool upland halt, and no story the clan carries has names for them. Something has been at the stores. Whoever remains is a guest here.',
     test: respond(
       'Guard and sort the stores',
       'Lift the stores off the ground and count what is left.',
@@ -294,6 +316,8 @@ export const FIRST_STOPS: Partial<Record<LocationId, FirstStop>> = {
       ),
       say('erden', 'A camp that claims a crossroads becomes a toll gate. I have seen it happen.'),
     ],
+    remnant:
+      'Open steppe runs out on every side, and any rider would be seen a day off. Whoever remains must decide whether to pack for the road or keep the near side open.',
     test: respond(
       'Ready stores for the onward road',
       'Gather what the open country offers and pack it for the road.',
@@ -328,6 +352,8 @@ export const FIRST_STOPS: Partial<Record<LocationId, FirstStop>> = {
         'By my count, Saran has carried more than any two of us. I should have said so sooner.',
       ),
     ],
+    remnant:
+      'Warm rock shelters a dry camp, and every drop of water has to be carried up from far below. The same tired hands have carried it, turn after turn.',
     test: respond(
       'Check and share the stores',
       'Boro and Erden count every waterskin and share out the turns by the numbers.',
@@ -366,6 +392,8 @@ export const FIRST_STOPS: Partial<Record<LocationId, FirstStop>> = {
       say('boro', 'Done by who?'),
       say('saran', 'A list of what we eat is not a list of who we are. Add what people know.'),
     ],
+    remnant:
+      'Broad river pastures give the first easy day in a long while. The tally lies open on a felt: food, horses, felt, arrows. Whoever remains must decide what else belongs in it.',
     test: respond(
       'Check the tally against the pasture',
       'Walk the river meadows and correct the count against the grass and the herd.',
@@ -403,6 +431,8 @@ export const SECOND_STOPS: Partial<Record<LocationId, SecondStop>> = {
       ),
       say('nara', 'I can carry the water. You don’t have to give me the smallest bowl.'),
     ],
+    remnant:
+      'Loose stone rattles down the slopes, and the cracks are widening. The wheels, the harness, and the tired hands all need tending, and the ground will not wait.',
     mend: respond(
       'Mend the wheels together',
       'The households sort sound timber and repair their travelling tools.',
@@ -444,6 +474,8 @@ export const SECOND_STOPS: Partial<Record<LocationId, SecondStop>> = {
       ),
       say('nara', 'Then don’t argue. Everyone check someone else’s pack.'),
     ],
+    remnant:
+      'The path up slid away in the night, and the next one is steeper. Every load must be lighter and better tied, with no spare hands to check the knots.',
     mend: respond(
       'Check every load',
       'Repack, retie, and repair the travelling gear for the steeper road.',
@@ -479,6 +511,8 @@ export const SECOND_STOPS: Partial<Record<LocationId, SecondStop>> = {
       say('saran', 'Then we leave it in good order, for whoever needs it next.'),
       say('erden', 'The court never left anything for whoever came next.'),
     ],
+    remnant:
+      'Tremors shake needles from the trees, and the windbreak is half down. It is a good place, which makes it hard to leave in good order.',
     mend: respond(
       'Turn the windbreak into travois',
       'Lash the poles into drags and pack the wagons.',
@@ -511,6 +545,8 @@ export const SECOND_STOPS: Partial<Record<LocationId, SecondStop>> = {
       say('boro', 'Then we redraw it. Out loud, so everyone hears where the cracks are.'),
       say('nara', 'And whoever hauls the wagons gets a say in where they go.'),
     ],
+    remnant:
+      'The ground moved in the night, and half the sketched route is wrong. It has to be redrawn by the same hands that will haul the wagons.',
     mend: respond(
       'Redraw the route, fit the wagons',
       'Try each approach, mark it on the sketch, and fit the wagons to match.',
@@ -549,6 +585,8 @@ export const SECOND_STOPS: Partial<Record<LocationId, SecondStop>> = {
       say('nara', 'The Khan decides, right?'),
       say('saran', 'The Khan answers for it. That is not the same thing.'),
     ],
+    remnant:
+      'The slopes are sliding, and a scattered herd is still out on them. Waiting risks the road; leaving loses the animals.',
     mend: respond(
       'Rig lead lines for the herd',
       'Use the spare rope and harness so the household’s animals travel with the caravan.',
@@ -587,6 +625,8 @@ export const SECOND_STOPS: Partial<Record<LocationId, SecondStop>> = {
       say('boro', 'Wagons I understand. Let them argue over supper.'),
       say('erden', 'What I have seen, I will swear to. What it meant, I will not pretend to know.'),
     ],
+    remnant:
+      'The upland trembles, and nobody can say what the moving ground means. The mismatched cloth in the banner still holds at its seams, and the wagons need mending all the same.',
     mend: respond(
       'Start where they agree',
       'Put every household to work on the wagons; the argument can wait.',
@@ -625,6 +665,8 @@ export const SECOND_STOPS: Partial<Record<LocationId, SecondStop>> = {
         'Tracks, a cleared camp, a marked trail. Signs that someone came this way who would have stopped for them.',
       ),
     ],
+    remnant:
+      'Tremors run through the open ground, and the roads are emptying. Someone may yet come down one of them. Tracks, a cleared camp, and a marked trail are all that can be left.',
     mend: respond(
       'Ready the wagons, mark the trail',
       'Fit the wagons for the rough road and mark the way for whoever follows.',
@@ -661,6 +703,8 @@ export const SECOND_STOPS: Partial<Record<LocationId, SecondStop>> = {
       say('saran', 'I am fine.'),
       say('erden', 'By my count, you are not.'),
     ],
+    remnant:
+      'The dry ground splits in long lines. Nothing moves without water, and the hands that carry it are the most tired of all.',
     mend: respond(
       'Put the water on wheels',
       'Repair the casks and harness so the water travels on wagons, not backs.',
@@ -696,6 +740,8 @@ export const SECOND_STOPS: Partial<Record<LocationId, SecondStop>> = {
       say('boro', 'Or everyone tells you what they’re carrying and you write it down. Faster.'),
       say('nara', 'And if you get it wrong, they tell you.'),
     ],
+    remnant:
+      'The river meadows ripple as the ground shifts. The tally no longer matches what the wagons hold, and it has to be rebuilt while the packing goes on.',
     mend: respond(
       'Rebuild the tally while packing',
       'Each household names its load as it packs; Erden writes, and the wagons fill.',
@@ -728,6 +774,8 @@ const FALLBACK_FIRST: FirstStop = {
     say('saran', 'And I trust the households to say what they have seen.'),
     say('nara', 'Then ask both.'),
   ],
+  remnant:
+    'The White Silence makes familiar signs unreliable. The remaining hands decide what to trust.',
   test: respond(
     'Test the ground',
     'Boro checks the grazing and the approaches before the camp settles.',
@@ -759,6 +807,8 @@ const FALLBACK_SECOND: SecondStop = {
     say('boro', 'The ground warns before it breaks. Watch it, and the wagons can cross.'),
     say('nara', 'I can carry water. Give me real work.'),
   ],
+  remnant:
+    'The ground shifts beneath the camp. The wheels, the harness, and the tired hands all need tending.',
   mend: respond(
     'Mend the wagons',
     'The households repair their travelling tools.',

@@ -486,10 +486,10 @@ export function storyEncounter(run: RunState, id: StoryBeat): StoryEncounter {
     const remembrance: Record<StoryBeat, string> = {
       fire: 'The carried embers become a small fire. A place beside it is still a promise.',
       departure: 'The gers can be packed. The remaining hands must choose what to carry onward.',
-      river: `${c.place} · The White Silence makes familiar signs unreliable. The remaining hands decide what to trust.`,
+      river: `${c.place} · ${firstStop(currentLocation(run).id).remnant}`,
       promise:
         'Scraps of cloth are tied into the blue banner. Those who remain keep the promise to count before leaving.',
-      earth: `${c.place} · The ground shifts beneath the camp. The wheels, the harness, and the tired hands all need tending.`,
+      earth: `${c.place} · ${secondStop(currentLocation(run).id).remnant}`,
       court:
         'A folded tally from the Last Court records what happened in the courtyard. Its witness left questions that the road has not answered.',
       opening: 'Beyond the fallen stone lies the valley. The passage will take time to clear.',

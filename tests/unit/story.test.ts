@@ -6,6 +6,7 @@ import { advanceClan, beginMigration, damageClan } from '../../src/game/state/cl
 import { createRun } from '../../src/game/state/run';
 import { openNextStory, resolveStory } from '../../src/game/state/story';
 import { STORY_CONSEQUENCES, storyConsequence } from '../../src/game/data/storyConsequences';
+import { firstStop, secondStop } from '../../src/game/data/storyDestinations';
 import { companionBonds, companionStanding } from '../../src/game/state/storyBonds';
 import type { LocationId } from '../../src/game/types';
 import type { StoryBeat, StoryEncounter } from '../../src/game/story/types';
@@ -204,9 +205,11 @@ function journey(
   second: LocationId,
   answers: Partial<Record<StoryBeat, string>> = {},
   route = 'river',
+  population?: number,
 ) {
   const run = createRun();
   run.phase = 'playing';
+  if (population !== undefined) run.clan.population = population;
   const settle = () => {
     while (openNextStory(run)) resolveStory(run, answers[run.story.active!.id]);
   };
@@ -283,11 +286,17 @@ describe('destination-specific scenes', () => {
   it('never names an unvisited place across every ordered pair of camps and both answer sets', () => {
     const firsts: LocationId[] = ['silent-river', ...NAMED];
     const seconds: LocationId[] = ['broken-pass', ...NAMED];
+    // Full casts, a small remnant, and a single survivor each take their own text paths.
+    const runs = [
+      ...Object.values(ANSWERS).map((answers) => ({ answers, population: undefined })),
+      { answers: ANSWERS.practical!, population: 3 },
+      { answers: ANSWERS.listening!, population: 1 },
+    ];
     for (const first of firsts)
       for (const second of seconds) {
         if (first === second) continue;
-        for (const answers of Object.values(ANSWERS)) {
-          const run = journey(first, second, answers);
+        for (const { answers, population } of runs) {
+          const run = journey(first, second, answers, 'river', population);
           expect(run.story.records.map((record) => record.encounter.id)).toEqual(STORY_ORDER);
           const text = [
             ...run.story.records.map((record) => sceneText(record.encounter)),
@@ -298,6 +307,41 @@ describe('destination-specific scenes', () => {
           expect(text).not.toMatch(/undefined|NaN|\$\{/);
         }
       }
+  });
+
+  it('gives each camp its own remnant account, drawn from that camp and safe for one survivor', () => {
+    const scene = (beat: 'river' | 'earth', id: LocationId, population: number) => {
+      const run = createRun();
+      run.clan.region = beat === 'river' ? 1 : 2;
+      run.clan.locationId = id;
+      run.clan.population = population;
+      return storyEncounter(run, beat);
+    };
+    const accounts = new Set<string>();
+    const slots = [
+      ['river', ['silent-river', ...NAMED], (id: LocationId) => firstStop(id).remnant],
+      ['earth', ['broken-pass', ...NAMED], (id: LocationId) => secondStop(id).remnant],
+    ] as const;
+    for (const [beat, ids, remnant] of slots)
+      for (const id of ids) {
+        expect(remnant(id).trim()).not.toBe('');
+        // One survivor reads the same account, so it must not assume a crowd.
+        expect(remnant(id)).not.toMatch(/survivors|households|families|everyone/);
+        accounts.add(remnant(id));
+        for (const population of [4, 1]) {
+          const remembered = scene(beat, id, population);
+          expect(remembered.lines).toEqual([
+            { speaker: 'clan', text: expect.stringContaining(remnant(id)) },
+          ]);
+          expect(sceneText(remembered)).not.toMatch(/Saran|Nara|Erden|Boro/);
+        }
+        expect(scene(beat, id, 1).setting).toContain('1 survivor remains');
+        expect(scene(beat, id, 4).setting).toContain('4 survivors remain');
+      }
+    expect(accounts.size).toBe(18);
+    // The neutral fallbacks keep the chapter's generic account.
+    expect(firstStop(undefined).remnant).toContain('White Silence');
+    expect(secondStop(undefined).remnant).toContain('ground shifts');
   });
 
   it('recalls the response actually chosen at each camp during the final defense', () => {
