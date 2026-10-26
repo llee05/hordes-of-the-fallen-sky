@@ -107,7 +107,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
     onBuild: (run) => welcomePeople(run, 6),
     title: 'Family gers',
     icon: '⌂',
-    description: 'Welcome 6 survivors. More hands gather materials faster.',
+    description: 'Six survivors join the camp, and more hands gather materials faster.',
     materials: 18,
     spirit: 0,
     workers: 0,
@@ -117,7 +117,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'hearthkeepers',
         exclusiveGroup: 'specialization',
         title: 'Hearthkeepers',
-        description: 'Welcome 6 survivors and restore clan resolve while encamped.',
+        description: 'Six more survivors join, and clan resolve recovers while the camp stays put.',
         apply: (run) => welcomePeople(run, 6),
       },
       {
@@ -125,13 +125,14 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'refugee-beacons',
         exclusiveGroup: 'specialization',
         title: 'Refugee beacons',
-        description: 'Welcome 10 more survivors; unlock larger work crews.',
+        description:
+          'Beacons call in the scattered: 10 more survivors arrive, and larger work crews become possible.',
       },
       {
         id: 'felt-linings',
         title: 'Felt-lined households',
         materials: C.ger.linings.materials,
-        description: 'Layered shelter reduces all clan damage by 10%.',
+        description: 'Layered felt keeps out more than the cold. The clan takes 10% less damage.',
         effects: { multipliers: { clanProtection: C.ger.linings.protection } },
       },
       {
@@ -140,7 +141,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         requires: ['hearthkeepers'],
         materials: C.ger.hospitality.materials,
         description:
-          'Recover another 0.15 resolve per stationary second. Arrivals heal the Khan by 10 more.',
+          'The clan recovers another 0.15 resolve each second it stays put, and each arrival heals the Khan for 10 more.',
         effects: {
           bonuses: {
             resolveRecovery: C.ger.hospitality.resolve,
@@ -154,7 +155,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         requires: ['refugee-beacons'],
         materials: C.ger.apprentices.materials,
         description:
-          'Pass skills between households. Stationary material gathering increases by 20%.',
+          'Households teach one another their skills. Material gathering in camp rises 20%.',
         effects: { multipliers: { materialProduction: C.ger.apprentices.gathering } },
       },
     ],
@@ -165,7 +166,8 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
     illustration: 'archery',
     title: 'Archery grounds',
     icon: '➶',
-    description: 'Train 3 horse archers. Unlock encirclement and charging wedge.',
+    description:
+      'Train 3 horse archers. The riders can now form the encirclement and the charging wedge.',
     materials: 24,
     spirit: 0,
     workers: 3,
@@ -175,20 +177,20 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'fire-arrows',
         exclusiveGroup: 'specialization',
         title: 'Fire arrows',
-        description: 'Arrows ignite. With wind shamans, unlock the Burning Tempest.',
+        description: 'Arrows burn. Paired with Wind shamans, they make the Burning Tempest.',
       },
       {
         id: 'veteran-riders',
         exclusiveGroup: 'specialization',
         title: 'Veteran riders',
-        description: 'Recruit 3 elite archers; their volleys deal more damage.',
+        description: 'Three seasoned archers join you, and their volleys hit harder.',
       },
       {
         id: 'seasoned-bowyers',
         title: 'Horn-and-sinew bowyers',
         materials: C.archery.bowyers.materials,
         description:
-          'Carefully fitted bows extend Khan and accompanying-rider targeting range by 30 paces.',
+          'Carefully fitted bows let the Khan and the riders with you target enemies 30 paces farther out.',
         effects: { bonuses: { range: C.archery.bowyers.range } },
       },
       {
@@ -196,7 +198,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         title: 'Prepared resin bundles',
         requires: ['fire-arrows'],
         materials: C.archery.resin.materials,
-        description: 'Fire-arrow burn damage increases by 30%.',
+        description: 'Fire arrows burn for 30% more damage.',
         effects: { multipliers: { burnDamage: C.archery.resin.damage } },
       },
       {
@@ -205,7 +207,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         requires: ['veteran-riders'],
         materials: C.archery.arban.materials,
         description:
-          'Practise coordinated riding: companion arrow damage +20%; mounted-host firing intervals fall by 10%.',
+          'The riders drill until they move as one. Their arrows deal 20% more damage, and the mounted host’s firing interval is 10% shorter.',
         effects: {
           multipliers: {
             riderDamage: C.archery.arban.damage,
@@ -224,7 +226,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
     },
     title: 'Herding grounds',
     icon: '♧',
-    description: 'Gain 4 horses, gather more food, and unlock feigned retreat.',
+    description: 'Gain 4 horses and more food. The riders can now use the feigned retreat.',
     materials: 20,
     spirit: 0,
     workers: 2,
@@ -237,7 +239,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'remount-herds',
         exclusiveGroup: 'specialization',
         title: 'Remount herds',
-        description: 'Faster migration and faster mounted movement.',
+        description: 'Spare horses mean a faster migration and a faster ride.',
       },
       {
         apply: (run) => {
@@ -246,13 +248,14 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'winter-stores',
         exclusiveGroup: 'specialization',
         title: 'Winter stores',
-        description: 'Gain 45 food and halve the clan’s food consumption.',
+        description: 'Gain 45 food, and the clan eats half as much.',
       },
       {
         id: 'seasonal-grazing',
         title: 'Seasonal grazing knowledge',
         materials: C.herd.grazing.materials,
-        description: 'Choose and rest the grazing ground. Pasture depletion falls by 15%.',
+        description:
+          'Move the herds between grazing grounds and let each one rest. The pasture wears out 15% more slowly.',
         effects: { multipliers: { pastureUse: C.herd.grazing.depletion } },
       },
       {
@@ -260,7 +263,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         title: 'A horse held in reserve',
         requires: ['remount-herds'],
         materials: C.herd.relay.materials,
-        description: 'Gain 3 horses. Gallop cooldown falls by a further 10%.',
+        description: 'Gain 3 horses, and the gallop cooldown is a further 10% shorter.',
         apply: (run) => {
           run.clan.herd = Math.min(GAME.clan.maxHerd, run.clan.herd + C.herd.relay.horses);
         },
@@ -271,7 +274,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         title: 'The herders’ dairy reserve',
         requires: ['winter-stores'],
         materials: C.herd.dairy.materials,
-        description: 'Gain 25 food. Stationary food production increases by 20%.',
+        description: 'Gain 25 food, and food production in camp rises 20%.',
         apply: (run) => {
           run.clan.food += C.herd.dairy.food;
         },
@@ -295,13 +298,13 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'wind-shamans',
         exclusiveGroup: 'specialization',
         title: 'Wind shamans',
-        description: 'Storms strike more often and bend flaming volleys into sweeping arcs.',
+        description: 'Storms strike more often, and they bend flaming volleys into sweeping arcs.',
       },
       {
         id: 'ancestral-ward',
         exclusiveGroup: 'specialization',
         title: 'Ancestral ward',
-        description: 'A guardian damages enemies approaching the camp and protects the clan.',
+        description: 'A guardian strikes enemies that come near the camp and shields the clan.',
       },
       {
         id: 'ovoo-remembrance',
@@ -309,7 +312,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         materials: C.sanctuary.remembrance.materials,
         spirit: C.sanctuary.remembrance.spirit,
         description:
-          'Keep the memory of sacred places together. Successful arrivals restore 6 additional clan resolve.',
+          'Keep the memory of sacred places alive between you. Each successful arrival restores 6 more clan resolve.',
         effects: { bonuses: { arrivalResolve: C.sanctuary.remembrance.arrivalResolve } },
       },
       {
@@ -318,7 +321,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         requires: ['wind-shamans'],
         materials: C.sanctuary.watch.materials,
         spirit: C.sanctuary.watch.spirit,
-        description: 'Sanctuary lightning intervals fall by another 15%.',
+        description: 'The sanctuary’s lightning interval is another 15% shorter.',
         effects: { multipliers: { sanctuaryInterval: C.sanctuary.watch.interval } },
       },
       {
@@ -328,7 +331,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         materials: C.sanctuary.tales.materials,
         spirit: C.sanctuary.tales.spirit,
         description:
-          'Recover 0.15 Khan health per active second and another 0.1 clan resolve per stationary second.',
+          'The Khan recovers 0.15 health every active second, and the clan another 0.1 resolve each second it stays put.',
         effects: {
           bonuses: {
             commanderRecovery: C.sanctuary.tales.health,
@@ -344,7 +347,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
     illustration: 'wagon',
     title: 'Wagon circle',
     icon: '▣',
-    description: 'Carts fire defensive arrows. They keep firing during migration.',
+    description: 'The carts loose arrows to defend the camp and keep shooting on the march.',
     materials: 26,
     spirit: 0,
     workers: 1,
@@ -354,7 +357,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'war-carts',
         exclusiveGroup: 'specialization',
         title: 'War carts',
-        description: 'Carts fire triple volleys and retain full damage while moving.',
+        description: 'Carts fire triple volleys and lose no damage while moving.',
       },
       {
         apply: (run) => {
@@ -363,13 +366,13 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'felt-armor',
         exclusiveGroup: 'specialization',
         title: 'Felt armor',
-        description: 'Halve damage to the caravan and repair 30 resolve.',
+        description: 'The caravan takes half damage, and 30 resolve is restored.',
       },
       {
         id: 'rawhide-lashings',
         title: 'Rawhide lashings',
         materials: C.wagon.lashings.materials,
-        description: 'Secure the travelling loads. Caravan migration mobility increases by 8%.',
+        description: 'Lash the loads down tight. The caravan’s migration mobility rises 8%.',
         effects: { multipliers: { mobility: C.wagon.lashings.mobility } },
       },
       {
@@ -377,7 +380,8 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         title: 'Wheelwright crews',
         requires: ['war-carts'],
         materials: C.wagon.wheels.materials,
-        description: 'Stable firing platforms increase Wagon circle arrow damage by 25%.',
+        description:
+          'Steadier carts make better firing platforms. Wagon circle arrows deal 25% more damage.',
         effects: { multipliers: { wagonDamage: C.wagon.wheels.damage } },
       },
       {
@@ -386,7 +390,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         requires: ['felt-armor'],
         materials: C.wagon.felt.materials,
         description:
-          'Clan damage falls by another 10%, multiplying with Felt armor and patron protection.',
+          'The clan takes a further 10% less damage. This multiplies with Felt armor and patron protection.',
         effects: { multipliers: { clanProtection: C.wagon.felt.protection } },
       },
     ],
@@ -397,7 +401,8 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
     category: 'Craft',
     illustration: 'ger',
     icon: '⌂',
-    description: 'Turn wool and household craft into travelling supplies. Material gathering +15%.',
+    description:
+      'Wool and household craft become supplies for the road. Material gathering rises 15%.',
     materials: C.felt.base.materials,
     spirit: 0,
     workers: C.felt.base.workers,
@@ -409,7 +414,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         title: 'Wool sorting circles',
         materials: C.felt.sorting.materials,
         description:
-          'Share the work of preparing wool. Material gathering increases by another 15%.',
+          'Everyone sorts and prepares the wool together. Material gathering rises another 15%.',
         effects: { multipliers: { materialProduction: C.felt.sorting.gathering } },
       },
       {
@@ -417,7 +422,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         title: 'Weatherproof ger covers',
         materials: C.felt.covers.materials,
         description:
-          'Better shelter conserves provisions. Food consumption falls by 10%, including during travel.',
+          'Better shelter stretches the provisions. The clan eats 10% less food, on the road as well as in camp.',
         effects: { multipliers: { consumption: C.felt.covers.consumption } },
       },
       {
@@ -425,7 +430,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         title: 'Folding pack frames',
         materials: C.felt.frames.materials,
         description:
-          'Pack the wooden lattice and felt covers for the road. Migration mobility increases by 10%.',
+          'The wooden lattice and felt covers fold down for the road. Migration mobility rises 10%.',
         effects: { multipliers: { mobility: C.felt.frames.mobility } },
       },
       {
@@ -434,7 +439,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         requires: ['wool-sorting', 'weatherproof-covers'],
         materials: C.felt.mastery.materials,
         description:
-          'Skilled household craft reduces all clan damage by 10%. Requires both wool sorting and weatherproof covers.',
+          'Craft handed down through the households: the clan takes 10% less damage. Needs both Wool sorting circles and Weatherproof ger covers.',
         effects: { multipliers: { clanProtection: C.felt.mastery.protection } },
       },
     ],
@@ -446,7 +451,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
     illustration: 'ger',
     icon: '♧',
     description:
-      'Dairy work and preserved supplies. Gain 25 food; stationary food production +15%.',
+      'Dairy work and preserved food. Gain 25 food, and food production in camp rises 15%.',
     materials: C.provisions.base.materials,
     spirit: 0,
     workers: C.provisions.base.workers,
@@ -460,7 +465,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'aaruul-drying',
         title: 'Aaruul drying racks',
         materials: C.provisions.aaruul.materials,
-        description: 'Store dried curds for the road. Gain 20 food; food consumption falls by 10%.',
+        description: 'Dry curds to carry on the road. Gain 20 food, and the clan eats 10% less.',
         apply: (run) => {
           run.clan.food += C.provisions.aaruul.food;
         },
@@ -470,7 +475,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'borts-stores',
         title: 'Borts travel stores',
         materials: C.provisions.borts.materials,
-        description: 'Preserved meat reserves provide 15 food after each completed crossing.',
+        description: 'Dried meat put by for the road brings 15 food after each completed crossing.',
         effects: { bonuses: { arrivalFood: C.provisions.borts.arrivalFood } },
       },
       {
@@ -478,7 +483,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         title: 'Airag hospitality',
         materials: C.provisions.airag.materials,
         description:
-          'Welcome 4 survivors around the shared table and restore 10 clan resolve immediately.',
+          'Four survivors are welcomed to the shared table, and clan resolve rises by 10 at once.',
         apply: (run) => {
           welcomePeople(run, C.provisions.airag.people);
           run.clan.integrity = Math.min(100, run.clan.integrity + C.provisions.airag.resolve);
@@ -490,7 +495,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         requires: ['aaruul-drying', 'borts-stores'],
         materials: C.provisions.shared.materials,
         description:
-          'Successful arrivals restore 10 additional Khan health and 6 additional clan resolve.',
+          'Each successful arrival heals the Khan for 10 more and restores 6 more clan resolve.',
         effects: {
           bonuses: {
             arrivalHealth: C.provisions.shared.arrivalHealth,
@@ -506,8 +511,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
     category: 'Wayfinding',
     illustration: 'banner',
     icon: '⚑',
-    description:
-      'Couriers link the travelling clan to the road ahead. Migration mobility increases by 8%.',
+    description: 'Couriers tie the moving clan to the road ahead. Migration mobility rises 8%.',
     materials: C.relay.base.materials,
     spirit: 0,
     workers: C.relay.base.workers,
@@ -518,15 +522,15 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'pasture-scouts',
         title: 'Pasture scouts',
         materials: C.relay.scouts.materials,
-        description: 'Find better ground before unpacking. Pasture depletion falls by 10%.',
+        description:
+          'Scouts find better ground before the camp unpacks. The pasture wears out 10% more slowly.',
         effects: { multipliers: { pastureUse: C.relay.scouts.depletion } },
       },
       {
         id: 'supply-caches',
         title: 'Supplies along the road',
         materials: C.relay.caches.materials,
-        description:
-          'Each successful crossing brings 10 additional materials and 8 additional food.',
+        description: 'Each successful crossing brings 10 more materials and 8 more food.',
         effects: {
           bonuses: {
             arrivalMaterials: C.relay.caches.arrivalMaterials,
@@ -538,7 +542,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'family-messengers',
         title: 'Messengers to scattered families',
         materials: C.relay.messengers.materials,
-        description: 'Blue-banner rescue arrivals welcome 3 additional people.',
+        description: 'Each blue-banner rescue brings in 3 more people.',
         effects: { bonuses: { refugePeople: C.relay.messengers.people } },
       },
       {
@@ -546,8 +550,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         title: 'Fresh horses on the road',
         requires: ['pasture-scouts', 'supply-caches'],
         materials: C.relay.horses.materials,
-        description:
-          'Each successful crossing grants 1 additional horse and 4 additional clan resolve.',
+        description: 'Each successful crossing brings 1 more horse and 4 more clan resolve.',
         effects: {
           bonuses: {
             arrivalHerd: C.relay.horses.arrivalHerd,
