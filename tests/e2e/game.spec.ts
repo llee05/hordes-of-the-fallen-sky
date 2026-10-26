@@ -98,6 +98,10 @@ test('clan defeat, victory, best time, and replay complete the run lifecycle', a
     scene.run.clan.integrity = 0;
   });
   await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
+  // The defeat screen narrates the recorded journey instead of a fixed line.
+  await expect(page.locator('.end-menu .panel-intro')).toContainText(
+    'At the Golden Pasture, before the clan had ever broken camp, the clan’s resolve gave out',
+  );
   await expect(page.locator('#best')).toHaveText('00:42');
   await page.getByRole('button', { name: /RAISE THE BANNERS AGAIN/ }).click();
   await startExpedition(page);

@@ -1,6 +1,7 @@
 import { GAME } from '../config';
 import { clanDoctrine } from '../state/clan';
-import { currentLocation, locationById } from '../state/journey';
+import { chapterLocation, currentLocation, locationById } from '../state/journey';
+import { ALL_ENEMIES, SKYBREAKER } from './enemies';
 import { companionBonds, companionStanding, storyChoice } from '../state/storyBonds';
 import { firstStop, secondStop, type StoryResponse } from './storyDestinations';
 import type { LocationId, RunState } from '../types';
@@ -653,6 +654,86 @@ export function epilogueText(run: RunState): readonly string[] {
         ]
       : []),
     'Keep a place beside the fire. Someone is still coming home.',
+  ];
+}
+
+/** "a hollow wolf" for a recorded attacker, or the unreturned when the source is unknown. */
+function attackerName(source: string | undefined): string {
+  if (source === SKYBREAKER.title) return 'the Skybreaker';
+  const known = ALL_ENEMIES.find((enemy) => (enemy.title ?? enemy.id) === source);
+  if (!known) return 'the unreturned';
+  const name = (known.title ?? known.id).toLowerCase();
+  return `${/^[aeiou]/.test(name) ? 'an' : 'a'} ${name}`;
+}
+
+function listPlaces(names: readonly string[]): string {
+  return names.length < 3
+    ? names.join(' and ')
+    : `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
+}
+
+/**
+ * A short account of a lost expedition, built only from what the run recorded: where the
+ * clan was, the last damage it took, the camps it actually reached, its losses, and its
+ * Khans. It names no companion and no place the clan never reached, so it holds for any
+ * remnant, including one that no longer exists.
+ */
+export function defeatAccount(run: RunState): readonly string[] {
+  const clan = run.clan;
+  const place = locationName(currentLocation(run).id)!;
+  const where =
+    clan.stage === 'migration'
+      ? `On the road out of ${place}`
+      : clan.stage === 'final'
+        ? `At ${place}, while the passage was still being cleared`
+        : run.story.crossings.length === 0
+          ? `At ${place}, before the clan had ever broken camp`
+          : `At ${place}`;
+  const how =
+    clan.population <= 0
+      ? 'the last of the clan was lost'
+      : `the clan’s resolve gave out with ${clan.population === 1 ? 'one person' : `${clan.population} people`} still beneath the banner`;
+  const blow = run.safety.lastDamage;
+  const cause = !blow
+    ? ''
+    : {
+        attack: ` The final blow came from ${attackerName(blow.source)}.`,
+        starvation: ' The stores had run empty, and hunger struck the final blow.',
+        eruption: ' The final blow came when the ground erupted at the camp.',
+        seer: ' The final blow was a seer’s strike on the camp.',
+        area: ' The final blow came from a spell or a shift in the land near the camp.',
+      }[blow.cause];
+
+  const reached = run.story.crossings
+    .map((crossing) => locationName(crossing.locationId))
+    .filter((name): name is string => !!name);
+  const rescues = run.story.crossings.filter((crossing) => crossing.route === 'refuge').length;
+  const lost = run.story.peopleLost;
+  const khans = run.khan.generation;
+  const awaitingSuccessor = run.khan.successionRemaining > 0;
+  const road = [
+    reached.length
+      ? `The road had led from ${locationName(chapterLocation(0).id)} to ${listPlaces(reached)}.`
+      : '',
+    rescues
+      ? `On the way, the clan answered the blue banners${rescues === 1 ? '' : rescues === 2 ? ' twice' : ` ${rescues} times`}.`
+      : '',
+    lost > 0
+      ? `In all, ${lost === 1 ? 'one person was' : `${lost} people were`} lost on the road.`
+      : '',
+    khans > 1
+      ? `The banner had passed through ${khans} Khans’ hands${awaitingSuccessor ? '; the last of them had fallen, and no successor had yet taken up the bow' : ''}.`
+      : awaitingSuccessor
+        ? 'The Khan had fallen, and no successor had yet taken up the bow.'
+        : '',
+    clan.finalBossDefeated ? 'The Skybreaker had already fallen.' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return [
+    `${where}, ${how}.${cause}`,
+    ...(road ? [road] : []),
+    'The journey ends here. The road it travelled is still remembered.',
   ];
 }
 

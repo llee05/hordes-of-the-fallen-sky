@@ -22,7 +22,7 @@ import { arrivalLocation, availableDestinations, currentLocation } from '../game
 import { INTRO_SLIDES, introImageUrl } from '../game/data/intro';
 import { introMenu } from './introContent';
 import { storyAct } from '../game/data/story';
-import { storyMenu, epilogueMenu, storyLogMenu } from './storyContent';
+import { storyMenu, epilogueMenu, storyLogMenu, defeatAccountContent } from './storyContent';
 import type { ArenaScene } from '../game/scenes/ArenaScene';
 import {
   assignedWorkers,
@@ -768,7 +768,7 @@ export class GameUI {
       this.overlay.innerHTML = developerConsole(snapshot.developerConsole);
     else {
       const won = run.phase === 'won';
-      this.overlay.innerHTML = `<section class="end-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">${won ? 'A PEOPLE, STILL ALIVE' : 'THE STEPPE WILL REMEMBER'}</p><h2 id="overlay-title">${won ? 'A sky worth saving.' : 'The banners fall.'}</h2><p class="panel-intro">${won ? `${run.clan.population} ${run.clan.population === 1 ? 'person' : 'people'} and ${run.clan.herd} ${run.clan.herd === 1 ? 'animal' : 'animals'} reach the mountain passage.<br>Your civilization lives to see another sky.` : 'The journey ends here. Another clan will take up the blue banner.'}</p><div class="end-stats"><div><strong>${formatTime(run.elapsed)}</strong><span>JOURNEY</span></div><div><strong>${run.clan.population}</strong><span>PEOPLE</span></div><div><strong>${run.clan.region + 1}/4</strong><span>PASTURES</span></div></div>${expeditionMetricsContent(run)}<nav class="main-menu"><button class="menu-button featured" data-action="restart" data-primary>RAISE THE BANNERS AGAIN <span>→</span></button>${savedMenu}${won ? '<button class="menu-button" data-action="epilogue">Read the epilogue</button>' : ''}<button class="menu-button" data-action="story-log">Our remembered road</button>${quit}</nav></section>`;
+      this.overlay.innerHTML = `<section class="end-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">${won ? 'A PEOPLE, STILL ALIVE' : 'THE STEPPE WILL REMEMBER'}</p><h2 id="overlay-title">${won ? 'A sky worth saving.' : 'The banners fall.'}</h2><p class="panel-intro">${won ? `${run.clan.population} ${run.clan.population === 1 ? 'person' : 'people'} and ${run.clan.herd} ${run.clan.herd === 1 ? 'animal' : 'animals'} reach the mountain passage.<br>Your civilization lives to see another sky.` : defeatAccountContent(run)}</p><div class="end-stats"><div><strong>${formatTime(run.elapsed)}</strong><span>JOURNEY</span></div><div><strong>${run.clan.population}</strong><span>PEOPLE</span></div><div><strong>${run.clan.region + 1}/4</strong><span>PASTURES</span></div></div>${expeditionMetricsContent(run)}<nav class="main-menu"><button class="menu-button featured" data-action="restart" data-primary>RAISE THE BANNERS AGAIN <span>→</span></button>${savedMenu}${won ? '<button class="menu-button" data-action="epilogue">Read the epilogue</button>' : ''}<button class="menu-button" data-action="story-log">Our remembered road</button>${quit}</nav></section>`;
     }
     if (import.meta.env.DEV && ['developer', 'console'].includes(run.phase)) {
       this.developerRevision = -1;
