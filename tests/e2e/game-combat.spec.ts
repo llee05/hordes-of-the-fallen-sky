@@ -54,5 +54,5 @@ test('guard riders fire at camp threats while the commander scouts away', async 
     enemy.health = 1;
     scene.attackTimer = 0;
   });
-  await expect(page.locator('#kills')).not.toHaveText('0', { timeout: 5000 });
+  await expect(page.locator('#kills')).not.toHaveText('0');
 });
