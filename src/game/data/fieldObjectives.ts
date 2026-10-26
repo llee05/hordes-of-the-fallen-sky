@@ -2,21 +2,21 @@ import { GAME } from '../config';
 export const FIELD_OBJECTIVES = {
   supplies: {
     title: 'Scattered supplies',
-    instruction: 'Clear the cart and stay nearby to gather it.',
+    instruction: 'Clear the enemies off the cart, then stay close while it is gathered.',
     reward: '+18 food · +12 materials',
     art: 'cart',
     ...GAME.field.rewards.supplies,
   },
   herd: {
     title: 'A loose herd',
-    instruction: 'Approach the horses, then ride with them back to camp.',
+    instruction: 'Ride up to the horses, then lead them back to camp.',
     reward: '+3 horses · +8 food',
     art: 'packhorse',
     ...GAME.field.rewards.herd,
   },
   refugees: {
     title: 'Stranded households',
-    instruction: 'Meet the survivors and escort them back to camp.',
+    instruction: 'Reach the survivors and bring them safely back to camp.',
     reward: '+2 people · +6 resolve',
     art: 'worker',
     ...GAME.field.rewards.refugees,

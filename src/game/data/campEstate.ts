@@ -23,23 +23,24 @@ export const ENCAMPMENT_TIERS = [
   },
   {
     title: 'Established Encampment',
-    description: 'Dedicated workplaces and a shared tally improve gathering by 10%.',
+    description: 'Proper workplaces and a shared tally. Material gathering rises 10%.',
     effects: { multipliers: { materialProduction: C.modestProduction } },
   },
   {
     title: 'Prosperous Ordo',
     description:
-      'Organised provisions improve food production by 10% and reduce clan damage by 5%.',
+      'The stores are kept in good order. Food production rises 10%, and the clan takes 5% less damage.',
     effects: { multipliers: { foodProduction: C.modestProduction, clanProtection: C.protection } },
   },
   {
     title: 'Great Ordo',
-    description: 'The travelling host fires 5% faster and carries its camp 6% more efficiently.',
+    description: 'The host fires 5% faster, and the camp packs and travels 6% more easily.',
     effects: { multipliers: { hostInterval: C.interval, mobility: C.mobility } },
   },
   {
     title: 'Imperial Ordo',
-    description: 'A great portable household: material gathering +20%, clan damage −15%.',
+    description:
+      'A great household that still packs onto carts. Material gathering rises 20%, and the clan takes 15% less damage.',
     effects: {
       multipliers: { materialProduction: C.strongProduction, clanProtection: C.strongProtection },
     },
@@ -94,28 +95,28 @@ export const INTERNAL_DEVELOPMENTS: readonly InternalDevelopment[] = [
   internal(
     'clan-council',
     'Clan Council',
-    'Shared decisions reduce food consumption by 5% per rank.',
+    'Decide things together and waste less: the clan eats 5% less food per rank.',
     'journal',
     { multipliers: { consumption: C.consumption } },
   ),
   internal(
     'ancestral-hearth',
     'Ancestral Hearth',
-    'Remembrance strengthens stored Spirit gained from defeats by 15% per rank.',
+    'Names spoken at the fire. Each rank adds 15% to the Spirit stored from defeated enemies.',
     'hearth',
     { multipliers: { spiritGain: C.spiritGain } },
   ),
   internal(
     'master-craftsmen',
     'Master Craftsmen',
-    'Shared tools and teaching improve material gathering by 10% per rank.',
+    'Tools are shared and skills are taught. Material gathering rises 10% per rank.',
     'materials',
     { multipliers: { materialProduction: C.modestProduction } },
   ),
   internal(
     'war-council',
     'War Council',
-    'Coordinated drills increase accompanying rider damage by 15% per rank.',
+    'Riders drill together. The riders with you deal 15% more damage per rank.',
     'bow',
     { multipliers: { riderDamage: C.riderDamage } },
     2,
@@ -123,7 +124,7 @@ export const INTERNAL_DEVELOPMENTS: readonly InternalDevelopment[] = [
   internal(
     'supply-organisation',
     'Supply Organisation',
-    'Each completed crossing brings 8 additional food per rank.',
+    'Each completed crossing brings 8 more food per rank.',
     'grain',
     { bonuses: { arrivalFood: C.arrivalFood } },
     2,
@@ -131,7 +132,7 @@ export const INTERNAL_DEVELOPMENTS: readonly InternalDevelopment[] = [
   internal(
     'travelling-merchants',
     'Travelling Merchants',
-    'Travelling exchange brings 6 additional materials after each crossing per rank.',
+    'Trade along the road brings 6 more materials after each crossing, per rank.',
     'wagon',
     { bonuses: { arrivalMaterials: C.arrivalMaterials } },
     3,
@@ -153,13 +154,13 @@ const FACILITIES: Record<
       { multipliers: { materialProduction: C.modestProduction } },
       { bonuses: { resolveRecovery: C.resolve } },
     ],
-    flavour: 'The home is carried in felt, timber, memory, and the hands that unpack it.',
+    flavour: 'Home travels as felt, timber, memory, and the hands that unpack it.',
   },
   archery: {
     tier: 1,
     names: ['Mounted archery range', 'Veteran training grounds'],
     benefits: [{ bonuses: { range: C.range } }, { multipliers: { riderDamage: C.riderDamage } }],
-    flavour: 'Practice travels with the riders; targets and bow racks fold onto the carts.',
+    flavour: 'Practice travels with the riders; the targets and bow racks fold onto the carts.',
   },
   felt: {
     tier: 2,
@@ -225,8 +226,8 @@ export function extendCampBuilding(building: BuildingDefinition): BuildingDefini
     title: data.names[i]!,
     description:
       level === 2
-        ? 'Organise this facility for more dependable work.'
-        : 'Experienced households pass their skills to the next generation.',
+        ? 'Put the work here on a steadier footing.'
+        : 'Experienced hands teach the next generation.',
     effects: data.benefits[i],
     minTier: level,
     requires: level === 3 ? ['level-2'] : [],
@@ -246,14 +247,14 @@ export function extendCampBuilding(building: BuildingDefinition): BuildingDefini
           {
             id: 'reinforced-felt',
             title: 'Reinforced felt production',
-            description: 'Layered military felt reduces all clan damage by 15%.',
+            description: 'Thick felt made for war. The clan takes 15% less damage.',
             exclusiveGroup: 'specialization',
             effects: { multipliers: { clanProtection: C.strongProtection } },
           },
           {
             id: 'fine-felt',
             title: 'Fine felt craftsmanship',
-            description: 'Fine craft increases material gathering by 20%.',
+            description: 'Finer craft, better use of every fleece. Material gathering rises 20%.',
             exclusiveGroup: 'specialization',
             effects: { multipliers: { materialProduction: C.strongProduction } },
           },

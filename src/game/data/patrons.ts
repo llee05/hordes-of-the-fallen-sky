@@ -16,7 +16,7 @@ export const PATRONS: readonly PatronDefinition[] = [
     playstyle: 'Hunting',
     symbol: 'wolf',
     description:
-      'Run with the hunt. Keep momentum, finish wounded enemies, and turn each moving kill into strength for the next pursuit.',
+      'Hunt the way the wolf hunts. Keep moving, finish what is wounded, and let every kill on the run carry you into the next.',
   },
   {
     id: 'etugen-eke',
@@ -24,7 +24,7 @@ export const PATRONS: readonly PatronDefinition[] = [
     playstyle: 'Civilisation',
     symbol: 'grain',
     description:
-      'Care for the living ground. Sustain the pasture, feed more households, and build a civilisation that can survive the long road.',
+      'Look after the ground that feeds you. Make the pasture last, feed more households, and build a camp that can survive the long road.',
   },
   {
     id: 'khukhedei-mergen',
@@ -32,7 +32,7 @@ export const PATRONS: readonly PatronDefinition[] = [
     playstyle: 'Archery',
     symbol: 'bow',
     description:
-      'Make every shot count. Extend the host’s reach, send shafts through the unreturned, and fill the approach with arrows.',
+      'Make every shot count. Reach farther, drive shafts through the unreturned, and darken the approach with arrows.',
   },
   {
     id: 'golomt',
@@ -40,7 +40,7 @@ export const PATRONS: readonly PatronDefinition[] = [
     playstyle: 'Survival',
     symbol: 'hearth',
     description:
-      'Carry the hearth through darkness. Recover from wounds, shelter the Khan, and keep one last ember against defeat.',
+      'Carry the hearth through the dark. Heal from wounds, shelter the Khan, and hold one last ember in reserve against defeat.',
   },
   {
     id: 'lus',
@@ -48,7 +48,7 @@ export const PATRONS: readonly PatronDefinition[] = [
     playstyle: 'Terrain',
     symbol: 'river',
     description:
-      'Shape the ground of the battle. Slow the enemy approach, read eruptions before they strike, and turn the current against the horde.',
+      'Pay attention to the ground and the water. Slow the enemy’s approach, read the earth before it breaks, and turn the current against the horde.',
   },
   {
     id: 'ongod',
@@ -56,7 +56,7 @@ export const PATRONS: readonly PatronDefinition[] = [
     playstyle: 'Summoning',
     symbol: 'spirit',
     description:
-      'Let remembered riders travel beside the living. Ancestral echoes answer the bow, gather scattered vitality, and ride as a council.',
+      'Let the remembered ride beside the living. Ancestral echoes draw the bow with you, help gather what the fallen leave, and ride together as a council.',
   },
   {
     id: 'sulde',
@@ -64,7 +64,7 @@ export const PATRONS: readonly PatronDefinition[] = [
     playstyle: 'Leadership',
     symbol: 'banner',
     description:
-      'A people beneath one standard. Recruit a mounted host, strengthen its volleys, and bring every wagon through with resolve.',
+      'One people under one standard. Raise a mounted host, sharpen its volleys, and keep spirits up until every wagon is through.',
   },
   {
     id: 'burkhan-guardian',
@@ -72,6 +72,6 @@ export const PATRONS: readonly PatronDefinition[] = [
     playstyle: 'Construction',
     symbol: 'mountain',
     description:
-      'Raise a shelter wherever the clan stops. This imagined mountain guardian inspires economical construction, watchfires, and a defended passage.',
+      'Make shelter wherever the clan stops. This imagined guardian of the mountain inspires thrifty building, watchfires, and a passage held against the dark.',
   },
 ];

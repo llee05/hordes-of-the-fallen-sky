@@ -10,7 +10,7 @@ export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
       title: 'Ride ahead of the storm',
       maxStacks: 1,
       requires: [{ id: 'pursuit-gallop', rank: 1 }],
-      description: 'Ride 10% faster; attacks above half momentum deal 20% more damage.',
+      description: 'Ride 10% faster. Above half momentum, attacks deal 20% more damage.',
       apply: (r) => {
         r.stats.speed *= S.windSpeed;
         r.patrons.hunt.movingDamage *= S.windDamage;
@@ -23,7 +23,7 @@ export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
       title: 'Hands that build a people',
       maxStacks: 1,
       requires: [{ id: 'shared-labour', rank: 1 }],
-      description: 'Gather 40% more materials, strengthening the travelling camp economy.',
+      description: 'Gather 40% more materials to keep the travelling camp growing.',
       apply: (r) => {
         r.patrons.land.materials *= S.craftMaterials;
       },
@@ -37,7 +37,7 @@ export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
       maxStacks: 1,
       requires: [{ id: 'power', rank: 1 }],
       description:
-        'One additional Khan arrow per volley; shared damage falls 10%, and friendly volley spacing widens 20%.',
+        'Each Khan volley carries one more arrow and your volleys fan out 20% wider, but shared damage drops 10%.',
       apply: (r) => {
         r.stats.projectiles += S.wideArrows;
         r.stats.damage *= S.wideDamage;
@@ -50,7 +50,7 @@ export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
       maxStacks: 1,
       requires: [{ id: 'haste', rank: 1 }],
       description:
-        'Shared attack damage +60%; Khan and rider targeting range +60 paces. Focus on powerful, precise volleys.',
+        'Shared attack damage rises 60%, and the Khan and riders can target enemies 60 paces farther out. For heavier, truer volleys.',
       apply: (r) => {
         r.stats.damage *= S.precisionDamage;
         r.patrons.bow.range += S.precisionRange;
@@ -61,8 +61,7 @@ export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
       title: 'Through the gathered shadows',
       maxStacks: 1,
       requires: [{ id: 'piercing-shaft', rank: 1 }],
-      description:
-        'Friendly arrows pierce two additional enemies. Focus on deep ranks of approaching enemies.',
+      description: 'Your arrows pass through two more enemies. Best against deep ranks closing in.',
       apply: (r) => {
         r.patrons.bow.pierce += S.piercingBonus;
       },
@@ -75,7 +74,7 @@ export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
       maxStacks: 1,
       requires: [{ id: 'felt-and-fire', rank: 1 }],
       description:
-        'Maximum Khan health +40; Khan damage taken falls a further 15%. Choose steady protection over Last Ember.',
+        'The Khan gains 40 maximum health and takes a further 15% less damage. Steady protection, in place of the last ember.',
       apply: (r) => {
         r.stats.maxHealth += S.bulwarkHealth;
         r.patrons.hearth.damageTaken *= S.bulwarkProtection;
@@ -89,7 +88,7 @@ export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
       maxStacks: 1,
       requires: [{ id: 'turned-earth', rank: 1 }],
       description:
-        'Slowing fields gain 18 percentage points of slow; eruption warnings last another half-second.',
+        'The slowing fields slow enemies by a further 18 percentage points, and eruption warnings last another half-second.',
       apply: (r) => {
         r.patrons.water.slow += S.stillSlow;
         r.patrons.water.warning += S.stillWarning;
@@ -103,7 +102,7 @@ export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
       maxStacks: 1,
       requires: [{ id: 'spirit-thread', rank: 1 }],
       description:
-        'Shard attraction radius +30%; Spirit gained from kills +50%. Keep two echoes and invest in the clan economy.',
+        'Shards are drawn in from 30% farther away, and kills store 50% more Spirit. Keep two echoes and put the gain into the camp.',
       apply: (r) => {
         r.stats.pickupRadius *= S.memoryPickup;
         r.patrons.ancestors.spiritGain *= S.memorySpirit;
@@ -117,7 +116,7 @@ export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
       maxStacks: 1,
       requires: [{ id: 'ordered-march', rank: 1 }],
       description:
-        'Migration mobility +25%; clan damage taken falls a further 25%. Choose a protected crossing over more riders.',
+        'Migration mobility rises 25%, and the clan takes a further 25% less damage. A safer crossing, in place of more riders.',
       apply: (r) => {
         r.patrons.banner.mobility *= S.vanguardMobility;
         r.patrons.guardian.protection *= S.vanguardProtection;
@@ -131,7 +130,7 @@ export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
       maxStacks: 1,
       requires: [{ id: 'watchfires', rank: 1 }],
       description:
-        'Wagon circle arrow damage +50%, while stationary and migrating. Requires a Wagon circle to fire.',
+        'Wagon circle arrows deal 50% more damage, in camp and on the march. Needs a Wagon circle.',
       apply: (r) => {
         r.clan.campEffects.multipliers.wagonDamage *= S.fortressDamage;
       },
