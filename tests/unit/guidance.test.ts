@@ -61,12 +61,12 @@ describe('first-crossing guidance', () => {
     run.guidance.enabled = false;
     expect(clanWarning(run)).toBe('');
     run.clan.pasture = 20;
-    expect(clanWarning(run)).toContain('Inspect a route');
+    expect(clanWarning(run)).toContain('Scout a route');
     run.clan.stage = 'final';
     expect(clanWarning(run)).toContain('passage opens');
     run.clan.food = 10;
     run.clan.stage = 'migration';
-    expect(clanWarning(run)).toContain('until arrival');
+    expect(clanWarning(run)).toContain('on arrival');
     run.clan.integrity = 20;
     expect(clanWarning(run)).toContain('resolve is critical');
     run.clan.food = 0;

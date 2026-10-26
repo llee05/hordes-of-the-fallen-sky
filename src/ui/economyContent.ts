@@ -4,7 +4,7 @@ import { economyForecast, type EconomyForecast } from '../game/state/economy';
 import { formatTime } from '../game/state/run';
 
 export const FORECAST_NOTE =
-  'Estimates follow changing pasture with current households and improvements; battles and future purchases can change them.';
+  'Estimates follow the shifting pasture, your households and improvements. Battles and new purchases will move them.';
 
 export function signedRate(value: number): string {
   const rounded = Math.round(value * 100) / 100;

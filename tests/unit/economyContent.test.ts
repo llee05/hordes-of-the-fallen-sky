@@ -80,7 +80,7 @@ describe('economy planning interfaces', () => {
     );
     expect(html).toContain('aria-label="Camp economy"');
     expect(html).toContain('camp-popup');
-    expect(html).toContain('changing pasture');
+    expect(html).toContain('shifting pasture');
     expect(run).toEqual(before);
   });
 

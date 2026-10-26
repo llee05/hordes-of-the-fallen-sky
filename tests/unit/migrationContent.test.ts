@@ -30,7 +30,7 @@ describe('destination planning and remembered places', () => {
       expect(menu).toContain(`data-landscape="${place.id}"`);
       expect(menu).toContain(LANDSCAPES[place.id].description);
       expect(menu).toContain('art/steppe-scenery-v2.png');
-      expect(destinationEffects(place)).not.toBe('Standard gathering and travel');
+      expect(destinationEffects(place)).not.toBe('Ordinary gathering and travel');
     }
   });
 
@@ -40,7 +40,7 @@ describe('destination planning and remembered places', () => {
     run.clan.stageTime = 45;
     beginMigration(run, 'river', 'orkhon-valley');
     expect(locationAtChapter(run, 1).id).toBe('orkhon-valley');
-    expect(journalMenu(run, 'journey')).toContain('travelling to Orkhon Valley');
+    expect(journalMenu(run, 'journey')).toContain('on the road to Orkhon Valley');
     run.phase = 'playing';
     advanceClan(run, 100);
     run.phase = 'route';
