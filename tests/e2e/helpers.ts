@@ -58,10 +58,13 @@ export async function tapController(
 
 /** Browse the authored branch, then inspect a node without spending anything. */
 export async function inspectNode(page: Page, id: string): Promise<void> {
+  // Native menu keys are consumed on the next scene frame, before the DOM is rebuilt.
+  await expect(page.locator('.immersive-camp, .progression-panel')).toBeVisible();
   if (await page.locator('.immersive-camp').count()) {
     const building = id.split('-')[0]!;
-    await selectCampBuilding(page, building);
     const node = page.locator(`[data-node="${id}"]`);
+    // Keep the current parchment: reopening it resets the foldout after every purchase.
+    if (!(await node.count())) await selectCampBuilding(page, building);
     const craft = page.locator('.camp-crafts');
     if (await node.evaluate((el) => !!el.closest('details:not([open])')))
       await craft.locator('summary').click();
@@ -81,10 +84,15 @@ export async function buyNode(page: Page, id: string): Promise<void> {
 
 /** Select through the painted scene, using search for an as-yet unbuilt facility. */
 export async function selectCampBuilding(page: Page, id: string, unfold = true): Promise<void> {
+  await expect(page.locator('.immersive-camp')).toBeVisible();
   if (await page.locator('[data-camp-dismiss]').count())
     await page.locator('[data-camp-dismiss]').click();
-  if (!(await page.locator(`[data-camp-site="${id}"]`).count()))
-    await page.getByRole('searchbox', { name: 'Find in camp' }).fill(id);
+  if (!(await page.locator(`[data-camp-site="${id}"]`).count())) {
+    const search = page.getByRole('searchbox', { name: 'Find in camp' });
+    await expect(search).toBeVisible();
+    await expect(search).toBeEditable();
+    await search.fill(id);
+  }
   await page.locator(`[data-camp-site="${id}"]`).click();
   if (
     unfold &&

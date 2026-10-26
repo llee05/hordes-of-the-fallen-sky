@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { GAME } from '../../src/game/config';
 import {
   selectCampBuilding,
   closeOverlayOrPause,
@@ -20,9 +21,7 @@ test.beforeEach(async ({ page }) => {
   await page.keyboard.press('b');
 });
 
-test('eight camp branches expose shared crafts and multi-parent mastery on narrow and desktop screens', async ({
-  page,
-}) => {
+test('eight camp branches expose every authored development', async ({ page }) => {
   await expect(page.locator('[data-camp-site]')).toHaveCount(1);
   let nodes = 0;
   for (const site of [
@@ -39,6 +38,11 @@ test('eight camp branches expose shared crafts and multi-parent mastery on narro
     nodes += await page.locator('.camp-path-node').count();
   }
   expect(nodes).toBe(63);
+});
+
+test('shared felt crafts and multi-parent mastery fit narrow and desktop screens', async ({
+  page,
+}) => {
   await selectCampBuilding(page, 'felt');
   await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
   const before = await page.evaluate(() => (window as any).__gloam.scene.run.clan.materials);
@@ -138,7 +142,14 @@ test('provisioning and relay upgrades follow the caravan and grant their arrival
   expect(result.food).toBeCloseTo(158, 0);
   expect(result.materials).toBeCloseTo(before + 10, 0);
   expect(result.health).toBe(75);
-  expect(result.resolve).toBe(72);
+  // A lossless crossing now grants safeResolve before the normal +12 arrival reward.
+  expect(result.resolve).toBe(
+    50 +
+      GAME.crossings.safeResolve +
+      12 +
+      GAME.camp.provisions.shared.arrivalResolve +
+      GAME.camp.relay.horses.arrivalResolve,
+  );
   expect(result.herd).toBe(6);
   expect(result.world).toEqual(['provisions', 'relay']);
   await selectCampBuilding(page, 'provisions');

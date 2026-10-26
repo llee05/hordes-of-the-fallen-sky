@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { GAME } from '../../src/game/config';
 import {
   selectCampBuilding,
   closeOverlayOrPause,
@@ -51,7 +52,14 @@ test('wooden hurdles receive local melee and missile impacts, with feedback froz
   expect(new Set(visible.map((piece) => piece.depth)).size).toBeGreaterThan(10);
   const firstHit = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.spawnEnemy();
+    // Random offscreen spawns can be rejected by minimumPlayerDistance after centering
+    // on camp. Use the actual attack position, safely away from the Khan, instead.
+    if (
+      !scene.spawnEnemy(undefined, {
+        point: { x: scene.camp.x + 119, y: scene.camp.y },
+      })
+    )
+      throw new Error('Could not place the barrier attacker');
     const enemy = scene.enemies.getFirstAlive();
     enemy.setPosition(scene.camp.x + 119, scene.camp.y);
     enemy.health = 10000;
@@ -111,7 +119,14 @@ test('the barricade encloses new crafts and households while both attack and war
   expect(expanded.pieces).toHaveLength(48);
   const attack = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.spawnEnemy();
+    // Random offscreen spawns can be rejected by minimumPlayerDistance after centering
+    // on camp. Use the actual attack position, safely away from the Khan, instead.
+    if (
+      !scene.spawnEnemy(undefined, {
+        point: { x: scene.camp.x + 119, y: scene.camp.y },
+      })
+    )
+      throw new Error('Could not place the barrier attacker');
     const enemy = scene.enemies.getFirstAlive();
     enemy.setPosition(scene.camp.x + scene.campBarrier.radius + 11, scene.camp.y);
     enemy.health = enemy.maxHealth = 1000;
@@ -147,7 +162,14 @@ test('the same bounded barrier follows the caravan, freezes, redeploys on arriva
     Object.assign(window, {
       oldBarrierPieces: scene.campBarrier.hurdles.map((piece: any) => piece.image),
     });
-    scene.spawnEnemy();
+    // Random offscreen spawns can be rejected by minimumPlayerDistance after centering
+    // on camp. Use the actual attack position, safely away from the Khan, instead.
+    if (
+      !scene.spawnEnemy(undefined, {
+        point: { x: scene.camp.x + 119, y: scene.camp.y },
+      })
+    )
+      throw new Error('Could not place the barrier attacker');
     const enemy = scene.enemies.getFirstAlive();
     enemy.setPosition(scene.camp.x + 119, scene.camp.y);
     enemy.definition = { ...enemy.definition, speed: 0, damage: 0 };
@@ -160,12 +182,21 @@ test('the same bounded barrier follows the caravan, freezes, redeploys on arriva
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.camp.x))
     .toBeGreaterThan(2605);
-  expect(
-    await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      return (window as any).frontAttacker.x - scene.camp.x;
-    }),
-  ).toBeCloseTo(119);
+  // updateEnemies pushes to attackRange - 1 only after crossing that clearance.
+  // Fractional caravan steps can leave the attacker anywhere in the contact band.
+  await expect
+    .poll(() =>
+      page.evaluate((attackReach) => {
+        const scene = (window as any).__gloam.scene;
+        const distance = (window as any).frontAttacker.x - scene.camp.x;
+        const attackRange = scene.campBarrier.radius + attackReach;
+        return {
+          outsideClearance: distance >= attackRange - 1,
+          withinAttackReach: distance <= attackRange,
+        };
+      }, GAME.camp.barrier.attackReach),
+    )
+    .toEqual({ outsideClearance: true, withinAttackReach: true });
   await closeOverlayOrPause(page);
   const frozen = await barrierState(page);
   await page.waitForTimeout(200);
