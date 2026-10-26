@@ -1,4 +1,5 @@
-import { _electron as electron, expect, test } from '@playwright/test';
+import { launchElectron } from '../support/electron';
+import { expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -9,7 +10,7 @@ test('desktop starting traditions and combat settings fit a compact window and p
   const env = { ...process.env };
   delete env.ELECTRON_RUN_AS_NODE;
   delete env.GLOAM_DEV_SERVER_URL;
-  const app = await electron.launch({
+  const app = await launchElectron({
     ...(process.env.GLOAM_TEST_EXECUTABLE
       ? {
           executablePath: process.env.GLOAM_TEST_EXECUTABLE,

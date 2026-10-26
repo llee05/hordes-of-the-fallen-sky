@@ -10,7 +10,7 @@ Hordes of the Fallen Sky is a nomadic civilization builder and desktop TypeScrip
 - `npm run format`: format source and documentation.
 - `npm run check`: formatting, strict renderer/desktop type checking, unit tests, and production build.
 - `npm run test:desktop`: actual Electron smoke test with isolated saves; requires a display or Xvfb on Linux.
-- `npm run test:e2e`: browser regression tests. Install Chromium or set `PLAYWRIGHT_CHROMIUM_EXECUTABLE`.
+- `npm run test:e2e`: visible browser regression tests requiring a display and hardware WebGL locally. Install Chromium or set `PLAYWRIGHT_CHROMIUM_EXECUTABLE`; `CI` or `E2E_HEADLESS=1` keeps headless software rendering.
 
 ## Commit workflow
 

@@ -265,6 +265,31 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 npm run format
 ```
 
+Local `test:e2e` and `test:pages` runs open visible Chromium windows and check that
+WebGL 1 and 2 use hardware rendering. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to your
+system Chromium binary, as above, or install Playwright Chromium. Linux uses ANGLE's
+OpenGL backend and selects Wayland when `WAYLAND_DISPLAY` is set. Test windows keep
+rendering when covered or on another workspace; keep the display session available.
+The renderer strings are printed before testing, and software fallback fails early.
+
+Headed test windows use the class/app id `bh-e2e-test`; set `E2E_WINDOW_CLASS` to
+override it. On Hyprland, an optional local window rule can match that class and
+send windows silently to a dedicated workspace (for example, workspace 9).
+Routing and focus behavior depend on your compositor's local rules; desktop
+configuration is not installed by the test suite.
+
+`CI` keeps the existing headless software-rendered browser behavior. For the same
+behavior locally, use `E2E_HEADLESS=1`, for example:
+
+```sh
+E2E_HEADLESS=1 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
+```
+
+The switch also applies to `test:pages`. Desktop tests use the game's Electron
+runtime, with the same local GPU flags and renderer check. For Electron, `CI` or
+`E2E_HEADLESS=1` disables those overrides and checks; native windows still require
+a display session or Xvfb on Linux.
+
 Browser tests cover keyboard, controller, touch, combat, traditions, planning, the Burning Tempest, caravan damage, route rewards, remote camp defense, three crossings, clan-survival victory, full-window layout, and paused chronicle/settings/help navigation. Electron tests exercise the offline build, layout, native save persistence, sandboxing, fullscreen, and quit using isolated saves. Tests never use normal save files. Linux needs a display session or Xvfb for Electron.
 
 Further release work includes extended balancing and playtesting, target-hardware performance, a longer campaign, permanent unlocks, platform validation, release art, real Steamworks APIs, and Steam review.

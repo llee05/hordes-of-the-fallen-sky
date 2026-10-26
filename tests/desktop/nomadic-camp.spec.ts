@@ -1,4 +1,5 @@
-import { _electron as electron, expect, test } from '@playwright/test';
+import { launchElectron } from '../support/electron';
+import { expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -11,7 +12,7 @@ test('painted camp persists through the native profile and app restart at both d
   delete environment.ELECTRON_RUN_AS_NODE;
   delete environment.GLOAM_DEV_SERVER_URL;
   const launch = () =>
-    electron.launch({
+    launchElectron({
       args: [resolve('dist-desktop/desktop/main.js'), `--user-data-dir=${directory}`],
       env: environment,
     });

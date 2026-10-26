@@ -1,4 +1,7 @@
 import { defineConfig } from '@playwright/test';
+import { testGraphics } from './playwright.graphics';
+
+const graphics = testGraphics();
 
 // Exercise the production artifact beneath the same subpath as GitHub Pages.
 // Keep the renderer's relative build base so this artifact also works in Electron.
@@ -11,10 +14,11 @@ export default defineConfig({
   workers: 1,
   timeout: 45000,
   outputDir: 'test-results/pages',
+  globalSetup: graphics.headless ? undefined : './tests/support/checkGraphics.ts',
   use: {
+    ...graphics,
     baseURL: `${origin}${path}`,
     viewport: { width: 1280, height: 800 },
-    launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE },
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },

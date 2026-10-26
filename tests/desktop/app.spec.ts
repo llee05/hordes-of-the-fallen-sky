@@ -1,5 +1,6 @@
+import { launchElectron } from '../support/electron';
 import { buyNode, inspectNode, selectCampBuilding, closeOverlayOrPause } from '../e2e/helpers';
-import { _electron as electron, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -10,7 +11,7 @@ test('desktop migration offers named destinations and frozen, responsive travel 
   const environment = { ...process.env };
   delete environment.ELECTRON_RUN_AS_NODE;
   delete environment.GLOAM_DEV_SERVER_URL;
-  const app = await electron.launch({
+  const app = await launchElectron({
     ...(process.env.GLOAM_TEST_EXECUTABLE
       ? {
           executablePath: process.env.GLOAM_TEST_EXECUTABLE,
@@ -68,7 +69,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
   delete environment.ELECTRON_RUN_AS_NODE;
   delete environment.GLOAM_DEV_SERVER_URL;
   const launch = () =>
-    electron.launch({
+    launchElectron({
       ...(process.env.GLOAM_TEST_EXECUTABLE
         ? {
             executablePath: process.env.GLOAM_TEST_EXECUTABLE,
