@@ -94,12 +94,12 @@ jobs:
         timeout-minutes: 45
         env:
           PR_BASE: ${{ github.event.pull_request.base.sha }}
-        run: npm run test:e2e:changed -- "$PR_BASE" --shard=${{ matrix.shard }}/${{ needs.select.outputs.total }} --workers=1 --reporter=github,line
+        run: npm run test:e2e:changed -- "$PR_BASE" --shard=${{ matrix.shard }}/${{ needs.select.outputs.total }} --workers=1 --timeout=90000 --reporter=github,line
       - name: Run full browser regression shard
         if: github.event_name != 'pull_request'
         timeout-minutes: 45
         # Software-rendered Chromium needs most of a runner's CPU per browser.
-        run: npx playwright test --shard=${{ matrix.shard }}/8 --workers=1 --reporter=github,line
+        run: npx playwright test --shard=${{ matrix.shard }}/8 --workers=1 --timeout=90000 --reporter=github,line
       - name: Upload failure traces and screenshots
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

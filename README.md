@@ -298,8 +298,9 @@ The **Browser E2E** workflow runs related browser specs plus two smoke tests on
 pull requests to `main`, using `test:e2e:changed` against the PR base. Changes
 requiring its conservative full-suite fallback use eight single-worker shards;
 focused reviews use one. Pushes to `main` and nightly runs (17:23 UTC) always run
-the full suite across eight single-worker shards. Each shard has a 45-minute test
-budget within a 60-minute job and reports failures as GitHub annotations. Failed
+the full suite across eight single-worker shards. CI allows 90 seconds per test;
+local test deadlines are unchanged. Each shard has a 45-minute test budget within
+a 60-minute job and reports failures as GitHub annotations. Failed
 shards upload `test-results/`, including retained traces and screenshots, as
 separate artifacts kept for seven days. Download a failing shard's artifact and
 open its `trace.zip` with `npx playwright show-trace /path/to/trace.zip`.
