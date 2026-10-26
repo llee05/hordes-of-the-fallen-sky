@@ -1,6 +1,7 @@
 import { GAME } from '../config';
 import { CROSSING_ENCOUNTERS, type CrossingRoute } from '../data/crossings';
 import {
+  CROSSING_OBJECTIVE_ACCOUNTS,
   CROSSING_OBJECTIVE_REMNANT,
   SAFE_CROSSING_REMNANT,
   crossingObjectiveReaction,
@@ -120,8 +121,8 @@ export function settleCrossingEncounter(run: RunState): boolean {
     rememberClan(
       run,
       'Every household arrived',
-      `No people were lost on the crossing. The clan recovered ${GAME.crossings.safeResolve} additional resolve.`,
-      safeCrossingReaction(run),
+      `No one was lost on the crossing, and the clan’s resolve rose by ${GAME.crossings.safeResolve}.`,
+      safeCrossingReaction(run, c.route),
       SAFE_CROSSING_REMNANT,
     );
   }
@@ -146,7 +147,7 @@ export function settleCrossingEncounter(run: RunState): boolean {
   rememberClan(
     run,
     CROSSING_ENCOUNTERS[c.route].title,
-    `The crossing objective was completed. ${CROSSING_ENCOUNTERS[c.route].reward}.`,
+    `${CROSSING_OBJECTIVE_ACCOUNTS[c.route]} ${CROSSING_ENCOUNTERS[c.route].reward}.`,
     crossingObjectiveReaction(run, c.route),
     CROSSING_OBJECTIVE_REMNANT,
   );

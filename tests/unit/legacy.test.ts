@@ -150,7 +150,7 @@ describe('companion reactions to lived history', () => {
     choose(run, 'share-watch');
     run.health = 0;
     beginSuccession(run);
-    expect(currentReaction(run)?.line?.text).toContain('hold without one rider');
+    expect(currentReaction(run)?.line?.text).toContain('hold without any one rider');
     run.khan.candidate = 'outrider';
     run.elapsed = 20;
     advanceSuccession(run, GAME.khan.successionDelay);

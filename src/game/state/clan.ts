@@ -8,7 +8,10 @@ import { recordClanDamage, type ClanDamageCause } from './clanSafety';
 import { rememberClan } from './legacy';
 import {
   ARRIVAL_REMNANT,
+  BUILDING_REMNANT,
+  ROUTE_ACCOUNTS,
   DEPARTURE_REMNANT,
+  LOSS_REMNANT,
   STARVATION_REMNANT,
   arrivalReaction,
   buildingReaction,
@@ -202,9 +205,11 @@ export function buildStructure(
   rememberClan(
     run,
     development?.title ?? definition.title,
-    `${development ? 'Learned' : 'Established'} for the travelling camp.`,
-    buildingReaction(id),
-    'The remaining hands make room for another craft.',
+    development
+      ? 'The households learned a new craft for the travelling camp.'
+      : 'The households raised it in the travelling camp.',
+    buildingReaction(id, development?.id),
+    BUILDING_REMNANT,
   );
   return true;
 }
@@ -237,8 +242,8 @@ export function beginMigration(
   rememberClan(
     run,
     'The camp packed for the road',
-    `${clan.population} people set out toward ${destination.name} along ${route.title}.`,
-    departureReaction(run),
+    `${clan.population} people set out for ${destination.name}. ${ROUTE_ACCOUNTS[route.id].departed}`,
+    departureReaction(run, route.id),
     DEPARTURE_REMNANT,
   );
   return true;
@@ -283,10 +288,10 @@ export function damageClan(
         run,
         'A place left empty',
         cause === 'starvation'
-          ? 'Empty provisions cost the clan a person. The surviving households carried on.'
-          : `${cause === 'eruption' ? 'A ground eruption' : cause === 'seer' ? 'A seer’s strike' : cause === 'area' ? 'A local terrain or spell strike' : 'An attack'} cost the clan a person. The surviving households carried on.`,
+          ? 'With the provisions gone, the clan lost one of its people. The other households carried on.'
+          : `${cause === 'eruption' ? 'The ground erupted and' : cause === 'seer' ? 'A seer struck and' : cause === 'area' ? 'A spell or a shifting of the land near camp' : 'An attack'} cost the clan one of its people. The other households carried on.`,
         lossReaction(run),
-        'One fewer beneath the banner. The loss remains in the tally.',
+        LOSS_REMNANT,
       );
   }
   recordClanDamage(
@@ -351,7 +356,7 @@ export function advanceClan(
     rememberClan(
       run,
       'The provisions ran out',
-      'Starvation cost a person and livestock; low resolve may bring further losses.',
+      'Hunger cost the clan a person and a horse. If resolve stays low, more losses may follow.',
       starvationReaction(run),
       STARVATION_REMNANT,
     );
@@ -392,8 +397,8 @@ export function advanceClan(
     rememberClan(
       run,
       arrivedPeople ? 'New households at the fire' : 'The caravan arrived',
-      `${clan.population} people reached ${destination.name} by ${route.title}.`,
-      arrivalReaction(run, arrivedPeople),
+      `${clan.population} people reached ${destination.name} ${ROUTE_ACCOUNTS[route.id].arrived}.`,
+      arrivalReaction(run, route.id, arrivedPeople),
       ARRIVAL_REMNANT,
     );
     return 'arrived';

@@ -98,7 +98,7 @@ it('the Skybreaker memory follows the remnant voice and Camp scenes: Off', () =>
   defeatSkybreaker(remnant);
   expect(remnant.legacy.memories.at(-1)!.line).toEqual({
     speaker: 'clan',
-    text: 'The great creature lies still. The few who remain turn back to the wagons.',
+    text: 'The great creature lies still, and the few who remain turn back to the wagons.',
   });
   const quiet = finale();
   quiet.story.enabled = false;
