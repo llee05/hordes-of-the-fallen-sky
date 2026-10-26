@@ -278,21 +278,40 @@ export function damageClan(
   const previousPopulation = clan.population;
   const previous = clan.integrity;
   clan.integrity = Math.max(0, previous - amount * protection);
-  if (Math.floor((100 - previous) / 20) < Math.floor((100 - clan.integrity) / 20)) {
-    if (clan.population > 0) run.story.peopleLost += 1;
-    clan.population = Math.max(0, clan.population - 1);
+  const bandsCrossed =
+    Math.floor((100 - clan.integrity) / GAME.clan.resolveLossBand) -
+    Math.floor((100 - previous) / GAME.clan.resolveLossBand);
+  if (bandsCrossed > 0) {
+    const peopleLost = Math.min(clan.population, bandsCrossed);
+    run.story.peopleLost += peopleLost;
+    clan.population -= peopleLost;
     clan.herd = Math.max(0, clan.herd - 1);
     clan.message = 'The clan has suffered losses. Bring your riders back to guard.';
-    if (clan.population < previousPopulation)
+    if (peopleLost > 0) {
+      const loss = peopleLost === 1 ? 'a person' : `${peopleLost} people`;
+      const reaction = lossReaction(run);
       rememberClan(
         run,
         'A place left empty',
         cause === 'starvation'
-          ? 'With the provisions gone, the clan lost one of its people. The other households carried on.'
-          : `${cause === 'eruption' ? 'The ground erupted and' : cause === 'seer' ? 'A seer struck and' : cause === 'area' ? 'A spell or a shifting of the land near camp' : 'An attack'} cost the clan one of its people. The other households carried on.`,
-        lossReaction(run),
-        LOSS_REMNANT,
+          ? `With the provisions gone, the clan lost ${loss}. The other households carried on.`
+          : `${cause === 'eruption' ? 'The ground erupted and' : cause === 'seer' ? 'A seer struck and' : cause === 'area' ? 'A spell or a shifting of the land near camp' : 'An attack'} cost the clan ${loss}. The other households carried on.`,
+        peopleLost === 1
+          ? reaction
+          : {
+              ...reaction,
+              text:
+                reaction.speaker === 'saran'
+                  ? `${peopleLost} empty places at the fire. Say their names tonight, so the road doesn’t take those as well.`
+                  : reaction.speaker === 'nara'
+                    ? `${peopleLost} fewer. I wrote them in the tally myself, where everyone can read it.`
+                    : `${peopleLost} fewer at the fire. I have entered the losses in the tally, where any of us may read it.`,
+            },
+        peopleLost === 1
+          ? LOSS_REMNANT
+          : `${peopleLost} fewer under the banner. The tally keeps the losses.`,
       );
+    }
   }
   recordClanDamage(
     run,

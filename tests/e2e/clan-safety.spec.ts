@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { GAME } from '../../src/game/config';
 import { openTitle, startExpedition } from './helpers';
 test.beforeEach(async ({ page }) => {
   await openTitle(page);
@@ -123,4 +124,40 @@ test('camp threats show a screen direction and losses distinguish attacks from h
   expect(losses.combat).toBeGreaterThan(0);
   expect(losses.hunger).toBeGreaterThan(0);
   expect(losses.combat + losses.hunger).toBe(losses.total);
+});
+
+test('multi-band hits report every person lost in the HUD and survival tallies', async ({
+  page,
+}) => {
+  await page.keyboard.press('Escape');
+  const results = await page.evaluate((bandSize) => {
+    const s = (window as any).__gloam.scene;
+    const r = s.run;
+    const population = r.clan.population;
+    r.clan.formation = 'wedge';
+    const results = [1, 2, 3].map((bands) => {
+      r.clan.integrity = 100;
+      r.clan.population = population;
+      const previousLosses = r.story.peopleLost;
+      const previousCombat = r.safety.combatLosses;
+      s.damageClan(bands * bandSize);
+      return {
+        bands,
+        population: r.clan.population,
+        expectedPopulation: population - bands,
+        losses: r.story.peopleLost - previousLosses,
+        combat: r.safety.combatLosses - previousCombat,
+        observed: r.safety.lastDamage.people,
+      };
+    });
+    s.publishPhase();
+    return results;
+  }, GAME.clan.resolveLossBand);
+  for (const result of results) {
+    expect(result.population).toBe(result.expectedPopulation);
+    expect(result.losses).toBe(result.bands);
+    expect(result.combat).toBe(result.bands);
+    expect(result.observed).toBe(result.bands);
+  }
+  await expect(page.locator('#population')).toHaveText(String(results.at(-1)!.expectedPopulation));
 });
