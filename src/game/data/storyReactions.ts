@@ -293,21 +293,13 @@ const INTERNAL_REACTIONS: Record<string, readonly [StoryLine, StoryLine]> = {
   ],
 };
 
-/** The steady hearthkeeper's line for any estate improvement without an authored voice. */
-const ESTATE_FALLBACK: StoryLine = {
-  speaker: 'saran',
-  text: 'Another practice beside the hearth. We will carry it to the next pasture.',
-};
-
 /** Choose the voice for a validated encampment tier or internal development rank. */
 export function estateReaction(
   kind: 'encampment' | 'internal',
   id: string,
   rank: number,
-): StoryLine {
-  const line =
-    kind === 'encampment' ? ENCAMPMENT_REACTIONS[rank] : INTERNAL_REACTIONS[id]?.[rank - 1];
-  return line ?? ESTATE_FALLBACK;
+): StoryLine | undefined {
+  return kind === 'encampment' ? ENCAMPMENT_REACTIONS[rank] : INTERNAL_REACTIONS[id]?.[rank - 1];
 }
 
 export const ENCAMPMENT_REMNANT =

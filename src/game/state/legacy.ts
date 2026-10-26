@@ -57,12 +57,15 @@ export function rememberClan(
   run: RunState,
   title: string,
   detail: string,
-  reaction: StoryLine,
+  reaction: StoryLine | undefined,
   remnant: string,
 ): void {
   const legacy = run.legacy;
   const canSpeak =
-    run.clan.population > 0 && run.story.enabled && run.elapsed >= legacy.reactionUntil;
+    reaction !== undefined &&
+    run.clan.population > 0 &&
+    run.story.enabled &&
+    run.elapsed >= legacy.reactionUntil;
   const line = canSpeak ? (run.clan.population < 5 ? clanVoiceLine(remnant) : reaction) : undefined;
   legacy.totalMemories += 1;
   legacy.memories.push({

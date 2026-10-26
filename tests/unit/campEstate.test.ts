@@ -22,6 +22,7 @@ import {
   estateReaction,
 } from '../../src/game/data/storyReactions';
 import { GAME } from '../../src/game/config';
+import { rememberClan } from '../../src/game/state/legacy';
 function richCamp() {
   const run = createRun();
   run.phase = 'building';
@@ -146,6 +147,35 @@ describe('portable clan estate progression', () => {
 });
 
 describe('estate memories in the chronicle', () => {
+  it('has an authored reaction for every purchasable tier and internal rank', () => {
+    for (const node of ENCAMPMENT_TIERS.filter((node) => node.tier > 1))
+      expect(estateReaction('encampment', node.id, node.tier)).toBeDefined();
+    for (const development of INTERNAL_DEVELOPMENTS)
+      for (const [index] of development.ranks.entries())
+        expect(estateReaction('internal', development.id, index + 1)).toBeDefined();
+  });
+
+  it('records missing reactions silently without changing reaction spacing', () => {
+    const reaction = estateReaction('internal', 'unknown', 1);
+    expect(reaction).toBeUndefined();
+    expect(estateReaction('encampment', 'encampment-6', 6)).toBeUndefined();
+    for (const population of [4, 8]) {
+      const run = richCamp();
+      run.clan.population = population;
+      run.legacy.reactionUntil = 10;
+      run.elapsed = 20;
+      rememberClan(run, 'A new practice', 'The clan learned it.', reaction, 'Remnant.');
+      expect(run.legacy.totalMemories).toBe(1);
+      expect(run.legacy.memories).toHaveLength(1);
+      expect(run.legacy.memories[0]).toMatchObject({
+        title: 'A new practice',
+        detail: 'The clan learned it.',
+        line: undefined,
+      });
+      expect(run.legacy.reactionUntil).toBe(10);
+    }
+  });
+
   // Each internal path speaks through the companion whose concern it is.
   const SPEAKERS: Record<string, string> = {
     'clan-council': 'boro',
