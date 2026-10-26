@@ -8,6 +8,9 @@ import {
   tapController,
 } from './helpers';
 
+// Tests use isolated browser contexts; parallel mode also balances CI shards.
+test.describe.configure({ mode: 'parallel' });
+
 test('the painted scene reflects real developments, freezes the world, and respects reduced motion', async ({
   page,
 }) => {
@@ -46,18 +49,18 @@ test('the painted scene reflects real developments, freezes the world, and respe
   await expect(page.getByRole('dialog')).toBeHidden();
 });
 
-test('all facilities remain inspectable from the painting or search at supported viewport sizes', async ({
-  page,
-}) => {
-  test.setTimeout(60000);
-  await openTitle(page);
-  await startExpedition(page);
-  await page.keyboard.press('b');
-  for (const size of [
-    { width: 1280, height: 800 },
-    { width: 960, height: 600 },
-    { width: 390, height: 844 },
-  ]) {
+for (const size of [
+  { width: 1280, height: 800 },
+  { width: 960, height: 600 },
+  { width: 390, height: 844 },
+])
+  test(`all facilities remain inspectable from the painting or search at supported viewport sizes at ${size.width}×${size.height}`, async ({
+    page,
+  }) => {
+    test.setTimeout(60000);
+    await openTitle(page);
+    await startExpedition(page);
+    await page.keyboard.press('b');
     await page.setViewportSize(size);
     for (const site of [
       'ger',
@@ -75,18 +78,19 @@ test('all facilities remain inspectable from the painting or search at supported
     expect(
       await page.locator('.camp-estate').evaluate((e) => e.scrollWidth <= e.clientWidth + 1),
     ).toBe(true);
-  }
-  await page.locator('[data-camp-dismiss]').click();
-  const search = page.getByRole('searchbox', { name: 'Find in camp' });
-  await search.fill('ortoo');
-  await expect(page.locator('.camp-building-choice')).toHaveCount(1);
-  await search.fill('no-such-building');
-  await expect(page.locator('.camp-popup').getByRole('status')).toContainText('No matching crafts');
-  await search.fill('herd');
-  await page.locator('[data-camp-site="herd"]').click();
-  await expect(search).toHaveValue('');
-  await expect(page.locator('.camp-popup-heading')).toContainText('Herding grounds');
-});
+    await page.locator('[data-camp-dismiss]').click();
+    const search = page.getByRole('searchbox', { name: 'Find in camp' });
+    await search.fill('ortoo');
+    await expect(page.locator('.camp-building-choice')).toHaveCount(1);
+    await search.fill('no-such-building');
+    await expect(page.locator('.camp-popup').getByRole('status')).toContainText(
+      'No matching crafts',
+    );
+    await search.fill('herd');
+    await page.locator('[data-camp-site="herd"]').click();
+    await expect(search).toHaveValue('');
+    await expect(page.locator('.camp-popup-heading')).toContainText('Herding grounds');
+  });
 
 test('controller confirms inspection and explicit purchase; Back dismisses the parchment first', async ({
   page,

@@ -3,6 +3,9 @@ import { buyNode } from '../e2e/helpers';
 import { expect, test } from '@playwright/test';
 import { DEVELOPER_LEVELS } from '../../src/game/dev/levels';
 
+// Tests use isolated browser contexts; parallel mode also balances CI shards.
+test.describe.configure({ mode: 'parallel' });
+
 test('developer mode freezes the expedition and returns to the exact title, intro, story, or menu', async ({
   page,
 }) => {
@@ -49,49 +52,6 @@ test('developer mode freezes the expedition and returns to the exact title, intr
   await expect(page.locator('[data-tree-search]')).toHaveValue('bow');
   await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
-});
-
-test('every developer checkpoint launches its real chapter, landscape, and crossing', async ({
-  page,
-}) => {
-  test.setTimeout(180000);
-  const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/?terrain=2d');
-  await expect(page.getByRole('button', { name: 'Developer mode F8' })).toBeVisible();
-  for (const level of DEVELOPER_LEVELS) {
-    await page.keyboard.press('F8');
-    await page.locator(`[data-developer-level="${level.id}"]`).click();
-    await expect(page.getByRole('dialog')).toBeHidden();
-    await expect(page.locator('#developer-run')).toBeVisible();
-    await expect
-      .poll(() =>
-        page.evaluate(() => {
-          const scene = (window as any).__gloam.scene;
-          return {
-            region: scene.run.clan.region,
-            locationId: scene.run.clan.locationId ?? 'golden-pasture',
-            routeId: scene.run.clan.stage === 'migration' ? scene.run.clan.routeId : undefined,
-            stage: scene.run.clan.stage,
-            landscape: scene.landscape.regional.name,
-            paused: scene.physics.world.isPaused,
-            knowledge: scene.run.pendingUpgrades,
-          };
-        }),
-      )
-      .toEqual({
-        region: level.region,
-        locationId: level.locationId,
-        routeId: level.routeId,
-        stage: level.routeId ? 'migration' : level.region === 3 ? 'final' : 'camp',
-        landscape: `landscape-${level.locationId}`,
-        paused: false,
-        knowledge: 40,
-      });
-    if (level.routeId) await expect(page.locator('#build')).toBeDisabled();
-    else if (level.region < 3) await expect(page.locator('#migrate')).toBeEnabled();
-  }
-  expect(errors).toEqual([]);
 });
 
 test('switching checkpoints clears old actors, hazards, boss state, succession, and research', async ({

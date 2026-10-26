@@ -2,6 +2,9 @@ import { expect, test } from '@playwright/test';
 import { openTitle, startExpedition, tapController } from './helpers';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
 
+// Tests use isolated browser contexts; parallel mode also balances CI shards.
+test.describe.configure({ mode: 'parallel' });
+
 const places = [
   ['otgontenger', 'Mount Otgontenger', 'OTGONTENGER'],
   ['bogd-khan-uul', 'Bogd Khan Uul', 'BOGD KHAN UUL'],
@@ -77,23 +80,23 @@ for (const [id, name, short] of places)
     await expect(page.locator(`[data-destination="${id}"]`)).toHaveCount(0);
   });
 
-test('destination inspection preserves focus and paused state across responsive layouts', async ({
-  page,
-}) => {
-  test.setTimeout(60000);
-  await openTitle(page);
-  await startExpedition(page);
-  await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.run.clan.stageTime = 45;
-    scene.openRoutes();
-  });
-  const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  for (const viewport of [
-    { width: 1280, height: 800 },
-    { width: 960, height: 600 },
-    { width: 390, height: 844 },
-  ]) {
+for (const viewport of [
+  { width: 1280, height: 800 },
+  { width: 960, height: 600 },
+  { width: 390, height: 844 },
+])
+  test(`destination inspection preserves focus and paused state across responsive layouts at ${viewport.width}×${viewport.height}`, async ({
+    page,
+  }) => {
+    test.setTimeout(60000);
+    await openTitle(page);
+    await startExpedition(page);
+    await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      scene.run.clan.stageTime = 45;
+      scene.openRoutes();
+    });
+    const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
     await page.setViewportSize(viewport);
     for (const [id, name] of places) {
       const button = page.locator(`[data-destination="${id}"]`);
@@ -107,12 +110,13 @@ test('destination inspection preserves focus and paused state across responsive 
         .locator('.route-dialog')
         .evaluate((panel) => panel.scrollWidth <= panel.clientWidth),
     ).toBe(true);
-  }
-  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
-  await page.screenshot({ path: 'test-results/destinations-narrow.png' });
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog')).toBeHidden();
-});
+    expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(
+      before,
+    );
+    await page.screenshot({ path: `test-results/destinations-${viewport.width}.png` });
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toBeHidden();
+  });
 
 test('keyboard and controller select a destination before confirming the journey', async ({
   page,
