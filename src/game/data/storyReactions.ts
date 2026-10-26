@@ -381,11 +381,6 @@ export function crossingObjectiveReaction(_run: RunState, route: CrossingRoute):
 
 export const CROSSING_OBJECTIVE_REMNANT = 'Those who came through take stock of what they saved.';
 
-/**
- * Boro takes in the cart's load and the loose horses, Saran welcomes the
- * stranded households without naming any of them, and Nara watched the
- * raiders turned back from the gers.
- */
 const FIELD_OBJECTIVE_REACTIONS: Record<FieldObjectiveKind, StoryLine> = {
   supplies: {
     speaker: 'boro',
