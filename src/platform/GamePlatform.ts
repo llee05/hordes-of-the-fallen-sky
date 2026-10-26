@@ -104,7 +104,7 @@ export class GamePlatform {
   }
 
   saveExpedition(slot: SaveSlot, save: ExpeditionSave): Promise<void> {
-    if (!isSaveSlot(slot) || !isCompatibleExpedition(save))
+    if (!isSaveSlot(slot) || !isExpeditionSave(save))
       return Promise.reject(new Error('Invalid save'));
     const serialized = JSON.stringify(save);
     if (new TextEncoder().encode(serialized).length > MAX_SAVE_BYTES)

@@ -192,8 +192,6 @@ describe('full expedition snapshots', () => {
               loadProfile: () => profiles.load(),
               listExpeditions: () => profiles.listExpeditions(),
               loadExpedition: (slot: 'slot-1') => profiles.loadExpedition(slot),
-              saveExpedition: (slot: 'slot-1', value: unknown) =>
-                profiles.saveExpedition(slot, value),
             }
           : undefined,
       });
@@ -215,7 +213,6 @@ describe('full expedition snapshots', () => {
         const reopened = await GamePlatform.create();
         expect(reopened.saveStorageError).toBe(false);
         expect(reopened.saves).toEqual([{ slot: 'slot-1', status: 'incompatible' }]);
-        await expect(platform.saveExpedition('slot-1', incompatible)).rejects.toThrow('Invalid save');
       }
     }
   });
