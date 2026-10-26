@@ -137,6 +137,7 @@ import {
   finalChapter,
   passageProgress,
   acceptCampBarrage,
+  defeatSkybreaker,
 } from '../state/finalStand';
 
 export interface ArenaCallbacks {
@@ -2640,12 +2641,7 @@ export class ArenaScene extends Phaser.Scene {
       this.run.patrons.ancestors.spiritGain *
       this.run.clan.campEffects.multipliers.spiritGain;
     rewardPatronKill(this.run);
-    if (enemy === this.boss) {
-      this.run.clan.finalBossDefeated = true;
-      this.run.clan.integrity = Math.min(100, this.run.clan.integrity + 20);
-      this.run.clan.message =
-        'The Skybreaker has fallen. Protect the families until the passage opens.';
-    }
+    if (enemy === this.boss) defeatSkybreaker(this.run);
     this.burst(x, y, 0xa58aad, 5);
     const gem = this.gems.get(x, y, 'gem') as Gem | null;
     if (gem) {

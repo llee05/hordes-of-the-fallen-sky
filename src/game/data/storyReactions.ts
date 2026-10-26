@@ -3,8 +3,7 @@ import type { BuildingId, RunState } from '../types';
 import type { StoryLine } from '../story/types';
 
 /**
- * Brief companion reactions to factual moments: camp work, losses, and succession.
- * Each is chosen when the moment is recorded, so the chronicle keeps what was said.
+ * Choose reactions when recording a moment so later choices cannot rewrite its transcript.
  */
 const BUILDING_REACTIONS: Record<BuildingId, StoryLine> = {
   ger: {
@@ -77,5 +76,13 @@ export function chosenKhanReaction(run: RunState): StoryLine {
   return {
     speaker: 'erden',
     text: 'A new hand carries the banner. The people and everything they have learned remain.',
+  };
+}
+
+/** The Skybreaker falls during the final stand; Boro turns the clan back to the wagons. */
+export function skybreakerReaction(): StoryLine {
+  return {
+    speaker: 'boro',
+    text: 'It is down. Let the little ones see it lying still, then back to the wagons. We are not through yet.',
   };
 }

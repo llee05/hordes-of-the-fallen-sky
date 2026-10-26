@@ -83,13 +83,15 @@ The chronicle's **Our story** tab contains the current run's scenes. Expand one 
 
 ## Lived history
 
-Validated camp purchases, departures, completed crossings, actual losses, and Khan
-succession add factual memories to the chronicle. A brief reaction may accompany a
-moment, voiced by the companion it concerns (`src/game/data/storyReactions.ts`):
+Validated camp purchases, departures, completed crossings, actual losses, Khan
+succession, and the Skybreaker's defeat add factual memories to the chronicle. A
+brief reaction may accompany a moment, voiced by the companion it concerns
+(`src/game/data/storyReactions.ts`):
 
 - **Camp work:** Boro reacts to herds, bows, and stores; Nara to felt and relays; Erden to wagons; Saran to gers and sanctuaries.
 - **Losses:** recorded by whoever keeps the tally after the court scene. From the third loss, Saran answers instead.
 - **Succession:** a first fall recalls a shared watch if the clan named one. A successor is greeted according to the chosen trait.
+- **[The Skybreaker](final-stand.md):** Boro turns the clan back to the wagons, echoing his line in the road scene.
 
 Reactions are spaced by eight active seconds and freeze in menus. Only displayed reactions receive a retained transcript. Fewer than five survivors use the collective remembered-road voice. Camp scenes: Off keeps factual memories without companion speech. Records are bounded to the latest 96 moments and 64 Khans.
 
