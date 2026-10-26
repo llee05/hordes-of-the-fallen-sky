@@ -149,8 +149,8 @@ test('the returning current pushes enemies and the mountain ward protects the tr
     const paused = {
       first,
       pausedHealth: enemy.health,
-      waterTimer: scene.patronSupport.waterTimer,
-      guardianTimer: scene.patronSupport.guardianTimer,
+      waterTimer: scene.patronSupport.capture().waterTimer,
+      guardianTimer: scene.patronSupport.capture().guardianTimer,
     };
     scene.run.phase = 'playing';
     scene.invulnerable = 0;
