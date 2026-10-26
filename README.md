@@ -290,6 +290,19 @@ runtime, with the same local GPU flags and renderer check. For Electron, `CI` or
 `E2E_HEADLESS=1` disables those overrides and checks; native windows still require
 a display session or Xvfb on Linux.
 
+Each browser test run starts its own server, so several checkouts on one host
+need distinct ports. Set `E2E_PORT` (default 5173) to move the `test:e2e` dev
+server and `PAGES_PORT` (default 4173) to move the `test:pages` preview server,
+for example:
+
+```sh
+E2E_PORT=5199 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
+```
+
+A run never reuses a server it finds already listening; it always starts a fresh
+one on the configured port so it cannot test another checkout's build. Set
+`E2E_REUSE_SERVER=1` to opt into reusing an existing server on the same port.
+
 Browser tests cover keyboard, controller, touch, combat, traditions, planning, the Burning Tempest, caravan damage, route rewards, remote camp defense, three crossings, clan-survival victory, full-window layout, and paused chronicle/settings/help navigation. Electron tests exercise the offline build, layout, native save persistence, sandboxing, fullscreen, and quit using isolated saves. Tests never use normal save files. Linux needs a display session or Xvfb for Electron.
 
 Further release work includes extended balancing and playtesting, target-hardware performance, a longer campaign, permanent unlocks, platform validation, release art, real Steamworks APIs, and Steam review.
