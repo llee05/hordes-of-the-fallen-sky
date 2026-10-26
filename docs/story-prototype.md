@@ -89,6 +89,7 @@ brief reaction may accompany a moment, voiced by the companion it concerns
 (`src/game/data/storyReactions.ts`):
 
 - **Camp work:** Boro reacts to herds, bows, and stores; Nara to felt and relays; Erden to wagons; Saran to gers and sanctuaries.
+- **Journey moments:** departures, starvation, arrivals, crossing outcomes, and completed field objectives speak through the same data file, each paired with the collective voice heard below five survivors.
 - **Losses:** recorded by whoever keeps the tally after the court scene. From the third loss, Saran answers instead.
 - **Succession:** a first fall recalls a shared watch if the clan named one. A successor is greeted according to the chosen trait.
 - **[The Skybreaker](final-stand.md):** Boro turns the clan back to the wagons, echoing his line in the road scene.

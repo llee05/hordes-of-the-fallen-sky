@@ -1,5 +1,11 @@
 import { GAME } from '../config';
 import { CROSSING_ENCOUNTERS, type CrossingRoute } from '../data/crossings';
+import {
+  CROSSING_OBJECTIVE_REMNANT,
+  SAFE_CROSSING_REMNANT,
+  crossingObjectiveReaction,
+  safeCrossingReaction,
+} from '../data/storyReactions';
 import { rememberClan } from './legacy';
 import type { RunState } from '../types';
 import { isKhanActive } from './khan';
@@ -115,8 +121,8 @@ export function settleCrossingEncounter(run: RunState): boolean {
       run,
       'Every household arrived',
       `No people were lost on the crossing. The clan recovered ${GAME.crossings.safeResolve} additional resolve.`,
-      { speaker: 'nara', text: 'I counted again. Every household that left is still here.' },
-      'Every household that departed reached the next camp.',
+      safeCrossingReaction(run),
+      SAFE_CROSSING_REMNANT,
     );
   }
   const success =
@@ -141,11 +147,8 @@ export function settleCrossingEncounter(run: RunState): boolean {
     run,
     CROSSING_ENCOUNTERS[c.route].title,
     `The crossing objective was completed. ${CROSSING_ENCOUNTERS[c.route].reward}.`,
-    {
-      speaker: 'saran',
-      text: 'Count everyone who came through. What you protected belongs beside our fire.',
-    },
-    'The people who came through count what they saved.',
+    crossingObjectiveReaction(run, c.route),
+    CROSSING_OBJECTIVE_REMNANT,
   );
   return true;
 }
