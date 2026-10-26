@@ -40,7 +40,7 @@ describe('destination planning and remembered places', () => {
     run.clan.stageTime = 45;
     beginMigration(run, 'river', 'orkhon-valley');
     expect(locationAtChapter(run, 1).id).toBe('orkhon-valley');
-    expect(journalMenu(run, 'journey')).toContain('travelling to Orkhon Valley');
+    expect(journalMenu(run, 'journey')).toContain('on the road to Orkhon Valley');
     run.phase = 'playing';
     advanceClan(run, 100);
     run.phase = 'route';
