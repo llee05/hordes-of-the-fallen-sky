@@ -125,31 +125,31 @@ The five chapters below are the canonical short telling used by `src/game/data/i
 
 **Beneath Eternal Heaven.**
 
-Above us was Tengri, Eternal Heaven. Beneath our hooves, Etügen, Mother Earth. We lived between them: tending the herds, honoring the land, remembering those who rode before us.
+Tengri, Eternal Heaven, was the sky over our heads. Etügen, Mother Earth, was the grass under our hooves. We lived between them, following the herds, greeting each spring before we drank, and speaking the names of those who rode before us.
 
 ### II · THE IRON VOW
 
 **A vow that broke the world.**
 
-The rulers of the Last Court raised an iron standard to bind Heaven's favor to their throne. When their vow was spoken, the sky split. We named that night the Sundering.
+The rulers of the Last Court wanted Heaven's favor chained to their throne forever. They raised a standard of iron and spoke their vow, and at its last word the sky split open. We call that night the Sundering.
 
 ### III · THE UNRETURNED
 
 **The unreturned ride.**
 
-Through the wound came riders without breath, wolves without warmth, and voices wearing the names of our dead. Winter crossed into summer. Cities fell. The roads between the living and the ancestors were lost.
+Through the wound came riders who did not breathe, wolves with no warmth, and voices that borrowed the names of our dead. Snow drifted across summer rivers. Cities fell. The roads between the living and our ancestors were lost.
 
 ### IV · THE LIVING HEARTH
 
 **Keep the hearth alive.**
 
-Eight of us remained beneath a blue banner. Our hearthkeeper carried the last embers; you took up the bow. We would gather the scattered families and carry our hearth where the darkness could not follow.
+Eight of us remained, with three horses and a length of blue cloth for a banner. Our hearthkeeper carried the last embers. You took up the bow. We meant to gather the scattered families and carry the hearth somewhere the darkness could not follow.
 
 ### V · THE HEART OF THE STEPPE
 
 **A road beneath the sky.**
 
-East, at the Heart of the Steppe, the elders remember a sheltered valley beneath an unbroken sky. Lead us to the sacred mountain. Guard the wagons until the passage opens. Let our children see another dawn.
+East, past the broken country, the elders remember a sheltered valley at the Heart of the Steppe, where the sky has not torn. Lead us to the sacred mountain. Guard the wagons until the passage opens. Let our children see another dawn.
 
 ## Research notes and writing boundaries
 

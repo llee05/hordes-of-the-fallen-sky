@@ -3,31 +3,31 @@ export const INTRO_SLIDES = [
   {
     chapter: 'I · HEAVEN AND EARTH',
     title: 'Beneath Eternal Heaven.',
-    text: 'Above us was Tengri, Eternal Heaven. Beneath our hooves, Etügen, Mother Earth. We lived between them: tending the herds, honoring the land, remembering those who rode before us.',
+    text: 'Tengri, Eternal Heaven, was the sky over our heads. Etügen, Mother Earth, was the grass under our hooves. We lived between them, following the herds, greeting each spring before we drank, and speaking the names of those who rode before us.',
     image: 'intro-steppe.png',
   },
   {
     chapter: 'II · THE IRON VOW',
     title: 'A vow that broke the world.',
-    text: "The rulers of the Last Court raised an iron standard to bind Heaven's favor to their throne. When their vow was spoken, the sky split. We named that night the Sundering.",
+    text: "The rulers of the Last Court wanted Heaven's favor chained to their throne forever. They raised a standard of iron and spoke their vow, and at its last word the sky split open. We call that night the Sundering.",
     image: 'intro-iron-vow.png',
   },
   {
     chapter: 'III · THE UNRETURNED',
     title: 'The unreturned ride.',
-    text: 'Through the wound came riders without breath, wolves without warmth, and voices wearing the names of our dead. Winter crossed into summer. Cities fell. The roads between the living and the ancestors were lost.',
+    text: 'Through the wound came riders who did not breathe, wolves with no warmth, and voices that borrowed the names of our dead. Snow drifted across summer rivers. Cities fell. The roads between the living and our ancestors were lost.',
     image: 'intro-fallen-sky.png',
   },
   {
     chapter: 'IV · THE LIVING HEARTH',
     title: 'Keep the hearth alive.',
-    text: 'Eight of us remained beneath a blue banner. Our hearthkeeper carried the last embers; you took up the bow. We would gather the scattered families and carry our hearth where the darkness could not follow.',
+    text: 'Eight of us remained, with three horses and a length of blue cloth for a banner. Our hearthkeeper carried the last embers. You took up the bow. We meant to gather the scattered families and carry the hearth somewhere the darkness could not follow.',
     image: 'intro-hearth.png',
   },
   {
     chapter: 'V · THE HEART OF THE STEPPE',
     title: 'A road beneath the sky.',
-    text: 'East, at the Heart of the Steppe, the elders remember a sheltered valley beneath an unbroken sky. Lead us to the sacred mountain. Guard the wagons until the passage opens. Let our children see another dawn.',
+    text: 'East, past the broken country, the elders remember a sheltered valley at the Heart of the Steppe, where the sky has not torn. Lead us to the sacred mountain. Guard the wagons until the passage opens. Let our children see another dawn.',
     image: 'intro-caravan.png',
   },
 ] as const;
