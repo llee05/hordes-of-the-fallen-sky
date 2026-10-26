@@ -9,4 +9,6 @@ playwright-report/
 package-lock.json
 .agents/
 .aws/
+.claude/
 .codex/
+.opencode/
