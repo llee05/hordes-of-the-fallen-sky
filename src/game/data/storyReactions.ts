@@ -79,3 +79,11 @@ export function chosenKhanReaction(run: RunState): StoryLine {
     text: 'A new hand carries the banner. The people and everything they have learned remain.',
   };
 }
+
+/** The Skybreaker falls during the final stand; Boro turns the clan back to the wagons. */
+export function skybreakerReaction(): StoryLine {
+  return {
+    speaker: 'boro',
+    text: 'It is down. Let the little ones see it lying still, then back to the wagons. We are not through yet.',
+  };
+}

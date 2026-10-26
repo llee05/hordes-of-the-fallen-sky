@@ -1,6 +1,8 @@
 import { GAME } from '../config';
 import type { RunState } from '../types';
 import { isKhanActive } from './khan';
+import { rememberClan } from './legacy';
+import { skybreakerReaction } from '../data/storyReactions';
 export interface PassageWork {
   x?: number;
   y?: number;
@@ -94,5 +96,20 @@ export function acceptCampBarrage(run: RunState, barrage?: number): boolean {
   if (barrage === undefined || !run.finalStand) return true;
   if (barrage <= (run.finalStand.lastCampBarrage ?? -1)) return false;
   run.finalStand.lastCampBarrage = barrage;
+  return true;
+}
+/** The Skybreaker's defeat is optional and counted once: resolve, the camp message, and a memory. */
+export function defeatSkybreaker(run: RunState): boolean {
+  if (run.clan.finalBossDefeated) return false;
+  run.clan.finalBossDefeated = true;
+  run.clan.integrity = Math.min(100, run.clan.integrity + GAME.finalStand.bossResolve);
+  run.clan.message = 'The Skybreaker has fallen. Protect the families until the passage opens.';
+  rememberClan(
+    run,
+    'The Skybreaker fell',
+    `${run.clan.population} people watched the great creature fall before the mountain passage.`,
+    skybreakerReaction(),
+    'The great creature lies still. The few who remain turn back to the wagons.',
+  );
   return true;
 }

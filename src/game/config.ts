@@ -45,6 +45,8 @@ export const GAME = {
     workSeconds: 5,
     workRadius: 90,
     workBonus: 12,
+    /** Resolve restored once when the Skybreaker falls, capped at 100. */
+    bossResolve: 20,
     workOffset: 390,
     contestRadius: 160,
     assaultCount: 2,
