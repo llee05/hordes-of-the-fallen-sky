@@ -7,6 +7,9 @@ async function open(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-level="destination:2:otgontenger"]').click();
+  // The title already has a 3D canvas. Wait for the queued scene restart to rebuild its pools.
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await expect(page.locator('canvas[data-world-renderer="3d"]')).toBeVisible();
   await page.evaluate(() => {
     const s = (window as any).__gloam.scene;

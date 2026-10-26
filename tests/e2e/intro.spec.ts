@@ -4,6 +4,8 @@ import { closeOverlayOrPause, tapController } from './helpers';
 test('intro reads at the player’s pace with frozen simulation, back, completion, and a fresh expedition', async ({
   page,
 }) => {
+  // Five full-page paintings plus two expeditions exceed 30s on CI's software renderer.
+  test.setTimeout(60000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/?terrain=2d');
@@ -99,6 +101,14 @@ test('intro reads at the player’s pace with frozen simulation, back, completio
   await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Start a new run' }).click();
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
+  // The pause autosave (f780c79) takes primary focus; keyboard focus must stay visible.
+  const continueExpedition = page.getByRole('button', { name: /CONTINUE EXPEDITION/ });
+  await expect(continueExpedition).toBeFocused();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Shift+Tab');
+  await expect(continueExpedition).toBeFocused();
+  await expect(continueExpedition).toHaveCSS('outline-style', 'solid');
+  await expect(continueExpedition).toHaveCSS('outline-width', '2px');
   await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toHaveCount(0);
   await page.getByRole('button', { name: /NEW GAME/ }).click();
   await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
@@ -197,6 +207,15 @@ test('controller starts, advances, skips, replays, and never leaks a held confir
     Object.defineProperty(navigator, 'getGamepads', { value: () => [state] });
   });
   const press = (index: number): Promise<void> => tapController(page, index);
+  const navigateTo = async (name: string | RegExp): Promise<void> => {
+    const target = page.getByRole('button', { name });
+    const buttons = await page.locator('.title-menu button').count();
+    for (let step = 0; step < buttons; step++) {
+      if (await target.evaluate((button) => button === document.activeElement)) break;
+      await press(13);
+    }
+    await expect(target).toBeFocused();
+  };
   await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await press(0);
@@ -208,15 +227,16 @@ test('controller starts, advances, skips, replays, and never leaks a held confir
   expect(await page.evaluate(() => (window as any).__gloam.scene.dashTimer)).toBe(0);
   await press(9);
   await page.getByRole('button', { name: 'Start a new run' }).click();
-  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused();
-  await press(13);
-  await expect(page.getByRole('button', { name: 'Replay introduction' })).toBeFocused();
+  // Pause autosaves (f780c79) make Continue expedition the title's primary focus.
+  const continueExpedition = page.getByRole('button', { name: /CONTINUE EXPEDITION/ });
+  await expect(continueExpedition).toBeFocused();
+  await navigateTo('Replay introduction');
   await press(0);
   for (let chapter = 1; chapter < 5; chapter++) await press(0);
   await page.evaluate(() => {
     (window as any).testController.buttons[0].pressed = true;
   });
-  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused();
+  await expect(continueExpedition).toBeFocused();
   await page.waitForTimeout(300);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('ready');
   await page.evaluate(() => {
@@ -225,6 +245,7 @@ test('controller starts, advances, skips, replays, and never leaks a held confir
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.controller.previousButtons & 1))
     .toBe(0);
+  await navigateTo(/NEW GAME/);
   await press(0);
   for (let chapter = 1; chapter < 5; chapter++) await press(0);
   await page.evaluate(() => {

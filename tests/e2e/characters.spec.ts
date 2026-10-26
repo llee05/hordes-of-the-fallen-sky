@@ -92,10 +92,17 @@ test('all creature clips advance and freeze with camp planning', async ({ page }
     const scene = (window as any).__gloam.scene;
     const definitions = [...ENEMIES.slice(0, 5), SKYBREAKER];
     for (const [index, definition] of definitions.entries()) {
-      const before = scene.enemies.countActive(true);
-      for (let attempt = 0; attempt < 10 && scene.enemies.countActive(true) === before; attempt++)
+      const before = new Set(scene.enemies.getChildren().filter((enemy: any) => enemy.active));
+      for (
+        let attempt = 0;
+        attempt < 10 && scene.enemies.countActive(true) === before.size;
+        attempt++
+      )
         scene.spawnEnemy({ ...definition, health: 100000, damage: 0 });
-      const enemy = scene.boss;
+      // f780c79 reserves scene.boss for boss behavior; ordinary clips use the newly activated pool member.
+      const enemy = scene.enemies
+        .getChildren()
+        .find((enemy: any) => enemy.active && !before.has(enemy));
       enemy.setPosition(
         scene.player.x + 600 + (index % 3) * 80,
         scene.player.y + Math.floor(index / 3) * 100,
@@ -109,6 +116,7 @@ test('all creature clips advance and freeze with camp planning', async ({ page }
         expected: enemy.definition.scale * 10,
       }));
   });
+  expect(initialBodies).toHaveLength(6);
   for (const body of initialBodies) expect(body.width).toBeCloseTo(body.expected, 8);
   const frames = new Map<string, Set<string>>();
   await expect
