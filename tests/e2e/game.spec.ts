@@ -66,8 +66,9 @@ test('starts, moves, dashes, pauses, resumes, and resets a run', async ({ page }
   const before = await page.evaluate(() => (window as any).__gloam.scene.player.x);
   await page.keyboard.down('d');
   try {
+    // Software-rendered CI needs more wall time to advance the same gameplay distance.
     await expect
-      .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.x))
+      .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.x), { timeout: 15000 })
       .toBeGreaterThan(before + 30);
   } finally {
     await page.keyboard.up('d');
