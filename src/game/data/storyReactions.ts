@@ -198,6 +198,35 @@ export const FALLEN_KHAN_REMNANT =
 export const CHOSEN_KHAN_REMNANT =
   'Someone new takes up the banner, and the survivors carry on what they have learned.';
 
+// --- Chronicle wording ------------------------------------------------------
+// Short phrases the call sites weave into factual memory details, so a
+// remembered crossing or errand reads as an account rather than a menu label.
+
+/** How the caravan travelled each approach, for departure and arrival memories. */
+export const ROUTE_ACCOUNTS: Record<CrossingRoute, { departed: string; arrived: string }> = {
+  river: { departed: 'They followed the river.', arrived: 'by the river road' },
+  ridge: { departed: 'They took the high ridge.', arrived: 'over the high ridge' },
+  refuge: {
+    departed: 'They rode out to answer the blue banners.',
+    arrived: 'after answering the blue banners',
+  },
+};
+
+/** What a completed crossing objective accomplished, before its reward is listed. */
+export const CROSSING_OBJECTIVE_ACCOUNTS: Record<CrossingRoute, string> = {
+  river: 'The ford held against the attackers on both banks.',
+  ridge: 'The ambush on the ridge was broken before the wagons reached it.',
+  refuge: 'The households under the blue banners were brought safely into the column.',
+};
+
+/** What a completed field objective accomplished, before its reward is listed. */
+export const FIELD_OBJECTIVE_ACCOUNTS: Record<FieldObjectiveKind, string> = {
+  supplies: 'The cart was cleared and its load gathered.',
+  herd: 'The loose horses were ridden back to camp.',
+  refugees: 'The stranded households were escorted back to camp.',
+  gathering: 'The raiders were beaten back before they reached camp.',
+};
+
 /** The collective remembered-road voice that stands in below five survivors. */
 export function clanVoiceLine(text: string): StoryLine {
   return { speaker: 'clan', text };

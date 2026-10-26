@@ -1,6 +1,10 @@
 import { GAME } from '../config';
 import { FIELD_OBJECTIVES, type FieldObjectiveKind } from '../data/fieldObjectives';
-import { FIELD_OBJECTIVE_REMNANT, fieldObjectiveReaction } from '../data/storyReactions';
+import {
+  FIELD_OBJECTIVE_ACCOUNTS,
+  FIELD_OBJECTIVE_REMNANT,
+  fieldObjectiveReaction,
+} from '../data/storyReactions';
 import type { RunState } from '../types';
 import { currentLocation } from './journey';
 import { rememberClan } from './legacy';
@@ -85,7 +89,7 @@ export function completeFieldObjective(run: RunState): boolean {
   rememberClan(
     run,
     definition.title,
-    `${definition.instruction} Secured: ${definition.reward}.`,
+    `${FIELD_OBJECTIVE_ACCOUNTS[objective.kind]} ${definition.reward}.`,
     fieldObjectiveReaction(run, objective.kind),
     FIELD_OBJECTIVE_REMNANT,
   );

@@ -117,7 +117,7 @@ Defeat shows the actual journey result and leaves the memories available. A rest
 - `src/game/data/story.ts`: composes each scene once, on opening, from the cast, the chapter, the place, and the actual journey.
 - `src/game/data/storyDestinations.ts`: destination treatments.
 - `src/game/data/storyConsequences.ts`: trust shifts and lasting effects.
-- `src/game/data/storyReactions.ts`: lived-history reactions.
+- `src/game/data/storyReactions.ts`: lived-history reactions, remnant voices, and the wording memories use for approaches and completed objectives.
 - `src/game/state/story.ts`: once-only progression and gifts.
 - `src/game/state/storyBonds.ts`: derives trust.
 - `ArenaScene`: owns phase transitions and pause behavior.

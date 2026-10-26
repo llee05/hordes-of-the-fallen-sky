@@ -117,7 +117,7 @@ export function rememberChosenKhan(run: RunState): void {
   rememberClan(
     run,
     `Khan ${run.khan.generation} took the banner`,
-    `${run.clan.population} people carried their buildings, traditions, and journey forward.`,
+    `${run.clan.population} people carried their camp, traditions, and journey forward under the new Khan.`,
     chosenKhanReaction(run),
     CHOSEN_KHAN_REMNANT,
   );

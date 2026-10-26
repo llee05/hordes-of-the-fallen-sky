@@ -11,6 +11,9 @@ import {
   SAFE_CROSSING_REMNANT,
   SKYBREAKER_REMNANT,
   STARVATION_REMNANT,
+  CROSSING_OBJECTIVE_ACCOUNTS,
+  FIELD_OBJECTIVE_ACCOUNTS,
+  ROUTE_ACCOUNTS,
   arrivalReaction,
   clanVoiceLine,
   crossingObjectiveReaction,
@@ -19,6 +22,10 @@ import {
   safeCrossingReaction,
   starvationReaction,
 } from '../../src/game/data/storyReactions';
+import { CROSSING_ENCOUNTERS } from '../../src/game/data/crossings';
+import { FIELD_OBJECTIVES } from '../../src/game/data/fieldObjectives';
+import { LOCATIONS, ROUTES } from '../../src/game/data/clan';
+import { advanceClan, beginMigration } from '../../src/game/state/clan';
 import { createRun } from '../../src/game/state/run';
 
 describe('companion moment reactions', () => {
@@ -109,5 +116,44 @@ describe('companion moment reactions', () => {
     expect(CHOSEN_KHAN_REMNANT).toBe(
       'Someone new takes up the banner, and the survivors carry on what they have learned.',
     );
+  });
+});
+
+describe('chronicle wording', () => {
+  it('remembers each approach in words rather than its menu label', () => {
+    for (const route of ROUTES) {
+      const run = createRun();
+      run.phase = 'route';
+      run.clan.stageTime = 45;
+      expect(beginMigration(run, route.id)).toBe(true);
+      const destination = LOCATIONS.find((entry) => entry.id === run.clan.destinationId)!;
+      expect(run.legacy.memories.at(-1)!.detail).toBe(
+        `${run.clan.population} people set out for ${destination.name}. ${ROUTE_ACCOUNTS[route.id].departed}`,
+      );
+      run.phase = 'playing';
+      expect(advanceClan(run, 1000)).toBe('arrived');
+      const arrival = run.legacy.memories.at(-1)!.detail;
+      expect(arrival).toBe(
+        `${run.clan.population} people reached ${destination.name} ${ROUTE_ACCOUNTS[route.id].arrived}.`,
+      );
+      expect(arrival).not.toContain(route.title);
+    }
+  });
+
+  it('accounts for every crossing objective and field objective without naming a place', () => {
+    const accounts = [
+      ...Object.keys(CROSSING_ENCOUNTERS).map(
+        (route) => CROSSING_OBJECTIVE_ACCOUNTS[route as keyof typeof CROSSING_ENCOUNTERS],
+      ),
+      ...Object.keys(FIELD_OBJECTIVES).map(
+        (kind) => FIELD_OBJECTIVE_ACCOUNTS[kind as keyof typeof FIELD_OBJECTIVES],
+      ),
+      ...Object.values(ROUTE_ACCOUNTS).flatMap((entry) => [entry.departed, entry.arrived]),
+    ];
+    expect(new Set(accounts).size).toBe(accounts.length);
+    for (const account of accounts) {
+      expect(account.trim()).not.toBe('');
+      for (const location of LOCATIONS) expect(account).not.toContain(location.name);
+    }
   });
 });
