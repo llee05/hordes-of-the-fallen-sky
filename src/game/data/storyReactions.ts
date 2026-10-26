@@ -89,7 +89,7 @@ const BUILDING_VOICES: Record<BuildingId, BuildingVoice> = {
       'level-2':
         'Each wagon has its number and its place in the line. I have kept such lists before. This one I am glad to keep.',
       'level-3':
-        'The drivers are teaching their children to hold the circle. A defence that is taught outlasts its builders.',
+        'The drivers are teaching their children to close the circle. I watched them practise until it was right.',
       'war-carts':
         'War carts. I have seen them built before, for worse reasons. These will guard families.',
       'felt-armor':
@@ -107,29 +107,88 @@ const BUILDING_VOICES: Record<BuildingId, BuildingVoice> = {
     speaker: 'saran',
     established:
       'Another roof of felt under the same sky. There will be room in it for whoever comes.',
-    paths: {},
-    craft: 'Another roof of felt under the same sky. There will be room in it for whoever comes.',
+    paths: {
+      'level-2':
+        'Each household knows its work now, and nobody carries it alone. A camp holds like good stitching.',
+      'level-3':
+        'Grandmothers showing children how the lattice folds. That is how a home learns to travel.',
+      hearthkeepers:
+        'Hearthkeepers at every fire. Nobody comes in from the cold to find the embers out.',
+      'refugee-beacons':
+        'Light the beacons. Anyone still out there should know which way the warm fires are.',
+      'felt-linings':
+        'Another layer of felt inside every wall. Warm cloth turns aside more than the wind.',
+      'hospitality-circle':
+        'A place at every hearth, not only mine. That is what the spare bowl was for.',
+      'household-apprentices':
+        'Every household is teaching another what it knows. Thread passes from hand to hand that way.',
+    },
+    craft: 'The households have learned something new. Give it a place near the fire.',
   },
+  // The sanctuary speaks of remembrance and shared care; it never promises
+  // that a real rite works (lore.md writing boundaries).
   sanctuary: {
     speaker: 'saran',
     established:
       'Give the old stories a place near the fire. We can carry those when we can carry nothing else.',
-    paths: {},
-    craft:
-      'Give the old stories a place near the fire. We can carry those when we can carry nothing else.',
+    paths: {
+      'level-2':
+        'A place to gather and keep the old words among us. Let anyone who wants to listen find room.',
+      'level-3':
+        'We remember those who came before us here, and teach the children their names. That much I know how to carry.',
+      'wind-shamans':
+        'The wind shamans watch the sky with us. I cannot say what Heaven intends, but I am glad not to watch alone.',
+      'ancestral-ward':
+        'A ward at the camp’s edge, with the names of those before us kept beside it. Let it remind us whom we protect.',
+      'ovoo-remembrance':
+        'We cannot carry the places we have left, only the memory of them. Let us carry that together.',
+      'storm-watch':
+        'Someone keeps watch on the storms now, every hour of the night. The rest of us can sleep.',
+      'ancestral-tales':
+        'Names beside the hearth, said aloud each night. A tired camp rests easier among them.',
+    },
+    craft: 'The sanctuary keeps one more thing for us. Remembering is work too.',
   },
   felt: {
     speaker: 'nara',
     established: 'I know how to make felt now. Ask me anything. Go on.',
-    paths: {},
-    craft: 'I know how to make felt now. Ask me anything. Go on.',
+    paths: {
+      'level-2':
+        'There’s a proper workshop now, with a place for every mallet. I got the best one.',
+      'level-3':
+        'The master feltmakers say I’m nearly ready to teach. Nearly. I’m holding them to it.',
+      'wool-sorting':
+        'Everyone sits in a circle and sorts wool. It goes faster, and you hear everything.',
+      'weatherproof-covers':
+        'New covers on the gers. The rain runs right off, so nobody burns through food just keeping warm.',
+      'pack-frames': 'The frames fold flat now. I packed a whole ger by myself. Ask Boro.',
+      'master-feltmakers':
+        'Felt passed down between generations. Someone taught me, so now I teach someone smaller.',
+      'reinforced-felt':
+        'Thick felt, layered like armour. I hit it with a mallet and it hardly noticed.',
+      'fine-felt':
+        'Fine felt, thin and even all the way through. Mine only has one lump in it now.',
+    },
+    craft: 'We learned another trick with felt. I’ll show you if you ask.',
   },
   relay: {
     speaker: 'nara',
     established:
       'Riders out ahead and word coming back. Nobody goes missing now without us knowing.',
-    paths: {},
-    craft: 'Riders out ahead and word coming back. Nobody goes missing now without us knowing.',
+    paths: {
+      'level-2':
+        'Every courier has a route now. If someone is late, we know exactly where to look.',
+      'level-3': 'The masters are teaching new riders every road they know. I asked to learn too.',
+      'pasture-scouts':
+        'Scouts ride ahead and find the grass first. Boro pretends he isn’t pleased.',
+      'supply-caches':
+        'Supplies left waiting along the road. It’s like setting out a bowl for ourselves.',
+      'family-messengers':
+        'Messengers to the scattered families. Somebody should be looking for the ones we haven’t found.',
+      'horse-relays':
+        'Fresh horses waiting on the road. Nobody falls behind because a horse gave out.',
+    },
+    craft: 'The relay riders learned something new. I made them tell me all of it.',
   },
 };
 

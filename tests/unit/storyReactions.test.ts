@@ -232,15 +232,19 @@ describe('camp-work reactions per level and specialization', () => {
   // docs/story-prototype.md: Boro reacts to herds, bows, and stores; Nara to
   // felt and relays; Erden to wagons; Saran to gers and sanctuaries.
   const VOICES = {
+    ger: 'saran',
     archery: 'boro',
     herd: 'boro',
-    provisions: 'boro',
+    sanctuary: 'saran',
     wagon: 'erden',
+    felt: 'nara',
+    provisions: 'boro',
+    relay: 'nara',
   } as const;
-  const voiced = BUILDINGS.filter((building) => building.id in VOICES);
+  const voiced = BUILDINGS;
 
-  it('gives every voiced building distinct lines for each level and specialization', () => {
-    expect(voiced).toHaveLength(Object.keys(VOICES).length);
+  it('gives every building distinct lines for each level and specialization', () => {
+    expect(BUILDINGS.map((building) => building.id).sort()).toEqual(Object.keys(VOICES).sort());
     for (const building of voiced) {
       const required = [
         undefined,
@@ -279,8 +283,11 @@ describe('camp-work reactions per level and specialization', () => {
       run.phase = 'building';
       run.clan.materials = run.clan.spirit = 10_000;
       run.clan.population = 30;
-      expect(buildStructure(run, building.id)).toBe(true);
-      expect(run.legacy.memories.at(-1)!.line).toEqual(buildingReaction(building.id));
+      // Every expedition starts with its gers already raised.
+      if (run.clan.buildings[building.id] === 0) {
+        expect(buildStructure(run, building.id)).toBe(true);
+        expect(run.legacy.memories.at(-1)!.line).toEqual(buildingReaction(building.id));
+      }
       run.legacy.reactionUntil = 0;
       expect(buildStructure(run, building.id, 'level-2')).toBe(true);
       expect(run.legacy.memories.at(-1)!.line).toEqual(buildingReaction(building.id, 'level-2'));
