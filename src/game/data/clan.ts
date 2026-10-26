@@ -633,7 +633,7 @@ export const LOCATIONS: readonly MigrationLocation[] = [
     peaks: 1,
     color: 0xaeb9b1,
     description:
-      'Make camp in the high foothills beneath a snow-capped summit. Thin grazing rewards careful provisioning.',
+      'Camp in the high foothills under a snow-capped summit. The grazing is thin, so careful provisioning pays.',
     context:
       'A sacred mountain of the Khangai, with shamanic and Buddhist traditions of reverence.',
     balance: GAME.locations.otgontenger,
@@ -646,7 +646,8 @@ export const LOCATIONS: readonly MigrationLocation[] = [
     terrain: 'foothills',
     peaks: 2,
     color: 0x9eaf8e,
-    description: 'Sheltered foothills offer grazing and timber for a growing travelling camp.',
+    description:
+      'Sheltered foothills with grazing and timber, and room for a camp that is still growing.',
     context:
       'A long-revered mountain south of present-day Ulaanbaatar, associated with protected sacred land.',
     balance: GAME.locations['bogd-khan-uul'],
@@ -660,7 +661,7 @@ export const LOCATIONS: readonly MigrationLocation[] = [
     peaks: 5,
     color: 0xb7c4c1,
     description:
-      'Five distant peaks frame a stony camp. Materials are plentiful; food and the next departure need care.',
+      'Five distant peaks stand around a stony camp. Materials are plentiful, but food and the next departure need care.',
     context: 'The Five Holy Peaks belong to the sacred landscapes of the Mongolian Altai.',
     balance: GAME.locations['altai-tavan-bogd'],
   },
@@ -673,7 +674,7 @@ export const LOCATIONS: readonly MigrationLocation[] = [
     peaks: 1,
     color: 0xb8bcc5,
     description:
-      'A sharp skyline rises above a demanding highland camp. Bring stores for the long approach and sparse pasture.',
+      'A sharp skyline rises over a hard highland camp. Bring stores for the long approach and the sparse grass.',
     context: 'A Tian Shan peak whose Turkic name is commonly interpreted as Lord of the Sky.',
     balance: GAME.locations['khan-tengri'],
   },
@@ -686,7 +687,7 @@ export const LOCATIONS: readonly MigrationLocation[] = [
     peaks: 3,
     color: 0xc4c9c7,
     description:
-      'White summits overlook a cool upland halt. Gather stone and wood while guarding the travelling stores.',
+      'White summits look down on a cool upland halt. Gather stone and wood, and keep watch over the stores.',
     context:
       'Belukha is especially revered in Altaian sacred-landscape traditions, distinct from Mongolian practices.',
     balance: GAME.locations.belukha,
@@ -700,7 +701,7 @@ export const LOCATIONS: readonly MigrationLocation[] = [
     peaks: 1,
     color: 0xc6ad76,
     description:
-      'Open steppe surrounds an old volcanic mountain. Gentle approaches favor a mobile clan.',
+      'Open steppe spreads around an old volcanic mountain. The gentle approaches suit a clan that moves quickly.',
     context:
       'An extinct volcanic mountain revered by Dariganga communities through local worship traditions.',
     balance: GAME.locations['altan-ovoo'],
@@ -714,7 +715,7 @@ export const LOCATIONS: readonly MigrationLocation[] = [
     peaks: 2,
     color: 0xc9ad82,
     description:
-      'Warm rock shelters a camp on the dry steppe. Salvage materials and keep the herd ready to move.',
+      'Warm rock shelters a camp on the dry steppe. Salvage what materials you can, and keep the herd ready to move.',
     context:
       'A revered Govi-Altai mountain whose name carries an association with maternal protection.',
     balance: GAME.locations['eej-khairkhan'],
@@ -728,7 +729,7 @@ export const LOCATIONS: readonly MigrationLocation[] = [
     peaks: 0,
     color: 0xa4b48a,
     description:
-      'Broad river pastures feed the households. A gentler approach leaves more supplies for the next camp.',
+      'Broad river pastures feed the households, and the easy approach leaves more supplies for the next camp.',
     context:
       'A cultural landscape of Turkic and Mongol history, with memorials and a long tradition of nomadic pastoralism.',
     balance: GAME.locations['orkhon-valley'],
