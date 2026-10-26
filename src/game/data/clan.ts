@@ -15,32 +15,33 @@ export const STARTING_TRADITIONS = [
     id: 'shared-hearth',
     title: 'Shared hearth',
     icon: 'ger',
-    description: 'Share the remaining stores evenly. A flexible beginning for the eight survivors.',
-    role: 'Balanced stores and a free choice of opening.',
+    description:
+      'What is left is shared out evenly, and the eight survivors are free to start however they choose.',
+    role: 'Even stores, and any first move you like.',
   },
   {
     id: 'outriders',
     title: 'Outrider circle',
     icon: 'bow',
     description:
-      'Another rider takes the field, but mounting the escort leaves fewer provisions and tools.',
-    role: 'Fight early; recover supplies before the crossing.',
+      'One more rider takes the field, but horsing the escort costs provisions and tools.',
+    role: 'Fight early, and win back supplies before the crossing.',
   },
   {
     id: 'hearthkeepers',
     title: 'Hearthkeepers',
     icon: 'sanctuary',
     description:
-      'Spend tools reinforcing the households. The clan withstands more damage while new facilities take longer to establish.',
-    role: 'A safer camp; a slower construction opening.',
+      'The tools go into strengthening the households. The clan can take more punishment, but new facilities are slower to set up.',
+    role: 'A safer camp that is slower to build.',
   },
   {
     id: 'pathfinders',
     title: 'Pathfinders',
     icon: 'banner',
     description:
-      'Pack lightly and keep the scouts moving. Gather farther afield and bring the caravan through faster.',
-    role: 'Faster scouting and travel; leaner starting stores.',
+      'Pack light and keep the scouts moving. Shards are swept up from farther off, and the caravan gets through faster.',
+    role: 'Quicker scouting and travel on leaner stores.',
   },
 ] as const satisfies readonly {
   id: StartingTraditionId;
@@ -740,7 +741,7 @@ export const ROUTES = [
     title: 'Follow the river',
     icon: '≈',
     subtitle: 'PROVISIONS / LONG CROSSING',
-    description: '+35 food, +2 horses. A longer crossing along the water.',
+    description: '+35 food, +2 horses. A longer crossing that keeps to the water.',
     food: 35,
     materials: 0,
     population: 0,
@@ -754,7 +755,7 @@ export const ROUTES = [
     title: 'Ride the high ridge',
     icon: '△',
     subtitle: 'MATERIALS / EXPOSED',
-    description: '+28 materials, +10 spirit. A short, dangerous mountain crossing.',
+    description: '+28 materials, +10 spirit. A short crossing, exposed on the mountain.',
     food: 0,
     materials: 28,
     population: 0,
@@ -768,7 +769,7 @@ export const ROUTES = [
     title: 'Answer the blue banners',
     icon: '⚑',
     subtitle: 'SURVIVORS / MORE MOUTHS',
-    description: '+8 people and 2 veteran riders. Rescues cost 18 food on arrival.',
+    description: '+8 people and 2 veteran riders. The rescued need 18 food when they arrive.',
     food: -18,
     materials: 0,
     population: 8,
@@ -782,18 +783,20 @@ export const ROUTES = [
 export const FORMATIONS: Record<Formation, { title: string; description: string }> = {
   guard: {
     title: 'Caravan guard',
-    description: 'Riders protect your people. Clan damage reduced by 30%.',
+    description: 'The riders stay close to the people. The clan takes 30% less damage.',
   },
   encircle: {
     title: 'Encirclement',
-    description: 'Riders circle nearby enemies. Moving volleys gain 30% damage.',
+    description:
+      'The riders circle nearby enemies. Volleys loosed on the move deal 30% more damage.',
   },
   wedge: {
     title: 'Charging wedge',
-    description: 'Riders follow your charge. Galloping through enemies deals damage.',
+    description: 'The riders follow your charge, and galloping through enemies hurts them.',
   },
   retreat: {
     title: 'Feigned retreat',
-    description: 'Wide formation. Faster volleys while moving; nearby shards follow you.',
+    description:
+      'A wide, loose formation. Volleys come faster while you move, and nearby shards follow you.',
   },
 };
