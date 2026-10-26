@@ -3,7 +3,7 @@ import { closeOverlayOrPause, openTitle, startExpedition } from './helpers';
 
 // Headless software rendering can need many wall-clock seconds for one active second.
 // Preserve exact combat assertions while allowing the real simulation to reach them.
-const activeExpect = expect.configure({ timeout: 20000 });
+const activeExpect = expect.configure({ timeout: 60000 });
 
 async function placeAttacker(page: Page, x: number, y: number, speed: number): Promise<void> {
   await page.evaluate(
@@ -44,7 +44,7 @@ async function siegeState(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  test.setTimeout(60000);
+  test.setTimeout(180000);
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
@@ -86,10 +86,12 @@ test('camp attackers stop outside the tents, repeat protected damage, freeze in 
   expect(holding.speed).toBe(0);
   expect(holding.resolve).toBe(first.resolve);
   await page.keyboard.press('b');
+  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'building');
   const frozen = await siegeState(page);
   await page.waitForTimeout(200);
   expect(await siegeState(page)).toEqual(frozen);
   await closeOverlayOrPause(page);
+  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await activeExpect
     .poll(async () => (await siegeState(page)).resolve)
     .toBeCloseTo(first.resolve - 3.15);

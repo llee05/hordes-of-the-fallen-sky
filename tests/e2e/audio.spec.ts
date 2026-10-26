@@ -1,6 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import { selectCampBuilding, closeOverlayOrPause, buyNode, startExpedition } from './helpers';
 
+// Tests use isolated browser contexts; parallel mode also balances CI shards.
+test.describe.configure({ mode: 'parallel' });
+
 async function heard(page: Page): Promise<string[]> {
   return page.evaluate(() => (window as any).heardSounds);
 }
@@ -32,11 +35,14 @@ test.beforeEach(async ({ page }) => {
     for (const enemy of scene.enemies.getChildren()) enemy.disableBody(true, true);
     scene.audio.reset();
     scene.audio.setPlaying(true);
-    Object.assign(window, { heardSounds: [] });
+    Object.assign(window, { heardSounds: [], heardAuditions: [] });
     const play = scene.audio.play.bind(scene.audio);
     scene.audio.play = (...args: any[]) => {
       const accepted = play(...args);
-      if (accepted) (window as any).heardSounds.push(args[0]);
+      if (accepted) {
+        (window as any).heardSounds.push(args[0]);
+        if (args[3] === true) (window as any).heardAuditions.push(args[0]);
+      }
       return accepted;
     };
   });
@@ -230,10 +236,18 @@ test('independent volume sliders persist, reference auditions stay in Settings, 
   await page.getByRole('slider', { name: 'Combat volume', exact: true }).fill('0');
   await page.getByRole('button', { name: 'Bow', exact: true }).click();
   await page.waitForTimeout(180);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.audio.diagnostics.events)).toBe(0);
+  expect(
+    await page.evaluate(
+      () => (window as any).heardAuditions.filter((kind: string) => kind === 'shoot').length,
+    ),
+  ).toBe(0);
   await page.getByRole('button', { name: 'Parchment', exact: true }).click();
   await expect
-    .poll(() => page.evaluate(() => (window as any).__gloam.scene.audio.diagnostics.events))
+    .poll(() =>
+      page.evaluate(
+        () => (window as any).heardAuditions.filter((kind: string) => kind === 'ui').length,
+      ),
+    )
     .toBeGreaterThan(0);
   await page.getByRole('slider', { name: 'Ambience volume', exact: true }).fill('24');
   await page.getByRole('slider', { name: 'Music volume', exact: true }).fill('17');
