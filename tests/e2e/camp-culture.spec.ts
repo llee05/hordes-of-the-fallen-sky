@@ -8,6 +8,9 @@ import {
   startExpedition,
 } from './helpers';
 
+// Independent page fixtures let CI split this measured long-running file across shards.
+test.describe.configure({ mode: 'parallel' });
+
 test.beforeEach(async ({ page }) => {
   await openTitle(page);
   await startExpedition(page);

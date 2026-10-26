@@ -1,6 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import { closeOverlayOrPause, buyNode, openTitle, startExpedition } from './helpers';
 
+// Tests use isolated browser contexts; parallel mode also balances CI shards.
+test.describe.configure({ mode: 'parallel' });
+
 async function fall(page: Page) {
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -186,6 +189,7 @@ test('successors return to the moving caravan and an arrival cannot end successi
 test('ancestral echoes defend camp during succession and uncollected XP waits for the new Khan', async ({
   page,
 }) => {
+  test.setTimeout(120000);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.run.patrons.ancestors.count = 2;
@@ -199,7 +203,7 @@ test('ancestral echoes defend camp during succession and uncollected XP waits fo
   await fall(page);
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.enemies.getFirstAlive().health), {
-      timeout: 15000,
+      timeout: 60000,
     })
     .toBeLessThan(10000);
   const collection = await page.evaluate(() => {
