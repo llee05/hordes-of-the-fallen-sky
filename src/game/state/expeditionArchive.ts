@@ -4,6 +4,8 @@ import { ALL_ENEMIES, SKYBREAKER } from '../data/enemies';
 import { UPGRADES } from '../data/upgrades';
 import { BUILDINGS, ROUTES, LOCATIONS, STARTING_TRADITIONS } from '../data/clan';
 import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
+import { STORY_ORDER, storyEncounter } from '../data/story';
+import { FIRST_STOPS, SECOND_STOPS, firstStop, secondStop } from '../data/storyDestinations';
 import { SUCCESSORS } from '../data/successors';
 import { GAME } from '../config';
 import { currentLocation } from './journey';
@@ -129,6 +131,15 @@ const motion = object({
   windingUp: boolean,
 });
 const location = oneOf(LOCATIONS.map((l) => l.id));
+const region = oneOf([0, 1, 2, 3]);
+// Include composed base scenes, all destination variants, and the fallback stops.
+const storyImages = new Set([
+  ...STORY_ORDER.map((id) => storyEncounter(createRun(), id).image),
+  ...Object.values(FIRST_STOPS).map((stop) => stop.image),
+  ...Object.values(SECOND_STOPS).map((stop) => stop.image),
+  firstStop(undefined).image,
+  secondStop(undefined).image,
+]);
 const trait = oneOf(Object.keys(SUCCESSORS));
 const line = object({
   speaker: oneOf(['saran', 'boro', 'erden', 'nara', 'newcomer', 'clan']),
@@ -146,11 +157,28 @@ const encounter = object({
   id: oneOf(['fire', 'departure', 'river', 'promise', 'earth', 'court', 'opening', 'road']),
   act: oneOf([1, 2]),
   title: string,
-  image: string,
+  image: oneOf([...storyImages]),
   setting: string,
   lines: list(line, 100),
   choices: list(choice, 20),
 });
+const khanRecord = object(
+  {
+    generation: integer,
+    chosenAt: number,
+    region,
+    people: number,
+    killsAtStart: integer,
+  },
+  {
+    trait,
+    locationId: location,
+    fallenAt: number,
+    fallenRegion: region,
+    fallenLocationId: location,
+    killsAtFall: integer,
+  },
+);
 const overrides: Record<string, Rule> = {
   phase: oneOf(['playing', 'paused', 'story']),
   upgrades: dictionary(integer),
@@ -170,23 +198,10 @@ const overrides: Record<string, Rule> = {
     GAME.mounted.maxTrails,
   ),
   'legacy.khans': list(
-    object(
-      {
-        generation: integer,
-        chosenAt: number,
-        region: integer,
-        people: number,
-        killsAtStart: integer,
-      },
-      {
-        trait,
-        locationId: location,
-        fallenAt: number,
-        fallenRegion: integer,
-        fallenLocationId: location,
-        killsAtFall: integer,
-      },
-    ),
+    (value) =>
+      khanRecord(value) &&
+      isRecord(value) &&
+      (value.fallenAt === undefined || region(value.fallenRegion)),
     GAME.story.khanRecordLimit,
   ),
   'legacy.memories': list(
@@ -194,7 +209,7 @@ const overrides: Record<string, Rule> = {
       {
         sequence: integer,
         elapsed: number,
-        region: integer,
+        region,
         population: number,
         title: string,
         detail: string,
@@ -216,7 +231,14 @@ const overrides: Record<string, Rule> = {
     100,
   ),
   'story.crossings': list(
-    object({ route: string, region: integer, population: number }, { locationId: location }),
+    object(
+      {
+        route: oneOf(ROUTES.map((route) => route.id)),
+        region: oneOf([1, 2, 3]),
+        population: number,
+      },
+      { locationId: location },
+    ),
     100,
   ),
 };

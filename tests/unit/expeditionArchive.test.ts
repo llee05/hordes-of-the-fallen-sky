@@ -9,7 +9,8 @@ import { beginMigration } from '../../src/game/state/clan';
 import { openNextStory, resolveStory } from '../../src/game/state/story';
 import { CharacterMotion } from '../../src/game/animation/CharacterMotion';
 import { createAreaEncounter, syncAreaEncounter } from '../../src/game/state/areaEncounters';
-import { STARTING_TRADITIONS } from '../../src/game/data/clan';
+import { STORY_ORDER, storyEncounter } from '../../src/game/data/story';
+import { LOCATIONS, ROUTES, STARTING_TRADITIONS } from '../../src/game/data/clan';
 import { syncFinalStand } from '../../src/game/state/finalStand';
 
 function world(): WorldArchive {
@@ -100,6 +101,113 @@ function world(): WorldArchive {
   };
 }
 describe('full expedition snapshots', () => {
+  it('accepts authored story images and valid chronicle indexes across all destinations', () => {
+    for (const location of LOCATIONS) {
+      for (const region of [0, 1, 2, 3]) {
+        const run = createRun();
+        run.clan.locationId = location.id;
+        run.clan.region = region;
+        run.legacy.khans[0]!.region = region;
+        run.legacy.khans[0]!.fallenRegion = region;
+        run.story.crossings = [1, 2, 3].map((region, index) => ({
+          region,
+          route: ROUTES[index]!.id,
+          population: 8,
+          locationId: location.id,
+        }));
+        run.story.records = STORY_ORDER.map((id) => ({
+          encounter: storyEncounter(run, id),
+          elapsed: 0,
+          population: 8,
+          status: 'skipped',
+        }));
+        expect(decodeExpedition(captureExpedition(run, world())).run.story.records).toEqual(
+          run.story.records,
+        );
+      }
+    }
+  });
+
+  it.each([
+    [
+      'Khan region',
+      (s: any) => {
+        s.run.legacy.khans[0].region = 4;
+      },
+    ],
+    [
+      'fallen region',
+      (s: any) => {
+        s.run.legacy.khans[0].fallenRegion = 7;
+      },
+    ],
+    [
+      'missing fallen region',
+      (s: any) => {
+        s.run.legacy.khans[0].fallenAt = 1;
+        delete s.run.legacy.khans[0].fallenRegion;
+      },
+    ],
+    [
+      'memory region',
+      (s: any) => {
+        s.run.legacy.memories[0].region = 4;
+      },
+    ],
+    [
+      'crossing region zero',
+      (s: any) => {
+        s.run.story.crossings[0].region = 0;
+      },
+    ],
+    [
+      'crossing region four',
+      (s: any) => {
+        s.run.story.crossings[0].region = 4;
+      },
+    ],
+    [
+      'unknown route',
+      (s: any) => {
+        s.run.story.crossings[0].route = 'unknown';
+      },
+    ],
+    [
+      'unknown active image',
+      (s: any) => {
+        s.run.story.active.image = 'unknown.png';
+      },
+    ],
+    [
+      'unknown recorded image',
+      (s: any) => {
+        s.run.story.records[0].encounter.image = 'unknown.png';
+      },
+    ],
+  ])('rejects incompatible chronicle content: %s', (_label, corrupt) => {
+    const run = createRun();
+    run.phase = 'playing';
+    openNextStory(run);
+    run.story.records.push({
+      encounter: structuredClone(run.story.active!),
+      elapsed: 0,
+      population: 8,
+      status: 'skipped',
+    });
+    run.story.crossings.push({ region: 1, route: 'river', population: 8 });
+    run.legacy.memories.push({
+      sequence: 1,
+      elapsed: 0,
+      region: 0,
+      population: 8,
+      title: 'Camp',
+      detail: 'Remembered',
+    });
+    const snapshot = captureExpedition(run, world());
+    corrupt(snapshot);
+    expect(() => decodeExpedition(snapshot)).toThrow('damaged or incompatible');
+  });
+
   it('preserves final warnings, work progress and already-braced barrage identities', () => {
     const run = createRun();
     run.clan.stage = 'final';
