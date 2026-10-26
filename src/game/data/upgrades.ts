@@ -16,7 +16,8 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         kind: 'foundation',
         title: 'The wolf’s trail',
         maxStacks: 2,
-        description: 'Each rank: +15% friendly damage above half momentum; Khan rides 4% faster.',
+        description:
+          'Each rank: while momentum is above half, your side deals 15% more damage. The Khan also rides 4% faster.',
         apply: (run) => {
           run.patrons.hunt.movingDamage *= P.wolf.movingDamage;
           run.stats.speed *= P.wolf.speed;
@@ -28,7 +29,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'The culling bite',
         maxStacks: 1,
         requires: [need('wolf-trail')],
-        description: 'Friendly attacks deal 30% more damage to enemies below half health.',
+        description: 'Your side deals 30% more damage to enemies below half health.',
         apply: (run) => {
           run.patrons.hunt.executeDamage *= P.wolf.execute;
         },
@@ -39,7 +40,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Never lose the quarry',
         maxStacks: 1,
         requires: [need('wolf-trail')],
-        description: 'Gallop cooldown falls by 25%, from 3 seconds to 2.25.',
+        description: 'The gallop cooldown is 25% shorter: 2.25 seconds instead of 3.',
         apply: (run) => {
           run.patrons.hunt.gallopCooldown *= P.wolf.gallop;
         },
@@ -50,7 +51,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Blood of the hunt',
         maxStacks: 1,
         requires: [need('wolf-trail', 2), need('culling-bite')],
-        description: 'Every kill above half momentum restores 2 Khan health.',
+        description: 'Each kill made above half momentum heals the Khan for 2.',
         apply: (run) => {
           run.patrons.hunt.killHeal += P.wolf.killHeal;
         },
@@ -65,7 +66,8 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         kind: 'foundation',
         title: 'Tend the living ground',
         maxStacks: 2,
-        description: 'Each rank: food production +15%; pasture depletion falls by 15%.',
+        description:
+          'Each rank: the camp produces 15% more food, and the pasture wears out 15% more slowly.',
         apply: (run) => {
           run.patrons.land.food *= P.earth.food;
           run.patrons.land.pastureUse *= P.earth.pasture;
@@ -77,7 +79,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Many hands, one camp',
         maxStacks: 1,
         requires: [need('tended-pasture')],
-        description: 'Camp material gathering increases by 25%.',
+        description: 'The camp gathers 25% more materials.',
         apply: (run) => {
           run.patrons.land.materials *= P.earth.materials;
         },
@@ -88,7 +90,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Take only what we need',
         maxStacks: 1,
         requires: [need('tended-pasture')],
-        description: 'People consume 20% less food, including during migration.',
+        description: 'Everyone eats 20% less food, on the road as well as in camp.',
         apply: (run) => {
           run.patrons.land.consumption *= P.earth.consumption;
         },
@@ -100,7 +102,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('tended-pasture', 2), need('measured-herds')],
         description:
-          'Regrow 0.12 pasture percentage points each active second while stationary, offsetting depletion.',
+          'While the camp stays put, the pasture regrows 0.12 percentage points every active second, offsetting what the herds take.',
         apply: (run) => {
           run.patrons.land.pastureRecovery += P.earth.recovery;
         },
@@ -116,7 +118,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'The measured bow',
         maxStacks: 2,
         description:
-          'Each rank: shared attack damage +25%; Khan and rider targeting range +30 paces.',
+          'Each rank: shared attack damage rises 25%, and the Khan and riders can target enemies 30 paces farther out.',
         apply: (run) => {
           run.stats.damage *= P.bow.damage;
           run.patrons.bow.range += P.bow.range;
@@ -129,7 +131,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('power')],
         description:
-          'The mounted host’s firing interval falls by 15%. Every fourth host volley, accompanying riders loose paired arrows.',
+          'The mounted host’s firing interval is 15% shorter. On every fourth volley, the riders with you loose paired arrows.',
         apply: (run) => {
           run.stats.attackInterval *= P.bow.interval;
         },
@@ -141,7 +143,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('power')],
         description:
-          'Friendly arrows pierce one additional enemy. Charged Khan volleys briefly pin ordinary enemies and interrupt charges; one arrow cannot hit the same creature twice.',
+          'Your arrows pass through one more enemy. A charged Khan volley briefly pins ordinary enemies and breaks their charges. No arrow can strike the same creature twice.',
         apply: (run) => {
           run.patrons.bow.pierce += P.bow.pierce;
         },
@@ -153,7 +155,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('power', 2), need('wide-quiver')],
         description:
-          'Add two arrows to every Khan volley. Friendly volley spacing widens a further 35%.',
+          'Every Khan volley carries two more arrows, and your volleys fan out a further 35%.',
         apply: (run) => {
           run.stats.projectiles += P.bow.volley;
           run.patrons.bow.spread *= P.specializations.stormSpread;
@@ -170,7 +172,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Keep the hearth alive',
         maxStacks: 2,
         description:
-          'Each rank: +20 maximum Khan health. A living Khan immediately recovers 35 health.',
+          'Each rank: the Khan gains 20 maximum health and, if alive, recovers 35 health at once.',
         apply: (run) => {
           run.stats.maxHealth += P.fire.health;
           run.health = Math.min(run.stats.maxHealth, run.health + P.fire.heal);
@@ -182,7 +184,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'The carried embers',
         maxStacks: 1,
         requires: [need('vitality')],
-        description: 'Recover 0.3 Khan health per active second.',
+        description: 'The Khan recovers 0.3 health every active second.',
         apply: (run) => {
           run.patrons.hearth.regeneration += P.fire.regeneration;
         },
@@ -193,7 +195,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Felt around the flame',
         maxStacks: 1,
         requires: [need('vitality')],
-        description: 'Khan damage taken falls by 15%.',
+        description: 'The Khan takes 15% less damage.',
         apply: (run) => {
           run.patrons.hearth.damageTaken *= P.fire.protection;
         },
@@ -205,7 +207,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('vitality', 2), need('carried-embers')],
         description:
-          'Once this expedition, a lethal hit instead restores 40% of maximum Khan health.',
+          'Once per expedition, a hit that would kill the Khan instead restores 40% of maximum health.',
         apply: (run) => {
           run.patrons.hearth.revives += 1;
         },
@@ -220,7 +222,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         kind: 'foundation',
         title: 'Find the watercourse',
         maxStacks: 2,
-        description: 'Each rank: enemies within 165 paces of Khan or camp move 12% slower.',
+        description: 'Each rank: enemies within 165 paces of the Khan or the camp move 12% slower.',
         apply: (run) => {
           run.patrons.water.slow += P.water.slow;
         },
@@ -231,7 +233,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Shelter among the reeds',
         maxStacks: 1,
         requires: [need('watercourse')],
-        description: 'The slowing fields extend 65 paces farther.',
+        description: 'The slowing fields reach 65 paces farther.',
         apply: (run) => {
           run.patrons.water.radius += P.water.radiusBonus;
         },
@@ -243,7 +245,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('watercourse')],
         description:
-          'Eruption warnings last one second longer and deal half damage. Galloping leaves a brief slowing wake on the ground.',
+          'Eruption warnings last one second longer, and eruptions deal half damage. Galloping leaves a short-lived slowing wake behind you.',
         apply: (run) => {
           run.patrons.water.warning += P.water.warning;
           run.patrons.water.hazardDamage *= P.water.hazardDamage;
@@ -256,7 +258,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('watercourse', 2), need('reed-beds')],
         description:
-          'Every 4 active seconds, the Khan’s field deals 75% shared damage and pushes enemies back 80 paces.',
+          'Every 4 active seconds, the Khan’s field strikes for 75% shared damage and pushes enemies back 80 paces.',
         apply: (run) => {
           run.patrons.water.pulseDamage += P.water.pulseDamage;
         },
@@ -272,7 +274,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'A rider remembered',
         maxStacks: 2,
         description:
-          'Each rank summons one ancestral echo. Echoes follow the Khan and fire at 55% shared damage every 1.1 seconds.',
+          'Each rank calls one ancestral echo to ride with the Khan. Echoes fire for 55% shared damage every 1.1 seconds.',
         apply: (run) => {
           run.patrons.ancestors.count += 1;
         },
@@ -283,7 +285,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Hands remember the bow',
         maxStacks: 1,
         requires: [need('ancestral-companion')],
-        description: 'Ancestral arrows rise from 55% to 90% shared damage.',
+        description: 'Ancestral arrows deal 90% shared damage instead of 55%.',
         apply: (run) => {
           run.patrons.ancestors.damage += P.ancestors.damageBonus;
         },
@@ -295,7 +297,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('ancestral-companion')],
         description:
-          'Shard attraction radius +40%; kills grant 25% more stored Spirit for camp construction.',
+          'Shards are drawn in from 40% farther away, and kills store 25% more Spirit for building the camp.',
         apply: (run) => {
           run.stats.pickupRadius *= P.ancestors.pickup;
           run.patrons.ancestors.spiritGain *= P.ancestors.spiritGain;
@@ -307,7 +309,8 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'The council rides with us',
         maxStacks: 1,
         requires: [need('ancestral-companion', 2), need('remembered-aim')],
-        description: 'Summon a third ancestral echo. Echo firing intervals fall by 30%.',
+        description:
+          'A third ancestral echo joins the others, and every echo’s firing interval is 30% shorter.',
         apply: (run) => {
           run.patrons.ancestors.count += 1;
           run.patrons.ancestors.interval *= P.ancestors.capInterval;
@@ -323,7 +326,8 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         kind: 'foundation',
         title: 'Riders of one standard',
         maxStacks: 2,
-        description: 'Each rank recruits one accompanying rider, independent of Khan arrow count.',
+        description:
+          'Each rank brings one more rider to ride with you, whatever the Khan’s arrow count.',
         apply: (run) => {
           run.patrons.banner.riders += 1;
         },
@@ -334,7 +338,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Rally to the blue cloth',
         maxStacks: 1,
         requires: [need('sworn-riders')],
-        description: 'Accompanying riders deal 25% more arrow damage.',
+        description: 'The riders with you deal 25% more arrow damage.',
         apply: (run) => {
           run.patrons.banner.damage *= P.banner.damage;
         },
@@ -345,7 +349,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'No wagon left behind',
         maxStacks: 1,
         requires: [need('sworn-riders')],
-        description: 'Caravan migration mobility increases by 15%.',
+        description: 'The caravan’s migration mobility rises 15%.',
         apply: (run) => {
           run.patrons.banner.mobility *= P.banner.mobility;
         },
@@ -356,7 +360,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'The unbroken standard',
         maxStacks: 1,
         requires: [need('sworn-riders', 2), need('rallying-banner')],
-        description: 'Recruit two more riders. Every enemy kill restores 0.15 clan resolve.',
+        description: 'Two more riders join you, and every enemy kill restores 0.15 clan resolve.',
         apply: (run) => {
           run.patrons.banner.riders += P.banner.capRiders;
           run.patrons.banner.resolveOnKill += P.banner.resolveOnKill;
@@ -372,7 +376,8 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         kind: 'foundation',
         title: 'Foundations we can carry',
         maxStacks: 2,
-        description: 'Each rank: camp material costs fall by 10%; clan damage taken falls by 10%.',
+        description:
+          'Each rank: camp building costs 10% fewer materials, and the clan takes 10% less damage.',
         apply: (run) => {
           run.patrons.guardian.cost *= P.guardian.cost;
           run.patrons.guardian.protection *= P.guardian.protection;
@@ -384,7 +389,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Watchfires on the ridge',
         maxStacks: 1,
         requires: [need('caravan-foundations')],
-        description: 'Wagon circle firing intervals fall by 25%. Requires a Wagon circle to fire.',
+        description: 'The Wagon circle’s firing interval is 25% shorter. Needs a Wagon circle.',
         apply: (run) => {
           run.patrons.guardian.wagonInterval *= P.guardian.wagonInterval;
         },
@@ -396,7 +401,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('caravan-foundations')],
         description:
-          'A camp ward strikes enemies within 125 paces for 65% shared damage every 2 active seconds, even while migrating.',
+          'A ward around the camp strikes enemies within 125 paces for 65% shared damage every 2 active seconds, even on the march.',
         apply: (run) => {
           run.patrons.guardian.wardDamage += P.guardian.wardDamage;
         },
@@ -408,7 +413,7 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         maxStacks: 1,
         requires: [need('caravan-foundations', 2), need('stone-shelter')],
         description:
-          'Reduce all clan damage by a further 20%, stacking with formations and camp armor.',
+          'The clan takes a further 20% less damage, on top of formations and camp armor.',
         apply: (run) => {
           run.patrons.guardian.protection *= P.guardian.capProtection;
         },

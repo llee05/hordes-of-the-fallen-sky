@@ -17,7 +17,7 @@ export const SYNERGIES: readonly SynergyDefinition[] = [
     title: 'Burning Tempest',
     icon: 'hearth',
     description:
-      'Fire arrows meet Wind shamans: every friendly volley gains two curving, burning arrows.',
+      'When Fire arrows meet Wind shamans, every volley from your side gains two curving, burning arrows.',
     requirements: [
       { kind: 'camp', building: 'archery', path: 'fire-arrows' },
       { kind: 'camp', building: 'sanctuary', path: 'wind-shamans' },
@@ -28,7 +28,7 @@ export const SYNERGIES: readonly SynergyDefinition[] = [
     title: 'The moving hunt',
     icon: 'horse',
     description:
-      'The wolf’s trail strengthens moving volleys. Riders of one standard adds more living archers to carry those volleys across the battlefield.',
+      'The wolf’s trail makes volleys loosed on the move hit harder, and Riders of one standard puts more archers in the saddle to loose them.',
     requirements: [
       { kind: 'research', id: 'wolf-trail', rank: 1 },
       { kind: 'research', id: 'sworn-riders', rank: 1 },
@@ -39,7 +39,7 @@ export const SYNERGIES: readonly SynergyDefinition[] = [
     title: 'The remembered bow',
     icon: 'bow',
     description:
-      'The measured bow raises shared arrow damage; Remembered Aim increases the share dealt by ancestral echoes. Both multipliers apply to their arrows.',
+      'The measured bow raises shared arrow damage, and Hands remember the bow raises the share the ancestral echoes deal. Their arrows get both.',
     requirements: [
       { kind: 'research', id: 'power', rank: 1 },
       { kind: 'research', id: 'remembered-aim', rank: 1 },
@@ -50,7 +50,7 @@ export const SYNERGIES: readonly SynergyDefinition[] = [
     title: 'Caravan bulwark',
     icon: 'wagon',
     description:
-      'Felt armor and Caravan Foundations multiply clan protection together, sheltering the same people and wagons.',
+      'Felt armor and Foundations we can carry each cut the damage the clan takes, and the two reductions multiply.',
     requirements: [
       { kind: 'camp', building: 'wagon', path: 'felt-armor' },
       { kind: 'research', id: 'caravan-foundations', rank: 2 },
@@ -61,7 +61,7 @@ export const SYNERGIES: readonly SynergyDefinition[] = [
     title: 'A longer pasture',
     icon: 'grain',
     description:
-      'Winter stores and Measured Herds combine their food-consumption reductions, giving the clan more time before it must move.',
+      'Winter stores and Take only what we need both cut what the clan eats, and together they buy more time before it must move.',
     requirements: [
       { kind: 'camp', building: 'herd', path: 'winter-stores' },
       { kind: 'research', id: 'measured-herds', rank: 1 },
