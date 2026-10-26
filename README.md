@@ -310,6 +310,28 @@ A run never reuses a server it finds already listening; it always starts a fresh
 one on the configured port so it cannot test another checkout's build. Set
 `E2E_REUSE_SERVER=1` to opt into reusing an existing server on the same port.
 
+For a quick review, run `npm run test:e2e:changed -- origin/main` (fetch the
+base branch first). It includes changed browser specs and specs that import changed
+test helpers, plus keyboard/lifecycle and default 3D smoke tests. Add `--list` to
+inspect the selection. Application, asset, dependency, config, and unknown file
+changes conservatively run the full suite: Playwright cannot track the game modules
+loaded inside the browser, so bare `--only-changed` can miss their regressions.
+
+For a focused application review, explicitly name the relevant specs; both smoke
+tests are still included:
+
+```sh
+PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e:changed -- origin/main --spec=mounted-tactics --spec=patron-effects
+```
+
+Repeat `--spec=pattern` for each affected area. This is partial review coverage;
+keep the full `test:e2e` suite in CI and run it before shipping gameplay changes.
+The review command preserves the normal viewport, worker count, GPU policy, and
+failure reporting. On shared Linux hosts, wrap browser commands in
+`flock /tmp/bh-playwright.lock` and choose a distinct `E2E_PORT`. See the
+[measured review and rendering comparisons](docs/browser-test-runtime.md) for
+selection limits, timings, and the decision to retain the full-suite defaults.
+
 Browser tests cover keyboard, controller, touch, combat, traditions, planning, the Burning Tempest, caravan damage, route rewards, remote camp defense, three crossings, clan-survival victory, full-window layout, and paused chronicle/settings/help navigation. Electron tests exercise the offline build, layout, native save persistence, sandboxing, fullscreen, and quit using isolated saves. Tests never use normal save files. Linux needs a display session or Xvfb for Electron.
 
 Further release work includes extended balancing and playtesting, target-hardware performance, a longer campaign, permanent unlocks, platform validation, release art, real Steamworks APIs, and Steam review.

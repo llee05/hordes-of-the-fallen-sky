@@ -16,6 +16,7 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:changed": "node scripts/e2e-review.mjs",
     "test:pages": "playwright test --config playwright.pages.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
