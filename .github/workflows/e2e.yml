@@ -1,0 +1,54 @@
+name: Browser E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser:
+    name: Browser shard ${{ matrix.shard }}/8
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      # Keep every shard running so one failure does not hide other results.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      CI: '1'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser regression shard
+        timeout-minutes: 15
+        # Software-rendered Chromium needs most of a runner's CPU per browser.
+        run: npx playwright test --shard=${{ matrix.shard }}/8 --workers=1 --reporter=github,line
+      - name: Upload failure traces and screenshots
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browser-e2e-shard-${{ matrix.shard }}
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 7
