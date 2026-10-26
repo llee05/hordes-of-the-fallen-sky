@@ -21,6 +21,9 @@ test('terrain settings fit the desktop window and persist in the native profile'
     await app.evaluate(({ BrowserWindow }) =>
       BrowserWindow.getAllWindows()[0]!.setContentSize(960, 600),
     );
+    // A tiling compositor may ignore native window sizing; keep the renderer check exact.
+    await page.setViewportSize({ width: 960, height: 600 });
+    expect(await page.evaluate(() => [innerWidth, innerHeight])).toEqual([960, 600]);
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     const terrain = page.getByRole('button', { name: 'Terrain', exact: true });
     await expect(terrain).toBeVisible();
