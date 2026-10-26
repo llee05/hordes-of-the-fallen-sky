@@ -1,10 +1,24 @@
 # Angled Living Steppe scenes
 
-The main renderer now presents all twelve destinations as angled orthographic scenes.
-Run `npm run dev` or `npm run dev:web`; no developer flag is required. The previous
-presentation remains available with `?terrain=2d` in the browser, or
-`VITE_TERRAIN_RENDERER=2d npm run dev` in Electron. WebGL initialization failures
-also restore the previous renderer.
+The main renderer presents all twelve destinations as angled orthographic scenes.
+Run `npm run dev` or `npm run dev:web`; no developer flag is required. In Settings,
+**Terrain** toggles between **Angled 3D** and **Flat 2D** immediately, including during
+a paused expedition. The current location and crossing are rebuilt in the selected
+renderer; simulation remains paused. The choice is saved with visual preferences
+in the platform profile, independently of expedition saves.
+
+Before constructing the terrain renderer, startup reads the Phaser WebGL context's
+`WEBGL_debug_renderer_info` unmasked renderer string. SwiftShader, llvmpipe,
+softpipe, and Software Rasterizer select Flat 2D automatically, with a dismissible
+notice on the title screen. Dismissal is saved so the notice stays dismissed across
+launches. Automatic fallback does not save an explicit terrain choice: returning
+to hardware rendering restores the normal 3D default. An explicit choice always wins
+over detection, including choosing Angled 3D on software WebGL. Missing or blocked
+driver information keeps the normal default.
+
+The development defaults `?terrain=2d` in the browser and
+`VITE_TERRAIN_RENDERER=2d npm run dev` in Electron still work when there is no saved
+terrain choice. WebGL initialization failures also restore the flat renderer.
 
 Phaser owns simulation, Arcade physics, input, pooling, animation, menus, and asset
 loading. Three.js provides depth-buffered terrain underneath the existing DOM HUD.
@@ -85,12 +99,12 @@ favor bullet-heaven movement over exact landscape realism. GPU performance and
 longer combat balance still require target-hardware playtesting; software GPU
 rendering is substantially slower and is not a frame-rate certification.
 
-Browser scene regressions exercise the default renderer across all twelve
+Browser scene regressions explicitly select Angled 3D and exercise the renderer across all twelve
 locations, screen-relative ramp movement, elevated combat, real terrain occlusion,
 console debug views, water pause behavior, resource budgets, and renderer teardown.
 Flat-coordinate simulation and compatibility-art regressions explicitly request
 `?terrain=2d`; they retain their original movement and pixel-space assumptions.
-Electron checks exercise the default view, offline production launch, migration,
+Electron scene checks explicitly select Angled 3D and exercise the view, offline production launch, migration,
 persistence, and both 1280×800 and 960×600 windows. Terrain unit tests cover mesh/query
 agreement, chunk seams and normals, cliff winding, connected caravan ground,
 water/bridge registration, and moving fence anchors.
@@ -118,3 +132,13 @@ river, including braided channels, so their opposing approaches follow the water
 curves. Location identity follows the physical landscape during crossings; a
 previewed destination cannot change the current enemy pool. See
 [area encounters](area-encounters.md) for local rosters and the bounded terrain rules.
+
+## Settings regression coverage
+
+`tests/unit/visualSettings.test.ts` injects renderer strings to cover hardware and
+software detection, absent or blocked debug info, explicit-choice precedence,
+legacy profiles, persisted preferences, and notice dismissal. The dedicated
+`tests/e2e/terrain-settings.spec.ts` covers live toggles, frozen expedition state,
+renderer canvas cleanup, reload persistence, and a software-driver notice using
+an injected driver string. Existing 3D regressions select the 3D view explicitly
+so headless software WebGL still tests the intended renderer.

@@ -86,8 +86,13 @@ Three.js world supplies genuine raised shelves, vertical cliff faces, snowfields
 shadows, river gorges, and timber crossings. Existing painted characters and camps
 stand on the terrain while Phaser retains physics, combat, and animation. Riding
 follows screen directions. F6 changes camera angle, F7 isolates terrain, and F9
-cycles debug views in development. Use `?terrain=2d` in browser preview or
-`VITE_TERRAIN_RENDERER=2d npm run dev` for the previous presentation. See
+cycles debug views in development. **Settings → Terrain** switches immediately between
+**Angled 3D** (the default) and **Flat 2D**, and saves your choice with your profile.
+On startup, detected software WebGL drivers such as SwiftShader and llvmpipe default
+to Flat 2D with a dismissible title-screen notice. An explicit saved choice always
+wins. If driver information is unavailable, the normal 3D default remains.
+`?terrain=2d` in browser preview and `VITE_TERRAIN_RENDERER=2d npm run dev` still
+select the flat default when no saved terrain choice exists. See
 [the angled scene guide](docs/world-3d.md) and [painted asset prompts](docs/angled-scene-art.md).
 The [environment quality guide](docs/environment-quality.md) describes painted material blending,
 weathered cliffs, shared riverbeds and shores, clustered vegetation, and render budgets.

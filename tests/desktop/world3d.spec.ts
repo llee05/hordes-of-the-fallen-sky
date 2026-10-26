@@ -1,3 +1,4 @@
+import { preferAngledTerrain } from '../support/terrain';
 import { launchElectron } from '../support/electron';
 import { expect, test } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -23,6 +24,7 @@ test('orthographic terrain and console run in the existing Electron shell at bot
   });
   try {
     const page = await app.firstWindow();
+    await preferAngledTerrain(page);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.getByRole('button', { name: 'Developer mode F8' }).click();
