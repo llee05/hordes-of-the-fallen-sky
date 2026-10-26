@@ -2,7 +2,7 @@ import { GAME } from '../config';
 import { FIELD_OBJECTIVES, type FieldObjectiveKind } from '../data/fieldObjectives';
 import {
   FIELD_OBJECTIVE_ACCOUNTS,
-  FIELD_OBJECTIVE_REMNANT,
+  FIELD_OBJECTIVE_REMNANTS,
   fieldObjectiveReaction,
 } from '../data/storyReactions';
 import type { RunState } from '../types';
@@ -91,7 +91,7 @@ export function completeFieldObjective(run: RunState): boolean {
     definition.title,
     `${FIELD_OBJECTIVE_ACCOUNTS[objective.kind]} ${definition.reward}.`,
     fieldObjectiveReaction(run, objective.kind),
-    FIELD_OBJECTIVE_REMNANT,
+    FIELD_OBJECTIVE_REMNANTS[objective.kind],
   );
   return true;
 }

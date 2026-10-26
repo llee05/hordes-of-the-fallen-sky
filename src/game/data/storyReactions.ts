@@ -135,8 +135,13 @@ export function departureReaction(_run: RunState, route: CrossingRoute): StoryLi
 export const DEPARTURE_REMNANT =
   'The few who are left load the wagons, count one another, and set out.';
 
-/** Boro keeps the remaining stores close when the provisions run out. */
-export function starvationReaction(_run: RunState): StoryLine {
+/** Boro keeps the remaining stores close; if the court scene gave Nara the tally, she records it. */
+export function starvationReaction(run: RunState): StoryLine {
+  if (choseStory(run, 'nara-tally'))
+    return {
+      speaker: 'nara',
+      text: 'I wrote it in the tally: the stores ran out, and it cost us someone. I don’t want to write that again.',
+    };
   return {
     speaker: 'boro',
     text: 'There’s nothing left to share out. Whatever we find next, we keep close.',
@@ -218,16 +223,40 @@ export function crossingObjectiveReaction(_run: RunState, route: CrossingRoute):
 
 export const CROSSING_OBJECTIVE_REMNANT = 'Those who came through take stock of what they saved.';
 
-/** Boro brings a completed field objective back beside the fire. */
-export function fieldObjectiveReaction(_run: RunState, _kind: FieldObjectiveKind): StoryLine {
-  return {
+/**
+ * Boro takes in the cart's load and the loose horses, Saran welcomes the
+ * stranded households without naming any of them, and Nara watched the
+ * raiders turned back from the gers.
+ */
+const FIELD_OBJECTIVE_REACTIONS: Record<FieldObjectiveKind, StoryLine> = {
+  supplies: {
     speaker: 'boro',
-    text: 'We went out together and came back together. Bring what we found to the fire.',
-  };
+    text: 'Food and tools off that cart. I’ll find room in the stores for every bit of it.',
+  },
+  herd: {
+    speaker: 'boro',
+    text: 'More horses running with ours. I’ll see they find grass.',
+  },
+  refugees: {
+    speaker: 'saran',
+    text: 'Bring them to the fire first. Questions can wait until they have eaten.',
+  },
+  gathering: {
+    speaker: 'nara',
+    text: 'They never got close to the gers. I watched the whole time.',
+  },
+};
+
+export function fieldObjectiveReaction(_run: RunState, kind: FieldObjectiveKind): StoryLine {
+  return FIELD_OBJECTIVE_REACTIONS[kind];
 }
 
-export const FIELD_OBJECTIVE_REMNANT =
-  'What is left of the clan brings what it found back into camp.';
+export const FIELD_OBJECTIVE_REMNANTS: Record<FieldObjectiveKind, string> = {
+  supplies: 'Those still standing haul the cart’s load back into camp.',
+  herd: 'The survivors bring the loose horses in to graze beside their own.',
+  refugees: 'The survivors make room at their small fire for the stranded households.',
+  gathering: 'What is left of the clan turns the raiders back before they reach camp.',
+};
 
 // --- Succession remnants ----------------------------------------------------
 // The succession reactions above pair with these collective voices in

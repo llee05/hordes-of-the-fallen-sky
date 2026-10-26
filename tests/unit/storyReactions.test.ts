@@ -6,7 +6,7 @@ import {
   CROSSING_OBJECTIVE_REMNANT,
   DEPARTURE_REMNANT,
   FALLEN_KHAN_REMNANT,
-  FIELD_OBJECTIVE_REMNANT,
+  FIELD_OBJECTIVE_REMNANTS,
   LOSS_REMNANT,
   SAFE_CROSSING_REMNANT,
   SKYBREAKER_REMNANT,
@@ -26,6 +26,7 @@ import { CROSSING_ENCOUNTERS } from '../../src/game/data/crossings';
 import { FIELD_OBJECTIVES } from '../../src/game/data/fieldObjectives';
 import { LOCATIONS, ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration } from '../../src/game/state/clan';
+import { completeFieldObjective, startFieldObjective } from '../../src/game/state/fieldObjectives';
 import { createRun } from '../../src/game/state/run';
 import { GAME } from '../../src/game/config';
 
@@ -132,23 +133,101 @@ describe('crossing reactions follow the approach taken', () => {
   });
 });
 
-describe('companion moment reactions', () => {
-  it('keeps the remaining stores through Boro when the provisions run out', () => {
-    expect(starvationReaction(createRun())).toEqual({
+describe('field-objective and starvation reactions by kind', () => {
+  const FIELD_SPEAKERS = {
+    supplies: 'boro',
+    herd: 'boro',
+    refugees: 'saran',
+    gathering: 'nara',
+  } as const;
+  const KINDS = Object.keys(FIELD_OBJECTIVES) as (keyof typeof FIELD_OBJECTIVES)[];
+
+  const complete = (
+    kind: keyof typeof FIELD_OBJECTIVES,
+    setup: (run: ReturnType<typeof createRun>) => void = () => {},
+  ) => {
+    const run = createRun();
+    run.phase = 'playing';
+    run.clan.stage = 'camp';
+    run.clan.stageTime = GAME.field.firstAt;
+    setup(run);
+    expect(startFieldObjective(run, { x: 0, y: 0 }, kind)).toBe(true);
+    expect(completeFieldObjective(run)).toBe(true);
+    return run.legacy.memories.at(-1)!.line;
+  };
+
+  it('gives every field objective its own speaker and words', () => {
+    expect(Object.keys(FIELD_SPEAKERS).sort()).toEqual([...KINDS].sort());
+    const texts = KINDS.map((kind) => {
+      const line = fieldObjectiveReaction(createRun(), kind);
+      expect(line.speaker).toBe(FIELD_SPEAKERS[kind]);
+      expect(line.text.trim()).not.toBe('');
+      expectNoPlaceName(line.text);
+      expect(complete(kind)).toEqual(line);
+      expect(fieldObjectiveReaction(createRun(), kind)).toEqual(line);
+      return line.text;
+    });
+    expect(new Set(texts).size).toBe(KINDS.length);
+  });
+
+  it('welcomes stranded households without naming any of them', () => {
+    const { text } = fieldObjectiveReaction(createRun(), 'refugees');
+    for (const name of ['Saran', 'Boro', 'Erden', 'Nara']) expect(text).not.toContain(name);
+    // No capitalised word past the first may stand in for an invented name.
+    expect(
+      text
+        .split(/[.!?]\s+/)
+        .flatMap((sentence) => sentence.split(/\s+/).slice(1))
+        .filter((word) => /^[A-Z]/.test(word)),
+    ).toEqual([]);
+  });
+
+  it('keeps the remnant voice and Camp scenes: Off silence for every kind', () => {
+    const remnants = KINDS.map((kind) => {
+      // Rescued households join before the memory is recorded, so start low enough
+      // that even the refugee objective stays below five.
+      const remnant = complete(kind, (run) => {
+        run.clan.population = 2;
+      });
+      expect(remnant).toEqual({ speaker: 'clan', text: FIELD_OBJECTIVE_REMNANTS[kind] });
+      expect(
+        complete(kind, (run) => {
+          run.story.enabled = false;
+        }),
+      ).toBeUndefined();
+      return remnant!.text;
+    });
+    expect(new Set(remnants).size).toBe(KINDS.length);
+  });
+
+  it('lets Nara record a starvation when the court gave her the tally', () => {
+    const run = createRun();
+    expect(starvationReaction(run)).toEqual({
       speaker: 'boro',
       text: 'There’s nothing left to share out. Whatever we find next, we keep close.',
     });
+    run.story.records.push({
+      encounter: { id: 'court', act: 2, title: '', image: '', setting: '', lines: [], choices: [] },
+      choice: {
+        id: 'nara-tally',
+        label: '',
+        description: '',
+        response: '',
+        benefit: 'resolve',
+        doctrine: 'iron',
+      },
+      status: 'chosen',
+      elapsed: 0,
+      population: 8,
+    });
+    expect(starvationReaction(run)).toEqual({
+      speaker: 'nara',
+      text: 'I wrote it in the tally: the stores ran out, and it cost us someone. I don’t want to write that again.',
+    });
   });
+});
 
-  it('brings field objective findings beside the fire through Boro for every kind', () => {
-    const run = createRun();
-    for (const kind of ['supplies', 'herd', 'refugees', 'gathering'] as const)
-      expect(fieldObjectiveReaction(run, kind)).toEqual({
-        speaker: 'boro',
-        text: 'We went out together and came back together. Bring what we found to the fire.',
-      });
-  });
-
+describe('companion moment reactions', () => {
   it('keeps the collective remnant voices heard below five survivors', () => {
     expect(clanVoiceLine('A remembered account.')).toEqual({
       speaker: 'clan',
@@ -168,9 +247,6 @@ describe('companion moment reactions', () => {
     );
     expect(CROSSING_OBJECTIVE_REMNANT).toBe(
       'Those who came through take stock of what they saved.',
-    );
-    expect(FIELD_OBJECTIVE_REMNANT).toBe(
-      'What is left of the clan brings what it found back into camp.',
     );
     expect(FALLEN_KHAN_REMNANT).toBe(
       'The people keep the banner raised while they choose another Khan.',
