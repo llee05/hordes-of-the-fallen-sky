@@ -388,6 +388,21 @@ describe('destination-specific scenes', () => {
     run.khan.generation = 3;
     expect(sceneText(storyEncounter(run, 'promise'))).toContain('3 Khans’ hands');
   });
+
+  it('ties the banner thread to the actual number of people lost, in natural words', () => {
+    const run = createRun();
+    run.clan.region = 2;
+    run.clan.locationId = 'broken-pass';
+    expect(sceneText(storyEncounter(run, 'promise'))).not.toContain('dark thread');
+    run.story.peopleLost = 1;
+    expect(sceneText(storyEncounter(run, 'promise'))).toContain('for the one we lost');
+    run.story.peopleLost = 3;
+    expect(sceneText(storyEncounter(run, 'promise'))).toContain('for each of the 3 we lost');
+    run.clan.population = 1;
+    expect(storyEncounter(run, 'promise').setting).toBe(
+      '1 survivor remains beneath the blue banner. One voice carries the memory of the road now.',
+    );
+  });
 });
 
 describe('the ending', () => {
