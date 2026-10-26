@@ -208,7 +208,7 @@ export function buildStructure(
     development
       ? 'The households learned a new craft for the travelling camp.'
       : 'The households raised it in the travelling camp.',
-    buildingReaction(id),
+    buildingReaction(id, development?.id),
     BUILDING_REMNANT,
   );
   return true;

@@ -1,46 +1,145 @@
 import { choseStory } from '../state/storyBonds';
 import type { BuildingId, RunState } from '../types';
-import type { StoryLine } from '../story/types';
+import type { Companion, StoryLine } from '../story/types';
 import type { CrossingRoute } from './crossings';
 import type { FieldObjectiveKind } from './fieldObjectives';
 
+// Reactions are chosen when a moment is recorded, so later choices cannot
+// rewrite its transcript.
+
 /**
- * Choose reactions when recording a moment so later choices cannot rewrite its transcript.
+ * Each building has one voice: Boro for bows, herds, and stores, Erden for
+ * wagons, Saran for gers and the sanctuary, and Nara for felt and the relay.
+ * Lines speak only of the facility just raised or the development just
+ * learned, keyed by path ID. A development without its own line falls back to
+ * the building's general craft line.
  */
-const BUILDING_REACTIONS: Record<BuildingId, StoryLine> = {
-  ger: {
-    speaker: 'saran',
-    text: 'Another roof of felt under the same sky. There will be room in it for whoever comes.',
-  },
+interface BuildingVoice {
+  speaker: Companion;
+  /** The facility is first established. */
+  established: string;
+  /** A development is learned, by path ID. */
+  paths: Readonly<Record<string, string>>;
+  /** Any development without its own line. */
+  craft: string;
+}
+
+const BUILDING_VOICES: Record<BuildingId, BuildingVoice> = {
   archery: {
     speaker: 'boro',
-    text: 'Good bows. I hope they ride the whole road on the cart.',
+    established: 'Good bows. I hope they ride the whole road on the cart.',
+    paths: {
+      'level-2':
+        'A proper range, marked out and kept. Practice goes better when everyone knows where to stand.',
+      'level-3':
+        'The old hands are teaching the young ones to shoot. That’s how a skill outlasts the people who had it.',
+      'fire-arrows': 'Fire arrows. Keep them well away from the felt and the hay.',
+      'veteran-riders':
+        'Seasoned riders with steady hands. I’ll find them horses that can keep up.',
+      'seasoned-bowyers':
+        'Horn and sinew, fitted to each rider. Those bows reach a good way past where I could.',
+      'resin-preparation': 'Resin bundles, wrapped and kept dry. Store them nowhere near the food.',
+      'arban-drills':
+        'Arban drills. They ride in step now, like a herd that knows where it’s going.',
+    },
+    craft: 'Another thing learned at the archery grounds. Better bows, fewer arrows wasted.',
   },
   herd: {
     speaker: 'boro',
-    text: 'More horses, more grass to find. I’m glad of every one of them anyway.',
+    established: 'More horses, more grass to find. I’m glad of every one of them anyway.',
+    paths: {
+      'level-2':
+        'Herding teams for every season. Now someone besides me is always watching the grass.',
+      'level-3':
+        'A remount herd worth the name, and young ones learning to keep it. I might sleep a little now.',
+      'remount-herds':
+        'Fresh mounts for everyone. We’ll cover ground faster than the grass runs out.',
+      'winter-stores':
+        'Winter stores, put by while the grass is good. Half the hunger on the road.',
+      'seasonal-grazing': 'Graze it, then let it rest. Grass that’s given a season comes back.',
+      'relay-remounts':
+        'Always one horse saddled and waiting. Nobody rides a tired mount on my watch.',
+      'dairy-reserves': 'Milk set by for the lean days. The herd feeds us twice over now.',
+    },
+    craft: 'The herders know a little more than they did. The horses will be glad of it.',
   },
-  sanctuary: {
-    speaker: 'saran',
-    text: 'Give the old stories a place near the fire. We can carry those when we can carry nothing else.',
+  provisions: {
+    speaker: 'boro',
+    established: 'Food that keeps on the road. Now there’s a promise I can keep.',
+    paths: {
+      'level-2':
+        'Every household putting food by now, not just mine. The stores fill faster that way.',
+      'level-3':
+        'Stewards for the stores, teaching the next ones how it’s done. Good. I can’t watch every sack forever.',
+      'aaruul-drying':
+        'Curds drying on every rack. Hard as stone, and they’ll last the whole road.',
+      'borts-stores':
+        'Dried meat packed small. Something to eat on the far side of every crossing.',
+      'airag-hospitality':
+        'Airag for anyone who sits down with us. I’ll grumble about the cost, then pour another bowl.',
+      'shared-provisions':
+        'Provisions for every household, not only the loudest. Arriving tired won’t mean arriving hungry.',
+    },
+    craft: 'One more way to make food last. I’ll take every one we can learn.',
   },
   wagon: {
     speaker: 'erden',
-    text: 'I have checked every axle twice. Whatever we promise, these wagons can carry it.',
+    established: 'I have checked every axle twice. Whatever we promise, these wagons can carry it.',
+    paths: {
+      'level-2':
+        'Each wagon has its number and its place in the line. I have kept such lists before. This one I am glad to keep.',
+      'level-3':
+        'The drivers are teaching their children to hold the circle. A defence that is taught outlasts its builders.',
+      'war-carts':
+        'War carts. I have seen them built before, for worse reasons. These will guard families.',
+      'felt-armor':
+        'Felt hung along every wagon side. Half the blows will never reach the people behind it.',
+      'rawhide-lashings':
+        'Every load lashed in rawhide. I have counted the knots; none will slip on the road.',
+      wheelwrights:
+        'A wheel that runs true makes a steady platform. The archers on the carts will feel it.',
+      'layered-felt':
+        'Another layer of felt on the screens. I have weighed it, and the wagons can bear it.',
+    },
+    craft: 'The wagon circle has learned something new. I have entered it in the tally.',
   },
-  felt: { speaker: 'nara', text: 'I know how to make felt now. Ask me anything. Go on.' },
-  provisions: {
-    speaker: 'boro',
-    text: 'Food that keeps on the road. Now there’s a promise I can keep.',
+  ger: {
+    speaker: 'saran',
+    established:
+      'Another roof of felt under the same sky. There will be room in it for whoever comes.',
+    paths: {},
+    craft: 'Another roof of felt under the same sky. There will be room in it for whoever comes.',
+  },
+  sanctuary: {
+    speaker: 'saran',
+    established:
+      'Give the old stories a place near the fire. We can carry those when we can carry nothing else.',
+    paths: {},
+    craft:
+      'Give the old stories a place near the fire. We can carry those when we can carry nothing else.',
+  },
+  felt: {
+    speaker: 'nara',
+    established: 'I know how to make felt now. Ask me anything. Go on.',
+    paths: {},
+    craft: 'I know how to make felt now. Ask me anything. Go on.',
   },
   relay: {
     speaker: 'nara',
-    text: 'Riders out ahead and word coming back. Nobody goes missing now without us knowing.',
+    established:
+      'Riders out ahead and word coming back. Nobody goes missing now without us knowing.',
+    paths: {},
+    craft: 'Riders out ahead and word coming back. Nobody goes missing now without us knowing.',
   },
 };
 
-export function buildingReaction(id: BuildingId): StoryLine {
-  return BUILDING_REACTIONS[id];
+/** The facility's own companion speaks for its establishment or the development just learned. */
+export function buildingReaction(id: BuildingId, pathId?: string): StoryLine {
+  const voice = BUILDING_VOICES[id];
+  return {
+    speaker: voice.speaker,
+    text: pathId === undefined ? voice.established : (voice.paths[pathId] ?? voice.craft),
+  };
 }
 
 export const BUILDING_REMNANT = 'Even with so few hands, the clan makes room for one more craft.';

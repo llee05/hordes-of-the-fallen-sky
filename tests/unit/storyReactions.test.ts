@@ -15,6 +15,7 @@ import {
   FIELD_OBJECTIVE_ACCOUNTS,
   ROUTE_ACCOUNTS,
   arrivalReaction,
+  buildingReaction,
   clanVoiceLine,
   crossingObjectiveReaction,
   departureReaction,
@@ -24,8 +25,8 @@ import {
 } from '../../src/game/data/storyReactions';
 import { CROSSING_ENCOUNTERS } from '../../src/game/data/crossings';
 import { FIELD_OBJECTIVES } from '../../src/game/data/fieldObjectives';
-import { LOCATIONS, ROUTES } from '../../src/game/data/clan';
-import { advanceClan, beginMigration } from '../../src/game/state/clan';
+import { BUILDINGS, LOCATIONS, ROUTES } from '../../src/game/data/clan';
+import { advanceClan, beginMigration, buildStructure } from '../../src/game/state/clan';
 import { completeFieldObjective, startFieldObjective } from '../../src/game/state/fieldObjectives';
 import { createRun } from '../../src/game/state/run';
 import { GAME } from '../../src/game/config';
@@ -224,6 +225,66 @@ describe('field-objective and starvation reactions by kind', () => {
       speaker: 'nara',
       text: 'I wrote it in the tally: the stores ran out, and it cost us someone. I don’t want to write that again.',
     });
+  });
+});
+
+describe('camp-work reactions per level and specialization', () => {
+  // docs/story-prototype.md: Boro reacts to herds, bows, and stores; Nara to
+  // felt and relays; Erden to wagons; Saran to gers and sanctuaries.
+  const VOICES = {
+    archery: 'boro',
+    herd: 'boro',
+    provisions: 'boro',
+    wagon: 'erden',
+  } as const;
+  const voiced = BUILDINGS.filter((building) => building.id in VOICES);
+
+  it('gives every voiced building distinct lines for each level and specialization', () => {
+    expect(voiced).toHaveLength(Object.keys(VOICES).length);
+    for (const building of voiced) {
+      const required = [
+        undefined,
+        'level-2',
+        'level-3',
+        ...building.paths.filter((path) => path.level === 4).map((path) => path.id),
+      ];
+      const all = [undefined, ...building.paths.map((path) => path.id)];
+      const texts = all.map((pathId) => {
+        const line = buildingReaction(building.id, pathId);
+        expect(line.speaker).toBe(VOICES[building.id as keyof typeof VOICES]);
+        expect(line.text.trim()).not.toBe('');
+        expectNoPlaceName(line.text);
+        expect(buildingReaction(building.id, pathId)).toEqual(line);
+        return line.text;
+      });
+      expect(new Set(texts).size).toBe(all.length);
+      expect(required.every((pathId) => all.includes(pathId))).toBe(true);
+    }
+  });
+
+  it('falls back to the building’s craft line for an unknown development', () => {
+    for (const building of voiced) {
+      const craft = buildingReaction(building.id, 'not-a-path');
+      expect(craft.speaker).toBe(VOICES[building.id as keyof typeof VOICES]);
+      expect(
+        building.paths.map((path) => buildingReaction(building.id, path.id).text),
+      ).not.toContain(craft.text);
+    }
+  });
+
+  it('records the line for the facility or development actually purchased', () => {
+    for (const building of voiced) {
+      const run = createRun();
+      delete run.clan.estate;
+      run.phase = 'building';
+      run.clan.materials = run.clan.spirit = 10_000;
+      run.clan.population = 30;
+      expect(buildStructure(run, building.id)).toBe(true);
+      expect(run.legacy.memories.at(-1)!.line).toEqual(buildingReaction(building.id));
+      run.legacy.reactionUntil = 0;
+      expect(buildStructure(run, building.id, 'level-2')).toBe(true);
+      expect(run.legacy.memories.at(-1)!.line).toEqual(buildingReaction(building.id, 'level-2'));
+    }
   });
 });
 
