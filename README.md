@@ -328,7 +328,9 @@ Repeat `--spec=pattern` for each affected area. This is partial review coverage;
 keep the full `test:e2e` suite in CI and run it before shipping gameplay changes.
 The review command preserves the normal viewport, worker count, GPU policy, and
 failure reporting. On shared Linux hosts, wrap browser commands in
-`flock /tmp/bh-playwright.lock` and choose a distinct `E2E_PORT`.
+`flock /tmp/bh-playwright.lock` and choose a distinct `E2E_PORT`. See the
+[measured review and rendering comparisons](docs/browser-test-runtime.md) for
+selection limits, timings, and the decision to retain the full-suite defaults.
 
 Browser tests cover keyboard, controller, touch, combat, traditions, planning, the Burning Tempest, caravan damage, route rewards, remote camp defense, three crossings, clan-survival victory, full-window layout, and paused chronicle/settings/help navigation. Electron tests exercise the offline build, layout, native save persistence, sandboxing, fullscreen, and quit using isolated saves. Tests never use normal save files. Linux needs a display session or Xvfb for Electron.
 
