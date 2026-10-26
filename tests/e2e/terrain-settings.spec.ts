@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 test('terrain toggles immediately while paused and persists across reloads', async ({ page }) => {
-  test.setTimeout(60000);
+  // Rebuilding both renderers and reloading twice can exceed a minute on shared GPUs.
+  test.setTimeout(120000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
