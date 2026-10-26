@@ -564,7 +564,7 @@ export class ArenaScene extends Phaser.Scene {
     this.tweens.pauseAll();
     if (developerRun) {
       this.landscape.setRegion(this.run.clan.region, currentLocation(this.run));
-      this.terrainCollision.setTerrain(this.landscape.navigation);
+      this.reconcileTerrain();
       this.campBarrier.relocate(this.run, this.camp);
       this.invulnerable = GAME.khan.returnProtection;
       this.beginExpedition();
@@ -816,7 +816,6 @@ export class ArenaScene extends Phaser.Scene {
       currentLocation(run),
       run.clan.stage === 'migration' ? run.clan.routeId : undefined,
     );
-    this.terrainCollision.setTerrain(this.landscape.navigation);
     this.camp.setPosition(world.camp.x, world.camp.y);
     this.camp.setDepth(100 + world.camp.y);
     this.campLabel
@@ -908,7 +907,7 @@ export class ArenaScene extends Phaser.Scene {
         .lineStyle(2, 0xd49b79, 0.8)
         .strokeCircle(h.x, h.y, h.radius ?? 90),
     }));
-    this.spatial.rebuild(pool);
+    this.reconcileTerrain();
     this.applyCameraZoom(world.zoom);
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09).setFollowOffset(0, 0);
     this.cameras.main.centerOn(this.player.x, this.player.y);
@@ -1287,21 +1286,7 @@ export class ArenaScene extends Phaser.Scene {
     this.areaEffects.clear();
     this.packingRemaining = 2.4;
     this.landscape.setRegion(this.run.clan.region, currentLocation(this.run), id);
-    const navigation = this.landscape.navigation;
-    this.terrainCollision.setTerrain(navigation);
-    if (navigation)
-      for (const actor of [
-        this.player,
-        ...this.enemies.getChildren(),
-        ...this.gems.getChildren(),
-      ] as (Enemy | Gem)[]) {
-        if (!actor.active) continue;
-        const safe = navigation.nearestWalkable(actor);
-        if (safe) {
-          actor.setPosition(safe.x, safe.y);
-          actor.body?.updateFromGameObject();
-        }
-      }
+    this.reconcileTerrain();
     this.refreshCamp();
     this.setPhase('playing');
     this.audio.play('depart');
@@ -1350,7 +1335,7 @@ export class ArenaScene extends Phaser.Scene {
         currentLocation(this.run),
         this.run.clan.stage === 'migration' ? this.run.clan.routeId : undefined,
       );
-      this.terrainCollision.setTerrain(this.landscape.navigation);
+      this.reconcileTerrain();
     } else if (key === 'effectDensity')
       this.visualSettings.effectDensity =
         this.visualSettings.effectDensity === 'full'
@@ -1364,6 +1349,39 @@ export class ArenaScene extends Phaser.Scene {
     void this.platform
       .saveVisualSettings(this.visualSettings)
       .catch(() => this.callbacks?.onSaveError());
+  }
+
+  private reconcileTerrain(): void {
+    const navigation = this.landscape.navigation;
+    this.terrainCollision.setTerrain(navigation);
+    if (!navigation) {
+      this.spatial.rebuild(this.enemies.getChildren() as Enemy[]);
+      return;
+    }
+    for (const actor of [
+      this.player,
+      ...this.enemies.getChildren(),
+      ...this.gems.getChildren(),
+    ] as (Phaser.Physics.Arcade.Sprite | Gem)[]) {
+      if (!actor.active) continue;
+      const safe = navigation.nearestWalkable(actor);
+      if (!safe || (safe.x === actor.x && safe.y === actor.y)) continue;
+      actor.setPosition(safe.x, safe.y);
+      actor.body?.updateFromGameObject();
+      if (!(actor instanceof Gem)) actor.setDepth(100 + actor.y);
+    }
+    this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
+    this.aura.setPosition(this.player.x, this.player.y);
+    for (const [enemy, shadow] of this.enemyShadows)
+      if (enemy.active) shadow.setPosition(enemy.x + 6, enemy.y + 4).setDepth(99 + enemy.y);
+    this.riders.forEach((rider, index) => {
+      if (!rider.visible) return;
+      const safe = navigation.nearestWalkable(rider);
+      if (!safe) return;
+      rider.setPosition(safe.x, safe.y).setDepth(100 + safe.y);
+      this.riderShadows[index]!.setPosition(safe.x + 7, safe.y + 4).setDepth(99 + safe.y);
+    });
+    this.spatial.rebuild(this.enemies.getChildren() as Enemy[]);
   }
 
   private styleHostileProjectile(shot: Projectile): void {
@@ -3409,7 +3427,7 @@ export class ArenaScene extends Phaser.Scene {
     syncAreaEncounter(this.areaEncounter, this.run);
     this.areaEffects.clear();
     this.landscape.setRegion(this.run.clan.region, currentLocation(this.run));
-    this.terrainCollision.setTerrain(this.landscape.navigation);
+    this.reconcileTerrain();
     this.refreshCamp();
     this.campBarrier.relocate(this.run, this.camp);
     this.cameras.main.flash(500, 225, 215, 180);

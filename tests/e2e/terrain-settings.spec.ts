@@ -73,3 +73,110 @@ test('software WebGL starts flat with a dismissible notice and honors an explici
   await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1);
   await expect(notice).toHaveCount(0);
 });
+
+for (const scenario of [
+  { location: 'golden-pasture', level: 'chapter:golden-pasture', source: 'Flat 2D' },
+  { location: 'otgontenger', level: 'destination:2:otgontenger', source: 'Angled 3D' },
+]) {
+  test(`${scenario.location} preserves actors and XP on blocked ground when toggling and restoring`, async ({
+    page,
+  }) => {
+    test.setTimeout(120000);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    const terrain = page.getByRole('button', { name: 'Terrain', exact: true });
+    if ((await terrain.textContent()) !== scenario.source) await terrain.click();
+    await page.getByRole('button', { name: 'Back ESC', exact: true }).click();
+    await page.keyboard.press('F8');
+    await page.locator(`[data-developer-level="${scenario.level}"]`).click();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.evaluate(() => {
+      const s = (window as any).__gloam.scene;
+      s.testSourceNavigation = s.landscape.navigation;
+    });
+    await terrain.click();
+    const blocked = await page.evaluate(() => {
+      const s = (window as any).__gloam.scene;
+      const target = s.landscape.navigation;
+      const source = s.testSourceNavigation;
+      const size = target.terrain.cellSize;
+      for (let y = size / 2; y < target.terrain.worldSize; y += size)
+        for (let x = size / 2; x < target.terrain.worldSize; x += size)
+          if (!target.isWalkable(x, y, 18, true) && (!source || source.isWalkable(x, y, 18, true)))
+            return { x, y };
+      throw new Error('Expected ground made inaccessible by the target renderer');
+    });
+    await terrain.click();
+    const before = await page.evaluate(async (point) => {
+      const { captureExpedition } = await import('/src/game/state/expeditionArchive.ts');
+      const s = (window as any).__gloam.scene;
+      for (const actor of s.enemies.getChildren()) actor.disableBody(true, true);
+      for (const gem of s.gems.getChildren()) gem.disableBody(true, true);
+      s.spawnEnemy();
+      const enemy = s.enemies.getFirstAlive();
+      if (!enemy) throw new Error('Expected a live enemy');
+      s.player.body.reset(point.x, point.y);
+      enemy.body.reset(point.x, point.y);
+      enemy.health = 3;
+      const gem = s.gems.get(point.x, point.y, 'gem');
+      gem.enableBody(true, point.x, point.y, true, true);
+      gem.value = 37;
+      gem.attracted = true;
+      s.riders[0].setVisible(true).setPosition(point.x, point.y);
+      s.testTerrainSave = captureExpedition(s.run, s.captureWorld());
+      return { xp: s.run.xp, points: s.run.pendingUpgrades, spawnId: enemy.spawnId };
+    }, blocked);
+    await terrain.click();
+    const inspect = () =>
+      page.evaluate(() => {
+        const s = (window as any).__gloam.scene;
+        const nav = s.landscape.navigation;
+        const enemy = s.enemies.getFirstAlive();
+        const gem = s.gems.getFirstAlive();
+        const actors = [s.player, enemy, gem, s.riders[0]];
+        return {
+          reachable: actors.every((actor) => actor && nav.isWalkable(actor.x, actor.y, 18, true)),
+          bodiesAligned: [s.player, enemy, gem].every((actor) =>
+            ['x', 'y'].every(
+              (axis) =>
+                Math.abs(
+                  actor.body.position[axis] -
+                    (actor.getTopLeft()[axis] +
+                      actor.body.offset[axis] * (axis === 'x' ? actor.scaleX : actor.scaleY)),
+                ) < 0.01,
+            ),
+          ),
+          enemies: s.enemies.countActive(true),
+          gems: s.gems.countActive(true),
+          health: enemy?.health,
+          spawnId: enemy?.spawnId,
+          value: gem?.value,
+          attracted: gem?.attracted,
+          xp: s.run.xp,
+          points: s.run.pendingUpgrades,
+          renderer: s.terrainRenderer,
+        };
+      });
+    const expected = {
+      reachable: true,
+      bodiesAligned: true,
+      enemies: 1,
+      gems: 1,
+      health: 3,
+      spawnId: before.spawnId,
+      value: 37,
+      attracted: true,
+      xp: before.xp,
+      points: before.points,
+      renderer: scenario.source === 'Flat 2D' ? '3d' : '2d',
+    };
+    expect(await inspect()).toEqual(expected);
+    await page.evaluate(() => {
+      const s = (window as any).__gloam.scene;
+      s.scene.restart({ expedition: s.testTerrainSave });
+    });
+    await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
+    expect(await inspect()).toEqual(expected);
+  });
+}
