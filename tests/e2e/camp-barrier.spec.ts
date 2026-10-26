@@ -51,7 +51,14 @@ test('wooden hurdles receive local melee and missile impacts, with feedback froz
   expect(new Set(visible.map((piece) => piece.depth)).size).toBeGreaterThan(10);
   const firstHit = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.spawnEnemy();
+    // Random offscreen spawns can be rejected by minimumPlayerDistance after centering
+    // on camp. Use the actual attack position, safely away from the Khan, instead.
+    if (
+      !scene.spawnEnemy(undefined, {
+        point: { x: scene.camp.x + 119, y: scene.camp.y },
+      })
+    )
+      throw new Error('Could not place the barrier attacker');
     const enemy = scene.enemies.getFirstAlive();
     enemy.setPosition(scene.camp.x + 119, scene.camp.y);
     enemy.health = 10000;
@@ -111,7 +118,14 @@ test('the barricade encloses new crafts and households while both attack and war
   expect(expanded.pieces).toHaveLength(48);
   const attack = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.spawnEnemy();
+    // Random offscreen spawns can be rejected by minimumPlayerDistance after centering
+    // on camp. Use the actual attack position, safely away from the Khan, instead.
+    if (
+      !scene.spawnEnemy(undefined, {
+        point: { x: scene.camp.x + 119, y: scene.camp.y },
+      })
+    )
+      throw new Error('Could not place the barrier attacker');
     const enemy = scene.enemies.getFirstAlive();
     enemy.setPosition(scene.camp.x + scene.campBarrier.radius + 11, scene.camp.y);
     enemy.health = enemy.maxHealth = 1000;
@@ -147,7 +161,14 @@ test('the same bounded barrier follows the caravan, freezes, redeploys on arriva
     Object.assign(window, {
       oldBarrierPieces: scene.campBarrier.hurdles.map((piece: any) => piece.image),
     });
-    scene.spawnEnemy();
+    // Random offscreen spawns can be rejected by minimumPlayerDistance after centering
+    // on camp. Use the actual attack position, safely away from the Khan, instead.
+    if (
+      !scene.spawnEnemy(undefined, {
+        point: { x: scene.camp.x + 119, y: scene.camp.y },
+      })
+    )
+      throw new Error('Could not place the barrier attacker');
     const enemy = scene.enemies.getFirstAlive();
     enemy.setPosition(scene.camp.x + 119, scene.camp.y);
     enemy.definition = { ...enemy.definition, speed: 0, damage: 0 };
