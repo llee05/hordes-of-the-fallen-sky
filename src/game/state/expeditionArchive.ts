@@ -132,9 +132,10 @@ const motion = object({
 });
 const location = oneOf(LOCATIONS.map((l) => l.id));
 const region = oneOf([0, 1, 2, 3]);
+const storyScenes = STORY_ORDER.map((id) => storyEncounter(createRun(), id));
 // Include composed base scenes, all destination variants, and the fallback stops.
 const storyImages = new Set([
-  ...STORY_ORDER.map((id) => storyEncounter(createRun(), id).image),
+  ...storyScenes.map((scene) => scene.image),
   ...Object.values(FIRST_STOPS).map((stop) => stop.image),
   ...Object.values(SECOND_STOPS).map((stop) => stop.image),
   firstStop(undefined).image,
@@ -146,7 +147,7 @@ const line = object({
   text: string,
 });
 const choice = object({
-  id: string,
+  id: oneOf(storyScenes.flatMap((scene) => scene.choices.map((option) => option.id))),
   label: string,
   description: string,
   response: string,

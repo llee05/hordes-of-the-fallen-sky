@@ -4,6 +4,9 @@ import { join } from 'node:path';
 import { afterEach, expect, it, vi } from 'vitest';
 import { ProfileStore } from '../../desktop/profile';
 import { GamePlatform } from '../../src/platform/GamePlatform';
+import { captureExpedition } from '../../src/game/state/expeditionArchive';
+import { createRun } from '../../src/game/state/run';
+import { world } from './fixtures/expedition';
 import { isExpeditionSave, isSaveData, type ExpeditionSave } from '../../src/shared/expeditionSave';
 
 const directories: string[] = [];
@@ -14,13 +17,9 @@ afterEach(async () => {
   );
 });
 function fixture(elapsed = 30): ExpeditionSave {
-  return {
-    version: 1,
-    savedAt: Date.now(),
-    summary: { location: 'Golden Pasture', elapsed, population: 8, level: 1, stage: 'camp' },
-    run: { elapsed },
-    world: {},
-  };
+  const run = createRun();
+  run.elapsed = elapsed;
+  return captureExpedition(run, world());
 }
 async function store() {
   const directory = await mkdtemp(join(tmpdir(), 'gloam-expedition-'));

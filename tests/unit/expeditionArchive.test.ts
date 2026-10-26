@@ -1,105 +1,27 @@
-import { describe, expect, it } from 'vitest';
-import {
-  captureExpedition,
-  decodeExpedition,
-  type WorldArchive,
-} from '../../src/game/state/expeditionArchive';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
 import { createRun } from '../../src/game/state/run';
 import { beginMigration } from '../../src/game/state/clan';
 import { openNextStory, resolveStory } from '../../src/game/state/story';
-import { CharacterMotion } from '../../src/game/animation/CharacterMotion';
-import { createAreaEncounter, syncAreaEncounter } from '../../src/game/state/areaEncounters';
+import { syncAreaEncounter } from '../../src/game/state/areaEncounters';
 import { STORY_ORDER, storyEncounter } from '../../src/game/data/story';
 import { LOCATIONS, ROUTES, STARTING_TRADITIONS } from '../../src/game/data/clan';
 import { syncFinalStand } from '../../src/game/state/finalStand';
+import { GamePlatform } from '../../src/platform/GamePlatform';
+import { ProfileStore } from '../../desktop/profile';
+import type { RunState } from '../../src/game/types';
+import { world } from './fixtures/expedition';
 
-function world(): WorldArchive {
-  const motion = new CharacterMotion('player').capture();
-  const body = { x: 2600, y: 2700, vx: 13, vy: -22, flip: false };
-  return {
-    player: { ...body, motion },
-    camp: { x: 2600, y: 2600 },
-    facing: { x: 0, y: 1 },
-    zoom: 0.8,
-    timers: {
-      spawnTimer: 0.4,
-      attackTimer: 0.8,
-      dashTimer: 2,
-      dashRemaining: 0.1,
-      invulnerable: 0.3,
-      supportTimer: 1,
-      wagonTimer: 2,
-      wardTimer: 3,
-      hazardTimer: 4,
-    },
-    generations: [4, 2],
-    enemies: [
-      {
-        ...body,
-        slot: 1,
-        definition: 'wisp',
-        motion,
-        state: {
-          health: 5,
-          maxHealth: 20,
-          spawnId: 2,
-          attackTimer: 0.2,
-          clanAttackTimer: 0.3,
-          chargeTimer: 0,
-          burning: 1,
-          pinned: 0,
-          lastGallop: -1,
-          dangerTimer: 2,
-          tacticalSlot: 1,
-          preparingAttack: true,
-          tactics: {
-            phase: 'windup',
-            remaining: 0.2,
-            aim: { x: 2600, y: 2600 },
-            direction: { x: 1, y: 0 },
-          },
-        },
-      },
-    ],
-    projectiles: [
-      {
-        ...body,
-        damage: 15,
-        remaining: 0.8,
-        fire: true,
-        tempest: false,
-        turn: 0,
-        pierces: 1,
-        pins: true,
-        rotation: 0.2,
-        tint: 0xffffff,
-        hits: [{ slot: 1, spawnId: 2 }],
-      },
-    ],
-    hostileShots: [],
-    gems: [{ ...body, value: 23, attracted: true }],
-    riders: [],
-    support: { ancestorTimer: 0.8, waterTimer: 1.8, guardianTimer: 0.4, spirits: [] },
-    hazards: [{ x: 2700, y: 2700, remaining: 0.4, radius: 90, damage: 8, source: 'seer' }],
-    areaEncounter: createAreaEncounter(),
-    areaThreats: {
-      nextId: 2,
-      threats: [
-        {
-          id: 1,
-          kind: 'frost',
-          x: 2700,
-          y: 2800,
-          age: 0.2,
-          warning: 1,
-          impacted: false,
-          nextTick: 2,
-          owner: '1:2',
-        },
-      ],
-    },
-  };
-}
+const directories: string[] = [];
+afterEach(async () => {
+  vi.unstubAllGlobals();
+  await Promise.all(
+    directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })),
+  );
+});
+
 describe('full expedition snapshots', () => {
   it('accepts authored story images and valid chronicle indexes across all destinations', () => {
     for (const location of LOCATIONS) {
@@ -127,6 +49,51 @@ describe('full expedition snapshots', () => {
       }
     }
   });
+
+  it('loads and resolves every authored choice without losing its saved outcome', () => {
+    for (const beat of STORY_ORDER) {
+      for (const option of storyEncounter(createRun(), beat).choices) {
+        const run = createRun();
+        run.story.active = storyEncounter(run, beat);
+        const loaded = decodeExpedition(captureExpedition(run, world())).run;
+        expect(resolveStory(loaded, option.id)).toBe(true);
+        const restored = decodeExpedition(captureExpedition(loaded, world())).run;
+        expect(restored.story.records[0]!.choice).toEqual(option);
+      }
+    }
+  });
+
+  it.each(['toString', 'constructor', '__proto__', 'unknown'])(
+    'rejects the unauthored choice ID %s in every saved representation',
+    (id) => {
+      for (const beat of ['court', 'river', 'earth'] as const) {
+        const run = createRun();
+        run.clan.region = 2;
+        const encounter = storyEncounter(run, beat);
+        run.story.active = storyEncounter(run, 'opening');
+        run.story.records.push({
+          encounter,
+          choice: encounter.choices[0],
+          elapsed: 0,
+          population: run.clan.population,
+          status: 'chosen',
+        });
+        const snapshot = captureExpedition(run, world());
+        for (const representation of ['active', 'recorded', 'selected']) {
+          const corrupted = structuredClone(snapshot);
+          const story = (corrupted.run as unknown as RunState).story;
+          const option =
+            representation === 'active'
+              ? story.active!.choices[0]!
+              : representation === 'recorded'
+                ? story.records[0]!.encounter.choices[0]!
+                : story.records[0]!.choice!;
+          option.id = id;
+          expect(() => decodeExpedition(corrupted)).toThrow('damaged or incompatible');
+        }
+      }
+    },
+  );
 
   it.each([
     [
@@ -184,7 +151,7 @@ describe('full expedition snapshots', () => {
         s.run.story.records[0].encounter.image = 'unknown.png';
       },
     ],
-  ])('rejects incompatible chronicle content: %s', (_label, corrupt) => {
+  ])('rejects incompatible chronicle content: %s', async (_label, corrupt) => {
     const run = createRun();
     run.phase = 'playing';
     openNextStory(run);
@@ -204,8 +171,53 @@ describe('full expedition snapshots', () => {
       detail: 'Remembered',
     });
     const snapshot = captureExpedition(run, world());
-    corrupt(snapshot);
-    expect(() => decodeExpedition(snapshot)).toThrow('damaged or incompatible');
+    const incompatible = structuredClone(snapshot);
+    corrupt(incompatible);
+    expect(() => decodeExpedition(incompatible)).toThrow('damaged or incompatible');
+    const valid = JSON.stringify(snapshot);
+    const invalid = JSON.stringify(incompatible);
+    const directory = await mkdtemp(join(process.cwd(), '.expedition-compatibility-'));
+    directories.push(directory);
+    const profiles = new ProfileStore(directory);
+    const values = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    });
+    for (const native of [false, true]) {
+      vi.stubGlobal('window', {
+        desktop: native
+          ? {
+              loadProfile: () => profiles.load(),
+              listExpeditions: () => profiles.listExpeditions(),
+              loadExpedition: (slot: 'slot-1') => profiles.loadExpedition(slot),
+              saveExpedition: (slot: 'slot-1', value: unknown) =>
+                profiles.saveExpedition(slot, value),
+            }
+          : undefined,
+      });
+      for (const backup of [false, true]) {
+        const key = `gloam-expedition-slot-1${backup ? '-backup' : ''}`;
+        const file = join(directory, `expedition-slot-1.json${backup ? '.bak' : ''}`);
+        values.set('gloam-expedition-slot-1', backup ? '{interrupted' : valid);
+        values.set('gloam-expedition-slot-1-backup', valid);
+        await writeFile(join(directory, 'expedition-slot-1.json'), backup ? '{interrupted' : valid);
+        await writeFile(join(directory, 'expedition-slot-1.json.bak'), valid);
+        const platform = await GamePlatform.create();
+        expect(platform.saves[0]?.status).toBe(backup ? 'recovered' : 'ready');
+        values.set(key, invalid);
+        await writeFile(file, invalid);
+        await expect(platform.loadExpedition('slot-1')).rejects.toThrow('damaged or incompatible');
+        expect(platform.saves).toEqual([{ slot: 'slot-1', status: 'incompatible' }]);
+        await platform.refreshSaves();
+        expect(platform.saves).toEqual([{ slot: 'slot-1', status: 'incompatible' }]);
+        const reopened = await GamePlatform.create();
+        expect(reopened.saveStorageError).toBe(false);
+        expect(reopened.saves).toEqual([{ slot: 'slot-1', status: 'incompatible' }]);
+        await expect(platform.saveExpedition('slot-1', incompatible)).rejects.toThrow('Invalid save');
+      }
+    }
   });
 
   it('preserves final warnings, work progress and already-braced barrage identities', () => {
