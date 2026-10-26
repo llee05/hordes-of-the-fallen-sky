@@ -260,10 +260,17 @@ Actors use bounded pools and a spatial grid. Combat, economy, and physics stop i
 
 ```sh
 npm run check           # Formatting, both typechecks, unit tests, production build
+npm run test:coverage   # Unit tests with per-directory coverage floors
 npm run test:desktop    # Actual Electron against offline production files
 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 npm run format
 ```
+
+`test:coverage` prints a V8 coverage table and enforces regression floors on the
+renderer-independent core: `src/game/state` needs 95% covered lines, and
+`src/game/data` and `src/shared` need 90%. Raising a floor above the actual
+coverage fails the run, so the well-tested core cannot erode silently. Plain
+`npm test` and `npm run check` skip coverage collection.
 
 Local `test:e2e` and `test:pages` runs open visible Chromium windows and check that
 WebGL 1 and 2 use hardware rendering. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to your

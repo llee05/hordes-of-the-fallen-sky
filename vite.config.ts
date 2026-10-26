@@ -11,5 +11,17 @@ export default defineConfig({
       },
     },
   },
-  test: { include: ['tests/unit/**/*.test.ts'] },
+  test: {
+    include: ['tests/unit/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text'],
+      include: ['src/game/state/**', 'src/game/data/**', 'src/shared/**'],
+      thresholds: {
+        'src/game/state/**': { lines: 95 },
+        'src/game/data/**': { lines: 90 },
+        'src/shared/**': { lines: 90 },
+      },
+    },
+  },
 });
