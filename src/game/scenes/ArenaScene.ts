@@ -1,5 +1,8 @@
 import {
   normalizeVisualSettings,
+  resolveTerrainRenderer,
+  showSoftwareTerrainNotice,
+  webGLRendererName,
   effectAmount,
   type VisualSettings,
 } from '../../shared/visualSettings';
@@ -36,6 +39,7 @@ import {
 } from '../systems/enemyTactics';
 import type { SuccessorTrait } from '../data/successors';
 import type { ClanDamageCause } from '../state/clanSafety';
+import { wantsWorld3D } from '../world3d/worldProjection';
 import { projectGround } from '../world3d/worldProjection';
 import { projectileTerrainClear } from '../world3d/projectileTerrain';
 import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
@@ -242,6 +246,26 @@ export class ArenaScene extends Phaser.Scene {
   private saveMenuReturn: 'ready' | 'paused' | 'dead' | 'won' = 'ready';
   private saveMessage = '';
   private visualSettings: VisualSettings;
+  private rendererName?: string;
+
+  get terrainRenderer() {
+    return (
+      this.visualSettings.terrainRenderer ??
+      (wantsWorld3D() ? resolveTerrainRenderer(this.visualSettings, this.rendererName) : '2d')
+    );
+  }
+
+  get softwareTerrainNotice(): boolean {
+    return wantsWorld3D() && showSoftwareTerrainNotice(this.visualSettings, this.rendererName);
+  }
+
+  dismissSoftwareTerrainNotice(): void {
+    this.visualSettings.softwareTerrainNoticeDismissed = true;
+    void this.platform
+      .saveVisualSettings(this.visualSettings)
+      .catch(() => this.callbacks?.onSaveError());
+    this.publishPhase();
+  }
 
   constructor(private readonly platform: GamePlatform) {
     super('arena');
@@ -327,7 +351,11 @@ export class ArenaScene extends Phaser.Scene {
     this.passageMarkers = [];
     this.crossingMarkers = new FieldMarkers(this);
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
-    this.landscape = new SteppeLandscape(this);
+    this.rendererName =
+      this.game.renderer.type === Phaser.WEBGL
+        ? webGLRendererName((this.game.renderer as Phaser.Renderer.WebGL.WebGLRenderer).gl)
+        : undefined;
+    this.landscape = new SteppeLandscape(this, this.terrainRenderer);
     const center = GAME.worldSize / 2;
     this.camp = this.add
       .container(center, center)
@@ -1314,7 +1342,16 @@ export class ArenaScene extends Phaser.Scene {
     if (key === 'projectileContrast')
       this.visualSettings.projectileContrast =
         this.visualSettings.projectileContrast === 'high' ? 'standard' : 'high';
-    else
+    else if (key === 'terrainRenderer') {
+      this.visualSettings.terrainRenderer = this.terrainRenderer === '3d' ? '2d' : '3d';
+      this.landscape.terrainRenderer = this.terrainRenderer;
+      this.landscape.setRegion(
+        this.run.clan.region,
+        currentLocation(this.run),
+        this.run.clan.stage === 'migration' ? this.run.clan.routeId : undefined,
+      );
+      this.terrainCollision.setTerrain(this.landscape.navigation);
+    } else if (key === 'effectDensity')
       this.visualSettings.effectDensity =
         this.visualSettings.effectDensity === 'full'
           ? 'reduced'

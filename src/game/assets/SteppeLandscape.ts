@@ -20,7 +20,7 @@ import { MountainTerrain } from '../terrain/MountainTerrain';
 import { TerrainNavigation } from '../terrain/TerrainNavigation';
 import { MountainRenderer } from '../terrain/MountainRenderer';
 import { World3DRenderer } from '../world3d/World3DRenderer';
-import { wantsWorld3D } from '../world3d/worldProjection';
+import type { TerrainRenderer } from '../../shared/visualSettings';
 import { ComposedTerrain } from '../world3d/ComposedTerrain';
 import { crossingLandscape } from '../data/crossingLandscapes';
 
@@ -39,7 +39,10 @@ export class SteppeLandscape {
   private river?: RiverSurface;
   private definition: LandscapeDefinition = LANDSCAPES['golden-pasture'];
 
-  constructor(private readonly scene: Phaser.Scene) {
+  constructor(
+    private readonly scene: Phaser.Scene,
+    public terrainRenderer: TerrainRenderer = '3d',
+  ) {
     const size = GAME.worldSize;
     this.ground = scene.add
       .tileSprite(0, 0, size, size, 'ground')
@@ -67,7 +70,7 @@ export class SteppeLandscape {
     this.world3d = undefined;
     this.scene.cameras.main.setAlpha(1);
     this.navigation = undefined;
-    if (wantsWorld3D() && this.scene.game.renderer.type === Phaser.WEBGL) {
+    if (this.terrainRenderer === '3d' && this.scene.game.renderer.type === Phaser.WEBGL) {
       try {
         const terrain = new ComposedTerrain(composition.terrain, this.definition.water);
         this.navigation = new TerrainNavigation(terrain);
