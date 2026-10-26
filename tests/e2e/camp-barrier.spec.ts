@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { GAME } from '../../src/game/config';
 import {
   selectCampBuilding,
   closeOverlayOrPause,
@@ -181,12 +182,21 @@ test('the same bounded barrier follows the caravan, freezes, redeploys on arriva
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.camp.x))
     .toBeGreaterThan(2605);
-  expect(
-    await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      return (window as any).frontAttacker.x - scene.camp.x;
-    }),
-  ).toBeCloseTo(119);
+  // updateEnemies pushes to attackRange - 1 only after crossing that clearance.
+  // Fractional caravan steps can leave the attacker anywhere in the contact band.
+  await expect
+    .poll(() =>
+      page.evaluate((attackReach) => {
+        const scene = (window as any).__gloam.scene;
+        const distance = (window as any).frontAttacker.x - scene.camp.x;
+        const attackRange = scene.campBarrier.radius + attackReach;
+        return {
+          outsideClearance: distance >= attackRange - 1,
+          withinAttackReach: distance <= attackRange,
+        };
+      }, GAME.camp.barrier.attackReach),
+    )
+    .toEqual({ outsideClearance: true, withinAttackReach: true });
   await closeOverlayOrPause(page);
   const frozen = await barrierState(page);
   await page.waitForTimeout(200);
