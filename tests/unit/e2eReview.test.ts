@@ -34,6 +34,11 @@ describe('browser review selection', () => {
     expect(needsFullSuite(['README.md', 'src/main.ts'])).toBe(true);
   });
 
+  it('retains full coverage when a source file moves into a documentation path', () => {
+    // git diff --no-renames retains the deleted source and the added document.
+    expect(needsFullSuite(['src/removed.ts', 'docs/moved.md'])).toBe(true);
+  });
+
   it('always runs keyboard/lifecycle and default 3D smoke tests, even with no changed tests', () => {
     expect(selectedTests({ suites: [] })).toEqual(smokeTests);
   });

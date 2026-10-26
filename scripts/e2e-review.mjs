@@ -97,7 +97,7 @@ export function main(args = process.argv.slice(2)) {
   };
   const mergeBase = git('merge-base', 'HEAD', base).trim();
   const files = [
-    ...git('diff', '--name-only', '-z', mergeBase, '--').split('\0'),
+    ...git('diff', '--no-renames', '--name-only', '-z', mergeBase, '--').split('\0'),
     ...git('ls-files', '--others', '--exclude-standard', '-z').split('\0'),
   ].filter(Boolean);
   if (!focused.length && needsFullSuite(files)) {
