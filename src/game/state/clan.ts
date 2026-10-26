@@ -11,7 +11,6 @@ import {
   BUILDING_REMNANT,
   ROUTE_ACCOUNTS,
   DEPARTURE_REMNANT,
-  LOSS_REMNANT,
   STARVATION_REMNANT,
   arrivalReaction,
   buildingReaction,
@@ -289,27 +288,14 @@ export function damageClan(
     clan.message = 'The clan has suffered losses. Bring your riders back to guard.';
     if (peopleLost > 0) {
       const loss = peopleLost === 1 ? 'a person' : `${peopleLost} people`;
-      const reaction = lossReaction(run);
       rememberClan(
         run,
         'A place left empty',
         cause === 'starvation'
           ? `With the provisions gone, the clan lost ${loss}. The other households carried on.`
           : `${cause === 'eruption' ? 'The ground erupted and' : cause === 'seer' ? 'A seer struck and' : cause === 'area' ? 'A spell or a shifting of the land near camp' : 'An attack'} cost the clan ${loss}. The other households carried on.`,
-        peopleLost === 1
-          ? reaction
-          : {
-              ...reaction,
-              text:
-                reaction.speaker === 'saran'
-                  ? `${peopleLost} empty places at the fire. Say their names tonight, so the road doesn’t take those as well.`
-                  : reaction.speaker === 'nara'
-                    ? `${peopleLost} fewer. I wrote them in the tally myself, where everyone can read it.`
-                    : `${peopleLost} fewer at the fire. I have entered the losses in the tally, where any of us may read it.`,
-            },
-        peopleLost === 1
-          ? LOSS_REMNANT
-          : `${peopleLost} fewer under the banner. The tally keeps the losses.`,
+        lossReaction(run, peopleLost),
+        `${peopleLost === 1 ? 'One' : peopleLost} fewer beneath the banner. The loss remains in the tally.`,
       );
     }
   }
