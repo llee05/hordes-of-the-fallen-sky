@@ -59,6 +59,27 @@ test('software WebGL starts flat with a dismissible notice and honors an explici
   await page.goto('/');
   const notice = page.getByRole('status').filter({ hasText: 'Software graphics detected' });
   await expect(notice).toBeVisible();
+  // Check the rendered text against the title cloth, including its transparency.
+  const contrast = await notice.evaluate((element) => {
+    const channels = (color: string) => color.match(/[\d.]+/g)!.map(Number);
+    const luminance = (rgb: number[]) =>
+      rgb.slice(0, 3).reduce((sum, channel, index) => {
+        const value = channel / 255;
+        const linear = value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+        return sum + linear * [0.2126, 0.7152, 0.0722][index];
+      }, 0);
+    const cloth = channels(
+      getComputedStyle(element.closest('.title-menu')!, '::before').backgroundColor,
+    );
+    // White behind translucent cloth gives the light text its lowest contrast.
+    const alpha = cloth[3] ?? 1;
+    const background = luminance(cloth.slice(0, 3).map((c) => c * alpha + 255 * (1 - alpha)));
+    return [element, element.querySelector('button')!].map((text) => {
+      const foreground = luminance(channels(getComputedStyle(text).color));
+      return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+    });
+  });
+  for (const ratio of contrast) expect(ratio).toBeGreaterThanOrEqual(4.5);
   await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Dismiss terrain notice' }).click();
   await expect(notice).toHaveCount(0);
