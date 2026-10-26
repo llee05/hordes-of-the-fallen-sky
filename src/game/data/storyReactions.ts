@@ -115,16 +115,21 @@ export const SKYBREAKER_REMNANT =
 // Journey and camp moment voices, recorded by state/clan.ts, state/legacy.ts,
 // state/crossingEncounters.ts, and state/fieldObjectives.ts. Each moment pairs
 // its companion reaction with the collective remnant voice heard when fewer
-// than five survivors remain. Factual chronicle titles and details stay at the
-// call sites; every spoken word lives here.
+// than five survivors remain. Chronicle titles and numbers stay at the call
+// sites; every spoken word lives here. Each table is plain data, so the same
+// moment always gets the same line.
 // ---------------------------------------------------------------------------
 
-/** Boro counts the households before the caravan moves. */
-export function departureReaction(_run: RunState): StoryLine {
-  return {
-    speaker: 'boro',
-    text: 'Count the households before anyone moves. Balance the packs and keep the herd close.',
-  };
+/** Boro packs for the approach the clan chose: water, a high shelf, or more mouths. */
+const DEPARTURE_REACTIONS: Record<CrossingRoute, string> = {
+  river: 'Pack the stores high on the carts and count the households. The herd can drink as we go.',
+  ridge: 'Pack light and tie everything down twice. Up on the ridge, a loose load is a lost one.',
+  refuge:
+    'Pack the stores tight and leave room on top. If we’re answering those banners, we’ll be feeding more than ourselves.',
+};
+
+export function departureReaction(_run: RunState, route: CrossingRoute): StoryLine {
+  return { speaker: 'boro', text: DEPARTURE_REACTIONS[route] };
 }
 
 export const DEPARTURE_REMNANT =
@@ -141,38 +146,74 @@ export function starvationReaction(_run: RunState): StoryLine {
 export const STARVATION_REMNANT =
   'The stores ran empty, and it cost another life. Those still standing keep moving.';
 
-/** Nara makes room for arrived households; a quieter arrival belongs to Saran. */
-export function arrivalReaction(_run: RunState, arrivedPeople: number): StoryLine {
-  return arrivedPeople
-    ? {
-        speaker: 'nara',
-        text: 'Push the bowls closer together. We need room for more people.',
-      }
-    : {
-        speaker: 'saran',
-        text: 'Set the covered embers down gently. This ground will hold a hearth.',
-      };
+/** Saran lights the hearth after the approach the clan actually took. */
+const QUIET_ARRIVALS: Record<CrossingRoute, string> = {
+  river: 'Shake the river damp out of the felt and set the embers down. We can make a hearth here.',
+  ridge: 'Let the wagons rest after that climb, and set the embers down out of the wind.',
+  // A rescue that brought no one in means the wagons were already full.
+  refuge:
+    'The wagons were too full to take in anyone from the banners. Keep the spare bowl out all the same.',
+};
+
+/**
+ * Households rescued under the blue banners speak for themselves on arrival.
+ * Any other arrival with people is Nara making room; a quiet one is Saran's.
+ */
+export function arrivalReaction(
+  _run: RunState,
+  route: CrossingRoute,
+  arrivedPeople: number,
+): StoryLine {
+  if (arrivedPeople > 0 && route === 'refuge')
+    return {
+      speaker: 'newcomer',
+      text: 'We followed your banner all this way. Tell us where to set down our bundles, and give us work.',
+    };
+  if (arrivedPeople > 0)
+    return {
+      speaker: 'nara',
+      text: 'Push the bowls closer together. We need room for more people.',
+    };
+  return { speaker: 'saran', text: QUIET_ARRIVALS[route] };
 }
 
 export const ARRIVAL_REMNANT =
   'Those who reached the pasture build a small fire and sit close around it.';
 
 /** Nara counts the caravan again when every household that left is still here. */
-export function safeCrossingReaction(_run: RunState): StoryLine {
-  return {
-    speaker: 'nara',
-    text: 'I counted twice. Everyone who set out with us is here.',
-  };
+const SAFE_CROSSINGS: Record<CrossingRoute, string> = {
+  river: 'I counted at the ford and again on the far bank. Nobody is missing.',
+  ridge: 'I counted everyone back down off the ridge. Nobody is missing.',
+  refuge: 'We rode out to the banners and nobody of ours was lost on the way. I counted twice.',
+};
+
+export function safeCrossingReaction(_run: RunState, route: CrossingRoute): StoryLine {
+  return { speaker: 'nara', text: SAFE_CROSSINGS[route] };
 }
 
 export const SAFE_CROSSING_REMNANT = 'Every household that set out reached the next camp together.';
 
-/** Saran claims what a completed crossing objective protected for the camp. */
-export function crossingObjectiveReaction(_run: RunState, _route: CrossingRoute): StoryLine {
-  return {
+/**
+ * A held ford is Erden's count of wagons, a broken ambush is Boro's intact
+ * packs, and households brought into the column are Saran's to welcome.
+ */
+const CROSSING_OBJECTIVE_REACTIONS: Record<CrossingRoute, StoryLine> = {
+  river: {
+    speaker: 'erden',
+    text: 'Every wagon came through the ford. I watched each axle leave the water.',
+  },
+  ridge: {
+    speaker: 'boro',
+    text: 'The ambush is broken and every pack is still tied on. That was good riding.',
+  },
+  refuge: {
     speaker: 'saran',
-    text: 'Count everyone who came through. Whatever you kept safe out there has a place by our fire.',
-  };
+    text: 'Bring them close to the fire. Anyone who walks under our banner has a place beside it.',
+  },
+};
+
+export function crossingObjectiveReaction(_run: RunState, route: CrossingRoute): StoryLine {
+  return CROSSING_OBJECTIVE_REACTIONS[route];
 }
 
 export const CROSSING_OBJECTIVE_REMNANT = 'Those who came through take stock of what they saved.';

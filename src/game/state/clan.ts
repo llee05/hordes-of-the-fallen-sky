@@ -243,7 +243,7 @@ export function beginMigration(
     run,
     'The camp packed for the road',
     `${clan.population} people set out for ${destination.name}. ${ROUTE_ACCOUNTS[route.id].departed}`,
-    departureReaction(run),
+    departureReaction(run, route.id),
     DEPARTURE_REMNANT,
   );
   return true;
@@ -398,7 +398,7 @@ export function advanceClan(
       run,
       arrivedPeople ? 'New households at the fire' : 'The caravan arrived',
       `${clan.population} people reached ${destination.name} ${ROUTE_ACCOUNTS[route.id].arrived}.`,
-      arrivalReaction(run, arrivedPeople),
+      arrivalReaction(run, route.id, arrivedPeople),
       ARRIVAL_REMNANT,
     );
     return 'arrived';

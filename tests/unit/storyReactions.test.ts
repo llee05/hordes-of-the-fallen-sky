@@ -27,48 +27,117 @@ import { FIELD_OBJECTIVES } from '../../src/game/data/fieldObjectives';
 import { LOCATIONS, ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration } from '../../src/game/state/clan';
 import { createRun } from '../../src/game/state/run';
+import { GAME } from '../../src/game/config';
 
-describe('companion moment reactions', () => {
-  it('counts the households through Boro before the caravan moves', () => {
-    expect(departureReaction(createRun())).toEqual({
-      speaker: 'boro',
-      text: 'Count the households before anyone moves. Balance the packs and keep the herd close.',
-    });
+const ROUTE_IDS = ROUTES.map((route) => route.id);
+
+function expectNoPlaceName(text: string): void {
+  for (const location of LOCATIONS) expect(text).not.toContain(location.name);
+}
+
+describe('crossing reactions follow the approach taken', () => {
+  const expected = {
+    departure: { river: 'boro', ridge: 'boro', refuge: 'boro' },
+    arrivedWithPeople: { river: 'nara', ridge: 'nara', refuge: 'newcomer' },
+    arrivedQuietly: { river: 'saran', ridge: 'saran', refuge: 'saran' },
+    safe: { river: 'nara', ridge: 'nara', refuge: 'nara' },
+    objective: { river: 'erden', ridge: 'boro', refuge: 'saran' },
+  } as const;
+
+  it('gives every route and arrival its own speaker and words, naming no place', () => {
+    const run = createRun();
+    for (const route of ROUTE_IDS) {
+      const lines = {
+        departure: departureReaction(run, route),
+        arrivedWithPeople: arrivalReaction(run, route, 8),
+        arrivedQuietly: arrivalReaction(run, route, 0),
+        safe: safeCrossingReaction(run, route),
+        objective: crossingObjectiveReaction(run, route),
+      };
+      for (const [moment, line] of Object.entries(lines)) {
+        expect(line.speaker).toBe(expected[moment as keyof typeof expected][route]);
+        expect(line.text.trim()).not.toBe('');
+        expectNoPlaceName(line.text);
+      }
+    }
+    for (const moment of [
+      (route: (typeof ROUTE_IDS)[number]) => departureReaction(run, route).text,
+      (route: (typeof ROUTE_IDS)[number]) => arrivalReaction(run, route, 0).text,
+      (route: (typeof ROUTE_IDS)[number]) => safeCrossingReaction(run, route).text,
+      (route: (typeof ROUTE_IDS)[number]) => crossingObjectiveReaction(run, route).text,
+    ])
+      expect(new Set(ROUTE_IDS.map(moment)).size).toBe(ROUTE_IDS.length);
   });
 
+  it('lets a newcomer speak only for people who arrived by the blue banners', () => {
+    const run = createRun();
+    for (const route of ROUTE_IDS)
+      for (const people of [0, 1, 8])
+        expect(arrivalReaction(run, route, people).speaker === 'newcomer').toBe(
+          route === 'refuge' && people > 0,
+        );
+  });
+
+  it('chooses the same words for the same crossing every time', () => {
+    for (const route of ROUTE_IDS) {
+      expect(departureReaction(createRun(), route)).toEqual(departureReaction(createRun(), route));
+      expect(arrivalReaction(createRun(), route, 8)).toEqual(
+        arrivalReaction(createRun(), route, 8),
+      );
+      expect(crossingObjectiveReaction(createRun(), route)).toEqual(
+        crossingObjectiveReaction(createRun(), route),
+      );
+    }
+  });
+
+  it('records the route’s departure line, the remnant voice, or silence', () => {
+    const depart = (setup: (run: ReturnType<typeof createRun>) => void, route = 'ridge') => {
+      const run = createRun();
+      run.phase = 'route';
+      run.clan.stageTime = 45;
+      setup(run);
+      expect(beginMigration(run, route)).toBe(true);
+      return run.legacy.memories.at(-1)!.line;
+    };
+    for (const route of ROUTE_IDS)
+      expect(depart(() => {}, route)).toEqual(departureReaction(createRun(), route));
+    expect(
+      depart((run) => {
+        run.clan.population = 4;
+      }),
+    ).toEqual({ speaker: 'clan', text: DEPARTURE_REMNANT });
+    expect(
+      depart((run) => {
+        run.story.enabled = false;
+      }),
+    ).toBeUndefined();
+  });
+
+  it('greets households who arrived by the blue banners, or notes full wagons', () => {
+    const arrive = (population: number) => {
+      const run = createRun();
+      run.phase = 'route';
+      run.clan.stageTime = 45;
+      run.clan.population = population;
+      expect(beginMigration(run, 'refuge')).toBe(true);
+      run.phase = 'playing';
+      run.legacy.reactionUntil = 0;
+      run.clan.food = 10_000;
+      run.story.peopleLost = 1; // skip the safe-crossing line so the arrival may speak
+      expect(advanceClan(run, 1000)).toBe('arrived');
+      return run.legacy.memories.at(-1)!.line;
+    };
+    expect(arrive(8)?.speaker).toBe('newcomer');
+    expect(arrive(GAME.clan.maxPopulation)).toEqual(arrivalReaction(createRun(), 'refuge', 0));
+  });
+});
+
+describe('companion moment reactions', () => {
   it('keeps the remaining stores through Boro when the provisions run out', () => {
     expect(starvationReaction(createRun())).toEqual({
       speaker: 'boro',
       text: 'There’s nothing left to share out. Whatever we find next, we keep close.',
     });
-  });
-
-  it('welcomes arrived households through Nara and a quiet arrival through Saran', () => {
-    const run = createRun();
-    expect(arrivalReaction(run, 2)).toEqual({
-      speaker: 'nara',
-      text: 'Push the bowls closer together. We need room for more people.',
-    });
-    expect(arrivalReaction(run, 0)).toEqual({
-      speaker: 'saran',
-      text: 'Set the covered embers down gently. This ground will hold a hearth.',
-    });
-  });
-
-  it('counts a protected crossing through Nara', () => {
-    expect(safeCrossingReaction(createRun())).toEqual({
-      speaker: 'nara',
-      text: 'I counted twice. Everyone who set out with us is here.',
-    });
-  });
-
-  it('claims what a crossing protected through Saran on every route', () => {
-    const run = createRun();
-    for (const route of ['river', 'ridge', 'refuge'] as const)
-      expect(crossingObjectiveReaction(run, route)).toEqual({
-        speaker: 'saran',
-        text: 'Count everyone who came through. Whatever you kept safe out there has a place by our fire.',
-      });
   });
 
   it('brings field objective findings beside the fire through Boro for every kind', () => {

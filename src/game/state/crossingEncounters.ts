@@ -122,7 +122,7 @@ export function settleCrossingEncounter(run: RunState): boolean {
       run,
       'Every household arrived',
       `No one was lost on the crossing, and the clan’s resolve rose by ${GAME.crossings.safeResolve}.`,
-      safeCrossingReaction(run),
+      safeCrossingReaction(run, c.route),
       SAFE_CROSSING_REMNANT,
     );
   }

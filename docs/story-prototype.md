@@ -90,6 +90,7 @@ brief reaction may accompany a moment, voiced by the companion it concerns
 
 - **Camp work:** Boro reacts to herds, bows, and stores; Nara to felt and relays; Erden to wagons; Saran to gers and sanctuaries.
 - **Journey moments:** departures, starvation, arrivals, crossing outcomes, and completed field objectives speak through the same data file, each paired with the collective voice heard below five survivors.
+- **Crossings:** each approach has its own lines. Boro packs for the river, the ridge, or the extra mouths of a rescue. Saran sets down the embers after a quiet arrival. Nara counts heads after a crossing without losses. A held ford is Erden's count of wagons, a broken ridge ambush is Boro's intact packs, and households brought into the column are Saran's to welcome. A newcomer speaks only when people actually arrived by the blue banners; if the wagons were too full to take anyone in, Saran says so instead. Lines name no place.
 - **Losses:** recorded by whoever keeps the tally after the court scene. From the third loss, Saran answers instead.
 - **Succession:** a first fall recalls a shared watch if the clan named one. A successor is greeted according to the chosen trait.
 - **[The Skybreaker](final-stand.md):** Boro turns the clan back to the wagons, echoing his line in the road scene.
