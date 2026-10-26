@@ -42,7 +42,7 @@ it('retains the major cause through minor hits, gives useful advice, and expires
   damageClan(run, 0.1, undefined, 'area');
   expect(majorLossMessage(run)).toContain('Skybreaker');
   expect(majorLossMessage(run)).toContain('1 person lost');
-  expect(majorLossMessage(run)).toContain('Guard the threatened approach');
+  expect(majorLossMessage(run)).toContain('Guard that approach');
   run.phase = 'paused';
   expect(majorLossMessage(run)).toContain('Skybreaker');
   run.elapsed = 37;

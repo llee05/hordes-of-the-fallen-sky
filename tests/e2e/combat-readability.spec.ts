@@ -65,7 +65,7 @@ test('combat visual preferences persist and keep projectile collision size and d
     s.damageClan(0.1);
     s.publishPhase();
   });
-  await expect(page.locator('#major-loss')).toContainText('seer strike');
+  await expect(page.locator('#major-loss')).toContainText('seer struck the camp');
   await page.reload();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Projectile contrast', exact: true })).toHaveText(
