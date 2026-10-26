@@ -12,10 +12,10 @@ export function enemyTacticText(enemy: EnemyDefinition): string {
       : role === 'bulwark'
         ? 'Armoured until pinned. Charged pinning arrows open its guard.'
         : role === 'skirmisher'
-          ? `Hangs back and looses ${enemy.volley?.shots ?? 2} shots in turn.`
+          ? `Hangs back and looses ${enemy.volley?.shots ?? 2} shots at once.`
           : enemy.behavior === 'charger'
             ? 'Marks its charge first. Sidestep, then strike while it recovers.'
-            : `Plants itself and looses ${enemy.volley?.shots ?? 1} shots in turn.`;
+            : `Plants itself and looses ${enemy.volley?.shots ?? 1} shots at once.`;
   if (enemy.concealed) text += ' Hides in cover until you ride close.';
   if (enemy.ability) {
     const abilities = {
@@ -26,7 +26,7 @@ export function enemyTacticText(enemy: EnemyDefinition): string {
       cinder: 'Calls cinders that scorch the ground a moment.',
       rift: 'Marks a rift strike.',
     };
-    text += ` ${abilities[enemy.ability.kind]} Defeat or pin it before it casts.`;
+    text += ` ${abilities[enemy.ability.kind]} Defeat or pin it before release.`;
   }
   return text;
 }
