@@ -401,7 +401,7 @@ const FIELD_OBJECTIVE_REACTIONS: Record<FieldObjectiveKind, StoryLine> = {
   },
   gathering: {
     speaker: 'nara',
-    text: 'They never got close to the gers. I watched the whole time.',
+    text: 'The last of those raiders has fallen. I counted them.',
   },
 };
 
@@ -413,7 +413,7 @@ export const FIELD_OBJECTIVE_REMNANTS: Record<FieldObjectiveKind, string> = {
   supplies: 'Those still standing haul the cart’s load back into camp.',
   herd: 'The survivors bring the loose horses in to graze beside their own.',
   refugees: 'The survivors make room at their small fire for the stranded households.',
-  gathering: 'What is left of the clan turns the raiders back before they reach camp.',
+  gathering: 'Those still standing have defeated the raiders.',
 };
 
 // --- Succession remnants ----------------------------------------------------
@@ -443,7 +443,7 @@ export const ROUTE_ACCOUNTS: Record<CrossingRoute, { departed: string; arrived: 
 /** What a completed crossing objective accomplished, before its reward is listed. */
 export const CROSSING_OBJECTIVE_ACCOUNTS: Record<CrossingRoute, string> = {
   river: 'The ford held against the attackers on both banks.',
-  ridge: 'The ambush on the ridge was broken before the wagons reached it.',
+  ridge: 'The ridge attackers were defeated.',
   refuge: 'The households under the blue banners were brought safely into the column.',
 };
 
@@ -452,7 +452,7 @@ export const FIELD_OBJECTIVE_ACCOUNTS: Record<FieldObjectiveKind, string> = {
   supplies: 'The cart was cleared and its load gathered.',
   herd: 'The loose horses were ridden back to camp.',
   refugees: 'The stranded households were escorted back to camp.',
-  gathering: 'The raiders were beaten back before they reached camp.',
+  gathering: 'The raiding band was beaten.',
 };
 
 /** The collective remembered-road voice that stands in below five survivors. */
