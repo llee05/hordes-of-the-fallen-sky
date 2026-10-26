@@ -563,7 +563,7 @@ function rememberedRoads(run: RunState): string | undefined {
   }
   if (unspoken.length)
     images.push(
-      `The road also passed through ${unspoken.join(' and ')}, remembered as a halt and a departure.`,
+      `The road also passed through ${unspoken.join(' and ')}, where the clan made camp and moved on.`,
     );
   return images.length ? images.join(' ') : undefined;
 }
@@ -598,17 +598,17 @@ function companionsEnding(run: RunState): string {
   return [
     close('nara')
       ? 'Nara sets down the ember vessel she carried through the passage and lights the new hearth herself.'
-      : 'Nara sets down the covered ember vessel and asks who will be coming next.',
+      : 'Nara sets down the covered ember vessel and asks who is coming next.',
     close('saran')
-      ? 'Saran lets someone else feed the fire, and sits.'
+      ? 'For once, Saran lets someone else feed the fire, and sits down.'
       : 'Saran feeds the new fire, as she always has.',
     close('boro') && close('saran')
       ? 'Boro, who once asked what they could feed a stranger, fills the spare bowl himself.'
       : strained('boro')
         ? 'Boro counts the horses twice when he thinks nobody is looking. He is not wrong to.'
         : close('boro')
-          ? 'Boro walks the new pasture and declares, grudgingly, that it will do.'
-          : 'Boro checks the grass and says nothing, which from Boro is praise.',
+          ? 'Boro walks the new pasture and admits, grudgingly, that it will do.'
+          : 'Boro checks the grass and says nothing, which, from Boro, counts as praise.',
     court === 'trust-erden'
       ? 'Erden reads the tally aloud, and the families answer for themselves.'
       : court === 'hear-erden'
@@ -617,7 +617,7 @@ function companionsEnding(run: RunState): string {
           ? 'Nara keeps the tally now. Erden checks her sums, and she lets him.'
           : strained('erden')
             ? 'Erden works at the edge of the firelight, counting, still unsure of his welcome.'
-            : 'Erden counts the gers twice, and says the number aloud.',
+            : 'Erden counts the gers twice and says the number aloud.',
   ].join(' ');
 }
 
@@ -630,24 +630,26 @@ export function epilogueText(run: RunState): readonly string[] {
   const rescued = run.story.crossings.some((crossing) => crossing.route === 'refuge');
   const roads = rememberedRoads(run);
   return [
-    `${clan.population} ${single ? 'person' : 'people'} and ${clan.herd} ${clan.herd === 1 ? 'animal' : 'animals'} reach the sheltered valley. ${clan.finalBossDefeated ? 'The Skybreaker has fallen behind them.' : 'The Skybreaker still walks beyond the mountain.'}${fallen > 0 ? ` ${fallen} ${fallen === 1 ? 'Khan' : 'Khans'} fell keeping the road; the banner came through in other hands.` : ''} The passage has given the living a road through.`,
+    `${clan.population} ${single ? 'person' : 'people'} and ${clan.herd} ${clan.herd === 1 ? 'animal' : 'animals'} come through the passage into the sheltered valley, under a stretch of sky that has not torn. ${clan.finalBossDefeated ? 'The Skybreaker has fallen behind them.' : 'The Skybreaker still walks beyond the mountain.'}${fallen > 0 ? ` ${fallen === 1 ? 'One Khan' : `${fallen} Khans`} fell keeping the road, and the banner came through in other hands.` : ''}`,
     run.story.peopleLost > 0
-      ? `The ${single ? 'last survivor remembers' : 'survivors remember'} the ${run.story.peopleLost} ${run.story.peopleLost === 1 ? 'person' : 'people'} lost along the road. Their names have a place beside the fire.`
-      : `Saran sets the spare bowl beside the new hearth. The carried embers catch in fresh kindling.${rescued ? ' The households gathered under the blue banners raise their gers beside the first two.' : ''}`,
+      ? `${run.story.peopleLost === 1 ? 'One person was' : `${run.story.peopleLost} people were`} lost on the road. ${single ? 'The last survivor keeps' : 'The survivors keep'} a place beside the fire for ${run.story.peopleLost === 1 ? 'that name' : 'their names'}.`
+      : `Saran sets the spare bowl down beside the new hearth, and the carried embers catch in fresh kindling.${rescued ? ' The households who came in under the blue banners raise their gers beside the first two.' : ''}`,
     ...(roads ? [roads] : []),
     ...(few ? [] : [companionsEnding(run)]),
     single
-      ? `The tally carries the clan’s name: ${identity}. Its promise belongs to the next camp as well.`
+      ? identity === 'A people taking shape'
+        ? 'The tally carries no clan name yet. Its promise goes on to the next camp all the same.'
+        : `The tally still carries the clan’s name, ${identity}, and its promise goes on to the next camp.`
       : identity === 'The Iron Horde'
         ? 'The Iron Horde posts riders above the approach, then sends tired guards back to eat with their families.'
         : identity === 'Children of the Eternal Sky'
           ? 'The Children of the Eternal Sky begin a song in several voices. Each household finds its own place in the answer.'
           : identity === 'The Wandering Nation'
-            ? 'The Wandering Nation leaves room between its gers for more arrivals. The next task is learning how many the pasture can support.'
-            : 'The households raise their gers around a common fire. Their people are still taking shape.',
+            ? 'The Wandering Nation leaves room between its gers for whoever arrives next. First, though, it has to learn how many this pasture can feed.'
+            : 'The households raise their gers around a common fire. What kind of people they will become is still being decided.',
     ...(few
       ? [
-          `${single ? 'The last survivor lights' : 'The remaining hands light'} a hearth from the carried embers. A spare bowl waits beside it.`,
+          `${single ? 'The last survivor lights' : 'The remaining hands light'} a hearth from the carried embers and set${single ? 's' : ''} a spare bowl beside it.`,
         ]
       : []),
     'Keep a place beside the fire. Someone is still coming home.',

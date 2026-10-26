@@ -114,7 +114,8 @@ describe('the two-act expedition', () => {
     run.clan.identity.sky = 6;
     const ending = epilogueText(run).join(' ');
     expect(ending).toContain(`${run.clan.population} people`);
-    expect(ending).toContain('1 person lost');
+    expect(ending).toContain('One person was lost on the road');
+    expect(ending).toContain('for that name');
     expect(ending).toContain('Children of the Eternal Sky');
     expect(ending).toContain('Skybreaker still walks');
     run.clan.finalBossDefeated = true;
@@ -460,7 +461,22 @@ describe('the ending', () => {
     const run = createRun();
     expect(epilogueText(run).join(' ')).not.toMatch(/Khans? fell/);
     run.khan.generation = 2;
+    expect(epilogueText(run).join(' ')).toContain('One Khan fell keeping the road');
     run.khan.successionRemaining = 3;
     expect(epilogueText(run).join(' ')).toContain('2 Khans fell keeping the road');
+  });
+
+  it('counts several losses and gives a lone survivor an unnamed clan without a broken sentence', () => {
+    const run = createRun();
+    run.story.peopleLost = 3;
+    expect(epilogueText(run).join(' ')).toContain('3 people were lost on the road');
+    expect(epilogueText(run).join(' ')).toContain('for their names');
+    run.clan.population = 1;
+    const alone = epilogueText(run).join(' ');
+    expect(alone).toContain('The last survivor keeps a place');
+    expect(alone).toContain('carries no clan name yet');
+    expect(alone).toContain('lights a hearth from the carried embers and sets a spare bowl');
+    run.clan.identity.wander = 6;
+    expect(epilogueText(run).join(' ')).toContain('the clan’s name, The Wandering Nation,');
   });
 });
