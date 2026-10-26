@@ -50,7 +50,7 @@ export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
       maxStacks: 1,
       requires: [{ id: 'haste', rank: 1 }],
       description:
-        'Shared attack damage rises 60%, and the Khan and riders can target enemies 60 paces farther out. For fewer, heavier, truer volleys.',
+        'Shared attack damage rises 60%, and the Khan and riders can target enemies 60 paces farther out. For heavier, truer volleys.',
       apply: (r) => {
         r.stats.damage *= S.precisionDamage;
         r.patrons.bow.range += S.precisionRange;
