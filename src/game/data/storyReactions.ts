@@ -204,20 +204,24 @@ export function buildingReaction(id: BuildingId, pathId?: string): StoryLine {
 export const BUILDING_REMNANT = 'Even with so few hands, the clan makes room for one more craft.';
 
 /** The record-keeper speaks for a loss; who keeps the record depends on the court scene. */
-export function lossReaction(run: RunState): StoryLine {
+export function lossReaction(run: RunState, peopleLost: number): StoryLine {
   if (run.story.peopleLost >= 3)
     return {
       speaker: 'saran',
-      text: 'Another empty place at the fire. Say the name tonight, so the road doesn’t take that as well.',
+      text:
+        peopleLost === 1
+          ? 'Another place left empty. Say the name tonight, so the road does not take that too.'
+          : `${peopleLost} places left empty. Say their names tonight, so the road does not take those too.`,
     };
+  const fewer = peopleLost === 1 ? 'One' : peopleLost;
   if (choseStory(run, 'nara-tally'))
     return {
       speaker: 'nara',
-      text: 'One fewer. I wrote it in the tally myself, where everyone can read it.',
+      text: `${fewer} fewer. I have written it in the tally, where everyone can see.`,
     };
   return {
     speaker: 'erden',
-    text: 'One fewer at the fire. I have entered the loss in the tally, where any of us may read it.',
+    text: `${fewer} fewer at the fire. I will keep the loss in the tally, where we can all see it.`,
   };
 }
 

@@ -13,6 +13,7 @@ describe('the clan’s lived history', () => {
     run.clan.population = 1;
     damageClan(run, 40);
     expect(run.clan.population).toBe(0);
+    expect(currentReaction(run)).toBeUndefined();
     const count = run.legacy.totalMemories;
     damageClan(run, 40);
     expect(run.legacy.totalMemories).toBe(count);
@@ -168,4 +169,57 @@ describe('companion reactions to lived history', () => {
     damageClan(run, 40);
     expect(currentReaction(run)?.line?.speaker).toBe('saran');
   });
+
+  it.each([1, 2])('matches both keepers’ tallies to %i current casualties', (peopleLost) => {
+    for (const keeper of ['erden', 'nara'] as const) {
+      const run = createRun();
+      run.clan.formation = 'wedge';
+      if (keeper === 'nara') choose(run, 'nara-tally');
+      damageClan(run, peopleLost * GAME.clan.resolveLossBand);
+      const fewer = peopleLost === 1 ? 'One' : peopleLost;
+      expect(run.clan.population).toBe(8 - peopleLost);
+      expect(currentReaction(run)?.line).toEqual({
+        speaker: keeper,
+        text:
+          keeper === 'nara'
+            ? `${fewer} fewer. I have written it in the tally, where everyone can see.`
+            : `${fewer} fewer at the fire. I will keep the loss in the tally, where we can all see it.`,
+      });
+    }
+  });
+
+  it.each([1, 2, 3])(
+    'matches Saran’s grief to %i current casualties at three total losses',
+    (peopleLost) => {
+      const run = createRun();
+      run.clan.formation = 'wedge';
+      run.story.peopleLost = 3 - peopleLost;
+      run.clan.population -= run.story.peopleLost;
+      damageClan(run, peopleLost * GAME.clan.resolveLossBand);
+      expect(run.story.peopleLost).toBe(3);
+      expect(run.clan.population).toBe(5);
+      expect(currentReaction(run)?.line).toEqual({
+        speaker: 'saran',
+        text:
+          peopleLost === 1
+            ? 'Another place left empty. Say the name tonight, so the road does not take that too.'
+            : `${peopleLost} places left empty. Say their names tonight, so the road does not take those too.`,
+      });
+    },
+  );
+
+  it.each([1, 2, 3])(
+    'keeps the remnant’s reaction consistent with %i current casualties',
+    (peopleLost) => {
+      const run = createRun();
+      run.clan.formation = 'wedge';
+      run.clan.population = 4 + peopleLost;
+      damageClan(run, peopleLost * GAME.clan.resolveLossBand);
+      expect(run.clan.population).toBe(4);
+      expect(currentReaction(run)?.line).toEqual({
+        speaker: 'clan',
+        text: `${peopleLost === 1 ? 'One' : peopleLost} fewer beneath the banner. The loss remains in the tally.`,
+      });
+    },
+  );
 });

@@ -433,6 +433,7 @@ export const GAME = {
     },
   },
   clan: {
+    resolveLossBand: 20,
     starts: {
       'shared-hearth': {
         food: 70,

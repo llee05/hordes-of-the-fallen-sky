@@ -97,7 +97,7 @@ Final resolve damage = raw damage
                      × camp craft protection (1 before crafts)
 ```
 
-The three camp/formation bonuses together leave 28% of raw damage. Two Guardian foundation ranks and Hold the passage multiply this by 0.648, leaving 18.144% before further camp crafts. Crossing a downward 20-point damage band removes one person and one horse per damage event, even if that event crosses several bands. Repairs can restore resolve, but do not resurrect casualties.
+The three camp/formation bonuses together leave 28% of raw damage. Two Guardian foundation ranks and Hold the passage multiply this by 0.648, leaving 18.144% before further camp crafts. Each downward 20-point resolve band crossed by a hit removes one person, capped at the remaining population: a hit from 100 to 80 loses one, to 60 loses two, and to 40 loses three. Count bands after all protection, using resolve clamped at zero; partial damage within a band causes no casualty. A hit crossing any number of bands still removes at most one horse, with herd size floored at zero. Chronicle entries and companion reactions reflect the actual casualties from the hit. Repairs can restore resolve, but do not resurrect casualties.
 
 ## 3. Spirit-stone / patron tech tree
 
