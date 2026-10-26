@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { closeOverlayOrPause, openTitle, startExpedition, tapController } from './helpers';
+import {
+  closeOverlayOrPause,
+  openTitle,
+  sceneFrames,
+  startExpedition,
+  tapController,
+} from './helpers';
 
 // Keep the full input/layout checks within budget on software-rendered Chromium.
 test.beforeEach(() => test.setTimeout(60000));
@@ -140,7 +146,7 @@ test('controller triggers and reset work once per press, including during succes
     (window as any).__gloam.scene.changeZoom(-20);
   });
   await expect(page.locator('#zoom-level')).toHaveText('60%');
-  await page.waitForTimeout(100);
+  await sceneFrames(page);
   const spawning = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     for (const enemy of scene.enemies.getChildren()) enemy.disableBody(true, true);
@@ -149,9 +155,10 @@ test('controller triggers and reset work once per press, including during succes
     return scene.enemies
       .getChildren()
       .filter((enemy: any) => enemy.active)
-      .map(
-        (enemy: any) =>
-          enemy.x < view.x || enemy.x > view.right || enemy.y < view.y || enemy.y > view.bottom,
+      .map((enemy: any) =>
+        scene.landscape.world3d
+          ? !scene.landscape.world3d.nearView(enemy)
+          : enemy.x < view.x || enemy.x > view.right || enemy.y < view.y || enemy.y > view.bottom,
       );
   });
   expect(spawning.length).toBeGreaterThan(0);

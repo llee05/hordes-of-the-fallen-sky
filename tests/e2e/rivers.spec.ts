@@ -1,5 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
+import { sceneFrames } from './helpers';
 
+// These diagnostics inspect the 2D renderer's Phaser current strokes and containers.
+// The default 3D river geometry is exercised by world3d and crossing-encounters.
 async function jump(page: Page, checkpoint: string): Promise<void> {
   await page.keyboard.press('F8');
   await page.locator(`[data-developer-level="${checkpoint}"]`).click();
@@ -77,7 +80,7 @@ test('current strokes follow active time, freeze in menus, and honor live reduce
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
   const paused = await flow(page);
-  await page.waitForTimeout(250);
+  await sceneFrames(page);
   expect(await flow(page)).toEqual(paused);
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
@@ -86,7 +89,7 @@ test('current strokes follow active time, freeze in menus, and honor live reduce
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.landscape.river.lastFrame))
     .toBe(0);
   const still = await flow(page);
-  await page.waitForTimeout(250);
+  await sceneFrames(page);
   expect(await flow(page)).toEqual(still);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await expect.poll(() => flow(page)).not.toEqual(still);
