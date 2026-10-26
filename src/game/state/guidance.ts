@@ -30,19 +30,19 @@ export function currentGuidance(run: RunState): Guidance | undefined {
     return {
       id: 'succession',
       title: 'The people carry on',
-      text: 'Your defenses keep fighting while a new Khan is chosen. The expedition ends only if the clan loses all people or resolve.',
+      text: 'The camp’s defenses fight on while a new Khan is chosen. Only losing every person, or all resolve, ends the expedition.',
     };
   if (run.clan.stage === 'migration')
     return {
       id: 'crossing',
       title: 'Bring everyone across',
-      text: 'Follow the clan arrow and ride beside the wagons. Food is consumed on the road; route rewards arrive after the crossing.',
+      text: 'Follow the clan arrow and keep beside the wagons. The road eats into the food; route rewards wait on the far side.',
     };
   if (canMigrate(run))
     return {
       id: 'depart',
       title: 'Choose when to leave',
-      text: 'Routes are open. Staying gathers supplies, but pasture shrinks and danger grows. M / Y lets you inspect the roads while the world is paused.',
+      text: 'The roads are open. Staying brings in supplies, but the pasture shrinks and danger grows. M / Y shows the roads with the world paused.',
       action: 'migrate',
       label: 'Inspect routes · M / Y',
     };
@@ -50,13 +50,13 @@ export function currentGuidance(run: RunState): Guidance | undefined {
     return {
       id: 'ride',
       title: 'Ride out, keep watch',
-      text: 'Ride with WASD, arrows, the left stick, or a touch drag. Your bow fires automatically. Space / controller A gives a brief protected gallop.',
+      text: 'Ride with WASD, arrows, the left stick or a touch drag; your bow fires on its own. Space / controller A breaks into a short, protected gallop.',
     };
   if (run.pendingUpgrades > 0 && !done('research'))
     return {
       id: 'research',
       title: 'Put knowledge to work',
-      text: 'Your spirit shards earned a knowledge point. Open the patron tree with T / LB; planning pauses the world. Points can be saved for later.',
+      text: 'Your shards have earned a knowledge point. T / LB opens the patron tree and pauses the world. You can also keep the point for later.',
       action: 'research',
       label: 'Patron tree · T / LB',
     };
@@ -64,7 +64,7 @@ export function currentGuidance(run: RunState): Guidance | undefined {
     return {
       id: 'build',
       title: 'Your camp is your strength',
-      text: 'Open camp development with B / X. Archery grounds add three riders and formations; herding grounds help feed the clan. Purchases reserve workers and travel with you.',
+      text: 'B / X opens the camp. Archery grounds add three riders and formations; herding grounds help feed the clan. What you build holds its workers and travels with you.',
       action: 'build',
       label: 'Develop camp · B / X',
     };
@@ -72,13 +72,13 @@ export function currentGuidance(run: RunState): Guidance | undefined {
     return {
       id: 'shards',
       title: 'Gather what the fallen leave',
-      text: 'Ride near turquoise spirit shards to collect them. Fill the tradition bar to earn knowledge points without interrupting the battle.',
+      text: 'Ride close to the turquoise spirit shards to gather them. A full tradition bar earns a knowledge point, and the fight never stops.',
     };
   if (availableFormations(run).length > 1 && !done('formation'))
     return {
       id: 'formation',
       title: 'Give the riders a purpose',
-      text: 'F / RB cycles unlocked formations. Caravan guard keeps riders near your people and reduces clan damage; other formations support moving attacks.',
+      text: 'F / RB steps through your unlocked formations. Caravan guard keeps riders by your people and softens clan damage; the others favour attacking on the move.',
       action: 'formation',
       label: 'Change formation · F / RB',
     };
@@ -86,7 +86,7 @@ export function currentGuidance(run: RunState): Guidance | undefined {
   return {
     id: 'prepare',
     title: 'Keep the people ready',
-    text: 'Watch clan resolve and food as you gather. Routes open after 45 active seconds. You choose when to pack; buildings and traditions travel with the clan.',
+    text: 'Keep an eye on resolve and food as you gather. Routes open after 45 active seconds and you choose when to pack; buildings and traditions go with the clan.',
   };
 }
 
@@ -98,27 +98,27 @@ export function clanWarning(
   const clan = run.clan;
   if (clan.food <= 0)
     return clan.stage === 'migration'
-      ? 'No food. Starvation costs people and livestock. Protect the caravan until arrival.'
-      : 'No food. Starvation costs people and livestock. Seek provisions.';
+      ? 'The food is gone. Starvation takes people and livestock. Guard the caravan to arrival.'
+      : 'The food is gone. Starvation takes people and livestock. Find provisions.';
   if (clan.integrity <= 35)
-    return 'Clan resolve is critical. Return to guard your people; all resolve lost ends the expedition.';
+    return 'Clan resolve is critical. Get back to your people; if resolve runs out, the expedition ends.';
   if (clan.population <= 3)
-    return 'Few people remain. Protect the clan; losing everyone ends the expedition.';
+    return 'Only a few people are left. Protect them; if the last falls, the expedition ends.';
   if (clan.food < 15)
     return clan.stage === 'migration'
-      ? 'Food is low. Guard the caravan until arrival brings the route rewards.'
+      ? 'Food is low. Guard the caravan; the route rewards come on arrival.'
       : clan.stage === 'final'
-        ? 'Food is low. Develop herding or provisions and protect the remaining supplies.'
-        : 'Food is low. Develop herding or provisions, or seek a river route.';
+        ? 'Food is low. Build up herding or provisions and protect what stores remain.'
+        : 'Food is low. Build up herding or provisions, or look for a river route.';
   if (forecast.foodSeconds !== undefined && forecast.foodSeconds <= GAME.clan.foodWarningSeconds)
     return clan.stage === 'migration'
-      ? 'Food will run out before arrival. Protect the caravan; arrival supplies come at the far end.'
+      ? 'Food will run out before arrival. Protect the caravan; supplies wait at the far end.'
       : clan.stage === 'final'
-        ? 'Food will run out before the passage opens. Develop herding or provisions.'
-        : 'Food will run out soon. Develop herding or provisions, or inspect a route ahead.';
+        ? 'Food will run out before the passage opens. Build up herding or provisions.'
+        : 'Food will run out soon. Build up herding or provisions, or scout a route ahead.';
   if (clan.stage === 'camp' && clan.pasture <= 25)
-    return 'Pasture is nearly spent. Gathering slows while mouths still need feeding. Inspect a route ahead.';
+    return 'The pasture is nearly spent. Gathering slows, but every mouth still needs feeding. Scout a route ahead.';
   if (clan.stage === 'final' && clan.pasture <= 25)
-    return 'Pasture is nearly spent. Protect your provisions and hold until the passage opens.';
+    return 'The pasture is nearly spent. Guard your provisions and hold until the passage opens.';
   return '';
 }
