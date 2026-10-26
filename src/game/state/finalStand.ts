@@ -98,7 +98,7 @@ export function acceptCampBarrage(run: RunState, barrage?: number): boolean {
   run.finalStand.lastCampBarrage = barrage;
   return true;
 }
-/** The Skybreaker's defeat is optional and counted once: resolve, the camp message, and a memory. */
+/** Returns false after the first defeat so repeated hits cannot grant rewards or memories. */
 export function defeatSkybreaker(run: RunState): boolean {
   if (run.clan.finalBossDefeated) return false;
   run.clan.finalBossDefeated = true;

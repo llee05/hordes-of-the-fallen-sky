@@ -3,8 +3,7 @@ import type { BuildingId, RunState } from '../types';
 import type { StoryLine } from '../story/types';
 
 /**
- * Brief companion reactions to factual moments: camp work, losses, and succession.
- * Each is chosen when the moment is recorded, so the chronicle keeps what was said.
+ * Choose reactions when recording a moment so later choices cannot rewrite its transcript.
  */
 const BUILDING_REACTIONS: Record<BuildingId, StoryLine> = {
   ger: {
