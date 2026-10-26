@@ -94,6 +94,10 @@ test('guidance leaves danger warnings and controls readable at supported preview
     { width: 390, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
+    // Narrow guidance is positioned by the next HUD snapshot, after CSS has resized.
+    await expect
+      .poll(() => page.locator('#field-guide').evaluate((el) => !!el.style.top))
+      .toBe(viewport.width <= 600);
     const guide = (await page.locator('#field-guide').boundingBox())!;
     expect(guide.x).toBeGreaterThanOrEqual(0);
     expect(guide.x + guide.width).toBeLessThanOrEqual(viewport.width);
@@ -110,6 +114,7 @@ test('guidance leaves danger warnings and controls readable at supported preview
     }
   }
   await page.setViewportSize({ width: 960, height: 600 });
+  await expect.poll(() => page.locator('#field-guide').evaluate((el) => el.style.top)).toBe('');
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.invulnerable = 0;
