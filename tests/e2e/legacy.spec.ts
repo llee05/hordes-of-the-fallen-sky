@@ -46,7 +46,7 @@ test('companions acknowledge camp work and the chronicle retains the real Khan s
   await expect(page.locator('.clan-memories')).toContainText('Khan 2 took the banner');
   await page.locator('.clan-memory summary').first().click();
   await expect(page.locator('.clan-memory').first()).toContainText(
-    'Good bows. Better if we never need them.',
+    'Good bows. I hope they ride the whole road on the cart.',
   );
   await page.screenshot({ path: 'test-results/clan-lived-history.png' });
 });

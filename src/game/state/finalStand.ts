@@ -2,7 +2,7 @@ import { GAME } from '../config';
 import type { RunState } from '../types';
 import { isKhanActive } from './khan';
 import { rememberClan } from './legacy';
-import { skybreakerReaction } from '../data/storyReactions';
+import { SKYBREAKER_REMNANT, skybreakerReaction } from '../data/storyReactions';
 export interface PassageWork {
   x?: number;
   y?: number;
@@ -109,7 +109,7 @@ export function defeatSkybreaker(run: RunState): boolean {
     'The Skybreaker fell',
     `${run.clan.population} people watched the great creature fall before the mountain passage.`,
     skybreakerReaction(),
-    'The great creature lies still. The few who remain turn back to the wagons.',
+    SKYBREAKER_REMNANT,
   );
   return true;
 }

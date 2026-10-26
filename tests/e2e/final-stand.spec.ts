@@ -126,7 +126,7 @@ test('defeating the Skybreaker restores resolve once and retains Boro in the chr
   await faceSkybreaker(page);
   await defeatInCombat(page, { population: 8, resolve: 50, speech: true });
   await expect(page.locator('#companion-reaction')).toContainText('Boro:');
-  await expect(page.locator('#companion-reaction')).toContainText('It is down.');
+  await expect(page.locator('#companion-reaction')).toContainText('It’s down.');
   const reward = await page.evaluate(async () => {
     const s = (window as any).__gloam.scene;
     const configPath = '/src/game/config.ts';
@@ -138,7 +138,7 @@ test('defeating the Skybreaker restores resolve once and retains Boro in the chr
   const memory = await openDefeatMemory(page);
   await expect(memory).toContainText('8 people watched the great creature fall');
   await expect(memory.locator('blockquote')).toContainText('Boro');
-  await expect(memory).toContainText('back to the wagons. We are not through yet.');
+  await expect(memory).toContainText('back to the wagons. We aren’t through yet.');
   const repeated = await page.evaluate(async () => {
     const s = (window as any).__gloam.scene;
     const modulePath = '/src/game/state/finalStand.ts';
@@ -191,7 +191,7 @@ for (const scenario of [
     });
     if (scenario.speaker === 'clan')
       await expect(page.locator('#companion-reaction')).toContainText(
-        'The great creature lies still. The few who remain turn back to the wagons.',
+        'The great creature lies still, and the few who remain turn back to the wagons.',
       );
     else if (scenario.speaker === 'boro')
       await expect(page.locator('#companion-reaction')).toContainText('Boro:');
@@ -208,7 +208,7 @@ for (const scenario of [
     if (scenario.speaker) {
       await expect(memory.locator('blockquote')).toHaveCount(1);
       if (scenario.speaker === 'clan') {
-        await expect(memory).toContainText('The few who remain');
+        await expect(memory).toContainText('the few who remain');
         await expect(memory).not.toContainText('Boro');
       }
     } else await expect(memory.locator('blockquote')).toHaveCount(0);

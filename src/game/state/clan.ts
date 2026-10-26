@@ -8,7 +8,9 @@ import { recordClanDamage, type ClanDamageCause } from './clanSafety';
 import { rememberClan } from './legacy';
 import {
   ARRIVAL_REMNANT,
+  BUILDING_REMNANT,
   DEPARTURE_REMNANT,
+  LOSS_REMNANT,
   STARVATION_REMNANT,
   arrivalReaction,
   buildingReaction,
@@ -204,7 +206,7 @@ export function buildStructure(
     development?.title ?? definition.title,
     `${development ? 'Learned' : 'Established'} for the travelling camp.`,
     buildingReaction(id),
-    'The remaining hands make room for another craft.',
+    BUILDING_REMNANT,
   );
   return true;
 }
@@ -286,7 +288,7 @@ export function damageClan(
           ? 'Empty provisions cost the clan a person. The surviving households carried on.'
           : `${cause === 'eruption' ? 'A ground eruption' : cause === 'seer' ? 'A seer’s strike' : cause === 'area' ? 'A local terrain or spell strike' : 'An attack'} cost the clan a person. The surviving households carried on.`,
         lossReaction(run),
-        'One fewer beneath the banner. The loss remains in the tally.',
+        LOSS_REMNANT,
       );
   }
   recordClanDamage(

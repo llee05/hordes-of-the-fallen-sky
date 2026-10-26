@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
   ARRIVAL_REMNANT,
+  BUILDING_REMNANT,
   CHOSEN_KHAN_REMNANT,
   CROSSING_OBJECTIVE_REMNANT,
   DEPARTURE_REMNANT,
   FALLEN_KHAN_REMNANT,
   FIELD_OBJECTIVE_REMNANT,
+  LOSS_REMNANT,
   SAFE_CROSSING_REMNANT,
+  SKYBREAKER_REMNANT,
   STARVATION_REMNANT,
   arrivalReaction,
   clanVoiceLine,
@@ -22,14 +25,14 @@ describe('companion moment reactions', () => {
   it('counts the households through Boro before the caravan moves', () => {
     expect(departureReaction(createRun())).toEqual({
       speaker: 'boro',
-      text: 'Count the households before we move. Keep the packs balanced and the herd beside us.',
+      text: 'Count the households before anyone moves. Balance the packs and keep the herd close.',
     });
   });
 
   it('keeps the remaining stores through Boro when the provisions run out', () => {
     expect(starvationReaction(createRun())).toEqual({
       speaker: 'boro',
-      text: 'There is nothing left to share. Keep the remaining stores close when we find them.',
+      text: 'There’s nothing left to share out. Whatever we find next, we keep close.',
     });
   });
 
@@ -37,18 +40,18 @@ describe('companion moment reactions', () => {
     const run = createRun();
     expect(arrivalReaction(run, 2)).toEqual({
       speaker: 'nara',
-      text: 'Move the bowls closer. There are more people to make room for.',
+      text: 'Push the bowls closer together. We need room for more people.',
     });
     expect(arrivalReaction(run, 0)).toEqual({
       speaker: 'saran',
-      text: 'Set the covered embers down gently. We can make a hearth here.',
+      text: 'Set the covered embers down gently. This ground will hold a hearth.',
     });
   });
 
   it('counts a protected crossing through Nara', () => {
     expect(safeCrossingReaction(createRun())).toEqual({
       speaker: 'nara',
-      text: 'I counted again. Every household that left is still here.',
+      text: 'I counted twice. Everyone who set out with us is here.',
     });
   });
 
@@ -57,7 +60,7 @@ describe('companion moment reactions', () => {
     for (const route of ['river', 'ridge', 'refuge'] as const)
       expect(crossingObjectiveReaction(run, route)).toEqual({
         speaker: 'saran',
-        text: 'Count everyone who came through. What you protected belongs beside our fire.',
+        text: 'Count everyone who came through. Whatever you kept safe out there has a place by our fire.',
       });
   });
 
@@ -66,7 +69,7 @@ describe('companion moment reactions', () => {
     for (const kind of ['supplies', 'herd', 'refugees', 'gathering'] as const)
       expect(fieldObjectiveReaction(run, kind)).toEqual({
         speaker: 'boro',
-        text: 'Another journey made together. Bring what we found beside the fire.',
+        text: 'We went out together and came back together. Bring what we found to the fire.',
       });
   });
 
@@ -75,21 +78,36 @@ describe('companion moment reactions', () => {
       speaker: 'clan',
       text: 'A remembered account.',
     });
-    expect(DEPARTURE_REMNANT).toBe('The remaining hands load the wagons and count before leaving.');
-    expect(STARVATION_REMNANT).toBe(
-      'Empty stores cost another life. The remaining people keep moving.',
+    expect(DEPARTURE_REMNANT).toBe(
+      'The few who are left load the wagons, count one another, and set out.',
     );
-    expect(ARRIVAL_REMNANT).toBe('Those who reached the pasture make another small hearth.');
-    expect(SAFE_CROSSING_REMNANT).toBe('Every household that departed reached the next camp.');
-    expect(CROSSING_OBJECTIVE_REMNANT).toBe('The people who came through count what they saved.');
+    expect(STARVATION_REMNANT).toBe(
+      'The stores ran empty, and it cost another life. Those still standing keep moving.',
+    );
+    expect(ARRIVAL_REMNANT).toBe(
+      'Those who reached the pasture build a small fire and sit close around it.',
+    );
+    expect(SAFE_CROSSING_REMNANT).toBe(
+      'Every household that set out reached the next camp together.',
+    );
+    expect(CROSSING_OBJECTIVE_REMNANT).toBe(
+      'Those who came through take stock of what they saved.',
+    );
     expect(FIELD_OBJECTIVE_REMNANT).toBe(
-      'The remaining hands bring the rescued supplies and travellers into camp.',
+      'What is left of the clan brings what it found back into camp.',
     );
     expect(FALLEN_KHAN_REMNANT).toBe(
-      'The banner remains with the people while another Khan is chosen.',
+      'The people keep the banner raised while they choose another Khan.',
+    );
+    expect(BUILDING_REMNANT).toBe(
+      'Even with so few hands, the clan makes room for one more craft.',
+    );
+    expect(LOSS_REMNANT).toBe('One fewer under the banner. The tally keeps the loss.');
+    expect(SKYBREAKER_REMNANT).toBe(
+      'The great creature lies still, and the few who remain turn back to the wagons.',
     );
     expect(CHOSEN_KHAN_REMNANT).toBe(
-      'Another hand takes the banner. The remaining people carry their learning onward.',
+      'Someone new takes up the banner, and the survivors carry on what they have learned.',
     );
   });
 });
