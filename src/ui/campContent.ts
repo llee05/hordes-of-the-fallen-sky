@@ -27,7 +27,7 @@ export function campBranches(run: RunState): TreeBranch[] {
         title: `Establish ${building.title}`,
         description:
           established && building.startsBuilt
-            ? 'This building is provided at the start of your expedition.'
+            ? 'Your clan sets out with this building already standing.'
             : building.description,
         status: established
           ? 'learned'

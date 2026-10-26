@@ -30,7 +30,7 @@ describe('destination planning and remembered places', () => {
       expect(menu).toContain(`data-landscape="${place.id}"`);
       expect(menu).toContain(LANDSCAPES[place.id].description);
       expect(menu).toContain('art/steppe-scenery-v2.png');
-      expect(destinationEffects(place)).not.toBe('Standard gathering and travel');
+      expect(destinationEffects(place)).not.toBe('Ordinary gathering and travel');
     }
   });
 

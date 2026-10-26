@@ -102,7 +102,7 @@ export function researchMenu(run: RunState, view: TreeViewState): string {
     allLabel: 'All patrons',
     view,
     introduction:
-      'Shape your expedition through patron traditions. Practices unlock after one foundation rank. Two foundation ranks and a focused practice unlock a capstone. Choose one capstone per patron; mix patrons freely. Foundations and practices cost one knowledge point; capstones cost two.',
+      'Each patron teaches its own traditions. One foundation rank opens its practices; two ranks and the practice a capstone names open that capstone. Take one capstone per patron and mix patrons freely. Foundations and practices cost one knowledge point, capstones two.',
     summary: [
       { label: 'Knowledge points', value: String(run.pendingUpgrades) },
       {
@@ -114,6 +114,6 @@ export function researchMenu(run: RunState, view: TreeViewState): string {
     branches: researchBranches(run),
     recipes: synergyContent(run),
     notice:
-      'Unspent points stay with the clan. Stored Spirit funds camp construction. These traditions begin afresh with each expedition.',
+      'Unspent points keep. Stored Spirit pays for camp building. Each new expedition learns these traditions from the start.',
   });
 }

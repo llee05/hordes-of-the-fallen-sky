@@ -125,14 +125,14 @@ export function buildingMenu(run: RunState, view: TreeViewState, selected: strin
           : `Building plot ${(view.campSlot ?? 0) + 1}`;
       content = locked
         ? `<p>This plot opens with ${escapeHtml(ENCAMPMENT_TIERS[Math.min(4, (view.campSlot ?? 1) - 1)]!.title)}.</p><button data-camp-encampment class="secondary-button">Inspect the Clan Encampment</button>`
-        : `<p>${view.campTarget === 'search' ? 'Select a facility to inspect its place and improvements.' : 'Choose a portable facility for this plot. Its workers and supplies are reserved only when you construct it.'}</p><div class="camp-building-choices">${matches
+        : `<p>${view.campTarget === 'search' ? 'Pick a facility to see its place and how it can grow.' : 'Choose a portable facility for this plot. Workers and supplies are only committed once you build.'}</p><div class="camp-building-choices">${matches
             .filter((b) => view.campTarget === 'search' || !run.clan.buildings[b.id])
             .map((b) =>
               buildingChoice(run, b.id, view.campTarget === 'slot' ? view.campSlot : undefined),
             )
             .join(
               '',
-            )}</div>${!matches.length ? '<p role="status">No matching crafts. Clear your search to explore the camp.</p>' : ''}`;
+            )}</div>${!matches.length ? '<p role="status">No matching crafts. Clear the search to see the whole camp.</p>' : ''}`;
     } else if (view.recipes) {
       title = 'Traditions that work together';
       content = synergyContent(run);
@@ -182,8 +182,8 @@ export function buildingMenu(run: RunState, view: TreeViewState, selected: strin
       content = `${kind === 'encampment' ? `<p class="camp-tier-tally">${slots.filter(Boolean).length} / ${tier.slots} building plots · ${Object.values(run.clan.estate?.internals ?? {}).filter((v) => v > 0).length} / ${tier.internalSlots} internal developments</p>` : ''}
         <button class="camp-foldout-toggle" data-camp-foldout data-focus-key="camp-foldout" aria-expanded="${!!view.expanded}">${view.expanded ? 'Fold away the upgrade path' : 'Unfold levels & specialisations'}</button>
         ${view.expanded ? campPath(branch, node, kind ? undefined : selectedBuilding.id) : ''}
-        ${campNodeDetails(displayedNode, `${kind === 'encampment' ? 'Camp tier' : 'Building level'} ${current} / ${max}`, bonuses, kind ? 'Organisation and knowledge travel with the households.' : (selectedBuilding.flavour ?? ''), !kind && !run.clan.buildings[selectedBuilding.id] ? view.campSlot : undefined)}
-        ${kind === 'encampment' ? `<details class="camp-internal-choices" data-disclosure-key="camp-internals"><summary>Internal camp developments</summary><p>These use their own allowance and never occupy a building plot.</p>${INTERNAL_DEVELOPMENTS.map((d) => `<button data-camp-internal="${d.id}" data-focus-key="internal-${d.id}">${clanMark(d.icon)}<span>${escapeHtml(d.title)}<small>Level ${run.clan.estate?.internals[d.id] ?? 0} / ${d.ranks.length}</small></span></button>`).join('')}</details>` : ''}`;
+        ${campNodeDetails(displayedNode, `${kind === 'encampment' ? 'Camp tier' : 'Building level'} ${current} / ${max}`, bonuses, kind ? 'Order and know-how travel with the households.' : (selectedBuilding.flavour ?? ''), !kind && !run.clan.buildings[selectedBuilding.id] ? view.campSlot : undefined)}
+        ${kind === 'encampment' ? `<details class="camp-internal-choices" data-disclosure-key="camp-internals"><summary>Internal camp developments</summary><p>These have their own allowance and never take up a building plot.</p>${INTERNAL_DEVELOPMENTS.map((d) => `<button data-camp-internal="${d.id}" data-focus-key="internal-${d.id}">${clanMark(d.icon)}<span>${escapeHtml(d.title)}<small>Level ${run.clan.estate?.internals[d.id] ?? 0} / ${d.ranks.length}</small></span></button>`).join('')}</details>` : ''}`;
     }
     popup = `<section class="camp-popup${view.expanded || view.recipes ? ' camp-popup-foldout' : ''}" id="camp-inspector" aria-label="${escapeHtml(title)}" style="--popup-x:${anchor[0]! > 55 ? Math.max(2, anchor[0]! - 42) : anchor[0]! + 7}%;--popup-y:${Math.max(3, anchor[1]! - 20)}%"><header class="camp-popup-heading">${clanMark(mark)}<h3>${escapeHtml(title)}</h3><button data-camp-dismiss data-focus-key="camp-popup-close" aria-label="Close parchment popup">×</button></header><div class="camp-popup-body" data-scroll-key="camp-popup">${content}</div></section>`;
   }

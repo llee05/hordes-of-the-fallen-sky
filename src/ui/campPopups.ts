@@ -75,7 +75,7 @@ export function estateBranch(run: RunState, kind: EstatePurchaseKind, id = ''): 
     category: 'Camp organisation',
     description:
       internal?.description ??
-      'The portable household is the foundation of the clan. More organisation unlocks plots, facilities, and internal developments.',
+      'The clan rests on its portable households. Better organisation opens more plots, facilities and internal developments.',
     illustration: clanMark(internal?.icon ?? 'ger'),
     progress: `Level ${current} / ${definitions.length}`,
     layout: 'tiers',
@@ -194,7 +194,7 @@ export function campNodeDetails(
       ? { slot: String(slot) }
       : {}),
   };
-  return `<div class="camp-popup-copy" data-scroll-key="camp-popup-copy"><p class="eyebrow">${h(level)} · ${stateLabel(node)}</p><h3>${h(node.title)}</h3><p class="camp-popup-description">${h(node.description)}</p>${flavour ? `<p class="camp-flavour">${h(flavour)}</p>` : ''}${bonuses.length ? `<details class="camp-current-bonuses" data-disclosure-key="current-bonuses"><summary>Current continuing bonuses</summary><ul>${bonuses.map((text) => `<li>${h(text)}</li>`).join('')}</ul></details>` : ''}
+  return `<div class="camp-popup-copy" data-scroll-key="camp-popup-copy"><p class="eyebrow">${h(level)} · ${stateLabel(node)}</p><h3>${h(node.title)}</h3><p class="camp-popup-description">${h(node.description)}</p>${flavour ? `<p class="camp-flavour">${h(flavour)}</p>` : ''}${bonuses.length ? `<details class="camp-current-bonuses" data-disclosure-key="current-bonuses"><summary>Bonuses already in effect</summary><ul>${bonuses.map((text) => `<li>${h(text)}</li>`).join('')}</ul></details>` : ''}
   ${
     preview.length
       ? `<section class="camp-gains" aria-label="Upgrade bonuses"><h4>With your clan</h4><dl>${preview
