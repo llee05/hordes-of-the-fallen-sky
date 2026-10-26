@@ -1,5 +1,6 @@
 import type { CampArchive } from '../shared/campArchive';
 import type { DesktopBridge } from '../shared/desktop';
+import { decodeExpedition } from '../game/state/expeditionArchive';
 import { defaultProfile, normalizeProfile } from '../shared/profile';
 import type { PlayerProfile } from '../shared/profile';
 import { normalizeDeveloperHistory } from '../shared/developerHistory';
@@ -15,6 +16,15 @@ import {
   type ExpeditionSave,
   type SaveListing,
 } from '../shared/expeditionSave';
+
+function isCompatibleExpedition(value: unknown): value is ExpeditionSave {
+  try {
+    decodeExpedition(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export class GamePlatform {
   private pendingSave: Promise<void> = Promise.resolve();
@@ -58,12 +68,21 @@ export class GamePlatform {
 
   async refreshSaves(): Promise<void> {
     await this.pendingExpedition.catch(() => undefined);
-    this.saves = this.desktop
+    const entries = this.desktop
       ? await this.desktop.listExpeditions()
       : SAVE_SLOTS.flatMap((slot) => {
           const { listing } = this.readBrowserSave(slot);
           return listing ? [listing] : [];
         });
+    this.saves = await Promise.all(
+      entries.map(async (entry): Promise<SaveListing> => {
+        if (!['ready', 'recovered'].includes(entry.status)) return entry;
+        const save = this.desktop
+          ? await this.desktop.loadExpedition(entry.slot)
+          : this.readBrowserSave(entry.slot).save;
+        return isCompatibleExpedition(save) ? entry : { slot: entry.slot, status: 'incompatible' };
+      }),
+    );
     this.saveStorageError = false;
   }
 
@@ -74,6 +93,13 @@ export class GamePlatform {
       ? await this.desktop.loadExpedition(slot)
       : this.readBrowserSave(slot).save;
     if (!isExpeditionSave(save)) throw new Error('This save could not be loaded');
+    if (!isCompatibleExpedition(save)) {
+      this.saves = [
+        ...this.saves.filter((entry) => entry.slot !== slot),
+        { slot, status: 'incompatible' },
+      ];
+      throw new Error('This expedition is damaged or incompatible with the current game.');
+    }
     return structuredClone(save);
   }
 

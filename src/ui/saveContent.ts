@@ -28,7 +28,7 @@ export function saveMenu(snapshot: HudSnapshot, confirmation?: SaveConfirmation)
       const details = summary
         ? `${h(summary.location)} · ${formatTime(summary.elapsed)} · ${summary.population} people · Level ${summary.level}${summary.stage === 'migration' ? ' · On the road' : ''}`
         : entry?.status === 'incompatible'
-          ? 'Made by an unsupported version'
+          ? 'Incompatible with the current game'
           : entry?.status === 'damaged'
             ? 'Damaged, with no usable backup'
             : 'Empty slot';
