@@ -1,3 +1,4 @@
+import { GAME } from '../config';
 import { RESEARCH, RESEARCH_BY_ID } from '../data/research';
 import type { ResearchRequirement } from '../data/researchTypes';
 import { PATRONS } from '../data/patrons';
@@ -166,6 +167,13 @@ export function researchBuildingModifiers(run: RunState): ResearchBuildingModifi
     optionalCount: 0,
     optionalCategories: [],
     bonuses: { ...run.clan.campEffects.bonuses },
-    multipliers: { ...run.clan.campEffects.multipliers },
+    multipliers: {
+      ...run.clan.campEffects.multipliers,
+      wagonDamage:
+        run.clan.campEffects.multipliers.wagonDamage /
+        ((run.upgrades['rolling-fortress'] ?? 0) > 0
+          ? GAME.patrons.specializations.fortressDamage
+          : 1),
+    },
   };
 }

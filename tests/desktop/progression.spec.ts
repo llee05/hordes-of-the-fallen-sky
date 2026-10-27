@@ -50,6 +50,13 @@ test('connected progression maps, camp comparisons, and recipe links fit native 
         .poll(() => page.evaluate(() => ({ width: innerWidth, height: innerHeight })))
         .toEqual(size);
       await page.keyboard.press('t');
+      await expect(page.locator('[data-tree-branch-select]')).toHaveCount(10);
+      await inspectNode(page, 'gen-mapmaker');
+      await expect(page.locator('.node-purchase-status')).toContainText('discovery pool');
+      await expect(page.locator('.tree-purchase')).toBeDisabled();
+      const compact = page.getByRole('button', { name: 'Compact list', exact: true });
+      if ((await compact.getAttribute('aria-pressed')) === 'false') await compact.click();
+      await expect(page.locator('.tree-graph')).toHaveAttribute('data-compact', 'true');
       await inspectNode(page, 'power');
       const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
       await inspectNode(page, 'sky-volley');

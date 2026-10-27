@@ -1,3 +1,4 @@
+import { RESEARCH } from '../../src/game/data/research';
 import { describe, expect, it } from 'vitest';
 import { UPGRADES } from '../../src/game/data/upgrades';
 import { chooseEnemy, spawnInterval } from '../../src/game/data/enemies';
@@ -75,7 +76,8 @@ describe('run progression', () => {
     run.pendingUpgrades = 3;
     expect(redeemMasteredResearch(run)).toBe(false);
     expect(run.pendingUpgrades).toBe(3);
-    for (const upgrade of UPGRADES) run.upgrades[upgrade.id] = upgrade.maxStacks;
+    for (const upgrade of RESEARCH.filter((t) => !t.unavailableReason))
+      run.upgrades[upgrade.id] = upgrade.maxRank;
     run.health = 1;
     expect(redeemMasteredResearch(run)).toBe(true);
     expect(run.clan.food).toBe(130);

@@ -101,7 +101,13 @@ export async function inspectNode(page: Page, id: string): Promise<void> {
 /** All purchases use the explicit inspector button, including repeated ranks. */
 export async function buyNode(page: Page, id: string): Promise<void> {
   await inspectNode(page, id);
-  await page.locator('.tree-purchase').click();
+  const purchase = page.locator('.tree-purchase');
+  const choice = await purchase.getAttribute('data-choice');
+  await purchase.click();
+  if (choice) {
+    await expect(purchase).toContainText('Confirm choice:');
+    await purchase.click();
+  }
 }
 
 /** Select through the painted scene, using search for an as-yet unbuilt facility. */

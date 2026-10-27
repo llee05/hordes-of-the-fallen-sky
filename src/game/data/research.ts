@@ -1,7 +1,18 @@
+import { RESEARCH_BLOCKERS } from './researchIntegration';
 import { UPGRADES } from './upgrades';
 import { RESEARCH_EXPANSIONS } from './researchCatalogue';
 import type { ResearchDefinition } from './researchTypes';
 
+const TAGS: Readonly<Record<string, readonly string[]>> = {
+  'borte-chino': ['projectile', 'migration', 'sustain'],
+  'etugen-eke': ['camp', 'migration'],
+  'khukhedei-mergen': ['projectile'],
+  golomt: ['sustain', 'camp'],
+  lus: ['terrain'],
+  ongod: ['companion', 'spirit'],
+  sulde: ['companion', 'migration'],
+  'burkhan-guardian': ['camp', 'projectile'],
+};
 const IMPLEMENTED_HANDLERS = [
   'hy-galloping-barrage',
   'hy-stillwater-refuge',
@@ -30,14 +41,25 @@ export const RESEARCH: readonly ResearchDefinition[] = [
     minSpendByPatron: {},
     minCompletedCrossings: 0,
     exclusiveGroup: u.exclusiveGroup ? `doctrine:${u.patron}` : undefined,
-    tags: [u.category],
+    tags: TAGS[u.patron] ?? [],
     effects: [{ kind: 'legacy', upgradeId: u.id }],
   })),
   ...RESEARCH_EXPANSIONS.map((t): ResearchDefinition => {
     const handler = IMPLEMENTED_HANDLERS.find((id) => id === t.id);
+    const tags = [
+      ...new Set(
+        t.patronIds.length ? t.patronIds.flatMap((p) => TAGS[p] ?? []) : ['camp', 'migration'],
+      ),
+    ];
     return handler
-      ? { ...t, unavailableReason: undefined, effects: [{ kind: 'runtime', handler }] }
-      : t;
+      ? { ...t, tags, unavailableReason: undefined, effects: [{ kind: 'runtime', handler }] }
+      : {
+          ...t,
+          tags,
+          unavailableReason:
+            RESEARCH_BLOCKERS[t.id] ??
+            `${t.title}: runtime effect is deferred at the failed patron integration gate`,
+        };
   }),
 ];
 export const RESEARCH_BY_ID: ReadonlyMap<string, ResearchDefinition> = new Map(

@@ -66,7 +66,8 @@ for (const route of ['river', 'ridge', 'refuge'])
     if (route === 'river') expect(result.resolve).toBe(78);
     if (route === 'ridge') {
       expect(result.resolve).toBe(72);
-      expect(result.materials).toBeGreaterThanOrEqual(38);
+      // Resource subtraction can leave 38 as 37.99999999999999.
+      expect(Number(result.materials.toFixed(9))).toBeGreaterThanOrEqual(38);
     }
     if (route === 'refuge') expect(result.people).toBe(18);
   });

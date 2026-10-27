@@ -1,3 +1,4 @@
+import { RESEARCH } from '../../src/game/data/research';
 import { describe, expect, it } from 'vitest';
 import {
   progressionMenu,
@@ -138,12 +139,14 @@ describe('expandable progression views', () => {
     run.pendingUpgrades = 2;
     run.upgrades.power = 1;
     const branches = researchBranches(run);
-    expect(branches).toHaveLength(PATRONS.length);
-    expect(branches.flatMap((entry) => entry.nodes)).toHaveLength(UPGRADES.length);
-    for (const branch of branches)
-      expect(treeLevels(branch.nodes).map((level) => level.length)).toEqual(
-        branch.id === 'khukhedei-mergen' ? [1, 3, 3] : [1, 2, 2],
-      );
+    expect(branches).toHaveLength(PATRONS.length + 2);
+    expect(branches.flatMap((entry) => entry.nodes)).toHaveLength(RESEARCH.length);
+    for (const branch of branches.filter((b) => PATRONS.some((p) => p.id === b.id)))
+      expect(
+        treeLevels(branch.nodes.filter((n) => UPGRADES.some((u) => u.id === n.id))).map(
+          (level) => level.length,
+        ),
+      ).toEqual(branch.id === 'khukhedei-mergen' ? [1, 3, 3] : [1, 2, 2]);
     const archer = branches.find((entry) => entry.id === 'khukhedei-mergen')!;
     expect(archer.nodes.find((n) => n.id === 'haste')?.status).toBe('available');
     expect(archer.nodes.find((n) => n.id === 'sky-volley')?.status).toBe('locked');

@@ -1,4 +1,6 @@
-# Patron tech tree
+# Patron tech tree — V1 reference
+
+This page preserves the original 42-technology catalogue. The [V2 implementation record](patron-research-v2.md) and [effect inventory](patron-research-v2-status.md) describe the current 166-entry research registry and its working slice. Original capstones are labelled Doctrines in the interface. Watchfires and Rolling Fortress now have the documented baseline guard-shot fallback when no Wagon circle is built.
 
 The catalog contains eight patrons and 42 technologies (50 authored ranks, including mutually exclusive alternatives). Their powers are original fantasy mechanics; cultural context and sourced writing boundaries live in [lore.md](../lore.md#patron-traditions).
 

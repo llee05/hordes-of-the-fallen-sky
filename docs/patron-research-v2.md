@@ -46,3 +46,28 @@ ownership; Council of Many Voices needs temporary lesser-echo lifecycle. These
 systems require their own gameplay milestone. Remaining Archery/Ongod effects are
 registered but unavailable at this gate; no claim of two complete Mythic paths is
 made. The shipped portion is a tested compatibility and early-research slice.
+
+## Interface and camp boundary
+
+The overview places eight patron regions around General Research, with a separate
+Hybrid Discoveries region and sixteen labelled Early/Advanced bridge cards. Working
+bridges show proximity to their gates; unavailable discoveries remain clearly marked
+as proposals. The branch map zooms from 60–150%; Compact list and narrow layouts
+keep text and keyboard controls usable without shrinking the whole catalogue.
+
+Select a locked node to inspect all blockers, required ranks, ANY alternatives,
+patron spending and crossing milestones. Pin a working goal to retain its legal
+purchase path, including side purchases that fund tier gates. The bounded path
+search refuses unavailable goals instead of displaying an invented working route.
+Pinned targets remain reachable when a search filter hides their branch. Doctrine
+and Mythic purchases require a second explicit confirmation; no respec is offered.
+
+Combined stat previews run the real transaction on a clone. Building contributions
+are listed separately. The read-only adapter strips the legacy Rolling Fortress
+technology multiplier from the **building** source label while retaining it in the
+combined runtime total. Optional counts/categories remain zero until the separate
+camp branch supplies that contract. No camp structures or save IDs are repurposed.
+
+The [effect inventory](patron-research-v2-status.md) lists every unimplemented effect.
+Registered, purchasable and functional counts are intentionally distinct: 166
+registered technologies, 53 working/purchasable technologies, 113 unavailable proposals.

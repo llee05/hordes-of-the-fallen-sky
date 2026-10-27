@@ -1005,3 +1005,92 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Research keeps eight patron regions around shared knowledge on wide displays. */
+[data-tree-kind='patrons'] .patron-overview {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+[data-tree-kind='patrons'] .patron-overview-card[data-branch-id='general'] {
+  grid-column: 2;
+  grid-row: 2;
+  border-color: #b59a58;
+}
+[data-tree-kind='patrons'] .patron-overview-card[data-branch-id='hybrids'] {
+  grid-column: 1 / -1;
+  border-color: #77aaa0;
+}
+.tree-graph[data-compact='true'] {
+  display: grid;
+  gap: 0.75rem;
+  width: auto !important;
+  height: auto !important;
+  padding: 1rem;
+}
+.tree-graph[data-compact='true'] .tree-connections {
+  display: none;
+}
+.tree-graph[data-compact='true'] .tree-node {
+  position: relative;
+  inset: auto !important;
+  width: 100%;
+  min-height: 5.5rem;
+  height: auto;
+}
+@media (max-width: 900px) {
+  [data-tree-kind='patrons'] .patron-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  [data-tree-kind='patrons'] .patron-overview-card[data-branch-id='general'],
+  [data-tree-kind='patrons'] .patron-overview-card[data-branch-id='hybrids'] {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  [data-tree-kind='patrons'] .tree-graph {
+    display: grid;
+    gap: 0.75rem;
+    width: auto !important;
+    height: auto !important;
+    padding: 1rem;
+  }
+  [data-tree-kind='patrons'] .tree-connections {
+    display: none;
+  }
+  [data-tree-kind='patrons'] .tree-node {
+    position: relative;
+    inset: auto !important;
+    width: 100%;
+    min-height: 5.5rem;
+    height: auto;
+  }
+}
+
+.research-bridges {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.research-bridges h3 {
+  grid-column: 1 / -1;
+}
+.research-bridges button {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  text-align: left;
+  border: 1px solid #7d9a92;
+}
+.research-bridges button[data-near='true'] {
+  outline: 2px solid #a88b44;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .research-bridges button[data-near='true'] {
+    animation: research-discovery-glow 2.5s ease-in-out infinite alternate;
+  }
+}
+@keyframes research-discovery-glow {
+  to {
+    box-shadow: 0 0 8px #b49b5c80;
+  }
+}

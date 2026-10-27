@@ -965,7 +965,37 @@ export class GameUI {
           '.tree-node[aria-pressed="true"], .camp-path-node[aria-pressed="true"]',
         )
         ?.focus();
+    } else if (button.dataset.treeZoom && this.lastSnapshot) {
+      this.treeView().zoom =
+        button.dataset.treeZoom === 'reset'
+          ? 1
+          : Math.max(
+              0.6,
+              Math.min(1.5, (this.treeView().zoom ?? 1) + Number(button.dataset.treeZoom)),
+            );
+      this.renderPhase(this.lastSnapshot);
+    } else if (button.hasAttribute('data-tree-compact') && this.lastSnapshot) {
+      this.treeView().compact = !this.treeView().compact;
+      this.renderPhase(this.lastSnapshot);
+    } else if (button.dataset.treePin && this.lastSnapshot) {
+      this.treeView().pinned = button.dataset.treePin;
+      this.renderPhase(this.lastSnapshot);
     } else if (button.dataset.treeSelect && this.lastSnapshot) {
+      if (this.phase === 'upgrade') {
+        if (button.dataset.treeTargetBranch)
+          Object.assign(this.treeView(), {
+            branch: button.dataset.treeTargetBranch,
+            category: 'all',
+            query: '',
+            overview: false,
+            recipes: false,
+          });
+        const branch = this.overlay.querySelector<HTMLElement>(
+          `[data-tree-branch-select][data-nodes~="${CSS.escape(button.dataset.treeSelect)}"]`,
+        )?.dataset.treeBranchSelect;
+        if (branch) Object.assign(this.treeView(), { branch, overview: false, recipes: false });
+        this.treeView().confirmResearch = undefined;
+      }
       this.treeView().node = button.dataset.treeSelect;
       this.renderPhase(this.lastSnapshot);
       this.overlay.querySelector('[data-scroll-key="node-details"]')?.scrollTo({ top: 0 });
@@ -973,6 +1003,7 @@ export class GameUI {
       Object.assign(this.treeView(), {
         branch: button.dataset.treeBranchSelect,
         node: undefined,
+        confirmResearch: undefined,
         overview: false,
         recipes: false,
       });
@@ -1095,9 +1126,20 @@ export class GameUI {
         void this.get('arena-wrap')
           .parentElement!.requestFullscreen()
           .catch(() => undefined);
-    } else if (button.dataset.research)
-      this.scene.research(button.dataset.research, Number(button.dataset.rank));
-    else if (button.dataset.building) {
+    } else if (button.dataset.research) {
+      if (
+        button.dataset.choice &&
+        this.treeView().confirmResearch !== button.dataset.research &&
+        this.lastSnapshot
+      ) {
+        this.treeView().confirmResearch = button.dataset.research;
+        this.renderPhase(this.lastSnapshot);
+        this.overlay.querySelector<HTMLButtonElement>('.tree-purchase')?.focus();
+      } else {
+        this.treeView().confirmResearch = undefined;
+        this.scene.research(button.dataset.research, Number(button.dataset.rank));
+      }
+    } else if (button.dataset.building) {
       this.treeView().node = undefined;
       this.scene.construct(
         button.dataset.building as BuildingId,

@@ -3,7 +3,7 @@ import { createMountedCombat } from './mountedCombat';
 import { createEncounters } from './encounters';
 import { createFieldState } from './fieldObjectives';
 import { UPGRADES } from '../data/upgrades';
-import { RESEARCH_BY_ID } from '../data/research';
+import { RESEARCH, RESEARCH_BY_ID } from '../data/research';
 import {
   purchaseResearch,
   researchState,
@@ -119,8 +119,11 @@ export function applyResearch(
 export function redeemMasteredResearch(run: RunState): boolean {
   if (
     run.pendingUpgrades < 1 ||
-    UPGRADES.some(
-      (entry) => !upgradeExcluded(run, entry) && (run.upgrades[entry.id] ?? 0) < entry.maxStacks,
+    RESEARCH.some(
+      (entry) =>
+        !entry.unavailableReason &&
+        !researchExcluded(run, entry.id) &&
+        (run.upgrades[entry.id] ?? 0) < entry.maxRank,
     )
   )
     return false;

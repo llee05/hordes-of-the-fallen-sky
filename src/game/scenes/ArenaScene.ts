@@ -101,11 +101,11 @@ import {
   riderCount,
   type ClanProtection,
 } from '../state/clan';
-import { UPGRADES } from '../data/upgrades';
+import { RESEARCH_BY_ID } from '../data/research';
 import { Enemy, Gem, Projectile } from '../entities/actors';
 import { captureCampArchive, runFromCampArchive } from '../state/campArchive';
 import { purchaseEstate, type EstatePurchaseKind } from '../state/campEstate';
-import { applyUpgrade, createRun, gainExperience, redeemMasteredResearch } from '../state/run';
+import { applyResearch, createRun, gainExperience, redeemMasteredResearch } from '../state/run';
 import {
   advancePatrons,
   friendlyDamageMultiplier,
@@ -1520,9 +1520,9 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   research(id: string, rank: number): void {
-    const upgrade = UPGRADES.find((entry) => entry.id === id);
+    const upgrade = RESEARCH_BY_ID.get(id);
     const previousCooldown = gallopCooldown(this.run);
-    if (this.run.phase !== 'upgrade' || !upgrade || !applyUpgrade(this.run, upgrade, rank)) return;
+    if (this.run.phase !== 'upgrade' || !upgrade || !applyResearch(this.run, id, rank - 1)) return;
     this.requestCheckpoint();
     this.audio.play('research');
     this.dashTimer *= gallopCooldown(this.run) / previousCooldown;

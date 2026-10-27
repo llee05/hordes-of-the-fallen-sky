@@ -18,7 +18,7 @@ test('inspection never spends points; explicit purchases use exact ranks and cur
   });
   await page.keyboard.press('t');
   await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
-  await expect(page.locator('[data-tree-branch-select]')).toHaveCount(8);
+  await expect(page.locator('[data-tree-branch-select]')).toHaveCount(10);
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await inspectNode(page, 'power');
   await expect(page.locator('.node-preview')).toContainText('Shared attack damage');
@@ -61,12 +61,13 @@ test('overview, accent-insensitive search and graph navigation work without poin
   await page.getByRole('button', { name: 'Patron tech tree', exact: true }).click();
   await expect(page.locator('.tree-node[data-status="available"]')).toHaveCount(0);
   await page.getByRole('button', { name: 'Patron overview' }).click();
-  await expect(page.locator('.patron-overview-card')).toHaveCount(8);
+  await expect(page.locator('.patron-overview-card')).toHaveCount(10);
   await page.locator('[data-tree-branch-select="borte-chino"]').first().click();
   await inspectNode(page, 'wolf-trail');
   await expect(page.locator('.tree-purchase')).toBeDisabled();
   await page.keyboard.press('ArrowDown');
-  await expect(page.locator('[data-node="culling-bite"]')).toBeFocused();
+  // With three first-row nodes, the straight connected child is pursuit-gallop.
+  await expect(page.locator('[data-node="pursuit-gallop"]')).toBeFocused();
   await expect(page.locator('.node-route')).toContainText('2 knowledge points');
   const search = page.getByRole('searchbox', { name: 'Find a branch' });
   await search.pressSequentially('borte chino');
