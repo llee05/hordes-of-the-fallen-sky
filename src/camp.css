@@ -555,7 +555,7 @@
     0 0 0 2px #e8cb83,
     0 3px 8px #514b3455;
 }
-.camp-place:focus-visible {
+.immersive-camp .camp-place:focus-visible {
   outline: none;
 }
 .camp-place:focus-visible .camp-plaque {
@@ -626,18 +626,6 @@
   width: 16px;
   height: 16px;
 }
-.camp-map-caption {
-  position: absolute;
-  bottom: 5px;
-  left: 10px;
-  right: 10px;
-  color: #4b5139;
-  text-align: center;
-  font:
-    italic 11px Georgia,
-    serif;
-  pointer-events: none;
-}
 .camp-popup {
   position: absolute;
   z-index: 6;
@@ -672,9 +660,6 @@
   }
   .camp-internal-place .camp-place-art {
     height: 40px;
-  }
-  .camp-map-caption {
-    font-size: 9px;
   }
 }
 @media (max-width: 760px) {
