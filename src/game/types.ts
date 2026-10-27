@@ -1,3 +1,4 @@
+import type { NomadicCamp } from '../shared/nomadicCamp.js';
 import type { ClanLegacy } from './state/legacy';
 import type { GuidanceState } from './state/guidance';
 import type { StoryState } from './story/types';
@@ -58,6 +59,8 @@ export interface CampEstate {
 }
 
 export interface ClanState {
+  /** Versioned five-core/five-choice camp; legacy snapshots migrate at load. */
+  nomadicCamp?: NomadicCamp;
   /** Portable infrastructure; optional only for legacy snapshots. */
   estate?: CampEstate;
   campEffects: CampEffects;
