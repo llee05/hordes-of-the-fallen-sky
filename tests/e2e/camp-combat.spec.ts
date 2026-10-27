@@ -138,7 +138,10 @@ test('every enemy can hold and animate a camp attack, including a charging rider
   page,
 }) => {
   const attackers = await page.evaluate(async () => {
-    const { ENEMIES, SKYBREAKER } = await import('/src/game/data/enemies.ts');
+    const { ENEMIES, SKYBREAKER } = (await import(
+      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+      '/src/game/data/enemies.ts'
+    )) as typeof import('../../src/game/data/enemies');
     const scene = (window as any).__gloam.scene;
     const definitions = [...ENEMIES, SKYBREAKER];
     for (const [index, definition] of definitions.entries()) {

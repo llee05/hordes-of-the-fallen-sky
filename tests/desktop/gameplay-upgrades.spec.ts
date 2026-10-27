@@ -1,4 +1,4 @@
-import { launchElectron } from '../support/electron';
+import { launchElectron, electronEnvironment } from '../support/electron';
 import { expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 test('desktop starting traditions and combat settings fit a compact window and persist through native saves', async () => {
   test.setTimeout(90000);
   const directory = await mkdtemp(join(tmpdir(), 'gloam-gameplay-upgrades-'));
-  const env = { ...process.env };
+  const env: Record<string, string> = { ...electronEnvironment() };
   delete env.ELECTRON_RUN_AS_NODE;
   delete env.GLOAM_DEV_SERVER_URL;
   const app = await launchElectron({

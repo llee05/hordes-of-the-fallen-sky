@@ -16,7 +16,16 @@ test('mounted gaits and bow release animate without changing collision geometry'
   page,
 }) => {
   await page.keyboard.down('d');
-  const samples = [];
+  const samples: {
+    frame: string;
+    rider: string;
+    width: number;
+    height: number;
+    displayWidth: number;
+    anchor: number;
+    centerX: number;
+    centerY: number;
+  }[] = [];
   // Sample until active-time animation has advanced, including on software renderers.
   await expect
     .poll(
@@ -88,7 +97,10 @@ test('mounted gaits and bow release animate without changing collision geometry'
 
 test('all creature clips advance and freeze with camp planning', async ({ page }) => {
   const initialBodies = await page.evaluate(async () => {
-    const { ENEMIES, SKYBREAKER } = await import('/src/game/data/enemies.ts');
+    const { ENEMIES, SKYBREAKER } = (await import(
+      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+      '/src/game/data/enemies.ts'
+    )) as typeof import('../../src/game/data/enemies');
     const scene = (window as any).__gloam.scene;
     const definitions = [...ENEMIES.slice(0, 5), SKYBREAKER];
     for (const [index, definition] of definitions.entries()) {

@@ -67,7 +67,7 @@ test('software WebGL starts flat with a dismissible notice and honors an explici
       rgb.slice(0, 3).reduce((sum, channel, index) => {
         const value = channel / 255;
         const linear = value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-        return sum + linear * [0.2126, 0.7152, 0.0722][index];
+        return sum + linear * [0.2126, 0.7152, 0.0722][index]!;
       }, 0);
     const cloth = channels(
       getComputedStyle(element.closest('.title-menu')!, '::before').backgroundColor,
@@ -131,7 +131,10 @@ for (const scenario of [
     });
     await terrain.click();
     const before = await page.evaluate(async (point) => {
-      const { captureExpedition } = await import('/src/game/state/expeditionArchive.ts');
+      const { captureExpedition } = (await import(
+        // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+        '/src/game/state/expeditionArchive.ts'
+      )) as typeof import('../../src/game/state/expeditionArchive');
       const s = (window as any).__gloam.scene;
       for (const actor of s.enemies.getChildren()) actor.disableBody(true, true);
       for (const gem of s.gems.getChildren()) gem.disableBody(true, true);

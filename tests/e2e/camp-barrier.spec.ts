@@ -8,7 +8,19 @@ import {
   startExpedition,
 } from './helpers';
 
-async function barrierState(page: Page) {
+async function barrierState(page: Page): Promise<{
+  radius: number;
+  travelling: boolean;
+  wear: number;
+  pieces: {
+    visible: boolean;
+    x: number;
+    y: number;
+    depth: number;
+    commands: number;
+    impact: number;
+  }[];
+}> {
   return page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     const barrier = scene.campBarrier;

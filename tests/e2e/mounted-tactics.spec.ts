@@ -14,7 +14,10 @@ test('charged arrows pin a charger and pooled arrows clear their special effect'
 }) => {
   const result = await page.evaluate(async () => {
     const s = (window as any).__gloam.scene;
-    const { ENEMIES } = await import('/src/game/data/enemies.ts');
+    const { ENEMIES } = (await import(
+      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+      '/src/game/data/enemies.ts'
+    )) as typeof import('../../src/game/data/enemies');
     s.spawnEnemy({ ...ENEMIES.find((e) => e.id === 'ghost-rider')!, health: 10000 });
     const e = s.enemies.getFirstAlive();
     e.setPosition(s.player.x + 120, s.player.y);
@@ -51,7 +54,10 @@ test('seer danger zones warn and strike in the opening area, while menus freeze 
 }) => {
   await page.evaluate(async () => {
     const s = (window as any).__gloam.scene;
-    const { ENEMIES } = await import('/src/game/data/enemies.ts');
+    const { ENEMIES } = (await import(
+      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+      '/src/game/data/enemies.ts'
+    )) as typeof import('../../src/game/data/enemies');
     s.spawnEnemy({ ...ENEMIES.find((e) => e.id === 'hollow-seer')!, health: 10000, speed: 0 });
     const e = s.enemies.getFirstAlive();
     e.setPosition(s.player.x + 300, s.player.y);
