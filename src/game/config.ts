@@ -1,6 +1,14 @@
 /** World units are pixels. Time inside gameplay is seconds. */
 export const GAME = {
   research: {
+    barrageSeconds: 2,
+    barrageDamage: 1.1,
+    barrageSpeed: 1.2,
+    refugeRecovery: 0.25,
+    refugeProtection: 0.95,
+    riverSeconds: 4,
+    riverStacks: 5,
+    riverRadius: 5,
     deepRootsLoss: 0.8,
     layeredProtection: 0.9,
     layeredSeconds: 3,

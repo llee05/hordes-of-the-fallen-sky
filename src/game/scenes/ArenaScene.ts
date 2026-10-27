@@ -2,6 +2,8 @@ import {
   recordKhanTarget,
   recordResearchShard,
   wideVolleyResearch,
+  gallopingBarrage,
+  researchGallop,
   wagonResearchDefence,
 } from '../state/researchRuntime';
 import {
@@ -1509,6 +1511,7 @@ export class ArenaScene extends Phaser.Scene {
   dash(): void {
     if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.dashTimer > 0) return;
     this.run.combat.gallopSerial++;
+    researchGallop(this.run);
     this.dashRemaining = GAME.dash.duration;
     this.dashTimer = gallopCooldown(this.run);
     this.invulnerable = Math.max(this.invulnerable, GAME.dash.duration);
@@ -2505,6 +2508,7 @@ export class ArenaScene extends Phaser.Scene {
     owner: 'khan' | 'rider' = 'rider',
   ): boolean {
     const research = wideVolleyResearch(this.run, count, owner === 'khan');
+    const barrage = gallopingBarrage(this.run, owner === 'khan');
     const direction = Math.atan2(target.y - y, target.x - x);
     const tempest = burningTempest(this.run);
     let fired = false;
@@ -2545,11 +2549,12 @@ export class ArenaScene extends Phaser.Scene {
         (charged ? GAME.mounted.chargedDamage : 1) *
         multiplier *
         research.damage *
+        barrage.damage *
         (this.run.clan.formation === 'encircle' && this.run.clan.momentum > 0.5 ? 1.3 : 1);
       bolt.remaining = GAME.projectile.lifetime;
       bolt.setVelocity(
-        Math.cos(angle) * GAME.projectile.speed,
-        Math.sin(angle) * GAME.projectile.speed,
+        Math.cos(angle) * GAME.projectile.speed * barrage.speed,
+        Math.sin(angle) * GAME.projectile.speed * barrage.speed,
       );
     }
     if (fired) {

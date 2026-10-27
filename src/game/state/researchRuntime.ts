@@ -3,6 +3,9 @@ import type { RunState } from '../types';
 
 /** Optional for compatibility with older expedition saves. All timestamps use active seconds. */
 export interface ResearchRuntime {
+  lastGallopAt?: number;
+  riverStacks?: number;
+  riverUntil?: number;
   lastHitAt?: number;
   lastHitGeneration?: number;
   targetSlot?: number;
@@ -33,7 +36,16 @@ export function echoPrefers(run: RunState, slot: number, spawn: number): boolean
   );
 }
 export function recordResearchShard(run: RunState): void {
-  if (run.phase !== 'playing' || !ownsResearch(run, 'on-memory-vessels')) return;
+  if (run.phase !== 'playing') return;
+  if (ownsResearch(run, 'hy-river-of-spirits')) {
+    const r = (run.researchRuntime ??= {});
+    r.riverStacks = Math.min(
+      GAME.research.riverStacks,
+      ((r.riverUntil ?? 0) > run.elapsed ? (r.riverStacks ?? 0) : 0) + 1,
+    );
+    r.riverUntil = run.elapsed + GAME.research.riverSeconds;
+  }
+  if (!ownsResearch(run, 'on-memory-vessels')) return;
   const r = (run.researchRuntime ??= {});
   r.memoryStacks = Math.min(
     GAME.research.memoryMaxStacks,
@@ -112,4 +124,39 @@ export function wagonResearchDefence(run: RunState): {
       (fallback ? GAME.research.wagonFallbackDamage : run.clan.stage === 'migration' ? 0.7 : 1.5) *
       run.clan.campEffects.multipliers.wagonDamage,
   };
+}
+
+export function researchGallop(run: RunState): void {
+  if (run.phase === 'playing') (run.researchRuntime ??= {}).lastGallopAt = run.elapsed;
+}
+export function gallopingBarrage(
+  run: RunState,
+  personal: boolean,
+): { damage: number; speed: number } {
+  const time = run.researchRuntime?.lastGallopAt;
+  const active =
+    personal &&
+    ownsResearch(run, 'hy-galloping-barrage') &&
+    time !== undefined &&
+    run.elapsed - time <= GAME.research.barrageSeconds;
+  return active
+    ? { damage: GAME.research.barrageDamage, speed: GAME.research.barrageSpeed }
+    : { damage: 1, speed: 1 };
+}
+export function stillwaterRefuge(run: RunState): boolean {
+  return (
+    ownsResearch(run, 'hy-stillwater-refuge') &&
+    run.patrons.water.slow > 0 &&
+    run.health > 0 &&
+    run.khan.successionRemaining <= 0
+  );
+}
+export function researchWaterRadius(run: RunState): number {
+  const r = run.researchRuntime;
+  return (
+    run.patrons.water.radius +
+    (ownsResearch(run, 'hy-river-of-spirits') && (r?.riverUntil ?? 0) > run.elapsed
+      ? (r?.riverStacks ?? 0) * GAME.research.riverRadius
+      : 0)
+  );
 }

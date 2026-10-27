@@ -9,7 +9,12 @@ import type { SpatialHash } from './SpatialHash';
 import { isKhanActive } from '../state/khan';
 import { campBoundary } from '../state/campBarrier';
 import type { SupportArchive } from '../state/expeditionArchive';
-import { echoPrefers, researchEchoRelease, updateEchoGuard } from '../state/researchRuntime';
+import {
+  echoPrefers,
+  researchEchoRelease,
+  updateEchoGuard,
+  researchWaterRadius,
+} from '../state/researchRuntime';
 import { PatronSupportClock } from '../state/patronSupportClock';
 
 interface GroundPosition {
@@ -88,6 +93,7 @@ export class PatronSupport {
     const step = this.clock.update(run, dt);
     if (!step) return;
     const effects = run.patrons;
+    const waterRadius = researchWaterRadius(run);
     const boundary = campBoundary(run);
     const khanActive = isKhanActive(run);
     const anchor = khanActive ? player : camp;
@@ -96,8 +102,8 @@ export class PatronSupport {
       this.fields.lineStyle(1.5, 0x86beb1, 0.22).fillStyle(0x70a99c, 0.025);
       for (const position of khanActive ? [player, camp] : [camp])
         this.fields
-          .fillCircle(position.x, position.y, effects.water.radius)
-          .strokeCircle(position.x, position.y, effects.water.radius);
+          .fillCircle(position.x, position.y, waterRadius)
+          .strokeCircle(position.x, position.y, waterRadius);
     }
     if (effects.guardian.wardDamage > 0)
       this.fields.lineStyle(1, 0xd8bc7e, 0.3).strokeCircle(camp.x, camp.y, boundary.wardRadius);
@@ -150,7 +156,7 @@ export class PatronSupport {
 
     updateEchoGuard(run, echoNearCamp);
     if (step.pulseWater) {
-      spatial.forEachNearby(player.x, player.y, effects.water.radius, (enemy) => {
+      spatial.forEachNearby(player.x, player.y, waterRadius, (enemy) => {
         actions.damage(enemy, run.stats.damage * effects.water.pulseDamage);
         if (!enemy.active) return;
         const dx = enemy.x - player.x;

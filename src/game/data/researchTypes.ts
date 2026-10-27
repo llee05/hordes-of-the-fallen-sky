@@ -12,6 +12,9 @@ export type ResearchEffect =
   | {
       kind: 'runtime';
       handler:
+        | 'hy-galloping-barrage'
+        | 'hy-stillwater-refuge'
+        | 'hy-river-of-spirits'
         | 'ee-deep-roots'
         | 'go-layered-felt'
         | 'go-common-fire'

@@ -3,6 +3,9 @@ import { RESEARCH_EXPANSIONS } from './researchCatalogue';
 import type { ResearchDefinition } from './researchTypes';
 
 const IMPLEMENTED_HANDLERS = [
+  'hy-galloping-barrage',
+  'hy-stillwater-refuge',
+  'hy-river-of-spirits',
   'ee-deep-roots',
   'go-layered-felt',
   'go-common-fire',

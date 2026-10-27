@@ -248,6 +248,9 @@ const optional: Record<string, Record<string, Rule>> = {
     researchRuntime: object(
       {},
       {
+        lastGallopAt: number,
+        riverStacks: integer,
+        riverUntil: number,
         lastHitAt: number,
         lastHitGeneration: integer,
         targetSlot: integer,

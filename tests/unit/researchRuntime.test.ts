@@ -1,3 +1,9 @@
+import {
+  gallopingBarrage,
+  researchGallop,
+  researchWaterRadius,
+} from '../../src/game/state/researchRuntime';
+import { advancePatrons } from '../../src/game/state/patrons';
 import { damageKhan } from '../../src/game/state/khan';
 import { economyRates } from '../../src/game/state/economy';
 import { wagonResearchDefence } from '../../src/game/state/researchRuntime';
@@ -18,6 +24,45 @@ import { clanDamageMultiplier } from '../../src/game/state/clan';
 import { researchPreviewById } from '../../src/game/state/progressionPreview';
 
 describe('supported V2 combat slice', () => {
+  it('limits barrage to personal shots in the two seconds after a real Gallop', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['hy-galloping-barrage'] = 1;
+    expect(gallopingBarrage(r, true).damage).toBe(1);
+    researchGallop(r);
+    expect(gallopingBarrage(r, true)).toEqual({ damage: 1.1, speed: 1.2 });
+    expect(gallopingBarrage(r, false).damage).toBe(1);
+    r.elapsed = 2.01;
+    expect(gallopingBarrage(r, true).damage).toBe(1);
+  });
+  it('caps River of Spirits radius, expires on active time and never changes base stats', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['hy-river-of-spirits'] = 1;
+    const base = r.patrons.water.radius;
+    for (let i = 0; i < 10; i++) recordResearchShard(r);
+    expect(researchWaterRadius(r)).toBe(base + 25);
+    expect(r.patrons.water.radius).toBe(base);
+    r.elapsed = 4;
+    expect(researchWaterRadius(r)).toBe(base);
+  });
+  it('applies Stillwater Refuge only to a living Khan with an active slowing field', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.health = 90;
+    r.upgrades['hy-stillwater-refuge'] = 1;
+    advancePatrons(r, 1);
+    expect(r.health).toBe(90);
+    r.patrons.water.slow = 0.12;
+    advancePatrons(r, 1);
+    expect(r.health).toBe(90.25);
+    damageKhan(r, 10);
+    expect(r.health).toBe(80.75);
+    r.health = 0;
+    r.khan.successionRemaining = 5;
+    advancePatrons(r, 1);
+    expect(r.health).toBe(0);
+  });
   it('applies Deep Roots to food exhaustion, with no production on the road', () => {
     const r = createRun();
     const full = economyRates(r).foodProduction;
