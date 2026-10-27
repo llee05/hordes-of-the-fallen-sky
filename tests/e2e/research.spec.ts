@@ -170,12 +170,11 @@ test('combination links cross camp and patron trees without resuming simulation,
   await expect(page.locator('[data-synergy="burning-tempest"]')).toContainText('Remaining route:');
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run.clan));
   await page
-    .locator('[data-synergy="burning-tempest"] [data-target-node="archery-fire-arrows"]')
+    .locator('[data-synergy="burning-tempest"] [data-target-node="fletchers-workshop"]')
     .click();
-  await expect(page.locator('.camp-popup-copy h3')).toHaveText('Fire arrows');
-  await expect(page.locator('.camp-popup-foldout')).toBeVisible();
-  await expect(page.locator('.node-price')).toContainText('36 materials');
-  await expect(page.locator('[data-node="archery-veteran-riders"]')).toBeVisible();
+  await expect(page.locator('.camp-popup-heading h3')).toHaveText("Fletcher's Workshop");
+  await expect(page.locator('.node-price')).toContainText('24 materials');
+  await expect(page.locator('[data-nomadic-level]')).toHaveCount(3);
   expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
     true,
   );

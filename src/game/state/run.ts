@@ -1,3 +1,4 @@
+import { initializeNomadicCamp, nomadicExperienceMultiplier } from './nomadicCamp';
 import { createClanSafety } from './clanSafety';
 import { createMountedCombat } from './mountedCombat';
 import { createEncounters } from './encounters';
@@ -23,7 +24,7 @@ export function createRun(tradition: StartingTraditionId = 'shared-hearth'): Run
   const clan = createClan();
   clan.food = balance.food;
   clan.materials = balance.materials;
-  return {
+  const run: RunState = {
     metrics: { stages: [] },
     startingTradition: tradition,
     legacy: createLegacy(),
@@ -54,10 +55,12 @@ export function createRun(tradition: StartingTraditionId = 'shared-hearth'): Run
       projectiles: 1,
     },
   };
+  initializeNomadicCamp(run);
+  return run;
 }
 
 export function gainExperience(run: RunState, amount: number): boolean {
-  run.xp += Math.max(0, amount);
+  run.xp += Math.max(0, amount) * nomadicExperienceMultiplier(run);
   if (amount > 0) completeGuidance(run, 'shards');
   let leveled = false;
   while (run.xp >= run.nextLevelXp) {

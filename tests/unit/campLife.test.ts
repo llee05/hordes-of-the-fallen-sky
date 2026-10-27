@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { buildStructure } from '../../src/game/state/clan';
 import {
   campWorkers,

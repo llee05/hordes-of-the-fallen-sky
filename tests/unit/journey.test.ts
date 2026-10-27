@@ -4,7 +4,7 @@ import { LOCATIONS, ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration } from '../../src/game/state/clan';
 import { currentLocation, availableDestinations, locationById } from '../../src/game/state/journey';
 import { crossingForecast, economyRates } from '../../src/game/state/economy';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { damageKhan, advanceSuccession } from '../../src/game/state/khan';
 import { openNextStory, resolveStory } from '../../src/game/state/story';
 

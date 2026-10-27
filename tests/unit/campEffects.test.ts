@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDINGS, type BuildingDefinition } from '../../src/game/data/clan';
 import { applyCampEffects } from '../../src/game/state/camp';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import {
   advanceClan,
   beginMigration,
@@ -11,7 +11,7 @@ import {
 } from '../../src/game/state/clan';
 import { advancePatrons, gallopCooldown } from '../../src/game/state/patrons';
 
-describe('portable camp development effects', () => {
+describe('legacy checkpoint compatibility: portable camp development effects', () => {
   it('keeps new expeditions independent with neutral economy, combat, and arrival effects', () => {
     const first = createRun();
     first.clan.campEffects.multipliers.foodProduction = 2;

@@ -1,5 +1,5 @@
 import { launchElectron, electronEnvironment } from '../support/electron';
-import { buyNode, inspectNode, selectCampBuilding, closeOverlayOrPause } from '../e2e/helpers';
+import { buyNode, selectCampBuilding, closeOverlayOrPause } from '../e2e/helpers';
 import { expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -160,7 +160,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.getByRole('button', { name: /Share the work/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await expect(page.locator('#khan-title')).toHaveText('THE KHAN');
-    await expect(page.locator('#food-rate')).toContainText('Food net +0.');
+    await expect(page.locator('#food-rate')).toContainText('Food net +1.');
     await expect(page.locator('#food-outlook')).toContainText('Stores empty in ~');
     // Exercise the production Web Audio path without a development scene hook.
     await page.evaluate(() => {
@@ -202,17 +202,18 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.screenshot({ path: 'test-results/native-tech-tree.png' });
     await closeOverlayOrPause(page);
     await page.keyboard.press('b');
-    await expect(page.getByRole('heading', { name: 'Build a people.' })).toBeVisible();
-    await expect(page.locator('[data-camp-site]')).toHaveCount(1);
+    await expect(page.getByRole('heading', { name: "The Khan's camp" })).toBeVisible();
+    await expect(page.locator('.camp-map-cores [data-camp-site]')).toHaveCount(5);
     await page.locator('[data-camp-economy]').click();
     await expect(page.getByRole('region', { name: 'Camp economy' })).toContainText('Food net');
     await expect(page.locator('.camp-popup')).toContainText('Food net');
     await page.screenshot({ path: 'test-results/native-economy-camp.png' });
     await selectCampBuilding(page, 'archery');
     await buyNode(page, 'archery-base');
-    await inspectNode(page, 'felt-base');
+    await selectCampBuilding(page, 'healers-ger');
+    await page.locator('.tree-purchase').click();
     await expect(page.locator('.tree-purchase')).toBeDisabled();
-    await expect(page.locator('.node-purchase-status')).toContainText('camp tier 2');
+    await expect(page.locator('.node-purchase-status')).toContainText("Khan's Ger level 2");
     await page.screenshot({ path: 'test-results/native-camp-tree.png' });
     await expect(page.locator('#riders')).toHaveText('4');
     await closeOverlayOrPause(page);
@@ -276,7 +277,20 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
         version: 1,
         bestSeconds: 88,
         muted: true,
-        camp: { tier: 1, buildings: ['ger', 'archery'] },
+        camp: {
+          tier: 1,
+          buildings: ['ger', 'archery', 'herd', 'wagon', 'provisions', 'relay'],
+          nomadicCamp: {
+            version: 1,
+            slots: [
+              { id: 'archery-range', level: 1 },
+              { id: 'healers-ger', level: 1 },
+              null,
+              null,
+              null,
+            ],
+          },
+        },
       },
     );
     app = await launch();

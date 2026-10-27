@@ -2,8 +2,7 @@ import { expect, test } from '@playwright/test';
 import {
   selectCampBuilding,
   closeOverlayOrPause,
-  buyNode,
-  inspectNode,
+  buyNomadicLevel,
   openTitle,
   startExpedition,
 } from './helpers';
@@ -20,30 +19,29 @@ test('provisions and exact purchase previews stay frozen while inspecting the pa
   });
   await page.locator('[data-camp-economy]').click();
   await expect(page.getByRole('region', { name: 'Camp economy' })).toContainText(
-    'Food net -0.04/s',
+    'Food net +0.17/s',
   );
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await inspectNode(page, 'herd-base');
+  await selectCampBuilding(page, 'hunting-lodge');
   await expect(page.locator('.camp-gains')).toContainText('Food net');
-  await inspectNode(page, 'ger-hearthkeepers');
-  await expect(page.locator('.camp-gains')).toContainText('Clan population');
+  await selectCampBuilding(page, 'healers-ger');
+  await expect(page.locator('.camp-gains')).toContainText('Maximum Khan health');
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
-  await buyNode(page, 'herd-base');
+  await buyNomadicLevel(page, 'hunting-lodge');
   await page.locator('[data-camp-dismiss]').click();
   await page.locator('[data-camp-economy]').click();
   await expect(page.getByRole('region', { name: 'Camp economy' })).toContainText(
-    'Food net +0.13/s',
+    'Food net +0.20/s',
   );
-  await inspectNode(page, 'herd-winter-stores');
-  await expect(page.locator('.camp-gains')).toContainText('Food now');
-  await expect(page.locator('.camp-gains')).toContainText('65');
-  await buyNode(page, 'herd-winter-stores');
+  await selectCampBuilding(page, 'artisans-ger');
+  await expect(page.locator('.camp-gains')).toContainText('Food net');
+  await buyNomadicLevel(page, 'artisans-ger');
   await page.locator('[data-camp-dismiss]').click();
   await page.locator('[data-camp-economy]').click();
   await expect(page.getByRole('region', { name: 'Camp economy' })).toContainText(
-    'Food net +0.23/s',
+    'Food net +0.21/s',
   );
-  await expect(page.getByLabel('Camp resources')).toContainText('65');
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.food)).toBe(20);
   await page.screenshot({ path: 'test-results/economy-camp.png' });
   await closeOverlayOrPause(page);
   await expect(page.locator('#food-rate')).toContainText('Food net +0.');
@@ -60,7 +58,7 @@ test('route estimates separate travel food from arrival gifts and risky routes r
     scene.openRoutes();
   });
   const river = page.locator('[data-route="river"]');
-  await expect(river).toContainText('Food needed en route ~13.9');
+  await expect(river).toContainText('Food needed en route ~12.2');
   await expect(river).toContainText('Food after arrival ~35.0');
   await expect(river).toContainText('Food runs out before arrival');
   await expect(river).toBeEnabled();
@@ -71,7 +69,7 @@ test('route estimates separate travel food from arrival gifts and risky routes r
   await page.screenshot({ path: 'test-results/economy-routes.png' });
   await river.click();
   await expect(page.getByRole('dialog')).toBeHidden();
-  await expect(page.locator('#food-rate')).toHaveText('Food net -0.20/s');
+  await expect(page.locator('#food-rate')).toHaveText('Food net -0.19/s');
   await expect(page.locator('#food-outlook')).toHaveClass('danger');
   expect(
     await page.evaluate(() => (window as any).__gloam.scene.run.clan.food),
@@ -114,8 +112,7 @@ test('food forecasts remain readable beside guidance and objectives at supported
     });
     expect(overlaps, `resources overlap at ${viewport.width}`).toEqual([]);
     await page.keyboard.press('b');
-    await selectCampBuilding(page, 'herd');
-    await inspectNode(page, 'herd-base');
+    await selectCampBuilding(page, 'hunting-lodge');
     const preview = page.locator('.camp-gains');
     await expect(preview).toBeVisible();
     expect(await preview.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(

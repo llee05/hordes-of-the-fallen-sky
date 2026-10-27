@@ -1,3 +1,4 @@
+import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
 import { expect, it } from 'vitest';
 import { STARTING_TRADITIONS } from '../../src/game/data/clan';
 import { UPGRADES } from '../../src/game/data/upgrades';
@@ -15,7 +16,7 @@ it('keeps the original opening and gives every alternative a real provision or c
     expect(run.clan.population).toBe(8);
     expect(run.clan.herd).toBe(3);
     expect(run.clan.food + run.clan.materials).toBeLessThan(120);
-    expect(run.clan.estate).toEqual(baseline.clan.estate);
+    expect(run.clan.nomadicCamp).toEqual(baseline.clan.nomadicCamp);
     expect(run.upgrades).toEqual({});
   }
   expect(riderCount(createRun('outriders'))).toBe(2);
@@ -35,13 +36,15 @@ it('keeps every patron foundation open, stacks camp improvements, and does not g
     for (const upgrade of UPGRADES.filter((u) => !u.requires?.length && !u.exclusiveGroup))
       expect(applyUpgrade(run, upgrade)).toBe(true);
     const initial = riderCount(run);
-    run.clan.buildings.archery = 1;
+    run.phase = 'building';
+    run.clan.materials = 100;
+    expect(purchaseNomadicBuilding(run, 'archery-range')).toBe(true);
     expect(riderCount(run)).toBe(initial + 3);
     run.clan.region = 2;
     run.khan.generation = 3;
     expect(run.startingTradition).toBe(entry.id);
-    expect(run.clan.estate?.tier).toBe(1);
-    expect(run.clan.estate?.slots).toEqual(createRun().clan.estate?.slots);
+    expect(run.clan.nomadicCamp!.slots).toHaveLength(5);
+    expect(Object.values(run.clan.nomadicCamp!.core)).toEqual([1, 1, 1, 1, 1]);
   }
 });
 

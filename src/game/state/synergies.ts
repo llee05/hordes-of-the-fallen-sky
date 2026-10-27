@@ -1,3 +1,5 @@
+import { nomadicBuilding } from '../data/nomadicCamp';
+import { nomadicBuildingLevel } from './nomadicCamp';
 import { BUILDINGS } from '../data/clan';
 import { ENCAMPMENT_TIERS } from '../data/campEstate';
 import { UPGRADES } from '../data/upgrades';
@@ -103,4 +105,81 @@ export function synergyProgress(run: RunState, recipe: SynergyDefinition) {
   const complete = requirements.every((r) => r.current >= r.needed);
   const closed = requirements.some((r) => r.closed);
   return { requirements, complete, closed, price: { knowledge, materials, spirit, workers } };
+}
+
+/** One dependency closure prices shared headquarters levels only once. */
+export function nomadicSynergyProgress(
+  run: RunState,
+  recipe: import('../data/synergies').NomadicSynergyDefinition,
+) {
+  const camp = run.clan.nomadicCamp!;
+  const desired = new Map<import('../../shared/nomadicCamp.js').NomadicBuildingId, number>();
+  const research = new Map<string, number>();
+  const addResearch = (id: string, rank: number) => {
+    if ((research.get(id) ?? 0) >= rank) return;
+    research.set(id, rank);
+    UPGRADES.find((u) => u.id === id)?.requires?.forEach((parent) =>
+      addResearch(parent.id, parent.rank),
+    );
+  };
+  const addBuilding = (
+    id: import('../../shared/nomadicCamp.js').NomadicBuildingId,
+    rank: number,
+  ) => {
+    if ((desired.get(id) ?? 0) >= rank) return;
+    desired.set(id, rank);
+    const definition = nomadicBuilding(id);
+    for (const level of definition.levels.slice(nomadicBuildingLevel(camp, id), rank))
+      for (const requirement of level.requires ?? [])
+        addBuilding(requirement.building, requirement.level);
+  };
+  const requirements = recipe.requirements.map((r) => {
+    if (r.kind === 'research') {
+      const definition = UPGRADES.find((u) => u.id === r.id)!;
+      addResearch(r.id, r.rank);
+      return {
+        ...r,
+        title: definition.title,
+        node: r.id,
+        branch: definition.patron,
+        current: run.upgrades[r.id] ?? 0,
+        needed: r.rank,
+        closed: upgradeExcluded(run, definition),
+      };
+    }
+    const definition = nomadicBuilding(r.id),
+      current = nomadicBuildingLevel(camp, r.id);
+    addBuilding(r.id, r.rank);
+    return {
+      kind: 'camp' as const,
+      title: `${definition.title} level ${r.rank}`,
+      node: r.id,
+      branch: r.id,
+      current,
+      needed: r.rank,
+      closed: current === 0 && !camp.slots.includes(null),
+    };
+  });
+  let knowledge = 0,
+    materials = 0,
+    spirit = 0,
+    workers = 0;
+  for (const [id, rank] of research)
+    knowledge +=
+      Math.max(0, rank - (run.upgrades[id] ?? 0)) * upgradeCost(UPGRADES.find((u) => u.id === id)!);
+  for (const [id, rank] of desired) {
+    const definition = nomadicBuilding(id),
+      current = nomadicBuildingLevel(camp, id);
+    for (const level of definition.levels.slice(current, rank)) {
+      materials += Math.ceil(level.cost.materials * run.patrons.guardian.cost);
+      spirit += level.cost.spirit;
+    }
+    if (!current) workers += definition.workers;
+  }
+  return {
+    requirements,
+    complete: requirements.every((r) => r.current >= r.needed),
+    closed: requirements.some((r) => r.closed),
+    price: { knowledge, materials, spirit, workers },
+  };
 }

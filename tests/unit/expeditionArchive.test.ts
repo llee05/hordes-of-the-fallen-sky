@@ -1,3 +1,4 @@
+import { createLegacyCampRun } from '../support/legacyCamp';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -23,6 +24,23 @@ afterEach(async () => {
 });
 
 describe('full expedition snapshots', () => {
+  it('migrates old full-run camps without resetting banked knowledge, health or chronology', () => {
+    const run = createLegacyCampRun();
+    run.pendingUpgrades = 9;
+    run.xp = 3;
+    run.health = 40;
+    const snapshot = captureExpedition(run, world());
+    const restored = decodeExpedition(snapshot).run;
+    expect(restored.clan.nomadicCamp!.slots).toHaveLength(5);
+    expect(Object.values(restored.clan.nomadicCamp!.core)).toEqual([1, 1, 1, 1, 1]);
+    expect(restored.clan.estate).toBeUndefined();
+    expect(restored.pendingUpgrades).toBe(9);
+    expect(restored.xp).toBe(3);
+    expect(restored.health).toBe(40);
+    expect(restored.story).toEqual(run.story);
+    expect(restored.legacy).toEqual(run.legacy);
+  });
+
   it('accepts authored story images and valid chronicle indexes across all destinations', () => {
     for (const location of LOCATIONS) {
       for (const region of [0, 1, 2, 3]) {

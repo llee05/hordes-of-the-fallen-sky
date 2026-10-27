@@ -1,3 +1,4 @@
+import { nomadicPopulationCapacity } from './nomadicCamp';
 import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import { FIELD_OBJECTIVES, type FieldObjectiveKind } from '../data/fieldObjectives';
@@ -83,7 +84,10 @@ export function completeFieldObjective(run: RunState): boolean {
   run.clan.materials += reward.materials;
   run.clan.spirit += reward.spirit;
   run.clan.herd = Math.min(GAME.clan.maxHerd, run.clan.herd + reward.horses);
-  run.clan.population = Math.min(GAME.clan.maxPopulation, run.clan.population + reward.people);
+  run.clan.population = Math.max(
+    run.clan.population,
+    Math.min(nomadicPopulationCapacity(run), run.clan.population + reward.people),
+  );
   restoreResolve(run, reward.resolve);
   run.field.nextAt = run.clan.stageTime + GAME.field.between;
   run.clan.message = `${definition.title} secured. ${definition.reward}.`;

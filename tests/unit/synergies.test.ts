@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { SYNERGIES } from '../../src/game/data/synergies';
 import { UPGRADES } from '../../src/game/data/upgrades';
-import { createRun, applyUpgrade } from '../../src/game/state/run';
+import { applyUpgrade } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { buildingCost, buildStructure } from '../../src/game/state/clan';
 import { synergyProgress } from '../../src/game/state/synergies';
 import { ENCAMPMENT_TIERS } from '../../src/game/data/campEstate';

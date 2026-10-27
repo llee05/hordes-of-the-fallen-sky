@@ -4,7 +4,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createServer } from 'vite';
-import { buyNode, inspectNode, closeOverlayOrPause } from '../e2e/helpers';
+import { buyNode, inspectNode, selectCampBuilding, closeOverlayOrPause } from '../e2e/helpers';
 
 test.use({ trace: 'off' });
 
@@ -66,9 +66,9 @@ test('connected progression maps, camp comparisons, and recipe links fit native 
       await page.screenshot({ path: `test-results/native-patron-map-${size.width}.png` });
       await page.getByRole('button', { name: 'Combinations', exact: true }).click();
       await page
-        .locator('[data-synergy="burning-tempest"] [data-target-node="archery-fire-arrows"]')
+        .locator('[data-synergy="burning-tempest"] [data-target-node="fletchers-workshop"]')
         .click();
-      await expect(page.locator('.camp-popup-foldout')).toContainText('Veteran riders');
+      await expect(page.locator('.camp-popup')).toContainText("Fletcher's Workshop");
       await expect(page.locator('.camp-popup')).toBeVisible();
       const campPurchase = (await page.locator('.tree-purchase').boundingBox())!;
       expect(campPurchase.y + campPurchase.height).toBeLessThan(size.height);
@@ -84,13 +84,10 @@ test('connected progression maps, camp comparisons, and recipe links fit native 
     }
     await page.keyboard.press('b');
     await buyNode(page, 'archery-base');
-    // This fresh camp has not yet earned its fourth-tier military specialisation.
-    await inspectNode(page, 'archery-fire-arrows');
+    await selectCampBuilding(page, 'fletchers-workshop');
+    await page.locator('.tree-purchase').click();
     await expect(page.locator('.tree-purchase')).toBeDisabled();
-    await expect(page.locator('[data-node="archery-arban-drills"]')).toHaveAttribute(
-      'data-status',
-      'locked',
-    );
+    await expect(page.locator('.node-purchase-status')).toContainText("Khan's Ger level 2");
     expect(errors).toEqual([]);
   } finally {
     await app.close();

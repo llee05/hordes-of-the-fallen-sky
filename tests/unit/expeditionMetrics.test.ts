@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
-import { createRun, gainExperience, applyUpgrade } from '../../src/game/state/run';
+import { gainExperience, applyUpgrade } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import {
   markExpedition,
   observeExpedition,

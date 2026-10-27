@@ -1,3 +1,4 @@
+import { nomadicAssignedWorkers, nomadicPopulationCapacity } from './nomadicCamp';
 import {
   createCampEstate,
   estateAssignedWorkers,
@@ -67,7 +68,9 @@ export function restoreResolve(run: RunState, amount: number): void {
 }
 
 export function assignedWorkers(run: RunState): number {
-  return estateAssignedWorkers(run);
+  return run.clan.nomadicCamp
+    ? nomadicAssignedWorkers(run.clan.nomadicCamp)
+    : estateAssignedWorkers(run);
 }
 
 export { hasDevelopment } from './camp';
@@ -147,6 +150,7 @@ export function buildingBlocker(
   path?: string,
   slot?: number,
 ): string | undefined {
+  if (run.clan.nomadicCamp) return 'Use the nomadic building levels';
   const definition = BUILDINGS.find((building) => building.id === id);
   if (!definition) return 'Unknown structure';
   const clan = run.clan;
@@ -320,6 +324,7 @@ export function advanceClan(
   protectionOptions?: ClanProtection,
 ): 'arrived' | 'lost' | 'saved' | undefined {
   if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
+  if (run.clan.population <= 0 || run.clan.integrity <= 0) return 'lost';
   metricStage(run);
   const clan = run.clan;
   const previousTime = clan.stageTime;
@@ -379,8 +384,11 @@ export function advanceClan(
     clan.materials += route.materials + bonuses.arrivalMaterials;
     clan.spirit += route.id === 'ridge' ? GAME.clan.arrival.ridgeSpirit : 0;
     const newPeople = route.population + (route.id === 'refuge' ? bonuses.refugePeople : 0);
-    const arrivedPeople = Math.min(GAME.clan.maxPopulation - clan.population, newPeople);
-    clan.population = Math.min(GAME.clan.maxPopulation, clan.population + newPeople);
+    const arrivedPeople = Math.max(
+      0,
+      Math.min(nomadicPopulationCapacity(run) - clan.population, newPeople),
+    );
+    clan.population += arrivedPeople;
     if (route.id === 'refuge') clan.rescuedRiders += GAME.clan.arrival.refugeRiders;
     clan.herd = Math.min(GAME.clan.maxHerd, clan.herd + route.herd + bonuses.arrivalHerd);
     completeGuidance(run, 'crossing');

@@ -3,7 +3,7 @@ import { GAME } from '../../src/game/config';
 import { ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration, buildStructure } from '../../src/game/state/clan';
 import { crossingForecast, economyForecast, economyRates } from '../../src/game/state/economy';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 describe('economy forecasts', () => {
   it('uses the simulation rates with regional, patron, pasture, and camp modifiers', () => {

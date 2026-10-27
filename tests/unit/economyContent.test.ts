@@ -3,7 +3,7 @@ import { BUILDINGS } from '../../src/game/data/clan';
 import { buildingBlocker, buildStructure } from '../../src/game/state/clan';
 import { developmentPreview } from '../../src/game/state/developmentPreview';
 import { economyForecast } from '../../src/game/state/economy';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { clanWarning } from '../../src/game/state/guidance';
 import { buildingMenu } from '../../src/ui/campModel';
 import { developmentOutlook, foodOutlook, signedRate } from '../../src/ui/economyContent';

@@ -9,7 +9,8 @@ import {
   isKhanActive,
 } from '../../src/game/state/khan';
 import { advancePatrons, rewardPatronKill } from '../../src/game/state/patrons';
-import { applyUpgrade, createRun, redeemMasteredResearch } from '../../src/game/state/run';
+import { applyUpgrade, redeemMasteredResearch } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import type { RunPhase } from '../../src/game/types';
 
 function expedition() {

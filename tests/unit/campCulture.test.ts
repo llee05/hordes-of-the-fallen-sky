@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDINGS } from '../../src/game/data/clan';
 import { GAME } from '../../src/game/config';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import {
   advanceClan,
   assignedWorkers,
@@ -22,7 +22,7 @@ function builder() {
   return run;
 }
 
-describe('Mongolian-inspired camp branches', () => {
+describe('legacy checkpoint compatibility: Mongolian-inspired camp branches', () => {
   it('authors eight valid, reachable branches and fifty-five level and craft developments', () => {
     expect(BUILDINGS.map((building) => building.id)).toEqual([
       'ger',

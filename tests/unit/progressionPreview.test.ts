@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createRun, applyUpgrade, upgradeCost } from '../../src/game/state/run';
+import { applyUpgrade, upgradeCost } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { UPGRADES } from '../../src/game/data/upgrades';
 import { researchPreview, campStatPreview } from '../../src/game/state/progressionPreview';
 import { buildStructure, clanDamageMultiplier } from '../../src/game/state/clan';

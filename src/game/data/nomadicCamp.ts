@@ -4,13 +4,16 @@ import {
   type NomadicBuildingId,
 } from '../../shared/nomadicCamp.js';
 import { GAME } from '../config';
-import type { CampEffectDefinition, PlayerStats } from '../types';
+import type { CampEffectDefinition, PlayerStats, Doctrine } from '../types';
 
 export interface NomadicBuildingEffects {
   ongoing?: CampEffectDefinition;
   player?: Partial<Pick<PlayerStats, 'damage' | 'maxHealth' | 'pickupRadius' | 'projectiles'>>;
   attackInterval?: number;
   pierce?: number;
+  populationCapacity?: number;
+  experience?: number;
+  unlocks?: { building: import('../types').BuildingId; path: string }[];
   /** Recorded and shown as planned benefits; no absent gameplay subsystem is simulated. */
   future?: Partial<
     Record<
@@ -70,6 +73,8 @@ export interface NomadicBuildingDefinition {
   category: 'Core' | 'Military' | 'Economy & survival' | 'Spiritual & cultural';
   description: string;
   icon: string;
+  doctrine: Doctrine;
+  workers: number;
   levels: readonly NomadicBuildingLevel[];
   /** Core anchors stay fixed; optional instances use their persistent slot's anchor. */
   position?: readonly [number, number];
@@ -93,6 +98,9 @@ function define(
     description,
     icon,
     position,
+    doctrine:
+      category === 'Military' ? 'iron' : category === 'Spiritual & cultural' ? 'sky' : 'wander',
+    workers: category === 'Core' ? 0 : C.workers,
     levels: effects.map((effect, i) => ({
       level: i + 1,
       title: ['Basic', 'Established', 'Advanced'][i] ?? `Level ${i + 1}`,
@@ -123,7 +131,8 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'ger',
     repeat({
       ongoing: { multipliers: { materialProduction: C.production } },
-      future: { populationCapacity: C.futureCapacity, leadership: C.futureEfficiency },
+      populationCapacity: C.populationCapacity,
+      future: { leadership: C.futureEfficiency },
     }),
     [50, 31],
   ),
@@ -251,9 +260,9 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'bow',
     'ger',
     [
-      { future: { specialArrows: 1 } },
       { player: { projectiles: 1 } },
-      { pierce: 1, future: { specialArrows: 1 } },
+      { attackInterval: C.interval },
+      { pierce: 1, unlocks: [{ building: 'archery', path: 'fire-arrows' }] },
     ],
   ),
   define(
@@ -346,6 +355,7 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'spirit',
     'ger',
     repeat({
+      unlocks: [{ building: 'sanctuary', path: 'wind-shamans' }],
       ongoing: { multipliers: { burnDamage: C.production } },
       future: {
         spiritualAbilities: C.futureEfficiency,
@@ -373,14 +383,13 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'storytellers-hearth',
     "Storyteller's Hearth",
     'Spiritual & cultural',
-    'Oral histories preserve knowledge, with experience and lore discovery recorded for future integration.',
+    'Oral histories preserve knowledge, improving experience and technology progression while lore discoveries await future integration.',
     'journal',
     'ger',
     repeat({
       ongoing: { multipliers: { spiritGain: C.production } },
+      experience: C.production,
       future: {
-        experienceGain: C.futureEfficiency,
-        technologyProgression: C.futureEfficiency,
         loreDiscoveries: 1,
       },
     }),

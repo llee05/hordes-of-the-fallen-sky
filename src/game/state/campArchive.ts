@@ -1,3 +1,11 @@
+import { NOMADIC_BUILDINGS } from '../data/nomadicCamp';
+import {
+  nomadicBuildingLevel,
+  applyNomadicBuildingEffects,
+  syncNomadicBuildings,
+} from './nomadicCamp';
+import { migrateLegacyNomadicCamp } from './nomadicCampMigration';
+import { createCampEffects } from './camp';
 import type { CampArchive } from '../../shared/campArchive';
 import { isCampArchive } from '../../shared/campArchive';
 import { GAME } from '../config';
@@ -12,6 +20,7 @@ export function captureCampArchive(run: RunState): CampArchive {
   const { food, materials, spirit, population, herd, integrity } = run.clan;
   return structuredClone({
     version: 1,
+    ...(run.clan.nomadicCamp ? { nomadicCamp: run.clan.nomadicCamp } : {}),
     tier: encampment(run).tier,
     slots: campSlots(run),
     buildings: BUILDINGS.filter((b) => run.clan.buildings[b.id] > 0).map((b) => b.id),
@@ -24,6 +33,23 @@ export function captureCampArchive(run: RunState): CampArchive {
 export function runFromCampArchive(value: unknown): RunState | undefined {
   if (!isCampArchive(value)) return undefined;
   const run = createRun();
+  if (value.nomadicCamp) {
+    run.clan.nomadicCamp = structuredClone(value.nomadicCamp);
+    for (const definition of NOMADIC_BUILDINGS) {
+      const first = definition.category === 'Core' ? 1 : 0;
+      for (const level of definition.levels.slice(
+        first,
+        nomadicBuildingLevel(value.nomadicCamp, definition.id),
+      ))
+        applyNomadicBuildingEffects(run, level.effects);
+    }
+    syncNomadicBuildings(run);
+    Object.assign(run.clan, value.supplies);
+    run.health = run.stats.maxHealth;
+    return run;
+  }
+  delete run.clan.nomadicCamp;
+  run.clan.campEffects = createCampEffects();
   const known = new Set(BUILDINGS.map((b) => b.id));
   const owned = new Set(
     value.buildings.filter((id): id is BuildingId => known.has(id as BuildingId)),
@@ -91,5 +117,6 @@ export function runFromCampArchive(value: unknown): RunState | undefined {
   run.health = run.stats.maxHealth;
   run.clan.message =
     'Your saved households unpack their knowledge, tools, and provisions for another road.';
+  migrateLegacyNomadicCamp(run);
   return run;
 }

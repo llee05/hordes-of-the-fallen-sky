@@ -1,3 +1,7 @@
+import { markExpedition } from './expeditionMetrics';
+import { completeGuidance } from './guidance';
+import { rememberClan } from './legacy';
+import { BUILDING_REMNANT, buildingReaction } from '../data/storyReactions';
 import {
   CORE_CAMP_BUILDINGS,
   OPTIONAL_CAMP_SLOTS,
@@ -10,7 +14,10 @@ import {
   type NomadicBuildingEffects,
 } from '../data/nomadicCamp';
 import type { RunState } from '../types';
-import { applyCampEffects } from './camp';
+import { applyCampEffects, createCampEffects } from './camp';
+import { createNomadicCamp } from '../../shared/nomadicCamp.js';
+import { GAME } from '../config';
+import type { BuildingId } from '../types';
 
 export function nomadicBuildingLevel(camp: NomadicCamp, id: NomadicBuildingId): number {
   return (
@@ -26,6 +33,7 @@ export function nomadicBuildingCost(run: RunState, id: NomadicBuildingId) {
     ? {
         materials: Math.ceil(next.cost.materials * run.patrons.guardian.cost),
         spirit: next.cost.spirit,
+        workers: camp && nomadicBuildingLevel(camp, id) ? 0 : nomadicBuilding(id).workers,
       }
     : undefined;
 }
@@ -58,6 +66,8 @@ export function nomadicBuildingBlocker(
   for (const requirement of next.requires ?? [])
     if (nomadicBuildingLevel(camp, requirement.building) < requirement.level)
       return `Requires ${nomadicBuilding(requirement.building).title} level ${requirement.level}`;
+  if (!level && nomadicAssignedWorkers(camp) + definition.workers > run.clan.population)
+    return 'More families needed';
   const cost = nomadicBuildingCost(run, id)!;
   if (run.clan.materials < cost.materials || run.clan.spirit < cost.spirit)
     return 'Gather more resources';
@@ -95,6 +105,17 @@ export function purchaseNomadicBuilding(
     };
   }
   applyNomadicBuildingEffects(run, next.effects);
+  run.clan.identity[definition.doctrine] += 2;
+  syncNomadicBuildings(run);
+  markExpedition(run, 'construction');
+  completeGuidance(run, 'build');
+  rememberClan(
+    run,
+    definition.title,
+    `The clan ${level ? 'improved' : 'established'} this household to level ${level + 1}.`,
+    NOMADIC_LEGACY_BUILDINGS[id] ? buildingReaction(NOMADIC_LEGACY_BUILDINGS[id]!) : undefined,
+    BUILDING_REMNANT,
+  );
   run.clan.message = `${definition.title} reaches level ${level + 1}.`;
   return true;
 }
@@ -110,4 +131,66 @@ export function nomadicFutureEffects(
         effects[typed] = (effects[typed] ?? 0) + value;
       }
   return effects;
+}
+
+/** These counters are a compatibility projection for existing camp combat/actor consumers. */
+export const NOMADIC_LEGACY_BUILDINGS: Partial<Record<NomadicBuildingId, BuildingId>> = {
+  'khans-ger': 'ger',
+  'horse-lines': 'relay',
+  'herding-grounds': 'herd',
+  'communal-hearth': 'provisions',
+  'wagon-yard': 'wagon',
+  'archery-range': 'archery',
+  'artisans-ger': 'felt',
+  'sacred-ovoo': 'sanctuary',
+};
+export function syncNomadicBuildings(run: RunState): void {
+  const camp = run.clan.nomadicCamp;
+  if (!camp) return;
+  for (const key of Object.keys(run.clan.buildings) as BuildingId[]) run.clan.buildings[key] = 0;
+  run.clan.paths = {};
+  for (const [id, legacy] of Object.entries(NOMADIC_LEGACY_BUILDINGS))
+    run.clan.buildings[legacy] = nomadicBuildingLevel(camp, id as NomadicBuildingId);
+  for (const definition of NOMADIC_BUILDINGS)
+    for (const level of definition.levels.slice(0, nomadicBuildingLevel(camp, definition.id)))
+      for (const unlock of level.effects.unlocks ?? [])
+        run.clan.paths[unlock.building] = [
+          ...new Set([...(run.clan.paths[unlock.building] ?? []), unlock.path]),
+        ];
+  delete run.clan.estate;
+}
+export function initializeNomadicCamp(run: RunState): void {
+  run.clan.nomadicCamp = createNomadicCamp();
+  run.clan.campEffects = createCampEffects();
+  for (const id of CORE_CAMP_BUILDINGS)
+    applyNomadicBuildingEffects(run, nomadicBuilding(id).levels[0]!.effects);
+  syncNomadicBuildings(run);
+}
+export function nomadicPopulationCapacity(run: RunState): number {
+  const camp = run.clan.nomadicCamp;
+  if (!camp) return GAME.clan.maxPopulation;
+  return Math.min(
+    GAME.clan.maxPopulation,
+    nomadicBuilding('khans-ger')
+      .levels.slice(0, camp.core['khans-ger'])
+      .reduce((sum, level) => sum + (level.effects.populationCapacity ?? 0), 0),
+  );
+}
+export function nomadicExperienceMultiplier(run: RunState): number {
+  const camp = run.clan.nomadicCamp;
+  if (!camp) return 1;
+  return NOMADIC_BUILDINGS.reduce(
+    (multiplier, definition) =>
+      definition.levels
+        .slice(0, nomadicBuildingLevel(camp, definition.id))
+        .reduce((m, level) => m * (level.effects.experience ?? 1), multiplier),
+    1,
+  );
+}
+
+export function nomadicAssignedWorkers(camp: NomadicCamp): number {
+  return NOMADIC_BUILDINGS.reduce(
+    (sum, definition) => sum + (nomadicBuildingLevel(camp, definition.id) ? definition.workers : 0),
+    0,
+  );
 }

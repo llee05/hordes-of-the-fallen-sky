@@ -1,6 +1,8 @@
+import { isNomadicCamp, type NomadicCamp } from './nomadicCamp.js';
 /** Bounded save payload; contains no renderer objects, functions, or filesystem capabilities. */
 export interface CampArchive {
   version: 1;
+  nomadicCamp?: NomadicCamp;
   tier: number;
   slots: (string | null)[];
   buildings: string[];
@@ -30,6 +32,7 @@ export function isCampArchive(value: unknown): value is CampArchive {
   if (
     !record(value) ||
     value.version !== 1 ||
+    (value.nomadicCamp !== undefined && !isNomadicCamp(value.nomadicCamp)) ||
     !integer(value.tier, 1, 5) ||
     !ids(value.buildings) ||
     !Array.isArray(value.slots) ||
@@ -62,6 +65,7 @@ export function normalizeCampArchive(value: unknown): CampArchive | undefined {
   if (!isCampArchive(value)) return undefined;
   return {
     version: 1,
+    ...(value.nomadicCamp ? { nomadicCamp: structuredClone(value.nomadicCamp) } : {}),
     tier: value.tier,
     slots: [...value.slots],
     buildings: [...value.buildings],

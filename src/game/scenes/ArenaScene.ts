@@ -1,3 +1,5 @@
+import { purchaseNomadicBuilding } from '../state/nomadicCamp';
+import type { NomadicBuildingId } from '../../shared/nomadicCamp.js';
 import {
   normalizeVisualSettings,
   resolveTerrainRenderer,
@@ -1248,6 +1250,14 @@ export class ArenaScene extends Phaser.Scene {
     if (this.run.phase !== 'ready' && this.run.phase !== 'paused') return;
     this.utilityReturnPhase = this.run.phase;
     this.setPhase(menu);
+  }
+
+  improveNomadicCamp(id: NomadicBuildingId, slot?: number): void {
+    if (!purchaseNomadicBuilding(this.run, id, slot)) return;
+    this.saveCamp();
+    this.refreshCamp();
+    this.audio.play('build');
+    this.publishPhase();
   }
 
   improveEstate(kind: EstatePurchaseKind, id: string, rank: number): void {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import {
   buildStructure,
   buildingBlocker,
@@ -41,7 +41,7 @@ function raiseCamp(run: ReturnType<typeof createRun>, to: number) {
     expect(purchaseEstate(run, 'encampment', `encampment-${tier}`, tier)).toBe(true);
   }
 }
-describe('portable clan estate progression', () => {
+describe('legacy checkpoint compatibility: portable clan estate progression', () => {
   it('starts with two building slots, an independent internal allowance, and permanent family shelters', () => {
     const run = richCamp();
     expect(encampment(run)).toMatchObject({ tier: 1, slots: 2, internalSlots: 1 });

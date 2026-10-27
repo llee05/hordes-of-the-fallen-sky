@@ -35,11 +35,8 @@ export async function startExpedition(
 ): Promise<void> {
   await page.getByRole('button', { name: /NEW GAME/ }).click();
   await page.getByRole('button', { name: /Skip intro/ }).click();
-  // Existing simulation contracts include pre-estate camps; the estate suite uses fresh rules.
-  if (options.legacyCamp !== false)
-    await page.evaluate(() => {
-      delete (window as any).__gloam.scene.run.clan.estate;
-    });
+  // All new expeditions now share the five-core/five-choice model.
+  void options;
 }
 
 /** A synthetic tap must span a sampled press and release, even on a slow render frame. */
@@ -100,27 +97,60 @@ export async function inspectNode(page: Page, id: string): Promise<void> {
 
 /** All purchases use the explicit inspector button, including repeated ranks. */
 export async function buyNode(page: Page, id: string): Promise<void> {
+  if (await page.locator('.nomadic-camp').count()) {
+    if (id.endsWith('-base')) return buyNomadicLevel(page, id.slice(0, -5));
+    throw new Error(`Retired camp path ${id}; use buyNomadicLevel with a current building ID`);
+  }
   await inspectNode(page, id);
   await page.locator('.tree-purchase').click();
 }
 
-/** Select through the manuscript map, using search for an as-yet unbuilt facility. */
-export async function selectCampBuilding(page: Page, id: string, unfold = true): Promise<void> {
-  await expect(page.locator('.immersive-camp')).toBeVisible();
+const CAMP_ALIASES: Record<string, string> = {
+  ger: 'khans-ger',
+  archery: 'archery-range',
+  herd: 'herding-grounds',
+  sanctuary: 'sacred-ovoo',
+  wagon: 'wagon-yard',
+  felt: 'artisans-ger',
+  provisions: 'communal-hearth',
+  relay: 'horse-lines',
+};
+/** Inspect current content through its painted location or the search popup. */
+export async function selectCampBuilding(
+  page: Page,
+  requested: string,
+  _unfold = true,
+): Promise<void> {
+  const id = CAMP_ALIASES[requested] ?? requested;
+  await expect(page.locator('.nomadic-camp')).toBeVisible();
   if (await page.locator('[data-camp-dismiss]').count())
     await page.locator('[data-camp-dismiss]').click();
-  if (!(await page.locator(`[data-camp-site="${id}"]`).count())) {
-    const search = page.getByRole('searchbox', { name: 'Find in camp' });
-    await expect(search).toBeVisible();
-    await expect(search).toBeEditable();
-    await search.fill(id);
+  if (!(await page.locator(`[data-nomadic-site="${id}"]`).count()))
+    await page.getByRole('searchbox', { name: 'Find in camp' }).fill(id);
+  await page.locator(`[data-nomadic-site="${id}"]`).click();
+}
+/** Build or upgrade through real UI purchases, including authored headquarters prerequisites. */
+export async function buyNomadicLevel(page: Page, requested: string, target = 1): Promise<void> {
+  const id = CAMP_ALIASES[requested] ?? requested;
+  if (id !== 'khans-ger' && target > 1) await buyNomadicLevel(page, 'khans-ger', target);
+  const level = async () =>
+    Number(
+      await page
+        .locator(`[data-camp-site="${id}"]`)
+        .getAttribute('data-level')
+        .catch(() => '0'),
+    );
+  let current = (await page.locator(`[data-camp-site="${id}"]`).count()) ? await level() : 0;
+  while (current < target) {
+    await selectCampBuilding(page, id);
+    await expect(page.locator('.tree-purchase')).toBeEnabled();
+    await page.locator('.tree-purchase').click();
+    current += 1;
+    await expect(page.locator(`[data-camp-site="${id}"]`)).toHaveAttribute(
+      'data-level',
+      String(current),
+    );
   }
-  await page.locator(`[data-camp-site="${id}"]`).click();
-  if (
-    unfold &&
-    (await page.locator('[data-camp-foldout]').getAttribute('aria-expanded')) === 'false'
-  )
-    await page.locator('[data-camp-foldout]').click();
 }
 
 /** Root camp management has its own exit; Escape first dismisses the details. */

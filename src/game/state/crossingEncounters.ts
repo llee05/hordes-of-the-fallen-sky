@@ -1,3 +1,4 @@
+import { nomadicPopulationCapacity } from './nomadicCamp';
 import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import { CROSSING_ENCOUNTERS, type CrossingRoute } from '../data/crossings';
@@ -138,9 +139,9 @@ export function settleCrossingEncounter(run: RunState): boolean {
     restoreResolve(run, GAME.crossings.ridgeResolve);
   }
   if (c.route === 'refuge') {
-    run.clan.population = Math.min(
-      GAME.clan.maxPopulation,
-      run.clan.population + GAME.crossings.refugePeople,
+    run.clan.population = Math.max(
+      run.clan.population,
+      Math.min(nomadicPopulationCapacity(run), run.clan.population + GAME.crossings.refugePeople),
     );
     restoreResolve(run, GAME.crossings.refugeResolve);
   }

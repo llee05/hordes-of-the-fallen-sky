@@ -1,5 +1,7 @@
 # The travelling camp
 
+This is the legacy craft catalog retained for save migration and its cultural references. The current five-core/five-choice system is documented in [the nomadic camp guide](nomadic-camp.md).
+
 The following tables catalogue the **37 original household crafts** retained by the estate upgrade. The full camp now has eight facilities, 55 level/craft developments, five central tiers, and six two-rank internal paths; see [the nomadic camp model](nomadic-camp.md) for level gates, plots, and save behavior. Its new crafts draw on Mongolian household work, herding, preserved provisions, mounted organisation, and relay travel. Every listed effect below is implemented; the numerical bonuses and supernatural attacks are original game design. [Cultural context and sources](#cultural-context-and-sources) distinguish those adaptations from historical or living practice.
 
 ## Purchase and travel rules

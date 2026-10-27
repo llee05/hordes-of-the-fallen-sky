@@ -734,3 +734,37 @@
     font-size: 10px;
   }
 }
+
+.nomadic-building-art {
+  position: relative;
+  height: calc(86px * var(--building-size, 1));
+}
+.camp-encampment .nomadic-building-art {
+  height: calc(132px * var(--building-size, 1));
+}
+.nomadic-ornament {
+  position: absolute;
+  width: 28px;
+  height: 65%;
+  bottom: 0;
+  right: calc(-5px + var(--ornament) * 23px);
+}
+@media (max-height: 650px) {
+  .nomadic-building-art {
+    height: calc(58px * var(--building-size, 1));
+  }
+  .camp-encampment .nomadic-building-art {
+    height: calc(86px * var(--building-size, 1));
+  }
+}
+@media (max-width: 1000px) {
+  .nomadic-camp .camp-stores {
+    gap: 9px;
+  }
+  .nomadic-camp .camp-stores strong {
+    font-size: 16px;
+  }
+  .nomadic-camp .camp-stores .clan-mark {
+    width: 19px;
+  }
+}
