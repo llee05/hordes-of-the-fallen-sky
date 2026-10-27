@@ -135,6 +135,10 @@ test('save and return to title preserves a normal expedition and developer runs 
 test('a carved 2.5D migration route and crossing resume with the same terrain and progress', async ({
   page,
 }) => {
+  test.skip(
+    !!process.env.CI,
+    'Needs a GPU: hosted SwiftShader renders 3D at ~2 fps; runs locally.',
+  );
   test.setTimeout(90000);
   await page.goto('/');
   await preferAngledTerrain(page);
