@@ -2,12 +2,15 @@ import Phaser from 'phaser';
 import * as THREE from 'three';
 import type { MountainHeightfield } from './MountainHeightfield';
 import { Fence3D } from './Fence3D';
+import { drawsNothing } from './graphicsCommands';
 
 interface GraphicsCopy {
   canvas: HTMLCanvasElement;
   texture: THREE.CanvasTexture;
   mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>;
   signature: string;
+  /** The WebGL upload was freed while the copy was hidden or blank. */
+  textureDisposed: boolean;
 }
 
 /** Replays existing Phaser effects and hurdle drawings; this authors no new artwork. */
@@ -98,8 +101,16 @@ export class GraphicsBridge {
         continue;
       live.add(object);
       const old = this.copies.get(object);
-      if (!object.visible || object.alpha <= 0 || object.commandBuffer.length === 0) {
-        if (old) old.mesh.visible = false;
+      if (!object.visible || object.alpha <= 0 || drawsNothing(object.commandBuffer)) {
+        if (old) {
+          old.mesh.visible = false;
+          // Keep hidden or blank copies out of GPU memory; three.js re-creates
+          // the WebGL texture from the canvas when the copy is drawn again.
+          if (!old.textureDisposed) {
+            old.texture.dispose();
+            old.textureDisposed = true;
+          }
+        }
         continue;
       }
       const hurdle = object.name.startsWith('camp-barrier-');
@@ -141,10 +152,12 @@ export class GraphicsBridge {
         );
         mesh.name = hurdle ? 'camp-hurdle' : 'ground-effect';
         if (!hurdle) this.root.add(mesh);
-        copy = { canvas, texture, mesh, signature: '' };
+        copy = { canvas, texture, mesh, signature: '', textureDisposed: false };
         this.copies.set(object, copy);
       }
       copy.mesh.visible = true;
+      // The WebGL upload comes back from the canvas once the mesh renders.
+      copy.textureDisposed = false;
       if (hurdle)
         copy.mesh.position.set(
           object.x,
