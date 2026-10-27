@@ -20,7 +20,7 @@ function crossToSilentRiver(route = 'river'): RunState {
 }
 
 describe('the defeat account', () => {
-  it('tells where the clan fell and what struck the last blow, from the recorded damage', () => {
+  it('tells where the clan fell and the last recorded damage', () => {
     const run = createRun();
     run.phase = 'playing';
     // Each fifth of resolve lost costs a person; the last one empties the camp.
@@ -30,13 +30,28 @@ describe('the defeat account', () => {
     expect(run.clan.population).toBe(0);
     const account = defeatAccount(run);
     expect(account[0]).toBe(
-      'At the Golden Pasture, before the clan had ever broken camp, the last of the clan was lost. The final blow came from a hollow wolf.',
+      'At the Golden Pasture, before the clan had ever broken camp, the last of the clan was lost. The last recorded blow came from a hollow wolf.',
     );
     expect(text(run)).toContain('In all, one person was lost on the road.');
     expect(account.at(-1)).toBe(
       'The journey ends here. The road it travelled is still remembered.',
     );
     expect(text(run)).not.toMatch(/Another clan|undefined|NaN|\$\{/);
+  });
+
+  it('reports a later recorded attack without crediting it with the loss of the clan', () => {
+    const run = createRun();
+    run.phase = 'playing';
+    run.clan.population = 1;
+    run.clan.integrity = 81;
+    damageClan(run, 10, undefined, 'attack', 'Hollow wolf');
+    expect(run.clan.population).toBe(0);
+    expect(run.clan.integrity).toBeGreaterThan(0);
+    damageClan(run, 1, undefined, 'attack', 'Earthbound hulk');
+    expect(run.safety.lastDamage).toMatchObject({ source: 'Earthbound hulk', people: 0 });
+    expect(defeatAccount(run)[0]).toBe(
+      'At the Golden Pasture, before the clan had ever broken camp, the last of the clan was lost. The last recorded blow came from an earthbound hulk.',
+    );
   });
 
   it('names each recorded cause without inventing an attacker', () => {
@@ -53,12 +68,16 @@ describe('the defeat account', () => {
     expect(blow('attack', 'Skybreaker')).toContain('from the Skybreaker.');
     expect(blow('attack', '<b>forged</b>')).toContain('from the unreturned.');
     expect(blow('attack')).toContain('from the unreturned.');
-    expect(blow('starvation')).toContain('hunger struck the final blow');
-    expect(blow('eruption')).toContain('the ground erupted at the camp');
-    expect(blow('seer')).toContain('a seer’s strike on the camp');
-    expect(blow('area')).toContain('a spell or a shift in the land');
+    expect(blow('starvation')).toContain('the last recorded blow came from hunger');
+    expect(blow('eruption')).toContain(
+      'The last recorded blow came when the ground erupted at the camp.',
+    );
+    expect(blow('seer')).toContain('The last recorded blow was a seer’s strike on the camp.');
+    expect(blow('area')).toContain(
+      'The last recorded blow came from a spell or a shift in the land near the camp.',
+    );
     run.safety.lastDamage = undefined;
-    expect(defeatAccount(run)[0]).not.toContain('final blow');
+    expect(defeatAccount(run)[0]).not.toContain('recorded blow');
   });
 
   it('separates a broken resolve from the loss of everyone, in singular and plural', () => {

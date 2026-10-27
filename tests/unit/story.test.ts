@@ -377,6 +377,20 @@ describe('destination-specific scenes', () => {
     expect(run.clan.campEffects.multipliers.clanProtection).toBeLessThan(1);
   });
 
+  it.each([1, 2, 3, 4])(
+    'keeps the witnessed courtyard account for %i survivors',
+    (population) => {
+      const run = createRun();
+      run.clan.population = population;
+      expect(storyEncounter(run, 'court').lines).toEqual([
+        {
+          speaker: 'clan',
+          text: 'Among the packs is a folded tally sheet stamped with the Last Court’s seal. It records what happened in the courtyard, and its witness left questions the road has not answered.',
+        },
+      ]);
+    },
+  );
+
   it('reflects the starting tradition and actual succession without inventing either', () => {
     const run = createRun();
     run.startingTradition = 'outriders';
@@ -466,7 +480,7 @@ describe('the ending', () => {
     expect(epilogueText(run).join(' ')).toContain('2 Khans fell keeping the road');
   });
 
-  it('counts several losses and gives a lone survivor an unnamed clan without a broken sentence', () => {
+  it('counts several losses and preserves a lone survivor’s developing identity', () => {
     const run = createRun();
     run.story.peopleLost = 3;
     expect(epilogueText(run).join(' ')).toContain('3 people were lost on the road');
@@ -474,9 +488,11 @@ describe('the ending', () => {
     run.clan.population = 1;
     const alone = epilogueText(run).join(' ');
     expect(alone).toContain('The last survivor keeps a place');
-    expect(alone).toContain('carries no clan name yet');
+    expect(alone).toContain('The tally remembers the clan as “A people taking shape.”');
     expect(alone).toContain('lights a hearth from the carried embers and sets a spare bowl');
     run.clan.identity.wander = 6;
-    expect(epilogueText(run).join(' ')).toContain('the clan’s name, The Wandering Nation,');
+    expect(epilogueText(run).join(' ')).toContain(
+      'The tally remembers the clan as “The Wandering Nation.”',
+    );
   });
 });

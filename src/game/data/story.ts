@@ -506,7 +506,7 @@ export function storyEncounter(run: RunState, id: StoryBeat): StoryEncounter {
         'Scraps of cloth go into the blue banner all the same. The promise holds, however few keep it: count who is left before every departure.',
       earth: `${c.place} · ${secondStop(currentLocation(run).id).remnant}`,
       court:
-        'Among the packs is a folded tally sheet stamped with the Last Court’s seal. It lists households and what they owed, and it raises questions the road has not answered.',
+        'Among the packs is a folded tally sheet stamped with the Last Court’s seal. It records what happened in the courtyard, and its witness left questions the road has not answered.',
       opening: 'Past the fallen stone lies the valley. Clearing the passage will take time.',
       road: 'The gap is widening. The carried embers need a road through, and someone has to hold it.',
     };
@@ -638,9 +638,7 @@ export function epilogueText(run: RunState): readonly string[] {
     ...(roads ? [roads] : []),
     ...(few ? [] : [companionsEnding(run)]),
     single
-      ? identity === 'A people taking shape'
-        ? 'The tally carries no clan name yet. Its promise goes on to the next camp all the same.'
-        : `The tally still carries the clan’s name, ${identity}, and its promise goes on to the next camp.`
+      ? `The tally remembers the clan as “${identity}.” Its promise goes on to the next camp.`
       : identity === 'The Iron Horde'
         ? 'The Iron Horde posts riders above the approach, then sends tired guards back to eat with their families.'
         : identity === 'Children of the Eternal Sky'
@@ -697,11 +695,11 @@ export function defeatAccount(run: RunState): readonly string[] {
   const cause = !blow
     ? ''
     : {
-        attack: ` The final blow came from ${attackerName(blow.source)}.`,
-        starvation: ' The stores had run empty, and hunger struck the final blow.',
-        eruption: ' The final blow came when the ground erupted at the camp.',
-        seer: ' The final blow was a seer’s strike on the camp.',
-        area: ' The final blow came from a spell or a shift in the land near the camp.',
+        attack: ` The last recorded blow came from ${attackerName(blow.source)}.`,
+        starvation: ' The stores had run empty; the last recorded blow came from hunger.',
+        eruption: ' The last recorded blow came when the ground erupted at the camp.',
+        seer: ' The last recorded blow was a seer’s strike on the camp.',
+        area: ' The last recorded blow came from a spell or a shift in the land near the camp.',
       }[blow.cause];
 
   const reached = run.story.crossings
