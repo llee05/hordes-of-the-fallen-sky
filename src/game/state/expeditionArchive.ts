@@ -248,6 +248,8 @@ const optional: Record<string, Record<string, Rule>> = {
     researchRuntime: object(
       {},
       {
+        lastHitAt: number,
+        lastHitGeneration: integer,
         targetSlot: integer,
         targetSpawn: integer,
         targetUntil: number,

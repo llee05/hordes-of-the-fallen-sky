@@ -12,6 +12,9 @@ export type ResearchEffect =
   | {
       kind: 'runtime';
       handler:
+        | 'ee-deep-roots'
+        | 'go-layered-felt'
+        | 'go-common-fire'
         | 'km-feathered-fan'
         | 'on-spirit-signal'
         | 'on-memory-vessels'

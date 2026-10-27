@@ -1,6 +1,12 @@
 /** World units are pixels. Time inside gameplay is seconds. */
 export const GAME = {
   research: {
+    deepRootsLoss: 0.8,
+    layeredProtection: 0.9,
+    layeredSeconds: 3,
+    commonProtection: 0.9,
+    wagonFallbackDamage: 0.35,
+    wagonFallbackRange: 260,
     signalSeconds: 3,
     memorySeconds: 4,
     memoryMaxStacks: 15,

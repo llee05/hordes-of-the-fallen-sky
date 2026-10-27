@@ -1,3 +1,4 @@
+import { researchGrazing } from './researchRuntime';
 import { GAME } from '../config';
 import { ROUTES, startingTradition, type MigrationLocation } from '../data/clan';
 import type { RunState } from '../types';
@@ -51,7 +52,7 @@ export function economyRates(run: RunState, pasture = run.clan.pasture): Economy
   const grazing = clan.stage === 'migration' ? 0 : Math.max(0, Math.min(pasture, 100)) / 100;
   const foodProduction =
     (0.65 + (clan.buildings.herd ? 0.65 : 0)) *
-    grazing *
+    researchGrazing(run, grazing) *
     (clan.region === 1 ? 0.7 : 1) *
     patrons.land.food *
     multipliers.foodProduction *

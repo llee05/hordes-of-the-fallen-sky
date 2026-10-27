@@ -1,3 +1,6 @@
+import { damageKhan } from '../../src/game/state/khan';
+import { economyRates } from '../../src/game/state/economy';
+import { wagonResearchDefence } from '../../src/game/state/researchRuntime';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
 import { world } from './fixtures/expedition';
 import { describe, expect, it } from 'vitest';
@@ -15,6 +18,64 @@ import { clanDamageMultiplier } from '../../src/game/state/clan';
 import { researchPreviewById } from '../../src/game/state/progressionPreview';
 
 describe('supported V2 combat slice', () => {
+  it('applies Deep Roots to food exhaustion, with no production on the road', () => {
+    const r = createRun();
+    const full = economyRates(r).foodProduction;
+    r.clan.pasture = 0;
+    expect(economyRates(r).foodProduction).toBe(0);
+    r.upgrades['ee-deep-roots'] = 1;
+    expect(economyRates(r).foodProduction).toBeCloseTo(full * 0.2);
+    r.clan.stage = 'migration';
+    expect(economyRates(r).foodProduction).toBe(0);
+  });
+  it('reduces subsequent hits within three active seconds, resets across succession', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['go-layered-felt'] = 1;
+    damageKhan(r, 10);
+    expect(r.health).toBe(90);
+    r.elapsed = 1;
+    damageKhan(r, 10);
+    expect(r.health).toBe(81);
+    r.elapsed = 4;
+    damageKhan(r, 10);
+    expect(r.health).toBe(71);
+    r.khan.generation++;
+    damageKhan(r, 10);
+    expect(r.health).toBe(61);
+    r.phase = 'paused';
+    damageKhan(r, 10);
+    expect(r.health).toBe(61);
+  });
+  it('protects resolve only above 80% living Khan health', () => {
+    const r = createRun();
+    const base = clanDamageMultiplier(r);
+    r.upgrades['go-common-fire'] = 1;
+    expect(clanDamageMultiplier(r)).toBeCloseTo(base * 0.9);
+    r.health = 80;
+    expect(clanDamageMultiplier(r)).toBe(base);
+    r.health = 100;
+    r.khan.successionRemaining = 1;
+    expect(clanDamageMultiplier(r)).toBe(base);
+  });
+  it('gives guardian research real baseline defence with zero optional buildings', () => {
+    const r = createRun();
+    expect(wagonResearchDefence(r).active).toBe(false);
+    r.pendingUpgrades = 10;
+    for (const id of [
+      'caravan-foundations',
+      'caravan-foundations',
+      'watchfires',
+      'rolling-fortress',
+    ])
+      expect(applyResearch(r, id)).toBe(true);
+    expect(wagonResearchDefence(r)).toMatchObject({ active: true, fallback: true, range: 260 });
+    expect(wagonResearchDefence(r).damage).toBeCloseTo(0.525);
+    expect(r.clan.buildings.wagon).toBe(0);
+    r.clan.buildings.wagon = 1;
+    expect(wagonResearchDefence(r).fallback).toBe(false);
+    expect(wagonResearchDefence(r).damage).toBe(2.25);
+  });
   it('round-trips runtime timers in version-1 saves and accepts older saves', () => {
     const r = createRun();
     r.phase = 'playing';

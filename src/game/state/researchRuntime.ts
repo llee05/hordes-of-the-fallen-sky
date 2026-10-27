@@ -3,6 +3,8 @@ import type { RunState } from '../types';
 
 /** Optional for compatibility with older expedition saves. All timestamps use active seconds. */
 export interface ResearchRuntime {
+  lastHitAt?: number;
+  lastHitGeneration?: number;
   targetSlot?: number;
   targetSpawn?: number;
   targetUntil?: number;
@@ -70,4 +72,44 @@ export function wideVolleyResearch(
   return personal && count > 1 && ownsResearch(run, 'km-feathered-fan')
     ? { damage: GAME.research.fanDamage, spread: GAME.research.fanSpread }
     : { damage: 1, spread: 1 };
+}
+
+export function researchKhanHitProtection(run: RunState): number {
+  if (!ownsResearch(run, 'go-layered-felt')) return 1;
+  const r = (run.researchRuntime ??= {});
+  const protectedHit =
+    r.lastHitGeneration === run.khan.generation &&
+    r.lastHitAt !== undefined &&
+    run.elapsed - r.lastHitAt < GAME.research.layeredSeconds;
+  r.lastHitAt = run.elapsed;
+  r.lastHitGeneration = run.khan.generation;
+  return protectedHit ? GAME.research.layeredProtection : 1;
+}
+export function researchCommonProtection(run: RunState): number {
+  return ownsResearch(run, 'go-common-fire') &&
+    run.khan.successionRemaining <= 0 &&
+    run.health > run.stats.maxHealth * 0.8
+    ? GAME.research.commonProtection
+    : 1;
+}
+export function researchGrazing(run: RunState, grazing: number): number {
+  return run.clan.stage !== 'migration' && ownsResearch(run, 'ee-deep-roots')
+    ? 1 - (1 - grazing) * GAME.research.deepRootsLoss
+    : grazing;
+}
+export function wagonResearchDefence(run: RunState): {
+  active: boolean;
+  fallback: boolean;
+  range: number;
+  damage: number;
+} {
+  const fallback = !run.clan.buildings.wagon;
+  return {
+    active: !fallback || ownsResearch(run, 'watchfires') || ownsResearch(run, 'rolling-fortress'),
+    fallback,
+    range: fallback ? GAME.research.wagonFallbackRange : 520,
+    damage:
+      (fallback ? GAME.research.wagonFallbackDamage : run.clan.stage === 'migration' ? 0.7 : 1.5) *
+      run.clan.campEffects.multipliers.wagonDamage,
+  };
 }

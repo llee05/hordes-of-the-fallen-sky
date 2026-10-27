@@ -3,6 +3,9 @@ import { RESEARCH_EXPANSIONS } from './researchCatalogue';
 import type { ResearchDefinition } from './researchTypes';
 
 const IMPLEMENTED_HANDLERS = [
+  'ee-deep-roots',
+  'go-layered-felt',
+  'go-common-fire',
   'km-feathered-fan',
   'on-spirit-signal',
   'on-memory-vessels',

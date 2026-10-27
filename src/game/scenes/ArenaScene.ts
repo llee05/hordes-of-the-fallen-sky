@@ -2,6 +2,7 @@ import {
   recordKhanTarget,
   recordResearchShard,
   wideVolleyResearch,
+  wagonResearchDefence,
 } from '../state/researchRuntime';
 import {
   normalizeVisualSettings,
@@ -3391,17 +3392,20 @@ export class ArenaScene extends Phaser.Scene {
         (clan.region === 3 ? 1.5 : 1) *
         clan.campEffects.multipliers.sanctuaryInterval;
     }
-    if (clan.buildings.wagon && this.wagonTimer <= 0) {
-      const target = this.spatial.nearest(this.camp.x, this.camp.y, 520);
+    const wagonResearch = wagonResearchDefence(this.run);
+    if (wagonResearch.active && this.wagonTimer <= 0) {
+      const target = this.spatial.nearest(this.camp.x, this.camp.y, wagonResearch.range);
       if (target)
         this.shootVolley(
           this.camp.x,
           this.camp.y,
           target,
           hasDevelopment(this.run, 'wagon', 'war-carts') ? 3 : 1,
-          (clan.stage === 'migration' && !hasDevelopment(this.run, 'wagon', 'war-carts')
-            ? 0.7
-            : 1.5) * clan.campEffects.multipliers.wagonDamage,
+          wagonResearch.fallback
+            ? wagonResearch.damage
+            : (clan.stage === 'migration' && !hasDevelopment(this.run, 'wagon', 'war-carts')
+                ? 0.7
+                : 1.5) * clan.campEffects.multipliers.wagonDamage,
         );
       this.wagonTimer = 0.9 * this.run.patrons.guardian.wagonInterval;
     }

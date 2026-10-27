@@ -1,3 +1,4 @@
+import { researchKhanHitProtection } from './researchRuntime';
 import { rememberFallenKhan, rememberChosenKhan } from './legacy';
 import { SUCCESSORS, type SuccessorTrait } from '../data/successors';
 import { GAME } from '../config';
@@ -28,6 +29,7 @@ export function damageKhan(
     0,
     run.health -
       amount *
+        researchKhanHitProtection(run) *
         run.patrons.hearth.damageTaken *
         (run.khan.trait ? SUCCESSORS[run.khan.trait].protection : 1),
   );
