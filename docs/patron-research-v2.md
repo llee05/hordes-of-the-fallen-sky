@@ -146,7 +146,7 @@ performance is therefore recorded as a known baseline failure, not a clean pass.
 
 ## Review corrections
 
-Food forecasts integrate the difference between full-pasture and empty-pasture production, including Deep Roots during pasture depletion and recovery. Research selection resolves its branch from the complete catalogue and clears filters for prerequisite, route, bridge, graph and pinned-target actions.
+Food forecasts integrate the difference between full-pasture and empty-pasture production, including Deep Roots during pasture depletion and recovery. Research selection resolves its branch from the complete catalogue and clears filters for prerequisite, route, bridge, graph and pinned-target actions. A pinned plan is computed once per render and its step IDs highlight nodes and edges across every displayed branch, including both patrons contributing to a hybrid.
 
 Personal volley previews and firing share `state/volley.ts`, including Burning Tempest spacing, Feathered Fan, active Galloping Barrage and the current formation. Preview damage excludes momentum, retreat, charged-shot and enemy-specific bonuses, as labelled in the inspector.
 

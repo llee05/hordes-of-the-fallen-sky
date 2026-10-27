@@ -87,6 +87,44 @@ describe('V2 research presentation', () => {
     expect(html).toContain('data-compact="true"');
     expect(html).toContain('Pinned: Whispered Orders');
   });
+  it.each([false, true])(
+    'keeps a pinned hybrid route across patron views with compact=%s',
+    (compact) => {
+      const run = createRun();
+      const view: TreeViewState = {
+        category: 'all',
+        query: '',
+        pinned: 'hy-galloping-barrage',
+        compact,
+      };
+      const highlighted = (html: string, id: string) => {
+        const button = html.match(new RegExp(`<button[^>]*data-node="${id}"[^>]*>`))?.[0];
+        expect(button, id).toBeDefined();
+        return button!.includes('data-route="true"');
+      };
+      selectResearch(view, 'piercing-shaft');
+      view.query = 'The measured bow';
+      let html = researchMenu(run, view);
+      expect(highlighted(html, 'haste')).toBe(true);
+      expect(highlighted(html, 'power')).toBe(true);
+      expect(highlighted(html, 'piercing-shaft')).toBe(true);
+      expect(highlighted(html, 'wide-quiver')).toBe(false);
+      expect(html).toContain('data-edge-from="power" data-edge-to="haste" data-route="true"');
+      selectResearch(view, 'pursuit-gallop');
+      html = researchMenu(run, view);
+      expect(highlighted(html, 'wolf-trail')).toBe(true);
+      expect(highlighted(html, 'pursuit-gallop')).toBe(true);
+      selectResearch(view, 'hy-stillwater-refuge');
+      html = researchMenu(run, view);
+      expect(highlighted(html, 'hy-galloping-barrage')).toBe(true);
+      view.pinned = undefined;
+      selectResearch(view, 'piercing-shaft');
+      html = researchMenu(run, view);
+      expect(highlighted(html, 'haste')).toBe(false);
+      expect(highlighted(html, 'power')).toBe(true);
+    },
+  );
+
   it('displays a legal shared route with filler costs and an explicit irreversible confirmation', () => {
     const r = createRun();
     r.pendingUpgrades = 20;

@@ -65,6 +65,7 @@ export function researchBranches(run: RunState, view?: TreeViewState): TreeBranc
     },
   ];
   const state = researchState(run);
+  const pinnedPlan = view?.pinned ? planResearch(state, view.pinned) : undefined;
   const building = researchBuildingModifiers(run);
   const label = (key: string) => key.replace(/[A-Z]/g, (c) => ' ' + c.toLowerCase());
   const sources = [
@@ -181,7 +182,7 @@ export function researchBranches(run: RunState, view?: TreeViewState): TreeBranc
     const selected = selectedNode(branch, view?.node);
     // Search only the selected and pinned goals, never all 166 on each render.
     for (const node of branch.nodes.filter((n) => n.id === selected.id || n.id === view?.pinned)) {
-      const path = planResearch(state, node.id);
+      const path = node.id === view?.pinned ? pinnedPlan! : planResearch(state, node.id);
       node.plannedRoute = {
         nodes: path.steps.map((s) => ({
           id: s.id,
