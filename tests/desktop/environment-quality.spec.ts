@@ -104,7 +104,10 @@ test('@perf Golden Pasture art review, water pause, and pooled combat retain nat
       const s = (window as any).__gloam.scene,
         w = s.landscape.world3d;
       s.setPhase('playing');
-      w.qualityTime = 0;
+      // Keep the adaptive scaler frozen through spawn, warm-up, and measurement:
+      // resetting it here would let the first frame downgrade render scale from
+      // the stale pre-spawn fps average instead of the loaded scene.
+      w.qualityTime = performance.now() + 60000;
       for (let i = 0; i < 350; i++) s.spawnEnemy();
       let index = 0;
       for (const e of s.enemies.getChildren())
@@ -133,26 +136,46 @@ test('@perf Golden Pasture art review, water pause, and pooled combat retain nat
     });
     const metrics = await page.evaluate(async () => {
       const s = (window as any).__gloam.scene,
-        w = s.landscape.world3d,
-        start = performance.now();
-      let frames = 0;
+        w = s.landscape.world3d;
       const ids = JSON.stringify(
         [...w.chunks.values()].map((c: any) => c.group.children[0].geometry.uuid),
       );
-      await new Promise<void>((resolve) => {
-        const tick = () => {
-          frames++;
-          if (performance.now() - start >= 1500) {
-            s.events.off('prerender', tick);
-            resolve();
-          }
-        };
-        s.events.on('prerender', tick);
-      });
+      // Count prerender frames over a window; optionally time each main-thread
+      // frame by wrapping the loop callback (the bound game step).
+      const sample = async (duration: number, frameMs?: number[]) => {
+        const loop = s.game.loop,
+          callback = loop.callback;
+        if (frameMs)
+          loop.callback = (time: number, delta: number) => {
+            const started = performance.now();
+            callback(time, delta);
+            frameMs.push(performance.now() - started);
+          };
+        const start = performance.now();
+        let frames = 0;
+        await new Promise<void>((resolve) => {
+          const tick = () => {
+            frames++;
+            if (performance.now() - start >= duration) {
+              s.events.off('prerender', tick);
+              resolve();
+            }
+          };
+          s.events.on('prerender', tick);
+        });
+        if (frameMs) loop.callback = callback;
+        return (frames / (performance.now() - start)) * 1000;
+      };
+      await sample(1000); // Warm up so the spawn burst and chunk uploads settle.
+      const frameMs: number[] = [];
+      const fps = await sample(3000, frameMs);
+      frameMs.sort((a, b) => a - b);
       const gl = w.renderer.getContext(),
         debug = gl.getExtension('WEBGL_debug_renderer_info');
       return {
-        fps: (frames / (performance.now() - start)) * 1000,
+        fps,
+        frameMsMean: frameMs.reduce((sum, ms) => sum + ms, 0) / frameMs.length,
+        frameMsP90: frameMs[Math.min(frameMs.length - 1, Math.floor(frameMs.length * 0.9))] ?? 0,
         renderScale: w.renderScale,
         secondarySamples: w.materials.samplingDetail.value,
         enemies: s.testEnemyCount,
