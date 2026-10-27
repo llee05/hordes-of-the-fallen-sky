@@ -57,7 +57,7 @@ for (const size of [
   test(`all facilities remain inspectable from the painting or search at supported viewport sizes at ${size.width}×${size.height}`, async ({
     page,
   }) => {
-    test.setTimeout(60000);
+    test.setTimeout(process.env.CI ? 90000 : 60000);
     await openTitle(page);
     await startExpedition(page);
     await page.keyboard.press('b');

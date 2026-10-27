@@ -96,7 +96,7 @@ test('specialization descendants are excluded while shared household crafts stay
 test('provisioning and relay upgrades follow the caravan and grant their arrival rewards', async ({
   page,
 }) => {
-  test.setTimeout(60000);
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   for (const id of [
     'provisions-base',
     'provisions-aaruul-drying',

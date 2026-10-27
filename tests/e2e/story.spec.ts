@@ -8,7 +8,7 @@ test('story cannot grant twice, and banked knowledge points survive a camp conve
   page,
 }) => {
   // Two research purchases and both memory menus exhaust 30s on CI's software renderer.
-  test.setTimeout(60000);
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await beginStory(page);
   const outcome = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;

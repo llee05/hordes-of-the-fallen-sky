@@ -5,7 +5,7 @@ test('intro reads at the player’s pace with frozen simulation, back, completio
   page,
 }) => {
   // Five full-page paintings plus two expeditions exceed 30s on CI's software renderer.
-  test.setTimeout(60000);
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/?terrain=2d');

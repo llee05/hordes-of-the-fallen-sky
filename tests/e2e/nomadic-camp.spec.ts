@@ -53,7 +53,7 @@ test('one painted camp opens anchored parchments and assigns construction to the
 test('central tiers, internal ranks and a real felt specialisation share the camp without extra panels', async ({
   page,
 }) => {
-  test.setTimeout(60000);
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await page.setViewportSize({ width: 960, height: 600 });
   await page.locator('[data-camp-encampment]').click();
   await page.locator('.tree-purchase').click(); // Established Encampment.

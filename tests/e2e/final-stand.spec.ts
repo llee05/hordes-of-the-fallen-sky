@@ -122,7 +122,7 @@ async function openDefeatMemory(page: Page) {
 test('defeating the Skybreaker restores resolve once and retains Boro in the chronicle', async ({
   page,
 }) => {
-  test.setTimeout(60000);
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await faceSkybreaker(page);
   await defeatInCombat(page, { population: 8, resolve: 50, speech: true });
   await expect(page.locator('#companion-reaction')).toContainText('Boro:');
@@ -172,7 +172,7 @@ for (const scenario of [
   },
 ]) {
   test(`Skybreaker defeat: ${scenario.name}`, async ({ page }) => {
-    test.setTimeout(60000);
+    test.setTimeout(process.env.CI ? 90000 : 60000);
     await faceSkybreaker(page);
     await defeatInCombat(page, { ...scenario, resolve: 90 });
     const state = await page.evaluate(() => {
@@ -220,7 +220,7 @@ for (const defeated of [true, false]) {
   test(`surviving the final stand preserves the ${defeated ? 'defeated' : 'living'} Skybreaker epilogue`, async ({
     page,
   }) => {
-    test.setTimeout(60000);
+    test.setTimeout(process.env.CI ? 90000 : 60000);
     await faceSkybreaker(page);
     if (defeated) await defeatInCombat(page, { population: 8, resolve: 50, speech: true });
     await page.evaluate(() => {

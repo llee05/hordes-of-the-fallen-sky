@@ -3,7 +3,7 @@ import { openTitle, startExpedition } from './helpers';
 test('combat visual preferences persist and keep projectile collision size and danger feedback intact', async ({
   page,
 }) => {
-  test.setTimeout(60000);
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await openTitle(page);
   await startExpedition(page, { legacyCamp: false });
   await page.keyboard.press('Escape');
