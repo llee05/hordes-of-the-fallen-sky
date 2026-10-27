@@ -1,5 +1,9 @@
 # Browser test runtime measurements
 
+The CI shard measurements below are historical. Browser E2E and desktop
+gameplay/graphics suites now run locally; GitHub Actions retains correctness
+checks and the unchanged Pages release smoke. See [current test commands](../README.md#checks).
+
 Measured on 2026-10-26 against application commit `297a02b`, with the review runner
 added in `0a205a4`. This is a shared 12-core Linux host with Intel Iris Xe graphics,
 not a dedicated benchmark machine. Browser runs used `/usr/bin/chromium`, visible
@@ -13,7 +17,7 @@ The full GPU baseline took **1,096.34 seconds (18m16s)**: **151 passed, 6 failed
 157 total. A focused review of `mounted-tactics` and `patron-effects`, including
 both smoke tests, took **56.41 seconds**: **9 passed**. That is 19.4 times less wall
 time for explicitly narrower review coverage. It does not establish a full-suite
-pass or replace the full CI run.
+pass or replace a full local regression run.
 
 ```sh
 flock /tmp/bh-playwright.lock env E2E_PORT=5268 \

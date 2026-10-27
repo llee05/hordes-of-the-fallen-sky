@@ -15,6 +15,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "test:local": "npm run test:e2e && npm run test:desktop",
     "test:e2e": "playwright test",
     "test:e2e:changed": "node scripts/e2e-review.mjs",
     "test:pages": "playwright test --config playwright.pages.config.ts",

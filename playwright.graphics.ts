@@ -1,4 +1,4 @@
-/** Shared browser/Electron test policy; CI retains Playwright's software-rendered defaults. */
+/** Local browser/Electron GPU policy; Pages CI uses headless software rendering. */
 export function testGraphics(
   environment: Record<string, string | undefined> = process.env,
   platform: string = process.platform,

@@ -107,7 +107,7 @@ export function main(args = process.argv.slice(2)) {
   }
   if (focused.length)
     console.log(
-      'Browser review: explicit focused coverage; the full suite is still required in CI.',
+      'Browser review: explicit focused coverage; run the full local suite before shipping gameplay changes.',
     );
   const report = JSON.parse(
     run(
