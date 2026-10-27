@@ -263,7 +263,8 @@ Actors use bounded pools and a spatial grid. Combat, economy, and physics stop i
 ```sh
 npm run check           # Formatting, renderer/desktop/Playwright typechecks, unit tests, production build
 npm run test:coverage   # Unit tests with per-directory coverage floors
-npm run test:local      # Full local browser gameplay/graphics suite, then Electron
+npm run test:local      # Local browser gameplay suite, then Electron (excludes @perf)
+npm run test:perf       # Exclusive browser + Electron graphics/FPS budgets, idle host required
 npm run test:desktop    # Actual Electron against offline production files
 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 npm run format
@@ -313,13 +314,14 @@ or GPU performance results.
 | Suite / configuration                                                               | Classification and where it runs                                                                                                                                                                                                            |
 | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Format, renderer/desktop/Playwright typechecks, Vitest unit tests, production build | Fast correctness checks; GitHub Actions and local `npm run check`. Unit simulations advance explicit time without a live renderer or wall-clock gameplay.                                                                                   |
-| `tests/e2e` browser specs                                                           | Mixed UI/save correctness and live gameplay/graphics coverage; local `npm run test:e2e`. The whole suite stays together rather than maintaining a second CI allowlist.                                                                      |
-| `tests/desktop` Playwright specs                                                    | Native correctness, layout, gameplay, and graphics/performance coverage; local `npm run test:desktop`.                                                                                                                                      |
+| `tests/e2e` browser specs                                                           | Mixed UI/save correctness and live gameplay/graphics coverage; local `npm run test:e2e`. Performance tests tagged `@perf` run separately through `test:perf`.                                                                               |
+| `tests/desktop` Playwright specs                                                    | Native correctness, layout, gameplay, and graphics/performance coverage; local `npm run test:desktop`; `@perf` runs through `test:perf`.                                                                                                    |
 | `tests/pages` production smoke                                                      | Release correctness at the Pages subpath: bundled assets, UI/profile flows, pause/resume, and unavailable storage; GitHub Actions and local `npm run test:pages` after a build. No combat, position, animation, or frame-budget assertions. |
 | `playwright.graphics.ts` and `tests/support/checkGraphics.ts`                       | Rendering configuration and local hardware-WebGL preflight, not a CI performance benchmark. The configuration's policy is unit-tested in `npm run check`; Pages keeps headless software rendering in CI.                                    |
 
-Run `npm run test:local` before shipping gameplay or artwork changes. It runs every
-browser spec, then builds and runs every Electron spec. Individual commands above
+Run `npm run test:local` before shipping gameplay or artwork changes. It runs the ordinary
+browser and Electron specs. Also run `npm run test:perf` for the tagged graphics
+and frame-rate budgets. Individual commands above
 remain available for focused reviews; no test assertions are removed or relaxed.
 
 `E2E_HEADLESS=1` also applies to `test:pages`. Desktop tests use the game's Electron
@@ -369,8 +371,17 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e:changed -- ori
 Repeat `--spec=pattern` for each affected area. This is partial review coverage;
 run the full `test:local` suite before shipping gameplay changes.
 The review command preserves the normal viewport, worker count, GPU policy, and
-failure reporting. On shared Linux hosts, wrap browser commands in
-`flock /tmp/bh-playwright.lock` and choose a distinct `E2E_PORT`. See the
+failure reporting. The local commands (`test:e2e`, `test:e2e:changed`, `test:desktop`, and
+`test:local`) automatically hold a shared `flock -s /tmp/bh-playwright.lock`.
+They can overlap each other; choose distinct `E2E_PORT` values. `test:perf` holds
+the same lock exclusively (`flock -x`) across its build and both tagged suites,
+so ordinary runs wait until it finishes. Do not wrap these commands in another
+lock. If `flock` is absent (including typical macOS/Windows installs), commands
+run without locking; arrange exclusive machine use yourself. After acquiring the
+performance lock, the runner waits up to 30 seconds for 1-minute load to fall to
+at most half the logical CPU count, then exits with “Machine busy, results
+unreliable” if still busy. This guard cannot prevent unrelated jobs starting
+later and Windows does not expose load average. See the
 [measured review and rendering comparisons](docs/browser-test-runtime.md) for
 selection limits, timings, and the decision to retain the full-suite defaults.
 

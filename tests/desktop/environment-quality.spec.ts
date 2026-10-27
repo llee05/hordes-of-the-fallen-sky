@@ -6,7 +6,7 @@ import { resolve } from 'node:path';
 import { createServer } from 'vite';
 
 test.use({ trace: 'off' });
-test('Golden Pasture art review, water pause, and pooled combat retain native resource budgets', async () => {
+test('@perf Golden Pasture art review, water pause, and pooled combat retain native resource budgets', async () => {
   test.setTimeout(120000);
   const directory = await mkdtemp('/tmp/steppe-art-review-');
   const server = await createServer({ server: { host: '127.0.0.1', port: 0 } });
