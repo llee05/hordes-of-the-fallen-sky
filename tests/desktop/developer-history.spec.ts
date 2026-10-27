@@ -1,4 +1,4 @@
-import { launchElectron } from '../support/electron';
+import { launchElectron, electronEnvironment } from '../support/electron';
 import { expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -10,7 +10,10 @@ test('native developer history survives app restart without restoring cheat flag
   const directory = await mkdtemp(join(tmpdir(), 'gloam-command-history-'));
   const server = await createServer({ server: { host: '127.0.0.1', port: 0 } });
   await server.listen();
-  const env = { ...process.env, GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]! };
+  const env: Record<string, string> = {
+    ...electronEnvironment(),
+    GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]!,
+  };
   delete env.ELECTRON_RUN_AS_NODE;
   const launch = () =>
     launchElectron({

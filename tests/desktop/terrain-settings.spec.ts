@@ -2,12 +2,12 @@ import { expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { launchElectron } from '../support/electron';
+import { launchElectron, electronEnvironment } from '../support/electron';
 
 test('terrain settings fit the desktop window and persist in the native profile', async () => {
   test.setTimeout(90000);
   const directory = await mkdtemp(join(tmpdir(), 'gloam-terrain-settings-'));
-  const env = { ...process.env };
+  const env: Record<string, string> = { ...electronEnvironment() };
   delete env.ELECTRON_RUN_AS_NODE;
   delete env.GLOAM_DEV_SERVER_URL;
   const launch = () =>

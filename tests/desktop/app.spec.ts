@@ -1,4 +1,4 @@
-import { launchElectron } from '../support/electron';
+import { launchElectron, electronEnvironment } from '../support/electron';
 import { buyNode, inspectNode, selectCampBuilding, closeOverlayOrPause } from '../e2e/helpers';
 import { expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 test('desktop migration offers named destinations and frozen, responsive travel forecasts', async () => {
   test.setTimeout(110000);
   const directory = await mkdtemp(join(tmpdir(), 'gloam-destinations-'));
-  const environment = { ...process.env };
+  const environment: Record<string, string> = { ...electronEnvironment() };
   delete environment.ELECTRON_RUN_AS_NODE;
   delete environment.GLOAM_DEV_SERVER_URL;
   const app = await launchElectron({
@@ -65,7 +65,7 @@ test('desktop migration offers named destinations and frozen, responsive travel 
 
 test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, and quits', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'gloam-desktop-'));
-  const environment = { ...process.env };
+  const environment: Record<string, string> = { ...electronEnvironment() };
   delete environment.ELECTRON_RUN_AS_NODE;
   delete environment.GLOAM_DEV_SERVER_URL;
   const launch = () =>
@@ -125,7 +125,11 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     expect(await page.evaluate(() => Boolean((window as any).desktop))).toBe(true);
     expect(
       await app.evaluate(({ BrowserWindow }) => {
-        const preferences = BrowserWindow.getAllWindows()[0]!.webContents.getLastWebPreferences();
+        // Electron exposes this diagnostic at runtime but omits it from its public types.
+        const contents = BrowserWindow.getAllWindows()[0]!.webContents as Electron.WebContents & {
+          getLastWebPreferences(): Electron.WebPreferences;
+        };
+        const preferences = contents.getLastWebPreferences();
         return {
           sandbox: preferences.sandbox,
           contextIsolation: preferences.contextIsolation,

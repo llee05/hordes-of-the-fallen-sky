@@ -1,4 +1,4 @@
-import { launchElectron } from '../support/electron';
+import { launchElectron, electronEnvironment } from '../support/electron';
 import { expect, test } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -13,7 +13,10 @@ test('connected progression maps, camp comparisons, and recipe links fit native 
   const directory = await mkdtemp(join(tmpdir(), 'gloam-progression-'));
   const server = await createServer({ server: { host: '127.0.0.1', port: 0 } });
   await server.listen();
-  const environment = { ...process.env, GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]! };
+  const environment: Record<string, string> = {
+    ...electronEnvironment(),
+    GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]!,
+  };
   delete environment.ELECTRON_RUN_AS_NODE;
   const app = await launchElectron({
     args: [resolve('dist-desktop/desktop/main.js'), `--user-data-dir=${directory}`],

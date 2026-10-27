@@ -1,5 +1,5 @@
 import { preferAngledTerrain } from '../support/terrain';
-import { launchElectron } from '../support/electron';
+import { launchElectron, electronEnvironment } from '../support/electron';
 import { expect, test } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -13,8 +13,8 @@ test('orthographic terrain and console run in the existing Electron shell at bot
   const directory = await mkdtemp(join(tmpdir(), 'gloam-world3d-'));
   const server = await createServer({ server: { host: '127.0.0.1', port: 0 } });
   await server.listen();
-  const environment = {
-    ...process.env,
+  const environment: Record<string, string> = {
+    ...electronEnvironment(),
     GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]!,
   };
   delete environment.ELECTRON_RUN_AS_NODE;

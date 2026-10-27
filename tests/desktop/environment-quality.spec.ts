@@ -1,5 +1,5 @@
 import { preferAngledTerrain } from '../support/terrain';
-import { launchElectron } from '../support/electron';
+import { launchElectron, electronEnvironment } from '../support/electron';
 import { expect, test } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -11,7 +11,10 @@ test('Golden Pasture art review, water pause, and pooled combat retain native re
   const directory = await mkdtemp('/tmp/steppe-art-review-');
   const server = await createServer({ server: { host: '127.0.0.1', port: 0 } });
   await server.listen();
-  const env = { ...process.env, GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]! };
+  const env: Record<string, string> = {
+    ...electronEnvironment(),
+    GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]!,
+  };
   delete env.ELECTRON_RUN_AS_NODE;
   const app = await launchElectron({
     args: [resolve('dist-desktop/desktop/main.js'), `--user-data-dir=${directory}`],
