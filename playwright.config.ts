@@ -12,6 +12,8 @@ const origin = `http://127.0.0.1:${port}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
+  grep: process.env.BH_PERF_TESTS === '1' ? /@perf/ : undefined,
+  grepInvert: process.env.BH_PERF_TESTS === '1' ? undefined : /@perf/,
   fullyParallel: false,
   workers: 1,
   expect: { timeout: process.env.CI ? 15000 : 5000 },

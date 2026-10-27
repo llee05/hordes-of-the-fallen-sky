@@ -4,6 +4,30 @@ The CI shard measurements below are historical. Browser E2E and desktop
 gameplay/graphics suites now run locally; GitHub Actions retains correctness
 checks and the unchanged Pages release smoke. See [current test commands](../README.md#checks).
 
+## Current local isolation
+
+`npm run test:perf` runs only the two `@perf` browser/Electron combat resource
+and FPS tests, with their existing budgets unchanged. It holds
+`flock -x /tmp/bh-playwright.lock` through the build and both suites.
+`test:e2e`, `test:e2e:changed`, `test:desktop`, and `test:local` exclude `@perf`
+and hold `flock -s` on that same file. Ordinary suites can overlap each other
+(use distinct `E2E_PORT` values), but wait behind a performance run. Each command
+waits in one blocking foreground acquisition; do not add an outer lock.
+
+After exclusive acquisition, the performance runner checks 1-minute load against
+half the available logical CPU count. It waits in 5-second intervals for up to
+30 seconds; if still busy, it exits with “Machine busy, results unreliable”
+without measuring any budgets. Keep unrelated CPU/GPU jobs idle during testing:
+the lock coordinates cooperating test commands only, and load does not measure
+GPU contention. Windows reports no load average. When `flock` is unavailable,
+commands warn and run unlocked rather than failing; arrange machine isolation
+manually on those hosts. Direct Playwright commands bypass the runner's lock;
+use the npm commands for local tests.
+
+The commands and timings below document historical exclusive-lock experiments.
+For current focused reviews use `npm run test:e2e:changed -- ...` directly,
+without the historical outer `flock` wrapper.
+
 Measured on 2026-10-26 against application commit `297a02b`, with the review runner
 added in `0a205a4`. This is a shared 12-core Linux host with Intel Iris Xe graphics,
 not a dedicated benchmark machine. Browser runs used `/usr/bin/chromium`, visible

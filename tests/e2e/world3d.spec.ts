@@ -185,7 +185,7 @@ test('Khan movement follows the ramp, terrain occludes sprites, and elevated com
   expect(occluded).toBe(true);
 });
 
-test('bounded atlas batches support pooled combat without rebuilding settled terrain', async ({
+test('@perf bounded atlas batches support pooled combat without rebuilding settled terrain', async ({
   page,
 }) => {
   test.setTimeout(120000);

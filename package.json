@@ -15,9 +15,9 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:local": "npm run test:e2e && npm run test:desktop",
-    "test:e2e": "playwright test",
-    "test:e2e:changed": "node scripts/e2e-review.mjs",
+    "test:local": "node scripts/local-tests.mjs local",
+    "test:e2e": "node scripts/local-tests.mjs e2e",
+    "test:e2e:changed": "node scripts/local-tests.mjs review",
     "test:pages": "playwright test --config playwright.pages.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -29,7 +29,8 @@
     "package:linux": "npm run package -- --platform=linux --arch=x64",
     "package:win": "npm run package -- --platform=win32 --arch=x64",
     "steam:prepare": "node scripts/prepare-steam.mjs",
-    "test:desktop": "npm run build && playwright test --config playwright.desktop.config.ts"
+    "test:desktop": "node scripts/local-tests.mjs desktop",
+    "test:perf": "node scripts/local-tests.mjs perf"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",
