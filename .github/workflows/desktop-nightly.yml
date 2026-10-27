@@ -23,6 +23,7 @@ jobs:
     env:
       CI: '1'
       E2E_HEADLESS: '1'
+      ELECTRON_XVFB: '1'
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -42,14 +43,43 @@ jobs:
           fi
           test -x node_modules/electron/dist/electron
       - name: Install Linux runtime dependencies
-        run: npx playwright install-deps chromium
+        run: |
+          npx playwright install-deps chromium
+          sudo apt-get install --yes --no-install-recommends xvfb openbox
       - name: Build and test the offline Electron game
-        run: npm run test:desktop
+        run: |
+          xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' bash -e <<'SH'
+            # Native focus and fullscreen require a window manager as well as X11.
+            openbox >/dev/null 2>&1 &
+            desktop_wm_pid=$!
+            trap 'kill "$desktop_wm_pid" 2>/dev/null || true' EXIT
+            npm run test:desktop
+          SH
+      - name: Collect failed test diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          shopt -s nullglob
+          for directory in test-results/desktop/*/; do
+            files=("${directory}"attachments/electron-trace-*.zip)
+            # The runner trace embeds attached native traces. Keep one copy only.
+            if [ "${#files[@]}" -eq 0 ]; then
+              files+=("${directory}trace.zip")
+            fi
+            files+=("${directory}"test-failed-*.png "${directory}error-context.md")
+            for file in "${files[@]}"; do
+              if [ -f "$file" ]; then
+                destination="desktop-failures/$(basename "$directory")"
+                mkdir -p "$destination"
+                cp "$file" "$destination/"
+              fi
+            done
+          done
       - name: Upload failure traces and screenshots
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: desktop-failure-${{ github.run_id }}-${{ github.run_attempt }}
-          path: test-results/
-          retention-days: 14
+          path: desktop-failures/
+          retention-days: 7
           if-no-files-found: warn

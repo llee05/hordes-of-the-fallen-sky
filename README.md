@@ -303,9 +303,13 @@ E2E_HEADLESS=1 npm run test:desktop
 ```
 
 The **Nightly desktop** workflow runs the full Electron suite daily at 17:43 UTC
-and on manual dispatch, independently of pull request checks. Software WebGL
-selects flat 2D terrain by default; renderer-specific specs explicitly select 3D.
-Failed runs upload `test-results/`, including native Electron traces, for 14 days.
+and on manual dispatch, independently of pull request checks. CI uses Xvfb with
+SwiftShader and Openbox (`ELECTRON_XVFB=1`) to exercise native window behavior on a virtual
+1920×1080 display. Software WebGL selects flat 2D terrain by default;
+renderer-specific specs explicitly select 3D.
+Failed runs upload only traces, failure screenshots, and error context for failed
+tests, for seven days. Duplicate trace copies and successful review screenshots
+are excluded.
 Download the artifact and open a trace with `npx playwright show-trace <trace.zip>`.
 If dependency installation skipped the Electron runtime, install it with
 `env -u ELECTRON_SKIP_BINARY_DOWNLOAD node node_modules/electron/install.js`.

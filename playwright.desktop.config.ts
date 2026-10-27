@@ -16,11 +16,18 @@ export default defineConfig({
       args:
         graphics.headless && process.platform === 'linux'
           ? [
-              '--ozone-platform=headless',
-              // Ozone otherwise exposes a 1×1 display, which clamps the native window.
-              '--ozone-override-screen-size=1920,1080',
+              ...(process.env.ELECTRON_XVFB === '1'
+                ? ['--ozone-platform=x11']
+                : [
+                    '--ozone-platform=headless',
+                    // Ozone otherwise exposes a 1×1 display, which clamps the native window.
+                    '--ozone-override-screen-size=1920,1080',
+                  ]),
               '--use-angle=swiftshader',
               '--enable-unsafe-swiftshader',
+              '--disable-background-timer-throttling',
+              '--disable-renderer-backgrounding',
+              '--disable-backgrounding-occluded-windows',
             ]
           : graphics.launchOptions.args,
     },
