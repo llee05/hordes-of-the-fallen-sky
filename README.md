@@ -309,11 +309,13 @@ runtime, with the same local GPU flags and renderer check. On Linux, `CI` or
 E2E_HEADLESS=1 npm run test:desktop
 ```
 
-The **Nightly desktop** workflow runs the full Electron suite daily at 17:43 UTC
+The **Nightly desktop** workflow runs the Electron suite daily at 17:43 UTC
 and on manual dispatch, independently of pull request checks. CI uses Xvfb with
 SwiftShader and Openbox (`ELECTRON_XVFB=1`) to exercise native window behavior on a virtual
 1920×1080 display. Software WebGL selects flat 2D terrain by default;
 renderer-specific specs explicitly select 3D.
+The desktop migration forecast regression is skipped in GitHub Actions because
+hosted software rendering is too slow; it remains enabled in local runs.
 Failed runs upload only traces, failure screenshots, and error context for failed
 tests, for seven days. Duplicate trace copies and successful review screenshots
 are excluded.
