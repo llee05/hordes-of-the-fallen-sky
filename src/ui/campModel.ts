@@ -1,6 +1,12 @@
 import { BUILDINGS } from '../game/data/clan';
 import { ENCAMPMENT_TIERS, INTERNAL_DEVELOPMENTS } from '../game/data/campEstate';
-import { buildingLevel, campSlots, encampment } from '../game/state/campEstate';
+import {
+  buildingLevel,
+  campSlots,
+  encampment,
+  estateBlocker,
+  estateCost,
+} from '../game/state/campEstate';
 import { currentLocation } from '../game/state/journey';
 import { assignedWorkers } from '../game/state/clan';
 import { hasDevelopment } from '../game/state/camp';
@@ -18,7 +24,7 @@ import {
   estateBranch,
   nextCampNode,
 } from './campPopups';
-import { escapeHtml, searchText, type TreeViewState } from './progressionTree';
+import { escapeHtml, priceText, searchText, type TreeViewState } from './progressionTree';
 
 function craftEmblem(id: BuildingId, run: RunState): string {
   const choice = BUILDINGS.find((b) => b.id === id)!.paths.find(
@@ -129,8 +135,11 @@ export function buildingMenu(run: RunState, view: TreeViewState, selected: strin
           .reduce((sum, p) => sum + (p.workers ?? 0), 0);
     return `<button class="camp-slot-card" data-camp-site="${id}" data-camp-plot="${index}" data-focus-key="site-${id}" data-established="${level > 0}" data-level="${level}" data-match="${matches.includes(b)}" aria-pressed="${!!view.campPopup && view.campTarget === 'building' && selectedBuilding.id === id}" aria-label="${escapeHtml(b.title)}. Level ${level}. ${workers} assigned workers. Inspect improvements."><span class="camp-slot-number">FACILITY ${String(index + 1).padStart(2, '0')} ${clanMark(BUILDING_MARKS[id] ?? 'ger')}</span><span class="camp-slot-art">${campIllustration(b.illustration ?? 'ger')}</span><strong>${escapeHtml(b.title)}</strong><small>Level ${level} / ${b.maxLevel ?? 3} · ${workers} assigned workers</small>${craftEmblem(id, run)}<span class="camp-card-action">${level ? 'Inspect improvements' : 'Reserved · establish facility'} →</span></button>`;
   };
-  const nextTier = estateBranch(run, 'encampment').nodes[tier.tier];
-  const holding = `<button class="camp-holding" data-camp-encampment data-focus-key="camp-encampment" aria-pressed="${!!view.campPopup && view.campTarget === 'encampment'}" aria-label="Clan Encampment. ${escapeHtml(tier.title)}. Tier ${tier.tier} of 5."><span class="camp-holding-art">${campIllustration('ger')}</span><span class="camp-holding-copy"><span class="eyebrow">CLAN ENCAMPMENT · TIER ${tier.tier} / 5</span><strong>${escapeHtml(tier.title)}</strong><small>${slots.filter(Boolean).length} / ${tier.slots} facilities · ${Object.values(run.clan.estate?.internals ?? {}).filter((v) => v > 0).length} / ${tier.internalSlots} internal developments</small><span class="camp-card-action">${nextTier ? `Inspect upgrade: ${escapeHtml(nextTier.title)} →<small>${escapeHtml(nextTier.cost)}${nextTier.reason ? ` · ${escapeHtml(nextTier.reason)}` : ''}</small>` : 'Highest camp tier · inspect bonuses →'}</span></span></button>`;
+  const nextTier = ENCAMPMENT_TIERS[tier.tier];
+  const tierBlocker = nextTier
+    ? estateBlocker(run, 'encampment', nextTier.id, nextTier.tier)
+    : undefined;
+  const holding = `<button class="camp-holding" data-camp-encampment data-focus-key="camp-encampment" aria-pressed="${!!view.campPopup && view.campTarget === 'encampment'}" aria-label="Clan Encampment. ${escapeHtml(tier.title)}. Tier ${tier.tier} of 5."><span class="camp-holding-art">${campIllustration('ger')}</span><span class="camp-holding-copy"><span class="eyebrow">CLAN ENCAMPMENT · TIER ${tier.tier} / 5</span><strong>${escapeHtml(tier.title)}</strong><small>${slots.filter(Boolean).length} / ${tier.slots} facilities · ${Object.values(run.clan.estate?.internals ?? {}).filter((v) => v > 0).length} / ${tier.internalSlots} internal developments</small><span class="camp-card-action">${nextTier ? `Inspect upgrade: ${escapeHtml(nextTier.title)} →<small>${escapeHtml(priceText(estateCost(run, nextTier)))}${tierBlocker ? ` · ${escapeHtml(tierBlocker)}` : ''}</small>` : 'Highest camp tier · inspect bonuses →'}</span></span></button>`;
   const internals = `<section class="camp-internals" aria-label="Internal developments"><h3>Within the household <small>${tier.internalSlots} development slots</small></h3><div class="camp-internal-strip">${INTERNAL_DEVELOPMENTS.map(
     (d) => {
       const rank = run.clan.estate?.internals[d.id] ?? 0;
