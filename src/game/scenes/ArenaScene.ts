@@ -1,4 +1,9 @@
 import {
+  recordKhanTarget,
+  recordResearchShard,
+  wideVolleyResearch,
+} from '../state/researchRuntime';
+import {
   normalizeVisualSettings,
   resolveTerrainRenderer,
   showSoftwareTerrainNotice,
@@ -2440,6 +2445,7 @@ export class ArenaScene extends Phaser.Scene {
         (1 + momentum * 0.3) * (retreat ? GAME.mounted.retreatDamage : 1),
         false,
         charged,
+        'khan',
       );
       hostFired ||= released;
       if (released && charged) {
@@ -2495,7 +2501,9 @@ export class ArenaScene extends Phaser.Scene {
     multiplier: number,
     ancestral = false,
     charged = false,
+    owner: 'khan' | 'rider' = 'rider',
   ): boolean {
+    const research = wideVolleyResearch(this.run, count, owner === 'khan');
     const direction = Math.atan2(target.y - y, target.x - x);
     const tempest = burningTempest(this.run);
     let fired = false;
@@ -2507,10 +2515,11 @@ export class ArenaScene extends Phaser.Scene {
         direction +
         (i - (count - 1) / 2) *
           (tempest ? 0.28 : 0.12) *
-          (ancestral ? 1 : this.run.patrons.bow.spread);
+          (ancestral ? 1 : this.run.patrons.bow.spread) *
+          research.spread;
       bolt.enableBody(true, x, y, true, true);
       bolt.barrage = undefined;
-      bolt.source = undefined;
+      bolt.source = owner === 'khan' ? 'khan' : undefined;
       bolt.setData('terrain-previous', { x, y });
       bolt
         .setTexture('bolt')
@@ -2534,6 +2543,7 @@ export class ArenaScene extends Phaser.Scene {
         this.run.stats.damage *
         (charged ? GAME.mounted.chargedDamage : 1) *
         multiplier *
+        research.damage *
         (this.run.clan.formation === 'encircle' && this.run.clan.momentum > 0.5 ? 1.3 : 1);
       bolt.remaining = GAME.projectile.lifetime;
       bolt.setVelocity(
@@ -2643,6 +2653,7 @@ export class ArenaScene extends Phaser.Scene {
       enemy.tactics.phase = 'recover';
       enemy.tactics.remaining = GAME.tactics.chargeRecovery;
     }
+    if (bolt.source === 'khan') recordKhanTarget(this.run, enemy.tacticalSlot, enemy.spawnId);
     this.damageEnemy(enemy, bolt.damage);
   }
 
@@ -2724,6 +2735,7 @@ export class ArenaScene extends Phaser.Scene {
       if (!gem.attracted) continue;
       if (distance < 18) {
         experience += gem.value;
+        recordResearchShard(this.run);
         gem.disableBody(true, true);
       } else {
         const step = Math.min(1, dt * (6 + 140 / distance));

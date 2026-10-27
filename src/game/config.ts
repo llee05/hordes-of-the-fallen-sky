@@ -1,5 +1,17 @@
 /** World units are pixels. Time inside gameplay is seconds. */
 export const GAME = {
+  research: {
+    signalSeconds: 3,
+    memorySeconds: 4,
+    memoryMaxStacks: 15,
+    memorySpeed: 0.01,
+    twinEvery: 4,
+    twinDamage: 0.4,
+    quietProtection: 0.95,
+    quietRadius: 165,
+    fanDamage: 0.95,
+    fanSpread: 1.1,
+  },
   width: 960,
   height: 540,
   worldSize: 5200,

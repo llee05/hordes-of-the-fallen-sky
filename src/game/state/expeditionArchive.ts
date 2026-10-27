@@ -245,6 +245,18 @@ const overrides: Record<string, Rule> = {
 };
 const optional: Record<string, Record<string, Rule>> = {
   '': {
+    researchRuntime: object(
+      {},
+      {
+        targetSlot: integer,
+        targetSpawn: integer,
+        targetUntil: number,
+        memoryStacks: integer,
+        memoryUntil: number,
+        echoReleases: integer,
+        echoNearCamp: boolean,
+      },
+    ),
     finalStand: object(
       {
         phase: oneOf(['advance', 'warning', 'recovery']),

@@ -6,6 +6,7 @@ import { clanDamageMultiplier, hasDevelopment, riderCount, burningTempest } from
 import { economyForecast, migrationMobility, pastureDepletion } from './economy';
 import { gallopCooldown } from './patrons';
 import { developmentPreview } from './developmentPreview';
+import { echoInterval, wideVolleyResearch } from './researchRuntime';
 
 export interface StatChange {
   label: string;
@@ -55,6 +56,21 @@ function metrics(r: RunState): Metric[] {
       context: 'Before Feigned retreat’s momentum condition',
     },
     { label: 'Khan arrows per volley', value: r.stats.projectiles + (burningTempest(r) ? 2 : 0) },
+    {
+      label: 'Khan wide-volley damage',
+      value: r.stats.damage * wideVolleyResearch(r, r.stats.projectiles, true).damage,
+      context: 'Personal multi-arrow volleys only; includes Feathered Fan penalty',
+    },
+    {
+      label: 'Khan wide-volley spacing',
+      value:
+        (0.12 *
+          r.patrons.bow.spread *
+          wideVolleyResearch(r, r.stats.projectiles, true).spread *
+          180) /
+        Math.PI,
+      unit: '°',
+    },
     { label: 'Additional arrow pierces', value: r.patrons.bow.pierce },
     {
       label: 'Volley spacing',
@@ -118,7 +134,7 @@ function metrics(r: RunState): Metric[] {
       value: r.patrons.ancestors.count ? r.stats.damage * r.patrons.ancestors.damage : 0,
       context: 'Before momentum, execution, and formation bonuses',
     },
-    { label: 'Echo firing interval', value: r.patrons.ancestors.interval, unit: 's', lower: true },
+    { label: 'Echo firing interval', value: echoInterval(r), unit: 's', lower: true },
     { label: 'Enemy slow in fields', value: Math.min(0.8, r.patrons.water.slow) * 100, unit: '%' },
     { label: 'Slowing field radius', value: r.patrons.water.radius, unit: ' paces' },
     { label: 'Extra eruption warning', value: r.patrons.water.warning, unit: 's' },

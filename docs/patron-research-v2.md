@@ -29,3 +29,20 @@ new discovery system, individual wagon simulation or follower lifecycle is in sc
 V1 numerical values remain unchanged in the compatibility rollout. Respec remains
 unavailable: existing one-shot vitality healing and Last Ember need a separate safe
 refund contract.
+
+## Runtime slice and gate
+
+The first enabled V2 nodes are Feathered Fan, Spirit Signal, Memory Vessels,
+Quiet Council and Ancestral Archers. The scene calls shard and Khan-hit hooks;
+echo support consumes target priority, firing cadence and bounded twin releases.
+Timers use active expedition seconds and are retained in optional version-1 save
+fields; old saves need no migration. Quiet Council protects aggregate resolve only
+while an actual echo is within 165 paces of camp. Feathered Fan affects personal
+multi-arrow volleys, separately from rider and echo shots.
+
+**Phase 3 gate is not passed:** Ongod's Bond of Ashes has no expiring echo lifecycle;
+Whispered Orders has no echo stances; Ancestral Legion needs coordinated formation
+ownership; Council of Many Voices needs temporary lesser-echo lifecycle. These
+systems require their own gameplay milestone. Remaining Archery/Ongod effects are
+registered but unavailable at this gate; no claim of two complete Mythic paths is
+made. The shipped portion is a tested compatibility and early-research slice.

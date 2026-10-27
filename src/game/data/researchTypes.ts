@@ -7,7 +7,17 @@ export interface ResearchRequirement {
   rank: number;
 }
 /** Only named adapters with real gameplay handlers belong in this vocabulary. */
-export type ResearchEffect = { kind: 'legacy'; upgradeId: string };
+export type ResearchEffect =
+  | { kind: 'legacy'; upgradeId: string }
+  | {
+      kind: 'runtime';
+      handler:
+        | 'km-feathered-fan'
+        | 'on-spirit-signal'
+        | 'on-memory-vessels'
+        | 'on-quiet-council'
+        | 'on-ancestral-archers';
+    };
 export interface ResearchDefinition {
   id: string;
   title: string;

@@ -1,6 +1,7 @@
 import { GAME } from '../config';
 import type { RunState } from '../types';
 import { isKhanActive } from './khan';
+import { echoInterval } from './researchRuntime';
 
 export interface PatronSupportTimers {
   ancestorTimer: number;
@@ -49,7 +50,7 @@ export class PatronSupportClock {
     const ancestorCount = Math.min(GAME.patrons.ancestors.maximum, effects.ancestors.count);
     if (ancestorCount === 0) this.ancestorTimer = 0;
     const releaseAncestors = ancestorCount > 0 && this.ancestorTimer <= 0;
-    if (releaseAncestors) this.ancestorTimer = effects.ancestors.interval;
+    if (releaseAncestors) this.ancestorTimer = echoInterval(run);
 
     const pulseWater = isKhanActive(run) && effects.water.pulseDamage > 0 && this.waterTimer <= 0;
     if (pulseWater) this.waterTimer = GAME.patrons.water.pulseEvery;

@@ -2,6 +2,14 @@ import { UPGRADES } from './upgrades';
 import { RESEARCH_EXPANSIONS } from './researchCatalogue';
 import type { ResearchDefinition } from './researchTypes';
 
+const IMPLEMENTED_HANDLERS = [
+  'km-feathered-fan',
+  'on-spirit-signal',
+  'on-memory-vessels',
+  'on-quiet-council',
+  'on-ancestral-archers',
+] as const;
+
 export const RESEARCH: readonly ResearchDefinition[] = [
   ...UPGRADES.map((u): ResearchDefinition => ({
     id: u.id,
@@ -19,7 +27,12 @@ export const RESEARCH: readonly ResearchDefinition[] = [
     tags: [u.category],
     effects: [{ kind: 'legacy', upgradeId: u.id }],
   })),
-  ...RESEARCH_EXPANSIONS,
+  ...RESEARCH_EXPANSIONS.map((t): ResearchDefinition => {
+    const handler = IMPLEMENTED_HANDLERS.find((id) => id === t.id);
+    return handler
+      ? { ...t, unavailableReason: undefined, effects: [{ kind: 'runtime', handler }] }
+      : t;
+  }),
 ];
 export const RESEARCH_BY_ID: ReadonlyMap<string, ResearchDefinition> = new Map(
   RESEARCH.map((t) => [t.id, t]),
