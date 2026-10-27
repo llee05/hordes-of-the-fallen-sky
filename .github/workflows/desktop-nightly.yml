@@ -1,9 +1,6 @@
 name: Nightly desktop
 
 on:
-  # Temporary bootstrap validation; removed after the first branch run.
-  pull_request:
-    paths: ['.github/workflows/desktop-nightly.yml']
   schedule:
     - cron: '43 17 * * *'
   workflow_dispatch:
