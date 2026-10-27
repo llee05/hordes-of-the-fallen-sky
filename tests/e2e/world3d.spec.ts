@@ -1,3 +1,4 @@
+import { preferAngledTerrain } from '../support/terrain';
 import { expect, test, type Page } from '@playwright/test';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
 import { sceneFrames } from './helpers';
@@ -7,6 +8,7 @@ test.use({ viewport: { width: 1280, height: 800 }, trace: 'off' });
 
 async function open(page: Page): Promise<void> {
   await page.goto('/');
+  await preferAngledTerrain(page);
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-level="destination:2:otgontenger"]').click();
   // The title already has a 3D canvas. Wait for the queued scene restart to rebuild its pools.
@@ -304,6 +306,7 @@ for (const id of places) {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('/');
+    await preferAngledTerrain(page);
     await expect(page.getByRole('button', { name: 'Developer mode F8' })).toBeVisible();
     await page.keyboard.press('F8');
     const choice = page.locator(`[data-developer-level$=":${id}"]`).first();

@@ -22,8 +22,9 @@ subpath; set `PAGES_PORT` to serve on another port when 4173 is busy. It checks
 local assets and prologue paintings, the absence of development
 hooks and native capabilities, real camp purchases, menu pausing, sound preference
 persistence, and play with unavailable browser storage. The gameplay smoke passes
-`?terrain=2d` because the default angled 3D terrain renderer exceeds CI's software
-WebGL time budget. Run `npm run check` and
+`?terrain=2d` to keep terrain flat within CI's software WebGL time budget regardless
+of driver detection. See [terrain selection and startup defaults](world-3d.md).
+Run `npm run check` and
 `npm run test:e2e` for the broader checks and development-browser regressions.
 
 For a manual production preview:

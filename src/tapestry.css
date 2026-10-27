@@ -187,6 +187,12 @@
 .menu-quit {
   color: #c7c1a9;
 }
+.title-menu .settings-note {
+  color: #ecdbb7;
+}
+.title-menu .settings-note .secondary-button {
+  color: #edc889;
+}
 .menu-button {
   color: #f0e0bd;
   border-bottom: 1px solid #c7a97524;

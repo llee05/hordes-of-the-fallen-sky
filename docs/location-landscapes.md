@@ -39,7 +39,7 @@ Eight user-supplied 1254 × 1254 terrain PNGs are bundled unchanged in `public/a
 | Mount Belukha     | `mount-belukha.png`     | Dark woodland soil, moss, ferns, roots, and stones   |
 | Eej Khairkhan     | `eej-khairkhan.png`     | Warm granite slabs, sandy gravel, sparse dry grass   |
 
-All twelve destinations now use the [angled scene renderer](world-3d.md) by default.
+All twelve destinations support the [angled scene renderer](world-3d.md).
 Their geometry, palettes, vegetation, and snow lines live in
 `src/game/data/worldRegions.ts`; `ComposedTerrain` combines their masses with seeded
 relief and broad traversable approaches. The [new quiet paintings](angled-scene-art.md)
@@ -47,7 +47,7 @@ provide meadow and granite materials plus an angled scenery atlas. Existing supp
 ground PNGs remain bundled for soil, snow, previews, and the compatible renderer.
 
 The following tile, scenery, and `RiverSurface` descriptions document that compatible
-renderer, available with `?terrain=2d` or `VITE_TERRAIN_RENDERER=2d`.
+renderer. See [terrain selection and startup defaults](world-3d.md) to select it.
 The supplied `bodg-khan-uul.png` is stored as `bogd-khan-uul.png` to match the
 canonical location ID. `LandscapeDefinition.groundTile` selects the PNG basename;
 `painterlyArt.ts` preloads each unique tile once under `ground-<basename>`, using
