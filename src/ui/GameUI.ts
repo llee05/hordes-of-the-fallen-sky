@@ -265,7 +265,7 @@ export class GameUI {
     }
   }
   private meter(id: string, value: number): void {
-    this.get(id).style.width = `${Math.max(0, Math.min(100, value))}%`;
+    this.get(id).style.width = `${Math.max(0, Math.min(value, 100))}%`;
   }
 
   private update(snapshot: HudSnapshot): void {
@@ -507,7 +507,7 @@ export class GameUI {
     this.get('migration-progress').hidden = clan.stage === 'camp';
     const progress = clan.stage === 'final' ? passageProgress(run) : clan.migrationProgress;
     this.text('progress-label', clan.stage === 'final' ? 'Passage opens' : 'Crossing');
-    this.text('crossing', `${Math.min(100, Math.round(progress * 100))}%`);
+    this.text('crossing', `${Math.min(Math.round(progress * 100), 100)}%`);
     this.meter('crossing-fill', progress * 100);
     this.text(
       'migration-hint',

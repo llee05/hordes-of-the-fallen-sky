@@ -523,7 +523,7 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
     (run.khan.successionRemaining > 0 && run.health !== 0) ||
     run.clan.population <= 0 ||
     run.clan.integrity <= 0 ||
-    run.clan.integrity > 100 ||
+    run.clan.integrity > GAME.clan.maxResolve ||
     !Number.isInteger(run.level) ||
     run.level < 1 ||
     !Number.isInteger(run.pendingUpgrades) ||

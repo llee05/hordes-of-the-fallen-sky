@@ -44,7 +44,7 @@ export function createClan(): ClanState {
     spirit: 0,
     population: 8,
     herd: 3,
-    integrity: 100,
+    integrity: GAME.clan.maxResolve,
     migrationProgress: 0,
     routeId: '',
     buildings: Object.fromEntries(
@@ -59,6 +59,11 @@ export function createClan(): ClanState {
     rescuedRiders: 0,
     message: 'Eight people. Three horses. One last patch of blue sky. Build your clan with B.',
   };
+}
+
+/** Restore clan resolve up to the shared cap; amount is supplied by gameplay rules. */
+export function restoreResolve(run: RunState, amount: number): void {
+  run.clan.integrity = Math.min(GAME.clan.maxResolve, run.clan.integrity + amount);
 }
 
 export function assignedWorkers(run: RunState): number {
@@ -255,9 +260,9 @@ export interface ClanProtection {
 
 export function clanDamageMultiplier(run: RunState): number {
   return (
-    (run.clan.formation === 'guard' ? 0.7 : 1) *
-    (hasDevelopment(run, 'wagon', 'felt-armor') ? 0.5 : 1) *
-    (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? 0.8 : 1) *
+    (run.clan.formation === 'guard' ? GAME.clan.protection.guard : 1) *
+    (hasDevelopment(run, 'wagon', 'felt-armor') ? GAME.clan.protection.feltArmor : 1) *
+    (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? GAME.clan.protection.ancestralWard : 1) *
     run.patrons.guardian.protection *
     run.clan.campEffects.multipliers.clanProtection *
     startingTradition(run.startingTradition).balance.protection
@@ -278,8 +283,8 @@ export function damageClan(
   const previous = clan.integrity;
   clan.integrity = Math.max(0, previous - amount * protection);
   const bandsCrossed =
-    Math.floor((100 - clan.integrity) / GAME.clan.resolveLossBand) -
-    Math.floor((100 - previous) / GAME.clan.resolveLossBand);
+    Math.floor((GAME.clan.maxResolve - clan.integrity) / GAME.clan.resolveLossBand) -
+    Math.floor((GAME.clan.maxResolve - previous) / GAME.clan.resolveLossBand);
   if (bandsCrossed > 0) {
     const peopleLost = Math.min(clan.population, bandsCrossed);
     run.story.peopleLost += peopleLost;
@@ -321,14 +326,13 @@ export function advanceClan(
   const { bonuses } = clan.campEffects;
   clan.stageTime += dt;
   if (clan.stage !== 'migration') {
-    clan.pasture = Math.max(0, Math.min(100, clan.pasture - dt * pastureDepletion(run)));
+    clan.pasture = Math.max(0, Math.min(clan.pasture - dt * pastureDepletion(run), 100));
     const rates = economyRates(run);
     clan.food += dt * rates.foodNet;
     clan.materials += dt * rates.materials;
-    clan.integrity = Math.min(
-      100,
-      clan.integrity +
-        dt * ((hasDevelopment(run, 'ger', 'hearthkeepers') ? 0.25 : 0) + bonuses.resolveRecovery),
+    restoreResolve(
+      run,
+      dt * ((hasDevelopment(run, 'ger', 'hearthkeepers') ? 0.25 : 0) + bonuses.resolveRecovery),
     );
   } else {
     clan.food += dt * economyRates(run).foodNet;
@@ -373,11 +377,11 @@ export function advanceClan(
     const destination = arrivalLocation(run);
     clan.food = Math.max(0, clan.food + route.food + bonuses.arrivalFood);
     clan.materials += route.materials + bonuses.arrivalMaterials;
-    clan.spirit += route.id === 'ridge' ? 10 : 0;
+    clan.spirit += route.id === 'ridge' ? GAME.clan.arrival.ridgeSpirit : 0;
     const newPeople = route.population + (route.id === 'refuge' ? bonuses.refugePeople : 0);
     const arrivedPeople = Math.min(GAME.clan.maxPopulation - clan.population, newPeople);
     clan.population = Math.min(GAME.clan.maxPopulation, clan.population + newPeople);
-    if (route.id === 'refuge') clan.rescuedRiders += 2;
+    if (route.id === 'refuge') clan.rescuedRiders += GAME.clan.arrival.refugeRiders;
     clan.herd = Math.min(GAME.clan.maxHerd, clan.herd + route.herd + bonuses.arrivalHerd);
     completeGuidance(run, 'crossing');
     clan.region += 1;
@@ -392,9 +396,12 @@ export function advanceClan(
     clan.stage = clan.region === 3 ? 'final' : 'camp';
     clan.stageTime = 0;
     clan.pasture = 100;
-    clan.integrity = Math.min(100, clan.integrity + 12 + bonuses.arrivalResolve);
+    restoreResolve(run, GAME.clan.arrival.resolve + bonuses.arrivalResolve);
     if (isKhanActive(run))
-      run.health = Math.min(run.stats.maxHealth, run.health + 25 + bonuses.arrivalHealth);
+      run.health = Math.min(
+        run.stats.maxHealth,
+        run.health + GAME.clan.arrival.health + bonuses.arrivalHealth,
+      );
     clan.message =
       clan.stage === 'final'
         ? 'The Red Eclipse. Protect your people for three minutes while the mountain passage opens.'

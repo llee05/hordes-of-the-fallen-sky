@@ -1,3 +1,4 @@
+import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import { STORY_ORDER, storyEncounter } from '../data/story';
 import { storyConsequence } from '../data/storyConsequences';
@@ -63,8 +64,7 @@ export function resolveStory(run: RunState, choiceId?: string): boolean {
   run.story.active = undefined;
   if (selected) {
     const amount = GAME.story.gifts[selected.benefit];
-    if (selected.benefit === 'resolve')
-      run.clan.integrity = Math.min(100, run.clan.integrity + amount);
+    if (selected.benefit === 'resolve') restoreResolve(run, amount);
     else run.clan[selected.benefit] += amount;
     run.clan.identity[selected.doctrine] += GAME.story.identityPerChoice;
     applyCampEffects(run.clan.campEffects, storyConsequence(selected.id)?.lasting?.effects);

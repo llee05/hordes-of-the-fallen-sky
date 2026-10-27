@@ -1,3 +1,4 @@
+import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import { FIELD_OBJECTIVES, type FieldObjectiveKind } from '../data/fieldObjectives';
 import {
@@ -83,7 +84,7 @@ export function completeFieldObjective(run: RunState): boolean {
   run.clan.spirit += reward.spirit;
   run.clan.herd = Math.min(GAME.clan.maxHerd, run.clan.herd + reward.horses);
   run.clan.population = Math.min(GAME.clan.maxPopulation, run.clan.population + reward.people);
-  run.clan.integrity = Math.min(100, run.clan.integrity + reward.resolve);
+  restoreResolve(run, reward.resolve);
   run.field.nextAt = run.clan.stageTime + GAME.field.between;
   run.clan.message = `${definition.title} secured. ${definition.reward}.`;
   rememberClan(

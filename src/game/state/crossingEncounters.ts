@@ -1,3 +1,4 @@
+import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import { CROSSING_ENCOUNTERS, type CrossingRoute } from '../data/crossings';
 import {
@@ -117,7 +118,7 @@ export function settleCrossingEncounter(run: RunState): boolean {
   c.phase = 'ended';
   if (run.story.peopleLost === c.lossesAtDeparture) {
     run.safety.protectedCrossings++;
-    run.clan.integrity = Math.min(100, run.clan.integrity + GAME.crossings.safeResolve);
+    restoreResolve(run, GAME.crossings.safeResolve);
     rememberClan(
       run,
       'Every household arrived',
@@ -131,18 +132,17 @@ export function settleCrossingEncounter(run: RunState): boolean {
       ? !!c.escort?.joined
       : c.spawned >= CROSSING_ENCOUNTERS[c.route].guards && c.defeated >= c.spawned;
   if (!success) return false;
-  if (c.route === 'river')
-    run.clan.integrity = Math.min(100, run.clan.integrity + GAME.crossings.riverResolve);
+  if (c.route === 'river') restoreResolve(run, GAME.crossings.riverResolve);
   if (c.route === 'ridge') {
     run.clan.materials += GAME.crossings.ridgeMaterials;
-    run.clan.integrity = Math.min(100, run.clan.integrity + GAME.crossings.ridgeResolve);
+    restoreResolve(run, GAME.crossings.ridgeResolve);
   }
   if (c.route === 'refuge') {
     run.clan.population = Math.min(
       GAME.clan.maxPopulation,
       run.clan.population + GAME.crossings.refugePeople,
     );
-    run.clan.integrity = Math.min(100, run.clan.integrity + GAME.crossings.refugeResolve);
+    restoreResolve(run, GAME.crossings.refugeResolve);
   }
   rememberClan(
     run,

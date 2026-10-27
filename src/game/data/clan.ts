@@ -1,3 +1,4 @@
+import { restoreResolve } from '../state/clan';
 import { extendCampBuilding } from './campEstate';
 import { GAME } from '../config';
 import type {
@@ -362,7 +363,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
       },
       {
         apply: (run) => {
-          run.clan.integrity = Math.min(100, run.clan.integrity + 30);
+          restoreResolve(run, 30);
         },
         id: 'felt-armor',
         exclusiveGroup: 'specialization',
@@ -487,7 +488,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
           'Four survivors are welcomed to the shared table, and clan resolve rises by 10 at once.',
         apply: (run) => {
           welcomePeople(run, C.provisions.airag.people);
-          run.clan.integrity = Math.min(100, run.clan.integrity + C.provisions.airag.resolve);
+          restoreResolve(run, C.provisions.airag.resolve);
         },
       },
       {

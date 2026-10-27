@@ -54,7 +54,7 @@ export function edgeWarnings(
         dy = danger.y - height / 2;
       const k = Math.min(
         (width / 2 - Math.min(90, width / 4)) / Math.max(0.001, Math.abs(dx)),
-        (height / 2 - Math.min(100, height / 4)) / Math.max(0.001, Math.abs(dy)),
+        (height / 2 - Math.min(height / 4, 100)) / Math.max(0.001, Math.abs(dy)),
       );
       return {
         ...danger,
