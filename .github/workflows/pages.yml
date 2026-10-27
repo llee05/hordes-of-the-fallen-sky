@@ -39,7 +39,7 @@ jobs:
         run: npm run check
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Test production release at the Pages subpath
+      - name: Test non-gameplay release smoke at the Pages subpath
         run: npm run test:pages
       - name: Upload browser release
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

@@ -303,21 +303,25 @@ behavior locally, use `E2E_HEADLESS=1`, for example:
 E2E_HEADLESS=1 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 ```
 
-GitHub Actions runs `npm run check` and the production Pages smoke tests through
-the unchanged **GitHub Pages** workflow on pull requests and pushes to `main`.
+GitHub Actions runs `npm run check` and the Pages artwork smoke — the one Pages
+test that never starts or plays the game — through the **GitHub Pages** workflow
+on pull requests and pushes to `main`. Pages tests tagged `@gameplay` start or
+play the game; the Pages Playwright config excludes them when `CI` is set, so
+GitHub never runs them and `npm run test:pages` keeps all three locally.
 The separate browser E2E workflow (focused PR runs, full shards, and nightly runs)
 is removed. Browser and desktop gameplay, graphics, and performance tests run
 locally, including Golden Pasture's texture/FPS budgets; there is no desktop nightly
 job. Software-rendered hosted runners do not provide reliable real-time simulation
 or GPU performance results.
 
-| Suite / configuration                                                               | Classification and where it runs                                                                                                                                                                                                            |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Format, renderer/desktop/Playwright typechecks, Vitest unit tests, production build | Fast correctness checks; GitHub Actions and local `npm run check`. Unit simulations advance explicit time without a live renderer or wall-clock gameplay.                                                                                   |
-| `tests/e2e` browser specs                                                           | Mixed UI/save correctness and live gameplay/graphics coverage; local `npm run test:e2e`. Performance tests tagged `@perf` run separately through `test:perf`.                                                                               |
-| `tests/desktop` Playwright specs                                                    | Native correctness, layout, gameplay, and graphics/performance coverage; local `npm run test:desktop`; `@perf` runs through `test:perf`.                                                                                                    |
-| `tests/pages` production smoke                                                      | Release correctness at the Pages subpath: bundled assets, UI/profile flows, pause/resume, and unavailable storage; GitHub Actions and local `npm run test:pages` after a build. No combat, position, animation, or frame-budget assertions. |
-| `playwright.graphics.ts` and `tests/support/checkGraphics.ts`                       | Rendering configuration and local hardware-WebGL preflight, not a CI performance benchmark. The configuration's policy is unit-tested in `npm run check`; Pages keeps headless software rendering in CI.                                    |
+| Suite / configuration                                                               | Classification and where it runs                                                                                                                                                                                                                                                                           |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Format, renderer/desktop/Playwright typechecks, Vitest unit tests, production build | Fast correctness checks; GitHub Actions and local `npm run check`. Unit simulations advance explicit time without a live renderer or wall-clock gameplay.                                                                                                                                                  |
+| `tests/e2e` browser specs                                                           | Mixed UI/save correctness and live gameplay/graphics coverage; local `npm run test:e2e`. Performance tests tagged `@perf` run separately through `test:perf`.                                                                                                                                              |
+| `tests/desktop` Playwright specs                                                    | Native correctness, layout, gameplay, and graphics/performance coverage; local `npm run test:desktop`; `@perf` runs through `test:perf`.                                                                                                                                                                   |
+| `tests/pages` artwork smoke                                                         | Release correctness at the Pages subpath without starting gameplay: bundled assets, fonts, introduction paintings, and the absence of development hooks and desktop capabilities; GitHub Actions and local `npm run test:pages` after a build. No combat, position, animation, or frame-budget assertions. |
+| `tests/pages` `@gameplay` smoke                                                     | Real camp purchases, pause/resume, sound preference persistence, and play with unavailable storage; local `npm run test:pages` after a build. Tagged `@gameplay` and never run by GitHub Actions.                                                                                                          |
+| `playwright.graphics.ts` and `tests/support/checkGraphics.ts`                       | Rendering configuration and local hardware-WebGL preflight, not a CI performance benchmark. The configuration's policy is unit-tested in `npm run check`; Pages keeps headless software rendering in CI.                                                                                                   |
 
 Run `npm run test:local` before shipping gameplay or artwork changes. It runs the ordinary
 browser and Electron specs. Also run `npm run test:perf` for the tagged graphics
