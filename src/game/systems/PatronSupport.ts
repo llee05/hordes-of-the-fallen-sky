@@ -9,6 +9,7 @@ import type { SpatialHash } from './SpatialHash';
 import { isKhanActive } from '../state/khan';
 import { campBoundary } from '../state/campBarrier';
 import type { SupportArchive } from '../state/expeditionArchive';
+import { PatronSupportClock } from '../state/patronSupportClock';
 
 interface GroundPosition {
   x: number;
@@ -23,9 +24,7 @@ export class PatronSupport {
     shadow: Phaser.GameObjects.Image;
     motion: CharacterMotion;
   }[];
-  private ancestorTimer = 0;
-  private waterTimer = 0;
-  private guardianTimer = 0;
+  private readonly clock = new PatronSupportClock();
 
   constructor(scene: Phaser.Scene, position: GroundPosition) {
     this.fields = scene.add.graphics().setDepth(3);
@@ -53,9 +52,7 @@ export class PatronSupport {
 
   capture(): SupportArchive {
     return {
-      ancestorTimer: this.ancestorTimer,
-      waterTimer: this.waterTimer,
-      guardianTimer: this.guardianTimer,
+      ...this.clock.capture(),
       spirits: this.spirits.map(({ image, motion }) => ({
         x: image.x,
         y: image.y,
@@ -66,9 +63,7 @@ export class PatronSupport {
   }
 
   restore(state: SupportArchive): void {
-    this.ancestorTimer = state.ancestorTimer;
-    this.waterTimer = state.waterTimer;
-    this.guardianTimer = state.guardianTimer;
+    this.clock.restore(state);
     this.spirits.forEach((spirit, index) => {
       const saved = state.spirits[index];
       if (!saved) return;
@@ -89,14 +84,12 @@ export class PatronSupport {
       volley: (x: number, y: number, target: Enemy, multiplier: number) => void;
     },
   ): void {
-    if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
+    const step = this.clock.update(run, dt);
+    if (!step) return;
     const effects = run.patrons;
     const boundary = campBoundary(run);
     const khanActive = isKhanActive(run);
     const anchor = khanActive ? player : camp;
-    this.ancestorTimer -= dt;
-    this.waterTimer -= dt;
-    this.guardianTimer -= dt;
     this.fields.clear();
     if (effects.water.slow > 0) {
       this.fields.lineStyle(1.5, 0x86beb1, 0.22).fillStyle(0x70a99c, 0.025);
@@ -108,9 +101,7 @@ export class PatronSupport {
     if (effects.guardian.wardDamage > 0)
       this.fields.lineStyle(1, 0xd8bc7e, 0.3).strokeCircle(camp.x, camp.y, boundary.wardRadius);
 
-    const count = Math.min(this.spirits.length, effects.ancestors.count);
-    if (count === 0) this.ancestorTimer = 0;
-    const release = count > 0 && this.ancestorTimer <= 0;
+    const count = step.ancestorCount;
     for (const [index, spirit] of this.spirits.entries()) {
       const active = index < count;
       if (active && !spirit.image.visible) {
@@ -136,7 +127,9 @@ export class PatronSupport {
       spirit.image.setPosition(x, y).setDepth(100 + y);
       if (Math.abs(dx) > 0.1) spirit.image.setFlipX(dx < 0);
       spirit.shadow.setPosition(x + 7, y + 4).setDepth(99 + y);
-      const target = release ? spatial.nearest(x, y, GAME.patrons.ancestors.range) : undefined;
+      const target = step.releaseAncestors
+        ? spatial.nearest(x, y, GAME.patrons.ancestors.range)
+        : undefined;
       if (target) {
         spirit.motion.attack();
         actions.volley(x, y, target, effects.ancestors.damage);
@@ -144,9 +137,8 @@ export class PatronSupport {
       spirit.motion.advance(dt, speed, false);
       renderCharacter(spirit.image, spirit.motion);
     }
-    if (release) this.ancestorTimer = effects.ancestors.interval;
 
-    if (khanActive && effects.water.pulseDamage > 0 && this.waterTimer <= 0) {
+    if (step.pulseWater) {
       spatial.forEachNearby(player.x, player.y, effects.water.radius, (enemy) => {
         actions.damage(enemy, run.stats.damage * effects.water.pulseDamage);
         if (!enemy.active) return;
@@ -160,13 +152,11 @@ export class PatronSupport {
           Phaser.Math.Clamp(enemy.y + ny * GAME.patrons.water.push, 24, GAME.worldSize - 24),
         );
       });
-      this.waterTimer = GAME.patrons.water.pulseEvery;
     }
-    if (effects.guardian.wardDamage > 0 && this.guardianTimer <= 0) {
+    if (step.ward) {
       spatial.forEachNearby(camp.x, camp.y, boundary.wardRadius, (enemy) =>
         actions.damage(enemy, run.stats.damage * effects.guardian.wardDamage),
       );
-      this.guardianTimer = GAME.patrons.guardian.wardEvery;
     }
   }
 }
