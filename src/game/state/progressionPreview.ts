@@ -1,15 +1,15 @@
+import { volleyFactors } from './volley';
 import { GAME } from '../config';
 import type { BuildingId, RunState, UpgradeDefinition } from '../types';
 import { applyResearch } from './run';
 import { RESEARCH_BY_ID } from '../data/research';
-import { clanDamageMultiplier, hasDevelopment, riderCount, burningTempest } from './clan';
+import { clanDamageMultiplier, hasDevelopment, riderCount } from './clan';
 import { economyForecast, migrationMobility, pastureDepletion } from './economy';
 import { gallopCooldown } from './patrons';
 import { SUCCESSORS } from '../data/successors';
 import { developmentPreview } from './developmentPreview';
 import {
   echoInterval,
-  wideVolleyResearch,
   stillwaterRefuge,
   researchWaterRadius,
   researchLayeredProtection,
@@ -34,6 +34,7 @@ const n = (value: number) => Number(value.toFixed(3)).toString();
 function metrics(r: RunState): Metric[] {
   const rates = economyForecast(r),
     c = r.clan.campEffects;
+  const volley = volleyFactors(r, r.stats.projectiles, true);
   return [
     { label: 'Clan population', value: r.clan.population },
     { label: 'Herd', value: r.clan.herd },
@@ -63,29 +64,19 @@ function metrics(r: RunState): Metric[] {
       lower: true,
       context: 'Before Feigned retreat’s momentum condition',
     },
-    { label: 'Khan arrows per volley', value: r.stats.projectiles + (burningTempest(r) ? 2 : 0) },
+    { label: 'Khan arrows per volley', value: volley.count },
     {
       label: 'Khan wide-volley damage',
-      value: r.stats.damage * wideVolleyResearch(r, r.stats.projectiles, true).damage,
-      context: 'Personal multi-arrow volleys only; includes Feathered Fan penalty',
+      value: r.stats.damage * volley.damage,
+      context:
+        'Includes Feathered Fan, Barrage and formation; before momentum, retreat, charged-shot and enemy-specific bonuses',
     },
     {
       label: 'Khan wide-volley spacing',
-      value:
-        (0.12 *
-          r.patrons.bow.spread *
-          wideVolleyResearch(r, r.stats.projectiles, true).spread *
-          180) /
-        Math.PI,
+      value: (volley.spacing * 180) / Math.PI,
       unit: '°',
     },
     { label: 'Additional arrow pierces', value: r.patrons.bow.pierce },
-    {
-      label: 'Volley spacing',
-      value: (0.12 * r.patrons.bow.spread * 180) / Math.PI,
-      unit: '°',
-      context: 'Ordinary multi-arrow volleys; Tempest uses its own wider fan',
-    },
     { label: 'Riding speed', value: r.stats.speed, unit: ' paces/s' },
     { label: 'Gallop cooldown', value: gallopCooldown(r), unit: 's', lower: true },
     { label: 'Maximum Khan health', value: r.stats.maxHealth },

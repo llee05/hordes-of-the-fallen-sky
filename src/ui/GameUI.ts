@@ -51,7 +51,7 @@ import {
   startingTraditionMenu,
 } from './menuContent';
 import type { JournalTab } from './menuContent';
-import { researchMenu } from './researchContent';
+import { researchMenu, selectResearch } from './researchContent';
 import { developerConsole, developerMenu } from './developerContent';
 import type { TreeViewState } from './progressionTree';
 import { AUDIO_CHANNELS, normalizeAudioMix, type AudioChannel } from '../shared/audioSettings';
@@ -981,22 +981,8 @@ export class GameUI {
       this.treeView().pinned = button.dataset.treePin;
       this.renderPhase(this.lastSnapshot);
     } else if (button.dataset.treeSelect && this.lastSnapshot) {
-      if (this.phase === 'upgrade') {
-        if (button.dataset.treeTargetBranch)
-          Object.assign(this.treeView(), {
-            branch: button.dataset.treeTargetBranch,
-            category: 'all',
-            query: '',
-            overview: false,
-            recipes: false,
-          });
-        const branch = this.overlay.querySelector<HTMLElement>(
-          `[data-tree-branch-select][data-nodes~="${CSS.escape(button.dataset.treeSelect)}"]`,
-        )?.dataset.treeBranchSelect;
-        if (branch) Object.assign(this.treeView(), { branch, overview: false, recipes: false });
-        this.treeView().confirmResearch = undefined;
-      }
-      this.treeView().node = button.dataset.treeSelect;
+      if (this.phase === 'upgrade') selectResearch(this.treeView(), button.dataset.treeSelect);
+      else this.treeView().node = button.dataset.treeSelect;
       this.renderPhase(this.lastSnapshot);
       this.overlay.querySelector('[data-scroll-key="node-details"]')?.scrollTo({ top: 0 });
     } else if (button.dataset.treeBranchSelect && this.lastSnapshot) {

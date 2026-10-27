@@ -1,3 +1,4 @@
+import { volleyFactors } from '../state/volley';
 import {
   observeResearchFrame,
   recordResearchDamage,
@@ -6,8 +7,6 @@ import {
 import {
   recordKhanTarget,
   recordResearchShard,
-  wideVolleyResearch,
-  gallopingBarrage,
   researchGallop,
   wagonResearchDefence,
 } from '../state/researchRuntime';
@@ -99,7 +98,6 @@ import {
   availableFormations,
   beginMigration,
   buildStructure,
-  burningTempest,
   canMigrate,
   damageClan,
   hasDevelopment,
@@ -2513,21 +2511,15 @@ export class ArenaScene extends Phaser.Scene {
     charged = false,
     owner: 'khan' | 'rider' = 'rider',
   ): boolean {
-    const research = wideVolleyResearch(this.run, count, owner === 'khan');
-    const barrage = gallopingBarrage(this.run, owner === 'khan');
+    const volley = volleyFactors(this.run, count, owner === 'khan', ancestral);
     const direction = Math.atan2(target.y - y, target.x - x);
-    const tempest = burningTempest(this.run);
+    const tempest = volley.tempest;
     let fired = false;
-    for (let i = 0; i < count + (tempest ? 2 : 0); i += 1) {
+    for (let i = 0; i < volley.count; i += 1) {
       const bolt = this.projectiles.get(x, y, 'bolt') as Projectile | null;
       if (!bolt) break;
       fired = true;
-      const angle =
-        direction +
-        (i - (count - 1) / 2) *
-          (tempest ? 0.28 : 0.12) *
-          (ancestral ? 1 : this.run.patrons.bow.spread) *
-          research.spread;
+      const angle = direction + (i - (count - 1) / 2) * volley.spacing;
       bolt.enableBody(true, x, y, true, true);
       bolt.barrage = undefined;
       bolt.source = owner === 'khan' ? 'khan' : undefined;
@@ -2554,13 +2546,11 @@ export class ArenaScene extends Phaser.Scene {
         this.run.stats.damage *
         (charged ? GAME.mounted.chargedDamage : 1) *
         multiplier *
-        research.damage *
-        barrage.damage *
-        (this.run.clan.formation === 'encircle' && this.run.clan.momentum > 0.5 ? 1.3 : 1);
+        volley.damage;
       bolt.remaining = GAME.projectile.lifetime;
       bolt.setVelocity(
-        Math.cos(angle) * GAME.projectile.speed * barrage.speed,
-        Math.sin(angle) * GAME.projectile.speed * barrage.speed,
+        Math.cos(angle) * GAME.projectile.speed * volley.speed,
+        Math.sin(angle) * GAME.projectile.speed * volley.speed,
       );
     }
     if (fired) {

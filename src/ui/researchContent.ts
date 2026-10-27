@@ -1,8 +1,7 @@
 import { researchPreviewById } from '../game/state/progressionPreview';
 import { synergyContent } from './synergyContent';
 import { PATRONS } from '../game/data/patrons';
-import { RESEARCH } from '../game/data/research';
-import { UPGRADES } from '../game/data/upgrades';
+import { RESEARCH, RESEARCH_BY_ID } from '../game/data/research';
 import {
   researchExcluded,
   researchState,
@@ -19,6 +18,25 @@ import {
   type TreeBranch,
   type TreeViewState,
 } from './progressionTree';
+
+export function selectResearch(view: TreeViewState, id: string): void {
+  const technology = RESEARCH_BY_ID.get(id);
+  if (!technology) return;
+  Object.assign(view, {
+    branch:
+      technology.tier === 'hybrid'
+        ? 'hybrids'
+        : technology.tier === 'general'
+          ? 'general'
+          : technology.patronIds[0],
+    node: id,
+    category: 'all',
+    query: '',
+    overview: false,
+    recipes: false,
+    confirmResearch: undefined,
+  });
+}
 
 export function researchBranches(run: RunState, view?: TreeViewState): TreeBranch[] {
   const groups = [
@@ -80,7 +98,6 @@ export function researchBranches(run: RunState, view?: TreeViewState): TreeBranc
         const validation = validateResearchPurchase(state, t.id, rank);
         const mastered = rank >= t.maxRank;
         const missing = validation.reasonCodes.some((c) => c !== 'knowledge' && c !== 'max-rank');
-        const original = UPGRADES.find((u) => u.id === t.id);
         const requirements = [...t.requiresAll, ...t.requiresAny];
         const gates = [
           ...Object.entries(t.minSpendByPatron).map(
@@ -111,7 +128,7 @@ export function researchBranches(run: RunState, view?: TreeViewState): TreeBranc
                   ? 'unaffordable'
                   : 'available',
           ranks: { current: rank, max: t.maxRank },
-          icon: original?.icon ?? group.symbol,
+          icon: `research:${t.id}`,
           choiceGroup: t.exclusiveGroup,
           price: { knowledge: t.pointCostPerRank[rank] ?? t.pointCostPerRank[0]! },
           preview: researchPreviewById(run, t.id),

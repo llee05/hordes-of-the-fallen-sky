@@ -1,3 +1,4 @@
+import { RESEARCH_ICONS } from './researchIcons';
 import propsSource from '/art/steppe-props.json?raw';
 import actorsSource from '/art/steppe-actors.json?raw';
 import clanSource from '/art/steppe-clan-motion.json?raw';
@@ -25,6 +26,36 @@ const scenery = JSON.parse(scenerySource) as typeof import('../../public/art/ste
 // Small brass-cut silhouettes stay legible at HUD scale. Decorative SVGs never add
 // accessible names or focus targets to the buttons and labels that contain them.
 const marks = {
+  paw: '<path d="M14 32c0-10 6-16 10-16s10 6 10 16c0 8-7 1-10 1s-10 7-10-1Z" fill="currentColor" fill-opacity=".2"/><ellipse cx="9" cy="20" rx="3" ry="5"/><ellipse cx="19" cy="10" rx="3" ry="5"/><ellipse cx="29" cy="10" rx="3" ry="5"/><ellipse cx="39" cy="20" rx="3" ry="5"/>',
+  road: '<path d="m9 43 10-20-2-18m22 38L29 23l2-18M24 38v-7m0-11v-6"/>',
+  fang: '<path d="M10 8h28L28 27l-4 15-4-15L10 8Z" fill="currentColor" fill-opacity=".2"/><path d="m14 15 10 7 10-7"/>',
+  drop: '<path d="M24 5C19 17 10 24 10 31a14 14 0 0 0 28 0C38 24 29 17 24 5Z" fill="currentColor" fill-opacity=".2"/><path d="M17 29c-2 5 1 8 5 9"/>',
+  wind: '<path d="M5 17h29c12 0 8-15 1-10M5 24h19c13 0 9 17 1 11M5 31h7m20-7h11"/>',
+  balance: '<path d="M24 6v35M14 41h20M7 15h34M12 15 5 29h14l-7-14Zm24 0-7 14h14l-7-14Z"/>',
+  hand: '<path d="M13 40 7 26c-2-5 2-7 6-2l4 5V10c0-5 6-5 6 0v13-17c0-4 6-4 6 0v17-13c0-4 6-4 6 0v15-8c0-4 6-4 6 0v17l-7 8H17Z" fill="currentColor" fill-opacity=".15"/>',
+  root: '<path d="M24 5v26m0-13L13 9m11 14L36 11M24 29l-8 7-9 2m17-9 8 7 9 2m-17-9v15m-8-8-3 8m19-8 3 8"/>',
+  eye: '<path d="M4 24q20-26 40 0-20 26-40 0Z" fill="currentColor" fill-opacity=".15"/><circle cx="24" cy="24" r="8"/><circle cx="24" cy="24" r="2" fill="currentColor"/>',
+  star: '<path d="m24 4 5 13 14 1-11 9 4 15-12-8-12 8 4-15-11-9 14-1Z" fill="currentColor" fill-opacity=".2"/>',
+  quiver:
+    '<path d="m12 19 22 4-5 20-20-4 3-20Zm5 1L21 5m3 17 5-17m2 19 8-15M17 9l4-4 1 6m3-3 4-3 2 6m3 1 5-3-1 6" fill="currentColor" fill-opacity=".15"/>',
+  vessel:
+    '<path d="M15 5h18v8l7 12v12q-16 12-32 0V25l7-12V5Zm0 8h18M8 28h32M17 35h14" fill="currentColor" fill-opacity=".15"/>',
+  felt: '<path d="m7 15 27-7 7 25-27 8-7-26Zm7 26L6 36 3 23m10-2 21-6m-19 13 21-6m-19 13 21-6" fill="currentColor" fill-opacity=".15"/>',
+  knot: '<path d="m24 5 10 10-10 10-10-10L24 5Zm0 18 10 10-10 10-10-10 10-10ZM5 24l10-10 10 10-10 10L5 24Zm18 0 10-10 10 10-10 10-10-10Z"/>',
+  circle:
+    '<circle cx="24" cy="24" r="17"/><path d="m17 9 7-5 7 5m8 8 5 7-5 7m-8 8-7 5-7-5M9 31l-5-7 5-7"/>',
+  moon: '<path d="M31 5a19 19 0 1 0 12 27C24 39 13 16 31 5Z" fill="currentColor" fill-opacity=".2"/>',
+  shield:
+    '<path d="m7 9 17-5 17 5v16c0 8-9 15-17 19C16 40 7 33 7 25V9Z" fill="currentColor" fill-opacity=".15"/><path d="M24 10v27M13 19h22"/>',
+  horn: '<path d="M8 35c20-3 21-15 25-29l10 7C30 29 29 40 10 42l-2-7Zm25-29 10 7M12 34l2 7" fill="currentColor" fill-opacity=".2"/>',
+  sun: '<circle cx="24" cy="24" r="11"/><path d="M24 3v6m0 30v6M3 24h6m30 0h6M9 9l5 5m20 20 5 5M9 39l5-5m20-20 5-5"/>',
+  storm:
+    '<path d="M6 20c-5-11 9-18 16-10 8-14 25-2 18 10H6Zm18 3-7 12h9l-5 10 14-15H24l6-7" fill="currentColor" fill-opacity=".18"/>',
+  hammer:
+    '<path d="m9 7 24 3-1 10-24-3 1-10Zm10 12-4 24 8 1 4-24M5 7l-1 9m32-6 7 1-1 10-7-1" fill="currentColor" fill-opacity=".2"/>',
+  snow: '<path d="M24 4v40M7 14l34 20M7 34l34-20M19 7l5 5 5-5m-10 34 5-5 5 5M7 20l7-1-1-7m22 24-1-7 7-1M7 28l7 1-1 7m22-24-1 7 7 1"/>',
+  feather:
+    '<path d="M10 42 35 8m-22 29C-3 18 19 5 38 5c2 25-5 39-25 32Zm0 0 2-16m5 5 1-13m5 7 1-11m-7 17h12m-6-6h10" fill="currentColor" fill-opacity=".15"/>',
   wolf: '<path d="m8 21 5-14 9 8 8-9 9 14-6 17-12 6-11-8-2-14Z" fill="currentColor" fill-opacity=".15"/><path d="m13 20 7 6-5 5m17-11-7 6 5 5m-15 0 7 5 8-5m-8-5v10m-4-14h.1m11 0h.1"/>',
   hearth:
     '<path d="M8 39h32M12 33h24m-20 6 8-6 8 6M24 5c4 9-5 9 1 17 2-3 4-4 5-7 10 11 5 19-6 19S8 25 15 15c0 7 5 8 4 1-1-5 1-8 5-11Z" fill="currentColor" fill-opacity=".16"/>',
@@ -64,7 +95,11 @@ const marks = {
 export type ClanMark = keyof typeof marks;
 
 export function clanMark(name: string): string {
-  return `<svg class="clan-mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${marks[name as ClanMark] ?? marks.spirit}</svg>`;
+  const icon = name.startsWith('research:') ? RESEARCH_ICONS[name.slice(9)] : undefined;
+  const body = icon
+    ? `<g transform="translate(1 1) scale(.75)">${marks[icon[0]]}</g><g transform="translate(25 25) scale(.46)">${marks[icon[1]]}</g>`
+    : (marks[name as ClanMark] ?? marks.spirit);
+  return `<svg class="clan-mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${body}</svg>`;
 }
 
 export const BUILDING_MARKS: Readonly<Record<string, ClanMark>> = {

@@ -65,6 +65,27 @@ test('V2 research exposes proposed content honestly, pins legal routes, and work
   await page.screenshot({ path: 'test-results/research-v2-compact.png' });
 });
 
+test('research links open destinations hidden by search filters', async ({ page }) => {
+  await openTitle(page);
+  await startExpedition(page);
+  await page.keyboard.press('t');
+  const search = page.getByRole('searchbox', { name: 'Find a branch' });
+  await search.fill('Galloping Barrage');
+  await page.locator('[data-node="hy-galloping-barrage"]').click();
+  await page.locator('.node-prerequisites [data-tree-select="wolf-trail"]').click();
+  await expect(page.locator('.node-inspector h3')).toHaveText('The wolf’s trail');
+  await expect(search).toHaveValue('');
+  await search.fill('Galloping Barrage');
+  await page.locator('[data-node="hy-galloping-barrage"]').click();
+  await page.locator('.node-route [data-tree-select="wolf-trail"]').first().click();
+  await expect(page.locator('.node-inspector h3')).toHaveText('The wolf’s trail');
+  await search.fill('Golomt');
+  await page.getByRole('button', { name: 'Patron overview', exact: true }).click();
+  await page.locator('[data-focus-key="bridge-hy-galloping-barrage"]').click();
+  await expect(page.locator('.node-inspector h3')).toHaveText('Galloping Barrage');
+  await expect(search).toHaveValue('');
+});
+
 test('V2 target, shard and volley effects are consumed by actual scene gameplay hooks', async ({
   page,
 }) => {

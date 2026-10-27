@@ -143,3 +143,11 @@ main-branch defect tracked by the [separate pending fix](https://github.com/llee
 Texture bridge, renderer, assets and actor sources are unchanged from `main`; this
 branch adds no texture allocations. The assertion is retained unchanged. Native
 performance is therefore recorded as a known baseline failure, not a clean pass.
+
+## Review corrections
+
+Food forecasts integrate the difference between full-pasture and empty-pasture production, including Deep Roots during pasture depletion and recovery. Research selection resolves its branch from the complete catalogue and clears filters for prerequisite, route, bridge, graph and pinned-target actions.
+
+Personal volley previews and firing share `state/volley.ts`, including Burning Tempest spacing, Feathered Fan, active Galloping Barrage and the current formation. Preview damage excludes momentum, retreat, charged-shot and enemy-specific bonuses, as labelled in the inspector.
+
+All 166 technologies have a distinct `research:<id>` icon key. `src/ui/researchIcons.ts` authors each icon as a distinct subject/detail pair rendered through the existing 48-unit inline SVG brass silhouette system in `src/ui/artwork.ts`. Patron seals remain separate secondary badges. The unit regression checks both 166 unique keys and 166 distinct rendered drawings.

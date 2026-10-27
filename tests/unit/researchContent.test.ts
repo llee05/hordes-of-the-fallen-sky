@@ -1,7 +1,10 @@
+import { clanMark } from '../../src/ui/artwork';
+import { RESEARCH_ICONS } from '../../src/ui/researchIcons';
+import type { TreeViewState } from '../../src/ui/progressionTree';
 import { describe, expect, it } from 'vitest';
 import { researchBuildingModifiers } from '../../src/game/state/research';
 import { createRun } from '../../src/game/state/run';
-import { researchBranches, researchMenu } from '../../src/ui/researchContent';
+import { researchBranches, researchMenu, selectResearch } from '../../src/ui/researchContent';
 
 describe('V2 research presentation', () => {
   it('exposes every canonical ID once and keeps unavailable nodes unpurchasable', () => {
@@ -16,6 +19,43 @@ describe('V2 research presentation', () => {
     expect(nodes.find((n) => n.id === 'gen-mapmaker')?.status).toBe('locked');
     expect(nodes.find((n) => n.id === 'on-bond-of-ashes')?.reason).toContain('expiry lifecycle');
   });
+  it('gives all 166 technologies unique icon keys and distinct rendered SVG art', () => {
+    const nodes = researchBranches(createRun()).flatMap((b) => b.nodes);
+    expect(new Set(nodes.map((n) => n.icon)).size).toBe(166);
+    expect(Object.keys(RESEARCH_ICONS)).toHaveLength(166);
+    for (const node of nodes) expect(RESEARCH_ICONS[node.id]).toBeDefined();
+    const rendered = nodes.map((n) => clanMark(n.icon!));
+    expect(new Set(rendered).size).toBe(166);
+    for (const svg of rendered) expect(svg).not.toBe(clanMark('spirit'));
+  });
+  it.each(['wolf-trail', 'power', 'hy-galloping-barrage', 'gen-mapmaker'])(
+    'opens %s from filtered prerequisites, routes, bridges and pinned targets',
+    (id) => {
+      const run = createRun();
+      const view: TreeViewState = {
+        category: 'Archery',
+        query: 'Galloping Barrage',
+        branch: 'hybrids',
+        overview: true,
+        recipes: true,
+        confirmResearch: 'one-perfect-shot',
+      };
+      selectResearch(view, id);
+      expect(view).toMatchObject({
+        node: id,
+        query: '',
+        category: 'all',
+        overview: false,
+        recipes: false,
+        confirmResearch: undefined,
+      });
+      const branch = researchBranches(run).find((b) => b.nodes.some((n) => n.id === id))!;
+      expect(view.branch).toBe(branch.id);
+      const html = researchMenu(run, view);
+      expect(html).toContain(`data-tree-branch="${branch.id}"`);
+      expect(html).toContain(`<h3>${branch.nodes.find((n) => n.id === id)!.title}</h3>`);
+    },
+  );
   it('separates legacy Fortress technology from the building modifier source', () => {
     const r = createRun();
     r.upgrades['rolling-fortress'] = 1;

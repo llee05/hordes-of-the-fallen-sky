@@ -3,9 +3,39 @@ import { GAME } from '../../src/game/config';
 import { ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration, buildStructure } from '../../src/game/state/clan';
 import { crossingForecast, economyForecast, economyRates } from '../../src/game/state/economy';
-import { createRun } from '../../src/game/state/run';
+import { createRun, applyResearch } from '../../src/game/state/run';
 
 describe('economy forecasts', () => {
+  it.each([
+    { recovering: false, food: 5 },
+    { recovering: false, food: 100 },
+    { recovering: true, food: 5 },
+    { recovering: true, food: 100 },
+  ])('integrates Deep Roots before and beyond pasture boundaries: %o', ({ recovering, food }) => {
+    const run = createRun();
+    run.pendingUpgrades = 20;
+    for (const id of ['tended-pasture', 'tended-pasture', 'shared-labour', 'ee-deep-roots'])
+      expect(applyResearch(run, id)).toBe(true);
+    run.clan.pasture = 5;
+    run.clan.population = 40;
+    run.clan.food = food;
+    if (recovering) {
+      run.patrons.land.pastureUse = 0;
+      run.patrons.land.pastureRecovery = 1;
+    }
+    const before = structuredClone(run);
+    const seconds = economyForecast(run).foodSeconds!;
+    expect(run).toEqual(before);
+    expect(seconds).toBeGreaterThan(0);
+    run.phase = 'playing';
+    let elapsed = 0;
+    while (run.clan.food > 0 && elapsed < 1000) {
+      advanceClan(run, 0.001);
+      elapsed += 0.001;
+    }
+    expect(elapsed).toBeCloseTo(seconds, 1);
+  });
+
   it('uses the simulation rates with regional, patron, pasture, and camp modifiers', () => {
     const run = createRun();
     run.phase = 'building';
