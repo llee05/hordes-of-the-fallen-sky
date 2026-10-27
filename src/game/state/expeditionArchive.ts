@@ -1,7 +1,7 @@
 import { isExpeditionSave, isRecord, type ExpeditionSave } from '../../shared/expeditionSave';
 import { createRun } from './run';
 import { ALL_ENEMIES, SKYBREAKER } from '../data/enemies';
-import { UPGRADES } from '../data/upgrades';
+import { RESEARCH_BY_ID } from '../data/research';
 import { BUILDINGS, ROUTES, LOCATIONS, STARTING_TRADITIONS } from '../data/clan';
 import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
 import { STORY_ORDER, storyEncounter } from '../data/story';
@@ -493,8 +493,8 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
   const run = value.run as unknown as RunState;
   const world = value.world as unknown as WorldArchive;
   const ranksValid = Object.entries(run.upgrades).every(([id, rank]) => {
-    const definition = UPGRADES.find((entry) => entry.id === id);
-    return definition && rank <= definition.maxStacks;
+    const definition = RESEARCH_BY_ID.get(id);
+    return definition && !definition.unavailableReason && rank <= definition.maxRank;
   });
   const slots = new Set(world.enemies.map((e) => e.slot));
   const referencesValid =

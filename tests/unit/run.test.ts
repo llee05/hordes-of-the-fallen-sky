@@ -59,17 +59,15 @@ describe('run progression', () => {
     expect(run.pendingUpgrades).toBe(2);
   });
 
-  it('supports data-defined prerequisites and keeps banked points when a branch is locked', () => {
+  it('rejects unregistered content even when a caller supplies a valid callback', () => {
     const run = createRun();
     const power = UPGRADES.find((upgrade) => upgrade.id === 'power')!;
-    const advanced = { ...power, id: 'advanced', requires: [{ id: 'power', rank: 2 }] };
+    const unknown = { ...power, id: 'advanced' };
     run.pendingUpgrades = 5;
-    expect(upgradeBlocker(run, advanced)).toContain(`${power.title} rank 2`);
-    expect(applyUpgrade(run, advanced)).toBe(false);
-    applyUpgrade(run, power, 1);
-    applyUpgrade(run, power, 2);
-    expect(applyUpgrade(run, advanced)).toBe(true);
-    expect(run.pendingUpgrades).toBe(2);
+    expect(upgradeBlocker(run, unknown)).toBe('Unknown technology');
+    expect(applyUpgrade(run, unknown)).toBe(false);
+    expect(run.pendingUpgrades).toBe(5);
+    expect(run.stats.damage).toBe(createRun().stats.damage);
   });
 
   it('converts every banked point only after all branches are mastered, exactly once', () => {

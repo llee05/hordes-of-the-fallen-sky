@@ -1,6 +1,7 @@
 import { GAME } from '../config';
 import type { BuildingId, RunState, UpgradeDefinition } from '../types';
-import { applyUpgrade, upgradeCost, upgradeExcluded } from './run';
+import { applyResearch } from './run';
+import { RESEARCH_BY_ID } from '../data/research';
 import { clanDamageMultiplier, hasDevelopment, riderCount, burningTempest } from './clan';
 import { economyForecast, migrationMobility, pastureDepletion } from './economy';
 import { gallopCooldown } from './patrons';
@@ -171,15 +172,19 @@ export function progressionChanges(before: RunState, after: RunState): StatChang
 }
 /** Run the same validated purchase on a disposable copy; no mutation or timer advancement. */
 export function researchPreview(run: RunState, upgrade: UpgradeDefinition): StatChange[] {
-  if (
-    upgradeExcluded(run, upgrade) ||
-    (run.upgrades[upgrade.id] ?? 0) >= upgrade.maxStacks ||
-    (upgrade.requires ?? []).some((r) => (run.upgrades[r.id] ?? 0) < r.rank)
-  )
-    return [];
+  return researchPreviewById(run, upgrade.id);
+}
+export function researchPreviewById(run: RunState, id: string): StatChange[] {
+  const definition = RESEARCH_BY_ID.get(id);
+  if (!definition) return [];
   const copy = structuredClone(run);
-  copy.pendingUpgrades = Math.max(upgradeCost(upgrade), copy.pendingUpgrades);
-  return applyUpgrade(copy, upgrade) ? progressionChanges(run, copy) : [];
+  // This is a clearly hypothetical stat comparison, not purchase permission.
+  // Only the knowledge shortage is waived; every other gate remains authoritative.
+  copy.pendingUpgrades = Math.max(
+    definition.pointCostPerRank[run.upgrades[id] ?? 0] ?? 0,
+    copy.pendingUpgrades,
+  );
+  return applyResearch(copy, id) ? progressionChanges(run, copy) : [];
 }
 export function campStatPreview(run: RunState, id: BuildingId, path?: string): StatChange[] {
   const preview = developmentPreview(run, id, path);

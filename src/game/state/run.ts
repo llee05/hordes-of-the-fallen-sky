@@ -3,6 +3,13 @@ import { createMountedCombat } from './mountedCombat';
 import { createEncounters } from './encounters';
 import { createFieldState } from './fieldObjectives';
 import { UPGRADES } from '../data/upgrades';
+import { RESEARCH_BY_ID } from '../data/research';
+import {
+  purchaseResearch,
+  researchState,
+  researchExcluded,
+  validateResearchPurchase,
+} from './research';
 import { GAME } from '../config';
 import { createLegacy } from './legacy';
 import { createClan } from './clan';
@@ -76,21 +83,8 @@ export function upgradeBlocker(
   upgrade: UpgradeDefinition,
   rank = (run.upgrades[upgrade.id] ?? 0) + 1,
 ): string | undefined {
-  const stacks = run.upgrades[upgrade.id] ?? 0;
-  if (rank <= stacks || stacks >= upgrade.maxStacks) return 'Already learned';
-  if (!Number.isInteger(rank) || rank !== stacks + 1) return `Requires rank ${rank - 1}`;
-  if (upgradeExcluded(run, upgrade)) return 'Another specialization chosen';
-  for (const requirement of upgrade.requires ?? []) {
-    if ((run.upgrades[requirement.id] ?? 0) < requirement.rank) {
-      const title = UPGRADES.find((entry) => entry.id === requirement.id)?.title ?? requirement.id;
-      return `Requires ${title} rank ${requirement.rank}`;
-    }
-  }
-  const cost = upgradeCost(upgrade);
-  if (!Number.isInteger(cost) || cost < 1) return 'Invalid research cost';
-  if (run.pendingUpgrades < cost)
-    return `Needs ${cost} knowledge point${cost === 1 ? '' : 's'} (${run.pendingUpgrades} available)`;
-  return undefined;
+  const validation = validateResearchPurchase(researchState(run), upgrade.id, rank - 1);
+  return validation.reasons[0];
 }
 
 export function applyUpgrade(
@@ -98,13 +92,25 @@ export function applyUpgrade(
   upgrade: UpgradeDefinition,
   rank = (run.upgrades[upgrade.id] ?? 0) + 1,
 ): boolean {
-  const stacks = run.upgrades[upgrade.id] ?? 0;
-  if (upgradeBlocker(run, upgrade, rank)) return false;
-  upgrade.apply(run);
+  return applyResearch(run, upgrade.id, rank - 1);
+}
+
+/** Scene and previews use the same canonical definition and validated transition. */
+export function applyResearch(
+  run: RunState,
+  id: string,
+  expectedRank = run.upgrades[id] ?? 0,
+): boolean {
+  const state = researchState(run);
+  const result = purchaseResearch(state, id, expectedRank);
+  if (!result.allowed) return false;
+  run.pendingUpgrades = state.pendingUpgrades;
+  const definition = RESEARCH_BY_ID.get(id)!;
+  for (const effect of definition.effects) {
+    if (effect.kind === 'legacy') UPGRADES.find((u) => u.id === effect.upgradeId)!.apply(run);
+  }
   markExpedition(run, 'research');
   if (run.khan.successionRemaining > 0) run.health = 0;
-  run.upgrades[upgrade.id] = stacks + 1;
-  run.pendingUpgrades -= upgradeCost(upgrade);
   completeGuidance(run, 'research');
   return true;
 }
@@ -136,23 +142,7 @@ export function upgradeExcluded(
   upgrade: UpgradeDefinition,
   visited = new Set<string>(),
 ): boolean {
-  if (visited.has(upgrade.id)) return false;
-  visited.add(upgrade.id);
-  if (
-    upgrade.exclusiveGroup &&
-    UPGRADES.some(
-      (other) =>
-        other.id !== upgrade.id &&
-        other.patron === upgrade.patron &&
-        other.exclusiveGroup === upgrade.exclusiveGroup &&
-        (run.upgrades[other.id] ?? 0) > 0,
-    )
-  )
-    return true;
-  return (upgrade.requires ?? []).some((requirement) => {
-    const parent = UPGRADES.find((entry) => entry.id === requirement.id);
-    return parent ? upgradeExcluded(run, parent, new Set(visited)) : false;
-  });
+  return researchExcluded(run, upgrade.id, visited);
 }
 
 export function formatTime(seconds: number): string {
