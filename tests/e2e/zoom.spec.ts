@@ -8,7 +8,7 @@ import {
 } from './helpers';
 
 // Keep the full input/layout checks within budget on software-rendered Chromium.
-test.beforeEach(() => test.setTimeout(60000));
+test.beforeEach(() => test.setTimeout(process.env.CI ? 90000 : 60000));
 
 test('buttons, keyboard, and wheel zoom the battlefield with bounds and a reset, keeping HUD and bodies stable', async ({
   page,

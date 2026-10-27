@@ -1,0 +1,110 @@
+name: Browser E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '23 17 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  select:
+    name: Select browser coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      shards: ${{ steps.coverage.outputs.shards }}
+      total: ${{ steps.coverage.outputs.total }}
+      mode: ${{ steps.coverage.outputs.mode }}
+    steps:
+      - name: Check out source and PR base history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          # Compare the PR's own commits with its base, even if main advances
+          # before GitHub regenerates the synthetic merge ref.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+      - name: Select focused review or sharded full coverage
+        id: coverage
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          import { appendFileSync } from 'node:fs';
+          import { needsFullSuite } from './scripts/e2e-review.mjs';
+
+          let full = process.env.GITHUB_EVENT_NAME !== 'pull_request';
+          if (!full) {
+            const base = execFileSync('git', ['merge-base', 'HEAD', process.env.PR_BASE], { encoding: 'utf8' }).trim();
+            const files = execFileSync('git', ['diff', '--no-renames', '--name-only', '-z', base, '--'], { encoding: 'utf8' }).split('\0').filter(Boolean);
+            console.log(`Changed paths: ${JSON.stringify(files)}`);
+            full = needsFullSuite(files);
+          }
+          const shards = full ? [1, 2, 3, 4, 5, 6, 7, 8] : [1];
+          const mode = full ? 'full' : 'review';
+          appendFileSync(process.env.GITHUB_OUTPUT, `shards=${JSON.stringify(shards)}\ntotal=${shards.length}\nmode=${mode}\n`);
+          console.log(`Browser coverage: ${mode}, ${shards.length} shard(s).`);
+          NODE
+
+  browser:
+    name: Browser ${{ needs.select.outputs.mode }} shard ${{ matrix.shard }}/${{ needs.select.outputs.total }}
+    needs: select
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      # Keep every shard running so one failure does not hide other results.
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.select.outputs.shards) }}
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      CI: '1'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run related PR specs and smoke tests
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 45
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: npm run test:e2e:changed -- "$PR_BASE" --shard=${{ matrix.shard }}/${{ needs.select.outputs.total }} --workers=1 --timeout=90000 --reporter=github,line
+      - name: Run full browser regression shard
+        if: github.event_name != 'pull_request'
+        timeout-minutes: 45
+        # Software-rendered Chromium needs most of a runner's CPU per browser.
+        run: npx playwright test --shard=${{ matrix.shard }}/8 --workers=1 --timeout=90000 --reporter=github,line
+      - name: Upload failure traces and screenshots
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browser-e2e-${{ needs.select.outputs.mode }}-shard-${{ matrix.shard }}
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 7

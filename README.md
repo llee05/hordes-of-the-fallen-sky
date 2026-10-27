@@ -301,6 +301,20 @@ behavior locally, use `E2E_HEADLESS=1`, for example:
 E2E_HEADLESS=1 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 ```
 
+The **Browser E2E** workflow runs related browser specs plus two smoke tests on
+pull requests to `main`, using `test:e2e:changed` against the PR base. Changes
+requiring its conservative full-suite fallback use eight single-worker shards;
+focused reviews use one. Pushes to `main` and nightly runs (17:23 UTC) always run
+the full suite across eight single-worker shards. CI defaults to 90 seconds per
+test and 15 seconds per assertion; local test deadlines and the five-second
+assertion default are unchanged. Each shard has a 45-minute test budget within
+a 60-minute job and reports failures as GitHub annotations. Failed
+shards upload `test-results/`, including retained traces and screenshots, as
+separate artifacts kept for seven days. Download a failing shard's artifact and
+open its `trace.zip` with `npx playwright show-trace /path/to/trace.zip`.
+The check is initially informative; enabling required branch protection is a
+separate repository policy decision.
+
 The switch also applies to `test:pages`. Desktop tests use the game's Electron
 runtime, with the same local GPU flags and renderer check. For Electron, `CI` or
 `E2E_HEADLESS=1` disables those overrides and checks; native windows still require

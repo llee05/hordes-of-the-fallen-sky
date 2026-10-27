@@ -6,7 +6,7 @@ test('eight patron traditions offer focused routes and exclude only the chosen c
 }) => {
   // Software-rendered CI spends the budget on rank previews and menu/scene transitions;
   // traces show advancing actions rather than a stalled selector. Keep this budget local.
-  test.setTimeout(60000);
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
@@ -55,7 +55,7 @@ test('mixing patrons and focused summon capstones creates the actual travelling 
 }) => {
   // Software-rendered CI spends the budget on rank previews and menu/scene transitions;
   // traces show advancing actions rather than a stalled selector. Keep this budget local.
-  test.setTimeout(60000);
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {

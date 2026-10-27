@@ -6,18 +6,25 @@ import { closeOverlayOrPause, openTitle, startExpedition } from './helpers';
 const activeExpect = expect.configure({ timeout: 60000 });
 
 async function placeAttacker(page: Page, x: number, y: number, speed: number): Promise<void> {
-  await page.evaluate(
-    ({ x, y, speed }) => {
-      const scene = (window as any).__gloam.scene;
-      scene.spawnEnemy();
-      const enemy = scene.enemies.getFirstAlive();
-      enemy.setPosition(scene.camp.x + x, scene.camp.y + y);
-      enemy.definition = { ...enemy.definition, speed };
-      enemy.health = enemy.maxHealth = 10000;
-      Object.assign(window, { campAttacker: enemy });
-    },
-    { x, y, speed },
-  );
+  // A spawn can reject its sampled ground; wait for a real pooled actor before using it.
+  await activeExpect
+    .poll(() =>
+      page.evaluate(
+        ({ x, y, speed }) => {
+          const scene = (window as any).__gloam.scene;
+          if (!scene.enemies.getFirstAlive()) scene.spawnEnemy();
+          const enemy = scene.enemies.getFirstAlive();
+          if (!enemy) return false;
+          enemy.setPosition(scene.camp.x + x, scene.camp.y + y);
+          enemy.definition = { ...enemy.definition, speed };
+          enemy.health = enemy.maxHealth = 10000;
+          Object.assign(window, { campAttacker: enemy });
+          return true;
+        },
+        { x, y, speed },
+      ),
+    )
+    .toBe(true);
 }
 
 async function siegeState(page: Page) {
@@ -60,7 +67,10 @@ test('camp attackers stop outside the tents, repeat protected damage, freeze in 
   page,
 }) => {
   await placeAttacker(page, 0, -190, 90);
-  await activeExpect.poll(async () => (await siegeState(page)).resolve).toBeCloseTo(96.85);
+  // Observe the first tick promptly so the interval assertion measures the full attack cadence.
+  await activeExpect
+    .poll(async () => (await siegeState(page)).resolve, { intervals: [50] })
+    .toBeCloseTo(96.85);
   const first = await siegeState(page);
   expect(first).toMatchObject({
     active: true,

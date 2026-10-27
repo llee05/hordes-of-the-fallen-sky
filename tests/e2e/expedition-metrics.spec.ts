@@ -3,7 +3,7 @@ import { openTitle, startExpedition } from './helpers';
 test('a real opening fight records active time and the chronicle exposes its milestones', async ({
   page,
 }) => {
-  test.setTimeout(60000);
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await openTitle(page);
   await startExpedition(page, { legacyCamp: false });
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');

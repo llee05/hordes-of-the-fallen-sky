@@ -85,7 +85,7 @@ test('route estimates separate travel food from arrival gifts and risky routes r
 test('food forecasts remain readable beside guidance and objectives at supported sizes', async ({
   page,
 }) => {
-  test.setTimeout(60000);
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await openTitle(page);
   await startExpedition(page);
   for (const viewport of [

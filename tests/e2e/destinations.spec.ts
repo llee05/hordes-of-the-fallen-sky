@@ -88,7 +88,7 @@ for (const viewport of [
   test(`destination inspection preserves focus and paused state across responsive layouts at ${viewport.width}×${viewport.height}`, async ({
     page,
   }) => {
-    test.setTimeout(60000);
+    test.setTimeout(process.env.CI ? 90000 : 60000);
     await openTitle(page);
     await startExpedition(page);
     await page.evaluate(() => {

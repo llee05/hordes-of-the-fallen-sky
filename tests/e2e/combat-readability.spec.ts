@@ -3,15 +3,28 @@ import { openTitle, startExpedition } from './helpers';
 test('combat visual preferences persist and keep projectile collision size and danger feedback intact', async ({
   page,
 }) => {
-  test.setTimeout(60000);
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await openTitle(page);
   await startExpedition(page, { legacyCamp: false });
   await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const s = (window as any).__gloam.scene;
+        if (!s.enemies.getFirstAlive()) s.spawnEnemy();
+        return !!s.enemies.getFirstAlive();
+      }),
+    )
+    .toBe(true);
   const before = await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.spawnEnemy(undefined, { point: { x: s.player.x + 330, y: s.player.y } });
     const enemy = s.enemies.getFirstAlive();
+    enemy.setPosition(s.player.x + 330, s.player.y);
     enemy.elite = true;
+    // Keep the real elite on screen and alive while the test inspects its marker.
+    enemy.definition = { ...enemy.definition, speed: 0 };
+    enemy.health = enemy.maxHealth = 10000;
     const shot = s.fireHostile(enemy, Math.PI);
     return { radius: shot.body.radius * shot.scaleX, damage: shot.damage };
   });

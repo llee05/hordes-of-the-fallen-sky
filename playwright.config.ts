@@ -14,6 +14,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
   workers: 1,
+  expect: { timeout: process.env.CI ? 15000 : 5000 },
   outputDir: 'test-results/browser',
   globalSetup: graphics.headless ? undefined : './tests/support/checkGraphics.ts',
   use: {
