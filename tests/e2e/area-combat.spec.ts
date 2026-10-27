@@ -8,7 +8,10 @@ test('native spell warnings cancel on pinning, pause in menus, and leave bounded
   await openTitle(page);
   await startExpedition(page);
   const warned = await page.evaluate(async () => {
-    const { AREA_ENEMIES } = await import('/src/game/data/enemies.ts');
+    const { AREA_ENEMIES } = (await import(
+      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+      '/src/game/data/enemies.ts'
+    )) as typeof import('../../src/game/data/enemies');
     const s = (window as any).__gloam.scene;
     s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
     for (const e of s.enemies.getChildren()) e.disableBody(true, true);
@@ -41,7 +44,10 @@ test('native spell warnings cancel on pinning, pause in menus, and leave bounded
   expect(await page.evaluate(() => (window as any).__gloam.scene.areaThreats)).toEqual(frozen);
   await page.locator('[data-action="exit-camp"]').first().click();
   const effects = await page.evaluate(async () => {
-    const { areaMovementMultiplier } = await import('/src/game/state/areaThreats.ts');
+    const { areaMovementMultiplier } = (await import(
+      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+      '/src/game/state/areaThreats.ts'
+    )) as typeof import('../../src/game/state/areaThreats');
     const s = (window as any).__gloam.scene,
       e = s.testCaster;
     e.pinned = 1;
@@ -96,7 +102,10 @@ for (const location of ['bogd-khan-uul', 'otgontenger', 'orkhon-valley', 'eej-kh
         before = enemies.length;
       s.updateEnemies(0.001);
       s.updateCharacterAnimations(0.001);
-      const { AREA_ENCOUNTERS } = await import('/src/game/data/areaEncounters.ts');
+      const { AREA_ENCOUNTERS } = (await import(
+        // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+        '/src/game/data/areaEncounters.ts'
+      )) as typeof import('../../src/game/data/areaEncounters');
       const home = s.run.clan.locationId;
       return {
         home,
@@ -142,7 +151,10 @@ test('terrain rules warn on real cliff-foot ground and woodland concealment reve
     )
     .toBe(0);
   const rock = await page.evaluate(async () => {
-    const { areaSurface } = await import('/src/game/systems/AreaHabitat.ts');
+    const { areaSurface } = (await import(
+      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+      '/src/game/systems/AreaHabitat.ts'
+    )) as typeof import('../../src/game/systems/AreaHabitat');
     const s = (window as any).__gloam.scene;
     s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
     const nav = s.landscape.navigation;
@@ -190,8 +202,14 @@ test('terrain rules warn on real cliff-foot ground and woodland concealment reve
     )
     .toBe(0);
   const forest = await page.evaluate(async () => {
-    const { AREA_ENEMIES, ENEMIES } = await import('/src/game/data/enemies.ts');
-    const { areaSurface } = await import('/src/game/systems/AreaHabitat.ts');
+    const { AREA_ENEMIES, ENEMIES } = (await import(
+      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+      '/src/game/data/enemies.ts'
+    )) as typeof import('../../src/game/data/enemies');
+    const { areaSurface } = (await import(
+      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+      '/src/game/systems/AreaHabitat.ts'
+    )) as typeof import('../../src/game/systems/AreaHabitat');
     const s = (window as any).__gloam.scene;
     s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
     for (const e of s.enemies.getChildren()) e.disableBody(true, true);

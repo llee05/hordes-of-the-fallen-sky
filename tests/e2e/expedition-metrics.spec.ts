@@ -8,7 +8,10 @@ test('a real opening fight records active time and the chronicle exposes its mil
   await startExpedition(page, { legacyCamp: false });
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await page.evaluate(async () => {
-    const { ENEMIES } = await import('/src/game/data/enemies.ts');
+    const { ENEMIES } = (await import(
+      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+      '/src/game/data/enemies.ts'
+    )) as typeof import('../../src/game/data/enemies');
     const scene = (window as any).__gloam.scene;
     scene.spawnTimer = 999;
     for (const enemy of scene.enemies.getChildren()) enemy.disableBody(true, true);

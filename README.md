@@ -261,12 +261,19 @@ Actors use bounded pools and a spatial grid. Combat, economy, and physics stop i
 ## Checks
 
 ```sh
-npm run check           # Formatting, both typechecks, unit tests, production build
+npm run check           # Formatting, renderer/desktop/Playwright typechecks, unit tests, production build
 npm run test:coverage   # Unit tests with per-directory coverage floors
 npm run test:desktop    # Actual Electron against offline production files
 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 npm run format
 ```
+
+`npm run typecheck` checks renderer, desktop, and Playwright code. The Playwright
+project includes browser, Electron, and Pages specs and their configuration files.
+Inside `page.evaluate`, `/src/...` imports are served by Vite: keep their narrow
+`@ts-expect-error` comments and pair them with a relative `typeof import(...)`
+assertion so the imported content still has its real types. Electron launch
+fixtures use `electronEnvironment()` to omit undefined environment values.
 
 `test:coverage` prints a V8 coverage table and enforces regression floors on the
 renderer-independent core: `src/game/state` needs 95% covered lines, and

@@ -1,4 +1,4 @@
-import { launchElectron } from '../support/electron';
+import { launchElectron, electronEnvironment } from '../support/electron';
 import { expect, test, type ElectronApplication } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -12,7 +12,10 @@ test('desktop developer selector fits native windows and launches clean test exp
   let application: ElectronApplication | undefined;
   try {
     await server.listen();
-    const environment = { ...process.env, GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]! };
+    const environment: Record<string, string> = {
+      ...electronEnvironment(),
+      GLOAM_DEV_SERVER_URL: server.resolvedUrls!.local[0]!,
+    };
     delete environment.ELECTRON_RUN_AS_NODE;
     const app = await launchElectron({
       args: [resolve('dist-desktop/desktop/main.js'), `--user-data-dir=${directory}`],

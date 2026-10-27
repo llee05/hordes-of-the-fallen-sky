@@ -70,8 +70,11 @@ test('additional choices and deeper camp tiers work without new layout or purcha
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(async () => {
-    const { BUILDINGS } = await import('/src/game/data/clan.ts');
-    const building = BUILDINGS.find((entry: any) => entry.id === 'ger');
+    const { BUILDINGS } = (await import(
+      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+      '/src/game/data/clan.ts'
+    )) as typeof import('../../src/game/data/clan');
+    const building = BUILDINGS.find((entry) => entry.id === 'ger')!;
     building.paths = [
       ...building.paths,
       {

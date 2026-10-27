@@ -1,4 +1,4 @@
-import { launchElectron } from '../support/electron';
+import { launchElectron, electronEnvironment } from '../support/electron';
 import { expect, test } from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -8,7 +8,7 @@ test.use({ trace: 'off' });
 test('painted camp persists through the native profile and app restart at both desktop sizes', async () => {
   test.setTimeout(120000);
   const directory = await mkdtemp(join(tmpdir(), 'gloam-nomadic-camp-'));
-  const environment = { ...process.env };
+  const environment: Record<string, string> = { ...electronEnvironment() };
   delete environment.ELECTRON_RUN_AS_NODE;
   delete environment.GLOAM_DEV_SERVER_URL;
   const launch = () =>
