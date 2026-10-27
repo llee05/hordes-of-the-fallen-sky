@@ -295,9 +295,20 @@ E2E_HEADLESS=1 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 ```
 
 The switch also applies to `test:pages`. Desktop tests use the game's Electron
-runtime, with the same local GPU flags and renderer check. For Electron, `CI` or
-`E2E_HEADLESS=1` disables those overrides and checks; native windows still require
-a display session or Xvfb on Linux.
+runtime, with the same local GPU flags and renderer check. On Linux, `CI` or
+`E2E_HEADLESS=1` runs Electron without a display using headless Ozone and SwiftShader:
+
+```sh
+E2E_HEADLESS=1 npm run test:desktop
+```
+
+The **Nightly desktop** workflow runs the full Electron suite daily at 17:43 UTC
+and on manual dispatch, independently of pull request checks. Software WebGL
+selects flat 2D terrain by default; renderer-specific specs explicitly select 3D.
+Failed runs upload `test-results/`, including native Electron traces, for 14 days.
+Download the artifact and open a trace with `npx playwright show-trace <trace.zip>`.
+If dependency installation skipped the Electron runtime, install it with
+`env -u ELECTRON_SKIP_BINARY_DOWNLOAD node node_modules/electron/install.js`.
 
 Shared browser helpers use the compatibility 2D terrain by default, including on
 software-rendered CI. To exercise those same regressions in the default angled 3D

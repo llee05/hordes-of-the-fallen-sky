@@ -7,11 +7,23 @@ export default defineConfig({
   testDir: './tests/desktop',
   fullyParallel: false,
   workers: 1,
-  timeout: 45000,
+  timeout: graphics.headless ? 120000 : 45000,
+  expect: { timeout: graphics.headless ? 15000 : 5000 },
   outputDir: 'test-results/desktop',
   use: {
     headless: graphics.headless,
-    launchOptions: { args: graphics.launchOptions.args },
+    launchOptions: {
+      args:
+        graphics.headless && process.platform === 'linux'
+          ? [
+              '--ozone-platform=headless',
+              // Ozone otherwise exposes a 1×1 display, which clamps the native window.
+              '--ozone-override-screen-size=1920,1080',
+              '--use-angle=swiftshader',
+              '--enable-unsafe-swiftshader',
+            ]
+          : graphics.launchOptions.args,
+    },
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },
