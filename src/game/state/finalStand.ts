@@ -1,3 +1,4 @@
+import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import type { RunState } from '../types';
 import { isKhanActive } from './khan';
@@ -102,7 +103,7 @@ export function acceptCampBarrage(run: RunState, barrage?: number): boolean {
 export function defeatSkybreaker(run: RunState): boolean {
   if (run.clan.finalBossDefeated) return false;
   run.clan.finalBossDefeated = true;
-  run.clan.integrity = Math.min(100, run.clan.integrity + GAME.finalStand.bossResolve);
+  restoreResolve(run, GAME.finalStand.bossResolve);
   run.clan.message = 'The Skybreaker has fallen. Protect the families until the passage opens.';
   rememberClan(
     run,

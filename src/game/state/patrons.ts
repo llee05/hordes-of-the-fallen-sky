@@ -1,3 +1,4 @@
+import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import type { PatronEffects, RunState } from '../types';
 import { isKhanActive } from './khan';
@@ -58,5 +59,5 @@ export function rewardPatronKill(run: RunState): void {
   if (run.phase !== 'playing') return;
   if (isKhanActive(run) && run.clan.momentum > 0.5)
     run.health = Math.min(run.stats.maxHealth, run.health + run.patrons.hunt.killHeal);
-  run.clan.integrity = Math.min(100, run.clan.integrity + run.patrons.banner.resolveOnKill);
+  restoreResolve(run, run.patrons.banner.resolveOnKill);
 }

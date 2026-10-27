@@ -12,6 +12,7 @@ import {
   clanDoctrine,
   damageClan,
   riderCount,
+  restoreResolve,
   assignedWorkers,
   buildingBlocker,
   buildingCost,
@@ -29,6 +30,17 @@ function builder(): RunState {
 }
 
 describe('a civilization that moves', () => {
+  it('restores resolve by the earned amount up to the shared cap', () => {
+    const run = createRun();
+    run.clan.integrity = GAME.clan.maxResolve - 10;
+    restoreResolve(run, 4);
+    expect(run.clan.integrity).toBe(GAME.clan.maxResolve - 6);
+    restoreResolve(run, 20);
+    expect(run.clan.integrity).toBe(GAME.clan.maxResolve);
+    restoreResolve(run, 0);
+    expect(run.clan.integrity).toBe(GAME.clan.maxResolve);
+  });
+
   it('starts with an independent eight-person clan and its family gers', () => {
     const first = createRun();
     first.clan.buildings.archery = 1;

@@ -48,7 +48,7 @@ export function economyRates(run: RunState, pasture = run.clan.pasture): Economy
     (hasDevelopment(run, 'herd', 'winter-stores') ? 0.5 : 1) *
     patrons.land.consumption *
     multipliers.consumption;
-  const grazing = clan.stage === 'migration' ? 0 : Math.max(0, Math.min(100, pasture)) / 100;
+  const grazing = clan.stage === 'migration' ? 0 : Math.max(0, Math.min(pasture, 100)) / 100;
   const foodProduction =
     (0.65 + (clan.buildings.herd ? 0.65 : 0)) *
     grazing *

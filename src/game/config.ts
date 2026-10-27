@@ -32,7 +32,11 @@ export const GAME = {
     spawnMargin: 60,
   },
   duration: 900,
+  saves: { autosaveInterval: 30 },
+  hazards: { initialDelay: 8 },
+  hud: { updateInterval: 0.08 },
   finalStand: {
+    bossDelay: 20,
     chapterAt: [65, 125],
     advanceSeconds: [6, 5, 4],
     warningSeconds: 2.4,
@@ -433,6 +437,9 @@ export const GAME = {
     },
   },
   clan: {
+    maxResolve: 100,
+    arrival: { resolve: 12, health: 25, ridgeSpirit: 10, refugeRiders: 2 },
+    protection: { guard: 0.7, feltArmor: 0.5, ancestralWard: 0.8 },
     resolveLossBand: 20,
     starts: {
       'shared-hearth': {
