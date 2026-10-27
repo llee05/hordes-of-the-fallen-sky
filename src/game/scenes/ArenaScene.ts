@@ -2612,10 +2612,8 @@ export class ArenaScene extends Phaser.Scene {
       if (bolt.turn) {
         const body = bolt.body as Phaser.Physics.Arcade.Body;
         const angle = Math.atan2(body.velocity.y, body.velocity.x) + bolt.turn * dt;
-        bolt.setVelocity(
-          Math.cos(angle) * GAME.projectile.speed,
-          Math.sin(angle) * GAME.projectile.speed,
-        );
+        const speed = body.velocity.length();
+        bolt.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
         bolt.setRotation(angle + Math.PI / 4);
       }
       if (bolt.remaining <= 0) bolt.disableBody(true, true);

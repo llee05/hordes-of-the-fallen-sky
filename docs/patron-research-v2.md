@@ -151,3 +151,5 @@ Food forecasts integrate the difference between full-pasture and empty-pasture p
 Personal volley previews and firing share `state/volley.ts`, including Burning Tempest spacing, Feathered Fan, active Galloping Barrage and the current formation. Preview damage excludes momentum, retreat, charged-shot and enemy-specific bonuses, as labelled in the inspector.
 
 All 166 technologies have a distinct `research:<id>` icon key. `src/ui/researchIcons.ts` authors each icon as a distinct subject/detail pair rendered through the existing 48-unit inline SVG brass silhouette system in `src/ui/artwork.ts`. Patron seals remain separate secondary badges. The unit regression checks both 166 unique keys and 166 distinct rendered drawings.
+
+Tempest steering preserves each arrow’s launch speed throughout flight, including active Galloping Barrage. The chronicle’s Traditions panel resolves learned ranks through the full research registry, with the same technology icons as the tree and labels for general, patron and hybrid research.

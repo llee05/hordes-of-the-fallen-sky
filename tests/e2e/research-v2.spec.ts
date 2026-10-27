@@ -1,5 +1,6 @@
+import { GAME } from '../../src/game/config';
 import { expect, test } from '@playwright/test';
-import { buyNode, inspectNode, openTitle, startExpedition } from './helpers';
+import { buyNode, inspectNode, openTitle, startExpedition, sceneFrames } from './helpers';
 
 test('V2 research exposes proposed content honestly, pins legal routes, and works by keyboard in compact mode', async ({
   page,
@@ -169,4 +170,149 @@ test('V2 target, shard and volley effects are consumed by actual scene gameplay 
   expect(result.stacks).toBe(1);
   expect(result.shots).toBe(6);
   expect(result.damage).toBeCloseTo(result.expectedDamage);
+});
+
+test('Barrage speed survives Tempest steering throughout projectile flight', async ({ page }) => {
+  await openTitle(page);
+  await startExpedition(page);
+  const results = await page.evaluate(async () => {
+    const { applyResearch } =
+      // @ts-expect-error Vite serves renderer modules by source URL.
+      (await import('/src/game/state/run.ts')) as typeof import('../../src/game/state/run');
+    const scene = (window as any).__gloam.scene;
+    scene.spawnTimer = scene.attackTimer = 999;
+    scene.run.pendingUpgrades = 30;
+    for (const id of [
+      'power',
+      'power',
+      'haste',
+      'wolf-trail',
+      'wolf-trail',
+      'hy-galloping-barrage',
+    ])
+      if (!applyResearch(scene.run, id)) throw Error(`Cannot purchase ${id}`);
+    const cases = [
+      { tempest: false, gallop: true, owner: 'khan', ancestral: false, expired: false },
+      { tempest: true, gallop: false, owner: 'khan', ancestral: false, expired: false },
+      { tempest: true, gallop: true, owner: 'khan', ancestral: false, expired: false },
+      { tempest: true, gallop: true, owner: 'rider', ancestral: false, expired: false },
+      { tempest: true, gallop: true, owner: 'rider', ancestral: true, expired: false },
+      { tempest: true, gallop: true, owner: 'khan', ancestral: false, expired: true },
+    ];
+    return cases.map((scenario) => {
+      for (const bolt of scene.projectiles.getChildren()) bolt.disableBody(true, true);
+      scene.run.clan.paths.archery = scenario.tempest ? ['fire-arrows'] : [];
+      scene.run.clan.paths.sanctuary = scenario.tempest ? ['wind-shamans'] : [];
+      scene.run.elapsed = 10;
+      delete scene.run.researchRuntime?.lastGallopAt;
+      if (scenario.gallop) {
+        scene.dashTimer = 0;
+        scene.dash();
+      }
+      if (scenario.expired) scene.run.elapsed += 2.01;
+      scene.shootVolley(
+        scene.player.x,
+        scene.player.y,
+        { x: scene.player.x + 200, y: scene.player.y + 60 },
+        2,
+        1,
+        scenario.ancestral,
+        false,
+        scenario.owner,
+      );
+      const bolts = scene.projectiles.getChildren().filter((b: any) => b.active);
+      const initial = bolts.map((b: any) => ({
+        x: b.body.velocity.x,
+        y: b.body.velocity.y,
+        turn: b.turn,
+      }));
+      for (let i = 0; i < 6; i++) scene.updateProjectiles(0.05);
+      return {
+        ...scenario,
+        arrows: bolts.map((b: any, i: number) => ({
+          ...initial[i],
+          vx: b.body.velocity.x,
+          vy: b.body.velocity.y,
+          active: b.active,
+        })),
+      };
+    });
+  });
+  for (const result of results) {
+    expect(result.arrows).toHaveLength(result.tempest ? 4 : 2);
+    const speed =
+      GAME.projectile.speed *
+      (result.owner === 'khan' && result.gallop && !result.expired ? 1.2 : 1);
+    for (const arrow of result.arrows) {
+      expect(arrow.active).toBe(true);
+      expect(Math.hypot(arrow.x, arrow.y)).toBeCloseTo(speed);
+      expect(Math.hypot(arrow.vx, arrow.vy)).toBeCloseTo(speed);
+      const angle = arrow.turn * 0.3;
+      expect(arrow.vx).toBeCloseTo(arrow.x * Math.cos(angle) - arrow.y * Math.sin(angle));
+      expect(arrow.vy).toBeCloseTo(arrow.x * Math.sin(angle) + arrow.y * Math.cos(angle));
+    }
+  }
+});
+
+test('chronicle retains purchased V2 traditions and legacy ranks while paused', async ({
+  page,
+}) => {
+  await openTitle(page);
+  await startExpedition(page);
+  await page.evaluate(async () => {
+    const { applyResearch } =
+      // @ts-expect-error Vite serves renderer modules by source URL.
+      (await import('/src/game/state/run.ts')) as typeof import('../../src/game/state/run');
+    const scene = (window as any).__gloam.scene;
+    scene.spawnTimer = scene.attackTimer = 999;
+    scene.run.pendingUpgrades = 30;
+    for (const id of [
+      'power',
+      'power',
+      'wide-quiver',
+      'km-feathered-fan',
+      'wolf-trail',
+      'wolf-trail',
+      'haste',
+      'hy-galloping-barrage',
+    ])
+      if (!applyResearch(scene.run, id)) throw Error(`Cannot purchase ${id}`);
+  });
+  await page.keyboard.press('j');
+  await page.getByRole('tab', { name: 'Traditions', exact: true }).click();
+  await expect(page.locator('.tradition-entry')).toHaveCount(6);
+  await expect(page.locator('.tradition-entry h4').filter({ hasText: 'Feathered Fan' })).toHaveText(
+    'Khükhedei Mergen · Feathered Fan RANK 1',
+  );
+  await expect(
+    page.locator('.tradition-entry h4').filter({ hasText: 'Galloping Barrage' }),
+  ).toHaveText('Börte Chino + Khükhedei Mergen · Galloping Barrage RANK 1');
+  await expect(
+    page.locator('.tradition-entry h4').filter({ hasText: 'The measured bow' }),
+  ).toHaveText('Khükhedei Mergen · The measured bow RANK 2');
+  const before = await page.evaluate(() => {
+    const scene = (window as any).__gloam.scene;
+    return {
+      elapsed: scene.run.elapsed,
+      upgrades: scene.run.upgrades,
+      knowledge: scene.run.pendingUpgrades,
+    };
+  });
+  await page.getByRole('tab', { name: 'Your clan', exact: true }).click();
+  await page.getByRole('tab', { name: 'Traditions', exact: true }).click();
+  await sceneFrames(page, 5);
+  expect(
+    await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      return {
+        elapsed: scene.run.elapsed,
+        upgrades: scene.run.upgrades,
+        knowledge: scene.run.pendingUpgrades,
+      };
+    }),
+  ).toEqual(before);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
+    true,
+  );
+  await expect(page.locator('.tradition-entry')).toHaveCount(6);
 });
