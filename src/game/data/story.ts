@@ -1,6 +1,7 @@
 import { GAME } from '../config';
 import { clanDoctrine } from '../state/clan';
-import { currentLocation, locationById } from '../state/journey';
+import { chapterLocation, currentLocation, locationById } from '../state/journey';
+import { ALL_ENEMIES, SKYBREAKER } from './enemies';
 import { companionBonds, companionStanding, storyChoice } from '../state/storyBonds';
 import { firstStop, secondStop, type StoryResponse } from './storyDestinations';
 import type { LocationId, RunState } from '../types';
@@ -76,21 +77,22 @@ type StoryContext = ReturnType<typeof storyContext>;
 
 const FIRE_SETTINGS: Record<NonNullable<RunState['startingTradition']>, string> = {
   'shared-hearth':
-    'Golden Pasture · Eight survivors unpack two gers and divide what is left into even shares. Saran coaxes the carried embers into flame.',
+    'Golden Pasture · Eight survivors put up two gers and split what is left into even shares. Saran kneels over the carried embers and coaxes them into a flame.',
   outriders:
-    'Golden Pasture · Eight survivors unpack two gers. One of the three horses already carries a second rider’s gear. Saran coaxes the carried embers into flame.',
+    'Golden Pasture · Eight survivors put up two gers. One of the three horses is already loaded with a second rider’s gear. Saran kneels over the carried embers and coaxes them into a flame.',
   hearthkeepers:
-    'Golden Pasture · Eight survivors raise two gers braced with the last good timber. Saran coaxes the carried embers into flame.',
+    'Golden Pasture · Eight survivors raise two gers, braced with the last sound timber they have. Saran kneels over the carried embers and coaxes them into a flame.',
   pathfinders:
-    'Golden Pasture · Eight survivors unpack two light gers; half the stores were left behind to travel faster. Saran coaxes the carried embers into flame.',
+    'Golden Pasture · Eight survivors put up two light gers. Half the stores were left behind so they could travel faster. Saran kneels over the carried embers and coaxes them into a flame.',
 };
 
 const FIRE_BORO: Record<NonNullable<RunState['startingTradition']>, string> = {
   'shared-hearth':
-    'An empty bowl is easy to set down. Filling it is herders’ work. Three horses, Saran.',
-  outriders: 'We put a second rider on one of three horses. I hope the road is worth the horse.',
-  hearthkeepers: 'We spent our timber on walls. Walls keep the wind out. They don’t fill bowls.',
-  pathfinders: 'We left half the stores behind to move fast. Fast to where, with what?',
+    'Setting down an empty bowl is easy. Filling it is herders’ work, and we have three horses, Saran.',
+  outriders:
+    'One of our three horses is carrying gear for two riders now. I hope the road is worth what that costs her.',
+  hearthkeepers: 'We spent the timber on walls. Walls keep out the wind. They don’t fill bowls.',
+  pathfinders: 'We left half the stores behind to move fast. Fast toward what? With what?',
 };
 
 function fire(c: StoryContext): Omit<StoryEncounter, 'id'> {
@@ -100,28 +102,31 @@ function fire(c: StoryContext): Omit<StoryEncounter, 'id'> {
     image: 'intro-hearth.png',
     setting: FIRE_SETTINGS[c.tradition],
     lines: [
-      line('nara', 'Who is the empty bowl for?'),
-      line('saran', 'Whoever reaches us next. A hearth keeps room for a promise.'),
+      line('nara', 'Who’s the empty bowl for?'),
+      line(
+        'saran',
+        'For whoever reaches us next. A hearth always keeps a place for someone still on the road.',
+      ),
       line('boro', FIRE_BORO[c.tradition]),
       line(
         'erden',
-        'Eight people. Three horses. Two gers. I can keep the tally, if you will let me. I have kept larger ones.',
+        'Eight people, three horses, two gers. I could keep the tally, if you will allow it. I have kept larger ones.',
       ),
     ],
     choices: [
       choice(
         'share-work',
         'Share the work',
-        'Saran’s way: every household salvages felt and timber, and Nara is given real work.',
-        'Saran sets the spare bowl beside the others. Nara is handed a mallet and does not give it back.',
+        'Saran’s way: every household salvages felt and timber, and Nara gets real work to do.',
+        'Saran sets the spare bowl beside the others. Someone hands Nara a mallet, and she doesn’t give it back.',
         'materials',
         'wander',
       ),
       choice(
         'share-watch',
         'Share the watch',
-        'Boro’s way: pair each household with a rider so everyone knows who guards them.',
-        'Boro names the first watch and takes the coldest hour himself. You no longer face every approach alone.',
+        'Boro’s way: pair every household with a rider, so each one knows who is guarding it.',
+        'Boro names the first watch and takes the coldest hour for himself. You no longer have to face every approach alone.',
         'resolve',
         'iron',
       ),
@@ -136,31 +141,31 @@ function departure(c: StoryContext, run: RunState): Omit<StoryEncounter, 'id'> {
     title: 'More mouths, more hands.',
     image: 'intro-steppe.png',
     setting:
-      'The first departure · The grazing is thinning. On the eastern horizon, Nara has seen scraps of blue cloth: other households, signalling.',
+      'The first departure · The grazing is thinning. Far off to the east, Nara has spotted scraps of blue cloth: other households, signalling for help.',
     lines: [
-      line('nara', 'There are banners out there. Blue, like ours. Someone is asking for help.'),
+      line('nara', 'There are banners out there. Blue, like ours. Someone’s asking for help.'),
       line(
         'boro',
-        'Someone. Or something that learned our colour. Every mouth we take eats from the same sack.',
+        'Someone. Or something that’s learned our colour. Every mouth we take in eats from the same sack.',
       ),
       line(
         'saran',
         fireChoice === 'share-watch'
           ? 'You named a watch for eight, Boro. You can name one for twenty.'
           : fireChoice === 'share-work'
-            ? 'That is what the bowl is for. The families built this camp; let them help decide.'
-            : 'We have kept one another alive. Now we decide what that lets us promise.',
+            ? 'That is what the spare bowl is for. The families built this camp. Let them have a say in this too.'
+            : 'We have kept one another alive so far. Now we decide what that lets us promise.',
       ),
       line(
         'erden',
-        `${Math.floor(run.clan.food)} measures of food. ${c.people} people. Fewer days with guests. I can give you the number. I cannot give you the answer.`,
+        `${Math.floor(run.clan.food)} measures of food for ${c.people} people. With guests, it lasts fewer days. I can give you the number. The answer is not mine to give.`,
       ),
     ],
     choices: [
       choice(
         'pack-food',
         'Fill the stores first',
-        'Boro dries the last grazing into travelling stores, whoever the road brings.',
+        'Boro dries the last of the grazing into travelling stores, for whoever the road brings.',
         'Boro packs the stores tight. “Whoever we meet will eat,” he says. “So will we.” Choose the road when you are ready.',
         'food',
         'wander',
@@ -169,7 +174,7 @@ function departure(c: StoryContext, run: RunState): Omit<StoryEncounter, 'id'> {
         'pack-tools',
         'Make room in the wagons',
         'Erden repacks every load so there is space for people as well as goods.',
-        'Erden finds room for four more sleepers. He loads a cart like someone who has moved an army. Choose the road when you are ready.',
+        'Erden finds room for four more sleepers. He loads a cart like a man who has moved an army before. Choose the road when you are ready.',
         'materials',
         'iron',
       ),
@@ -182,18 +187,21 @@ function firstArrivalNote(c: StoryContext): StoryLine[] {
   const departureChoice = c.chose('departure');
   if (c.rescuedFirst)
     return [
-      line('newcomer', 'We came in under your banner. We know a little of this country. Ask us.'),
+      line(
+        'newcomer',
+        'We came in under your banner, and we know this country a little. Ask us anything.',
+      ),
       departureChoice === 'pack-tools'
-        ? line('nara', 'The room we made in the wagons is full. Good.')
+        ? line('nara', 'The room we made in the wagons is full now. Good.')
         : line('boro', 'Good thing we filled the stores. Our guests eat like wolves. So do I.'),
     ];
   if (c.lost > 0)
-    return [line('saran', 'We left someone on the road. Keep the names close tonight.')];
+    return [line('saran', 'We left someone on the road. Keep their name close tonight.')];
   if (departureChoice === 'pack-tools')
     return [
       line(
         'nara',
-        'We made room in the wagons and nobody is sleeping in it. I keep looking at it.',
+        'We made room in the wagons, and nobody is sleeping in it. I keep looking at the gap.',
       ),
     ];
   return [];
@@ -218,7 +226,14 @@ function promise(c: StoryContext, run: RunState): Omit<StoryEncounter, 'id'> {
   const stop = secondStop(currentLocation(run).id);
   const context: StoryLine[] =
     c.lost > 0
-      ? [line('boro', `Tie a dark thread for the ${c.lost} we lost. They walked under it too.`)]
+      ? [
+          line(
+            'boro',
+            c.lost === 1
+              ? 'Tie in a dark thread for the one we lost. They walked under this cloth too.'
+              : `Tie in a dark thread for each of the ${c.lost} we lost. They walked under this cloth too.`,
+          ),
+        ]
       : c.rescued
         ? [
             line('newcomer', 'Our cloth is grey. Will it hold?'),
@@ -229,38 +244,38 @@ function promise(c: StoryContext, run: RunState): Omit<StoryEncounter, 'id'> {
     act: 2,
     title: 'A promise chosen.',
     image: 'intro-caravan.png',
-    setting: `${stop.promise} Act II begins. Households tie scraps of their own cloth into the blue banner. Erden holds an unmarked strip.`,
+    setting: `${stop.promise} One by one, the households tie scraps of their own cloth into the blue banner. Erden holds a strip with nothing on it.`,
     lines: [
       line('saran', 'Every household has brought a piece. Whose banner is it now?'),
-      line('nara', 'Ours. Even the parts that are different colours.'),
+      line('nara', 'Ours. Even the bits that are different colours.'),
       stop.promiseLine,
       ...context,
       ...(c.khan > 1
         ? [
             line(
               'boro',
-              `It has passed through ${c.khan} Khans’ hands already. Hands change. The banner doesn’t mind, as long as there are hands.`,
+              `It’s been through ${c.khan} Khans’ hands already. Hands change. The banner doesn’t mind, as long as there are hands to hold it.`,
             ),
           ]
         : []),
       line(
         'erden',
-        `I counted ${c.people} at the crossing. Let the banner promise that we count again before we leave. I have nothing of my own to tie.`,
+        `I counted ${c.people} at the crossing. Let the banner hold us to counting again before every departure. I have nothing of my own to tie on.`,
       ),
     ],
     choices: [
       choice(
         'promise-guard',
         'We will watch for one another',
-        'The households organize a shared watch, and count heads before every departure.',
-        'Each family names someone to look for when the wagons move. The banner belongs to all of them.',
+        'The households set up a shared watch and count heads before every departure.',
+        'Each family names someone to look out for when the wagons move. The banner belongs to all of them now.',
         'resolve',
         'iron',
       ),
       choice(
         'promise-remember',
         'We will carry every name',
-        'Saran teaches a song with room for each household to answer.',
+        'Saran teaches a song with a place in it for every household to answer.',
         'One voice becomes several. Erden ties his blank strip into the cloth.',
         'spirit',
         'sky',
@@ -281,8 +296,8 @@ function earth(c: StoryContext, run: RunState): Omit<StoryEncounter, 'id'> {
       line(
         'saran',
         c.weathered
-          ? 'We have paid for this road already. Whatever we choose, let the tired rest first.'
-          : 'We still have strength to share. Spend it on whoever is tired.',
+          ? 'This road has cost us already. Whatever we choose, the tired rest first.'
+          : 'We still have strength to spare. Let it go to whoever is most tired.',
       ),
     ],
     choices: [
@@ -297,39 +312,39 @@ function court(c: StoryContext): Omit<StoryEncounter, 'id'> {
     act: 2,
     title: 'The court’s empty promise.',
     image: 'intro-iron-vow.png',
-    setting: `${c.place} · Before the final departure, Erden unfolds a tally sheet bearing the seal of the Last Court.`,
+    setting: `${c.place} · With the last departure close, Erden unfolds a tally sheet stamped with the seal of the Last Court.`,
     lines: [
       line(
         'erden',
-        'I counted households for the Last Court. Taxes. Soldiers. Obligations. I stood in the courtyard when they spoke the Iron Vow.',
+        'I counted households for the Last Court: their taxes, their soldiers, what each of them owed. I was standing in the courtyard when they spoke the Iron Vow.',
       ),
       line(
         'boro',
         c.chose('departure') === 'pack-tools'
-          ? 'I knew you had loaded wagons for an army. I didn’t think it was that army.'
-          : 'You were there. And you let us trust your numbers.',
+          ? 'I knew you’d loaded wagons for an army. I didn’t think it was that army.'
+          : 'You were there. And you let us trust your numbers all this way.',
       ),
       line(
         'erden',
-        'I was afraid you would hear the court every time I spoke. I saw the sky tear. I cannot tell you what Heaven intended. I can tell you what we did.',
+        'I was afraid that every time I spoke, you would hear the court. I saw the sky tear. I cannot tell you what Heaven meant by it. I can only tell you what we did.',
       ),
       line('nara', '“We.” You said “we.”'),
-      line('saran', 'Then begin with what you can do for the people here.'),
+      line('saran', 'Then start with what you can do for the people in front of you.'),
     ],
     choices: [
       choice(
         'trust-erden',
         'Put the tally in shared hands',
-        'Erden keeps the record, but reads it aloud for the households to correct.',
-        'Erden reads every entry aloud. The families correct it together; no name belongs to the court.',
+        'Erden keeps the record, but reads it aloud so the households can correct it.',
+        'Erden reads every entry aloud, and the families correct it together. No name in it belongs to the court any more.',
         'materials',
         'wander',
       ),
       choice(
         'hear-erden',
         'Hear the whole account',
-        'Saran and the households listen, question, and record what Erden witnessed.',
-        'The court’s actions become a memory the clan can examine. Its claim over them ends at this fire.',
+        'Saran and the households listen, ask their questions, and write down what Erden saw.',
+        'What the court did becomes something the clan can remember and question. Its claim on them ends at this fire.',
         'spirit',
         'sky',
       ),
@@ -357,7 +372,7 @@ function opening(c: StoryContext, run: RunState): Omit<StoryEncounter, 'id'> {
   const tally = {
     'trust-erden': line(
       'erden',
-      'The households have the tally. Each knows which wagon follows theirs.',
+      'The households have the tally now. Each one knows which wagon follows theirs.',
     ),
     'hear-erden': line(
       'erden',
@@ -373,33 +388,32 @@ function opening(c: StoryContext, run: RunState): Omit<StoryEncounter, 'id'> {
     title: 'The narrow opening.',
     image: 'intro-caravan.png',
     setting:
-      'Heart of the Steppe · The valley lies beyond fallen stone and ice. Families begin clearing the narrow approach as the eclipse reddens the sky.',
+      'Heart of the Steppe · The valley lies beyond fallen stone and ice. As the eclipse reddens the sky, the families start clearing the narrow approach.',
     lines: [
       line(
         'boro',
-        'There is a way through. We need time to clear it, and riders to hold the approach.',
+        'There’s a way through. We need time to clear it, and riders to hold the approach.',
       ),
       ...recall,
-      tally ??
-        line('erden', 'I will count the wagons at the opening. Ask anyone here to check me.'),
+      tally ?? line('erden', 'I will count the wagons at the opening. Anyone here may check me.'),
       line(
         'saran',
-        `We have brought ${c.people} people this far${c.rescued ? ', the households from the blue banners among them' : ''}.${c.khan > 1 ? ` The banner rides with Khan ${c.khan} now.` : ''} Ride for them while we make the passage ready.`,
+        `We have brought ${c.people} people this far${c.rescued ? ', the households from the blue banners among them' : ''}.${c.khan > 1 ? ` The banner rides with Khan ${c.khan} now.` : ''} Ride for them while we open the way.`,
       ),
     ],
     choices: [
       choice(
         'hold-watch',
         'Organize the last watch',
-        'Riders and households prepare to take turns defending the approach.',
-        'The watches take their places. The clan begins the work behind them.',
+        'Riders and households take turns defending the approach.',
+        'The watches take their places, and behind them the clan sets to work.',
         'resolve',
         'iron',
       ),
       choice(
         'share-last-meal',
         'Share a meal before the work',
-        'Boro gathers the last stores close to the people clearing the path.',
+        'Boro brings the last stores up to the people clearing the path.',
         'Food passes from hand to hand. There will be work enough for everyone.',
         'food',
         'wander',
@@ -423,7 +437,7 @@ function road(c: StoryContext, run: RunState): Omit<StoryEncounter, 'id'> {
     title: 'Hold the road.',
     image: 'intro-hearth.png',
     setting:
-      'The last stand · The gap widens. Beyond the defenders, Nara reaches for the covered ember vessel.',
+      'The last stand · The gap is widening. Behind the defenders, Nara reaches for the covered ember vessel.',
     lines: [
       line('nara', 'I can carry it now. Keep your hands free for the people coming after us.'),
       ...(naraTrusted
@@ -435,7 +449,7 @@ function road(c: StoryContext, run: RunState): Omit<StoryEncounter, 'id'> {
           ]
         : [
             line('saran', 'Your hands are small for it.'),
-            line('nara', 'They are steady. Keep yours on the wagons.'),
+            line('nara', 'They’re steady. Keep yours on the wagons.'),
           ]),
       ...recall,
       line(
@@ -449,15 +463,15 @@ function road(c: StoryContext, run: RunState): Omit<StoryEncounter, 'id'> {
       choice(
         'hold-together',
         'Hold together',
-        'The defenders hear the households answering behind them.',
-        'The blue cloth moves above the wagons. Every watch knows what it is holding for.',
+        'The defenders can hear the households answering behind them.',
+        'The blue cloth stirs above the wagons. Every watch knows what it is holding the road for.',
         'resolve',
         'iron',
       ),
       choice(
         'carry-song',
         'Carry the song forward',
-        'Saran calls each household into the song they will take through the passage.',
+        'Saran calls each household into the song they’ll carry through the passage.',
         'Nara carries the covered embers. The song travels beside the wagons.',
         'spirit',
         'sky',
@@ -484,39 +498,40 @@ export function storyEncounter(run: RunState, id: StoryBeat): StoryEncounter {
   // named people, and the game never claims which individual casualties occurred.
   if (run.clan.population < 5) {
     const remembrance: Record<StoryBeat, string> = {
-      fire: 'The carried embers become a small fire. A place beside it is still a promise.',
-      departure: 'The gers can be packed. The remaining hands must choose what to carry onward.',
+      fire: 'The carried embers make a small fire. Even now, a place beside it is kept for whoever comes.',
+      departure:
+        'The grazing is thinning and the gers must come down. Whatever goes onward has to fit in the hands that are left.',
       river: `${c.place} · ${firstStop(currentLocation(run).id).remnant}`,
       promise:
-        'Scraps of cloth are tied into the blue banner. Those who remain keep the promise to count before leaving.',
+        'Scraps of cloth go into the blue banner all the same. The promise holds, however few keep it: count who is left before every departure.',
       earth: `${c.place} · ${secondStop(currentLocation(run).id).remnant}`,
       court:
-        'A folded tally from the Last Court records what happened in the courtyard. Its witness left questions that the road has not answered.',
-      opening: 'Beyond the fallen stone lies the valley. The passage will take time to clear.',
-      road: 'The gap is widening. The carried embers need a road through, and the defenders must hold it.',
+        'Among the packs is a folded tally sheet stamped with the Last Court’s seal. It records what happened in the courtyard, and its witness left questions the road has not answered.',
+      opening: 'Past the fallen stone lies the valley. Clearing the passage will take time.',
+      road: 'The gap is widening. The carried embers need a road through, and someone has to hold it.',
     };
     return {
       ...scene,
-      setting: `${run.clan.population} ${run.clan.population === 1 ? 'survivor remains' : 'survivors remain'} beneath the blue banner. The road is remembered in fewer voices.`,
+      setting: `${run.clan.population} ${run.clan.population === 1 ? 'survivor remains beneath the blue banner. One voice carries the memory of the road now.' : 'survivors remain beneath the blue banner. Fewer voices carry the memory of the road now.'}`,
       lines: [line('clan', remembrance[id])],
       choices: scene.choices.map((option) => ({
         ...option,
         label: {
-          food: 'Gather what provisions remain',
-          materials: 'Keep the travelling tools',
+          food: 'Gather what food is left',
+          materials: 'Keep the travelling tools in order',
           spirit: 'Carry the names forward',
           resolve: 'Steady the next watch',
         }[option.benefit],
         description: {
-          food: 'Gather the remaining stores for the next part of the journey.',
-          materials: 'Put reusable timber and harness to work.',
+          food: 'Pack what stores remain for the next stretch of road.',
+          materials: 'Mend whatever timber and harness can still be used.',
           spirit: 'Carry a remembered song into the next camp.',
-          resolve: 'Take time to recover before the next watch.',
+          resolve: 'Rest and recover before the next watch.',
         }[option.benefit],
         response:
           run.clan.population === 1
-            ? 'The survivor records the decision and puts it into practice.'
-            : 'Those who remain record the decision and put it into practice.',
+            ? 'The survivor marks the choice in the tally and gets on with the work.'
+            : 'Those who remain mark the choice in the tally and get on with the work.',
       })),
     };
   }
@@ -549,7 +564,7 @@ function rememberedRoads(run: RunState): string | undefined {
   }
   if (unspoken.length)
     images.push(
-      `The road also passed through ${unspoken.join(' and ')}, remembered as a halt and a departure.`,
+      `The road also passed through ${unspoken.join(' and ')}, where the clan made camp and moved on.`,
     );
   return images.length ? images.join(' ') : undefined;
 }
@@ -584,17 +599,17 @@ function companionsEnding(run: RunState): string {
   return [
     close('nara')
       ? 'Nara sets down the ember vessel she carried through the passage and lights the new hearth herself.'
-      : 'Nara sets down the covered ember vessel and asks who will be coming next.',
+      : 'Nara sets down the covered ember vessel and asks who is coming next.',
     close('saran')
-      ? 'Saran lets someone else feed the fire, and sits.'
+      ? 'For once, Saran lets someone else feed the fire, and sits down.'
       : 'Saran feeds the new fire, as she always has.',
     close('boro') && close('saran')
       ? 'Boro, who once asked what they could feed a stranger, fills the spare bowl himself.'
       : strained('boro')
         ? 'Boro counts the horses twice when he thinks nobody is looking. He is not wrong to.'
         : close('boro')
-          ? 'Boro walks the new pasture and declares, grudgingly, that it will do.'
-          : 'Boro checks the grass and says nothing, which from Boro is praise.',
+          ? 'Boro walks the new pasture and admits, grudgingly, that it will do.'
+          : 'Boro checks the grass and says nothing, which, from Boro, counts as praise.',
     court === 'trust-erden'
       ? 'Erden reads the tally aloud, and the families answer for themselves.'
       : court === 'hear-erden'
@@ -603,7 +618,7 @@ function companionsEnding(run: RunState): string {
           ? 'Nara keeps the tally now. Erden checks her sums, and she lets him.'
           : strained('erden')
             ? 'Erden works at the edge of the firelight, counting, still unsure of his welcome.'
-            : 'Erden counts the gers twice, and says the number aloud.',
+            : 'Erden counts the gers twice and says the number aloud.',
   ].join(' ');
 }
 
@@ -616,27 +631,107 @@ export function epilogueText(run: RunState): readonly string[] {
   const rescued = run.story.crossings.some((crossing) => crossing.route === 'refuge');
   const roads = rememberedRoads(run);
   return [
-    `${clan.population} ${single ? 'person' : 'people'} and ${clan.herd} ${clan.herd === 1 ? 'animal' : 'animals'} reach the sheltered valley. ${clan.finalBossDefeated ? 'The Skybreaker has fallen behind them.' : 'The Skybreaker still walks beyond the mountain.'}${fallen > 0 ? ` ${fallen} ${fallen === 1 ? 'Khan' : 'Khans'} fell keeping the road; the banner came through in other hands.` : ''} The passage has given the living a road through.`,
+    `${clan.population} ${single ? 'person' : 'people'} and ${clan.herd} ${clan.herd === 1 ? 'animal' : 'animals'} come through the passage into the sheltered valley, under a stretch of sky that has not torn. ${clan.finalBossDefeated ? 'The Skybreaker has fallen behind them.' : 'The Skybreaker still walks beyond the mountain.'}${fallen > 0 ? ` ${fallen === 1 ? 'One Khan' : `${fallen} Khans`} fell keeping the road, and the banner came through in other hands.` : ''}`,
     run.story.peopleLost > 0
-      ? `The ${single ? 'last survivor remembers' : 'survivors remember'} the ${run.story.peopleLost} ${run.story.peopleLost === 1 ? 'person' : 'people'} lost along the road. Their names have a place beside the fire.`
-      : `Saran sets the spare bowl beside the new hearth. The carried embers catch in fresh kindling.${rescued ? ' The households gathered under the blue banners raise their gers beside the first two.' : ''}`,
+      ? `${run.story.peopleLost === 1 ? 'One person was' : `${run.story.peopleLost} people were`} lost on the road. ${single ? 'The last survivor keeps' : 'The survivors keep'} a place beside the fire for ${run.story.peopleLost === 1 ? 'that name' : 'their names'}.`
+      : `Saran sets the spare bowl down beside the new hearth, and the carried embers catch in fresh kindling.${rescued ? ' The households who came in under the blue banners raise their gers beside the first two.' : ''}`,
     ...(roads ? [roads] : []),
     ...(few ? [] : [companionsEnding(run)]),
     single
-      ? `The tally carries the clan’s name: ${identity}. Its promise belongs to the next camp as well.`
+      ? `The tally remembers the clan as “${identity}.” Its promise goes on to the next camp.`
       : identity === 'The Iron Horde'
         ? 'The Iron Horde posts riders above the approach, then sends tired guards back to eat with their families.'
         : identity === 'Children of the Eternal Sky'
           ? 'The Children of the Eternal Sky begin a song in several voices. Each household finds its own place in the answer.'
           : identity === 'The Wandering Nation'
-            ? 'The Wandering Nation leaves room between its gers for more arrivals. The next task is learning how many the pasture can support.'
-            : 'The households raise their gers around a common fire. Their people are still taking shape.',
+            ? 'The Wandering Nation leaves room between its gers for whoever arrives next. First, though, it has to learn how many this pasture can feed.'
+            : 'The households raise their gers around a common fire. What kind of people they will become is still being decided.',
     ...(few
       ? [
-          `${single ? 'The last survivor lights' : 'The remaining hands light'} a hearth from the carried embers. A spare bowl waits beside it.`,
+          `${single ? 'The last survivor lights' : 'The remaining hands light'} a hearth from the carried embers and set${single ? 's' : ''} a spare bowl beside it.`,
         ]
       : []),
     'Keep a place beside the fire. Someone is still coming home.',
+  ];
+}
+
+/** "a hollow wolf" for a recorded attacker, or the unreturned when the source is unknown. */
+function attackerName(source: string | undefined): string {
+  if (source === SKYBREAKER.title) return 'the Skybreaker';
+  const known = ALL_ENEMIES.find((enemy) => (enemy.title ?? enemy.id) === source);
+  if (!known) return 'the unreturned';
+  const name = (known.title ?? known.id).toLowerCase();
+  return `${/^[aeiou]/.test(name) ? 'an' : 'a'} ${name}`;
+}
+
+function listPlaces(names: readonly string[]): string {
+  return names.length < 3
+    ? names.join(' and ')
+    : `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
+}
+
+/**
+ * A short account of a lost expedition, built only from what the run recorded: where the
+ * clan was, the last damage it took, the camps it actually reached, its losses, and its
+ * Khans. It names no companion and no place the clan never reached, so it holds for any
+ * remnant, including one that no longer exists.
+ */
+export function defeatAccount(run: RunState): readonly string[] {
+  const clan = run.clan;
+  const place = locationName(currentLocation(run).id)!;
+  const where =
+    clan.stage === 'migration'
+      ? `On the road out of ${place}`
+      : clan.stage === 'final'
+        ? `At ${place}, while the passage was still being cleared`
+        : run.story.crossings.length === 0
+          ? `At ${place}, before the clan had ever broken camp`
+          : `At ${place}`;
+  const how =
+    clan.population <= 0
+      ? 'the last of the clan was lost'
+      : `the clan’s resolve gave out with ${clan.population === 1 ? 'one person' : `${clan.population} people`} still beneath the banner`;
+  const blow = run.safety.lastDamage;
+  const cause = !blow
+    ? ''
+    : {
+        attack: ` The last recorded blow came from ${attackerName(blow.source)}.`,
+        starvation: ' The stores had run empty; the last recorded blow came from hunger.',
+        eruption: ' The last recorded blow came when the ground erupted at the camp.',
+        seer: ' The last recorded blow was a seer’s strike on the camp.',
+        area: ' The last recorded blow came from a spell or a shift in the land near the camp.',
+      }[blow.cause];
+
+  const reached = run.story.crossings
+    .map((crossing) => locationName(crossing.locationId))
+    .filter((name): name is string => !!name);
+  const rescues = run.story.crossings.filter((crossing) => crossing.route === 'refuge').length;
+  const lost = run.story.peopleLost;
+  const khans = run.khan.generation;
+  const awaitingSuccessor = run.khan.successionRemaining > 0;
+  const road = [
+    reached.length
+      ? `The road had led from ${locationName(chapterLocation(0).id)} to ${listPlaces(reached)}.`
+      : '',
+    rescues
+      ? `On the way, the clan answered the blue banners${rescues === 1 ? '' : rescues === 2 ? ' twice' : ` ${rescues} times`}.`
+      : '',
+    lost > 0
+      ? `In all, ${lost === 1 ? 'one person was' : `${lost} people were`} lost on the road.`
+      : '',
+    khans > 1
+      ? `The banner had passed through ${khans} Khans’ hands${awaitingSuccessor ? '; the last of them had fallen, and no successor had yet taken up the bow' : ''}.`
+      : awaitingSuccessor
+        ? 'The Khan had fallen, and no successor had yet taken up the bow.'
+        : '',
+    clan.finalBossDefeated ? 'The Skybreaker had already fallen.' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return [
+    `${where}, ${how}.${cause}`,
+    ...(road ? [road] : []),
+    'The journey ends here. The road it travelled is still remembered.',
   ];
 }
 

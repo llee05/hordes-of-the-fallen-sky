@@ -3,6 +3,7 @@ import { clanMemories, khanRecords } from './legacyContent';
 import {
   COMPANIONS,
   STORY_ORDER,
+  defeatAccount,
   epilogueText,
   storyAct,
   storyGiftLabel,
@@ -82,4 +83,9 @@ export function storyLogMenu(run: RunState): string {
 export function epilogueMenu(run: RunState): string {
   const paragraphs = epilogueText(run);
   return `<section class="game-panel story-panel epilogue-panel"><header class="panel-heading"><div><p class="eyebrow">EPILOGUE · ${escapeHtml(clanDoctrine(run).toUpperCase())}</p><h2 id="overlay-title">A place beside the fire.</h2></div><button class="panel-close" data-action="epilogue-close" aria-label="Skip epilogue">×</button></header><div class="panel-body story-layout">${picture('intro-hearth.png', `${run.clan.population} ${run.clan.population === 1 ? 'PERSON' : 'PEOPLE'} · ONE SHARED HEARTH`)}<div class="story-body epilogue-copy">${paragraphs.map((paragraph, index) => (index === paragraphs.length - 1 ? `<blockquote>${escapeHtml(paragraph)}</blockquote>` : `<p>${escapeHtml(paragraph)}</p>`)).join('')}</div></div><footer class="panel-footer"><span class="paused-note">THE CLAN HAS REACHED REFUGE</span><button class="primary-button" data-action="epilogue-close" data-primary>See journey results <span>→</span></button></footer></section>`;
+}
+
+/** The defeat screen's narrated account, one escaped line per paragraph. */
+export function defeatAccountContent(run: RunState): string {
+  return defeatAccount(run).map(escapeHtml).join('<br>');
 }
