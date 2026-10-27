@@ -1,6 +1,5 @@
 import propsSource from '/art/steppe-props.json?raw';
 import actorsSource from '/art/steppe-actors.json?raw';
-import clanSource from '/art/steppe-clan-motion.json?raw';
 import scenerySource from '/art/steppe-scenery.json?raw';
 import type { BuildingDefinition } from '../game/data/clan';
 import { LANDSCAPES } from '../game/data/landscapes';
@@ -17,9 +16,6 @@ import type { LocationId } from '../game/types';
 // browser preview and file-based desktop build share the same atlas definitions.
 const props = JSON.parse(propsSource) as typeof import('../../public/art/steppe-props.json');
 const actors = JSON.parse(actorsSource) as typeof import('../../public/art/steppe-actors.json');
-const civilians = JSON.parse(
-  clanSource,
-) as typeof import('../../public/art/steppe-clan-motion.json');
 const scenery = JSON.parse(scenerySource) as typeof import('../../public/art/steppe-scenery.json');
 
 // Small brass-cut silhouettes stay legible at HUD scale. Decorative SVGs never add
@@ -113,15 +109,6 @@ function atlasIllustration(
   // Clip the atlas frame before the outer SVG fits it into its UI slot; clipping
   // only the outer viewport exposes adjacent subjects when it adds side margins.
   return `<svg class="camp-illustration" viewBox="0 0 ${frame.w} ${frame.h}" aria-hidden="true" focusable="false"><svg width="${frame.w}" height="${frame.h}" viewBox="${frame.x} ${frame.y} ${frame.w} ${frame.h}" overflow="hidden"><image href="${root}${atlas.meta.image}" width="${atlas.meta.size.w}" height="${atlas.meta.size.h}"/></svg></svg>`;
-}
-
-/** Static resting poses in the planning miniature; character clocks stay paused. */
-export function campResident(name: 'worker' | 'packhorse'): string {
-  return atlasIllustration(civilians, civilians.frames[`${name}-attack-0`].frame);
-}
-
-export function campProp(name: keyof typeof props.frames): string {
-  return atlasIllustration(props, props.frames[name].frame);
 }
 
 /** The same painted landmarks let players recognize a destination before departing. */

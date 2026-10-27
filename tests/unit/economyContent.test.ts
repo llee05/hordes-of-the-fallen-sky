@@ -79,7 +79,8 @@ describe('economy planning interfaces', () => {
       'herd',
     );
     expect(html).toContain('aria-label="Camp economy"');
-    expect(html).toContain('camp-popup');
+    expect(html).toContain('id="camp-inspector"');
+    expect(html).toContain('aria-label="Provisions &amp; gathering"');
     expect(html).toContain('shifting pasture');
     expect(run).toEqual(before);
   });

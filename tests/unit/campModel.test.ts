@@ -4,8 +4,8 @@ import { buildStructure } from '../../src/game/state/clan';
 import { buildingMenu } from '../../src/ui/campModel';
 import { estateBranch } from '../../src/ui/campPopups';
 const view = { category: 'all', query: '' };
-describe('immersive painted camp and anchored parchments', () => {
-  it('opens as one painting with a central encampment, established homes, and selectable plots', () => {
+describe('camp estate panels and shared details', () => {
+  it('opens with a holding, internal development strip, and selectable facility slots', () => {
     const run = createRun(),
       before = structuredClone(run);
     const html = buildingMenu(run, view, 'ger');
@@ -14,8 +14,56 @@ describe('immersive painted camp and anchored parchments', () => {
     expect(html.match(/data-camp-slot=/g)).toHaveLength(5);
     expect(html.match(/data-camp-site=/g)).toHaveLength(1);
     expect(html).not.toContain('class="camp-popup');
-    expect(html).not.toContain('camp-tree-workspace');
+    expect(html).toContain('camp-holding');
+    expect(html).toContain('camp-slot-grid');
+    expect(html).toContain('aria-label="Internal developments"');
+    expect(html).toContain('assigned workers');
+    expect(html).toContain('Inspect upgrade: Established Encampment');
+    expect(html).toContain('camp-inspector-idle');
     expect(html).not.toContain('class="node-inspector');
+    expect(run).toEqual(before);
+  });
+  it('distinguishes selected empty, locked, reserved and established facility slots', () => {
+    const run = createRun();
+    const empty = buildingMenu(
+      run,
+      { ...view, campPopup: true, campTarget: 'slot', campSlot: 1 },
+      'ger',
+    );
+    expect(empty).toMatch(/data-camp-slot="1"[^>]*data-unlocked="true"[^>]*aria-pressed="true"/);
+    expect(empty).toContain('data-camp-site="archery"');
+    const locked = buildingMenu(
+      run,
+      { ...view, campPopup: true, campTarget: 'slot', campSlot: 2 },
+      'ger',
+    );
+    expect(locked).toContain('This plot opens with Established Encampment');
+    expect(locked).not.toContain('class="camp-building-choice"');
+    run.clan.estate!.slots[1] = 'archery';
+    const reserved = buildingMenu(run, view, 'archery');
+    expect(reserved).toMatch(
+      /data-camp-site="archery"[^>]*data-established="false"[^>]*data-level="0"/,
+    );
+    expect(reserved).toContain('Reserved · establish facility');
+    run.clan.buildings.archery = 1;
+    const established = buildingMenu(run, view, 'archery');
+    expect(established).toMatch(
+      /data-camp-site="archery"[^>]*data-established="true"[^>]*data-level="1"/,
+    );
+    expect(established).toContain('Level 1 / 4 · 3 assigned workers');
+  });
+  it('selects an internal development and exposes its validated purchase without mutating the clan', () => {
+    const run = createRun(),
+      before = structuredClone(run);
+    const html = buildingMenu(
+      run,
+      { ...view, campPopup: true, campTarget: 'internal', campInternal: 'clan-council' },
+      'ger',
+    );
+    expect(html).toMatch(/data-camp-internal="clan-council"[^>]*aria-pressed="true"/);
+    expect(html).toContain('data-estate-kind="internal"');
+    expect(html).toContain('data-estate-id="clan-council"');
+    expect(html).toContain('the clan eats 5% less food per rank');
     expect(run).toEqual(before);
   });
   it('inspects locked upgrades without spending resources and uses a foldout for exclusive branches', () => {
