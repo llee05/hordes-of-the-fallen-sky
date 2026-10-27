@@ -1,10 +1,6 @@
 import { expect, test } from '@playwright/test';
 
 test('terrain toggles immediately while paused and persists across reloads', async ({ page }) => {
-  test.skip(
-    !!process.env.CI,
-    'Needs a GPU: hosted SwiftShader renders 3D at ~2 fps; runs locally.',
-  );
   // Rebuilding both renderers and reloading twice can exceed a minute on shared GPUs.
   test.setTimeout(120000);
   const errors: string[] = [];

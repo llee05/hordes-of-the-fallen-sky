@@ -263,6 +263,7 @@ Actors use bounded pools and a spatial grid. Combat, economy, and physics stop i
 ```sh
 npm run check           # Formatting, renderer/desktop/Playwright typechecks, unit tests, production build
 npm run test:coverage   # Unit tests with per-directory coverage floors
+npm run test:local      # Full local browser gameplay/graphics suite, then Electron
 npm run test:desktop    # Actual Electron against offline production files
 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 npm run format
@@ -301,27 +302,33 @@ behavior locally, use `E2E_HEADLESS=1`, for example:
 E2E_HEADLESS=1 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 ```
 
-The **Browser E2E** workflow runs related browser specs plus two smoke tests on
-pull requests to `main`, using `test:e2e:changed` against the PR base. Changes
-requiring its conservative full-suite fallback use eight single-worker shards;
-focused reviews use one. Pushes to `main` and nightly runs (17:23 UTC) always run
-the full suite across eight single-worker shards. CI defaults to 90 seconds per
-test and 15 seconds per assertion; local test deadlines and the five-second
-assertion default are unchanged. Each shard has a 45-minute test budget within
-a 60-minute job and reports failures as GitHub annotations. Failed
-shards upload `test-results/`, including retained traces and screenshots, as
-separate artifacts kept for seven days. Download a failing shard's artifact and
-open its `trace.zip` with `npx playwright show-trace /path/to/trace.zip`.
-The check is initially informative; enabling required branch protection is a
-separate repository policy decision.
+GitHub Actions runs `npm run check` and the production Pages smoke tests through
+the unchanged **GitHub Pages** workflow on pull requests and pushes to `main`.
+The separate browser E2E workflow (focused PR runs, full shards, and nightly runs)
+is removed. Browser and desktop gameplay, graphics, and performance tests run
+locally, including Golden Pasture's texture/FPS budgets; there is no desktop nightly
+job. Software-rendered hosted runners do not provide reliable real-time simulation
+or GPU performance results.
 
-The switch also applies to `test:pages`. Desktop tests use the game's Electron
+| Suite / configuration                                                               | Classification and where it runs                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Format, renderer/desktop/Playwright typechecks, Vitest unit tests, production build | Fast correctness checks; GitHub Actions and local `npm run check`. Unit simulations advance explicit time without a live renderer or wall-clock gameplay.                                                                                   |
+| `tests/e2e` browser specs                                                           | Mixed UI/save correctness and live gameplay/graphics coverage; local `npm run test:e2e`. The whole suite stays together rather than maintaining a second CI allowlist.                                                                      |
+| `tests/desktop` Playwright specs                                                    | Native correctness, layout, gameplay, and graphics/performance coverage; local `npm run test:desktop`.                                                                                                                                      |
+| `tests/pages` production smoke                                                      | Release correctness at the Pages subpath: bundled assets, UI/profile flows, pause/resume, and unavailable storage; GitHub Actions and local `npm run test:pages` after a build. No combat, position, animation, or frame-budget assertions. |
+| `playwright.graphics.ts` and `tests/support/checkGraphics.ts`                       | Rendering configuration and local hardware-WebGL preflight, not a CI performance benchmark. The configuration's policy is unit-tested in `npm run check`; Pages keeps headless software rendering in CI.                                    |
+
+Run `npm run test:local` before shipping gameplay or artwork changes. It runs every
+browser spec, then builds and runs every Electron spec. Individual commands above
+remain available for focused reviews; no test assertions are removed or relaxed.
+
+`E2E_HEADLESS=1` also applies to `test:pages`. Desktop tests use the game's Electron
 runtime, with the same local GPU flags and renderer check. For Electron, `CI` or
 `E2E_HEADLESS=1` disables those overrides and checks; native windows still require
 a display session or Xvfb on Linux.
 
 Shared browser helpers use the compatibility 2D terrain by default, including on
-software-rendered CI. To exercise those same regressions in the default angled 3D
+headless local runs. To exercise those same regressions in the default angled 3D
 view on a local GPU, run:
 
 ```sh
@@ -360,7 +367,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e:changed -- ori
 ```
 
 Repeat `--spec=pattern` for each affected area. This is partial review coverage;
-keep the full `test:e2e` suite in CI and run it before shipping gameplay changes.
+run the full `test:local` suite before shipping gameplay changes.
 The review command preserves the normal viewport, worker count, GPU policy, and
 failure reporting. On shared Linux hosts, wrap browser commands in
 `flock /tmp/bh-playwright.lock` and choose a distinct `E2E_PORT`. See the
