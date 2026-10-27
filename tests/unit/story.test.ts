@@ -377,19 +377,16 @@ describe('destination-specific scenes', () => {
     expect(run.clan.campEffects.multipliers.clanProtection).toBeLessThan(1);
   });
 
-  it.each([1, 2, 3, 4])(
-    'keeps the witnessed courtyard account for %i survivors',
-    (population) => {
-      const run = createRun();
-      run.clan.population = population;
-      expect(storyEncounter(run, 'court').lines).toEqual([
-        {
-          speaker: 'clan',
-          text: 'Among the packs is a folded tally sheet stamped with the Last Court’s seal. It records what happened in the courtyard, and its witness left questions the road has not answered.',
-        },
-      ]);
-    },
-  );
+  it.each([1, 2, 3, 4])('keeps the witnessed courtyard account for %i survivors', (population) => {
+    const run = createRun();
+    run.clan.population = population;
+    expect(storyEncounter(run, 'court').lines).toEqual([
+      {
+        speaker: 'clan',
+        text: 'Among the packs is a folded tally sheet stamped with the Last Court’s seal. It records what happened in the courtyard, and its witness left questions the road has not answered.',
+      },
+    ]);
+  });
 
   it('reflects the starting tradition and actual succession without inventing either', () => {
     const run = createRun();
