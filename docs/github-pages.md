@@ -23,9 +23,9 @@ local assets and prologue paintings and the absence of development
 hooks and native capabilities — that artwork smoke is the only Pages test GitHub
 Actions runs. The `@gameplay` smokes, which never run on GitHub, check real camp
 purchases, menu pausing, sound preference persistence, and play with unavailable
-browser storage. The expedition gameplay smoke passes
-`?terrain=2d` to keep terrain flat within software-rendered time budgets regardless
-of driver detection. See [terrain selection and startup defaults](world-3d.md).
+browser storage. The gameplay smoke uses the same angled 2.5D world as the desktop
+game, including on software GPUs. The headless software Pages smoke run passed all
+three tests. See [the world renderer guide](world-3d.md).
 Run `npm run check` and
 `npm run test:e2e` for the broader checks and development-browser regressions.
 

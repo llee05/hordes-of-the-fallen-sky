@@ -18,7 +18,7 @@ test.beforeEach(async ({ page }) => {
       }
     };
   });
-  await page.goto('/?terrain=2d');
+  await page.goto('/');
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   expect(await page.evaluate(() => (window as any).audioContextsCreated ?? 0)).toBe(0);
   expect(await page.evaluate(() => (window as any).__gloam.scene.audio.context)).toBeUndefined();

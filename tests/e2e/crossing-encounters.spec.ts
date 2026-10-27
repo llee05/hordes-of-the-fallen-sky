@@ -1,4 +1,3 @@
-import { preferAngledTerrain } from '../support/terrain';
 import { expect, test } from '@playwright/test';
 import { openTitle, startExpedition } from './helpers';
 for (const route of ['river', 'ridge', 'refuge'])
@@ -76,7 +75,6 @@ test('the angled river route carves an actual connected ford and preserves live 
 }) => {
   test.setTimeout(120000);
   await page.goto('/');
-  await preferAngledTerrain(page);
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await startExpedition(page, { legacyCamp: false });
   await expect

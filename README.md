@@ -72,25 +72,20 @@ Every location has two native enemy variants alongside familiar shared unreturne
 
 Every location has a distinct painted landscape: golden meadow, frozen river, slate pass, forested foothills, snowy peaks and glaciers, volcanic steppe, granite desert, and braided river pasture. Terrain colors, vegetation, watercourses, landmark silhouettes, and atmosphere follow the chosen place. Migration cards preview the same scenery before departure. See [the twelve-location landscape catalog](docs/location-landscapes.md).
 
-Mount Otgontenger uses five stepped elevation tiers: connected ridges, terraces,
+Mount Otgontenger has connected ridges, terraces,
 rock shelves, snowy summits, and broad winding passes. Full cliff faces, contact
 occlusion, and cast shadows communicate height around open camp and caravan space.
 Rubble gathers below cliffs, scrub occupies shelves, and sparse conifers stay low.
-Camera-sized chunks reuse the existing 2D textures and painted prop frames.
-In development, choose Otgontenger with **F8** and press **F9** to cycle elevation,
-slope, cliff-placement, and traversal overlays. See [the mountain terrain guide](docs/mountain-terrain.md)
-for configuration, rendering, traversal, and limits.
 
-Angled 2.5D scenes are available across all twelve destinations. An orthographic
-Three.js world supplies genuine raised shelves, vertical cliff faces, snowfields,
+Angled 2.5D scenes render across all twelve destinations. An orthographic
+Three.js world supplies raised shelves, vertical cliff faces, snowfields,
 shadows, river gorges, and timber crossings. Existing painted characters and camps
 stand on the terrain while Phaser retains physics, combat, and animation. Riding
 follows screen directions. F6 changes camera angle, F7 isolates terrain, and F9
-cycles debug views in development. **Settings → Terrain** switches immediately between
-**Angled 3D** and **Flat 2D**, and saves your choice with your profile. See
-[the angled scene guide](docs/world-3d.md) for startup defaults, software-WebGL
-fallback, and development overrides, and [painted asset prompts](docs/angled-scene-art.md)
-for the bundled artwork.
+cycles debug views in development. WebGL is required, including on software GPUs;
+there is no flat terrain mode. Older saved terrain preferences load into the angled
+world while preserving other settings. See [the angled scene guide](docs/world-3d.md)
+and [painted asset prompts](docs/angled-scene-art.md) for the bundled artwork.
 The [environment quality guide](docs/environment-quality.md) describes painted material blending,
 weathered cliffs, shared riverbeds and shores, clustered vegetation, and render budgets.
 
@@ -342,17 +337,15 @@ runtime, with the same local GPU flags and renderer check. For Electron, `CI` or
 `E2E_HEADLESS=1` disables those overrides and checks; native windows still require
 a display session or Xvfb on Linux.
 
-Shared browser helpers use the compatibility 2D terrain by default, including on
-headless local runs. To exercise those same regressions in the default angled 3D
-view on a local GPU, run:
+All browser regressions use the angled 2.5D terrain. To run on a local GPU:
 
 ```sh
-E2E_TERRAIN=3d E2E_PORT=5244 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
+E2E_PORT=5244 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 ```
 
-Specs with explicit renderer URLs retain that selection. The `world3d` suite
-exercises 3D and its 2D fallback; the `landscapes`, `mountains`, and `rivers`
-diagnostics inspect the compatibility renderer's Phaser objects and stay in 2D.
+The `world3d` suite exercises geometry, sprites, water, streaming, debug views,
+and resource cleanup. Settings regressions cover legacy profile migration into
+this same renderer; landscape and river previews remain interface illustrations.
 
 Each browser test run starts its own server, so several checkouts on one host
 need distinct ports. Set `E2E_PORT` (default 5173) to move the `test:e2e` dev

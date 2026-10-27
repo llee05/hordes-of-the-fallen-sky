@@ -44,53 +44,23 @@ Their geometry, palettes, vegetation, and snow lines live in
 `src/game/data/worldRegions.ts`; `ComposedTerrain` combines their masses with seeded
 relief and broad traversable approaches. The [new quiet paintings](angled-scene-art.md)
 provide meadow and granite materials plus an angled scenery atlas. Existing supplied
-ground PNGs remain bundled for soil, snow, previews, and the compatible renderer.
+ground PNGs remain bundled for soil, snow, and previews.
 
-The following tile, scenery, and `RiverSurface` descriptions document that compatible
-renderer. See [terrain selection and startup defaults](world-3d.md) to select it.
 The supplied `bodg-khan-uul.png` is stored as `bogd-khan-uul.png` to match the
-canonical location ID. `LandscapeDefinition.groundTile` selects the PNG basename;
-`painterlyArt.ts` preloads each unique tile once under `ground-<basename>`, using
-the app's asset base URL for both offline desktop and browser subpath builds.
-`GROUND_TILE_SCALE` displays ground at 0.65 world units per source pixel. A world-sized
-tile sprite switches texture on arrival. Otgontenger additionally uses the
-[stepped terrain prototype](mountain-terrain.md) in this compatible presentation.
+canonical location ID. `painterlyArt.ts` preloads each unique tile once under
+`ground-<basename>`, using the asset base URL for offline desktop and subpath builds.
 
-`LandscapeDefinition` is renderer independent. It defines a quiet ground wash,
-surface marks, bounded vegetation counts, camp-relative landmark anchors and
-optional water splines. A missing water definition means dry ground. Landmark
-widths include the shared logical canvas. Chapters retain their gameplay pressures;
-the White Silence adds a light snow veil to the chosen place rather than replacing
-its landscape. The red eclipse and fictional passage belong to the final refuge.
-
-Scenery is decorative and walkable. A clear strip around the camp and eastward
-caravan route keeps tall vegetation and rock clusters away from the main battle.
-Large landforms sit behind actors; smaller props sort by their ground positions.
-Scattered props also leave each landmark’s projected silhouette clear, keeping
-rocks and trees from appearing on top of snowy summits or volcanic slopes.
-All terrain is seeded by location, so returning to a checkpoint reproduces its
-composition. Arrival destroys the previous location's scenery before rebuilding;
-textures load once through `painterlyArt.ts`. Weather uses active gameplay seconds
-and freezes in menus. No runtime image generation or asset downloads are required.
+`LandscapeDefinition` retains authored palettes, landmark anchors, and optional
+water splines. Location previews reuse the painted scenery and water geometry;
+they remain 2D interface illustrations. Battlefield geometry and depth-tested
+scenery use the shared angled renderer. Returning to a checkpoint reproduces its
+seeded composition, and arrival disposes the previous world before rebuilding.
 
 ## Rivers and shores
 
-`assets/riverGeometry.ts` samples the authored watercourses into smooth channels
-with separately varying near and far banks. Orkhon's narrower branch splits and
-rejoins the main river around dry gravel bars. The same geometry keeps scattered
-tree, reed, and rock bases away from the water, including a small dry margin.
-
-`assets/RiverSurface.ts` paints opaque blue-green water over softened soil edges,
-shallow shelves, broken deeper pools, and restrained directional brush grain.
-Pebbles and small reed clumps follow the banks. Silent River has irregular,
-angular ice shelves, shaded edges, and fine fractures around open water. These
-adaptable shapes use native geometry and the existing painted reed atlas; no new
-bitmap or character frame is required. All river layers stay behind combat actors
-and remain decorative and walkable.
-
-Broken current highlights follow distance along each bend using active gameplay
-seconds, with a bounded number of strokes redrawn at 15 Hz. Frozen water moves more
-slowly while its ice stays fixed. Menus freeze the water, and the operating system's
-reduced-motion preference keeps current highlights still, including live preference
-changes. Destination vignettes reuse these same channel outlines, including the
-Orkhon branches and Silent River ice.
+`assets/riverGeometry.ts` samples authored watercourses into smooth channels with
+separately varying banks. Orkhon's narrower branch splits and rejoins the main
+river. Destination vignettes retain those channel outlines and Silent River ice.
+The angled world uses `WorldRiver` and `Water3D` for carved riverbeds, banks,
+water, and crossings; see [the scene guide](world-3d.md). Water animation follows
+active gameplay seconds and freezes in menus. All art is bundled locally.

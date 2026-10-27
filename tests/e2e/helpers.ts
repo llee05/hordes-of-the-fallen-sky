@@ -1,8 +1,5 @@
 import { expect, type Page } from '@playwright/test';
 
-/** CI retains the compatibility renderer; opt into the player-facing renderer on a local GPU. */
-export const terrainURL = process.env.E2E_TERRAIN === '3d' ? '/' : '/?terrain=2d';
-
 /** Observe actual scene renders, including in menus, rather than sleeping through a slow frame. */
 export async function sceneFrames(page: Page, count = 2): Promise<void> {
   await page.evaluate(
@@ -22,10 +19,9 @@ export async function sceneFrames(page: Page, count = 2): Promise<void> {
 }
 
 export async function openTitle(page: Page): Promise<void> {
-  await page.goto(terrainURL);
+  await page.goto('/');
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
-  if (process.env.E2E_TERRAIN === '3d')
-    await expect(page.locator('canvas[data-world-renderer="3d"]')).toBeVisible();
+  await expect(page.locator('canvas[data-world-renderer="3d"]')).toBeVisible();
 }
 
 /** Start through the real New Game and prologue actions, leaving camp-scene preferences intact. */

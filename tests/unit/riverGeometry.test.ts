@@ -7,8 +7,6 @@ import {
   riverPoint,
   riverSectionAt,
 } from '../../src/game/assets/riverGeometry';
-import { landscapeCover } from '../../src/game/assets/landscapeLayout';
-import type { LocationId } from '../../src/game/types';
 
 describe('river shorelines', () => {
   it('samples current positions continuously by distance and clamps safely at each end', () => {
@@ -71,8 +69,8 @@ describe('river shorelines', () => {
     expect(isRiverWater(channels, a.x, (a.y + b.y) / 2)).toBe(false);
   });
 
-  it('recognizes water and keeps the bases of scattered vegetation and rocks on dry ground', () => {
-    for (const [id, definition] of Object.entries(LANDSCAPES)) {
+  it('recognizes water and dry ground beside authored channels', () => {
+    for (const definition of Object.values(LANDSCAPES)) {
       if (!definition.water) continue;
       const channels = riverChannels(definition.water);
       for (const section of channels[0]!.sections.filter((_, index) => index % 12 === 0)) {
@@ -82,8 +80,6 @@ describe('river shorelines', () => {
           expect(isRiverWater(channels, dry.x, dry.y)).toBe(false);
         }
       }
-      for (const prop of landscapeCover(id as LocationId))
-        expect(isRiverWater(channels, prop.x, prop.y, prop.width * 0.2 + 14)).toBe(false);
     }
   });
 });

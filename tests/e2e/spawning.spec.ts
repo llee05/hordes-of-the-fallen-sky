@@ -1,4 +1,3 @@
-import { preferAngledTerrain } from '../support/terrain';
 import { expect, test } from '@playwright/test';
 
 test.use({ viewport: { width: 1280, height: 800 }, trace: 'off' });
@@ -8,7 +7,6 @@ test('Golden Pasture arrivals use the visible camera edge, survive the next upda
 }) => {
   test.setTimeout(120000);
   await page.goto('/');
-  await preferAngledTerrain(page);
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await page.getByRole('button', { name: /NEW GAME/ }).click();
   await page.getByRole('button', { name: /Skip intro/ }).click();

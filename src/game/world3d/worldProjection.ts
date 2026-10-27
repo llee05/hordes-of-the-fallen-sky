@@ -75,11 +75,3 @@ export function groundView(
     (Math.abs(Math.sin(turn)) * width) / zoom / 2 + Math.abs(Math.cos(turn)) * (span / 2 + relief);
   return { x: x - halfX, y: z - halfZ, width: halfX * 2, height: halfZ * 2 };
 }
-
-/** Angled scenes are the main presentation; the previous renderer stays available for compatibility. */
-export function wantsWorld3D(): boolean {
-  return (
-    import.meta.env.VITE_TERRAIN_RENDERER !== '2d' &&
-    new URLSearchParams(location.search).get('terrain') !== '2d'
-  );
-}

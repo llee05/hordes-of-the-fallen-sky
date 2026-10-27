@@ -9,7 +9,7 @@ test.describe.configure({ mode: 'parallel' });
 test('using cheats marks a normal run, preserves records, carries between checkpoints, and resets on New Game', async ({
   page,
 }) => {
-  await page.goto('/?terrain=2d');
+  await page.goto('/');
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await page.getByRole('button', { name: /NEW GAME/ }).click();
   await page.getByRole('button', { name: /Skip intro/ }).click();

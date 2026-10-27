@@ -4,7 +4,7 @@ import { selectCampBuilding, closeOverlayOrPause, buyNode, startExpedition } fro
 test('companions acknowledge camp work and the chronicle retains the real Khan succession', async ({
   page,
 }) => {
-  await page.goto('/?terrain=2d');
+  await page.goto('/');
   await startExpedition(page);
   await page.locator('[data-story-choice="share-work"]').click();
   await page.keyboard.press('b');

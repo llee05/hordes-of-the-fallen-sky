@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MountainTerrain } from '../../src/game/terrain/MountainTerrain';
 import { OTGONTENGER_MOUNTAINS } from '../../src/game/data/terrainBiomes';
-import { terrainCliffBands } from '../../src/game/terrain/terrainCliffBands';
 import { terrainDressing } from '../../src/game/terrain/terrainDressing';
 
 describe('mountain landform geometry and dressing', () => {
@@ -17,25 +16,6 @@ describe('mountain landform geometry and dressing', () => {
     expect(sheltered.depression).toBeGreaterThan(exposed.depression);
     expect(sheltered.weights[4]).toBeGreaterThan(exposed.weights[4] + 0.1);
   });
-  it('fills the full area between all four ledge heights without gaps or overlapping triangles', () => {
-    const terrain = new MountainTerrain(OTGONTENGER_MOUNTAINS, 1024);
-    terrain.rawHeight = (_x, y) => 0.8 - y / 450;
-    terrain.terraceStrength = () => 1;
-    const bands = terrainCliffBands(terrain, terrain.getChunk(0, 0));
-    expect(new Set(bands.map((band) => band.tier)).size).toBe(4);
-    let area = 0;
-    for (const band of bands) {
-      expect(
-        band.vertices.every((point) => point.raw >= band.lower && point.raw <= band.upper),
-      ).toBe(true);
-      for (let i = 1; i < band.vertices.length - 1; i++) {
-        const [a, b, c] = [band.vertices[0]!, band.vertices[i]!, band.vertices[i + 1]!];
-        area += Math.abs((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) / 2;
-      }
-    }
-    expect(area).toBeCloseTo(512 * 450 * 0.08 * 4, 6);
-  });
-
   it('keeps deterministic bounded clusters below cliffs and on suitable shelves, away from combat clearings', () => {
     const terrain = new MountainTerrain(OTGONTENGER_MOUNTAINS);
     const kinds = new Set<string>();

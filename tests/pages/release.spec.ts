@@ -83,7 +83,7 @@ test('@gameplay browser expedition builds, pauses, resumes, and retains its prof
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('./?terrain=2d');
+  await page.goto('./');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
   await expect

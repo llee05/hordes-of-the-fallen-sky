@@ -28,7 +28,7 @@ for (const group of groups)
     test.setTimeout(90000);
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
-    await page.goto('/?terrain=2d');
+    await page.goto('/');
     await expect(page.getByRole('button', { name: 'Developer mode F8' })).toBeVisible();
     for (const level of group.levels) {
       await page.keyboard.press('F8');
@@ -44,7 +44,7 @@ for (const group of groups)
               locationId: scene.run.clan.locationId ?? 'golden-pasture',
               routeId: scene.run.clan.stage === 'migration' ? scene.run.clan.routeId : undefined,
               stage: scene.run.clan.stage,
-              landscape: scene.landscape.regional.name,
+              landscape: `landscape-${scene.landscape.world3d.terrain.region.scene.id}`,
               paused: scene.physics.world.isPaused,
               knowledge: scene.run.pendingUpgrades,
             };

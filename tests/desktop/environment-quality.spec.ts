@@ -1,4 +1,3 @@
-import { preferAngledTerrain } from '../support/terrain';
 import { launchElectron, electronEnvironment } from '../support/electron';
 import { expect, test } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -22,7 +21,6 @@ test('@perf Golden Pasture art review, water pause, and pooled combat retain nat
   });
   try {
     const page = await app.firstWindow();
-    await preferAngledTerrain(page);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));

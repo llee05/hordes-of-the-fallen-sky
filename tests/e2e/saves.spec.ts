@@ -1,4 +1,3 @@
-import { preferAngledTerrain } from '../support/terrain';
 import { expect, test } from '@playwright/test';
 import { openTitle, startExpedition } from './helpers';
 
@@ -137,7 +136,6 @@ test('a carved 2.5D migration route and crossing resume with the same terrain an
 }) => {
   test.setTimeout(90000);
   await page.goto('/');
-  await preferAngledTerrain(page);
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await startExpedition(page, { legacyCamp: false });
   await page.evaluate(() => {

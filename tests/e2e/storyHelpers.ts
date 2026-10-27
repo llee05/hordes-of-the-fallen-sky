@@ -2,7 +2,7 @@ import { expect, type Page } from '@playwright/test';
 import { startExpedition } from './helpers';
 
 export async function beginStory(page: Page): Promise<void> {
-  await page.goto('/?terrain=2d');
+  await page.goto('/');
   await startExpedition(page);
   await expect(page.getByRole('heading', { name: 'A place beside the fire.' })).toBeVisible();
 }

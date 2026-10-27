@@ -8,11 +8,8 @@ import type { TerrainArt } from '../terrain/types';
 const PROPS = new Set(['ger', 'cart', 'banner', 'sheep', 'rock', 'pillar']);
 /** Scales the camp presentation around its world anchor, independently of combat. */
 export const CAMP_VISUAL_SCALE = GAME.camp.visualScale;
-/** World scale shared by the original ground and the supplied location tiles. */
-export const GROUND_TILE_SCALE = 0.65;
-/** Reuse local painted ground swatches for blended slopes and contour cliff faces. */
+/** Reuse local painted ground swatches for blended slopes and cliff faces. */
 export const MOUNTAIN_TERRAIN_ART: TerrainArt = {
-  tileScale: GROUND_TILE_SCALE,
   materials: {
     grassland: { texture: 'ground-mount-otgontenger', color: 0xa7ad72 },
     'rocky-soil': { texture: 'ground-eej-khairkhan', color: 0xb49672 },
