@@ -1,4 +1,9 @@
 import {
+  observeResearchFrame,
+  recordResearchDamage,
+  type ResearchDamageSource,
+} from '../state/researchMetrics';
+import {
   recordKhanTarget,
   recordResearchShard,
   wideVolleyResearch,
@@ -1601,6 +1606,7 @@ export class ArenaScene extends Phaser.Scene {
       beginSuccession(this.run);
       this.hideFallenKhan();
     }
+    observeResearchFrame(this.run, delta);
     this.run.elapsed += dt;
     advancePatrons(this.run, dt);
     this.dashTimer = Math.max(0, this.dashTimer - dt);
@@ -2660,7 +2666,7 @@ export class ArenaScene extends Phaser.Scene {
       enemy.tactics.remaining = GAME.tactics.chargeRecovery;
     }
     if (bolt.source === 'khan') recordKhanTarget(this.run, enemy.tacticalSlot, enemy.spawnId);
-    this.damageEnemy(enemy, bolt.damage);
+    this.damageEnemy(enemy, bolt.damage, bolt.source === 'khan' ? 'khan' : 'allied-arrows');
   }
 
   private projectileReaches(projectile: Projectile): boolean {
@@ -2673,7 +2679,11 @@ export class ArenaScene extends Phaser.Scene {
     return true;
   }
 
-  private damageEnemy(enemy: Enemy, amount: number): void {
+  private damageEnemy(
+    enemy: Enemy,
+    amount: number,
+    source: ResearchDamageSource = 'support-and-other',
+  ): void {
     if (!enemy.active) return;
     if (enemy === this.boss && this.run.finalStand?.phase === 'recovery')
       amount *= GAME.finalStand.vulnerableDamage;
@@ -2687,6 +2697,11 @@ export class ArenaScene extends Phaser.Scene {
     )
       amount *= enemy.definition.armor ?? GAME.tactics.heavyArmor;
     if (amount >= 1) enemy.motion.hit();
+    recordResearchDamage(
+      this.run,
+      source,
+      Math.min(Math.max(0, enemy.health), Math.max(0, amount)),
+    );
     enemy.health -= amount;
     if (enemy.health > 0) {
       if (amount >= 1)

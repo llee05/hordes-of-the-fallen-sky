@@ -1,3 +1,4 @@
+import { hasDevelopment } from './camp';
 import { GAME } from '../config';
 import type { RunState } from '../types';
 
@@ -14,6 +15,7 @@ export interface ResearchRuntime {
   memoryStacks?: number;
   memoryUntil?: number;
   echoReleases?: number;
+  echoAttacks?: number[];
   echoNearCamp?: boolean;
 }
 export function ownsResearch(run: RunState, id: string): boolean {
@@ -61,11 +63,15 @@ export function echoInterval(run: RunState): number {
       : 0;
   return run.patrons.ancestors.interval / (1 + bonus);
 }
-export function researchEchoRelease(run: RunState): boolean {
+export function researchEchoRelease(run: RunState, index = 0): boolean {
   if (run.phase !== 'playing' || !ownsResearch(run, 'on-ancestral-archers')) return false;
+  if (!Number.isInteger(index) || index < 0 || index >= GAME.patrons.ancestors.maximum)
+    return false;
   const r = (run.researchRuntime ??= {});
   r.echoReleases = (r.echoReleases ?? 0) + 1;
-  return r.echoReleases % GAME.research.twinEvery === 0;
+  const attacks = (r.echoAttacks ??= Array(GAME.patrons.ancestors.maximum).fill(0) as number[]);
+  attacks[index] = (attacks[index] ?? 0) + 1;
+  return attacks[index]! % GAME.research.twinEvery === 0;
 }
 export function updateEchoGuard(run: RunState, nearCamp: boolean): void {
   if (run.phase !== 'playing') return;
@@ -86,21 +92,27 @@ export function wideVolleyResearch(
     : { damage: 1, spread: 1 };
 }
 
+export function researchLayeredProtection(run: RunState): number {
+  const r = run.researchRuntime;
+  return ownsResearch(run, 'go-layered-felt') &&
+    r?.lastHitGeneration === run.khan.generation &&
+    r.lastHitAt !== undefined &&
+    run.elapsed - r.lastHitAt < GAME.research.layeredSeconds
+    ? GAME.research.layeredProtection
+    : 1;
+}
 export function researchKhanHitProtection(run: RunState): number {
   if (!ownsResearch(run, 'go-layered-felt')) return 1;
   const r = (run.researchRuntime ??= {});
-  const protectedHit =
-    r.lastHitGeneration === run.khan.generation &&
-    r.lastHitAt !== undefined &&
-    run.elapsed - r.lastHitAt < GAME.research.layeredSeconds;
+  const protection = researchLayeredProtection(run);
   r.lastHitAt = run.elapsed;
   r.lastHitGeneration = run.khan.generation;
-  return protectedHit ? GAME.research.layeredProtection : 1;
+  return protection;
 }
 export function researchCommonProtection(run: RunState): number {
   return ownsResearch(run, 'go-common-fire') &&
     run.khan.successionRemaining <= 0 &&
-    run.health > run.stats.maxHealth * 0.8
+    run.health > run.stats.maxHealth * GAME.research.commonThreshold
     ? GAME.research.commonProtection
     : 1;
 }
@@ -121,8 +133,11 @@ export function wagonResearchDefence(run: RunState): {
     fallback,
     range: fallback ? GAME.research.wagonFallbackRange : 520,
     damage:
-      (fallback ? GAME.research.wagonFallbackDamage : run.clan.stage === 'migration' ? 0.7 : 1.5) *
-      run.clan.campEffects.multipliers.wagonDamage,
+      (fallback
+        ? GAME.research.wagonFallbackDamage
+        : run.clan.stage === 'migration' && !hasDevelopment(run, 'wagon', 'war-carts')
+          ? 0.7
+          : 1.5) * run.clan.campEffects.multipliers.wagonDamage,
   };
 }
 

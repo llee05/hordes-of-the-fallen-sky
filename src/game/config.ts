@@ -13,6 +13,7 @@ export const GAME = {
     layeredProtection: 0.9,
     layeredSeconds: 3,
     commonProtection: 0.9,
+    commonThreshold: 0.8,
     wagonFallbackDamage: 0.35,
     wagonFallbackRange: 260,
     signalSeconds: 3,

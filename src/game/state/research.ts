@@ -4,7 +4,8 @@ import type { ResearchRequirement } from '../data/researchTypes';
 import { PATRONS } from '../data/patrons';
 import type { PatronId, RunState } from '../types';
 
-export type ResearchState = Pick<RunState, 'upgrades' | 'pendingUpgrades'> & {
+export type ResearchState = Pick<RunState, 'upgrades' | 'pendingUpgrades' | 'researchPurchases'> & {
+  elapsed?: number;
   completedCrossings: number;
 };
 export type ResearchReason =
@@ -33,14 +34,22 @@ export function researchState(run: RunState): ResearchState {
     upgrades: run.upgrades,
     pendingUpgrades: run.pendingUpgrades,
     completedCrossings: run.story.crossings.length,
+    elapsed: run.elapsed,
+    researchPurchases: run.researchPurchases,
   };
 }
-export function researchSpend(state: Pick<ResearchState, 'upgrades'>): Record<PatronId, number> {
+export function researchSpend(
+  state: Pick<ResearchState, 'upgrades' | 'researchPurchases'>,
+): Record<PatronId, number> {
   const spent = Object.fromEntries(PATRONS.map((p) => [p.id, 0])) as Record<PatronId, number>;
+  const receipts = new Map(
+    (state.researchPurchases ?? []).map((p) => [`${p.id}:${p.rank}`, p.cost]),
+  );
   for (const t of RESEARCH) {
     if (t.patronIds.length !== 1) continue;
     const rank = Math.min(t.maxRank, state.upgrades[t.id] ?? 0);
-    spent[t.patronIds[0]!] += t.pointCostPerRank.slice(0, rank).reduce((a, b) => a + b, 0);
+    for (let i = 1; i <= rank; i++)
+      spent[t.patronIds[0]!] += receipts.get(`${t.id}:${i}`) ?? t.pointCostPerRank[i - 1]!;
   }
   return spent;
 }
@@ -141,6 +150,10 @@ export function purchaseResearch(
   if (result.allowed) {
     state.pendingUpgrades -= result.cost;
     state.upgrades[id] = expectedRank + 1;
+    state.researchPurchases = [
+      ...(state.researchPurchases ?? []),
+      { id, rank: expectedRank + 1, cost: result.cost, at: state.elapsed ?? 0 },
+    ];
   }
   return result;
 }

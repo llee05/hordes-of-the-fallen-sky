@@ -105,6 +105,7 @@ export function applyResearch(
   const result = purchaseResearch(state, id, expectedRank);
   if (!result.allowed) return false;
   run.pendingUpgrades = state.pendingUpgrades;
+  run.researchPurchases = state.researchPurchases;
   const definition = RESEARCH_BY_ID.get(id)!;
   for (const effect of definition.effects) {
     if (effect.kind === 'legacy') UPGRADES.find((u) => u.id === effect.upgradeId)!.apply(run);

@@ -71,3 +71,75 @@ camp branch supplies that contract. No camp structures or save IDs are repurpose
 The [effect inventory](patron-research-v2-status.md) lists every unimplemented effect.
 Registered, purchasable and functional counts are intentionally distinct: 166
 registered technologies, 53 working/purchasable technologies, 113 unavailable proposals.
+
+## Purchase and observation interfaces
+
+`state/research.ts` owns `validateResearchPurchase`, `purchaseResearch` and
+`previewResearchPurchase`. They accept a canonical ID and **expected current rank**;
+refusal never mutates ranks, points or receipts. `state/run.ts`'s `applyResearch`
+executes that transaction and the canonical effect adapter. The existing
+`applyUpgrade(..., nextRank)` API remains a compatibility wrapper. Stat previews
+project the same transition on a clone, raising only its hypothetical knowledge
+budget; actual purchase blockers always retain the real budget.
+
+New purchases retain `{ id, rank, cost, at }` receipts. Spend gates use costs actually
+paid; ranks from older saves fall back to their unchanged authored prices. Version-1
+expedition saves accept these optional receipts and observations without replaying
+any purchase. Duplicate/unowned receipts are rejected. New expeditions discard them.
+The final Ancestral Archers implementation counts each echo's targeted attacks
+independently; empty release intervals do not advance its fourth-attack bonus.
+
+The development console's `research-metrics` command is read-only. It reports
+level-earned and accounted knowledge separately (developer grants can differ),
+unspent/spent points, patron spend, tiers, Doctrine/Mythic/hybrid choices and the
+first observed Mythic time. Damage groups distinguish Khan arrows, other allied
+arrows, and support/other effects; they count effective health removed, excluding
+overkill. Active-frame observations retain count, mean engine-frame delta and worst
+delta, not a claimed GPU render profile. Menus add no observations. Older saves
+retain unknown timestamps and frame history as unknown. No telemetry is uploaded.
+
+## Balance evidence and release gate
+
+Run `npm run research:benchmark` to reproduce twelve existing expedition pressure
+models plus legal, dependency-validated allocation simulations at 45/60/75 points.
+The models use real economy/purchases with modelled combat cadence and legacy build
+choices; they are **not observed player runs or a combat simulation of gated effects**.
+
+| Model schedule  | Full-journey time | Knowledge earned | Survivors |
+| --------------- | ----------------- | ---------------- | --------- |
+| Early migration | 518.25–538.5 s    | 7                | 4–7       |
+| Riding          | 589–602.75 s      | 11               | 4–7       |
+| Guarding        | 730.75–748 s      | 10               | 27–29     |
+
+All twelve survive three crossings. The proposed 45–60-point budget is not supported
+by this model. The unchanged XP curve requires 6,300 / 11,100 / 17,250 XP for
+45 / 60 / 75 points. Every authored Mythic has a legal 17-point completion; hybrids
+cost 6, 13, 19 or 23 points including their prerequisites and fillers.
+
+| Authored example                                                    | Total knowledge | Fits 45 / 60 / 75 |
+| ------------------------------------------------------------------- | --------------- | ----------------- |
+| Focused Storm Archer with early hybrid and U3 general research      | 25              | yes / yes / yes   |
+| Two-patron Thousand Arrows with two Mythics and U4 general research | 44              | yes / yes / yes   |
+| Three-patron generalist with U3 general research                    | 55              | no / yes / yes    |
+
+These are separate authoring scenarios, not simultaneous ownership of exclusive
+alternatives and not permission to buy unavailable effects. No numerical V1
+rebalance or knowledge-award increase is committed. Before enabling the gated late
+tree, review its economy against observed runs: either lower new tier costs/gates
+or expand expedition rewards after measuring combat, survival and caravan pressure.
+Changing the whole XP economy from this model alone would not be justified.
+
+The full 166-effect release gate remains unmet. This branch delivers the tested
+53-technology slice and complete gated catalogue. Individual wagons/follower health,
+structure repair/durability, provisions, discovery/ambush/route pools, temporary
+summon lifecycles and the separate camp branch remain explicit feature milestones.
+
+Performance verification used the project's exclusive-lock hardware-WebGL suite.
+The browser pooled-combat case passes: 350 enemies, 19 textures, 29 draws and about
+45 sampled FPS on Intel Iris Xe. Native combat records 350 enemies, 20 textures,
+34 draws and about 60.56 FPS, then fails the existing `<20` texture assertion. Per
+firstmate's confirmed baseline, the extra blank warnings texture is the existing
+main-branch defect tracked by the [separate pending fix](https://github.com/llee05/hordes-of-the-fallen-sky/pull/30).
+Texture bridge, renderer, assets and actor sources are unchanged from `main`; this
+branch adds no texture allocations. The assertion is retained unchanged. Native
+performance is therefore recorded as a known baseline failure, not a clean pass.

@@ -109,7 +109,6 @@ export class PatronSupport {
       this.fields.lineStyle(1, 0xd8bc7e, 0.3).strokeCircle(camp.x, camp.y, boundary.wardRadius);
 
     const count = step.ancestorCount;
-    const twin = step.releaseAncestors && researchEchoRelease(run);
     let echoNearCamp = false;
     for (const [index, spirit] of this.spirits.entries()) {
       const active = index < count;
@@ -146,6 +145,7 @@ export class PatronSupport {
         preferred ??
         (step.releaseAncestors ? spatial.nearest(x, y, GAME.patrons.ancestors.range) : undefined);
       if (target) {
+        const twin = researchEchoRelease(run, index);
         spirit.motion.attack();
         actions.volley(x, y, target, effects.ancestors.damage);
         if (twin) actions.volley(x, y, target, effects.ancestors.damage * GAME.research.twinDamage);

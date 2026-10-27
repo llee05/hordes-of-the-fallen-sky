@@ -245,6 +245,21 @@ const overrides: Record<string, Rule> = {
 };
 const optional: Record<string, Record<string, Rule>> = {
   '': {
+    researchPurchases: list(
+      object({
+        id: oneOf([...RESEARCH_BY_ID.keys()]),
+        rank: oneOf([1, 2]),
+        cost: oneOf([1, 2, 3]),
+        at: positive,
+      }),
+      174,
+    ),
+    researchObservations: object({
+      damage: object({ khan: positive, 'allied-arrows': positive, 'support-and-other': positive }),
+      frames: integer,
+      frameMilliseconds: positive,
+      worstFrameMilliseconds: positive,
+    }),
     researchRuntime: object(
       {},
       {
@@ -259,6 +274,7 @@ const optional: Record<string, Record<string, Rule>> = {
         memoryStacks: integer,
         memoryUntil: number,
         echoReleases: integer,
+        echoAttacks: list(integer, GAME.patrons.ancestors.maximum),
         echoNearCamp: boolean,
       },
     ),
@@ -513,6 +529,12 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
     const definition = RESEARCH_BY_ID.get(id);
     return definition && !definition.unavailableReason && rank <= definition.maxRank;
   });
+  const purchases = run.researchPurchases ?? [];
+  const receiptsValid =
+    new Set(purchases.map((p) => `${p.id}:${p.rank}`)).size === purchases.length &&
+    purchases.every(
+      (p) => p.rank > 0 && p.rank <= (run.upgrades[p.id] ?? 0) && p.cost > 0 && p.at <= run.elapsed,
+    );
   const slots = new Set(world.enemies.map((e) => e.slot));
   const referencesValid =
     slots.size === world.enemies.length &&
@@ -529,6 +551,7 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
     );
   if (
     !ranksValid ||
+    !receiptsValid ||
     !referencesValid ||
     run.elapsed < 0 ||
     run.elapsed > 86400 ||

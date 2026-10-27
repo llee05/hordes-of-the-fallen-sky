@@ -5,8 +5,16 @@ import { RESEARCH_BY_ID } from '../data/research';
 import { clanDamageMultiplier, hasDevelopment, riderCount, burningTempest } from './clan';
 import { economyForecast, migrationMobility, pastureDepletion } from './economy';
 import { gallopCooldown } from './patrons';
+import { SUCCESSORS } from '../data/successors';
 import { developmentPreview } from './developmentPreview';
-import { echoInterval, wideVolleyResearch } from './researchRuntime';
+import {
+  echoInterval,
+  wideVolleyResearch,
+  stillwaterRefuge,
+  researchWaterRadius,
+  researchLayeredProtection,
+  wagonResearchDefence,
+} from './researchRuntime';
 
 export interface StatChange {
   label: string;
@@ -82,10 +90,23 @@ function metrics(r: RunState): Metric[] {
     { label: 'Gallop cooldown', value: gallopCooldown(r), unit: 's', lower: true },
     { label: 'Maximum Khan health', value: r.stats.maxHealth },
     { label: 'Khan health now', value: r.health },
-    { label: 'Khan damage reduction', value: (1 - r.patrons.hearth.damageTaken) * 100, unit: '%' },
+    {
+      label: 'Khan damage reduction',
+      value:
+        (1 -
+          r.patrons.hearth.damageTaken *
+            (r.khan.trait ? SUCCESSORS[r.khan.trait].protection : 1) *
+            (stillwaterRefuge(r) ? GAME.research.refugeProtection : 1) *
+            researchLayeredProtection(r)) *
+        100,
+      unit: '%',
+    },
     {
       label: 'Khan recovery',
-      value: r.patrons.hearth.regeneration + c.bonuses.commanderRecovery,
+      value:
+        r.patrons.hearth.regeneration +
+        c.bonuses.commanderRecovery +
+        (stillwaterRefuge(r) ? GAME.research.refugeRecovery : 0),
       unit: '/s',
       context: 'Only while the Khan is alive',
     },
@@ -136,7 +157,7 @@ function metrics(r: RunState): Metric[] {
     },
     { label: 'Echo firing interval', value: echoInterval(r), unit: 's', lower: true },
     { label: 'Enemy slow in fields', value: Math.min(0.8, r.patrons.water.slow) * 100, unit: '%' },
-    { label: 'Slowing field radius', value: r.patrons.water.radius, unit: ' paces' },
+    { label: 'Slowing field radius', value: researchWaterRadius(r), unit: ' paces' },
     { label: 'Extra eruption warning', value: r.patrons.water.warning, unit: 's' },
     {
       label: 'Eruption damage reduction',
@@ -145,6 +166,13 @@ function metrics(r: RunState): Metric[] {
     },
     { label: 'Water pulse damage', value: r.patrons.water.pulseDamage * r.stats.damage },
     { label: 'Camp ward damage', value: r.patrons.guardian.wardDamage * r.stats.damage },
+    {
+      label: 'Wagon defence arrow damage',
+      value: wagonResearchDefence(r).active ? r.stats.damage * wagonResearchDefence(r).damage : 0,
+      context: wagonResearchDefence(r).fallback
+        ? 'Baseline short-range guard shot without Wagon circle'
+        : 'Includes current camp and technology modifiers',
+    },
     { label: 'Wagon damage multiplier', value: c.multipliers.wagonDamage, unit: '×' },
     {
       label: 'Wagon firing interval',

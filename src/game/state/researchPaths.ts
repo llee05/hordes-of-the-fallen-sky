@@ -1,7 +1,7 @@
 import { RESEARCH, RESEARCH_BY_ID } from '../data/research';
 import type { PatronId } from '../types';
 import type { ResearchRequirement } from '../data/researchTypes';
-import { researchExcluded, type ResearchState } from './research';
+import { researchSpend, researchExcluded, type ResearchState } from './research';
 
 export interface ResearchStep {
   id: string;
@@ -68,14 +68,9 @@ export function planResearch(state: ResearchState, id: string, catalogue = false
       return fail('Required technology is awaiting runtime integration');
     type Entry = { ranks: number[]; spend: number; steps: ResearchStep[] };
     const ranks = candidates.map((t) => state.upgrades[t.id] ?? 0);
-    const paid = (values: number[]) =>
-      candidates.reduce(
-        (sum, t, i) => sum + t.pointCostPerRank.slice(0, values[i]).reduce((a, b) => a + b, 0),
-        0,
-      );
     const minimum = target.patronIds.length === 2 ? (target.minSpendByPatron[patron] ?? 0) : 0;
     const buckets: Entry[][] = Array.from({ length: 76 }, () => []);
-    buckets[0]!.push({ ranks, spend: paid(ranks), steps: [] });
+    buckets[0]!.push({ ranks, spend: researchSpend(state)[patron], steps: [] });
     const seen = new Set<string>([ranks.join(',')]);
     let solution: Entry | undefined,
       visits = 0;

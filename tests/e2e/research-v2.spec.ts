@@ -31,6 +31,7 @@ test('V2 research exposes proposed content honestly, pins legal routes, and work
   await expect(
     page.getByRole('button', { name: 'Reset research map zoom', exact: true }),
   ).toHaveText('110%');
+  await expect(page.locator('.tree-graph')).toHaveCSS('zoom', '1.1');
   await page.getByRole('button', { name: 'Reset research map zoom', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Find a branch' }).fill('Golomt');
   await page.getByRole('button', { name: 'Pinned: Galloping Barrage', exact: true }).click();
@@ -100,6 +101,14 @@ test('V2 target, shard and volley effects are consumed by actual scene gameplay 
     const enemy = scene.enemies.getFirstAlive();
     enemy.setPosition(scene.player.x + 120, scene.player.y);
     enemy.health = enemy.maxHealth = 10000;
+    scene.spatial.rebuild([]);
+    scene.patronSupport.clock.restore({ ancestorTimer: 0, waterTimer: 999, guardianTimer: 999 });
+    scene.patronSupport.update(scene.run, 0.016, scene.player, scene.camp, scene.spatial, {
+      damage: () => {},
+      volley: () => {},
+    });
+    const emptyCounted =
+      scene.run.researchRuntime?.echoAttacks?.some((n: number) => n > 0) ?? false;
     scene.spatial.rebuild([enemy]);
     scene.shootVolley(scene.player.x, scene.player.y, enemy, 2, 1, false, false, 'khan');
     const bolt = scene.projectiles.getFirstAlive();
@@ -114,15 +123,27 @@ test('V2 target, shard and volley effects are consumed by actual scene gameplay 
     const stacks = scene.run.researchRuntime.memoryStacks;
     let shots = 0;
     scene.patronSupport.clock.restore({ ancestorTimer: 0, waterTimer: 999, guardianTimer: 999 });
-    scene.run.researchRuntime.echoReleases = 3;
+    scene.run.researchRuntime.echoAttacks = [3, 3, 3];
     scene.patronSupport.update(scene.run, 0.016, scene.player, scene.camp, scene.spatial, {
       damage: () => {},
       volley: () => {
         shots++;
       },
     });
-    return { target, stacks, shots, damage, expectedDamage: scene.run.stats.damage * 0.95 };
+    return {
+      target,
+      stacks,
+      shots,
+      damage,
+      expectedDamage: scene.run.stats.damage * 0.95,
+      emptyCounted,
+      paidPurchases: scene.run.researchPurchases.length,
+      recordedKhanDamage: scene.run.researchObservations?.damage.khan ?? 0,
+    };
   });
+  expect(result.emptyCounted).toBe(false);
+  expect(result.paidPurchases).toBe(13);
+  expect(result.recordedKhanDamage).toBeGreaterThan(0);
   expect(result.target).toBe(true);
   expect(result.stacks).toBe(1);
   expect(result.shots).toBe(6);
