@@ -104,7 +104,7 @@ export async function buyNode(page: Page, id: string): Promise<void> {
   await page.locator('.tree-purchase').click();
 }
 
-/** Select through the estate cards, using search for an as-yet unbuilt facility. */
+/** Select through the manuscript map, using search for an as-yet unbuilt facility. */
 export async function selectCampBuilding(page: Page, id: string, unfold = true): Promise<void> {
   await expect(page.locator('.immersive-camp')).toBeVisible();
   if (await page.locator('[data-camp-dismiss]').count())

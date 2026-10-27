@@ -5,7 +5,7 @@ import { buildingMenu } from '../../src/ui/campModel';
 import { estateBranch } from '../../src/ui/campPopups';
 const view = { category: 'all', query: '' };
 describe('camp estate panels and shared details', () => {
-  it('opens with a holding, internal development strip, and selectable facility slots', () => {
+  it('opens as a whole-camp manuscript with pinned plaques and selectable places', () => {
     const run = createRun(),
       before = structuredClone(run);
     const html = buildingMenu(run, view, 'ger');
@@ -14,12 +14,13 @@ describe('camp estate panels and shared details', () => {
     expect(html.match(/data-camp-slot=/g)).toHaveLength(5);
     expect(html.match(/data-camp-site=/g)).toHaveLength(1);
     expect(html).not.toContain('class="camp-popup');
-    expect(html).toContain('camp-holding');
-    expect(html).toContain('camp-slot-grid');
+    expect(html).toContain('camp-encampment');
+    expect(html).toContain('camp-plaque-badge');
+    expect(html).toContain('camp-map-facilities');
     expect(html).toContain('aria-label="Internal developments"');
     expect(html).toContain('assigned workers');
     expect(html).toContain('Inspect upgrade: Established Encampment');
-    expect(html).toContain('camp-inspector-idle');
+    expect(html).toContain('aria-label="Painted manuscript map of the camp"');
     expect(html).not.toContain('class="node-inspector');
     expect(run).toEqual(before);
   });

@@ -11,7 +11,7 @@ import {
 // Tests use isolated browser contexts; parallel mode also balances CI shards.
 test.describe.configure({ mode: 'parallel' });
 
-test('the estate ledger reflects real developments, freezes the world, and respects reduced motion', async ({
+test('the manuscript camp reflects real developments, freezes the world, and respects reduced motion', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
@@ -34,8 +34,8 @@ test('the estate ledger reflects real developments, freezes the world, and respe
     'data-established',
     'true',
   );
-  await expect(page.locator('.camp-slot-card[data-camp-site="archery"]')).toContainText('Level 1');
-  await expect(page.locator('.camp-slot-card[data-camp-site="archery"]')).toContainText(
+  await expect(page.locator('.camp-facility[data-camp-site="archery"]')).toContainText('Level 1');
+  await expect(page.locator('.camp-facility[data-camp-site="archery"]')).toContainText(
     'assigned workers',
   );
   const after = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
@@ -65,14 +65,54 @@ for (const size of [
     await startExpedition(page);
     await page.keyboard.press('b');
     await page.setViewportSize(size);
-    await expect(page.locator('.camp-internal-strip button')).toHaveCount(6);
-    await page.locator('[data-camp-encampment]').click();
+    await expect(page.locator('.camp-map-internals button')).toHaveCount(6);
     if (size.width > 760) {
-      const overview = (await page.locator('.camp-estate-overview').boundingBox())!;
-      const details = (await page.locator('.camp-popup').boundingBox())!;
-      expect(overview.x + overview.width).toBeLessThanOrEqual(details.x + 1);
-      expect(details.y + details.height).toBeLessThanOrEqual(size.height);
+      const plaques = await page.locator('.camp-plaque').evaluateAll((els) =>
+        els.map((el) => {
+          const rect = el.getBoundingClientRect(),
+            badge = el.querySelector('.camp-plaque-badge')!.getBoundingClientRect();
+          const x = Math.min(rect.x, badge.x),
+            y = Math.min(rect.y, badge.y);
+          return {
+            name: el.textContent?.trim(),
+            plaque: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+            badge: { x: badge.x, y: badge.y, width: badge.width, height: badge.height },
+            x,
+            y,
+            width: Math.max(rect.right, badge.right) - x,
+            height: Math.max(rect.bottom, badge.bottom) - y,
+          };
+        }),
+      );
+      const mapDimensions = await page.locator('.camp-map-scroll').evaluate((el) => ({
+        width: el.clientWidth,
+        height: el.clientHeight,
+        scrollWidth: el.scrollWidth,
+        scrollHeight: el.scrollHeight,
+      }));
+      expect(mapDimensions.scrollHeight).toBeLessThanOrEqual(mapDimensions.height);
+      expect(mapDimensions.scrollWidth).toBeLessThanOrEqual(mapDimensions.width);
+      for (const p of plaques) {
+        expect(p.x).toBeGreaterThanOrEqual(0);
+        expect(p.x + p.width).toBeLessThanOrEqual(size.width);
+        expect(p.y + p.height).toBeLessThanOrEqual(size.height);
+      }
+      for (let i = 0; i < plaques.length; i++)
+        for (const q of plaques.slice(i + 1)) {
+          const p = plaques[i]!;
+          expect(
+            p.x + p.width <= q.x ||
+              q.x + q.width <= p.x ||
+              p.y + p.height <= q.y ||
+              q.y + q.height <= p.y,
+            `Overlapping plaques: ${JSON.stringify(p)} / ${JSON.stringify(q)}`,
+          ).toBe(true);
+        }
     }
+    await page.locator('[data-camp-encampment]').click();
+    const details = (await page.locator('.camp-popup').boundingBox())!;
+    expect(details.x + details.width).toBeLessThanOrEqual(size.width);
+    expect(details.y + details.height).toBeLessThanOrEqual(size.height);
     await page.locator('[data-camp-dismiss]').click();
     for (const site of [
       'ger',
