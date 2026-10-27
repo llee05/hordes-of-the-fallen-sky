@@ -19,10 +19,12 @@ If Chromium is already installed, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to its
 executable instead. The smoke suite serves the production artifact at
 `http://127.0.0.1:4173/hordes-of-the-fallen-sky/`, matching a GitHub project site's
 subpath; set `PAGES_PORT` to serve on another port when 4173 is busy. It checks
-local assets and prologue paintings, the absence of development
-hooks and native capabilities, real camp purchases, menu pausing, sound preference
-persistence, and play with unavailable browser storage. The gameplay smoke passes
-`?terrain=2d` to keep terrain flat within CI's software WebGL time budget regardless
+local assets and prologue paintings and the absence of development
+hooks and native capabilities — that artwork smoke is the only Pages test GitHub
+Actions runs. The `@gameplay` smokes, which never run on GitHub, check real camp
+purchases, menu pausing, sound preference persistence, and play with unavailable
+browser storage. The expedition gameplay smoke passes
+`?terrain=2d` to keep terrain flat within software-rendered time budgets regardless
 of driver detection. See [terrain selection and startup defaults](world-3d.md).
 Run `npm run check` and
 `npm run test:e2e` for the broader checks and development-browser regressions.
@@ -48,7 +50,8 @@ first successful deployment; preparing or building locally does not publish it.
    **GitHub Actions** as the source. This is a one-time repository setting.
 2. Push the release commits to `main`. The **GitHub Pages** workflow runs all of
    `npm run check`, installs Chromium, and tests the exact production `dist/`
-   artifact beneath the project subpath before uploading it for deployment.
+   artifact beneath the project subpath with the non-gameplay artwork smoke
+   before uploading it for deployment.
 3. Open the workflow in **Actions**. The deploy job publishes only when every build
    and smoke-test step succeeds. Its `github-pages` environment links to the live
    site. Any configured environment approval must be completed there.

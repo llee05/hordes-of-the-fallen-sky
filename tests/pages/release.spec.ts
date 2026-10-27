@@ -78,7 +78,7 @@ test('production loads all local artwork under the Pages subpath without desktop
   expect(errors).toEqual([]);
 });
 
-test('browser expedition builds, pauses, resumes, and retains its profile after reload', async ({
+test('@gameplay browser expedition builds, pauses, resumes, and retains its profile after reload', async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -125,7 +125,7 @@ test('browser expedition builds, pauses, resumes, and retains its profile after 
   expect(errors).toEqual([]);
 });
 
-test('a compact browser can start and build when local storage is unavailable', async ({
+test('@gameplay a compact browser can start and build when local storage is unavailable', async ({
   page,
 }) => {
   const errors: string[] = [];

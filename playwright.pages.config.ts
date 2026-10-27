@@ -1,7 +1,9 @@
 import { defineConfig } from '@playwright/test';
+import { pagesSmokeSelection } from './playwright.pages-selection';
 import { testGraphics } from './playwright.graphics';
 
 const graphics = testGraphics();
+const selection = pagesSmokeSelection();
 
 // Exercise the production artifact beneath the same subpath as GitHub Pages.
 // Keep the renderer's relative build base so this artifact also works in Electron.
@@ -12,6 +14,7 @@ const path = '/hordes-of-the-fallen-sky/';
 
 export default defineConfig({
   testDir: './tests/pages',
+  grepInvert: selection.grepInvert,
   fullyParallel: false,
   workers: 1,
   timeout: 45000,

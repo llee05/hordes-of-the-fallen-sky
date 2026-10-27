@@ -2,7 +2,7 @@
 
 The CI shard measurements below are historical. Browser E2E and desktop
 gameplay/graphics suites now run locally; GitHub Actions retains correctness
-checks and the unchanged Pages release smoke. See [current test commands](../README.md#checks).
+checks and the Pages artwork smoke, which never starts gameplay. See [current test commands](../README.md#checks).
 
 ## Current local isolation
 
