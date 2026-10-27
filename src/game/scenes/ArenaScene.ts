@@ -349,7 +349,9 @@ export class ArenaScene extends Phaser.Scene {
     this.defeats = new DefeatSprites(this);
     this.fieldMarkers = new FieldMarkers(this);
     this.passageMarkers = [];
-    this.crossingMarkers = new FieldMarkers(this);
+    // Share the warnings layer like passage markers; a second blank layer would
+    // cost GraphicsBridge a full-view 2048² canvas texture for nothing.
+    this.crossingMarkers = new FieldMarkers(this, this.fieldMarkers.warnings);
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.rendererName =
       this.game.renderer.type === Phaser.WEBGL
