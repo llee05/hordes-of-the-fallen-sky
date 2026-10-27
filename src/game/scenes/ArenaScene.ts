@@ -194,7 +194,7 @@ export class ArenaScene extends Phaser.Scene {
     damage?: number;
     source?: 'seer';
   }[] = [];
-  private hazardTimer = 8;
+  private hazardTimer: number = GAME.hazards.initialDelay;
   private gems!: Phaser.Physics.Arcade.Group;
   private keys!: Record<
     'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd',
@@ -235,7 +235,7 @@ export class ArenaScene extends Phaser.Scene {
   private expeditionStarted = false;
   private saveBusy = false;
   private pendingSceneSave: Promise<boolean> = Promise.resolve(true);
-  private autosaveRemaining = 30;
+  private autosaveRemaining: number = GAME.saves.autosaveInterval;
   private checkpointQueued = false;
   private checkpointDirty = false;
   private saveGeneration = 0;
@@ -265,7 +265,7 @@ export class ArenaScene extends Phaser.Scene {
     this.saveGeneration++;
     this.expeditionStarted = false;
     this.saveBusy = false;
-    this.autosaveRemaining = 30;
+    this.autosaveRemaining = GAME.saves.autosaveInterval;
     this.checkpointQueued = false;
     this.checkpointDirty = false;
     this.saveMessage = '';
@@ -311,7 +311,7 @@ export class ArenaScene extends Phaser.Scene {
     this.packingRemaining = 0;
     this.boss = undefined;
     this.hazards = [];
-    this.hazardTimer = 8;
+    this.hazardTimer = GAME.hazards.initialDelay;
     this.facing.set(0, 1);
     this.touchMove.set(0, 0);
     this.dragOrigin = undefined;
@@ -575,7 +575,7 @@ export class ArenaScene extends Phaser.Scene {
       const snapshot = captureExpedition(this.run, this.captureWorld());
       await this.platform.saveExpedition(slot, snapshot);
       if (generation !== this.saveGeneration) return true;
-      this.autosaveRemaining = 30;
+      this.autosaveRemaining = GAME.saves.autosaveInterval;
       this.saveMessage = slot === 'auto' ? 'Autosave complete.' : 'Expedition saved.';
       return true;
     } catch {
@@ -1608,7 +1608,7 @@ export class ArenaScene extends Phaser.Scene {
     this.updateAreaCombat(dt);
     this.autosaveRemaining -= dt;
     if (this.autosaveRemaining <= 0 && !this.saveBusy) {
-      this.autosaveRemaining = 30;
+      this.autosaveRemaining = GAME.saves.autosaveInterval;
       void this.saveExpedition();
     }
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
@@ -1618,13 +1618,13 @@ export class ArenaScene extends Phaser.Scene {
     this.updateCharacterAnimations(dt);
     this.hudTimer -= dt;
     if (this.hudTimer <= 0) {
-      this.hudTimer = 0.08;
+      this.hudTimer = GAME.hud.updateInterval;
       this.callbacks?.onHud(this.snapshot());
     }
     if (
       this.run.clan.stage === 'final' &&
       !this.run.clan.finalBossSpawned &&
-      this.run.clan.stageTime >= 20
+      this.run.clan.stageTime >= GAME.finalStand.bossDelay
     ) {
       if (this.spawnEnemy(SKYBREAKER)) this.run.clan.finalBossSpawned = true;
     }
@@ -1825,7 +1825,7 @@ export class ArenaScene extends Phaser.Scene {
       .setDisplaySize(width * 0.9, width * 0.3)
       .setVisible(true);
     enemy.definition = definition;
-    enemy.elite = ['frost-mare', 'eclipse-giant'].includes(definition.id);
+    enemy.elite = !!definition.elite;
     enemy.health = definition.health * (isBoss ? 1 : 1 + this.run.elapsed / 1200);
     enemy.maxHealth = enemy.health;
     enemy.spawnId += 1;
@@ -3366,7 +3366,7 @@ export class ArenaScene extends Phaser.Scene {
       if (gem.active) gem.setPosition(center, center + 100);
     for (const hazard of this.hazards) hazard.warning.destroy();
     this.hazards = [];
-    this.hazardTimer = 8;
+    this.hazardTimer = GAME.hazards.initialDelay;
     this.areaThreats = createAreaThreats();
     this.areaEncounter = createAreaEncounter();
     syncAreaEncounter(this.areaEncounter, this.run);

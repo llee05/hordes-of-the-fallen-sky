@@ -73,6 +73,7 @@ export const ENEMIES: readonly EnemyDefinition[] = [
   },
   {
     id: 'frost-mare',
+    elite: true,
     title: 'Frost mare',
     texture: 'ghost',
     health: 250,
@@ -86,6 +87,7 @@ export const ENEMIES: readonly EnemyDefinition[] = [
   },
   {
     id: 'eclipse-giant',
+    elite: true,
     title: 'Eclipse giant',
     texture: 'earth',
     navigation: 'heavy',

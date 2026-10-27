@@ -205,6 +205,8 @@ export interface UpgradeDefinition {
 }
 
 export interface EnemyDefinition {
+  /** Intrinsic elite status, also applied to forced spawns and reset on pool reuse. */
+  elite?: boolean;
   title?: string;
   home?: LocationId;
   localUnlockAt?: number;

@@ -32,7 +32,11 @@ export const GAME = {
     spawnMargin: 60,
   },
   duration: 900,
+  saves: { autosaveInterval: 30 },
+  hazards: { initialDelay: 8 },
+  hud: { updateInterval: 0.08 },
   finalStand: {
+    bossDelay: 20,
     chapterAt: [65, 125],
     advanceSeconds: [6, 5, 4],
     warningSeconds: 2.4,
