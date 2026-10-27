@@ -11,7 +11,7 @@ import {
 // Tests use isolated browser contexts; parallel mode also balances CI shards.
 test.describe.configure({ mode: 'parallel' });
 
-test('the painted scene reflects real developments, freezes the world, and respects reduced motion', async ({
+test('the estate ledger reflects real developments, freezes the world, and respects reduced motion', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
@@ -27,14 +27,17 @@ test('the painted scene reflects real developments, freezes the world, and respe
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
   expect(
     await page.locator('.camp-model').evaluate((e) => e.getAnimations({ subtree: true }).length),
-  ).toBeGreaterThan(0);
+  ).toBe(0);
   await buyNode(page, 'archery-base');
   await buyNode(page, 'archery-seasoned-bowyers');
   await expect(page.locator('[data-camp-site="archery"]')).toHaveAttribute(
     'data-established',
     'true',
   );
-  await expect(page.locator('[data-camp-site="archery"] .camp-supply')).toHaveCount(1);
+  await expect(page.locator('.camp-slot-card[data-camp-site="archery"]')).toContainText('Level 1');
+  await expect(page.locator('.camp-slot-card[data-camp-site="archery"]')).toContainText(
+    'assigned workers',
+  );
   const after = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await selectCampBuilding(page, 'archery');
   await page.locator('.camp-crafts summary').click();
@@ -54,7 +57,7 @@ for (const size of [
   { width: 960, height: 600 },
   { width: 390, height: 844 },
 ])
-  test(`all facilities remain inspectable from the painting or search at supported viewport sizes at ${size.width}×${size.height}`, async ({
+  test(`all facilities remain inspectable from the estate or search at supported viewport sizes at ${size.width}×${size.height}`, async ({
     page,
   }) => {
     test.setTimeout(process.env.CI ? 90000 : 60000);
@@ -62,6 +65,15 @@ for (const size of [
     await startExpedition(page);
     await page.keyboard.press('b');
     await page.setViewportSize(size);
+    await expect(page.locator('.camp-internal-strip button')).toHaveCount(6);
+    await page.locator('[data-camp-encampment]').click();
+    if (size.width > 760) {
+      const overview = (await page.locator('.camp-estate-overview').boundingBox())!;
+      const details = (await page.locator('.camp-popup').boundingBox())!;
+      expect(overview.x + overview.width).toBeLessThanOrEqual(details.x + 1);
+      expect(details.y + details.height).toBeLessThanOrEqual(size.height);
+    }
+    await page.locator('[data-camp-dismiss]').click();
     for (const site of [
       'ger',
       'archery',
@@ -92,7 +104,7 @@ for (const size of [
     await expect(page.locator('.camp-popup-heading')).toContainText('Herding grounds');
   });
 
-test('controller confirms inspection and explicit purchase; Back dismisses the parchment first', async ({
+test('controller confirms inspection and explicit purchase; Back dismisses the details first', async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -114,6 +126,11 @@ test('controller confirms inspection and explicit purchase; Back dismisses the p
   await tapController(page, 1);
   await expect(page.locator('.camp-popup')).toHaveCount(0);
   await page.keyboard.press('ArrowRight');
+  await expect(page.locator('[data-camp-internal="clan-council"]')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.camp-popup-heading')).toContainText('Clan Council');
+  await tapController(page, 1);
+  for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowRight');
   await expect(page.locator('[data-camp-site="ger"]')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('.camp-popup')).toBeVisible();

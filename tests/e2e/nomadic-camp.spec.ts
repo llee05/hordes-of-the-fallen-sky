@@ -13,13 +13,13 @@ test.beforeEach(async ({ page }) => {
   await page.keyboard.press('b');
 });
 
-test('one painted camp opens anchored parchments and assigns construction to the selected plot atomically', async ({
+test('the estate opens building details and assigns construction to the selected plot atomically', async ({
   page,
 }) => {
   await expect(page.locator('.camp-popup')).toHaveCount(0);
-  await expect(
-    page.locator('.camp-estate-body, .camp-tree-workspace, .node-inspector'),
-  ).toHaveCount(0);
+  await expect(page.locator('.camp-holding')).toBeVisible();
+  await expect(page.locator('.camp-internal-strip button')).toHaveCount(6);
+  await expect(page.locator('.camp-slot-grid > button')).toHaveCount(6);
   await expect(page.locator('[data-camp-slot][data-unlocked="true"]')).toHaveCount(1);
   await expect(page.locator('[data-camp-slot][data-unlocked="false"]')).toHaveCount(4);
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
@@ -28,7 +28,7 @@ test('one painted camp opens anchored parchments and assigns construction to the
   await expect(page.locator('[data-camp-dismiss]')).toBeFocused();
   await page.locator('[data-tree-recipes]').click();
   await expect(page.locator('[data-synergy]')).toHaveCount(5);
-  await page.locator('.camp-diorama [data-camp-site="ger"]').click();
+  await page.locator('.camp-slot-grid [data-camp-site="ger"]').click();
   await expect(page.locator('.camp-popup-heading h3')).toHaveText('Family gers');
   await expect(page.locator('[data-synergy]')).toHaveCount(0);
   await page.locator('[data-camp-dismiss]').click();
@@ -70,8 +70,8 @@ test('central tiers, internal ranks and a real felt specialisation share the cam
   await page.locator('[data-camp-encampment]').click();
   await page.locator('.tree-purchase').click();
   await page.locator('.tree-purchase').click();
-  await expect(page.locator('.camp-central')).toContainText('Imperial Ordo');
-  await page.locator('.camp-internal-choices summary').click();
+  await expect(page.locator('.camp-holding')).toContainText('Imperial Ordo');
+  await page.locator('[data-camp-dismiss]').click();
   await page.locator('[data-camp-internal="clan-council"]').click();
   await page.locator('.tree-purchase').click();
   await page.locator('.tree-purchase').click();
@@ -102,7 +102,7 @@ test('central tiers, internal ranks and a real felt specialisation share the cam
   await page.screenshot({ path: 'test-results/nomadic-camp-foldout.png' });
 });
 
-test('the painting and one popup fit desktop, Steam Deck and narrow windows without advancing the world', async ({
+test('the estate and its details fit desktop, Steam Deck and narrow windows without advancing the world', async ({
   page,
 }) => {
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
@@ -173,5 +173,5 @@ test('saved camp organisation and stores survive reload without replaying welcom
   expect(restored.population).toBe(saved.supplies.population);
   expect(restored.herd).toBe(saved.supplies.herd);
   expect(restored.food).toBeCloseTo(saved.supplies.food, 0);
-  await expect(page.locator('.camp-central')).toContainText('Established Encampment');
+  await expect(page.locator('.camp-holding')).toContainText('Established Encampment');
 });

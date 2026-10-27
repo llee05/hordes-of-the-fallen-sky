@@ -104,7 +104,7 @@ export async function buyNode(page: Page, id: string): Promise<void> {
   await page.locator('.tree-purchase').click();
 }
 
-/** Select through the painted scene, using search for an as-yet unbuilt facility. */
+/** Select through the estate cards, using search for an as-yet unbuilt facility. */
 export async function selectCampBuilding(page: Page, id: string, unfold = true): Promise<void> {
   await expect(page.locator('.immersive-camp')).toBeVisible();
   if (await page.locator('[data-camp-dismiss]').count())
@@ -123,7 +123,7 @@ export async function selectCampBuilding(page: Page, id: string, unfold = true):
     await page.locator('[data-camp-foldout]').click();
 }
 
-/** Root camp management has its own exit; Escape first dismisses the anchored parchment. */
+/** Root camp management has its own exit; Escape first dismisses the details. */
 export async function closeOverlayOrPause(page: Page): Promise<void> {
   if (await page.locator('.immersive-camp').isVisible())
     await page.locator('[data-action="exit-camp"]').first().click();
