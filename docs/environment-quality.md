@@ -92,8 +92,12 @@ fixed cliff anchors, exact terrain queries, and connected caravan ground.
 Browser tests exercise every destination, debug/terrain-only modes, elevated
 movement and combat, pooled render budgets, and frozen water in menus. The native
 art-review test fixes Golden Pasture at (2600,2600), zoom 1, and saves both normal
-and terrain-only views before measuring 350 pooled enemies. Production Electron
-checks cover offline launch, migration, and both desktop window sizes.
+and terrain-only views before measuring 350 pooled enemies. It holds full render
+scale with the adaptive scaler frozen through spawning, a one-second warm-up,
+and a three-second frame-rate sample. The sample also logs mean and 90th-percentile
+main-thread frame times. Budget assertions remain in
+`tests/desktop/environment-quality.spec.ts`. Production Electron checks cover
+offline launch, migration, and both desktop window sizes.
 
 The final isolated native 350-enemy Golden Pasture sample measured about 60 FPS
 on Intel Iris Xe at 1280×800, full render scale, and secondary texture sampling,
