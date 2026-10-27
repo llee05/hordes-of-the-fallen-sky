@@ -1,10 +1,13 @@
 # Angled Living Steppe scenes
 
-The main renderer presents all twelve destinations as angled orthographic scenes.
+Angled 3D is the default terrain renderer across all twelve destinations unless
+software WebGL is detected or a flat development default is requested.
 Run `npm run dev` or `npm run dev:web`; no developer flag is required. In Settings,
 **Terrain** toggles between **Angled 3D** and **Flat 2D** immediately, including during
 a paused expedition. The current location and crossing are rebuilt in the selected
-renderer; simulation remains paused. The choice is saved with visual preferences
+renderer; simulation remains paused. Active actors and XP drops on newly blocked
+ground move to nearby walkable ground without losing health, XP, or progression.
+The choice is saved with visual preferences
 in the platform profile, independently of expedition saves.
 
 Before constructing the terrain renderer, startup reads the Phaser WebGL context's
@@ -18,7 +21,8 @@ driver information keeps the normal default.
 
 The development defaults `?terrain=2d` in the browser and
 `VITE_TERRAIN_RENDERER=2d npm run dev` in Electron still work when there is no saved
-terrain choice. WebGL initialization failures also restore the flat renderer.
+terrain choice; they suppress the software-driver notice. An explicit saved choice
+overrides these defaults too. WebGL initialization failures also restore the flat renderer.
 
 Phaser owns simulation, Arcade physics, input, pooling, animation, menus, and asset
 loading. Three.js provides depth-buffered terrain underneath the existing DOM HUD.

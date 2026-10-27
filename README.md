@@ -81,19 +81,16 @@ In development, choose Otgontenger with **F8** and press **F9** to cycle elevati
 slope, cliff-placement, and traversal overlays. See [the mountain terrain guide](docs/mountain-terrain.md)
 for configuration, rendering, traversal, and limits.
 
-Angled 2.5D scenes are now the default across all twelve destinations. An orthographic
+Angled 2.5D scenes are available across all twelve destinations. An orthographic
 Three.js world supplies genuine raised shelves, vertical cliff faces, snowfields,
 shadows, river gorges, and timber crossings. Existing painted characters and camps
 stand on the terrain while Phaser retains physics, combat, and animation. Riding
 follows screen directions. F6 changes camera angle, F7 isolates terrain, and F9
 cycles debug views in development. **Settings → Terrain** switches immediately between
-**Angled 3D** (the default) and **Flat 2D**, and saves your choice with your profile.
-On startup, detected software WebGL drivers such as SwiftShader and llvmpipe default
-to Flat 2D with a dismissible title-screen notice. An explicit saved choice always
-wins. If driver information is unavailable, the normal 3D default remains.
-`?terrain=2d` in browser preview and `VITE_TERRAIN_RENDERER=2d npm run dev` still
-select the flat default when no saved terrain choice exists. See
-[the angled scene guide](docs/world-3d.md) and [painted asset prompts](docs/angled-scene-art.md).
+**Angled 3D** and **Flat 2D**, and saves your choice with your profile. See
+[the angled scene guide](docs/world-3d.md) for startup defaults, software-WebGL
+fallback, and development overrides, and [painted asset prompts](docs/angled-scene-art.md)
+for the bundled artwork.
 The [environment quality guide](docs/environment-quality.md) describes painted material blending,
 weathered cliffs, shared riverbeds and shores, clustered vegetation, and render budgets.
 
