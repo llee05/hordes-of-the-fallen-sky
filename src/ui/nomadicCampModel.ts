@@ -18,7 +18,7 @@ import { assignedWorkers } from '../game/state/clan';
 import { currentLocation } from '../game/state/journey';
 import { progressionChanges } from '../game/state/progressionPreview';
 import type { RunState } from '../game/types';
-import { campIllustration, campResident, campProp, clanMark } from './artwork';
+import { nomadicIllustration, campResident, campProp, clanMark } from './artwork';
 import { campNodeDetails, effectDescriptions } from './campPopups';
 import { economySummary } from './economyContent';
 import { synergyContent } from './synergyContent';
@@ -62,7 +62,9 @@ const OPTIONAL_POSITIONS = [
 export function nomadicBuildingArt(definition: NomadicBuildingDefinition, level: number): string {
   const visual = definition.levels[Math.max(0, level - 1)]!.visual;
   const art =
-    definition.id === 'horse-lines' ? campResident('packhorse') : campIllustration(visual.art);
+    definition.id === 'horse-lines'
+      ? campResident('packhorse')
+      : nomadicIllustration(visual.art, level);
   return `<span class="camp-place-art nomadic-building-art" data-visual-level="${level}" style="--building-size:${visual.scale}" aria-hidden="true">${art}${Array.from({ length: visual.ornament }, (_, i) => `<span class="nomadic-ornament" style="--ornament:${i}">${campProp('banner')}</span>`).join('')}</span>`;
 }
 export function nomadicBuildingMenu(
@@ -105,7 +107,7 @@ export function nomadicBuildingMenu(
       .map((b) => {
         const level = nomadicBuildingLevel(camp, b.id);
         const cost = nomadicBuildingCost(run, b.id);
-        return `<button class="camp-building-choice" data-nomadic-site="${b.id}" ${slot !== undefined ? `data-nomadic-slot="${slot}"` : ''} data-focus-key="choose-${b.id}">${campIllustration(b.levels[0]!.visual.art)}<span><strong>${h(b.title)}</strong><small>${h(b.category)} · ${level ? `Level ${level}` : cost ? h(priceText(cost)) : 'Completed'}</small><small>${h(nomadicEffectDescriptions(b.levels[0]!.effects).slice(0, 2).join(' · '))}</small></span>${clanMark(b.icon)}</button>`;
+        return `<button class="camp-building-choice" data-nomadic-site="${b.id}" ${slot !== undefined ? `data-nomadic-slot="${slot}"` : ''} data-focus-key="choose-${b.id}">${nomadicIllustration(b.levels[0]!.visual.art, 1)}<span><strong>${h(b.title)}</strong><small>${h(b.category)} · ${level ? `Level ${level}` : cost ? h(priceText(cost)) : 'Completed'}</small><small>${h(nomadicEffectDescriptions(b.levels[0]!.effects).slice(0, 2).join(' · '))}</small></span>${clanMark(b.icon)}</button>`;
       })
       .join('')}</div>`;
   let popup = '';
@@ -212,7 +214,7 @@ export function nomadicJournalBuildings(run: RunState): string {
   return NOMADIC_BUILDINGS.filter((b) => nomadicBuildingLevel(camp, b.id))
     .map((b) => {
       const level = nomadicBuildingLevel(camp, b.id);
-      return `<div class="clan-building"><span class="clan-building-art">${campIllustration(b.levels[level - 1]!.visual.art)}</span><div><strong>${h(b.title)}</strong><p>Level ${level} / ${b.levels.length} · ${h(b.category)}</p></div></div>`;
+      return `<div class="clan-building"><span class="clan-building-art">${nomadicIllustration(b.levels[level - 1]!.visual.art, level)}</span><div><strong>${h(b.title)}</strong><p>Level ${level} / ${b.levels.length} · ${h(b.category)}</p></div></div>`;
     })
     .join('');
 }

@@ -365,9 +365,9 @@
   min-height: 0;
   isolation: isolate;
   overflow: hidden;
-  background-color: #b6b38b;
-  background-image: linear-gradient(#e2d8b784, #c5c49b66), url('/art/steppe-ground.png');
-  background-size: auto, 1000px;
+  background-color: #d8c39b;
+  background-image: linear-gradient(#e2d1a9dc, #d1bd92e8), var(--cloth-texture);
+  background-size: auto, 400px;
 }
 .camp-map-tools {
   position: absolute;
@@ -414,17 +414,18 @@
   height: 100%;
   min-width: 800px;
   min-height: 360px;
-  box-shadow: inset 0 0 80px #665d3c44;
+  box-shadow: inset 0 0 60px #3b402c55;
 }
 .camp-map-painting {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
-.camp-map-painting > svg {
+.camp-panorama {
   display: block;
   width: 100%;
   height: 100%;
+  object-fit: fill;
 }
 .map-decoration {
   position: absolute;
@@ -513,8 +514,11 @@
   padding: 6px 9px 6px 19px;
   background-image: linear-gradient(#f0e2c3f2, #dcccaae8), var(--cloth-texture);
   background-size: auto, 400px;
-  border: 1px solid #9c8353;
-  box-shadow: 0 2px 2px #514b3433;
+  border: 1px solid #8e754b;
+  box-shadow:
+    inset 0 0 0 2px #f5e8c855,
+    inset 0 -3px 8px #9f794b22,
+    1px 3px 5px #34382044;
   text-align: left;
 }
 .camp-plaque strong {
@@ -526,7 +530,7 @@
 .camp-plaque small {
   display: block;
   margin-top: 3px;
-  color: #665b40;
+  color: #554b35;
   font-size: 9px;
   line-height: 1.25;
 }
@@ -540,8 +544,11 @@
   height: 27px;
   transform: rotate(45deg);
   border: 2px solid #b79b62;
-  background: #2f4246;
-  color: #e8ca87;
+  background: linear-gradient(135deg, #405954, #263d3d);
+  box-shadow:
+    inset 0 0 0 1px #e8cf8d88,
+    2px 2px 3px #34382044;
+  color: #f0d79c;
 }
 .camp-plaque-badge .clan-mark {
   width: 22px;
@@ -737,6 +744,7 @@
 
 .nomadic-building-art {
   position: relative;
+  isolation: isolate;
   height: calc(86px * var(--building-size, 1));
 }
 .camp-encampment .nomadic-building-art {
@@ -767,4 +775,34 @@
   .nomadic-camp .camp-stores .clan-mark {
     width: 19px;
   }
+}
+
+/* Paint stays behind the same fixed clickable locations and parchment bounds. */
+.camp-place-art::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  bottom: -2px;
+  left: 12%;
+  width: 80%;
+  height: 18%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #39402a5c, #39402a00 72%);
+  transform: skewX(-22deg);
+}
+.camp-place-art > .camp-illustration,
+.map-decoration > .camp-illustration {
+  filter: drop-shadow(3px 5px 2px #343d294d);
+}
+.nomadic-building-art > .camp-illustration {
+  position: relative;
+  z-index: 1;
+}
+.camp-plaque strong {
+  color: #344638;
+  text-shadow: 0 1px #fff3d477;
+}
+.camp-popup-heading {
+  background: linear-gradient(90deg, #c8ac7040, transparent 75%);
+  box-shadow: inset 0 3px #f8eaca66;
 }
