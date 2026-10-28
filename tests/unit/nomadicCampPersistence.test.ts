@@ -4,8 +4,11 @@ import { storyConsequence } from '../../src/game/data/storyConsequences';
 import { describe, expect, it } from 'vitest';
 import { createRun, gainExperience } from '../../src/game/state/run';
 import { createLegacyCampRun } from '../support/legacyCamp';
-import { buildStructure, advanceClan } from '../../src/game/state/clan';
+import { buildStructure, advanceClan, clanDoctrine } from '../../src/game/state/clan';
 import { captureCampArchive, runFromCampArchive } from '../../src/game/state/campArchive';
+import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
+import { world } from './fixtures/expedition';
+import type { NomadicBuildingId } from '../../src/shared/nomadicCamp';
 import { isCampArchive, normalizeCampArchive } from '../../src/shared/campArchive';
 import { migrateLegacyNomadicCamp } from '../../src/game/state/nomadicCampMigration';
 import { purchaseEstate } from '../../src/game/state/campEstate';
@@ -111,6 +114,72 @@ describe('nomadic foundations, effects and persistence', () => {
     archive.nomadicCamp!.slots[1] = { id: 'archery-range', level: 2 };
     expect(isCampArchive(archive)).toBe(false);
     expect(runFromCampArchive(archive)).toBeUndefined();
+  });
+  it.each<{
+    purchases: NomadicBuildingId[];
+    identity: { iron: number; sky: number; wander: number };
+    title: string;
+  }>([
+    {
+      purchases: [],
+      identity: { iron: 0, sky: 0, wander: 0 },
+      title: 'A people taking shape',
+    },
+    {
+      purchases: ['archery-range', 'smiths-forge'],
+      identity: { iron: 4, sky: 0, wander: 0 },
+      title: 'The Iron Horde',
+    },
+    {
+      purchases: ['khans-ger', 'khans-ger', 'horse-lines', 'horse-lines'],
+      identity: { iron: 0, sky: 0, wander: 8 },
+      title: 'The Wandering Nation',
+    },
+    {
+      purchases: ['khans-ger', 'khans-ger', 'shamans-ger', 'shamans-ger', 'shamans-ger'],
+      identity: { iron: 0, sky: 6, wander: 4 },
+      title: 'Children of the Eternal Sky',
+    },
+  ])('restores purchased-level identity and title: $title', ({ purchases, identity, title }) => {
+    const source = funded();
+    for (const id of purchases) expect(purchaseNomadicBuilding(source, id)).toBe(true);
+    expect(source.clan.identity).toEqual(identity);
+    expect(clanDoctrine(source)).toBe(title);
+    const archive = captureCampArchive(source);
+    const saved = structuredClone(archive);
+    let restored = runFromCampArchive(archive)!;
+    for (let round = 0; round < 3; round++) {
+      expect(restored.clan.identity).toEqual(identity);
+      expect(clanDoctrine(restored)).toBe(title);
+      expect(restored.clan.nomadicCamp).toEqual(source.clan.nomadicCamp);
+      expect(restored.clan).toMatchObject(archive.supplies);
+      expect(restored.clan.campEffects).toEqual(source.clan.campEffects);
+      expect(restored.stats).toEqual(source.stats);
+      restored = runFromCampArchive(captureCampArchive(restored))!;
+    }
+    expect(archive).toEqual(saved);
+    expect(runFromCampArchive(archive)!.clan.identity).toEqual(identity);
+  });
+  it('retains serialized expedition identity without awarding owned buildings again', () => {
+    const source = funded();
+    for (const id of ['archery-range', 'smiths-forge', 'khans-ger'] as const)
+      expect(purchaseNomadicBuilding(source, id)).toBe(true);
+    source.clan.identity.sky += 7;
+    const identity = { iron: 4, sky: 7, wander: 2 };
+    expect(source.clan.identity).toEqual(identity);
+    const snapshot = captureExpedition(source, world());
+    const restored = decodeExpedition(snapshot).run;
+    const twice = decodeExpedition(captureExpedition(restored, world())).run;
+    for (const run of [restored, twice]) {
+      expect(run.clan.identity).toEqual(identity);
+      expect(clanDoctrine(run)).toBe('Children of the Eternal Sky');
+      expect(run.clan.nomadicCamp).toEqual(source.clan.nomadicCamp);
+      expect(run.clan.materials).toBe(source.clan.materials);
+      expect(run.clan.food).toBe(source.clan.food);
+      expect(run.clan.population).toBe(source.clan.population);
+      expect(run.clan.campEffects).toEqual(source.clan.campEffects);
+      expect(run.stats).toEqual(source.stats);
+    }
   });
   it('labels unsupported future benefits honestly while showing real capacity and experience effects', () => {
     expect(

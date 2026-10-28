@@ -40,8 +40,10 @@ export function runFromCampArchive(value: unknown): RunState | undefined {
       for (const level of definition.levels.slice(
         first,
         nomadicBuildingLevel(value.nomadicCamp, definition.id),
-      ))
+      )) {
         applyNomadicBuildingEffects(run, level.effects);
+        run.clan.identity[definition.doctrine] += 2;
+      }
     }
     syncNomadicBuildings(run);
     Object.assign(run.clan, value.supplies);

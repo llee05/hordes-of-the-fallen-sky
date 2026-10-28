@@ -57,7 +57,7 @@ The panorama and three-stage ger, wagon-workplace and archery-ground paintings a
 
 ## Portable checkpoints and full expeditions
 
-The existing profile's version-1 camp envelope can include a strictly validated `nomadicCamp` ownership record. New checkpoints save choices and every level. Restoring a checkpoint begins a fresh expedition and reconstructs each camp benefit once, then restores the actual saved supplies. It does not replay arrival, welcome or food gifts. Patron research and battle actors restart, as before. Full expedition saves retain battle, story, research, health, succession and earned knowledge.
+The existing profile's version-1 camp envelope can include a strictly validated `nomadicCamp` ownership record. New checkpoints save choices and every level. Restoring a checkpoint begins a fresh expedition and reconstructs each camp benefit once, then restores the actual saved supplies. Each purchased building level restores its two doctrine points; free core level 1 awards none. It does not replay arrival, welcome or food gifts. Patron research and battle actors restart, as before. Full expedition saves retain battle, story, research, health, succession, earned knowledge and serialized clan identity without awarding building points again.
 
 Old profiles and both save types migrate automatically:
 
