@@ -30,7 +30,8 @@ painting, keeping the region visually consistent without another large download.
 | Hybrid discoveries          | Meeting trails, wolves, eagle and ancestral riders          |                344,048 |
 
 `src/ui/researchArtwork.ts` authors local URLs relative to Vite's base URL, including
-static browser deployments under a project subpath. `TreeBranch.artwork` is
+static browser deployments under a project subpath. CSS-variable image URLs are
+resolved against the document base so Electron never looks under `assets/art/`. `TreeBranch.artwork` is
 optional so other progression consumers keep their existing presentation.
 `progressionTree.ts` emits image styles only for the selected branch and inspector.
 Navigation and overview retain their distinct SVG symbols without loading regional

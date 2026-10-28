@@ -1,0 +1,351 @@
+/* Living Steppe research tapestry. Scoped away from camp and other progression views. */
+.overlay:has([data-tree-kind='patrons']) {
+  padding: 14px;
+  overflow: hidden;
+}
+[data-tree-kind='patrons'] {
+  position: relative;
+  width: min(100%, 1680px);
+  max-height: calc(100dvh - 28px);
+  height: calc(100dvh - 28px);
+  border: 7px solid #284b50;
+  outline: 1px solid #bd9557;
+  box-shadow:
+    0 15px 60px #071b25aa,
+    inset 0 0 0 1px #b38b50;
+}
+[data-tree-kind='patrons']::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  z-index: 8;
+  border-block: 7px solid transparent;
+  border-image: var(--braid) 8 round;
+  pointer-events: none;
+}
+.research-masthead {
+  flex-shrink: 0;
+  background:
+    linear-gradient(90deg, #f3e6c9 5%, #f3e6c9e8 32%, #f3e6c90a 68%),
+    url('/art/research/header.webp') right 48% / cover;
+}
+[data-tree-kind='patrons'] .panel-heading {
+  padding: 18px 22px 8px;
+  background: transparent;
+  border: 0;
+}
+[data-tree-kind='patrons'] .panel-heading::after {
+  display: none;
+}
+[data-tree-kind='patrons'] .panel-title {
+  gap: 18px;
+}
+[data-tree-kind='patrons'] .panel-emblem {
+  position: relative;
+  border-radius: 4px 4px 30% 30%;
+  width: 64px;
+  height: 72px;
+  background-color: #173d45;
+  outline: 1px solid #c9a565;
+  outline-offset: 3px;
+  color: #dfb975;
+}
+[data-tree-kind='patrons'] .panel-emblem::after {
+  content: '';
+  position: absolute;
+  bottom: -13px;
+  left: 13px;
+  width: 3px;
+  height: 12px;
+  background: #974f38;
+  border-bottom: 4px solid #ba8f4e;
+  box-shadow:
+    17px 5px #974f38,
+    34px 0 #974f38;
+  pointer-events: none;
+}
+[data-tree-kind='patrons'] .panel-heading h2 {
+  color: #193e46;
+  margin-top: 6px;
+}
+[data-tree-kind='patrons'] .tree-toolbar {
+  gap: 8px 16px;
+  padding: 10px 22px 14px;
+  background: linear-gradient(90deg, #f3e6c9cc, #f3e6c920);
+  border-bottom: 5px solid #8f5137;
+}
+[data-tree-kind='patrons'] .tree-summary strong {
+  color: #203f45;
+}
+[data-tree-kind='patrons'] .tree-view-tools {
+  padding: 4px;
+  background: #efe0bdcc;
+  border: 1px solid #a78349;
+  box-shadow: inset 0 0 0 2px #f9edce88;
+}
+[data-tree-kind='patrons'] .tree-view-tools button {
+  background: #f0e1be;
+  color: #243f40;
+}
+[data-tree-kind='patrons'] .tree-view-tools [aria-pressed='true'] {
+  background: #214b51;
+  color: #ffebbf;
+}
+[data-tree-kind='patrons'] .patron-navigation {
+  background-color: #173d45;
+  border-right: 5px double #ad884e;
+  padding-inline: 10px;
+}
+[data-tree-kind='patrons'] .patron-nav-item {
+  padding-block: 13px;
+}
+[data-tree-kind='patrons'] .patron-nav-item .clan-mark {
+  width: 32px;
+  height: 36px;
+  color: #dfb66e;
+}
+[data-tree-kind='patrons'] .patron-nav-item[aria-pressed='true'] {
+  background: linear-gradient(110deg, #315e64, #24474d);
+  border: 1px solid #d2a85d;
+  box-shadow: inset 0 0 0 3px #ddbd7530;
+}
+[data-tree-kind='patrons'] .patron-nav-item strong {
+  color: #f1d394;
+}
+[data-tree-kind='patrons'] .patron-nav-item small {
+  color: #e0ddc6;
+}
+[data-tree-kind='patrons'] .tree-main {
+  padding: 22px 18px;
+  background-color: #e9d8b5;
+  background-image:
+    linear-gradient(#f5e8cad9 0, #f5e8caac 140px, #f5e8ca20 340px), var(--research-landscape, none);
+  background-size: auto, cover;
+  background-position:
+    center,
+    center top;
+  background-attachment: scroll;
+}
+[data-tree-kind='patrons'] .tree-branch-heading {
+  min-height: 68px;
+}
+[data-tree-kind='patrons'] .tree-branch h3 {
+  color: #173d45;
+  text-shadow: 0 1px #fff1d9;
+}
+[data-tree-kind='patrons'] .tree-branch-description {
+  position: relative;
+  padding: 8px 10px;
+  margin: 10px 0 16px;
+  background: #f5e8cadb;
+  border-left: 2px solid #a98348;
+  color: #353e32;
+  font:
+    13px/1.55 Georgia,
+    serif;
+}
+[data-tree-kind='patrons'] .tree-graph-viewport {
+  background: transparent;
+  border: 0;
+  padding: 4px;
+}
+[data-tree-kind='patrons'] .tree-connections path {
+  stroke: #3d5b52;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 1px #f6e7c4);
+}
+[data-tree-kind='patrons'] .tree-connections path[data-route='true'] {
+  stroke: #a45b28;
+  stroke-width: 4;
+}
+[data-tree-kind='patrons'] .tree-node {
+  isolation: isolate;
+  overflow: hidden;
+  background: #f0dfb9;
+  color: #293c35;
+  border-color: #8d683b;
+  box-shadow:
+    inset 0 0 0 3px #b88e4933,
+    0 2px 5px #2d392c55;
+}
+.tree-node-vignette {
+  position: absolute;
+  right: 0;
+  bottom: 14px;
+  z-index: -1;
+  width: 60%;
+  height: 58px;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.48;
+  mask-image: linear-gradient(90deg, transparent, #000 70%);
+  pointer-events: none;
+}
+[data-tree-kind='patrons'] .tree-node strong {
+  align-self: start;
+  padding: 1px 2px;
+  background: #f6e7c8db;
+  color: #263b33;
+}
+[data-tree-kind='patrons'] .tree-node-icon {
+  color: #805021;
+}
+[data-tree-kind='patrons'] .tree-node-state {
+  background: #f3e3c3e8;
+  color: #3d4434;
+  padding-block: 2px;
+}
+[data-tree-kind='patrons'] .tree-node[data-status='learned'] {
+  background-color: #d6e3c9;
+  border-color: #397064;
+}
+[data-tree-kind='patrons'] .tree-node[data-status='excluded'] {
+  background-color: #e6c8b7;
+  border-color: #9b5c47;
+}
+[data-tree-kind='patrons'] .tree-node[data-route='true'] {
+  border-bottom: 3px solid #a35b2d;
+}
+[data-tree-kind='patrons'] .tree-node[aria-pressed='true'] {
+  outline: 2px solid #224e53;
+  outline-offset: 3px;
+  box-shadow:
+    inset 0 0 0 3px #c69a48,
+    0 0 0 6px #d1b372;
+}
+[data-tree-kind='patrons'] .tree-node:focus-visible {
+  outline: 3px solid #048e9b;
+  outline-offset: 4px;
+}
+[data-tree-kind='patrons'] .tree-map-hint {
+  background: #f3e6c9e8;
+  padding: 7px;
+  color: #34453a;
+}
+[data-tree-kind='patrons'] .node-inspector {
+  border-left: 5px double #ad884e;
+  background: #f2e4c6;
+}
+[data-tree-kind='patrons'] .node-portrait,
+[data-tree-kind='patrons'] .node-portrait[data-capstone='true'] {
+  float: none;
+  width: 100%;
+  height: 108px;
+  margin: 0 0 14px;
+  display: flex;
+  justify-content: flex-start;
+  padding: 10px 14px;
+  background:
+    linear-gradient(90deg, #f3e4c4 8%, #f3e4c420 65%),
+    var(--research-detail, none) center / cover;
+  color: #805021;
+  border: 0;
+  border-bottom: 1px solid #b8955b;
+  box-shadow: none;
+}
+[data-tree-kind='patrons'] .node-portrait > .clan-mark {
+  width: 62px;
+  height: 62px;
+  padding: 7px;
+  background: #f5e6c7dd;
+  border-radius: 50%;
+}
+[data-tree-kind='patrons'] .node-patron-seal {
+  color: #173d45;
+  background: #f5e6c7e8;
+  padding: 3px;
+  width: 30px;
+  height: 30px;
+}
+[data-tree-kind='patrons'] .node-effect {
+  color: #344333;
+}
+[data-tree-kind='patrons'] .node-purchase {
+  background: #ebd8b0;
+}
+[data-tree-kind='patrons'] .panel-footer {
+  padding-block: 10px;
+  background: #173d45;
+  color: #f2deb4;
+  border-top: 4px solid #925239;
+}
+[data-tree-kind='patrons'] .panel-footer button,
+[data-tree-kind='patrons'] .paused-note {
+  color: #f2deb4;
+}
+@media (max-width: 1100px) {
+  [data-tree-kind='patrons'] .tree-toolbar {
+    padding: 8px 14px;
+  }
+  [data-tree-kind='patrons'] .tree-view-tools {
+    gap: 4px;
+  }
+  [data-tree-kind='patrons'] .tree-main {
+    padding: 14px 10px;
+  }
+}
+@media (max-height: 700px) and (min-width: 761px) {
+  [data-tree-kind='patrons'] .panel-heading {
+    padding: 10px 16px 6px;
+  }
+  [data-tree-kind='patrons'] .panel-emblem {
+    width: 36px;
+    height: 40px;
+  }
+  [data-tree-kind='patrons'] .panel-emblem::after {
+    display: none;
+  }
+  [data-tree-kind='patrons'] .node-portrait,
+  [data-tree-kind='patrons'] .node-portrait[data-capstone='true'] {
+    height: 52px;
+    margin-bottom: 8px;
+  }
+  [data-tree-kind='patrons'] .node-portrait > .clan-mark {
+    width: 46px;
+    height: 46px;
+  }
+  [data-tree-kind='patrons'] .tree-bottom-note {
+    font-size: 8px;
+    padding-block: 4px;
+  }
+}
+@media (max-width: 760px) {
+  [data-tree-kind='patrons'] .panel-heading {
+    padding: 12px;
+  }
+  [data-tree-kind='patrons'] .panel-heading h2 {
+    font-size: 27px;
+  }
+  [data-tree-kind='patrons'] .panel-emblem {
+    width: 38px;
+    height: 44px;
+  }
+  [data-tree-kind='patrons'] .panel-emblem::after {
+    display: none;
+  }
+  [data-tree-kind='patrons'] .tree-summary {
+    gap: 14px;
+  }
+  [data-tree-kind='patrons'] .tree-summary strong {
+    font-size: 20px;
+  }
+  [data-tree-kind='patrons'] .tree-view-tools {
+    gap: 3px;
+  }
+  [data-tree-kind='patrons'] .tree-view-tools button {
+    padding: 8px;
+  }
+  [data-tree-kind='patrons'] .patron-navigation {
+    border-right: 0;
+    border-bottom: 4px double #ad884e;
+  }
+  [data-tree-kind='patrons'] .patron-nav-item {
+    padding-block: 8px;
+  }
+  [data-tree-kind='patrons'] .panel-footer {
+    padding: 8px 12px;
+  }
+  [data-tree-kind='patrons'] .tree-bottom-note {
+    font-size: 8px;
+  }
+}

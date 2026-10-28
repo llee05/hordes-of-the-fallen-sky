@@ -72,6 +72,10 @@ The [effect inventory](patron-research-v2-status.md) lists every unimplemented e
 Registered, purchasable and functional counts are intentionally distinct; the inventory
 is the reference for delivery status.
 
+The [research artwork guide](research-artwork.md) records the painted masthead,
+per-patron landscapes, matching inspector art, shared vignette sets and local lazy
+loading contract. The visual layer keeps research state and purchase rules unchanged.
+
 ## Purchase and observation interfaces
 
 `state/research.ts` owns `validateResearchPurchase`, `purchaseResearch` and
