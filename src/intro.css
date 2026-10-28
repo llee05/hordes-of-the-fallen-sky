@@ -1,4 +1,5 @@
-/* Full-bleed paintings with the clan's brass, manuscript, and woven materials. */
+/* Full-bleed painterly story sequence with depth parallax, drifting motes,
+   embers, cloth sway, and the clan's brass, manuscript, and woven materials. */
 #app[data-phase='intro'] .game-hud {
   opacity: 0;
   visibility: hidden;
@@ -6,7 +7,7 @@
 .overlay.intro-screen {
   display: block;
   padding: 0;
-  background: #162a31;
+  background: #0c181f;
   overflow: auto;
 }
 .intro-story {
@@ -23,14 +24,334 @@
   inset: 0;
   z-index: -2;
   overflow: hidden;
-  background: #162a31;
+  background: #0c181f;
 }
+.intro-stage {
+  position: absolute;
+  inset: -3.5%;
+  container-type: size;
+  transform-origin: var(--intro-focal-x) var(--intro-focal-y);
+  animation: intro-pan-east 24s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.intro-canvas {
+  position: absolute;
+  left: var(--intro-focal-x);
+  top: var(--intro-focal-y);
+  width: max(100cqw, 150cqh);
+  height: max(100cqh, calc(100cqw * 2 / 3));
+  translate: calc(-1 * var(--intro-focal-x)) calc(-1 * var(--intro-focal-y));
+}
+.intro-composition {
+  position: relative;
+  width: 1536px;
+  height: 1024px;
+}
+.intro-background,
 .intro-painting {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center 42%;
-  animation: intro-drift 22s ease-out both;
+  filter: contrast(1.03) saturate(1.04);
+}
+/* Painted foreground and clean background have independent depth transforms.
+   The oversized stage keeps the canvas edges outside the viewport during the pan. */
+.intro-near-plane {
+  position: absolute;
+  inset: 0;
+  animation: intro-depth-shift 24s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes intro-depth-shift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(12px, -4px, 0);
+  }
+}
+.intro-story[data-camera='rise-throne'] .intro-stage {
+  animation-name: intro-rise-throne;
+}
+.intro-story[data-camera='surge-west'] .intro-stage {
+  animation-name: intro-surge-west;
+}
+.intro-story[data-camera='pull-hearth'] .intro-stage {
+  animation-name: intro-pull-hearth;
+}
+.intro-story[data-camera='pan-pass'] .intro-stage {
+  animation-name: intro-pan-pass;
+}
+
+/* Scene-specific atmospheric lighting, smoke, cloth sway, embers, and dust. */
+.intro-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.intro-sun-wash {
+  transform-origin: 62% 32%;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 58% 46% at 62% 32%,
+    rgba(245, 174, 82, 0.2),
+    rgba(218, 128, 52, 0.08) 45%,
+    rgba(218, 128, 52, 0.02) 70%,
+    transparent 88%
+  );
+  filter: blur(18px);
+  mix-blend-mode: screen;
+  animation: intro-light-pulse 9s ease-in-out infinite alternate;
+}
+.intro-smoke-plume {
+  position: absolute;
+  left: 43%;
+  top: 36%;
+  width: 140px;
+  height: 110px;
+}
+.intro-smoke-plume i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(226, 232, 238, 0.24), transparent 72%);
+  filter: blur(6px);
+  animation: intro-smoke-drift 9.5s ease-out infinite;
+}
+.intro-smoke-plume i:nth-child(2) {
+  animation-delay: -3.2s;
+}
+.intro-smoke-plume i:nth-child(3) {
+  animation-delay: -6.4s;
+}
+
+.intro-rift-pulse {
+  transform-origin: 56% 18%;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 52% 42% at 56% 18%,
+    rgba(96, 240, 224, 0.22),
+    rgba(42, 168, 178, 0.09) 42%,
+    rgba(42, 168, 178, 0.02) 68%,
+    transparent 86%
+  );
+  filter: blur(18px);
+  mix-blend-mode: screen;
+  animation: intro-rift-flicker 6.5s ease-in-out infinite alternate;
+}
+.intro-brazier-glow {
+  position: absolute;
+  top: 56%;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 164, 62, 0.26) 0%,
+    rgba(214, 92, 32, 0.11) 38%,
+    rgba(214, 92, 32, 0.03) 64%,
+    transparent 85%
+  );
+  filter: blur(20px);
+  mix-blend-mode: screen;
+  animation: intro-fire-flicker 3.4s ease-in-out infinite alternate;
+}
+.intro-brazier-glow.brazier-left {
+  left: 9%;
+}
+.intro-brazier-glow.brazier-right {
+  right: 9%;
+  animation-delay: -1.7s;
+}
+
+.intro-vortex-gleam {
+  transform-origin: 41% 33%;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 48% 44% at 41% 33%,
+    rgba(94, 236, 226, 0.22),
+    rgba(42, 148, 162, 0.09) 45%,
+    rgba(42, 148, 162, 0.02) 70%,
+    transparent 88%
+  );
+  filter: blur(18px);
+  mix-blend-mode: screen;
+  animation: intro-rift-flicker 7.5s ease-in-out infinite alternate;
+}
+.intro-frost-mist {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  top: 44%;
+  height: 30%;
+  background: radial-gradient(
+    ellipse 60% 50% at 50% 50%,
+    rgba(156, 222, 226, 0.15),
+    transparent 76%
+  );
+  filter: blur(14px);
+  animation: intro-mist-sweep 14s ease-in-out infinite alternate;
+}
+
+.intro-hearth-glow {
+  position: absolute;
+  left: 51%;
+  top: 66%;
+  width: 460px;
+  height: 320px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse 50% 50% at 50% 50%,
+    rgba(255, 168, 66, 0.24) 0%,
+    rgba(224, 98, 36, 0.11) 36%,
+    rgba(190, 74, 24, 0.03) 64%,
+    transparent 86%
+  );
+  filter: blur(22px);
+  mix-blend-mode: screen;
+  animation: intro-fire-flicker 3.1s ease-in-out infinite alternate;
+}
+.intro-distant-rift {
+  transform-origin: 68% 18%;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 38% 30% at 68% 18%,
+    rgba(78, 218, 222, 0.18),
+    rgba(48, 152, 166, 0.05) 48%,
+    transparent 78%
+  );
+  filter: blur(16px);
+  mix-blend-mode: screen;
+  animation: intro-rift-flicker 8s ease-in-out infinite alternate;
+}
+
+.intro-dawn-rays {
+  transform-origin: 78% 36%;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 56% 50% at 78% 36%,
+    rgba(255, 206, 112, 0.22),
+    rgba(232, 156, 68, 0.09) 46%,
+    rgba(232, 156, 68, 0.02) 70%,
+    transparent 88%
+  );
+  filter: blur(18px);
+  mix-blend-mode: screen;
+  animation: intro-light-pulse 8.5s ease-in-out infinite alternate;
+}
+.intro-storm-lightning {
+  transform-origin: 18% 38%;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 40% 36% at 18% 38%,
+    rgba(88, 232, 238, 0.2),
+    rgba(46, 154, 168, 0.06) 46%,
+    transparent 78%
+  );
+  filter: blur(16px);
+  mix-blend-mode: screen;
+  animation: intro-rift-flicker 5.8s ease-in-out infinite alternate;
+}
+
+/* Cloth and banner sway overlays matched to painted banners. */
+.intro-cloth-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.intro-ribbon-path {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: intro-cloth-sway 5.2s ease-in-out infinite alternate;
+}
+.intro-caravan-banner .intro-ribbon-path {
+  transform-origin: right center;
+}
+.ribbon-teal {
+  fill: rgba(46, 178, 184, 0.28);
+  filter: blur(1.5px);
+}
+.ribbon-rust {
+  fill: rgba(204, 88, 52, 0.26);
+  filter: blur(1.5px);
+  animation-delay: -2.1s;
+}
+.ribbon-tattered {
+  fill: rgba(48, 168, 178, 0.26);
+  filter: blur(1.5px);
+}
+.ribbon-blue {
+  fill: rgba(54, 186, 206, 0.28);
+  filter: blur(1.8px);
+}
+
+/* Drifting steppe dust motes and rising hearth embers. */
+.intro-motes,
+.intro-embers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.intro-motes {
+  animation: intro-parallax-fore 24s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.intro-mote {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(246, 222, 174, 0.68), rgba(246, 222, 174, 0) 75%);
+  animation: intro-mote-drift var(--dur) linear infinite;
+  animation-delay: var(--delay);
+}
+.intro-ash-motes .intro-mote {
+  background: radial-gradient(circle, rgba(168, 228, 232, 0.65), rgba(168, 228, 232, 0) 75%);
+}
+.intro-ember {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffd57e 15%, #f06d2f 65%, transparent 100%);
+  box-shadow: 0 0 8px rgba(255, 146, 54, 0.7);
+  animation: intro-ember-rise var(--dur) ease-out infinite;
+  animation-delay: var(--delay);
+}
+
+.intro-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 88% 76% at 50% 40%,
+      transparent 48%,
+      rgba(8, 18, 24, 0.46) 82%,
+      rgba(6, 14, 19, 0.78) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(9, 22, 29, 0.84) 0%,
+      rgba(12, 27, 33, 0.08) 22%,
+      rgba(12, 27, 33, 0.16) 46%,
+      rgba(9, 21, 27, 0.88) 73%,
+      #09151b 100%
+    );
 }
 .intro-story::before {
   content: '';
@@ -38,14 +359,7 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    #0d242bdd,
-    #11272a00 25%,
-    #11272a22 38%,
-    #10252be8 73%,
-    #10252b 100%
-  );
+  box-shadow: inset 0 0 90px rgba(5, 12, 16, 0.65);
 }
 .intro-story::after {
   content: '';
@@ -65,7 +379,7 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.14em;
-  text-shadow: 0 2px 8px #0a1b21;
+  text-shadow: 0 2px 8px #071318;
 }
 .intro-prologue {
   color: #e1b878;
@@ -78,7 +392,7 @@
   border: 1px solid #c4a47577;
   border-radius: 3px;
   padding: 11px 18px;
-  background: #18333ce8;
+  background: #142b33eb;
   color: #f4e6c8;
   cursor: pointer;
 }
@@ -95,10 +409,12 @@
 }
 .intro-caption {
   width: min(760px, 100%);
-  margin: auto auto 26px;
-  padding-top: clamp(140px, 34vh, 390px);
+  margin: auto auto 16px;
+  padding-top: clamp(110px, 28vh, 360px);
   text-align: center;
-  text-shadow: 0 2px 12px #091a22;
+  text-shadow:
+    0 2px 16px #050f14,
+    0 1px 4px #040b0f;
   animation: ink-arrive 350ms var(--steppe-ease);
 }
 .intro-caption .eyebrow {
@@ -177,14 +493,156 @@
   border-color: #ffe3af;
   box-shadow: 0 0 0 2px #d1ab7133;
 }
-@keyframes intro-drift {
+
+@keyframes intro-pan-east {
   from {
-    transform: scale(1);
+    transform: scale(1.01) translate3d(-1.1%, 0.4%, 0);
   }
   to {
-    transform: scale(1.035);
+    transform: scale(1.065) translate3d(1.1%, -0.5%, 0);
   }
 }
+@keyframes intro-rise-throne {
+  from {
+    transform: scale(1.02) translate3d(0, 1.3%, 0);
+  }
+  to {
+    transform: scale(1.075) translate3d(0, -1.2%, 0);
+  }
+}
+@keyframes intro-surge-west {
+  from {
+    transform: scale(1.015) translate3d(-1.2%, -0.4%, 0);
+  }
+  to {
+    transform: scale(1.07) translate3d(1.2%, 0.6%, 0);
+  }
+}
+@keyframes intro-pull-hearth {
+  from {
+    transform: scale(1.065) translate3d(0.6%, -0.6%, 0);
+  }
+  to {
+    transform: scale(1.01) translate3d(-0.6%, 0.4%, 0);
+  }
+}
+@keyframes intro-pan-pass {
+  from {
+    transform: scale(1.015) translate3d(-1.3%, 0.5%, 0);
+  }
+  to {
+    transform: scale(1.07) translate3d(1.4%, -0.7%, 0);
+  }
+}
+
+@keyframes intro-parallax-fore {
+  from {
+    transform: scale(1.025) translate3d(0.9%, 0.5%, 0);
+  }
+  to {
+    transform: scale(1.105) translate3d(-1.4%, -0.6%, 0);
+  }
+}
+
+@keyframes intro-light-pulse {
+  from {
+    opacity: 0.68;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+@keyframes intro-rift-flicker {
+  0% {
+    opacity: 0.62;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 0.78;
+    transform: scale(1.01);
+  }
+}
+@keyframes intro-fire-flicker {
+  0% {
+    opacity: 0.76;
+    transform: scale(0.94, 0.97);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.05, 1.03);
+  }
+  100% {
+    opacity: 0.84;
+    transform: scale(0.98, 1.02);
+  }
+}
+@keyframes intro-smoke-drift {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0) scale(0.65);
+  }
+  30% {
+    opacity: 0.48;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(44px, -54px, 0) scale(1.85);
+  }
+}
+@keyframes intro-mist-sweep {
+  from {
+    opacity: 0.55;
+    transform: translate3d(-4%, 0, 0) scaleX(1.02);
+  }
+  to {
+    opacity: 0.9;
+    transform: translate3d(4%, -4px, 0) scaleX(1.08);
+  }
+}
+@keyframes intro-cloth-sway {
+  from {
+    transform: skewY(-1.8deg) scaleX(0.97);
+  }
+  to {
+    transform: skewY(2.2deg) scaleX(1.03);
+  }
+}
+@keyframes intro-mote-drift {
+  0% {
+    opacity: 0;
+    transform: translate3d(-18px, 10px, 0) scale(0.8);
+  }
+  20% {
+    opacity: 0.75;
+  }
+  80% {
+    opacity: 0.65;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(46px, -24px, 0) scale(1.15);
+  }
+}
+@keyframes intro-ember-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.9);
+  }
+  25% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(26px, -88px, 0) scale(0.35);
+  }
+}
+
 @media (max-height: 650px) {
   .intro-caption {
     padding-top: 100px;

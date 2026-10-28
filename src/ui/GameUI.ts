@@ -97,8 +97,10 @@ export class GameUI {
   ) {
     // Warm the remaining local paintings without blocking the first chapter or Skip.
     for (const slide of INTRO_SLIDES) {
-      const image = new Image();
-      image.src = introImageUrl(slide.image);
+      for (const asset of [slide.backgroundImage, slide.foregroundImage]) {
+        const image = new Image();
+        image.src = introImageUrl(asset);
+      }
     }
     root.dataset.phase = 'ready';
     root.innerHTML = `<main class="game-shell" aria-label="Hordes of the Fallen Sky game">
