@@ -1,7 +1,7 @@
 # Research V2 effect delivery status
 
-All 166 IDs are registered. The original 42 and the 11 additions marked **Working**
-are purchasable. The remaining 113 proposed effects are unavailable. Catalogue
+All 166 IDs are registered. 88 technologies have runtime effects; 78 proposed effects remain unavailable.
+Some working effects have unavailable prerequisites and cannot yet be purchased in play. Catalogue
 reachability tests ignore only runtime availability; they do not enable these effects.
 A fresh expedition resets all research; full expedition saves retain purchases.
 
@@ -46,18 +46,18 @@ the documented zero-building guard-shot adaptation. No respec is offered.
 | `km-one-arrow-one-fate`       | One Arrow, One Fate: runtime effect deferred at failed patron integration gate                                |
 | `km-world-piercer`            | World-Piercer: runtime effect deferred at failed patron integration gate                                      |
 | `km-sky-darkener`             | Sky Darkener: runtime effect deferred at failed patron integration gate                                       |
-| `go-warm-ashes`               | Warm Ashes: runtime effect deferred at failed patron integration gate                                         |
-| `go-layered-felt`             | **Working** — Damage from rapid consecutive hits falls 10% after the first (3 s window).                      |
-| `go-common-fire`              | **Working** — When Khan is above 80% health, clan resolve losses are reduced 10%.                             |
-| `go-embers-return`            | Embers Return: runtime effect deferred at failed patron integration gate                                      |
-| `go-shelter-the-wounded`      | Shelter the Wounded: runtime effect deferred at failed patron integration gate                                |
-| `go-campfire-vigil`           | Campfire Vigil: runtime effect deferred at failed patron integration gate                                     |
-| `go-ash-born`                 | Ash-Born: runtime effect deferred at failed patron integration gate                                           |
-| `go-firebreak`                | Firebreak: runtime effect deferred at failed patron integration gate                                          |
-| `go-household-oath`           | Household Oath: runtime effect deferred at failed patron integration gate                                     |
-| `go-flame-that-refuses`       | Flame That Refuses to Die: runtime effect deferred at failed patron integration gate                          |
-| `go-fortress-of-felt`         | Fortress of Felt: runtime effect deferred at failed patron integration gate                                   |
-| `go-eternal-hearth`           | The Eternal Hearth: runtime effect deferred at failed patron integration gate                                 |
+| `go-warm-ashes`               | **Working** — go-warm-ashes runtime effect connected and unit tested.                                         |
+| `go-layered-felt`             | **Working** — go-layered-felt runtime effect connected and unit tested.                                       |
+| `go-common-fire`              | **Working** — go-common-fire runtime effect connected and unit tested.                                        |
+| `go-embers-return`            | **Working** — go-embers-return runtime effect connected and unit tested.                                      |
+| `go-shelter-the-wounded`      | **Working** — go-shelter-the-wounded runtime effect connected and unit tested.                                |
+| `go-campfire-vigil`           | **Working** — go-campfire-vigil runtime effect connected and unit tested.                                     |
+| `go-ash-born`                 | **Working** — go-ash-born runtime effect connected and unit tested.                                           |
+| `go-firebreak`                | **Working** — go-firebreak runtime effect connected and unit tested.                                          |
+| `go-household-oath`           | **Working** — go-household-oath runtime effect connected and unit tested.                                     |
+| `go-flame-that-refuses`       | **Working** — go-flame-that-refuses runtime effect connected and unit tested.                                 |
+| `go-fortress-of-felt`         | **Working** — go-fortress-of-felt runtime effect connected and unit tested.                                   |
+| `go-eternal-hearth`           | **Working** — go-eternal-hearth runtime effect connected and unit tested.                                     |
 | `lu-floodplain`               | Floodplain: runtime effect deferred at failed patron integration gate                                         |
 | `lu-geomancers-eye`           | Geomancer's Eye: runtime effect deferred at failed patron integration gate                                    |
 | `lu-stone-and-stream`         | Stone and Stream: runtime effect deferred at failed patron integration gate                                   |

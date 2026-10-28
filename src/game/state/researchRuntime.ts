@@ -49,6 +49,15 @@ export interface ResearchRuntime {
   arrowRainY?: number;
   arrowRainDamage?: number;
   stillHandShots?: number;
+  embersReturnUntil?: number;
+  khanStationaryNearCamp?: boolean;
+  ashBornInvulnerableUntil?: number;
+  ashBornPulsePending?: boolean;
+  firebreakUntil?: number;
+  householdOathUntil?: number;
+  flameHealUntil?: number;
+  flamePulsesRemaining?: number;
+  flameNextPulseAt?: number;
 }
 function enemyKey(slot: number, spawn: number): string {
   return `${slot}:${spawn}`;
@@ -410,10 +419,25 @@ export function updateEchoGuard(run: RunState, nearCamp: boolean): void {
   if (run.phase !== 'playing') return;
   (run.researchRuntime ??= {}).echoNearCamp = nearCamp && run.patrons.ancestors.count > 0;
 }
+export function updateCampfireVigil(run: RunState, stationaryNearCamp: boolean): void {
+  if (run.phase !== 'playing') return;
+  (run.researchRuntime ??= {}).khanStationaryNearCamp =
+    stationaryNearCamp && run.health > 0 && run.khan.successionRemaining <= 0;
+}
+export function campfireVigilActive(run: RunState): boolean {
+  return (
+    ownsResearch(run, 'go-campfire-vigil') &&
+    Boolean(run.researchRuntime?.khanStationaryNearCamp) &&
+    run.health > 0 &&
+    run.khan.successionRemaining <= 0
+  );
+}
 export function researchResolveProtection(run: RunState): number {
-  return ownsResearch(run, 'on-quiet-council') && run.researchRuntime?.echoNearCamp
-    ? GAME.research.quietProtection
-    : 1;
+  let mult = 1;
+  if (ownsResearch(run, 'on-quiet-council') && run.researchRuntime?.echoNearCamp)
+    mult *= GAME.research.quietProtection;
+  if (campfireVigilActive(run)) mult *= GAME.research.campfireVigilProtection;
+  return mult;
 }
 export function wideVolleyResearch(
   run: RunState,
@@ -662,6 +686,121 @@ export function researchAttackIntervalMultiplier(run: RunState): number {
   return ownsResearch(run, 'km-one-arrow-one-fate') ? 1 / GAME.research.oneArrowFireRate : 1;
 }
 
+function addClanResolve(run: RunState, amount: number): void {
+  if (amount <= 0 || run.clan.integrity <= 0 || run.clan.population <= 0) return;
+  run.clan.integrity = Math.min(GAME.clan.maxResolve, run.clan.integrity + amount);
+}
+export function khanHealingMultiplier(run: RunState): number {
+  return ownsResearch(run, 'go-fortress-of-felt') ? GAME.research.fortressOfFeltHealing : 1;
+}
+export function healKhan(run: RunState, rawAmount: number): number {
+  if (
+    run.phase !== 'playing' ||
+    !Number.isFinite(rawAmount) ||
+    rawAmount <= 0 ||
+    run.health <= 0 ||
+    run.khan.successionRemaining > 0
+  )
+    return 0;
+  const scaled = rawAmount * khanHealingMultiplier(run);
+  const next = run.health + scaled;
+  const overheal = Math.max(0, next - run.stats.maxHealth);
+  run.health = Math.min(run.stats.maxHealth, next);
+  if (overheal > 0 && ownsResearch(run, 'go-household-oath')) {
+    const r = (run.researchRuntime ??= {});
+    if ((r.householdOathUntil ?? -Infinity) <= run.elapsed) {
+      r.householdOathUntil = run.elapsed + GAME.research.householdOathCooldown;
+      addClanResolve(run, GAME.research.householdOathResolve);
+    }
+  }
+  return scaled;
+}
+export function recordKhanSurvivedHit(run: RunState): void {
+  if (
+    run.phase !== 'playing' ||
+    !ownsResearch(run, 'go-embers-return') ||
+    run.health <= 0 ||
+    run.khan.successionRemaining > 0 ||
+    run.health >= run.stats.maxHealth * GAME.research.embersReturnThreshold
+  )
+    return;
+  const r = (run.researchRuntime ??= {});
+  if ((r.embersReturnUntil ?? -Infinity) <= run.elapsed) {
+    r.embersReturnUntil = run.elapsed + GAME.research.embersReturnCooldown;
+    healKhan(run, GAME.research.embersReturnHeal);
+  }
+}
+export function recordLastEmberRevival(run: RunState): void {
+  if (run.phase !== 'playing') return;
+  if (ownsResearch(run, 'go-ash-born')) {
+    const r = (run.researchRuntime ??= {});
+    r.ashBornInvulnerableUntil = run.elapsed + GAME.research.ashBornInvulnerableSeconds;
+    r.ashBornPulsePending = true;
+  }
+  if (ownsResearch(run, 'go-flame-that-refuses')) {
+    const r = (run.researchRuntime ??= {});
+    r.flameHealUntil = run.elapsed + GAME.research.flameHealSeconds;
+    r.flamePulsesRemaining = GAME.research.flamePulses;
+    r.flameNextPulseAt = run.elapsed + GAME.research.flamePulseInterval;
+  }
+}
+export function ashBornInvulnerable(run: RunState): boolean {
+  return (
+    ownsResearch(run, 'go-ash-born') &&
+    (run.researchRuntime?.ashBornInvulnerableUntil ?? 0) > run.elapsed
+  );
+}
+export function claimAshBornPulse(run: RunState): { radius: number; push: number } | undefined {
+  if (
+    run.phase !== 'playing' ||
+    !ownsResearch(run, 'go-ash-born') ||
+    !run.researchRuntime?.ashBornPulsePending
+  )
+    return undefined;
+  run.researchRuntime.ashBornPulsePending = false;
+  return {
+    radius: GAME.research.ashBornPulseRadius,
+    push: GAME.research.ashBornPulsePush,
+  };
+}
+export function flameRefusesRegen(run: RunState): number {
+  return ownsResearch(run, 'go-flame-that-refuses') &&
+    (run.researchRuntime?.flameHealUntil ?? 0) > run.elapsed
+    ? run.stats.maxHealth * GAME.research.flameHealFractionPerSecond
+    : 0;
+}
+export function claimFlameRefusesPulse(
+  run: RunState,
+): { damage: number; radius: number } | undefined {
+  if (run.phase !== 'playing' || !ownsResearch(run, 'go-flame-that-refuses')) return undefined;
+  const r = run.researchRuntime;
+  if (
+    (r?.flamePulsesRemaining ?? 0) <= 0 ||
+    r?.flameNextPulseAt === undefined ||
+    run.elapsed < r.flameNextPulseAt
+  )
+    return undefined;
+  r.flamePulsesRemaining = (r.flamePulsesRemaining ?? 1) - 1;
+  r.flameNextPulseAt =
+    r.flamePulsesRemaining > 0 ? r.flameNextPulseAt + GAME.research.flamePulseInterval : undefined;
+  return {
+    damage: run.stats.damage * GAME.research.flamePulseDamage,
+    radius: GAME.research.flamePulseRadius,
+  };
+}
+export function eternalHearthActive(run: RunState): boolean {
+  return (
+    run.phase === 'playing' &&
+    ownsResearch(run, 'go-eternal-hearth') &&
+    run.elapsed >= GAME.research.eternalHearthCycle &&
+    run.elapsed % GAME.research.eternalHearthCycle < GAME.research.eternalHearthDuration
+  );
+}
+export function eternalHearthPush(run: RunState, distance: number, isBoss = false): number {
+  return eternalHearthActive(run) && !isBoss && distance < GAME.research.eternalHearthRadius
+    ? GAME.research.eternalHearthPushSpeed
+    : 0;
+}
 export function researchLayeredProtection(run: RunState): number {
   const r = run.researchRuntime;
   return ownsResearch(run, 'go-layered-felt') &&
@@ -671,12 +810,29 @@ export function researchLayeredProtection(run: RunState): number {
     ? GAME.research.layeredProtection
     : 1;
 }
-export function researchKhanHitProtection(run: RunState): number {
-  if (!ownsResearch(run, 'go-layered-felt')) return 1;
-  const r = (run.researchRuntime ??= {});
-  const protection = researchLayeredProtection(run);
-  r.lastHitAt = run.elapsed;
-  r.lastHitGeneration = run.khan.generation;
+export function researchKhanHitProtection(run: RunState, incomingDamage = 0): number {
+  let protection = campfireVigilActive(run) ? GAME.research.campfireVigilProtection : 1;
+  if (
+    ownsResearch(run, 'go-fortress-of-felt') &&
+    run.health < run.stats.maxHealth * GAME.research.fortressOfFeltThreshold
+  )
+    protection *= GAME.research.fortressOfFeltProtection;
+  if (ownsResearch(run, 'go-layered-felt')) {
+    const r = (run.researchRuntime ??= {});
+    protection *= researchLayeredProtection(run);
+    r.lastHitAt = run.elapsed;
+    r.lastHitGeneration = run.khan.generation;
+  }
+  if (
+    ownsResearch(run, 'go-firebreak') &&
+    incomingDamage >= run.stats.maxHealth * GAME.research.firebreakThreshold
+  ) {
+    const r = (run.researchRuntime ??= {});
+    if ((r.firebreakUntil ?? -Infinity) <= run.elapsed) {
+      r.firebreakUntil = run.elapsed + GAME.research.firebreakCooldown;
+      protection *= GAME.research.firebreakMultiplier;
+    }
+  }
   return protection;
 }
 export function researchCommonProtection(run: RunState): number {
@@ -715,6 +871,14 @@ export function recordWaveEnded(run: RunState): void {
   if (ownsResearch(run, 'ee-vigilant-herders')) {
     const r = (run.researchRuntime ??= {});
     r.vigilantHerdersUntil = run.elapsed + GAME.research.vigilantHerdersSeconds;
+  }
+  if (ownsResearch(run, 'go-warm-ashes')) {
+    healKhan(run, GAME.research.warmAshesHeal);
+  }
+  if (ownsResearch(run, 'go-shelter-the-wounded')) {
+    const missing = Math.max(0, run.stats.maxHealth - run.health);
+    if (missing > 0) healKhan(run, missing * GAME.research.shelterWoundedHealthFraction);
+    addClanResolve(run, GAME.research.shelterWoundedResolve);
   }
 }
 export function syncBountyInScarcity(run: RunState): boolean {

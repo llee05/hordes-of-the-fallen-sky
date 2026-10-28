@@ -9,9 +9,12 @@ import {
   capWorldPiercerDamage,
   circleOfShaftsVolley,
   claimArrowRainDrop,
+  claimAshBornPulse,
+  claimFlameRefusesPulse,
   claimHoofTrailDamage,
   eagleEyeOverkillSpill,
   enemyStaggerSlowMultiplier,
+  eternalHearthPush,
   isEnemyMarked,
   ownsResearch,
   packInstinctBonus,
@@ -30,6 +33,7 @@ import {
   riderAttackSpeedMultiplier,
   riderPrefersTarget,
   stillHandDamageMultiplier,
+  updateCampfireVigil,
   updateMarkedProximity,
   wagonResearchDefence,
 } from '../state/researchRuntime';
@@ -1599,6 +1603,12 @@ export class ArenaScene extends Phaser.Scene {
     }
     observeResearchFrame(this.run, delta);
     this.run.elapsed += dt;
+    updateCampfireVigil(
+      this.run,
+      isKhanActive(this.run) &&
+        this.player.body!.velocity.length() <= GAME.mounted.minimumSpeed &&
+        Math.hypot(this.player.x - this.camp.x, this.player.y - this.camp.y) < 300,
+    );
     advancePatrons(this.run, dt);
     this.dashTimer = Math.max(0, this.dashTimer - dt);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
@@ -3543,6 +3553,31 @@ export class ArenaScene extends Phaser.Scene {
     this.supportTimer -= dt;
     this.wagonTimer -= dt;
     this.wardTimer -= dt;
+    const ashPulse = claimAshBornPulse(this.run);
+    const flamePulse = claimFlameRefusesPulse(this.run);
+    if (isKhanActive(this.run)) {
+      const radius = Math.max(
+        ashPulse?.radius ?? 0,
+        flamePulse?.radius ?? 0,
+        GAME.research.eternalHearthRadius,
+      );
+      this.spatial.forEachNearby(this.player.x, this.player.y, radius, (enemy) => {
+        const dx = enemy.x - this.player.x;
+        const dy = enemy.y - this.player.y;
+        const distance = Math.hypot(dx, dy);
+        if (flamePulse && distance <= flamePulse.radius) this.damageEnemy(enemy, flamePulse.damage);
+        if (!enemy.active) return;
+        const boss = enemy.definition.behavior === 'boss';
+        const push =
+          (ashPulse && !boss && distance <= ashPulse.radius ? ashPulse.push : 0) +
+          eternalHearthPush(this.run, distance, boss) * dt;
+        if (push > 0)
+          enemy.setPosition(
+            enemy.x + (distance ? dx / distance : 1) * push,
+            enemy.y + (distance ? dy / distance : 0) * push,
+          );
+      });
+    }
     const arrowRain = claimArrowRainDrop(this.run);
     if (arrowRain) {
       this.spatial.forEachNearby(arrowRain.x, arrowRain.y, arrowRain.radius, (enemy) =>

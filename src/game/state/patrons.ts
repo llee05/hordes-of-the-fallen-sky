@@ -1,4 +1,11 @@
-import { researchWaterRadius, stillwaterRefuge } from './researchRuntime';
+import {
+  campfireVigilActive,
+  eternalHearthActive,
+  flameRefusesRegen,
+  healKhan,
+  researchWaterRadius,
+  stillwaterRefuge,
+} from './researchRuntime';
 import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import type { PatronEffects, RunState } from '../types';
@@ -49,19 +56,21 @@ export function terrainSpeedMultiplier(run: RunState, distance: number): number 
 
 export function advancePatrons(run: RunState, dt: number): void {
   if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0 || !isKhanActive(run)) return;
-  run.health = Math.min(
-    run.stats.maxHealth,
-    run.health +
-      (run.patrons.hearth.regeneration +
-        run.clan.campEffects.bonuses.commanderRecovery +
-        (stillwaterRefuge(run) ? GAME.research.refugeRecovery : 0)) *
-        dt,
-  );
+  const hearthZone = eternalHearthActive(run);
+  const regen =
+    run.patrons.hearth.regeneration +
+    run.clan.campEffects.bonuses.commanderRecovery +
+    (stillwaterRefuge(run) ? GAME.research.refugeRecovery : 0) +
+    (campfireVigilActive(run) ? GAME.research.campfireVigilRegen : 0) +
+    flameRefusesRegen(run) +
+    (hearthZone ? GAME.research.eternalHearthHealPerSecond : 0);
+  if (regen > 0) healKhan(run, regen * dt);
+  if (hearthZone) restoreResolve(run, GAME.research.eternalHearthResolvePerSecond * dt);
 }
 
 export function rewardPatronKill(run: RunState): void {
   if (run.phase !== 'playing') return;
-  if (isKhanActive(run) && run.clan.momentum > 0.5)
-    run.health = Math.min(run.stats.maxHealth, run.health + run.patrons.hunt.killHeal);
+  if (isKhanActive(run) && run.clan.momentum > 0.5 && run.patrons.hunt.killHeal > 0)
+    healKhan(run, run.patrons.hunt.killHeal);
   restoreResolve(run, run.patrons.banner.resolveOnKill);
 }

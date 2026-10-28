@@ -138,7 +138,7 @@ describe('research authoring acceptance and adversarial sequences', () => {
             ['t2', 't3', 't4', 'mythic'].includes(t.tier),
         ),
       ).toHaveLength(12);
-    expect(RESEARCH.filter((t) => !t.unavailableReason)).toHaveLength(78);
+    expect(RESEARCH.filter((t) => !t.unavailableReason)).toHaveLength(88);
     for (const t of RESEARCH) expect(t.effects.length > 0).toBe(!t.unavailableReason);
   });
   it('checks exact tier threshold and threshold-minus-one before the candidate purchase', () => {

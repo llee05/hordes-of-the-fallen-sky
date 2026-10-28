@@ -50,6 +50,16 @@ const IMPLEMENTED_HANDLERS = [
   'km-one-arrow-one-fate',
   'km-world-piercer',
   'km-sky-darkener',
+  'go-warm-ashes',
+  'go-embers-return',
+  'go-shelter-the-wounded',
+  'go-campfire-vigil',
+  'go-ash-born',
+  'go-firebreak',
+  'go-household-oath',
+  'go-flame-that-refuses',
+  'go-fortress-of-felt',
+  'go-eternal-hearth',
 ] as const;
 
 export const RESEARCH: readonly ResearchDefinition[] = [
