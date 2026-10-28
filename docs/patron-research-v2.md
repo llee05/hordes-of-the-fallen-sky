@@ -114,14 +114,15 @@ choices; they are **not observed player runs or a combat simulation of gated eff
 
 | Model schedule  | Full-journey time | Knowledge earned | Survivors |
 | --------------- | ----------------- | ---------------- | --------- |
-| Early migration | 518.25–538.5 s    | 7                | 4–7       |
-| Riding          | 589–602.75 s      | 11               | 4–7       |
-| Guarding        | 730.75–748 s      | 10               | 27–29     |
+| Early migration | 493.75–513.75 s   | 48–50            | 5–8       |
+| Riding          | 565.5–577 s       | 65–66            | 8         |
+| Guarding        | 699.25–713.75 s   | 62–63            | 32        |
 
-All twelve survive three crossings. The proposed 45–60-point budget is not supported
-by this model. The unchanged XP curve requires 6,300 / 11,100 / 17,250 XP for
-45 / 60 / 75 points. Every authored Mythic has a legal 17-point completion; hybrids
-cost 6, 13, 19 or 23 points including their prerequisites and fillers.
+All twelve survive three crossings. The recalibrated model reproduces the live measured
+48–66 knowledge band across all schedules (against 36–42 idle and 48–75 live moving runs),
+directly supporting the 45–60-point budget. The unchanged XP curve requires
+6,300 / 11,100 / 17,250 XP for 45 / 60 / 75 points. Every authored Mythic has a legal
+17-point completion; hybrids cost 6, 13, 19 or 23 points including their prerequisites and fillers.
 
 | Authored example                                                    | Total knowledge | Fits 45 / 60 / 75 |
 | ------------------------------------------------------------------- | --------------- | ----------------- |
@@ -131,10 +132,9 @@ cost 6, 13, 19 or 23 points including their prerequisites and fillers.
 
 These are separate authoring scenarios, not simultaneous ownership of exclusive
 alternatives and not permission to buy unavailable effects. No numerical V1
-rebalance or knowledge-award increase is committed. Before enabling the gated late
-tree, review its economy against observed runs: either lower new tier costs/gates
-or expand expedition rewards after measuring combat, survival and caravan pressure.
-Changing the whole XP economy from this model alone would not be justified.
+rebalance or knowledge-award increase is committed. Live measurement (BH-40) confirmed
+the economy supports late research tiers without altering awards, gates, or costs;
+recalibrating the benchmark aligns internal tooling with observed runs.
 
 The full 166-effect release gate remains unmet. This branch delivers the tested
 53-technology slice and complete gated catalogue. Individual wagons/follower health,
