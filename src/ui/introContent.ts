@@ -1,6 +1,8 @@
 import { INTRO_SLIDES, introImageUrl, type IntroSceneId } from '../game/data/intro';
 
-const DUST_SPECS: readonly (readonly [number, number, number, number, number])[] = [
+type ParticleSpec = readonly [number, number, number, number, number];
+
+const DUST_SPECS: readonly ParticleSpec[] = [
   [12, 68, 3, 18, -2],
   [24, 52, 2, 22, -9],
   [37, 74, 4, 16, -5],
@@ -11,7 +13,18 @@ const DUST_SPECS: readonly (readonly [number, number, number, number, number])[]
   [91, 72, 2.5, 21, -15],
 ];
 
-const EMBER_SPECS: readonly (readonly [number, number, number, number, number])[] = [
+const VOW_EMBER_SPECS: readonly ParticleSpec[] = [
+  [16, 69, 3.5, 7.5, -1.2],
+  [18, 71, 2.5, 6.2, -3.4],
+  [27, 68, 3, 8.4, -5.1],
+  [29, 70, 2.5, 6.8, -2.3],
+  [71, 68, 2.5, 7.9, -4.6],
+  [73, 70, 3, 9.1, -6.2],
+  [83, 69, 3.5, 8.2, -0.8],
+  [85, 71, 2.5, 7.1, -3.9],
+];
+
+const HEARTH_EMBER_SPECS: readonly ParticleSpec[] = [
   [46, 67, 3.5, 7.5, -1.2],
   [49, 70, 2.5, 6.2, -3.4],
   [51, 66, 4, 8.4, -5.1],
@@ -22,14 +35,19 @@ const EMBER_SPECS: readonly (readonly [number, number, number, number, number])[
   [56, 71, 3, 7.1, -3.9],
 ];
 
+function renderEmbers(specs: readonly ParticleSpec[]): string {
+  return specs
+    .map(
+      ([x, y, size, duration, delay]) =>
+        `<i class="intro-ember" style="--x:${x}%;--y:${y}%;--size:${size}px;--dur:${duration}s;--delay:${delay}s"></i>`,
+    )
+    .join('');
+}
+
 function sceneLayers(id: IntroSceneId): string {
   const dust = DUST_SPECS.map(
     ([x, y, size, duration, delay]) =>
       `<i class="intro-mote" style="--x:${x}%;--y:${y}%;--size:${size}px;--dur:${duration}s;--delay:${delay}s"></i>`,
-  ).join('');
-  const embers = EMBER_SPECS.map(
-    ([x, y, size, duration, delay]) =>
-      `<i class="intro-ember" style="--x:${x}%;--y:${y}%;--size:${size}px;--dur:${duration}s;--delay:${delay}s"></i>`,
   ).join('');
 
   if (id === 'steppe') {
@@ -49,7 +67,7 @@ function sceneLayers(id: IntroSceneId): string {
         <span class="intro-rift-pulse"></span>
         <span class="intro-brazier-glow brazier-left"></span>
         <span class="intro-brazier-glow brazier-right"></span>
-        <div class="intro-embers">${embers}</div>
+        <div class="intro-embers">${renderEmbers(VOW_EMBER_SPECS)}</div>
         <div class="intro-motes">${dust}</div>
       </div>`;
   }
@@ -72,7 +90,7 @@ function sceneLayers(id: IntroSceneId): string {
         <svg class="intro-cloth-overlay intro-hearth-banner" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice">
           <path class="intro-ribbon-path ribbon-blue" d="M380 120 C454 148, 520 206, 616 244 C568 258, 504 244, 444 218 C394 196, 386 164, 380 120 Z" />
         </svg>
-        <div class="intro-embers intro-hearth-embers">${embers}</div>
+        <div class="intro-embers intro-hearth-embers">${renderEmbers(HEARTH_EMBER_SPECS)}</div>
         <div class="intro-motes">${dust}</div>
       </div>`;
   }

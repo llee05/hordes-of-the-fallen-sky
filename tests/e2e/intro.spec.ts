@@ -361,6 +361,9 @@ test('intro effects stay registered to each painting throughout camera motion an
             ? new DOMPoint(768, 512).matrixTransform(cloth.getScreenCTM()!)
             : null;
           const mote = stage.querySelector('.intro-mote')!.getBoundingClientRect();
+          const embers = [...stage.querySelectorAll<HTMLElement>('.intro-ember')].map(
+            (ember) => (ember.getBoundingClientRect().x - image.x) / image.width,
+          );
           return {
             image: { x: image.x, y: image.y, width: image.width, height: image.height },
             atmosphere: {
@@ -371,6 +374,7 @@ test('intro effects stay registered to each painting throughout camera motion an
             },
             clothCenter: point ? { x: point.x, y: point.y } : null,
             moteX: (mote.x - image.x) / image.width,
+            embers,
             paintedSurfaces: [...stage.querySelectorAll('*')].filter(
               (element) =>
                 element instanceof HTMLImageElement ||
@@ -393,12 +397,25 @@ test('intro effects stay registered to each painting throughout camera motion an
             3,
           );
         }
+        if (chapter === 1) {
+          expect(geometry.embers).toHaveLength(8);
+          for (const x of geometry.embers) {
+            expect(x < 0.35 || x > 0.65).toBe(true);
+          }
+        } else if (chapter === 3) {
+          expect(geometry.embers).toHaveLength(8);
+          for (const x of geometry.embers) {
+            expect(x).toBeGreaterThan(0.4);
+            expect(x).toBeLessThan(0.6);
+          }
+        } else {
+          expect(geometry.embers).toEqual([]);
+        }
         positions.push(geometry);
       }
       expect(positions[0]!.image).not.toEqual(positions[2]!.image);
       expect(Math.abs(positions[0]!.moteX - positions[2]!.moteX)).toBeGreaterThan(0.001);
     }
-    await page.screenshot({ path: `test-results/intro-registered-${chapter}.png` });
     if (chapter < 4) await page.keyboard.press('ArrowRight');
   }
 });
