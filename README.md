@@ -249,7 +249,7 @@ src/ui/GameUI.ts               Full-window HUD, title/pause menus, focus and inp
 src/ui/menuContent.ts          Camp, route, chronicle, settings, and help panels
 src/ui/progressionTree.ts      Shared data-driven progression tree renderer
 src/ui/researchContent.ts      Patron branches, ranks, and research state
-src/ui/campContent.ts          Legacy camp nodes and shared parchment detail rendering
+src/ui/campContent.ts          Legacy camp branch and node rendering
 src/ui/campModel.ts            Camp panorama and nameplate composition
 src/ui/nomadicCampModel.ts     Building locations, chooser, previews, and upgrade popovers
 src/camp.css                  Camp landscape, sites, and responsive inspector layout

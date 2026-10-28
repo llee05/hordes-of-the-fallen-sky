@@ -135,7 +135,7 @@ The tree opens one connected patron graph with compact navigation, a comparison 
 
 Once all implemented, nonexcluded research ranks are mastered, subsequent points grant **20 food and 15 materials each**, and a living Khan is fully healed when those points are converted. Conversion cannot revive a fallen Khan during succession. Temporarily blocked but implemented, nonexcluded technologies still prevent mastery; unavailable proposals do not.
 
-Each enemy drops its defined XP independent of scaled health. Shards begin following inside the attraction radius and collect within 18 world units. Once attracted, they keep following. At the 500-shard pool limit, new XP merges into an existing active shard. Uncollected XP travels to the next camp on arrival.
+Each enemy drops its defined base XP independent of scaled health; experience-gain effects from [camp buildings](nomadic-camp.md#buildings-and-progression) apply when XP is collected. Shards begin following inside the attraction radius and collect within 18 world units. Once attracted, they keep following. At the 500-shard pool limit, new XP merges into an existing active shard. Uncollected XP travels to the next camp on arrival.
 
 ## 4. Camp development and upgrade tree
 
