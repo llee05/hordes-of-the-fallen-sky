@@ -29,11 +29,20 @@ export function researchEnemySlow(
       delete r.rootCooldown?.[k];
     }
   const strength = Math.max(base, patch ? GAME.research.ridgeSlow : 0);
-  if (strength > 0) {
-    if (seen[key] === undefined || seen[key]! < now - dt - 0.001) since[key] = now - dt;
+  const effectiveUntil = Math.max(
+    until[key] ?? -Infinity,
+    !boss ? (r.rootUntil?.[key] ?? -Infinity) : -Infinity,
+  );
+  if (strength > 0 || effectiveUntil > now) {
+    if (
+      since[key] === undefined ||
+      ((seen[key] ?? -Infinity) < now - dt - 0.001 && effectiveUntil < now - dt - 0.001)
+    )
+      since[key] = now - dt;
     seen[key] = now;
-    until[key] = now + (ownsResearch(run, 'lu-floodplain') ? GAME.research.floodplainSeconds : 0);
-  } else if ((until[key] ?? 0) <= now) {
+    if (strength > 0)
+      until[key] = now + (ownsResearch(run, 'lu-floodplain') ? GAME.research.floodplainSeconds : 0);
+  } else {
     delete since[key];
     return 1;
   }

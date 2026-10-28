@@ -91,6 +91,7 @@ export interface ResearchRuntime {
   arrowRainX?: number;
   arrowRainY?: number;
   arrowRainDamage?: number;
+  warmAshesPending?: boolean;
   embersReturnUntil?: number;
   khanStationaryNearCamp?: boolean;
   hearthCampInRange?: boolean;
@@ -913,6 +914,11 @@ export function researchMaterialGrazing(
   const roadGrazing = Math.max(0, Math.min(pasture, 100)) / 100;
   return roadGrazing * GAME.research.wanderingCityMaterialRate;
 }
+export function settleWarmAshes(run: RunState, combatActive: boolean): void {
+  if (run.phase !== 'playing' || combatActive || !run.researchRuntime?.warmAshesPending) return;
+  run.researchRuntime.warmAshesPending = false;
+  healKhan(run, GAME.research.warmAshesHeal);
+}
 export function recordWaveEnded(run: RunState, combatActive: boolean): void {
   if (run.phase !== 'playing') return;
   rewardLivingWaters(run);
@@ -920,9 +926,8 @@ export function recordWaveEnded(run: RunState, combatActive: boolean): void {
     const r = (run.researchRuntime ??= {});
     r.vigilantHerdersUntil = run.elapsed + GAME.research.vigilantHerdersSeconds;
   }
-  if (!combatActive && ownsResearch(run, 'go-warm-ashes')) {
-    healKhan(run, GAME.research.warmAshesHeal);
-  }
+  if (ownsResearch(run, 'go-warm-ashes')) (run.researchRuntime ??= {}).warmAshesPending = true;
+  settleWarmAshes(run, combatActive);
   if (ownsResearch(run, 'go-shelter-the-wounded')) {
     const missing = Math.max(0, run.stats.maxHealth - run.health);
     if (missing > 0) healKhan(run, missing * GAME.research.shelterWoundedHealthFraction);

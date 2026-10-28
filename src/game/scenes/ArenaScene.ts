@@ -2691,7 +2691,7 @@ export class ArenaScene extends Phaser.Scene {
   ): boolean {
     const volley = volleyFactors(this.run, count, owner === 'khan', ancestral);
     const direction = Math.atan2(target.y - y, target.x - x);
-    const tempest = volley.tempest;
+    const tempest = !ghost && volley.tempest;
     const candidates: { slot: number; spawn: number; health: number; x: number; y: number }[] = [
       {
         slot: target.tacticalSlot,

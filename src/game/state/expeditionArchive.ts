@@ -364,6 +364,7 @@ const optional: Record<string, Record<string, Rule>> = {
         arrowRainX: number,
         arrowRainY: number,
         arrowRainDamage: positive,
+        warmAshesPending: boolean,
         embersReturnUntil: number,
         khanStationaryNearCamp: boolean,
         hearthCampInRange: boolean,

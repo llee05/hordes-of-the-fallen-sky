@@ -133,3 +133,36 @@ it('all pushes recognise current, lingering and patch slows while bosses resist 
   expect(researchKnockback(r, slowed, false)).toBe(1.2);
   expect(researchKnockback(r, slowed, true)).toBe(0);
 });
+
+it('Frozen Bank keeps a root for its full duration after a push outside the field', () => {
+  const r = run('lu-frozen-bank');
+  researchEnemySlow(r, 0, 1, 10, 1);
+  r.elapsed = 1;
+  researchEnemySlow(r, 0, 1, 10, 1);
+  r.elapsed = 2;
+  expect(researchEnemySlow(r, 0, 1, 10, 1)).toBe(0);
+  r.elapsed = 2.1;
+  expect(researchEnemySlow(r, 0, 1, 1000, 0.1)).toBe(0);
+  expect(researchEnemySlow(r, 0, 2, 1000, 0.1)).toBe(1);
+  r.elapsed = 2.6;
+  expect(researchEnemySlow(r, 0, 1, 1000, 0.5)).toBe(1);
+});
+
+it('Floodplain preserves continuous Frozen Bank and Deep Current progress across exit and reentry', () => {
+  const r = run('lu-floodplain', 'lu-frozen-bank', 'lu-deep-current');
+  researchEnemySlow(r, 0, 1, 10, 1);
+  r.elapsed = 1;
+  researchEnemySlow(r, 0, 1, 10, 1);
+  const since = r.researchRuntime!.slowSince!['0:1'];
+  r.elapsed = 1.5;
+  expect(researchEnemySlow(r, 0, 1, 1000, 0.5)).toBeCloseTo(0.66);
+  r.elapsed = 1.6;
+  expect(researchEnemySlow(r, 0, 1, 10, 0.1)).toBeCloseTo(0.656);
+  expect(r.researchRuntime!.slowSince!['0:1']).toBe(since);
+  r.elapsed = 2;
+  expect(researchEnemySlow(r, 0, 1, 10, 0.4)).toBe(0);
+  r.elapsed = 4;
+  expect(researchEnemySlow(r, 0, 1, 1000, 2)).toBe(1);
+  r.elapsed = 4.1;
+  expect(researchEnemySlow(r, 0, 1, 10, 0.1)).toBeCloseTo(0.756);
+});

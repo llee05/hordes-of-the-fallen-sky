@@ -193,16 +193,21 @@ test('allied piercing bonuses and penalties agree while ghost arrows inherit one
   }
 });
 
-test('Warm Ashes does not heal when an elite survives the recovery transition', async ({
-  page,
-}) => {
+test('Warm Ashes pays once after the surviving elite is defeated', async ({ page }) => {
   const result = await page.evaluate(() => {
     const s = (window as any).__gloam.scene,
       r = s.run;
     for (let i = 0; i < 20 && !s.enemies.countActive(true); i++) s.spawnEnemy();
     const elite = s.enemies.getFirstAlive();
     elite.elite = true;
-    elite.health = 10000;
+    elite.health = elite.maxHealth = 10000;
+    elite.definition = {
+      ...elite.definition,
+      id: 'test-elite',
+      behavior: 'chaser',
+      speed: 0,
+      ability: undefined,
+    };
     elite.setPosition(s.player.x + 300, s.player.y);
     r.upgrades = { 'go-warm-ashes': 1 };
     r.clan.campEffects.bonuses.commanderRecovery = 0;
@@ -211,15 +216,16 @@ test('Warm Ashes does not heal when an elite survives the recovery transition', 
     r.encounters.phase = 'elite';
     s.update(0, 20);
     const combat = { health: r.health, phase: r.encounters.phase, eliteActive: elite.active };
-    for (const e of s.enemies.getChildren()) e.disableBody(true, true);
-    for (const p of s.hostileShots.getChildren()) p.disableBody(true, true);
-    r.clan.stageTime = 63.99;
-    r.encounters.phase = 'elite';
+    s.damageEnemy(elite, elite.health * 2);
     s.update(0, 20);
-    return { combat, clearHealth: r.health };
+    const clearHealth = r.health;
+    s.update(0, 20);
+    return { combat, defeated: !elite.active, clearHealth, repeatedHealth: r.health };
   });
   expect(result.combat).toEqual({ health: 50, phase: 'recovery', eliteActive: true });
+  expect(result.defeated).toBe(true);
   expect(result.clearHealth).toBe(55);
+  expect(result.repeatedHealth).toBe(55);
 });
 
 test('eruption warnings reward leaving an entered area and ignore stationary proximity', async ({
@@ -287,8 +293,6 @@ for (const attack of ['seer', 'cinder'] as const) {
       for (const hazard of s.hazards) hazard.warning.destroy();
       s.hazards = [];
       s.areaThreats.threats = [];
-      r.clan.stageTime = 63.99;
-      r.encounters.phase = 'elite';
       s.update(0, 20);
       return { blocked, clear: r.health };
     }, attack);
@@ -319,4 +323,36 @@ test('Shifting Ridge creates one patch at eruption resolution after a protected 
   });
   expect(result.crossing).toEqual({ crossed: true, patches: 0 });
   expect(result.patches).toHaveLength(1);
+});
+
+test('Ghost-Fletched arrows inherit one modifier even with Burning Tempest owned', async ({
+  page,
+}) => {
+  const result = await page.evaluate(() => {
+    const s = (window as any).__gloam.scene,
+      r = s.run;
+    for (let i = 0; i < 20 && !s.enemies.countActive(true); i++) s.spawnEnemy();
+    const enemy = s.enemies.getFirstAlive();
+    r.clan.paths.archery = ['fire-arrows'];
+    r.clan.paths.sanctuary = ['wind-shamans'];
+    r.patrons.bow.pierce = 2;
+    const shoot = (ghost: boolean) => {
+      for (const bolt of s.projectiles.getChildren()) bolt.disableBody(true, true);
+      s.shootVolley(s.player.x, s.player.y, enemy, 1, 1, true, false, 'rider', 0, ghost);
+      return s.projectiles
+        .getChildren()
+        .filter((bolt: any) => bolt.active)
+        .map((bolt: any) => ({
+          tempest: bolt.tempest,
+          turn: bolt.turn,
+          fire: bolt.fire,
+          pierces: bolt.pierces,
+        }));
+    };
+    return { ordinary: shoot(false), ghosts: shoot(true) };
+  });
+  expect(result.ordinary).toHaveLength(3);
+  expect(result.ordinary[0]).toMatchObject({ tempest: true, fire: true });
+  expect(result.ordinary[0].turn).not.toBe(0);
+  expect(result.ghosts).toEqual([{ tempest: false, turn: 0, fire: false, pierces: 2 }]);
 });

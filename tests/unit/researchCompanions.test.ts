@@ -53,6 +53,7 @@ describe('shared research runtime integration', () => {
     const r = createRun();
     r.researchRuntime = {
       nearestCompanion: 'echo:1',
+      warmAshesPending: true,
       hoofTrailHits: { '1:0': 1, '2:0': 1 },
       echoFireAt: [2, 3],
       riderFireAt: [4],

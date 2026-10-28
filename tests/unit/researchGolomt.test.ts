@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { advanceEncounters } from '../../src/game/state/encounters';
 import { createRun } from '../../src/game/state/run';
 import { damageKhan } from '../../src/game/state/khan';
 import { advancePatrons } from '../../src/game/state/patrons';
@@ -149,4 +150,26 @@ it('arrival healing scales base and camp bonuses, converts overheal and preserve
   const before = r.clan.integrity;
   expect(advanceClan(r, 100)).toBe('arrived');
   expect(r.clan.integrity).toBe(before + GAME.clan.arrival.resolve + 1);
+});
+
+it('retains Warm Ashes through combat and menus, then pays once without another recovery transition', () => {
+  const r = run('go-warm-ashes');
+  r.health = 50;
+  r.clan.stageTime = 64;
+  advanceEncounters(r, true);
+  expect(r.health).toBe(50);
+  expect(r.researchRuntime?.warmAshesPending).toBe(true);
+  r.clan.stageTime += 1;
+  advanceEncounters(r, true);
+  expect(r.health).toBe(50);
+  r.phase = 'paused';
+  advanceEncounters(r, false);
+  expect(r.health).toBe(50);
+  expect(r.researchRuntime?.warmAshesPending).toBe(true);
+  r.phase = 'playing';
+  advanceEncounters(r, false);
+  expect(r.health).toBe(55);
+  expect(r.researchRuntime?.warmAshesPending).toBe(false);
+  advanceEncounters(r, false);
+  expect(r.health).toBe(55);
 });
