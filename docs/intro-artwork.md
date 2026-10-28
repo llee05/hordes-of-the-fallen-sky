@@ -2,7 +2,7 @@
 
 The five prologue illustrations were generated with the built-in `generate_image` tool (`image_gen` equivalent). The selected PNGs are bundled locally in `public/art/`, compressed at 1536 × 1024 each (~1.84–1.91 MiB per file, 9.85 MB total, down from 14.70 MB previously). There are no runtime image downloads or AI calls. `src/game/data/intro.ts` pairs each painting with the canonical short telling in [the world lore](../lore.md#opening-slideshow) and configures each chapter's camera motion and focal anchor for `src/ui/introContent.ts` and `src/intro.css`.
 
-The prologue follows the clan's account of Tengri and Etügen, the Last Court's Iron Vow, the unreturned, the surviving hearth, and the search for refuge. Every painting depicts invented events in the game's fictional setting, without personifying Tengri or Etügen or presenting the court's act as a historical ceremony. In the opening sequence, a single painting plane with independent atmospheric depth parallax, slow camera pans, drifting steppe dust and ash motes, rising hearth and brazier embers, smoke plumes, and swaying ribbon/banner overlays bring subtle storybook motion to each slide while freezing completely when `prefers-reduced-motion: reduce` is active.
+The prologue follows the clan's account of Tengri and Etügen, the Last Court's Iron Vow, the unreturned, the surviving hearth, and the search for refuge. Every painting depicts invented events in the game's fictional setting, without personifying Tengri or Etügen or presenting the court's act as a historical ceremony. In the opening sequence, a clean background plate and a transparent painted foreground move at different rates beneath a slow camera pan. Drifting steppe dust and ash motes, rising hearth and brazier embers, smoke plumes, and swaying ribbon/banner overlays bring subtle storybook motion to each slide while freezing completely when `prefers-reduced-motion: reduce` is active.
 
 | Chapter                     | Painting                          | Camera & Motion                                                   |
 | --------------------------- | --------------------------------- | ----------------------------------------------------------------- |
@@ -12,7 +12,39 @@ The prologue follows the clan's account of Tengri and Etügen, the Last Court's 
 | IV · The Living Hearth      | `public/art/intro-hearth.png`     | `pull-hearth` · Hearth firelight, rising embers, blue banner sway |
 | V · The Heart of the Steppe | `public/art/intro-caravan.png`    | `pan-pass` · Dawn god-rays, storm lightning, caravan banner sway  |
 
-Painting, cloth, smoke, embers, and lighting share a 1536 × 1024 image-coordinate canvas, cropped at the chapter’s focal anchor and moved by one camera transform. Dust and frost mist move independently to provide depth without repeating painted silhouettes.
+The original PNGs remain available to camp/story illustrations. The intro itself uses
+`intro-{scene}-background.webp` and `intro-{scene}-foreground.webp` for each of the
+five scene IDs above. All ten layers retain the shared 1536 × 1024 registration.
+The background has no foreground subjects; the foreground retains the original
+terrain, camp/court/caravan and its skyline on transparent alpha. The spectral
+host keeps a feathered mist edge. Cloth, smoke, embers and lighting follow the
+foreground, while that plane travels 12 image pixels right and four up over
+24 seconds relative to the background. Both planes also share the chapter camera.
+The oversized stage protects frame edges. Reduced motion disables all transforms
+and particles, including when the preference changes live.
+
+The ten WebP layers add 1,451,912 bytes (approximately 1.38 MiB) (quality 86 background / 88
+foreground), compared with 9.39 MiB for the five reusable original PNGs. Each
+`public/art/{scene}-mask.svg` records the manually traced registered foreground
+mask. Rasterize on black, feather by 0.6 image pixels, then copy the mask to the
+original painting's alpha channel before WebP encoding. The transparent spectral
+mist patch is feathered separately inside its SVG. These masks are authoring
+metadata; no raster processing or AI calls run in the game.
+
+### Clean-background edit prompts
+
+The built-in `image_gen` tool edited each original painting as the reference and
+edit target. Shared prompt:
+
+> Use case: precise-object-edit. Edit target: attached painting. Create a clean background plate for two-plane parallax. Maintain exact 1536x1024 composition registration, hand-painted matte gouache brushwork, cinematic Living Steppe Tapestry palette and lighting. No added subjects, no text. This image goes behind original foreground cutouts.
+
+Scene-specific instructions:
+
+- **Steppe:** Remove the foreground cairn, ribbons and pole on the left, the entire camp, animals and all riders, foreground rocks and grass. Replace them with uninterrupted distant golden steppe terrain extending to the bottom edge. Preserve the exact existing sky, horizon, mountains, river, amber lighting, matte gouache brushwork and 1536x1024 composition. No new subjects, no text. The plate will be behind the original foreground cutout; keep background registration unchanged.
+- **Iron Vow:** Remove the entire foreground stone court, columns, throne, iron standard, chains, rulers and braziers. Replace with uninterrupted distant empty twilight steppe and storm sky. Preserve the turquoise fissure and cloud composition.
+- **Unreturned:** Remove the entire foreground abandoned tents, cartwheel, banner, riders, wolves and wraiths, including their distant silhouettes inside the vortex. Replace with uninterrupted empty frost plain and storm sky. Preserve the vortex, distant burning city, horizon and lighting.
+- **Hearth:** Remove the entire foreground camp, people, horses, gers, banner, fire, cairn and cart. Replace with uninterrupted empty dark steppe and distant hills. Preserve the cloud composition, turquoise fracture, horizon and dusk lighting.
+- **Caravan:** Remove the entire caravan: all wagons, horses, people, rider, banner and foreground ridge rocks/grass. Replace with uninterrupted empty rocky distant valley terrain. Preserve the exact mountain skyline, storm wall, lightning, golden dawn rays and passage.
 
 ## Painterly story sequence prompts
 

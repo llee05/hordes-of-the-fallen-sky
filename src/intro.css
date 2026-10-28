@@ -46,11 +46,27 @@
   width: 1536px;
   height: 1024px;
 }
+.intro-background,
 .intro-painting {
   display: block;
   width: 100%;
   height: 100%;
   filter: contrast(1.03) saturate(1.04);
+}
+/* Painted foreground and clean background have independent depth transforms.
+   The oversized stage keeps the canvas edges outside the viewport during the pan. */
+.intro-near-plane {
+  position: absolute;
+  inset: 0;
+  animation: intro-depth-shift 24s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes intro-depth-shift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(12px, -4px, 0);
+  }
 }
 .intro-story[data-camera='rise-throne'] .intro-stage {
   animation-name: intro-rise-throne;

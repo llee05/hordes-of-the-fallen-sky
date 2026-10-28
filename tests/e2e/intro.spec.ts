@@ -314,6 +314,11 @@ test('story works at Steam Deck size and disables painting motion on a live pref
       { width: 390, height: 844 },
     ]) {
       await page.setViewportSize(viewport);
+      if (viewport.width === 1280 || (chapter === 5 && viewport.width === 960)) {
+        await page.screenshot({
+          path: `${process.env.INTRO_PROOF_DIR ?? 'test-results'}/intro-${sceneId}-${viewport.width}x${viewport.height}.png`,
+        });
+      }
       for (const selector of ['.intro-skip', '.intro-next', '.intro-caption', '.intro-pages']) {
         const box = (await page.locator(selector).boundingBox())!;
         expect(box.x).toBeGreaterThanOrEqual(0);
@@ -375,6 +380,11 @@ test('intro effects stay registered to each painting throughout camera motion an
             clothCenter: point ? { x: point.x, y: point.y } : null,
             moteX: (mote.x - image.x) / image.width,
             embers,
+            backgroundWidth:
+              stage.querySelector<HTMLImageElement>('.intro-background')!.naturalWidth,
+            depthOffset:
+              (image.x - stage.querySelector('.intro-background')!.getBoundingClientRect().x) /
+              image.width,
             paintedSurfaces: [...stage.querySelectorAll('*')].filter(
               (element) =>
                 element instanceof HTMLImageElement ||
@@ -382,7 +392,8 @@ test('intro effects stay registered to each painting throughout camera motion an
             ).length,
           };
         }, time);
-        expect(geometry.paintedSurfaces).toBe(1);
+        expect(geometry.paintedSurfaces).toBe(2);
+        expect(geometry.backgroundWidth).toBe(1536);
         expect(geometry.image.width / geometry.image.height).toBeCloseTo(1.5, 5);
         for (const key of ['x', 'y', 'width', 'height'] as const) {
           expect(geometry.atmosphere[key]).toBeCloseTo(geometry.image[key], 3);
@@ -414,6 +425,7 @@ test('intro effects stay registered to each painting throughout camera motion an
         positions.push(geometry);
       }
       expect(positions[0]!.image).not.toEqual(positions[2]!.image);
+      expect(positions[2]!.depthOffset - positions[0]!.depthOffset).toBeCloseTo(12 / 1536, 5);
       expect(Math.abs(positions[0]!.moteX - positions[2]!.moteX)).toBeGreaterThan(0.001);
     }
     if (chapter < 4) await page.keyboard.press('ArrowRight');

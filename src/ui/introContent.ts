@@ -108,15 +108,19 @@ function sceneLayers(id: IntroSceneId): string {
 export function introMenu(index: number): string {
   const slide = INTRO_SLIDES[index]!;
   const last = index === INTRO_SLIDES.length - 1;
-  const imageUrl = introImageUrl(slide.image);
+  const imageUrl = introImageUrl(slide.foregroundImage);
+  const backgroundUrl = introImageUrl(slide.backgroundImage);
   return `<section class="intro-story" data-scene="${slide.id}" data-camera="${slide.camera}" style="--intro-focal-x:${slide.focalPoint[0]}%;--intro-focal-y:${slide.focalPoint[1]}%" aria-label="Opening story">
     <div class="intro-art" aria-hidden="true">
       <div class="intro-stage">
         <svg class="intro-canvas" viewBox="0 0 1536 1024">
           <foreignObject width="1536" height="1024">
             <div xmlns="http://www.w3.org/1999/xhtml" class="intro-composition">
+              <img class="intro-background" src="${backgroundUrl}" alt="" width="1536" height="1024" decoding="async" />
+              <div class="intro-near-plane">
               <img class="intro-painting" src="${imageUrl}" alt="" width="1536" height="1024" decoding="async" />
               ${sceneLayers(slide.id)}
+              </div>
             </div>
           </foreignObject>
         </svg>

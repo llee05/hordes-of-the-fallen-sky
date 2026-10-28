@@ -41,6 +41,11 @@ test('production loads all local artwork under the Pages subpath without desktop
         page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth),
       )
       .toBe(1536);
+    await expect
+      .poll(() =>
+        page.locator('.intro-background').evaluate((image: HTMLImageElement) => image.naturalWidth),
+      )
+      .toBe(1536);
     if (heading !== 'A road beneath the sky.') await page.keyboard.press('ArrowRight');
   }
   await page.keyboard.press('Escape');
