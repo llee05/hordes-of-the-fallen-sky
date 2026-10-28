@@ -31,6 +31,11 @@ camp pasture boundaries, final-stand limits, crossing previews and migration
 shortages. Behavioral regressions compare forecast depletion with simulated food
 depletion and crossing stores. The outer validation phases supply final check results.
 
+Wagon ricochets emit exactly one arrow with the incoming hit damage, without
+reapplying volley factors, Burning Tempest expansion or Encircle damage. Browser
+regressions exercise the combined bonuses for piercing and nonpiercing arrows
+and confirm ricochets cannot trigger another ricochet.
+
 Captured Full triage output supplied for this delivery:
 
 ```text

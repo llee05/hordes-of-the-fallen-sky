@@ -2682,14 +2682,17 @@ export class ArenaScene extends Phaser.Scene {
     y: number,
     target: Enemy,
     count: number,
-    multiplier: number,
+    damageOrMultiplier: number,
     ancestral = false,
     charged = false,
     owner: 'khan' | 'rider' | 'wagon' | 'wagon-ricochet' = 'rider',
     echoIndex?: number,
     ghost = false,
   ): boolean {
-    const volley = volleyFactors(this.run, count, owner === 'khan', ancestral);
+    const volley =
+      owner === 'wagon-ricochet'
+        ? { tempest: false, count: 1, spacing: 0, damage: 1, speed: 1 }
+        : volleyFactors(this.run, count, owner === 'khan', ancestral);
     const direction = Math.atan2(target.y - y, target.x - x);
     const tempest = !ghost && volley.tempest;
     const candidates: { slot: number; spawn: number; health: number; x: number; y: number }[] = [
@@ -2765,12 +2768,14 @@ export class ArenaScene extends Phaser.Scene {
       if (bolt.fire) bolt.setTint(0xffa04e);
       if (ancestral) bolt.setTint(0x91ded6);
       bolt.damage =
-        this.run.stats.damage *
-        (charged ? GAME.mounted.chargedDamage : 1) *
-        multiplier *
-        volley.damage *
-        khanVolley.damageMultiplier *
-        stillHand;
+        owner === 'wagon-ricochet'
+          ? damageOrMultiplier
+          : this.run.stats.damage *
+            (charged ? GAME.mounted.chargedDamage : 1) *
+            damageOrMultiplier *
+            volley.damage *
+            khanVolley.damageMultiplier *
+            stillHand;
       bolt.setData('base-damage', bolt.damage);
       bolt.setData('dealt-damage', 0);
       bolt.setData('precision', precision);
@@ -2809,7 +2814,7 @@ export class ArenaScene extends Phaser.Scene {
       bolt.hitTargets.clear();
       bolt.turn = 0;
       if (bolt.fire) bolt.setTint(0xffa04e);
-      bolt.damage = this.run.stats.damage * multiplier * backward.damage;
+      bolt.damage = this.run.stats.damage * damageOrMultiplier * backward.damage;
       bolt.setData('base-damage', bolt.damage);
       bolt.setData('dealt-damage', 0);
       bolt.setData('precision', precision);
@@ -2964,16 +2969,7 @@ export class ArenaScene extends Phaser.Scene {
           bolt.hitTargets.get(candidate) !== candidate.spawnId,
       );
       if (next)
-        this.shootVolley(
-          enemy.x,
-          enemy.y,
-          next,
-          1,
-          hitDamage / this.run.stats.damage,
-          false,
-          false,
-          'wagon-ricochet',
-        );
+        this.shootVolley(enemy.x, enemy.y, next, 1, hitDamage, false, false, 'wagon-ricochet');
     }
   }
 

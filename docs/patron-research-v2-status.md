@@ -156,6 +156,8 @@ remains unavailable because there are no individual wagon hit events or escort a
 
 Guardian defaults: Arrow Platforms uses a 220-pace, 60%-damage guard shot every six
 seconds; ricochets seek a normal foe within 180 paces and cannot ricochet again.
+Each ricochet emits one arrow with the incoming hit damage; volley modifiers,
+Burning Tempest expansion and Encircle damage are not applied again.
 City of Felt and Wood covers up to 40 materials after other cost modifiers.
 Fast Unpacking applies only after a completed crossing; both first-construction
 benefits use the existing purchase transaction and never consume on preview.

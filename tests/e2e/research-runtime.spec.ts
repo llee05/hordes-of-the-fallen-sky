@@ -356,3 +356,77 @@ test('Ghost-Fletched arrows inherit one modifier even with Burning Tempest owned
   expect(result.ordinary[0].turn).not.toBe(0);
   expect(result.ghosts).toEqual([{ tempest: false, turn: 0, fire: false, pierces: 2 }]);
 });
+
+for (const pierces of [0, 1]) {
+  test(`wagon ricochet preserves one arrow and its damage with Burning Tempest and Encircle (${pierces} pierces)`, async ({
+    page,
+  }) => {
+    const result = await page.evaluate((pierces) => {
+      const s = (window as any).__gloam.scene,
+        r = s.run;
+      for (let i = 0; i < 20 && s.enemies.countActive(true) < 2; i++) s.spawnEnemy();
+      const targets = s.enemies
+        .getChildren()
+        .filter((enemy: any) => enemy.active)
+        .slice(0, 2);
+      for (const [i, enemy] of targets.entries()) {
+        enemy.setPosition(s.player.x + 80 + i * 40, s.player.y);
+        enemy.definition = {
+          ...enemy.definition,
+          id: 'test-target',
+          behavior: 'chaser',
+          armor: 1,
+          speed: 0,
+        };
+        enemy.health = enemy.maxHealth = 10000;
+        enemy.pinned = 0;
+      }
+      for (const bolt of s.projectiles.getChildren()) bolt.disableBody(true, true);
+      s.spatial.rebuild(s.enemies.getChildren());
+      r.upgrades = { 'gu-circling-volley': 1 };
+      r.clan.paths.archery = ['fire-arrows'];
+      r.clan.paths.sanctuary = ['wind-shamans'];
+      r.clan.formation = 'encircle';
+      r.clan.momentum = 1;
+      r.patrons.bow.pierce = pierces;
+      r.stats.damage = 20;
+      s.shootVolley(s.player.x, s.player.y, targets[0], 1, 0.6, false, false, 'wagon');
+      const ordinary = s.projectiles.getChildren().filter((bolt: any) => bolt.active);
+      const original = ordinary[0];
+      const initialCount = ordinary.length;
+      const originalDamage = original.damage;
+      for (const bolt of ordinary.slice(1)) bolt.disableBody(true, true);
+      const random = Math.random;
+      try {
+        Math.random = () => 0;
+        s.hitEnemy(original, targets[0]);
+        const ricochets = s.projectiles
+          .getChildren()
+          .filter((bolt: any) => bolt.active && bolt.source === 'wagon-ricochet');
+        const arrows = ricochets.map((bolt: any) => ({
+          damage: bolt.damage,
+          tempest: bolt.tempest,
+          turn: bolt.turn,
+        }));
+        const before = targets[1].health;
+        s.hitEnemy(ricochets[0], targets[1]);
+        return {
+          initialCount,
+          originalDamage,
+          arrows,
+          dealt: before - targets[1].health,
+          afterHit: s.projectiles
+            .getChildren()
+            .filter((bolt: any) => bolt.active && bolt.source === 'wagon-ricochet').length,
+        };
+      } finally {
+        Math.random = random;
+      }
+    }, pierces);
+    expect(result.initialCount).toBe(3);
+    expect(result.originalDamage).toBeCloseTo(20 * 0.6 * 1.3);
+    expect(result.arrows).toEqual([{ damage: result.originalDamage, tempest: false, turn: 0 }]);
+    expect(result.dealt).toBeCloseTo(result.originalDamage);
+    expect(result.afterHit).toBe(pierces);
+  });
+}
