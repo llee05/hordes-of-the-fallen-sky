@@ -1,6 +1,6 @@
 # Research V2 effect delivery status
 
-All 166 IDs are registered. 88 technologies have runtime effects; 78 proposed effects remain unavailable.
+All 166 IDs are registered. 100 technologies have runtime effects; 66 proposed effects remain unavailable.
 Some working effects have unavailable prerequisites and cannot yet be purchased in play. Catalogue
 reachability tests ignore only runtime availability; they do not enable these effects.
 A fresh expedition resets all research; full expedition saves retain purchases.
@@ -58,18 +58,18 @@ the documented zero-building guard-shot adaptation. No respec is offered.
 | `go-flame-that-refuses`       | **Working** — go-flame-that-refuses runtime effect connected and unit tested.                                 |
 | `go-fortress-of-felt`         | **Working** — go-fortress-of-felt runtime effect connected and unit tested.                                   |
 | `go-eternal-hearth`           | **Working** — go-eternal-hearth runtime effect connected and unit tested.                                     |
-| `lu-floodplain`               | Floodplain: runtime effect deferred at failed patron integration gate                                         |
-| `lu-geomancers-eye`           | Geomancer's Eye: runtime effect deferred at failed patron integration gate                                    |
-| `lu-stone-and-stream`         | Stone and Stream: runtime effect deferred at failed patron integration gate                                   |
-| `lu-undertow`                 | Undertow: runtime effect deferred at failed patron integration gate                                           |
-| `lu-warning-signs`            | Warning Signs: runtime effect deferred at failed patron integration gate                                      |
-| `lu-frozen-bank`              | Frozen Bank: runtime effect deferred at failed patron integration gate                                        |
-| `lu-floodgate`                | Floodgate: runtime effect deferred at failed patron integration gate                                          |
-| `lu-shifting-ridge`           | Shifting Ridge: runtime effect deferred at failed patron integration gate                                     |
-| `lu-deep-current`             | Deep Current: runtime effect deferred at failed patron integration gate                                       |
-| `lu-river-that-remembers`     | River That Remembers: runtime effect deferred at failed patron integration gate                               |
-| `lu-eye-of-the-mountain`      | Eye of the Mountain: runtime effect deferred at failed patron integration gate                                |
-| `lu-land-in-motion`           | The Land in Motion: runtime effect deferred at failed patron integration gate                                 |
+| `lu-floodplain`               | **Working** — lu-floodplain terrain effect connected and unit tested.                                         |
+| `lu-geomancers-eye`           | **Working** — lu-geomancers-eye terrain effect connected and unit tested.                                     |
+| `lu-stone-and-stream`         | **Working** — lu-stone-and-stream terrain effect connected and unit tested.                                   |
+| `lu-undertow`                 | **Working** — lu-undertow terrain effect connected and unit tested.                                           |
+| `lu-warning-signs`            | **Working** — lu-warning-signs terrain effect connected and unit tested.                                      |
+| `lu-frozen-bank`              | **Working** — lu-frozen-bank terrain effect connected and unit tested.                                        |
+| `lu-floodgate`                | **Working** — lu-floodgate terrain effect connected and unit tested.                                          |
+| `lu-shifting-ridge`           | **Working** — lu-shifting-ridge terrain effect connected and unit tested.                                     |
+| `lu-deep-current`             | **Working** — lu-deep-current terrain effect connected and unit tested.                                       |
+| `lu-river-that-remembers`     | **Working** — lu-river-that-remembers terrain effect connected and unit tested.                               |
+| `lu-eye-of-the-mountain`      | **Working** — lu-eye-of-the-mountain terrain effect connected and unit tested.                                |
+| `lu-land-in-motion`           | **Working** — lu-land-in-motion terrain effect connected and unit tested.                                     |
 | `on-spirit-signal`            | **Working** — Echoes prioritise the Khan's most recently hit target for 3 s.                                  |
 | `on-memory-vessels`           | **Working** — Each collected shard grants echoes +1% attack speed for 4 s, stacking to +15%.                  |
 | `on-quiet-council`            | **Working** — Ancestral echoes provide +5% clan resolve protection while near camp.                           |
@@ -134,3 +134,11 @@ the documented zero-building guard-shot adaptation. No respec is offered.
 | `gen-road-of-legends`         | Sacred-site and optional elite discovery pools do not exist                                                   |
 | `gen-unbroken-road`           | Travelling provisions have no separate consumption channel                                                    |
 | `gen-great-gathering`         | Temporary encounter blessing choices do not exist                                                             |
+
+Lus implementation defaults where the design has no number: Undertow pulls 50 paces;
+Geomancer grants 10% speed for 2 seconds (8 second cooldown); ridge patches use a
+70 pace radius and 20% slow; rock arcs hit within 140 paces for 120% shared damage;
+Land in Motion heals 0.2 Khan health/s in water and deals 15% shared damage/s in stone.
+Golomt defaults: Ash-Born pushes 75 paces within 140; fire pulses deal 120% shared
+damage within 150 at one-second intervals; Eternal Hearth heals 0.5 Khan health/s,
+restores 0.15 resolve/s, and pushes normal foes 28 paces/s within 160.

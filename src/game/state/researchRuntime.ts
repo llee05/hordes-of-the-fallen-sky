@@ -4,6 +4,19 @@ import type { RunState } from '../types';
 
 /** Optional for compatibility with older expedition saves. All timestamps use active seconds. */
 export interface ResearchRuntime {
+  slowSince?: Record<string, number>;
+  slowSeenAt?: Record<string, number>;
+  slowUntil?: Record<string, number>;
+  rootUntil?: Record<string, number>;
+  rootCooldown?: Record<string, number>;
+  terrainPulseAt?: number;
+  undertowAt?: number;
+  floodgateAt?: number;
+  dodgeUntil?: number;
+  dodgeCooldown?: number;
+  rockArcCooldown?: number;
+  stoneTickAt?: number;
+  ridgePatches?: { x: number; y: number; until: number }[];
   lastGallopAt?: number;
   riverStacks?: number;
   riverUntil?: number;

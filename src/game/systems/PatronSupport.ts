@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { claimWaterPush, researchKnockback } from '../state/researchTerrain';
 import { paintedImage } from '../assets/painterlyArt';
 import { CharacterMotion } from '../animation/CharacterMotion';
 import { renderCharacter } from '../animation/CharacterVisuals';
@@ -158,17 +159,28 @@ export class PatronSupport {
 
     updateEchoGuard(run, echoNearCamp);
     if (step.pulseWater) {
+      const push = claimWaterPush(run);
       spatial.forEachNearby(player.x, player.y, waterRadius, (enemy) => {
-        actions.damage(enemy, run.stats.damage * effects.water.pulseDamage);
+        actions.damage(
+          enemy,
+          run.stats.damage * effects.water.pulseDamage * (effects.water.slow > 0 ? push.damage : 1),
+        );
         if (!enemy.active) return;
         const dx = enemy.x - player.x;
         const dy = enemy.y - player.y;
         const distance = Math.hypot(dx, dy);
         const nx = distance > 0 ? dx / distance : 1;
         const ny = distance > 0 ? dy / distance : 0;
+        const force = researchKnockback(
+          run,
+          effects.water.slow > 0,
+          enemy.definition.behavior === 'boss',
+        );
+        const displacement =
+          (GAME.patrons.water.push - (distance > waterRadius * 0.5 ? push.pull : 0)) * force;
         enemy.setPosition(
-          Phaser.Math.Clamp(enemy.x + nx * GAME.patrons.water.push, 24, GAME.worldSize - 24),
-          Phaser.Math.Clamp(enemy.y + ny * GAME.patrons.water.push, 24, GAME.worldSize - 24),
+          Phaser.Math.Clamp(enemy.x + nx * displacement, 24, GAME.worldSize - 24),
+          Phaser.Math.Clamp(enemy.y + ny * displacement, 24, GAME.worldSize - 24),
         );
       });
     }

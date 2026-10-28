@@ -57,7 +57,19 @@ export type ResearchEffect =
         | 'go-household-oath'
         | 'go-flame-that-refuses'
         | 'go-fortress-of-felt'
-        | 'go-eternal-hearth';
+        | 'go-eternal-hearth'
+        | 'lu-floodplain'
+        | 'lu-geomancers-eye'
+        | 'lu-stone-and-stream'
+        | 'lu-undertow'
+        | 'lu-warning-signs'
+        | 'lu-frozen-bank'
+        | 'lu-floodgate'
+        | 'lu-shifting-ridge'
+        | 'lu-deep-current'
+        | 'lu-river-that-remembers'
+        | 'lu-eye-of-the-mountain'
+        | 'lu-land-in-motion';
     };
 export interface ResearchDefinition {
   id: string;

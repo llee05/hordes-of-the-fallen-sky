@@ -1,3 +1,10 @@
+import {
+  researchEnemySlow,
+  inRidgePatch,
+  terrainWarningBonus,
+  resolveResearchEruption,
+  claimTerrainWave,
+} from '../state/researchTerrain';
 import { volleyFactors } from '../state/volley';
 import {
   observeResearchFrame,
@@ -30,6 +37,7 @@ import {
   researchAttackIntervalMultiplier,
   researchBonusPierces,
   researchGallop,
+  researchWaterRadius,
   riderAttackSpeedMultiplier,
   riderPrefersTarget,
   stillHandDamageMultiplier,
@@ -139,7 +147,6 @@ import {
   friendlyDamageMultiplier,
   gallopCooldown,
   rewardPatronKill,
-  terrainSpeedMultiplier,
 } from '../state/patrons';
 import {
   advanceSuccession,
@@ -232,6 +239,7 @@ export class ArenaScene extends Phaser.Scene {
     radius?: number;
     damage?: number;
     source?: 'seer';
+    researchCrossed?: boolean;
   }[] = [];
   private hazardTimer: number = GAME.hazards.initialDelay;
   private gems!: Phaser.Physics.Arcade.Group;
@@ -2211,7 +2219,15 @@ export class ArenaScene extends Phaser.Scene {
       let speed =
         enemy.definition.speed *
         (1 + clan.region * 0.1) *
-        terrainSpeedMultiplier(this.run, Math.min(playerDistance, campDistance)) *
+        researchEnemySlow(
+          this.run,
+          enemy.tacticalSlot,
+          enemy.spawnId,
+          Math.min(playerDistance, campDistance),
+          dt,
+          enemy.definition.behavior === 'boss',
+          inRidgePatch(this.run, enemy.x, enemy.y),
+        ) *
         Math.max(
           0.65,
           1 /
@@ -3519,7 +3535,12 @@ export class ArenaScene extends Phaser.Scene {
         .fillCircle(x, y, 70)
         .lineStyle(2, 0xe6bd7b, 0.8)
         .strokeCircle(x, y, 70);
-      this.hazards.push({ x, y, remaining: 2 + this.run.patrons.water.warning, warning });
+      this.hazards.push({
+        x,
+        y,
+        remaining: 2 + this.run.patrons.water.warning + terrainWarningBonus(this.run),
+        warning,
+      });
       this.hazardTimer = clan.region === 3 ? 6 : 10;
     }
     for (let i = this.hazards.length - 1; i >= 0; i -= 1) {
@@ -3533,10 +3554,50 @@ export class ArenaScene extends Phaser.Scene {
           .fillCircle(hazard.x, hazard.y, radius)
           .lineStyle(2, 0xcba0c6, 0.8)
           .strokeCircle(hazard.x, hazard.y, radius);
+      if (
+        hazard.source !== 'seer' &&
+        !hazard.researchCrossed &&
+        this.dashRemaining > 0 &&
+        Math.hypot(this.player.x - hazard.x, this.player.y - hazard.y) < radius &&
+        ownsResearch(this.run, 'lu-eye-of-the-mountain')
+      ) {
+        hazard.researchCrossed = true;
+        const crossing = resolveResearchEruption(
+          this.run,
+          hazard.x,
+          hazard.y,
+          radius,
+          this.player,
+          true,
+        );
+        if (crossing.rock)
+          this.spatial.forEachNearby(hazard.x, hazard.y, GAME.research.rockArcRadius, (enemy) =>
+            this.damageEnemy(enemy, this.run.stats.damage * GAME.research.rockArcDamage),
+          );
+      }
       if (hazard.remaining > 0) continue;
       this.burst(hazard.x, hazard.y, clan.region === 3 ? 0xbf6558 : 0x796d4d, 12);
       this.audio.play('thunder', hazard);
-      if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.player.x, this.player.y) < radius)
+      const eruption =
+        hazard.source !== 'seer'
+          ? resolveResearchEruption(
+              this.run,
+              hazard.x,
+              hazard.y,
+              radius,
+              this.player,
+              this.dashRemaining > 0,
+            )
+          : { immune: false, rock: false };
+      if (eruption.rock)
+        this.spatial.forEachNearby(hazard.x, hazard.y, GAME.research.rockArcRadius, (enemy) =>
+          this.damageEnemy(enemy, this.run.stats.damage * GAME.research.rockArcDamage),
+        );
+      if (
+        !hazard.researchCrossed &&
+        !eruption.immune &&
+        Phaser.Math.Distance.Between(hazard.x, hazard.y, this.player.x, this.player.y) < radius
+      )
         this.takeDamage((hazard.damage ?? 20) * this.run.patrons.water.hazardDamage);
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.camp.x, this.camp.y) < radius + 25)
         this.damageClan(
@@ -3553,6 +3614,27 @@ export class ArenaScene extends Phaser.Scene {
     this.supportTimer -= dt;
     this.wagonTimer -= dt;
     this.wardTimer -= dt;
+    const terrain = claimTerrainWave(this.run);
+    if (terrain.wave || terrain.stone)
+      this.spatial.forEachNearby(
+        this.player.x,
+        this.player.y,
+        researchWaterRadius(this.run),
+        (enemy) => {
+          if (terrain.wave && enemy.definition.behavior !== 'boss') {
+            delete this.run.researchRuntime?.staggerCooldownUntil?.[
+              `${enemy.tacticalSlot}:${enemy.spawnId}`
+            ];
+            enemy.pinned = 0;
+          }
+          this.damageEnemy(
+            enemy,
+            this.run.stats.damage *
+              ((terrain.wave ? GAME.research.riverWaveDamage : 0) +
+                (terrain.stone ? GAME.research.landStoneDamage : 0)),
+          );
+        },
+      );
     const ashPulse = claimAshBornPulse(this.run);
     const flamePulse = claimFlameRefusesPulse(this.run);
     if (isKhanActive(this.run)) {

@@ -1,3 +1,4 @@
+import { terrainDodgeSpeed } from './researchTerrain';
 import {
   ashBornInvulnerable,
   recordKhanSurvivedHit,
@@ -98,5 +99,9 @@ export function chooseSuccessor(run: RunState, trait: SuccessorTrait): boolean {
   return true;
 }
 export function khanSpeedMultiplier(run: RunState): number {
-  return (run.khan.trait ? SUCCESSORS[run.khan.trait].speed : 1) * researchKhanSpeedMultiplier(run);
+  return (
+    (run.khan.trait ? SUCCESSORS[run.khan.trait].speed : 1) *
+    researchKhanSpeedMultiplier(run) *
+    terrainDodgeSpeed(run)
+  );
 }

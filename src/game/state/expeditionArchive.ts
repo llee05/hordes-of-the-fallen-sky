@@ -96,7 +96,13 @@ export interface WorldArchive {
   gems: (BodyArchive & { value: number; attracted: boolean })[];
   riders: (Point & { flip: boolean; motion: MotionArchive })[];
   support: SupportArchive;
-  hazards: (Point & { remaining: number; radius?: number; damage?: number; source?: 'seer' })[];
+  hazards: (Point & {
+    remaining: number;
+    radius?: number;
+    damage?: number;
+    source?: 'seer';
+    researchCrossed?: boolean;
+  })[];
   areaEncounter: AreaEncounterState;
   areaThreats: AreaThreatState;
 }
@@ -267,6 +273,19 @@ const optional: Record<string, Record<string, Rule>> = {
     researchRuntime: object(
       {},
       {
+        slowSince: dictionary(number),
+        slowSeenAt: dictionary(number),
+        slowUntil: dictionary(number),
+        rootUntil: dictionary(number),
+        rootCooldown: dictionary(number),
+        terrainPulseAt: number,
+        undertowAt: number,
+        floodgateAt: number,
+        dodgeUntil: number,
+        dodgeCooldown: number,
+        rockArcCooldown: number,
+        stoneTickAt: number,
+        ridgePatches: list(object({ x: number, y: number, until: number }), 16),
         lastGallopAt: number,
         riverStacks: integer,
         riverUntil: number,
@@ -529,7 +548,7 @@ const worldShape = object({
   hazards: list(
     object(
       { x: number, y: number, remaining: number },
-      { radius: positive, damage: positive, source: oneOf(['seer']) },
+      { radius: positive, damage: positive, source: oneOf(['seer']), researchCrossed: boolean },
     ),
     100,
   ),

@@ -6,6 +6,7 @@ import {
   researchWaterRadius,
   stillwaterRefuge,
 } from './researchRuntime';
+import { landWaterActive } from './researchTerrain';
 import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import type { PatronEffects, RunState } from '../types';
@@ -63,6 +64,7 @@ export function advancePatrons(run: RunState, dt: number): void {
     (stillwaterRefuge(run) ? GAME.research.refugeRecovery : 0) +
     (campfireVigilActive(run) ? GAME.research.campfireVigilRegen : 0) +
     flameRefusesRegen(run) +
+    (landWaterActive(run) ? GAME.research.landWaterHealing : 0) +
     (hearthZone ? GAME.research.eternalHearthHealPerSecond : 0);
   if (regen > 0) healKhan(run, regen * dt);
   if (hearthZone) restoreResolve(run, GAME.research.eternalHearthResolvePerSecond * dt);
