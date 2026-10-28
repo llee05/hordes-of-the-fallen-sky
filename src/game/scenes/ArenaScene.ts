@@ -12,6 +12,13 @@ import {
   researchSpiritYield,
   remembranceMagnetRadius,
 } from '../state/researchEchoes';
+import {
+  claimRiderVolley,
+  recordEliteAppearance,
+  issueKurultai,
+  bannerFormation,
+  bannerDamage,
+} from '../state/researchLeadership';
 import { volleyFactors } from '../state/volley';
 import {
   observeResearchFrame,
@@ -45,7 +52,6 @@ import {
   researchBonusPierces,
   researchGallop,
   researchWaterRadius,
-  riderAttackSpeedMultiplier,
   riderPrefersTarget,
   stillHandDamageMultiplier,
   updateCampfireVigil,
@@ -499,6 +505,7 @@ export class ArenaScene extends Phaser.Scene {
     bindAction('B', () => this.openBuildings());
     bindAction('M', () => this.openRoutes());
     bindAction('F', () => this.cycleFormation());
+    bindAction('R', () => this.rallyHost());
     bindAction('ONE', () => this.selectSuccessor('outrider'));
     bindAction('TWO', () => this.selectSuccessor('hearthguard'));
     bindAction('J', () => this.toggleJournal());
@@ -1335,13 +1342,23 @@ export class ArenaScene extends Phaser.Scene {
     this.audio.play('depart');
   }
 
+  rallyHost(): void {
+    if (issueKurultai(this.run)) {
+      this.run.clan.message = 'The Great Kurultai: the host rallies for fifteen seconds.';
+      this.callbacks?.onHud(this.snapshot());
+    }
+  }
+
   cycleFormation(): void {
     if (this.run.phase !== 'playing') return;
     const formations = availableFormations(this.run);
     if (formations.length > 1) completeGuidance(this.run, 'formation');
     this.run.clan.formation =
       formations[(formations.indexOf(this.run.clan.formation) + 1) % formations.length]!;
-    this.run.clan.message = FORMATIONS[this.run.clan.formation].description;
+    this.run.clan.message =
+      (ownsResearch(this.run, 'su-banner-formation')
+        ? `Banner ${bannerFormation(this.run)}. `
+        : '') + FORMATIONS[this.run.clan.formation].description;
     this.callbacks?.onHud(this.snapshot());
   }
 
@@ -1686,6 +1703,7 @@ export class ArenaScene extends Phaser.Scene {
     });
     this.attackTimer -= dt;
     if (this.attackTimer <= 0) this.fire();
+    this.fireRiders();
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0) {
       const spawned = this.spawnEnemy();
@@ -1900,6 +1918,7 @@ export class ArenaScene extends Phaser.Scene {
     if (!enemy) return false;
     this.initializeEnemy(enemy, definition, x, y);
     enemy.elite ||= !forced && !!selection.elite;
+    if (enemy.elite || isBoss) recordEliteAppearance(this.run);
     enemy.objectiveId = directive?.objectiveId;
     enemy.crossingId = directive?.crossingId;
     if (isBoss)
@@ -2555,6 +2574,15 @@ export class ArenaScene extends Phaser.Scene {
         this.burst(this.player.x, this.player.y, 0xe3c78c, 5);
       }
     }
+    if (hostFired) this.run.combat.volleys++;
+    this.attackTimer =
+      this.run.stats.attackInterval *
+      this.run.clan.campEffects.multipliers.hostInterval *
+      researchAttackIntervalMultiplier(this.run) *
+      (this.run.clan.formation === 'retreat' && momentum > 0.4 ? 0.7 : 1);
+  }
+
+  private fireRiders(): void {
     const paired =
       (this.run.upgrades.haste ?? 0) > 0 &&
       (this.run.combat.volleys + 1) % GAME.mounted.pairedEvery === 0;
@@ -2574,32 +2602,25 @@ export class ArenaScene extends Phaser.Scene {
           range,
           (e) => clear(e) && riderPrefersTarget(this.run, e.tacticalSlot, e.spawnId),
         ) ?? this.spatial.nearest(rider.x, rider.y, range, clear);
-      if (riderTarget) {
+      if (riderTarget && claimRiderVolley(this.run, i, i === 0)) {
         this.riderMotions[i]!.attack();
         if (this.riderSpeeds[i]! < 2)
           rider.setFlipX(
             (this.landscape.world3d?.screenX(riderTarget.x - rider.x, riderTarget.y - rider.y) ??
               riderTarget.x - rider.x) < 0,
           );
-        hostFired =
-          this.shootVolley(
-            rider.x,
-            rider.y,
-            riderTarget,
-            paired ? 2 : 1,
-            (0.6 + (hasDevelopment(this.run, 'archery', 'veteran-riders') ? 0.3 : 0)) *
-              this.run.patrons.banner.damage *
-              this.run.clan.campEffects.multipliers.riderDamage *
-              riderAttackSpeedMultiplier(this.run, i === 0),
-          ) || hostFired;
+        this.shootVolley(
+          rider.x,
+          rider.y,
+          riderTarget,
+          paired ? 2 : 1,
+          (0.6 + (hasDevelopment(this.run, 'archery', 'veteran-riders') ? 0.3 : 0)) *
+            this.run.patrons.banner.damage *
+            this.run.clan.campEffects.multipliers.riderDamage *
+            bannerDamage(this.run),
+        );
       }
     }
-    if (hostFired) this.run.combat.volleys++;
-    this.attackTimer =
-      this.run.stats.attackInterval *
-      this.run.clan.campEffects.multipliers.hostInterval *
-      researchAttackIntervalMultiplier(this.run) *
-      (this.run.clan.formation === 'retreat' && momentum > 0.4 ? 0.7 : 1);
   }
 
   private shootVolley(

@@ -1,3 +1,4 @@
+import { lastWagonSpeed } from './researchLeadership';
 import { terrainDodgeSpeed } from './researchTerrain';
 import {
   ashBornInvulnerable,
@@ -102,6 +103,7 @@ export function khanSpeedMultiplier(run: RunState): number {
   return (
     (run.khan.trait ? SUCCESSORS[run.khan.trait].speed : 1) *
     researchKhanSpeedMultiplier(run) *
-    terrainDodgeSpeed(run)
+    terrainDodgeSpeed(run) *
+    lastWagonSpeed(run)
   );
 }

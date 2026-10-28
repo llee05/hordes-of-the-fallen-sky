@@ -14,6 +14,7 @@ import { AREA_ENEMIES } from '../game/data/enemies';
 import { CROSSING_ENCOUNTERS } from '../game/data/crossings';
 import { encounterPlan } from '../game/state/encounters';
 import { FIELD_OBJECTIVES } from '../game/data/fieldObjectives';
+import { kurultaiAvailable, bannerFormation } from '../game/state/researchLeadership';
 import { GAME } from '../game/config';
 import { saveMenu, type SaveConfirmation } from './saveContent';
 import { isSaveSlot } from '../shared/expeditionSave';
@@ -144,7 +145,7 @@ export class GameUI {
           <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span>BOW <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
           <section class="tradition-hud" aria-label="Run progression"><span>TRADITION <b id="level">01</b> <small>· <span id="blessing-count">0</span> LEARNED</small></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small><button id="research" class="research-button" aria-label="Open patron tech tree" aria-keyshortcuts="T">Tech tree <kbd>T</kbd><span id="research-points">0</span></button></section>
           <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
-          <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">${clanMark('bow')}</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
+          <nav class="command-dock" aria-label="Clan commands"><button id="rally-host" class="command-button" hidden title="Rally the host (R)">Rally host <kbd>R</kbd></button><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">${clanMark('bow')}</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
           <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><div><p id="clan-message"></p><p id="companion-reaction" class="companion-reaction" hidden></p></div></div>
         </div>
         <div id="overlay" class="overlay ready-screen" role="dialog" aria-modal="true" aria-labelledby="overlay-title" tabindex="-1"></div>
@@ -167,6 +168,7 @@ export class GameUI {
         .successor;
       if (trait === 'outrider' || trait === 'hearthguard') scene.selectSuccessor(trait);
     });
+    this.get('rally-host').addEventListener('click', () => scene.rallyHost());
     this.get('formation').addEventListener('click', () => scene.cycleFormation());
     this.get('zoom-out').addEventListener('click', () => scene.changeZoom(-1));
     this.get('zoom-in').addEventListener('click', () => scene.changeZoom(1));
@@ -523,12 +525,17 @@ export class GameUI {
             ? 'The roads are open. Pack up with M.'
             : `Routes open in ${Math.ceil(GAME.clan.minimumCamp - clan.stageTime)}s. Build up the camp with B.`,
     );
-    if (this.get('formation-name').textContent !== FORMATIONS[clan.formation].title) {
-      this.text('formation-name', FORMATIONS[clan.formation].title);
+    const formationTitle = run.upgrades['su-banner-formation']
+      ? `Banner: ${bannerFormation(run)}`
+      : FORMATIONS[clan.formation].title;
+    if (this.get('formation-name').textContent !== formationTitle) {
+      this.text('formation-name', formationTitle);
       this.motion.notice(this.get('formation').querySelector<HTMLElement>('.command-icon')!);
     }
     (this.get('build') as HTMLButtonElement).disabled =
       run.phase !== 'playing' || clan.stage === 'migration';
+    this.get('rally-host').hidden = !(run.upgrades['su-great-kurultai'] ?? 0);
+    (this.get('rally-host') as HTMLButtonElement).disabled = !kurultaiAvailable(run);
     const migrate = this.get('migrate') as HTMLButtonElement;
     const routeAvailable = canMigrate(run);
     if (routeAvailable && migrate.dataset.available === 'false')

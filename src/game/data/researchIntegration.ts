@@ -1,5 +1,6 @@
 /** Feature gates describe missing gameplay, never optional-building prerequisites. */
 export const RESEARCH_BLOCKERS: Readonly<Record<string, string>> = {
+  'su-roadward-captains': 'Individual wagon hit events and rider escort assignments do not exist',
   'on-whispered-orders': 'Echo Guard/Pursue stances do not exist',
   'on-bond-of-ashes': 'Permanent echoes have no expiry lifecycle',
   'on-ancestral-legion': 'Coordinated echo formation ownership does not exist',

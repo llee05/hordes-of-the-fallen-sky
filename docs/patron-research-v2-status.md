@@ -1,6 +1,6 @@
 # Research V2 effect delivery status
 
-All 166 IDs are registered. 104 technologies have runtime effects; 62 proposed effects remain unavailable.
+All 166 IDs are registered. 108 technologies have runtime effects; 58 proposed effects remain unavailable.
 Some working effects have unavailable prerequisites and cannot yet be purchased in play. Catalogue
 reachability tests ignore only runtime availability; they do not enable these effects.
 A fresh expedition resets all research; full expedition saves retain purchases.
@@ -85,13 +85,13 @@ the documented zero-building guard-shot adaptation. No respec is offered.
 | `su-banner-orders`            | Riders have no Focus Fire command                                                                             |
 | `su-discipline-of-the-road`   | Riders have no individual loss model                                                                          |
 | `su-call-to-arms`             | Individual exposed wagons and rider guard assignments do not exist                                            |
-| `su-horn-of-the-host`         | Horn of the Host: runtime effect deferred at failed patron integration gate                                   |
-| `su-roadward-captains`        | Roadward Captains: runtime effect deferred at failed patron integration gate                                  |
-| `su-banner-formation`         | Banner Formation: runtime effect deferred at failed patron integration gate                                   |
+| `su-horn-of-the-host`         | **Working** — su-horn-of-the-host leadership effect connected and unit tested.                                |
+| `su-roadward-captains`        | Individual wagon hit events and rider escort assignments do not exist.                                        |
+| `su-banner-formation`         | **Working** — su-banner-formation leadership effect connected and unit tested.                                |
 | `su-captains-of-ten`          | Companions have no combat damage-resistance channel                                                           |
-| `su-last-wagon`               | The Last Wagon: runtime effect deferred at failed patron integration gate                                     |
+| `su-last-wagon`               | **Working** — su-last-wagon leadership effect connected and unit tested.                                      |
 | `su-standard-bearer`          | Rider projectile interception does not exist                                                                  |
-| `su-great-kurultai`           | The Great Kurultai: runtime effect deferred at failed patron integration gate                                 |
+| `su-great-kurultai`           | **Working** — su-great-kurultai leadership effect connected and unit tested.                                  |
 | `su-host-without-end`         | Temporary elite riders have no encounter-scoped lifecycle                                                     |
 | `su-unbroken-caravan`         | Individual wagon destruction prevention does not exist                                                        |
 | `gu-arrow-platforms`          | Arrow Platforms: runtime effect deferred at failed patron integration gate                                    |
@@ -146,3 +146,9 @@ restores 0.15 resolve/s, and pushes normal foes 28 paces/s within 160.
 Infinite Remembrance defaults to ten pickups with gaps below four active seconds,
 then four seconds of 500-pace shard attraction and +20% echo damage. Bonus shards
 carry a nonrecursive flag through saves; pool exhaustion preserves their XP.
+
+Banner Formation reuses F / Change formation to select Ring (guard), Wedge, or
+Column (retreat), and remains selectable each crossing. Defaults: Wedge +10% rider
+damage; Ring 10% clan protection; Column +10% migration mobility. Great Kurultai
+is issued with R or the Rally host button, once per crossing. Roadward Captains
+remains unavailable because there are no individual wagon hit events or escort assignments.

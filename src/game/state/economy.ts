@@ -4,6 +4,7 @@ import {
   researchMaterialGrazing,
   researchPastureRecoveryBonus,
 } from './researchRuntime';
+import { leadershipMobility } from './researchLeadership';
 import { GAME } from '../config';
 import { ROUTES, startingTradition, type MigrationLocation } from '../data/clan';
 import type { RunState } from '../types';
@@ -38,6 +39,7 @@ export function migrationMobility(run: RunState): number {
     (hasDevelopment(run, 'herd', 'remount-herds') ? 1.2 : 1) *
     (run.clan.region === 1 ? 0.8 : 1) *
     run.patrons.banner.mobility *
+    leadershipMobility(run) *
     run.clan.campEffects.multipliers.mobility *
     currentLocation(run).balance.mobility *
     startingTradition(run.startingTradition).balance.mobility

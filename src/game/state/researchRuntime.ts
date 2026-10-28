@@ -1,9 +1,16 @@
+import { leadershipAttackSpeed } from './researchLeadership';
 import { hasDevelopment } from './camp';
 import { GAME } from '../config';
 import type { RunState } from '../types';
 
 /** Optional for compatibility with older expedition saves. All timestamps use active seconds. */
 export interface ResearchRuntime {
+  riderFireAt?: number[];
+  hornUntil?: number;
+  hornCooldown?: number;
+  rallyUntil?: number;
+  rallyCrossing?: number;
+
   shardsGathered?: number;
   shardStreak?: number;
   shardStreakUntil?: number;
@@ -255,7 +262,7 @@ export function riderPrefersTarget(run: RunState, slot: number, spawn: number): 
   );
 }
 export function riderAttackSpeedMultiplier(run: RunState, isNearestCompanion = false): number {
-  let bonus = 0;
+  let bonus = leadershipAttackSpeed(run);
   if (packInstinctActive(run) && isNearestCompanion) bonus += GAME.research.packInstinctAttackSpeed;
   if (ownsResearch(run, 'bc-call-of-the-pack') && run.clan.momentum > 0.5)
     bonus += GAME.research.callOfPackSpeed;

@@ -73,7 +73,11 @@ export type ResearchEffect =
         | 'on-reverent-gathering'
         | 'on-line-of-forebears'
         | 'on-names-in-stone'
-        | 'on-infinite-remembrance';
+        | 'on-infinite-remembrance'
+        | 'su-horn-of-the-host'
+        | 'su-banner-formation'
+        | 'su-last-wagon'
+        | 'su-great-kurultai';
     };
 export interface ResearchDefinition {
   id: string;

@@ -20,6 +20,7 @@ import {
   starvationReaction,
 } from '../data/storyReactions';
 import { beginCrossingEncounter, settleCrossingEncounter } from './crossingEncounters';
+import { leadershipProtection } from './researchLeadership';
 import { GAME } from '../config';
 import { BUILDINGS, ROUTES, startingTradition } from '../data/clan';
 import type { BuildingId, ClanState, Formation, RunState } from '../types';
@@ -122,6 +123,7 @@ export function burningTempest(run: RunState): boolean {
 }
 
 export function availableFormations(run: RunState): Formation[] {
+  if ((run.upgrades['su-banner-formation'] ?? 0) > 0) return ['guard', 'wedge', 'retreat'];
   return [
     'guard',
     ...(run.clan.buildings.archery ? (['encircle', 'wedge'] as const) : []),
@@ -277,6 +279,7 @@ export function clanDamageMultiplier(run: RunState): number {
     run.patrons.guardian.protection *
     researchResolveProtection(run) *
     researchCommonProtection(run) *
+    leadershipProtection(run) *
     run.clan.campEffects.multipliers.clanProtection *
     startingTradition(run.startingTradition).balance.protection
   );
