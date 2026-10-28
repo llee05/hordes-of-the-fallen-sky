@@ -30,7 +30,12 @@ import { completeGuidance } from './guidance';
 import { isKhanActive } from './khan';
 import { markExpedition, metricCasualties, metricStage } from './expeditionMetrics';
 import { passageProgress } from './finalStand';
-import { researchResolveProtection, researchCommonProtection } from './researchRuntime';
+import {
+  recordMaterialSpend,
+  researchCommonProtection,
+  researchResolveProtection,
+  researchStarvationMultiplier,
+} from './researchRuntime';
 
 export function createClan(): ClanState {
   return {
@@ -196,6 +201,7 @@ export function buildStructure(
   completeGuidance(run, 'build');
   clan.materials -= cost.materials;
   clan.spirit -= cost.spirit;
+  recordMaterialSpend(run, cost.materials);
   if (path === undefined) reserveBuildingSlot(run, id, slot);
   clan.buildings[id] += 1;
   clan.identity[definition.doctrine] += 2;
@@ -285,7 +291,8 @@ export function damageClan(
 ): void {
   if (protectionOptions?.invincible || !Number.isFinite(amount) || amount <= 0) return;
   const clan = run.clan;
-  const protection = clanDamageMultiplier(run);
+  const protection =
+    clanDamageMultiplier(run) * (cause === 'starvation' ? researchStarvationMultiplier(run) : 1);
   const previousPopulation = clan.population;
   const previous = clan.integrity;
   clan.integrity = Math.max(0, previous - amount * protection);
@@ -343,7 +350,9 @@ export function advanceClan(
       dt * ((hasDevelopment(run, 'ger', 'hearthkeepers') ? 0.25 : 0) + bonuses.resolveRecovery),
     );
   } else {
-    clan.food += dt * economyRates(run).foodNet;
+    const rates = economyRates(run);
+    clan.food += dt * rates.foodNet;
+    clan.materials += dt * rates.materials;
     const route = ROUTES.find((r) => r.id === clan.routeId)!;
     clan.migrationProgress = Math.min(1, clan.stageTime / crossingDuration(run, route));
   }

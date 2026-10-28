@@ -1,4 +1,9 @@
-import { researchGrazing } from './researchRuntime';
+import {
+  researchFoodProductionMultiplier,
+  researchGrazing,
+  researchMaterialGrazing,
+  researchPastureRecoveryBonus,
+} from './researchRuntime';
 import { GAME } from '../config';
 import { ROUTES, startingTradition, type MigrationLocation } from '../data/clan';
 import type { RunState } from '../types';
@@ -22,7 +27,8 @@ export function pastureDepletion(run: RunState): number {
     (100 / GAME.clan.pastureLifetime) *
       run.patrons.land.pastureUse *
       run.clan.campEffects.multipliers.pastureUse -
-    run.patrons.land.pastureRecovery
+    run.patrons.land.pastureRecovery -
+    researchPastureRecoveryBonus(run)
   );
 }
 
@@ -52,7 +58,8 @@ export function economyRates(run: RunState, pasture = run.clan.pasture): Economy
   const grazing = clan.stage === 'migration' ? 0 : Math.max(0, Math.min(pasture, 100)) / 100;
   const foodProduction =
     (0.65 + (clan.buildings.herd ? 0.65 : 0)) *
-    researchGrazing(run, grazing) *
+    researchGrazing(run, grazing, pasture) *
+    researchFoodProductionMultiplier(run) *
     (clan.region === 1 ? 0.7 : 1) *
     patrons.land.food *
     multipliers.foodProduction *
@@ -63,7 +70,7 @@ export function economyRates(run: RunState, pasture = run.clan.pasture): Economy
     foodNet: foodProduction - foodConsumption,
     materials:
       (0.28 + clan.population * 0.018) *
-      grazing *
+      researchMaterialGrazing(run, grazing, pasture) *
       patrons.land.materials *
       multipliers.materialProduction *
       location.materials,

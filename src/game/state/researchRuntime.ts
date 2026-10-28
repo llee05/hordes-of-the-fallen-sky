@@ -31,6 +31,11 @@ export interface ResearchRuntime {
   momentumHoldUntil?: number;
   markedNearKhan?: boolean;
   endlessBurstUntil?: number;
+  vigilantHerdersUntil?: number;
+  craftspeopleRefundedCrossing?: number;
+  crossingMaterialsSpent?: number;
+  crossingSpentIndex?: number;
+  scarcityActive?: boolean;
 }
 function enemyKey(slot: number, spawn: number): string {
   return `${slot}:${spawn}`;
@@ -418,10 +423,87 @@ export function researchCommonProtection(run: RunState): number {
     ? GAME.research.commonProtection
     : 1;
 }
-export function researchGrazing(run: RunState, grazing: number): number {
-  return run.clan.stage !== 'migration' && ownsResearch(run, 'ee-deep-roots')
+export function researchGrazing(
+  run: RunState,
+  grazing: number,
+  pasture = run.clan.pasture,
+): number {
+  if (run.clan.stage === 'migration') {
+    if (!ownsResearch(run, 'ee-wandering-city')) return 0;
+    const roadGrazing = Math.max(0, Math.min(pasture, 100)) / 100;
+    return roadGrazing * GAME.research.wanderingCityFoodRate;
+  }
+  return ownsResearch(run, 'ee-deep-roots')
     ? 1 - (1 - grazing) * GAME.research.deepRootsLoss
     : grazing;
+}
+export function researchMaterialGrazing(
+  run: RunState,
+  grazing: number,
+  pasture = run.clan.pasture,
+): number {
+  if (run.clan.stage !== 'migration') return grazing;
+  if (!ownsResearch(run, 'ee-wandering-city')) return 0;
+  const roadGrazing = Math.max(0, Math.min(pasture, 100)) / 100;
+  return roadGrazing * GAME.research.wanderingCityMaterialRate;
+}
+export function recordWaveEnded(run: RunState): void {
+  if (run.phase !== 'playing') return;
+  if (ownsResearch(run, 'ee-vigilant-herders')) {
+    const r = (run.researchRuntime ??= {});
+    r.vigilantHerdersUntil = run.elapsed + GAME.research.vigilantHerdersSeconds;
+  }
+}
+export function syncBountyInScarcity(run: RunState): boolean {
+  if (!ownsResearch(run, 'ee-bounty-in-scarcity')) return false;
+  const food = run.clan.food;
+  if (food < GAME.research.scarcityLowFood) {
+    if (run.phase === 'playing') (run.researchRuntime ??= {}).scarcityActive = true;
+    return true;
+  }
+  if (food >= GAME.research.scarcityRecoverFood) {
+    if (run.researchRuntime?.scarcityActive) run.researchRuntime.scarcityActive = false;
+    return false;
+  }
+  return Boolean(run.researchRuntime?.scarcityActive);
+}
+export function researchFoodProductionMultiplier(run: RunState): number {
+  let mult = 1;
+  const r = run.researchRuntime;
+  if (ownsResearch(run, 'ee-vigilant-herders') && (r?.vigilantHerdersUntil ?? 0) > run.elapsed)
+    mult *= GAME.research.vigilantHerdersBonus;
+  if (syncBountyInScarcity(run)) mult *= GAME.research.scarcityFoodBonus;
+  return mult;
+}
+export function researchPastureRecoveryBonus(run: RunState): number {
+  return ownsResearch(run, 'ee-unbroken-seasons')
+    ? GAME.research.unbrokenSeasonsPastureRecovery
+    : 0;
+}
+export function researchStarvationMultiplier(run: RunState): number {
+  return ownsResearch(run, 'ee-unbroken-seasons')
+    ? GAME.research.unbrokenSeasonsStarvationMultiplier
+    : 1;
+}
+/** Reusable crossing material-spend ledger and Camp of Craftspeople first-spend refund. */
+export function recordMaterialSpend(run: RunState, spentMaterials: number): number {
+  if (!Number.isFinite(spentMaterials) || spentMaterials <= 0) return 0;
+  const crossing = run.story.crossings.length;
+  const hasCraftspeople = ownsResearch(run, 'ee-camp-of-craftspeople');
+  if (!hasCraftspeople && !run.researchRuntime) return 0;
+  const r = (run.researchRuntime ??= {});
+  if (r.crossingSpentIndex !== crossing) {
+    r.crossingSpentIndex = crossing;
+    r.crossingMaterialsSpent = 0;
+  }
+  let refund = 0;
+  if (hasCraftspeople && r.craftspeopleRefundedCrossing !== crossing) {
+    r.craftspeopleRefundedCrossing = crossing;
+    refund = Math.floor(spentMaterials * GAME.research.craftspeopleRefund);
+    run.clan.materials += refund;
+  }
+  r.crossingMaterialsSpent = (r.crossingMaterialsSpent ?? 0) + Math.max(0, spentMaterials - refund);
+  return refund;
 }
 export function wagonResearchDefence(run: RunState): {
   active: boolean;

@@ -34,6 +34,11 @@ const IMPLEMENTED_HANDLERS = [
   'bc-storm-chaser',
   'bc-call-of-the-pack',
   'bc-endless-pursuit',
+  'ee-vigilant-herders',
+  'ee-camp-of-craftspeople',
+  'ee-bounty-in-scarcity',
+  'ee-wandering-city',
+  'ee-unbroken-seasons',
 ] as const;
 
 export const RESEARCH: readonly ResearchDefinition[] = [

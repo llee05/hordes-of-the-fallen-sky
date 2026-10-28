@@ -10,6 +10,7 @@ import { areaRoster } from '../data/enemies';
 import { chooseEnemy } from '../data/enemies';
 import type { RunState } from '../types';
 import { currentLocation } from './journey';
+import { recordWaveEnded } from './researchRuntime';
 import { terrainSeed } from '../terrain/noise';
 
 export interface EncounterState {
@@ -57,6 +58,7 @@ export function advanceEncounters(run: RunState): boolean {
   }
   const changed = state.phase !== plan.phase;
   state.phase = plan.phase;
+  if (changed && plan.phase === 'recovery') recordWaveEnded(run);
   return changed && (plan.phase === 'warning' || plan.phase === 'elite');
 }
 export function encounterEnemy(run: RunState, random = Math.random) {

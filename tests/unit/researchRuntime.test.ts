@@ -12,8 +12,10 @@ import {
   recordFriendlyHitOnEnemy,
   recordGallopThroughEnemy,
   recordKhanTarget,
+  recordMaterialSpend,
   recordResearchEnemyKill,
   recordResearchShard,
+  recordWaveEnded,
   researchEchoRelease,
   researchGallop,
   researchWaterRadius,
@@ -28,13 +30,13 @@ import {
 import { advancePatrons } from '../../src/game/state/patrons';
 import { damageKhan, khanSpeedMultiplier } from '../../src/game/state/khan';
 import { advanceMountedCombat } from '../../src/game/state/mountedCombat';
-import { economyRates } from '../../src/game/state/economy';
+import { economyRates, pastureDepletion } from '../../src/game/state/economy';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
 import { world } from './fixtures/expedition';
 import { describe, expect, it } from 'vitest';
 import { applyResearch } from '../../src/game/state/run';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
-import { clanDamageMultiplier } from '../../src/game/state/clan';
+import { buildStructure, clanDamageMultiplier, damageClan } from '../../src/game/state/clan';
 import { researchPreviewById } from '../../src/game/state/progressionPreview';
 
 describe('supported V2 combat slice', () => {
@@ -370,6 +372,79 @@ describe('Börte Chino (Hunting) runtime effects', () => {
     expect(khanSpeedMultiplier(r)).toBeCloseTo(1.15);
     r.elapsed = 1.1;
     expect(khanSpeedMultiplier(r)).toBe(1);
+    expect(decodeExpedition(captureExpedition(r, world())).run.researchRuntime).toEqual(
+      r.researchRuntime,
+    );
+  });
+});
+
+describe('Etügen Eke (Civilisation) runtime effects', () => {
+  it('boosts herd food production by 30% for 20 s after a wave ends with Vigilant Herders without stacking', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['ee-vigilant-herders'] = 1;
+    const base = economyRates(r).foodProduction;
+    recordWaveEnded(r);
+    expect(economyRates(r).foodProduction).toBeCloseTo(base * 1.3);
+    r.elapsed = 10;
+    recordWaveEnded(r);
+    expect(economyRates(r).foodProduction).toBeCloseTo(base * 1.3);
+    r.elapsed = 29;
+    expect(economyRates(r).foodProduction).toBeCloseTo(base * 1.3);
+    r.elapsed = 30.1;
+    expect(economyRates(r).foodProduction).toBeCloseTo(base);
+  });
+
+  it('refunds 15% of materials rounded down on the first material spend each crossing with Camp of Craftspeople', () => {
+    const r = createRun();
+    r.phase = 'building';
+    r.clan.materials = 100;
+    r.upgrades['ee-camp-of-craftspeople'] = 1;
+    expect(buildStructure(r, 'wagon')).toBe(true);
+    expect(r.clan.materials).toBe(100 - 26 + Math.floor(26 * 0.15));
+    const afterFirst = r.clan.materials;
+    expect(recordMaterialSpend(r, 20)).toBe(0);
+    expect(r.clan.materials).toBe(afterFirst);
+    r.story.crossings.push({ route: 'river', region: 1, population: 8 });
+    expect(recordMaterialSpend(r, 27)).toBe(4);
+  });
+
+  it('activates Bounty in Scarcity below 25 food and keeps +40% herding until reserves recover to 40', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['ee-bounty-in-scarcity'] = 1;
+    const base = economyRates(r).foodProduction;
+    r.clan.food = 30;
+    expect(economyRates(r).foodProduction).toBeCloseTo(base);
+    r.clan.food = 24;
+    expect(economyRates(r).foodProduction).toBeCloseTo(base * 1.4);
+    r.clan.food = 35;
+    expect(economyRates(r).foodProduction).toBeCloseTo(base * 1.4);
+    r.clan.food = 40;
+    expect(economyRates(r).foodProduction).toBeCloseTo(base);
+  });
+
+  it('produces 60% herd food and 50% camp materials while migrating with The Wandering City', () => {
+    const r = createRun();
+    const campRates = economyRates(r);
+    r.clan.stage = 'migration';
+    expect(economyRates(r).foodProduction).toBe(0);
+    expect(economyRates(r).materials).toBe(0);
+    r.upgrades['ee-wandering-city'] = 1;
+    expect(economyRates(r).foodProduction).toBeCloseTo(campRates.foodProduction * 0.6);
+    expect(economyRates(r).materials).toBeCloseTo(campRates.materials * 0.5);
+  });
+
+  it('regenerates pasture in camp and halves starvation resolve loss with Unbroken Seasons', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    const baseDepletion = pastureDepletion(r);
+    r.upgrades['ee-unbroken-seasons'] = 1;
+    expect(pastureDepletion(r)).toBeCloseTo(baseDepletion - 0.25);
+    const control = createRun();
+    damageClan(control, 8, undefined, 'starvation');
+    damageClan(r, 8, undefined, 'starvation');
+    expect(100 - r.clan.integrity).toBeCloseTo((100 - control.clan.integrity) * 0.5);
     expect(decodeExpedition(captureExpedition(r, world())).run.researchRuntime).toEqual(
       r.researchRuntime,
     );

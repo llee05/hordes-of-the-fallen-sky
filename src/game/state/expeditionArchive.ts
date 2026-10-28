@@ -297,6 +297,11 @@ const optional: Record<string, Record<string, Rule>> = {
         momentumHoldUntil: number,
         markedNearKhan: boolean,
         endlessBurstUntil: number,
+        vigilantHerdersUntil: number,
+        craftspeopleRefundedCrossing: integer,
+        crossingMaterialsSpent: positive,
+        crossingSpentIndex: integer,
+        scarcityActive: boolean,
       },
     ),
     finalStand: object(

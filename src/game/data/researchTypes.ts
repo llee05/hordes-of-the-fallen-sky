@@ -31,7 +31,12 @@ export type ResearchEffect =
         | 'bc-throat-of-the-prey'
         | 'bc-storm-chaser'
         | 'bc-call-of-the-pack'
-        | 'bc-endless-pursuit';
+        | 'bc-endless-pursuit'
+        | 'ee-vigilant-herders'
+        | 'ee-camp-of-craftspeople'
+        | 'ee-bounty-in-scarcity'
+        | 'ee-wandering-city'
+        | 'ee-unbroken-seasons';
     };
 export interface ResearchDefinition {
   id: string;
