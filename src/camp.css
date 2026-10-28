@@ -806,3 +806,201 @@
   background: linear-gradient(90deg, #c8ac7040, transparent 75%);
   box-shadow: inset 0 3px #f8eaca66;
 }
+
+/* Estate manuscript: the frame, title and plaques belong to one painted page. */
+.nomadic-camp {
+  border: 1px solid #c4a16a;
+  box-shadow:
+    inset 0 0 0 3px #384b48,
+    inset 0 0 0 5px #b2915d,
+    0 0 0 3px #654b36;
+  padding: 6px;
+  background: repeating-linear-gradient(
+    45deg,
+    #344843 0 3px,
+    #a88c59 3px 4px,
+    #553e30 4px 7px,
+    #a88c59 7px 8px
+  );
+}
+.nomadic-camp .camp-estate-heading {
+  position: relative;
+  justify-content: center;
+  padding: 53px 44px 9px;
+  background-color: #293c3c;
+  border-bottom: 1px solid #ad8c57;
+}
+.nomadic-camp .camp-estate-title {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 7px 30px 9px;
+  min-width: 310px;
+  justify-content: center;
+  text-align: center;
+  border: 1px solid #947746;
+  background: linear-gradient(#eddfbfed, #c6b184f2), var(--cloth-texture);
+  box-shadow: 0 3px 5px #152b2b66;
+}
+.nomadic-camp .camp-estate-title > .clan-mark {
+  display: none;
+}
+.nomadic-camp .camp-estate-title h2 {
+  margin: 2px 0 0;
+  color: #3f4939;
+  font-size: 25px;
+}
+.nomadic-camp .camp-estate-title .eyebrow {
+  color: #635339;
+  font-size: 6px;
+}
+.nomadic-camp .camp-stores {
+  gap: 30px;
+}
+.nomadic-camp .camp-stores > span {
+  gap: 5px;
+}
+.nomadic-camp .camp-stores strong {
+  font-size: 17px;
+}
+.nomadic-camp .camp-stores small {
+  display: inline;
+  font-size: 9px;
+  margin-left: 5px;
+}
+.nomadic-camp .camp-stores > span > span {
+  display: flex;
+  align-items: baseline;
+}
+.nomadic-camp .panel-close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+.nomadic-camp .camp-map-tools {
+  inset: 8px 12px auto;
+  align-items: center;
+}
+.nomadic-camp .tree-search-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 300px;
+  white-space: nowrap;
+  padding: 4px 7px;
+}
+.nomadic-camp .camp-map-tools > button {
+  padding: 8px 12px;
+}
+.nomadic-camp .camp-map-scroll {
+  inset: 0;
+}
+.nomadic-camp .camp-plaque {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px 6px 18px;
+  border: 1px solid #8e754b;
+  min-height: 31px;
+}
+.nomadic-camp .camp-plaque strong {
+  font-size: 12px;
+  line-height: 1.2;
+  flex: 1;
+}
+.nomadic-camp .camp-plaque small {
+  margin: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font:
+    10px/1.2 Georgia,
+    serif;
+}
+.nomadic-camp .camp-plaque-badge {
+  top: 5px;
+  width: 23px;
+  height: 23px;
+  background: #293b39;
+}
+.nomadic-camp .camp-plaque-badge .clan-mark {
+  width: 19px;
+  height: 19px;
+}
+.nomadic-camp .panel-footer {
+  position: relative;
+  justify-content: center;
+  padding: 7px 10px;
+  border-top: 2px solid #ae8d58;
+  background: #293c3c;
+}
+.nomadic-camp .panel-footer .secondary-button {
+  padding: 9px 24px;
+  background: #243737;
+  border: 1px solid #c5a56b;
+  color: #eeddb3;
+  box-shadow: inset 0 0 0 2px #40504a;
+}
+.nomadic-camp .paused-note {
+  position: absolute;
+  left: 14px;
+  color: #c4b58f;
+}
+@media (max-width: 1000px) {
+  .nomadic-camp .camp-stores {
+    gap: 16px;
+  }
+  .nomadic-camp .camp-stores small {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@media (max-width: 760px) {
+  .nomadic-camp .camp-estate-heading {
+    padding: 56px 5px 8px;
+  }
+  .nomadic-camp .camp-estate-title {
+    min-width: 260px;
+    padding: 6px 16px;
+  }
+  .nomadic-camp .camp-estate-title h2 {
+    font-size: 23px;
+  }
+  .nomadic-camp .panel-close {
+    right: 2px;
+    top: 4px;
+    padding: 4px;
+  }
+  .nomadic-camp .camp-stores {
+    gap: 6px;
+  }
+  .nomadic-camp .tree-search-label {
+    display: block;
+    width: 150px;
+    white-space: normal;
+  }
+  .nomadic-camp .camp-map-tools {
+    inset: 7px 5px auto;
+    gap: 4px;
+    align-items: end;
+  }
+  .nomadic-camp .camp-map-tools > button {
+    padding: 8px 5px;
+  }
+  .nomadic-camp .camp-map-scroll {
+    inset: 65px 0 0;
+  }
+  .nomadic-camp .paused-note {
+    position: static;
+    font-size: 0;
+  }
+  .nomadic-camp .panel-footer {
+    gap: 0;
+  }
+}
