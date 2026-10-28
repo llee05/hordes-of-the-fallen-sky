@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
 import { BUILDINGS, type BuildingDefinition } from '../../src/game/data/clan';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import {
   advanceClan,
   availableFormations,

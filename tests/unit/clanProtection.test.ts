@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
 import { advanceClan, damageClan } from '../../src/game/state/clan';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { createDeveloperRun } from '../../src/game/dev/levels';
 
 describe('transient clan protection', () => {

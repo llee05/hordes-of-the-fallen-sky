@@ -2,7 +2,7 @@
 
 A Mongolian-inspired nomadic civilization builder × mounted bullet heaven. **TypeScript + Phaser 3 + Electron + Vite.** The cities have fallen, the sky is going dark, and a small clan survives by moving. Build a people, defend their temporary home, and protect the caravan on its journey to the sacred heart of the steppe.
 
-This playable prototype includes a complete two-act expedition: eight illustrated camp encounters with choices, four companions, three defended crossings, a final mountain stand, and an epilogue reflecting the people who arrive. Its civilization systems include eight camp facilities, five encampment tiers, and six internal development paths, abstracted population and workers, three resources, four journey chapters with eight additional named camp destinations, five shared standard enemies, two shared elites, 24 local enemy variants, and one boss. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and broader campaign unlocks remain future work.
+This playable prototype includes a complete two-act expedition: eight illustrated camp encounters with choices, four companions, three defended crossings, a final mountain stand, and an epilogue reflecting the people who arrive. Its civilization systems include five permanent camp households and five optional workplaces chosen from fourteen building types, abstracted population and workers, three resources, four journey chapters with eight additional named camp destinations, five shared standard enemies, two shared elites, 24 local enemy variants, and one boss. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and broader campaign unlocks remain future work.
 
 Read [the world lore](lore.md) for the Tengri-inspired setting: Eternal Heaven, Etügen and the living land, the Last Court's Iron Vow, the unreturned, and the Blue Banner clan's search for refuge. Research notes separate the religious and cultural inspiration from the game's invented mythology.
 
@@ -133,24 +133,15 @@ until its discovery, provisions and encounter systems exist. See the
 [implementation record](docs/patron-research-v2.md) and
 [complete effect status inventory](docs/patron-research-v2-status.md).
 
-Press **B** to visit one large painted **nomadic camp**. Select an embedded building or empty plot to open a small anchored parchment with its level, effects, cost, prerequisites, and upgrade action. **Unfold levels & specialisations** expands that parchment with a vertical path and clear forks; there are no permanent side panels. The central **Clan Encampment** progresses through Wandering Clan, Established Encampment, Prosperous Ordo, Great Ordo, and Imperial Ordo, unlocking two through six facility plots and separate internal-development allowances. Eight facilities have three levels; archery, feltmaking, the sanctuary, and wagons offer mutually exclusive fourth-level choices. Six internal paths strengthen governance, remembrance, craft, warfare, logistics, and travelling exchange without taking full plots. Existing crafts and effects remain. Planning freezes the world; Escape dismisses the parchment first, then leaves camp. Purchases and completed crossings save a portable camp checkpoint through the existing profile system. **Continue clan camp** restores that organisation and its stores into a fresh expedition; it does not resume an interrupted battle or patron research. **New Game** begins a new eight-person clan. See [the nomadic camp guide](docs/nomadic-camp.md) for costs, architecture, compatibility and scope.
+Press **B** to visit the illustrated **nomadic camp**. Five permanent core households begin at level 1: **Khan's Ger, Horse Lines, Herding Grounds, Communal Hearth and Wagon Yard**. Choose five different workplaces from fourteen military, economy, survival, spiritual and cultural buildings for the five optional locations. Every building has three levels, a visible upgraded appearance, authored costs and effects, and a compact parchment inspector. The Khan's Ger governs population capacity and higher building levels. Search, Provisions and Combinations stay within the same painted map; Escape/controller Back closes a popover before leaving. Planning freezes the world. Unsupported mount, equipment, companion, trading and corruption benefits are recorded as **Planned** data rather than simulated systems.
 
-| Building             | What it adds                                        | Development paths                                                              |
-| -------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Family gers          | Families and faster material gathering              | Hearthkeepers repair clan resolve; refugee beacons welcome more people         |
-| Archery grounds      | Three mounted archers, encirclement, charging wedge | Fire arrows or veteran riders                                                  |
-| Herding grounds      | Horses, food production, feigned retreat            | Faster remount herds or food-preserving winter stores                          |
-| Spirit sanctuary     | Lightning strikes against nearby enemies            | Wind shamans or an ancestral camp guardian                                     |
-| Wagon circle         | Defensive volleys, including during migration       | War carts or felt armor, then wheelwrights or layered screens; shared lashings |
-| Feltmakers’ workshop | Faster material gathering                           | Wool sorting, weatherproof covers, pack frames, and master felt craft          |
-| Provisioning ger     | Food supplies and production                        | Aaruul, borts, hospitality, and shared arrival provisions                      |
-| Örtöö relay          | Faster crossings                                    | Pasture scouts, supply caches, family messengers, and fresh horses             |
+Purchases and completed crossings save the portable camp checkpoint. **Continue clan camp** restores its choices, levels and actual supplies into a fresh expedition; **Continue expedition** restores the whole battle and journey. Old facilities map to their corresponding new buildings, while retired tiers, internal ranks and craft branches are refunded once. See [the nomadic camp guide](docs/nomadic-camp.md) for the complete catalog, effects, prices and migration mapping.
 
-**Fire arrows + wind shamans = the Burning Tempest:** curving, flaming arrow fans with lingering burn damage. Military, spiritual, and migration decisions gradually establish the Iron Horde, Children of the Eternal Sky, or Wandering Nation identity.
+**Advanced Fletcher's Workshop + Shaman's Ger = the Burning Tempest:** curving, flaming arrow fans with lingering burn damage. Other combinations retain their existing patron and combat interactions.
 
 **The Khan is a title carried by successive leaders.** If he falls, the clan spends **10 active seconds choosing a new Khan** while riders, ancestral echoes, and camp defenses keep fighting. A visible countdown marks succession. The successor returns at the current camp or moving caravan with full maximum health, a ready gallop, and 3 seconds of protection. During the countdown, optionally choose an outrider (+5% riding speed) or hearthguard (8% less Khan damage) using 1 / 2, controller left / right, or the HUD. Their trait lasts for that generation; leaving the choice alone returns an unmodified successor. All research, resources, buildings, and journey progress carry on. Menus pause the countdown. Golomt’s Last Ember saves the current Khan immediately once per expedition; its charge does not refresh for successors. Losing the clan’s people or resolve still ends the expedition.
 
-A portable barricade of lashed wooden hurdles and indigo and rust felt bands surrounds the camp. It expands around growing households and new crafts, then travels as low wheeled screens around the caravan. Enemies stop at its edge and repeatedly attack clan resolve until defeated; hostile shots strike the barrier itself. Struck panels briefly jolt and brighten, and worn wood and frayed cloth reflect low resolve. Your Khan, riders, and camp defenses can still defeat the attackers. Packing up makes attackers pursue the moving caravan again when it leaves their reach. The barricade uses the clan's existing resolve and protection rather than a separate health pool.
+A portable barricade of lashed wooden hurdles and indigo and rust felt bands surrounds the camp. It expands around growing households and workplaces, then travels as low wheeled screens around the caravan. Enemies stop at its edge and repeatedly attack clan resolve until defeated; hostile shots strike the barrier itself. Struck panels briefly jolt and brighten, and worn wood and frayed cloth reflect low resolve. Your Khan, riders, and camp defenses can still defeat the attackers. Packing up makes attackers pursue the moving caravan again when it leaves their reach. The barricade uses the clan's existing resolve and protection rather than a separate health pool.
 
 Battles alternate warned assaults, featured enemies, and recovery windows. Optional supply carts, loose herds, stranded households, and enemy gatherings invite short rides away from camp. Terrain-aware enemies use the current area’s passes, ramps, dry ground, and river crossings. Sustained riding charges a stronger volley; key technologies add paired rider shots, pinning arrows, and a slowing gallop wake.
 
@@ -170,15 +161,14 @@ households, winter conditions, and learned improvements; food can be increasing 
 and still run out later. During crossings and the final stand, it reports whether
 supplies last to arrival or the passage opening. Imminent shortages remain visible
 when tips are hidden. In the camp inspector, **Provisions & gathering** breaks down
-production, consumption, and material gathering, while eligible craft cards preview
-their before/after rates, immediate food grants, time until stores empty, and the
-range of food needed across the available crossing routes. You can
-preview a craft while saving up its resource cost. Route cards show estimated travel
+production, consumption, and material gathering. Eligible building inspectors preview
+the actual purchase’s changes to combat and economy values, including food duration
+and crossing costs. You can preview an upgrade while saving up its resource cost. Route cards show estimated travel
 time, food needed en route, food after arrival rewards or rescue costs, and shortages
 before arrival. Estimates assume current households and improvements without future
 battle losses or purchases; risky routes remain your choice.
 
-For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For every camp cost, dependency, effect, and cultural source, see [the camp upgrade tree](docs/camp-upgrade-tree.md). For original technology balance and specialization routes, see [the V1 reference](docs/patron-tech-tree.md); the [V2 record](docs/patron-research-v2.md) covers the expanded registry and gated integrations. For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
+For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For current camp rules and effects, see [the nomadic camp guide](docs/nomadic-camp.md); historical craft details and cultural sources remain in [the legacy camp catalog](docs/camp-upgrade-tree.md). For original technology balance and specialization routes, see [the V1 reference](docs/patron-tech-tree.md); the [V2 record](docs/patron-research-v2.md) covers the expanded registry and gated integrations. For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
 
 ## Controls
 
@@ -239,7 +229,9 @@ src/game/state/run.ts          Experience, traditions, run lifecycle
 src/game/state/khan.ts         Khan presence, lethal hits, and active-time succession
 src/game/state/clan.ts         Economy, construction, migration, victory
 src/game/state/camp.ts         Typed camp effects, neutral defaults, and once-only grants
-src/game/data/clan.ts          Buildings, specializations, routes, regions, formations
+src/game/data/clan.ts          Legacy crafts, routes, regions, formations
+src/game/data/nomadicCamp.ts   Current camp building registry and level effects
+src/game/state/nomadicCamp.ts  Validated building purchases and compatibility projections
 src/game/data/landscapes.ts    Twelve location palettes, landmarks, vegetation, water, weather
 src/game/data/enemies.ts       Five enemies, two elites, and the Skybreaker
 src/game/data/patrons.ts       Eight patrons, playstyles, symbols, and descriptions
@@ -257,8 +249,9 @@ src/ui/GameUI.ts               Full-window HUD, title/pause menus, focus and inp
 src/ui/menuContent.ts          Camp, route, chronicle, settings, and help panels
 src/ui/progressionTree.ts      Shared data-driven progression tree renderer
 src/ui/researchContent.ts      Patron branches, ranks, and research state
-src/ui/campContent.ts          Camp nodes, prerequisites, costs, and exclusive paths
-src/ui/campModel.ts            Painted camp scene with anchored upgrade parchments
+src/ui/campContent.ts          Legacy camp branch and node rendering
+src/ui/campModel.ts            Camp panorama and nameplate composition
+src/ui/nomadicCampModel.ts     Building locations, chooser, previews, and upgrade popovers
 src/camp.css                  Camp landscape, sites, and responsive inspector layout
 src/platform/                 Narrow native capability bridge and browser fallback
 desktop/                      Secure Electron lifecycle and atomic profile storage

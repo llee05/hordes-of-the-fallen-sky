@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { barrierContact, campBoundary } from '../../src/game/state/campBarrier';
 import { CAMP_SITES, campShelters } from '../../src/game/state/campLife';
 

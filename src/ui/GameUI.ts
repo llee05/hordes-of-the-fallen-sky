@@ -1,3 +1,5 @@
+import { NOMADIC_BUILDINGS } from '../game/data/nomadicCamp';
+import type { NomadicBuildingId } from '../shared/nomadicCamp.js';
 import { normalizeVisualSettings } from '../shared/visualSettings';
 import {
   dangerWarningsContent,
@@ -844,7 +846,7 @@ export class GameUI {
   private closeCampPopup(): boolean {
     if (this.phase !== 'building' || !this.lastSnapshot || !this.treeView().campPopup) return false;
     const focus =
-      this.treeView().campTarget === 'building'
+      this.treeView().campTarget === 'building' && !this.lastSnapshot.run.clan.nomadicCamp
         ? `site-${this.campSelection}`
         : this.treeView().campFocus;
     Object.assign(this.treeView(), {
@@ -883,7 +885,41 @@ export class GameUI {
       !button.dataset.estateKind
     )
       this.scene.playInterfaceSound();
-    if (button.hasAttribute('data-camp-dismiss')) {
+    if (
+      button.dataset.nomadicPurchase &&
+      NOMADIC_BUILDINGS.some((b) => b.id === button.dataset.nomadicPurchase)
+    ) {
+      this.treeView().campFocus = `nomadic-site-${button.dataset.nomadicPurchase}`;
+      this.scene.improveNomadicCamp(
+        button.dataset.nomadicPurchase as NomadicBuildingId,
+        button.dataset.nomadicSlot === undefined ? undefined : Number(button.dataset.nomadicSlot),
+      );
+    } else if (
+      button.dataset.nomadicSite &&
+      this.lastSnapshot &&
+      NOMADIC_BUILDINGS.some((b) => b.id === button.dataset.nomadicSite)
+    ) {
+      Object.assign(this.treeView(), {
+        campPopup: true,
+        campTarget: 'building',
+        nomadicSelection: button.dataset.nomadicSite,
+        campSlot:
+          button.dataset.nomadicSlot === undefined ? undefined : Number(button.dataset.nomadicSlot),
+        query: '',
+        recipes: false,
+        campFocus:
+          this.lastSnapshot.run.clan.nomadicCamp &&
+          (this.lastSnapshot.run.clan.nomadicCamp.slots.some(
+            (slot) => slot?.id === button.dataset.nomadicSite,
+          ) ||
+            button.dataset.campSite)
+            ? `nomadic-site-${button.dataset.nomadicSite}`
+            : button.dataset.nomadicSlot === undefined
+              ? 'tree-search'
+              : `plot-${button.dataset.nomadicSlot}`,
+      });
+      this.renderPhase(this.lastSnapshot);
+    } else if (button.hasAttribute('data-camp-dismiss')) {
       this.closeCampPopup();
     } else if (action === 'exit-camp') {
       this.scene.closeCamp();
@@ -944,6 +980,14 @@ export class GameUI {
     } else if (button.dataset.progressionJump && this.lastSnapshot) {
       const phase = button.dataset.progressionJump === 'camp' ? 'building' : 'upgrade';
       const view = this.treeView(phase);
+      if (
+        phase === 'building' &&
+        this.lastSnapshot.run.clan.nomadicCamp &&
+        NOMADIC_BUILDINGS.some((b) => b.id === button.dataset.branch)
+      ) {
+        view.nomadicSelection = button.dataset.branch;
+        view.campFocus = `nomadic-site-${button.dataset.branch}`;
+      }
       Object.assign(view, {
         branch: button.dataset.branch,
         node: button.dataset.targetNode,
@@ -954,6 +998,7 @@ export class GameUI {
       });
       if (phase === 'building') {
         this.campSelection = button.dataset.branch as BuildingId;
+        view.campSlot = undefined;
         view.expanded = true;
         view.campPopup = true;
         view.campTarget = 'building';

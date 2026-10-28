@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { advanceSuccession, beginSuccession, damageKhan } from '../../src/game/state/khan';
 import { advanceClan, beginMigration, buildStructure, damageClan } from '../../src/game/state/clan';
 import { currentReaction, rememberClan } from '../../src/game/state/legacy';

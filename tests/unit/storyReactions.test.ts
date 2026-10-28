@@ -28,7 +28,7 @@ import { FIELD_OBJECTIVES } from '../../src/game/data/fieldObjectives';
 import { BUILDINGS, LOCATIONS, ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration, buildStructure } from '../../src/game/state/clan';
 import { completeFieldObjective, startFieldObjective } from '../../src/game/state/fieldObjectives';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { GAME } from '../../src/game/config';
 
 const ROUTE_IDS = ROUTES.map((route) => route.id);

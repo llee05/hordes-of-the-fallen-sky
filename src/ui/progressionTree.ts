@@ -66,6 +66,7 @@ export interface TreeViewState {
   campPopup?: boolean;
   campTarget?: 'building' | 'encampment' | 'internal' | 'slot' | 'search' | 'economy';
   campSlot?: number;
+  nomadicSelection?: string;
   campInternal?: string;
   campFocus?: string;
 }

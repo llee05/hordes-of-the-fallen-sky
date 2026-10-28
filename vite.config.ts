@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   base: './',
   // Shared public atlas metadata is also bundled as raw text for UI illustrations.
-  assetsInclude: ['**/art/steppe-*.json'],
+  assetsInclude: ['**/art/steppe-*.json', '**/art/nomadic-camp-buildings.json'],
   build: {
     rolldownOptions: {
       output: {

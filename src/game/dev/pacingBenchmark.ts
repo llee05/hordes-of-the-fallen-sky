@@ -1,7 +1,9 @@
+import { nomadicBuildingLevel, purchaseNomadicBuilding } from '../state/nomadicCamp';
+import type { NomadicBuildingId } from '../../shared/nomadicCamp.js';
 import { GAME } from '../config';
 import { STARTING_TRADITIONS, type StartingTraditionId } from '../data/clan';
 import { UPGRADES } from '../data/upgrades';
-import { advanceClan, beginMigration, buildStructure } from '../state/clan';
+import { advanceClan, beginMigration } from '../state/clan';
 import { createRun, gainExperience, applyUpgrade, upgradeBlocker } from '../state/run';
 import { damageClan } from '../state/clan';
 import { observeExpedition, markExpedition, metricStage } from '../state/expeditionMetrics';
@@ -21,16 +23,20 @@ export function pacingBenchmark(
   let nextKill: number = config.firstContact,
     nextContact: number = config.contactEvery;
   let outcome: 'saved' | 'lost' | undefined;
-  const buy = (id: 'archery' | 'ger', path?: string) => {
+  const buy = (id: NomadicBuildingId) => {
     run.phase = 'building';
-    buildStructure(run, id, path);
+    purchaseNomadicBuilding(run, id);
     run.phase = 'playing';
   };
   while (!outcome && run.elapsed < config.maximumSeconds) {
     if (run.clan.stage === 'camp') {
-      if (!run.clan.buildings.archery) buy('archery');
-      if (style === 'guarding' && !run.clan.paths.ger?.includes('hearthkeepers'))
-        buy('ger', 'hearthkeepers');
+      if (!nomadicBuildingLevel(run.clan.nomadicCamp!, 'archery-range')) buy('archery-range');
+      if (style === 'guarding') {
+        if (run.clan.nomadicCamp!.core['khans-ger'] < 2) buy('khans-ger');
+        else if (run.clan.nomadicCamp!.core['communal-hearth'] < 2) buy('communal-hearth');
+        else if (!nomadicBuildingLevel(run.clan.nomadicCamp!, 'palisade-watchfires'))
+          buy('palisade-watchfires');
+      }
       if (run.clan.stageTime >= plan.departAt) {
         run.phase = 'route';
         beginMigration(

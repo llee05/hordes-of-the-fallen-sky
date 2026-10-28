@@ -10,7 +10,7 @@ import {
   type TreeBranch,
 } from '../../src/ui/progressionTree';
 import { researchBranches } from '../../src/ui/researchContent';
-import { createRun } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { PATRONS } from '../../src/game/data/patrons';
 import { UPGRADES } from '../../src/game/data/upgrades';
 import { BUILDINGS, type BuildingDefinition } from '../../src/game/data/clan';

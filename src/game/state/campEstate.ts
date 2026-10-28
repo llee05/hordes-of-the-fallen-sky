@@ -131,6 +131,7 @@ export function estateBlocker(
   id: string,
   rank: number,
 ): string | undefined {
+  if (run.clan.nomadicCamp) return 'The clan uses permanent households and optional building slots';
   const node = estateImprovement(run, kind, id, rank);
   if (!node || !Number.isInteger(rank) || rank < 1) return 'Unknown improvement';
   const current =

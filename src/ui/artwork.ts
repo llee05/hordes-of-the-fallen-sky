@@ -1,4 +1,5 @@
 import { RESEARCH_ICONS } from './researchIcons';
+import nomadicSource from '/art/nomadic-camp-buildings.json?raw';
 import propsSource from '/art/steppe-props.json?raw';
 import actorsSource from '/art/steppe-actors.json?raw';
 import clanSource from '/art/steppe-clan-motion.json?raw';
@@ -16,12 +17,16 @@ import type { LocationId } from '../game/types';
 
 // Public assets use root URLs in Vite. Bundle the metadata as text so both the
 // browser preview and file-based desktop build share the same atlas definitions.
+const nomadic = JSON.parse(
+  nomadicSource,
+) as typeof import('../../public/art/nomadic-camp-buildings.json');
 const props = JSON.parse(propsSource) as typeof import('../../public/art/steppe-props.json');
 const actors = JSON.parse(actorsSource) as typeof import('../../public/art/steppe-actors.json');
+const scenery = JSON.parse(scenerySource) as typeof import('../../public/art/steppe-scenery.json');
+
 const civilians = JSON.parse(
   clanSource,
 ) as typeof import('../../public/art/steppe-clan-motion.json');
-const scenery = JSON.parse(scenerySource) as typeof import('../../public/art/steppe-scenery.json');
 
 // Small brass-cut silhouettes stay legible at HUD scale. Decorative SVGs never add
 // accessible names or focus targets to the buttons and labels that contain them.
@@ -150,7 +155,7 @@ function atlasIllustration(
   return `<svg class="camp-illustration" viewBox="0 0 ${frame.w} ${frame.h}" aria-hidden="true" focusable="false"><svg width="${frame.w}" height="${frame.h}" viewBox="${frame.x} ${frame.y} ${frame.w} ${frame.h}" overflow="hidden"><image href="${root}${atlas.meta.image}" width="${atlas.meta.size.w}" height="${atlas.meta.size.h}"/></svg></svg>`;
 }
 
-/** Static resting poses in the planning miniature; character clocks stay paused. */
+/** Static painted figures for the manuscript camp; planning never advances their clocks. */
 export function campResident(name: 'worker' | 'packhorse'): string {
   return atlasIllustration(civilians, civilians.frames[`${name}-attack-0`].frame);
 }
@@ -217,4 +222,15 @@ export function routeIllustration(name: 'river' | 'ridge' | 'refuge'): string {
       '<path d="m0 77 46-22 40 12 53-23 45 13 56-11v50H0Z" fill="#a7ac7d"/><path d="m0 91 52-17 56 11 58-17 74 10v18H0Z" fill="#7c9077"/><path d="M89 77V15m47 53V7" stroke="#635c42" stroke-width="3"/><g class="route-flags"><path d="M91 17c15-10 19 10 37 0v25c-18 10-22-10-37 0Z" fill="#3b7c82"/><path d="M138 10c16-10 20 10 37 0v29c-17 10-21-10-37 0Z" fill="#a25b40"/><path d="m108 23 4 6-4 5-4-5Zm45-5 4 6-4 5-4-5Z" fill="#e4bf78"/></g>',
   };
   return `<svg class="route-illustration" viewBox="0 0 240 96" aria-hidden="true" focusable="false"><circle cx="188" cy="23" r="13" fill="#d4aa65" opacity=".65"/>${landscape[name]}<path d="M0 95h240" stroke="#9b7546" stroke-width="2"/></svg>`;
+}
+
+/** Three painted architecture stages, sharing the original camp's local atlas renderer. */
+export function nomadicIllustration(
+  art: NonNullable<BuildingDefinition['illustration']>,
+  level: number,
+): string {
+  const frame =
+    nomadic.frames[`${art}-${Math.min(3, Math.max(1, level))}` as keyof typeof nomadic.frames]
+      ?.frame;
+  return frame ? atlasIllustration(nomadic, frame) : campIllustration(art);
 }

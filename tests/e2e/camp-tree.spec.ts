@@ -1,138 +1,90 @@
 import { expect, test } from '@playwright/test';
 import {
-  selectCampBuilding,
-  closeOverlayOrPause,
-  buyNode,
-  inspectNode,
   openTitle,
   startExpedition,
+  selectCampBuilding,
+  buyNomadicLevel,
+  closeOverlayOrPause,
 } from './helpers';
 
-test('camp previews every development and enforces resources, workers, and exclusive choices', async ({
+test('camp construction previews real resources, worker reservation and headquarters prerequisites', async ({
   page,
 }) => {
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
-    const clan = (window as any).__gloam.scene.run.clan;
-    clan.materials = 500;
-    clan.spirit = 0;
-    clan.population = 2;
+    const s = (window as any).__gloam.scene;
+    s.run.clan.materials = 500;
+    s.run.clan.spirit = 0;
+    s.run.clan.population = 1;
   });
   await page.keyboard.press('b');
-  await expect(page.locator('[data-camp-site]')).toHaveCount(1);
-  await selectCampBuilding(page, 'archery');
-  await inspectNode(page, 'archery-base');
-  await expect(page.locator('.node-purchase-status')).toContainText('More families needed');
-  await inspectNode(page, 'archery-fire-arrows');
-  await expect(page.locator('.node-purchase-status')).toContainText(
-    'Establish Archery grounds first',
-  );
-  await expect(page.locator('.node-price')).toContainText('36 materials');
-  await selectCampBuilding(page, 'sanctuary');
-  await inspectNode(page, 'sanctuary-base');
-  await expect(page.locator('.node-price')).toContainText('12 Spirit');
+  await expect(page.locator('.camp-map-cores button')).toHaveCount(5);
+  await expect(page.locator('[data-camp-slot]')).toHaveCount(5);
+  await selectCampBuilding(page, 'sacred-ovoo');
+  await expect(page.locator('.node-price')).toContainText('8 Spirit');
+  await expect(page.locator('.tree-purchase')).toBeDisabled();
+  await selectCampBuilding(page, 'archery-range');
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await page.evaluate(() => (window as any).__gloam.scene.construct('archery'));
+  await expect(page.locator('.node-price')).toContainText('24 materials');
+  await expect(page.locator('.camp-gains')).toContainText('Shared attack damage');
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
+  await buyNomadicLevel(page, 'archery-range');
+  await expect(page.locator('.node-purchase-status')).toContainText("Khan's Ger level 2");
+  await selectCampBuilding(page, 'smiths-forge');
+  await expect(page.locator('.node-purchase-status')).toContainText('More families needed');
+  await expect(page.locator('.tree-purchase')).toBeDisabled();
   await closeOverlayOrPause(page);
   await page.evaluate(() => {
-    const clan = (window as any).__gloam.scene.run.clan;
-    clan.population = 8;
-    clan.spirit = 100;
+    (window as any).__gloam.scene.run.clan.population = 8;
   });
   await page.keyboard.press('b');
-  await selectCampBuilding(page, 'archery');
-  await buyNode(page, 'archery-base');
-  expect(
-    await page.locator('.camp-popup').evaluate((el) => el.contains(document.activeElement)),
-  ).toBe(true);
-  await buyNode(page, 'archery-fire-arrows');
-  await expect(page.locator('[data-node="archery-veteran-riders"]')).toHaveAttribute(
-    'data-status',
-    'excluded',
-  );
-  const learned = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.construct('archery', 'fire-arrows');
-    scene.construct('archery', 'veteran-riders');
-  });
+  await buyNomadicLevel(page, 'archery-range', 3);
+  await expect(page.locator('[data-camp-site="archery-range"]')).toHaveAttribute('data-level', '3');
+  await expect(page.locator('.tree-purchase')).toBeDisabled();
+  const completed = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
+  await page.evaluate(() => (window as any).__gloam.scene.improveNomadicCamp('archery-range'));
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(
-    learned,
+    completed,
   );
-  await page.screenshot({ path: 'test-results/camp-upgrade-tree.png' });
 });
 
-test('additional choices and deeper camp tiers work without new layout or purchase code', async ({
+test('authored building effects and cost changes flow through the inspector and real purchase', async ({
   page,
 }) => {
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(async () => {
-    const { BUILDINGS } = (await import(
-      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
-      '/src/game/data/clan.ts'
-    )) as typeof import('../../src/game/data/clan');
-    const building = BUILDINGS.find((entry) => entry.id === 'ger')!;
-    building.paths = [
-      ...building.paths,
-      {
-        id: 'herb-gardens',
-        title: 'Herb gardens',
-        description: 'Test extension of the camp.',
-        exclusiveGroup: 'specialization',
-        materials: 3,
-        spirit: 0,
-      },
-      {
-        id: 'field-medicine',
-        title: 'Field medicine',
-        description: 'Test deeper development.',
-        requires: ['herb-gardens'],
-        materials: 5,
-        spirit: 0,
-        apply: (run: any) => {
-          run.stats.maxHealth += 10;
-        },
-      },
-    ];
-    (window as any).__gloam.scene.run.clan.materials = 100;
+    const { NOMADIC_BUILDINGS } = await import(
+      // @ts-expect-error -- Vite browser module, not a Node import.
+      '/src/game/data/nomadicCamp.ts'
+    );
+    const level = NOMADIC_BUILDINGS.find((b: any) => b.id === 'archery-range').levels[0];
+    level.cost.materials = 19;
+    level.effects.player.damage = 3;
   });
   await page.keyboard.press('b');
-  await selectCampBuilding(page, 'ger');
-  await expect(page.locator('[data-tree-branch="ger"] [data-node]')).toHaveCount(10);
-  const materialsBefore = await page.evaluate(
-    () => (window as any).__gloam.scene.run.clan.materials,
-  );
-  const deeper = page.locator('[data-node="ger-field-medicine"]');
-  await expect(deeper).toHaveAttribute('data-status', 'locked');
-  await inspectNode(page, 'ger-field-medicine');
-  await expect(page.locator('.camp-popup-requirements')).toContainText('Herb gardens');
-  await buyNode(page, 'ger-herb-gardens');
-  await expect(page.locator('[data-node="ger-hearthkeepers"]')).toHaveAttribute(
-    'data-status',
-    'excluded',
-  );
-  await expect(deeper).toHaveAttribute('data-status', 'available');
-  await buyNode(page, 'ger-field-medicine');
-  await expect(deeper).toHaveAttribute('data-status', 'learned');
+  await selectCampBuilding(page, 'archery-range');
+  await expect(page.locator('.node-price')).toContainText('19 materials');
+  const before = await page.evaluate(() => {
+    const r = (window as any).__gloam.scene.run;
+    return { damage: r.stats.damage, materials: r.clan.materials };
+  });
+  await page.locator('.tree-purchase').click();
   expect(
-    await page.evaluate(() => ({
-      materials: (window as any).__gloam.scene.run.clan.materials,
-      health: (window as any).__gloam.scene.run.stats.maxHealth,
-    })),
-  ).toEqual({ materials: materialsBefore - 8, health: 110 });
+    await page.evaluate(() => {
+      const r = (window as any).__gloam.scene.run;
+      return { damage: r.stats.damage, materials: r.clan.materials };
+    }),
+  ).toEqual({ damage: before.damage + 3, materials: before.materials - 19 });
+  await expect(page.locator('[data-nomadic-level]')).toHaveCount(3);
 });
 
-test('camp parchments fit small screens, search is recoverable, and purchased nodes remain inspectable', async ({
+test('parchments remain bounded and search recoverable at desktop and compact sizes', async ({
   page,
 }) => {
   await openTitle(page);
   await startExpedition(page);
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.clan.materials = 500;
-  });
   await page.keyboard.press('b');
   for (const size of [
     { width: 1280, height: 800 },
@@ -140,21 +92,19 @@ test('camp parchments fit small screens, search is recoverable, and purchased no
     { width: 390, height: 844 },
   ]) {
     await page.setViewportSize(size);
-    await selectCampBuilding(page, 'wagon');
+    await selectCampBuilding(page, 'wagon-yard');
     const box = (await page.locator('.camp-popup').boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(size.width + 1);
     expect(box.y + box.height).toBeLessThanOrEqual(size.height + 1);
+    await page.locator('[data-disclosure-key="nomadic-levels"] summary').click();
+    await expect(page.locator('[data-nomadic-level="3"]')).toContainText('Advanced');
+    await page.locator('[data-camp-dismiss]').click();
   }
-  await buyNode(page, 'wagon-base');
-  await inspectNode(page, 'wagon-base');
-  await expect(page.locator('.tree-purchase')).toBeDisabled();
-  await page.locator('[data-camp-dismiss]').click();
-  await page.getByRole('searchbox', { name: 'Find in camp' }).fill('felt armor');
+  await page.getByRole('searchbox', { name: 'Find in camp' }).fill('rare trade');
   await expect(page.locator('.camp-building-choice')).toHaveCount(1);
-  await page.locator('.camp-building-choice[data-camp-site="wagon"]').click();
-  await expect(page.locator('.camp-popup-heading')).toContainText('Wagon circle');
-  await closeOverlayOrPause(page);
-  await expect(page.getByRole('dialog')).toBeHidden();
+  await page.locator('[data-nomadic-site="trading-post"]').click();
+  await expect(page.locator('.camp-popup-heading')).toContainText('Trading Post');
+  await expect(page.locator('.camp-popup')).toContainText('Planned · trade rates');
 });

@@ -1,66 +1,83 @@
-# The portable clan encampment
+# The nomadic camp
 
-The camp represents travelling infrastructure, household skills, movable possessions, and clan organisation. It is inspired by the Family Estate’s role as a household foundation in [CK3: Roads to Power](https://www.paradoxinteractive.com/games/crusader-kings-iii/add-ons/crusader-kings-iii-roads-to-power); this game’s progression, economy and fiction remain its own.
+Camp management is a single illustrated manuscript landscape with small parchment nameplates, diamond badges and a contextual upgrade popover. Existing painted gers, horses, carts, banners and props remain local assets. The central Khan's Ger and four other core households always exist; five additional locations let a player choose five different workplaces from fourteen options. This replaces the former eight-facility, five-tier and internal-development systems.
 
-## Progression model
+## Buildings and progression
 
-The five central tiers are Wandering Clan, Established Encampment, Prosperous Ordo, Great Ordo, and Imperial Ordo. They unlock 2, 3, 4, 5, and 6 building plots, and 1, 2, 3, 4, and 6 internal development slots. The central encampment occupies no plot and cannot be demolished. The starting Family gers occupy the first plot. Six plots among eight facilities make construction a strategic choice; there is no demolition or respecialisation in this prototype.
+Every building has Basic, Established and Advanced levels. Each level has authored resource costs, continuing effects, prerequisites and a registered visual state. The architecture can extend to five levels by adding content, prices and raising the shared validated maximum; UI layout and purchase logic do not assume three fixed cards.
 
-| Tier | Encampment             | Upgrade price before discounts | Plots / internal slots | Additional requirement      | Continuing benefit                                   |
-| ---- | ---------------------- | ------------------------------ | ---------------------- | --------------------------- | ---------------------------------------------------- |
-| 1    | Wandering Clan         | Provided                       | 2 / 1                  | —                           | Starting organisation                                |
-| 2    | Established Encampment | 45 materials                   | 3 / 2                  | Tier 1                      | Material gathering ×1.1                              |
-| 3    | Prosperous Ordo        | 95 materials +10 Spirit        | 4 / 3                  | Tier 2; Family gers level 2 | Food production ×1.1; clan damage taken ×0.95        |
-| 4    | Great Ordo             | 165 materials +25 Spirit       | 5 / 4                  | Tier 3; Family gers level 3 | Host firing interval ×0.95; migration mobility ×1.06 |
-| 5    | Imperial Ordo          | 260 materials +45 Spirit       | 6 / 6                  | Tier 4; Family gers level 3 | Material gathering ×1.2; clan damage taken ×0.85     |
+| Permanent core  | Purpose and current benefits                                                                         | Deferred benefits                          |
+| --------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Khan's Ger      | Material gathering, population capacity (40 / 80 / 120); gates the matching level of other buildings | Leadership                                 |
+| Horse Lines     | Migration mobility                                                                                   | Mount speed and effectiveness              |
+| Herding Grounds | Passive food production, existing grazing and retreat formation support                              | Leather and wool                           |
+| Communal Hearth | Food efficiency, active-time Khan recovery and stationary resolve recovery                           | —                                          |
+| Wagon Yard      | Existing defensive-cart support, migration mobility and materials after a completed crossing         | Storage capacity and relocation efficiency |
 
-Benefits accumulate. Guardian discounts apply to material prices, rounded up; Spirit and worker requirements are unchanged.
+All five cores start at level 1. They cannot be removed or exchanged, reserve no additional workers, and take no optional location. Each optional building reserves one worker on construction, retained through its upgrades. Casualties do not destroy workplaces or prevent upgrades that reserve no new workers.
 
-All eight existing facilities have three levels. Archery grounds, Spirit sanctuary, Wagon circle, and Feltmakers’ workshop offer mutually exclusive fourth-level specialisations. Family gers and Herding grounds retain their earlier household/herding choices. The original 37 craft IDs and all their gameplay checks remain; 16 ordinary facility levels and two felt specialisations extend the catalogue to 55 developments. `clan.buildings` still counts establishment plus learned developments. Use `buildingLevel()` for an actual facility level, rather than treating that counter as a level.
+| Optional building         | Category             | Current integration                                                                 | Deferred integration                                                      |
+| ------------------------- | -------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Archery Range             | Military             | Existing mounted archers and combat formations; damage, firing cadence and piercing | —                                                                         |
+| Smith's Forge             | Military             | Weapon damage and clan protection                                                   | Equipment crafting and armour effectiveness                               |
+| Warrior's Training Ground | Military             | Existing escort damage                                                              | Companion capacity, strength and abilities                                |
+| Scout's Watchpost         | Military             | Collection radius and materials after crossings                                     | Exploration radius, hidden discoveries and expedition reward improvements |
+| Fletcher's Workshop       | Military             | Additional projectile, firing cadence, piercing and fire-arrow unlock               | —                                                                         |
+| Palisade & Watchfires     | Military             | Clan protection                                                                     | Guard strength                                                            |
+| Hunting Lodge             | Economy & survival   | Food production and food after crossings                                            | Rare animal resources and hunting expeditions                             |
+| Artisan's Ger             | Economy & survival   | Material gathering and food efficiency                                              | Crafting and equipment systems                                            |
+| Trading Post              | Economy & survival   | Materials after crossings                                                           | Trade rates, merchant stock and rare trade goods                          |
+| Healer's Ger              | Economy & survival   | Maximum health and active-time recovery                                             | Healing-effectiveness modifiers                                           |
+| Sacred Ovoo               | Spiritual & cultural | Existing sanctuary lightning, Spirit gain and protection                            | Patron blessings                                                          |
+| Shaman's Ger              | Spiritual & cultural | Burn damage and the story world's fictional wind-magic unlock                       | Spiritual abilities, rituals and corruption cleansing                     |
+| Ancestral Standard        | Spiritual & cultural | Existing escort damage and resolve recovery                                         | Companion morale and patron-related bonuses                               |
+| Storyteller's Hearth      | Spiritual & cultural | Experience gain, banked technology progression and Spirit gain                      | Lore discoveries                                                          |
 
-Clan Council, Ancestral Hearth, Master Craftsmen, War Council, Supply Organisation, and Travelling Merchants have two ranks each and reserve internal slots independently of plots. Their production, consumption, Spirit income, rider damage, and arrival benefits use the existing simulation. Merchants are an abstract arrival benefit, not a trading/inventory subsystem.
+These spiritual benefits describe the fictional Sundering and the game's supernatural calamity; they are not claims about historical Tengri practices. Unsupported mechanics are stored as typed `future` effect data and explicitly labelled **Planned** in the inspector. They do not create pretend merchants, inventories, companion actors, corruption systems or mount simulation.
 
-| Internal development | First available tier | Benefit per rank                    |
-| -------------------- | -------------------- | ----------------------------------- |
-| Clan Council         | 1                    | Food consumption ×0.95              |
-| Ancestral Hearth     | 1                    | Stored Spirit from defeats ×1.15    |
-| Master Craftsmen     | 1                    | Material gathering ×1.1             |
-| War Council          | 2                    | Accompanying rider damage ×1.15     |
-| Supply Organisation  | 2                    | +8 food on completed crossings      |
-| Travelling Merchants | 3                    | +6 materials on completed crossings |
+All five optional locations begin empty and are immediately selectable. Inspecting a choice never reserves a location or charges supplies. One validated construction action occupies the selected location; a type already owned cannot be constructed again or moved into another location. There is no demolition or replacement action yet. The slot instances and IDs allow those actions to be introduced later without redesigning ownership.
 
-An internal first rank costs 24 materials, 4 Spirit, and one reserved worker. Its second rank costs 42 materials and 10 Spirit, needs camp tier 3, and reserves no additional worker or slot. Ordinary facility levels 2 and 3 cost 30 materials and 55 materials +5 Spirit respectively, with corresponding camp-tier requirements. Family gers welcome four people at each of these level upgrades. Fourth-level choices retain the facility's authored specialisation costs and require camp tier 4 and facility level 3.
+Default construction costs are 24 materials; levels 2 and 3 cost 40 and 70 materials. Spiritual buildings additionally cost 8, 12 and 20 Spirit respectively. Core level 1 is provided. Guardian material discounts apply with rounding up; workers are reserved rather than consumed. Level 2/3 requires the Khan's Ger at level 2/3. All balance values live in `GAME.camp.nomadic`.
 
-## Code contracts
+The Khan's Ger capacity governs new rescued or arriving households. Migration never deletes people already above their newly mapped capacity; they remain with the clan, and further arrivals wait until capacity is sufficient. A building purchase never heals or resurrects a fallen Khan, changes succession time, refreshes Last Ember, or opens the technology menu. Experience bonuses use the existing level-up banking rules.
 
-- `data/campEstate.ts` authors tiers, internal developments, and facility level extensions. Existing facilities and crafts remain in `data/clan.ts`.
-- `GAME.camp.estate` holds new balance values, costs, slot allowances, and effect strengths.
-- `state/campEstate.ts` derives facility levels, validates plot/tier/building/worker requirements, and purchases central or internal improvements. Each successful purchase adds one chronicle memory titled with the tier or rank; rejected purchases record nothing. Reactions come from `estateReaction` in `data/storyReactions.ts` and follow the shared memory bounds, reaction spacing, remnant voice, and Camp scenes setting described in [the story guide](story-prototype.md#lived-history).
-- `state/clan.ts` still validates and charges facility purchases. Plot assignment happens only after all blockers pass. Replayed purchases cannot charge again.
-- `state/camp.ts` applies typed effects once. Economy, patron stacking, targeting, protection, support fire, and arrival rewards consume the existing effect state. Spirit multipliers now include camp effects.
+## State, rendering and simulation
 
-`clan.estate` contains only the central tier, plot assignments, and internal ranks. Facility levels and specialisations use stable IDs in `clan.paths`, so there is no second progression copy in the DOM. Migration keeps these objects and their accumulated effects. Packed camps cannot purchase. New worker reservations require spare families; upgrades that reserve no new workers remain possible after casualties. Combination planning totals the missing central tiers, facility levels, and prerequisite crafts once, using current patron discounts.
+- `shared/nomadicCamp.ts` defines versioned ownership and validates exactly five cores, five optional slots, unique optional IDs and supported integer levels.
+- `game/data/nomadicCamp.ts` is the reusable 19-building registry. Definitions own categories, descriptions, levels, costs, prerequisites, effects and visual states. Core positions are stable; optional positions belong to slots, not to a building type.
+- `game/state/nomadicCamp.ts` validates and performs a purchase atomically. It applies typed ongoing effects and supported player modifiers once, records a chronicle memory, and preserves progression and existing patron modifiers. Future mechanics are derived from the same owned level data.
+- `clan.nomadicCamp` is authoritative. `clan.buildings` and the few remaining craft flags are derived compatibility projections for existing battlefield actors, camp lightning, formations and fire-arrow interactions. They are not a second editable progression model. New runs reject the retired craft/tier purchase APIs.
+- `ui/nomadicCampModel.ts` renders snapshot data using the existing shared parchment content builder and actual purchase previews. `GameUI` retains only selection/search state; `ArenaScene` owns action dispatch, persistence and phase changes.
 
-Legacy in-memory snapshots without `estate` retain their original craft gates and reservations until they adopt central progression. Existing facilities are grandfathered when reconstructing plot assignments, including any old camp over the six-plot limit; they are never silently deleted. New expeditions always receive the new two-plot rules. Tests for legacy craft prices explicitly use legacy snapshots; fresh-estate tests exercise the new restrictions.
+The camp keeps one picture, rather than adding permanent navigation or inspector columns. Each location is clickable through its art or nameplate. Hover and visible keyboard focus identify the selected nameplate; Escape/controller Back dismisses its popover before leaving management. Search, Provisions and Combinations remain available above the painting. Small windows pan the map and retain a bounded popover. No simulation or character clock advances while planning.
+
+Combination links inspect a building independently of the previously selected construction location. A combination is closed when its distinct missing optional buildings, including prerequisites, exceed the remaining locations; shared prerequisites count once.
+
+The panorama and three-stage ger, wagon-workplace and archery-ground paintings are bundled local assets. Higher ranks add canopies, carved entrances, stores and equipment; existing sheep, horses, cairns and banners complete the scene. See [the artwork record](nomadic-camp-artwork.md) for assets, atlas metadata and generation prompts. Portable forges, healer/herbal supplies, hunting racks, storyteller circles and distinct companion-training equipment would further improve workplace differentiation.
+
+## Portable checkpoints and full expeditions
+
+The [portable checkpoint contract](camp-checkpoints.md) owns capture, effect and identity reconstruction, gift suppression, and fresh-expedition continuation. [Full expedition saves](expedition-saves.md) retain the complete battle and journey state.
+
+Old profiles and both save types migrate automatically:
+
+| Old facility         | New building            |
+| -------------------- | ----------------------- |
+| Family gers          | Khan's Ger              |
+| Örtöö relay          | Horse Lines             |
+| Herding grounds      | Herding Grounds         |
+| Provisioning ger     | Communal Hearth         |
+| Wagon circle         | Wagon Yard              |
+| Archery grounds      | Archery Range, optional |
+| Feltmakers' workshop | Artisan's Ger, optional |
+| Spirit sanctuary     | Sacred Ovoo, optional   |
+
+Earned ordinary levels 2 and 3 carry over; an old exclusive craft is not mistaken for a free ordinary level. All five cores are provided at least at level 1. The three corresponding optional facilities retain ownership and occupy at most three locations, leaving at least two available choices.
+
+Removed craft branches, central encampment tier purchases and internal ranks return their materials and Spirit at the applicable catalog prices. Old crafts are refunded rather than retained as hidden alternatives. Current population, livestock, food, stores and already-paid arrival/welcome gifts remain. Only retired building contributions are removed from ongoing camp effects, preserving lasting story-choice benefits before the new mapped levels are applied; the old remount speed multiplier is removed before applying the new model. Research, trust, transcripts, chronicles and every banked knowledge point remain intact in full expeditions. A versioned ownership record marks migration complete, preventing repeat refunds or effect stacking.
+
+Legacy catalog definitions and explicit legacy test fixtures remain to validate old archives, reconstruct historical purchase effects and calculate refunds. They are not available through the current camp UI. New or malformed ownership records with duplicate choices, missing cores, unknown IDs or invalid levels are rejected by the existing validated save boundary; no filesystem or IPC capabilities were added.
 
 ## Verification
 
-Unit tests cover starting capacity, exact discounted costs, invalid and replayed purchases, independent slot types, worker reservation, camp/building gates, sequential facility levels, exclusive choices, tier caps, mechanical modifiers, and migration retention. The existing craft, economy, and patron tests continue to cover their established effects.
-
-## The painted interface
-
-Camp management is one full illustrated scene. The large central ger opens encampment progression and its internal developments. Buildings occupy the painted plots; an empty unlocked plot opens a construction chooser. Locked plots explain the central tier needed to claim them. There are no persistent navigation, development, or inspector columns.
-
-One parchment is open at a time, positioned beside its selected site and clamped into the viewport. It shows facility level, description, continuing bonuses, actual next-purchase changes, costs, blockers, and a validated action. **Unfold levels & specialisations** expands that same parchment with a vertical path and explicit forks. Complementary crafts remain in a folded section. Clicking a completed or locked entry inspects it without spending. Escape/controller Back dismisses the parchment first and restores focus to its building, then closes camp management on the next press. The frame’s return/close actions leave camp directly.
-
-`campModel.ts` composes the existing local painted PNGs and registered resting poses into the scene. `campPopups.ts` adapts state and authored effects into small parchment views. `GameUI` retains only selection and foldout state; purchases and phase transitions remain in `ArenaScene`. Search, provisions, and combinations also use temporary parchments. Narrow screens keep the scene behind a bounded popup, and live reduced-motion preferences still stop ornamental motion.
-
-## Portable camp saves
-
-The profile has an optional, versioned `camp` record. Old profiles still load unchanged; a malformed camp field is discarded without discarding score, sound, or command-history preferences. `shared/campArchive.ts` validates bounded IDs, ranks, plot arrays, and finite supplies before native persistence. `GamePlatform.saveCamp` deep-copies queued snapshots; the existing sandboxed bridge and atomic `ProfileStore` handle disk writes. No new filesystem or IPC capability is exposed.
-
-`captureCampArchive` records organisation, owned facilities, stable craft IDs, internal ranks, and stores. `runFromCampArchive` reconstructs a fresh run from known content and applies each continuing benefit once. Saved stores replace replayed immediate grants, so load cannot repeatedly award welcome gifts or food. Removed content is ignored; contradictory specialisations and descendants of their excluded branches cannot stack. Profile and archive tests cover old profiles, malformed records, native round trips, independent copies, and identical reconstruction.
-
-This is a **portable camp checkpoint**, not a mid-battle expedition save. The integration saves after successful purchases and completed migrations. **Continue clan camp** brings that organisation and those stores into a fresh expedition; patron research, battle actors, journey time, and story progression restart. **New Game** still starts with the original eight people and a new two-plot camp. Developer/cheated runs do not overwrite the camp checkpoint.
-
-For resuming the complete journey, including research and the battlefield, use **Continue expedition** or **Saved expeditions**. See [the separate full-save contract](expedition-saves.md).
+Tests cover all 19 registry entries, five empty locations, duplicate prevention, selected-slot construction, affordability and exact deductions, prerequisites, worker reservation, maximum levels, live effects, deferred effect data, save round-trips, old save migration, no double refunds, no replayed gifts, preserved knowledge and succession, and visible level states. Browser coverage exercises the painted map, optional chooser, popovers, search, controller confirmation/Back and both desktop sizes plus compact windows. Native Electron coverage verifies the production build, persistent choices/levels and layout across app restart.

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {
-  buyNode,
+  buyNomadicLevel,
   closeOverlayOrPause,
   openTitle,
   selectCampBuilding,
@@ -21,20 +21,18 @@ test('camp planning spends resources, unlocks riders and builds the Burning Temp
     clan.spirit = 100;
   });
   await page.keyboard.press('b');
-  await expect(page.getByRole('heading', { name: 'Build a people.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: "The Khan's camp" })).toBeVisible();
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
   await selectCampBuilding(page, 'archery');
-  await buyNode(page, 'archery-base');
-  await buyNode(page, 'archery-fire-arrows');
-  await selectCampBuilding(page, 'sanctuary');
-  await buyNode(page, 'sanctuary-base');
-  await buyNode(page, 'sanctuary-wind-shamans');
+  await buyNomadicLevel(page, 'archery-range');
+  await buyNomadicLevel(page, 'fletchers-workshop', 3);
+  await buyNomadicLevel(page, 'shamans-ger');
   await expect(page.locator('#synergy')).toBeVisible();
   await expect(page.locator('#riders')).toHaveText('4');
-  await expect(page.locator('#workers')).toHaveText('5 / 8');
-  await expect(page.locator('#materials')).toHaveText('190');
+  await expect(page.locator('#workers')).toHaveText('3 / 8');
+  await expect(page.locator('#materials')).toHaveText('8');
   await page.screenshot({ path: 'test-results/camp-development.png', fullPage: true });
   await closeOverlayOrPause(page);
   await expect(page.getByRole('dialog')).toBeHidden();
@@ -52,7 +50,9 @@ test('migration moves a vulnerable caravan, preserves the build and awards survi
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.run.clan.stageTime = 45;
-    scene.run.clan.buildings.archery = 1;
+    scene.openBuildings();
+    scene.improveNomadicCamp('archery-range');
+    scene.closeCamp();
   });
   await expect(page.locator('#migrate')).toBeEnabled();
   await page.keyboard.press('m');

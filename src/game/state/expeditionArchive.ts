@@ -1,3 +1,7 @@
+import { syncNomadicBuildings } from './nomadicCamp';
+import { isNomadicCamp } from '../../shared/nomadicCamp.js';
+import { createCampEstate } from './campEstate';
+import { migrateLegacyNomadicCamp } from './nomadicCampMigration';
 import { isExpeditionSave, isRecord, type ExpeditionSave } from '../../shared/expeditionSave';
 import { createRun } from './run';
 import { ALL_ENEMIES, SKYBREAKER } from '../data/enemies';
@@ -191,7 +195,7 @@ const overrides: Record<string, Rule> = {
     {},
     Object.fromEntries(BUILDINGS.map((b) => [b.id, list(oneOf(b.paths.map((p) => p.id)), 100)])),
   ),
-  'clan.estate.slots': list(oneOf([null, ...BUILDINGS.map((b) => b.id)]), 6),
+  'clan.estate.slots': list(oneOf([null, ...BUILDINGS.map((b) => b.id)]), 32),
   'clan.estate.internals': dictionary(integer),
   'guidance.completed': list(string, 100),
   'combat.trails': list(
@@ -385,7 +389,8 @@ function shape(example: unknown, path = ''): Rule {
     optional[path],
   );
 }
-optional.clan!.estate = shape(createRun().clan.estate, 'clan.estate');
+optional.clan!.estate = shape(createCampEstate(), 'clan.estate');
+optional.clan!.nomadicCamp = isNomadicCamp;
 const runShape = shape(createRun());
 const enemyState = object(
   {
@@ -573,5 +578,8 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
     !!run.story.active !== (run.phase === 'story')
   )
     throw new Error('This expedition contains invalid progression or actor references.');
-  return structuredClone({ run, world });
+  const restored = structuredClone({ run, world });
+  migrateLegacyNomadicCamp(restored.run);
+  syncNomadicBuildings(restored.run);
+  return restored;
 }

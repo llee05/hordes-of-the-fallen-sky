@@ -2,7 +2,8 @@ import { UPGRADES } from '../../src/game/data/upgrades';
 import { describe, expect, it } from 'vitest';
 import { RESEARCH } from '../../src/game/data/research';
 import { PATRONS } from '../../src/game/data/patrons';
-import { applyResearch, createRun, gainExperience } from '../../src/game/state/run';
+import { applyResearch, gainExperience } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import {
   purchaseResearch,
   researchSpend,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { currentGuidance, completeGuidance, clanWarning } from '../../src/game/state/guidance';
-import { createRun, gainExperience, applyUpgrade } from '../../src/game/state/run';
+import { gainExperience, applyUpgrade } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { buildStructure, beginMigration, advanceClan } from '../../src/game/state/clan';
 import { UPGRADES } from '../../src/game/data/upgrades';
 

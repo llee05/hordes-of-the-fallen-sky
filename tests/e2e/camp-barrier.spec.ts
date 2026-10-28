@@ -56,7 +56,7 @@ test('wooden hurdles receive local melee and missile impacts, with feedback froz
   page,
 }) => {
   const initial = await barrierState(page);
-  expect(initial.radius).toBe(108);
+  expect(initial.radius).toBe(196);
   expect(initial.pieces).toHaveLength(48);
   const visible = initial.pieces.filter((piece) => piece.visible);
   expect(visible.length).toBeGreaterThanOrEqual(24);
@@ -68,12 +68,12 @@ test('wooden hurdles receive local melee and missile impacts, with feedback froz
     // on camp. Use the actual attack position, safely away from the Khan, instead.
     if (
       !scene.spawnEnemy(undefined, {
-        point: { x: scene.camp.x + 119, y: scene.camp.y },
+        point: { x: scene.camp.x + scene.campBarrier.radius + 11, y: scene.camp.y },
       })
     )
       throw new Error('Could not place the barrier attacker');
     const enemy = scene.enemies.getFirstAlive();
-    enemy.setPosition(scene.camp.x + 119, scene.camp.y);
+    enemy.setPosition(scene.camp.x + scene.campBarrier.radius + 11, scene.camp.y);
     enemy.health = 10000;
     enemy.definition = { ...enemy.definition, speed: 0 };
     scene.updateEnemies(0.01);
@@ -105,11 +105,17 @@ test('wooden hurdles receive local melee and missile impacts, with feedback froz
     shot.setPosition(scene.camp.x + scene.campBarrier.radius - 1, scene.camp.y);
     shot.setVelocity(0, 0);
     shot.damage = 20;
+    const resolveBefore = scene.run.clan.integrity;
     scene.updateProjectiles(0.01);
-    return { active: shot.active, body: shot.body.enable, resolve: scene.run.clan.integrity };
+    return {
+      active: shot.active,
+      body: shot.body.enable,
+      resolve: scene.run.clan.integrity,
+      resolveBefore,
+    };
   });
   expect(missile).toMatchObject({ active: false, body: false });
-  expect(missile.resolve).toBeCloseTo(firstHit.resolve - 7);
+  expect(missile.resolve).toBeCloseTo(missile.resolveBefore - 7);
   expect((await barrierState(page)).pieces.filter((piece) => piece.impact > 0)).toHaveLength(1);
   await page.screenshot({ path: 'test-results/camp-barrier-impact.png' });
 });
@@ -120,11 +126,11 @@ test('the barricade encloses new crafts and households while both attack and war
   await page.evaluate(() => {
     (window as any).__gloam.scene.run.clan.population = 32;
   });
-  await expect.poll(async () => (await barrierState(page)).radius).toBeGreaterThan(108);
+  await expect.poll(async () => (await barrierState(page)).radius).toBeGreaterThanOrEqual(196);
   await page.keyboard.press('b');
   await selectCampBuilding(page, 'felt');
   await buyNode(page, 'felt-base');
-  await expect(page.locator('[data-node="felt-base"]')).toHaveAttribute('data-status', 'learned');
+  await expect(page.locator('[data-camp-site="artisans-ger"]')).toHaveAttribute('data-level', '1');
   await closeOverlayOrPause(page);
   const expanded = await barrierState(page);
   expect(expanded.radius).toBe(200);
@@ -135,7 +141,7 @@ test('the barricade encloses new crafts and households while both attack and war
     // on camp. Use the actual attack position, safely away from the Khan, instead.
     if (
       !scene.spawnEnemy(undefined, {
-        point: { x: scene.camp.x + 119, y: scene.camp.y },
+        point: { x: scene.camp.x + scene.campBarrier.radius + 11, y: scene.camp.y },
       })
     )
       throw new Error('Could not place the barrier attacker');
@@ -178,12 +184,12 @@ test('the same bounded barrier follows the caravan, freezes, redeploys on arriva
     // on camp. Use the actual attack position, safely away from the Khan, instead.
     if (
       !scene.spawnEnemy(undefined, {
-        point: { x: scene.camp.x + 119, y: scene.camp.y },
+        point: { x: scene.camp.x + scene.campBarrier.radius + 11, y: scene.camp.y },
       })
     )
       throw new Error('Could not place the barrier attacker');
     const enemy = scene.enemies.getFirstAlive();
-    enemy.setPosition(scene.camp.x + 119, scene.camp.y);
+    enemy.setPosition(scene.camp.x + scene.campBarrier.radius + 11, scene.camp.y);
     enemy.definition = { ...enemy.definition, speed: 0, damage: 0 };
     Object.assign(window, { frontAttacker: enemy });
     scene.run.clan.stageTime = 45;
@@ -242,7 +248,7 @@ test('the same bounded barrier follows the caravan, freezes, redeploys on arriva
   await page.getByRole('button', { name: 'Start a new run' }).click();
   await startExpedition(page);
   const restarted = await barrierState(page);
-  expect(restarted.radius).toBe(108);
+  expect(restarted.radius).toBe(196);
   expect(restarted.pieces).toHaveLength(48);
   expect(restarted.pieces.every((piece) => piece.impact === 0)).toBe(true);
   expect(

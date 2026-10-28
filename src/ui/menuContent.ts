@@ -1,3 +1,4 @@
+import { nomadicJournalBuildings } from './nomadicCampModel';
 import { normalizeVisualSettings, type VisualSettings } from '../shared/visualSettings';
 import { expeditionMetricsContent } from './expeditionMetricsContent';
 import { STARTING_TRADITIONS, startingTradition } from '../game/data/clan';
@@ -29,21 +30,23 @@ export function journalMenu(run: RunState, tab: JournalTab): string {
   if (tab === 'journey') {
     content = `<div class="journal-chapter"><span class="eyebrow">PASTURE ${clan.region + 1} OF 4</span><h3>${region.name}</h3><p>${description}</p>${areaIntel(region.id)}<div class="journey-map" aria-label="Journey progress">${REGIONS.map((r, i) => `<div class="journey-stop ${i === clan.region ? 'current' : i < clan.region ? 'passed' : ''}"><span>${clanMark(i === 3 ? 'mountain' : i === 1 ? 'river' : i === 2 ? 'sanctuary' : 'ger')}</span><div><strong>${locationAtChapter(run, i).name}</strong><small>${i < clan.region ? 'CROSSED' : i === clan.region ? 'YOUR CLAN IS HERE' : r.event.toUpperCase()}</small></div></div>`).join('')}</div><div class="journal-callout">${clan.stage === 'migration' ? `The caravan is on the road to ${arrivalLocation(run).name}. Ride with your people until the crossing is done.` : clan.stage === 'final' ? 'Hold on until the mountain passage opens. If your people live, the clan has won.' : 'The grass thins as the calamity grows. You choose when to pack up and go.'}</div>${canMigrate(run) ? '<button class="primary-button" data-action="routes">Choose a migration route <span>→</span></button>' : ''}</div>`;
   } else if (tab === 'clan') {
-    content = `<div class="journal-chapter"><span class="eyebrow">YOUR LIVING CIVILIZATION</span><h3>${clanDoctrine(run)}</h3><p class="journal-callout">Starting tradition: <strong>${startingTradition(run.startingTradition).title}</strong>. ${startingTradition(run.startingTradition).role}</p><div class="clan-facts"><div><strong>${clan.population}</strong><span>People</span></div><div><strong>${riderCount(run)}</strong><span>Mounted riders</span></div><div><strong>${assignedWorkers(run)} / ${clan.population}</strong><span>Assigned workers</span></div><div><strong>${clan.herd}</strong><span>Livestock</span></div></div>${khanRecords(run)}${expeditionMetricsContent(run)}<p class="formation-detail"><strong>${FORMATIONS[clan.formation].title}</strong><br>${FORMATIONS[clan.formation].description}</p><div class="clan-buildings">${BUILDINGS.map(
-      (b) =>
-        `<div class="clan-building"><span class="clan-building-art">${campIllustration(b.illustration ?? 'ger')}</span><div><strong>${b.title}</strong><p>${
-          (clan.paths[b.id]?.length ?? 0) > 0
-            ? b.paths
-                .filter((path) => clan.paths[b.id]?.includes(path.id))
-                .map((path) => path.title)
-                .join(' · ')
-            : clan.buildings[b.id]
-              ? 'Established'
-              : 'Not yet established'
-        }</p></div></div>`,
-    ).join(
-      '',
-    )}</div>${clan.stage !== 'migration' ? '<button class="primary-button" data-action="build">Develop the camp <span>↗</span></button>' : '<p class="journal-callout">Buildings wait until you unpack at the next pasture.</p>'}</div>`;
+    content = `<div class="journal-chapter"><span class="eyebrow">YOUR LIVING CIVILIZATION</span><h3>${clanDoctrine(run)}</h3><p class="journal-callout">Starting tradition: <strong>${startingTradition(run.startingTradition).title}</strong>. ${startingTradition(run.startingTradition).role}</p><div class="clan-facts"><div><strong>${clan.population}</strong><span>People</span></div><div><strong>${riderCount(run)}</strong><span>Mounted riders</span></div><div><strong>${assignedWorkers(run)} / ${clan.population}</strong><span>Assigned workers</span></div><div><strong>${clan.herd}</strong><span>Livestock</span></div></div>${khanRecords(run)}${expeditionMetricsContent(run)}<p class="formation-detail"><strong>${FORMATIONS[clan.formation].title}</strong><br>${FORMATIONS[clan.formation].description}</p><div class="clan-buildings">${
+      run.clan.nomadicCamp
+        ? nomadicJournalBuildings(run)
+        : BUILDINGS.map(
+            (b) =>
+              `<div class="clan-building"><span class="clan-building-art">${campIllustration(b.illustration ?? 'ger')}</span><div><strong>${b.title}</strong><p>${
+                (clan.paths[b.id]?.length ?? 0) > 0
+                  ? b.paths
+                      .filter((path) => clan.paths[b.id]?.includes(path.id))
+                      .map((path) => path.title)
+                      .join(' · ')
+                  : clan.buildings[b.id]
+                    ? 'Established'
+                    : 'Not yet established'
+              }</p></div></div>`,
+          ).join('')
+    }</div>${clan.stage !== 'migration' ? '<button class="primary-button" data-action="build">Develop the camp <span>↗</span></button>' : '<p class="journal-callout">Buildings wait until you unpack at the next pasture.</p>'}</div>`;
   } else if (tab === 'story') {
     content = storyRecords(run);
   } else {
