@@ -9,6 +9,12 @@ import type { SpatialHash } from './SpatialHash';
 import { isKhanActive } from '../state/khan';
 import { campBoundary } from '../state/campBarrier';
 import type { SupportArchive } from '../state/expeditionArchive';
+import {
+  echoPrefers,
+  researchEchoRelease,
+  updateEchoGuard,
+  researchWaterRadius,
+} from '../state/researchRuntime';
 import { PatronSupportClock } from '../state/patronSupportClock';
 
 interface GroundPosition {
@@ -87,6 +93,7 @@ export class PatronSupport {
     const step = this.clock.update(run, dt);
     if (!step) return;
     const effects = run.patrons;
+    const waterRadius = researchWaterRadius(run);
     const boundary = campBoundary(run);
     const khanActive = isKhanActive(run);
     const anchor = khanActive ? player : camp;
@@ -95,13 +102,14 @@ export class PatronSupport {
       this.fields.lineStyle(1.5, 0x86beb1, 0.22).fillStyle(0x70a99c, 0.025);
       for (const position of khanActive ? [player, camp] : [camp])
         this.fields
-          .fillCircle(position.x, position.y, effects.water.radius)
-          .strokeCircle(position.x, position.y, effects.water.radius);
+          .fillCircle(position.x, position.y, waterRadius)
+          .strokeCircle(position.x, position.y, waterRadius);
     }
     if (effects.guardian.wardDamage > 0)
       this.fields.lineStyle(1, 0xd8bc7e, 0.3).strokeCircle(camp.x, camp.y, boundary.wardRadius);
 
     const count = step.ancestorCount;
+    let echoNearCamp = false;
     for (const [index, spirit] of this.spirits.entries()) {
       const active = index < count;
       if (active && !spirit.image.visible) {
@@ -127,19 +135,28 @@ export class PatronSupport {
       spirit.image.setPosition(x, y).setDepth(100 + y);
       if (Math.abs(dx) > 0.1) spirit.image.setFlipX(dx < 0);
       spirit.shadow.setPosition(x + 7, y + 4).setDepth(99 + y);
-      const target = step.releaseAncestors
-        ? spatial.nearest(x, y, GAME.patrons.ancestors.range)
+      if (Math.hypot(x - camp.x, y - camp.y) <= GAME.research.quietRadius) echoNearCamp = true;
+      const preferred = step.releaseAncestors
+        ? spatial.nearest(x, y, GAME.patrons.ancestors.range, (e) =>
+            echoPrefers(run, e.tacticalSlot, e.spawnId),
+          )
         : undefined;
+      const target =
+        preferred ??
+        (step.releaseAncestors ? spatial.nearest(x, y, GAME.patrons.ancestors.range) : undefined);
       if (target) {
+        const twin = researchEchoRelease(run, index);
         spirit.motion.attack();
         actions.volley(x, y, target, effects.ancestors.damage);
+        if (twin) actions.volley(x, y, target, effects.ancestors.damage * GAME.research.twinDamage);
       }
       spirit.motion.advance(dt, speed, false);
       renderCharacter(spirit.image, spirit.motion);
     }
 
+    updateEchoGuard(run, echoNearCamp);
     if (step.pulseWater) {
-      spatial.forEachNearby(player.x, player.y, effects.water.radius, (enemy) => {
+      spatial.forEachNearby(player.x, player.y, waterRadius, (enemy) => {
         actions.damage(enemy, run.stats.damage * effects.water.pulseDamage);
         if (!enemy.active) return;
         const dx = enemy.x - player.x;

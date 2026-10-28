@@ -1,3 +1,5 @@
+import { RESEARCH } from '../../src/game/data/research';
+import { applyResearch } from '../../src/game/state/run';
 import { describe, expect, it } from 'vitest';
 import { PATRONS } from '../../src/game/data/patrons';
 import { UPGRADES } from '../../src/game/data/upgrades';
@@ -92,6 +94,12 @@ describe('the eight patron trees', () => {
       expect(applyUpgrade(run, path[3]!)).toBe(true);
     }
     expect(run.pendingUpgrades).toBe(51);
+    expect(redeemMasteredResearch(run)).toBe(false);
+    for (const t of RESEARCH.filter(
+      (t) => !t.unavailableReason && !UPGRADES.some((u) => u.id === t.id),
+    ))
+      applyResearch(run, t.id);
+    expect(run.pendingUpgrades).toBeLessThan(51);
     expect(redeemMasteredResearch(run)).toBe(true);
     expect(run.pendingUpgrades).toBe(0);
   });

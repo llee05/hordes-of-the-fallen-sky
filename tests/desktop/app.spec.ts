@@ -197,7 +197,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect(page.locator('#field-guide')).toBeHidden();
     await page.keyboard.press('t');
     await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
-    await expect(page.locator('[data-tree-branch-select]')).toHaveCount(8);
+    await expect(page.locator('[data-tree-branch-select]')).toHaveCount(10);
     await expect(page.locator('#game-hud')).toHaveAttribute('inert', '');
     await page.screenshot({ path: 'test-results/native-tech-tree.png' });
     await closeOverlayOrPause(page);

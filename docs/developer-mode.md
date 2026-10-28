@@ -43,18 +43,18 @@ history is saved independently and remains available for recall.
 The console, input bindings, and cheat effects are guarded by `import.meta.env.DEV`
 and are absent from production and packaged play.
 
-| Command                                 | Behaviour                                              |
-| --------------------------------------- | ------------------------------------------------------ |
-| `help`                                  | Lists commands and their usage.                        |
-| `invincible [on\|off]`, `god [on\|off]` | Protects the Khan; no argument toggles.                |
-| `heal`                                  | Restores the living Khan to full health.               |
-| `clan-invincible [on\|off]`             | Protects clan resolve, people, and livestock.          |
-| `status`                                | Displays invincibility, Khan health, and clan resolve. |
-| `clear`                                 | Clears output while keeping command history.           |
+| Command                                 | Behaviour                                                                                                                          |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `help`                                  | Lists commands and their usage.                                                                                                    |
+| `invincible [on\|off]`, `god [on\|off]` | Protects the Khan; no argument toggles.                                                                                            |
+| `heal`                                  | Restores the living Khan to full health.                                                                                           |
+| `clan-invincible [on\|off]`             | Protects clan resolve, people, and livestock.                                                                                      |
+| `status`                                | Displays invincibility, Khan health, and clan resolve.                                                                             |
+| `research-metrics`                      | Read-only research accounting; see the [research observation contract](patron-research-v2.md#purchase-and-observation-interfaces). |
+| `clear`                                 | Clears output while keeping command history.                                                                                       |
 
 Developer console rules live in the renderer-independent `src/game/dev/commands.ts`.
-The command catalog includes `help`, `invincible [on|off]` (`god` is an alias),
-`clan-invincible [on|off]`, `heal`, `status`, and `clear`. Omitting either
+Use `help` for the complete command catalog. Omitting either
 invincibility argument toggles that protection. Food and journey rules continue;
 clan losses require the separate clan toggle to be protected.
 Healing applies only to a living Khan and never refreshes Last Ember or skips

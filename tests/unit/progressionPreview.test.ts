@@ -1,10 +1,67 @@
+import { volleyFactors } from '../../src/game/state/volley';
+import { researchGallop } from '../../src/game/state/researchRuntime';
 import { describe, expect, it } from 'vitest';
-import { createRun, applyUpgrade, upgradeCost } from '../../src/game/state/run';
+import { createRun, applyUpgrade, applyResearch, upgradeCost } from '../../src/game/state/run';
 import { UPGRADES } from '../../src/game/data/upgrades';
-import { researchPreview, campStatPreview } from '../../src/game/state/progressionPreview';
+import {
+  researchPreview,
+  researchPreviewById,
+  campStatPreview,
+} from '../../src/game/state/progressionPreview';
 import { buildStructure, clanDamageMultiplier } from '../../src/game/state/clan';
 const upgrade = (id: string) => UPGRADES.find((u) => u.id === id)!;
 describe('exact progression previews', () => {
+  it.each([false, true])('matches firing factors during Barrage with Tempest=%s', (tempest) => {
+    const run = createRun();
+    run.pendingUpgrades = 20;
+    for (const id of [
+      'power',
+      'power',
+      'wide-quiver',
+      'wolf-trail',
+      'wolf-trail',
+      'haste',
+      'hy-galloping-barrage',
+    ])
+      expect(applyResearch(run, id)).toBe(true);
+    if (tempest) {
+      run.clan.paths.archery = ['fire-arrows'];
+      run.clan.paths.sanctuary = ['wind-shamans'];
+    }
+    run.phase = 'playing';
+    run.stats.damage = 20;
+    run.stats.projectiles = 2;
+    run.clan.formation = 'encircle';
+    run.clan.momentum = 0.8;
+    researchGallop(run);
+    const before = structuredClone(run);
+    const preview = researchPreviewById(run, 'km-feathered-fan');
+    expect(run).toEqual(before);
+    const spacing = (tempest ? 0.28 : 0.12) * run.patrons.bow.spread;
+    const format = (n: number) => Number(n.toFixed(3)).toString();
+    expect(preview.find((c) => c.label === 'Khan wide-volley damage')).toMatchObject({
+      before: format(20 * 1.1 * 1.3),
+      after: format(20 * 1.1 * 1.3 * 0.95),
+    });
+    expect(preview.find((c) => c.label === 'Khan wide-volley spacing')).toMatchObject({
+      before: format((spacing * 180) / Math.PI) + '°',
+      after: format((spacing * 1.1 * 180) / Math.PI) + '°',
+    });
+    expect(applyResearch(run, 'km-feathered-fan')).toBe(true);
+    expect(volleyFactors(run, 2, true)).toMatchObject({
+      count: tempest ? 4 : 2,
+      spacing: spacing * 1.1,
+      damage: 0.95 * 1.1 * 1.3,
+      speed: 1.2,
+    });
+    expect(volleyFactors(run, 2, false).damage).toBe(1.3);
+    expect(volleyFactors(run, 1, true).damage).toBeCloseTo(1.1 * 1.3);
+    expect(volleyFactors(run, 2, false, true).spacing).toBe(tempest ? 0.28 : 0.12);
+    run.elapsed = 2.01;
+    expect(volleyFactors(run, 2, true).damage).toBeCloseTo(0.95 * 1.3);
+    expect(volleyFactors(run, 2, true).speed).toBe(1);
+  });
+
   it('projects the actual next rank without spending points or mutating any nested state', () => {
     const run = createRun();
     run.stats.damage = 20;

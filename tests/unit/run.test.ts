@@ -1,3 +1,4 @@
+import { RESEARCH } from '../../src/game/data/research';
 import { describe, expect, it } from 'vitest';
 import { UPGRADES } from '../../src/game/data/upgrades';
 import { chooseEnemy, spawnInterval } from '../../src/game/data/enemies';
@@ -59,17 +60,15 @@ describe('run progression', () => {
     expect(run.pendingUpgrades).toBe(2);
   });
 
-  it('supports data-defined prerequisites and keeps banked points when a branch is locked', () => {
+  it('rejects unregistered content even when a caller supplies a valid callback', () => {
     const run = createRun();
     const power = UPGRADES.find((upgrade) => upgrade.id === 'power')!;
-    const advanced = { ...power, id: 'advanced', requires: [{ id: 'power', rank: 2 }] };
+    const unknown = { ...power, id: 'advanced' };
     run.pendingUpgrades = 5;
-    expect(upgradeBlocker(run, advanced)).toContain(`${power.title} rank 2`);
-    expect(applyUpgrade(run, advanced)).toBe(false);
-    applyUpgrade(run, power, 1);
-    applyUpgrade(run, power, 2);
-    expect(applyUpgrade(run, advanced)).toBe(true);
-    expect(run.pendingUpgrades).toBe(2);
+    expect(upgradeBlocker(run, unknown)).toBe('Unknown technology');
+    expect(applyUpgrade(run, unknown)).toBe(false);
+    expect(run.pendingUpgrades).toBe(5);
+    expect(run.stats.damage).toBe(createRun().stats.damage);
   });
 
   it('converts every banked point only after all branches are mastered, exactly once', () => {
@@ -77,7 +76,8 @@ describe('run progression', () => {
     run.pendingUpgrades = 3;
     expect(redeemMasteredResearch(run)).toBe(false);
     expect(run.pendingUpgrades).toBe(3);
-    for (const upgrade of UPGRADES) run.upgrades[upgrade.id] = upgrade.maxStacks;
+    for (const upgrade of RESEARCH.filter((t) => !t.unavailableReason))
+      run.upgrades[upgrade.id] = upgrade.maxRank;
     run.health = 1;
     expect(redeemMasteredResearch(run)).toBe(true);
     expect(run.clan.food).toBe(130);

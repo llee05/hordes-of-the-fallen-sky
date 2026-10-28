@@ -29,6 +29,7 @@ import { completeGuidance } from './guidance';
 import { isKhanActive } from './khan';
 import { markExpedition, metricCasualties, metricStage } from './expeditionMetrics';
 import { passageProgress } from './finalStand';
+import { researchResolveProtection, researchCommonProtection } from './researchRuntime';
 
 export function createClan(): ClanState {
   return {
@@ -264,6 +265,8 @@ export function clanDamageMultiplier(run: RunState): number {
     (hasDevelopment(run, 'wagon', 'felt-armor') ? GAME.clan.protection.feltArmor : 1) *
     (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? GAME.clan.protection.ancestralWard : 1) *
     run.patrons.guardian.protection *
+    researchResolveProtection(run) *
+    researchCommonProtection(run) *
     run.clan.campEffects.multipliers.clanProtection *
     startingTradition(run.startingTradition).balance.protection
   );

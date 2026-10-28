@@ -156,6 +156,9 @@ export interface PatronEffects {
 }
 
 export interface RunState {
+  researchPurchases?: import('./state/researchMetrics').ResearchPurchase[];
+  researchObservations?: import('./state/researchMetrics').ResearchObservations;
+  researchRuntime?: import('./state/researchRuntime').ResearchRuntime;
   finalStand?: import('./state/finalStand').FinalStandState;
   metrics?: import('./state/expeditionMetrics').ExpeditionMetrics;
   /** Missing only in expeditions saved before starting arrangements were introduced. */
