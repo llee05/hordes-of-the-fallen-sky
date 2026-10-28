@@ -1,6 +1,6 @@
 # Patron tech tree — V1 reference
 
-This page preserves the original 42-technology catalogue. The [V2 implementation record](patron-research-v2.md) and [effect inventory](patron-research-v2-status.md) describe the current 166-entry research registry and its working slice. Original capstones are labelled Doctrines in the interface. Watchfires and Rolling Fortress now have the documented baseline guard-shot fallback when no Wagon circle is built.
+This page preserves the original 42-technology catalogue. The [V2 implementation record](patron-research-v2.md) and [effect inventory](patron-research-v2-status.md) describe the current 166-entry research registry and its working slice. Original capstones are labelled Doctrines in the interface. The Guardian entries below include the baseline guard-shot adaptation when no Wagon circle is built.
 
 The catalog contains eight patrons and 42 technologies (50 authored ranks, including mutually exclusive alternatives). Their powers are original fantasy mechanics; cultural context and sourced writing boundaries live in [lore.md](../lore.md#patron-traditions).
 
@@ -8,7 +8,7 @@ The catalog contains eight patrons and 42 technologies (50 authored ranks, inclu
 
 Each level banks one knowledge point. Foundations have two ranks and cost one point per rank. Practices unlock after foundation rank one and cost one point. A focused capstone requires foundation rank two and its named practice and costs two points. Choose one capstone per patron; patron mixing and practice mixing remain unrestricted. A focused route therefore costs five knowledge points. Archery offers precision, piercing, and wide-volley capstones.
 
-Stored Spirit is a separate camp currency. Expected-rank validation rejects stale purchases. Unspent points survive menus, succession, and crossings. New expeditions reset research. Complete mastery considers only reachable choices: excluded capstones do not prevent earned surplus knowledge from becoming provisions.
+These are the original path rules. See the [current purchase contract](patron-research-v2.md#purchase-and-observation-interfaces) for V2 validation and the [knowledge rules](game-mechanics.md#3-spirit-stone--patron-tech-tree) for surplus conversion.
 
 ## Börte Chino · Hunting
 
@@ -103,11 +103,11 @@ Make shelter wherever the clan stops. This imagined guardian of the mountain ins
 | Technology / stable ID                               | Role                 | Cost | Requires                                                              | Effect                                                                                                                   |
 | ---------------------------------------------------- | -------------------- | ---- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | **Foundations we can carry** · `caravan-foundations` | foundation (2 ranks) | 1    | None                                                                  | Each rank: camp building costs 10% fewer materials, and the clan takes 10% less damage.                                  |
-| **Watchfires on the ridge** · `watchfires`           | practice             | 1    | Foundations we can carry rank 1                                       | The Wagon circle’s firing interval is 25% shorter. Needs a Wagon circle.                                                 |
+| **Watchfires on the ridge** · `watchfires`           | practice             | 1    | Foundations we can carry rank 1                                       | Wagon defence fires 25% faster. Without a Wagon circle, a guard shot reaches 260 paces and deals 35% shared damage.      |
 | **A circle of sheltered ground** · `stone-shelter`   | practice             | 1    | Foundations we can carry rank 1                                       | A ward around the camp strikes enemies within 125 paces for 65% shared damage every 2 active seconds, even on the march. |
 | **Hold the passage** · `hold-the-passage`            | capstone             | 2    | Foundations we can carry rank 2 + A circle of sheltered ground rank 1 | The clan takes a further 20% less damage, on top of formations and camp armor.                                           |
-| **A fortress on the road** · `rolling-fortress`      | capstone             | 2    | Foundations we can carry rank 2 + Watchfires on the ridge rank 1      | Wagon circle arrows deal 50% more damage, in camp and on the march. Needs a Wagon circle.                                |
+| **A fortress on the road** · `rolling-fortress`      | capstone             | 2    | Foundations we can carry rank 2 + Watchfires on the ridge rank 1      | Wagon defence deals 50% more damage, in camp and on the march, including the guard shot without a Wagon circle.          |
 
 ## Implementation
 
-Stable content IDs and dependencies live in `data/upgrades.ts` and `data/specializations.ts`; balance values live in `GAME.patrons.specializations`. `state/run.ts` validates rank, prerequisites, local exclusivity, and price before applying a purchase once. `state/progressionPreview.ts` projects that same purchase on an isolated copy and compares current combined statistics, including camp modifiers. It preserves succession and never advances active time. Active run data is not persisted, so profile saves need no migration.
+The [V2 implementation record](patron-research-v2.md) identifies the current registry, validator and preview adapters. Original numerical effects remain in `data/upgrades.ts` and `data/specializations.ts`, with balance in `GAME.patrons` and `GAME.patrons.specializations`. Full expedition saves preserve research; see the [save contract](expedition-saves.md).

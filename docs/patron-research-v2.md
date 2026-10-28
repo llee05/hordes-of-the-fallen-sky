@@ -69,23 +69,30 @@ combined runtime total. Optional counts/categories remain zero until the separat
 camp branch supplies that contract. No camp structures or save IDs are repurposed.
 
 The [effect inventory](patron-research-v2-status.md) lists every unimplemented effect.
-Registered, purchasable and functional counts are intentionally distinct: 166
-registered technologies, 53 working/purchasable technologies, 113 unavailable proposals.
+Registered, purchasable and functional counts are intentionally distinct; the inventory
+is the reference for delivery status.
 
 ## Purchase and observation interfaces
 
 `state/research.ts` owns `validateResearchPurchase`, `purchaseResearch` and
 `previewResearchPurchase`. They accept a canonical ID and **expected current rank**;
 refusal never mutates ranks, points or receipts. `state/run.ts`'s `applyResearch`
-executes that transaction and the canonical effect adapter. The existing
+executes that transaction and the canonical effect adapter. The scene still sends
+an expected **next rank**, converted at the boundary to the expected current rank. The existing
 `applyUpgrade(..., nextRank)` API remains a compatibility wrapper. Stat previews
 project the same transition on a clone, raising only its hypothetical knowledge
 budget; actual purchase blockers always retain the real budget.
 
+The registry owns rank costs, row-specific AND/ANY prerequisites, patron-spend gates,
+crossing milestones and independent Doctrine/Mythic exclusive groups. Expansion values
+are authored in `data/researchCatalogue.ts`; these gates never override runtime
+unavailability. Hybrid and general spending do not fund patron gates. Stored Spirit
+and camp construction remain separate from knowledge.
+
 New purchases retain `{ id, rank, cost, at }` receipts. Spend gates use costs actually
-paid; ranks from older saves fall back to their unchanged authored prices. Version-1
-expedition saves accept these optional receipts and observations without replaying
-any purchase. Duplicate/unowned receipts are rejected. New expeditions discard them.
+paid; ranks from older saves fall back to their unchanged authored prices. See the
+[full expedition save contract](expedition-saves.md#snapshot-and-hydration-contract) for
+receipt, runtime and observation persistence.
 The final Ancestral Archers implementation counts each echo's targeted attacks
 independently; empty release intervals do not advance its fourth-attack bonus.
 
