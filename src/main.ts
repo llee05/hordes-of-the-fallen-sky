@@ -8,6 +8,7 @@ import './motion.css';
 import './intro.css';
 import './story.css';
 import './progression.css';
+import './research.css';
 import './camp.css';
 import './migration.css';
 import './saves.css';

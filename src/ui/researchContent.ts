@@ -1,4 +1,5 @@
 import { researchPreviewById } from '../game/state/progressionPreview';
+import { researchArtwork } from './researchArtwork';
 import { synergyContent } from './synergyContent';
 import { PATRONS } from '../game/data/patrons';
 import { RESEARCH, RESEARCH_BY_ID } from '../game/data/research';
@@ -88,6 +89,7 @@ export function researchBranches(run: RunState, view?: TreeViewState): TreeBranc
     const functional = technologies.filter((t) => !t.unavailableReason).length;
     const branch: TreeBranch = {
       id: group.id,
+      artwork: researchArtwork(group.id),
       title: group.title,
       category: group.category,
       description: group.description,
