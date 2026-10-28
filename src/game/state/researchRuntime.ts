@@ -36,6 +36,19 @@ export interface ResearchRuntime {
   crossingMaterialsSpent?: number;
   crossingSpentIndex?: number;
   scarcityActive?: boolean;
+  khanVolleyCount?: number;
+  precisionVolleyCount?: number;
+  wideVolleyCount?: number;
+  precisionMarkedUntil?: Record<string, number>;
+  bleedStacks?: Record<string, number>;
+  bleedUntil?: Record<string, number>;
+  sunderStacks?: Record<string, number>;
+  sunderUntil?: Record<string, number>;
+  arrowRainAt?: number;
+  arrowRainX?: number;
+  arrowRainY?: number;
+  arrowRainDamage?: number;
+  stillHandShots?: number;
 }
 function enemyKey(slot: number, spawn: number): string {
   return `${slot}:${spawn}`;
@@ -84,7 +97,10 @@ export function throatOfPreyMultiplier(run: RunState, slot: number, spawn: numbe
     Math.min(GAME.research.throatMaxStacks, r.throatStacks ?? 0) * GAME.research.throatRampPerHit
   );
 }
-/** Applies marked-target damage bonuses and updates Scent of Fear / Throat of the Prey state. */
+export function isPrecisionMarked(run: RunState, slot: number, spawn: number): boolean {
+  return (run.researchRuntime?.precisionMarkedUntil?.[enemyKey(slot, spawn)] ?? 0) > run.elapsed;
+}
+/** Applies marked-target damage bonuses and updates Scent of Fear / Throat of the Prey / Draw to Breath state. */
 export function recordFriendlyHitOnEnemy(
   run: RunState,
   slot: number,
@@ -95,7 +111,11 @@ export function recordFriendlyHitOnEnemy(
 ): number {
   if (run.phase !== 'playing') return 1;
   const r = (run.researchRuntime ??= {});
+  const key = enemyKey(slot, spawn);
   const wasMarked = isEnemyMarked(run, slot, spawn);
+  const precisionHit =
+    ownsResearch(run, 'km-draw-to-breath') && isPrecisionMarked(run, slot, spawn);
+  if (precisionHit) delete r.precisionMarkedUntil?.[key];
   if (ownsResearch(run, 'bc-throat-of-the-prey')) {
     if (r.throatSlot !== slot || r.throatSpawn !== spawn) {
       r.throatSlot = slot;
@@ -107,6 +127,7 @@ export function recordFriendlyHitOnEnemy(
     else if (!wasMarked) r.throatStacks = 0;
   }
   const mult =
+    (precisionHit ? GAME.research.drawToBreathDamage : 1) *
     (ownsResearch(run, 'bc-scent-of-fear') && wasMarked ? GAME.research.scentOfFearDamage : 1) *
     (ownsResearch(run, 'bc-throat-of-the-prey') && elite && wasMarked
       ? 1 + (r.throatStacks ?? 0) * GAME.research.throatRampPerHit
@@ -317,7 +338,12 @@ export function recordResearchEnemyKill(
     r.endlessBurstUntil = run.elapsed + GAME.research.endlessPursuitBurstSeconds;
   }
   delete r.markedUntil?.[key];
+  delete r.precisionMarkedUntil?.[key];
   delete r.staggerUntil?.[key];
+  delete r.bleedUntil?.[key];
+  delete r.bleedStacks?.[key];
+  delete r.sunderUntil?.[key];
+  delete r.sunderStacks?.[key];
 }
 export function recordKhanTarget(run: RunState, slot: number, spawn: number): void {
   if (run.phase !== 'playing' || !ownsResearch(run, 'on-spirit-signal')) return;
@@ -397,6 +423,243 @@ export function wideVolleyResearch(
   return personal && count > 1 && ownsResearch(run, 'km-feathered-fan')
     ? { damage: GAME.research.fanDamage, spread: GAME.research.fanSpread }
     : { damage: 1, spread: 1 };
+}
+export function recordKhanVolley(
+  run: RunState,
+  count: number,
+  candidates: readonly {
+    slot: number;
+    spawn: number;
+    health: number;
+    x?: number;
+    y?: number;
+  }[] = [],
+): {
+  markedTarget?: { slot: number; spawn: number };
+  executionArrow: boolean;
+  skyDarkener: boolean;
+  arrowRainQueued: boolean;
+  damageMultiplier: number;
+  bonusPierces: number;
+  overrideCount?: number;
+} {
+  if (run.phase !== 'playing')
+    return {
+      executionArrow: false,
+      skyDarkener: false,
+      arrowRainQueued: false,
+      damageMultiplier: 1,
+      bonusPierces: 0,
+    };
+  const r = (run.researchRuntime ??= {});
+  r.khanVolleyCount = (r.khanVolleyCount ?? 0) + 1;
+  r.precisionVolleyCount = (r.precisionVolleyCount ?? 0) + 1;
+  let markedTarget: { slot: number; spawn: number } | undefined;
+  if (
+    ownsResearch(run, 'km-draw-to-breath') &&
+    r.khanVolleyCount % GAME.research.drawToBreathEvery === 0 &&
+    candidates.length > 0
+  ) {
+    const best = candidates.reduce((a, b) => (b.health > a.health ? b : a));
+    markEnemy(run, best.slot, best.spawn, GAME.research.markSeconds);
+    const precisionMarks = (r.precisionMarkedUntil ??= {});
+    pruneExpired(precisionMarks, run.elapsed);
+    precisionMarks[enemyKey(best.slot, best.spawn)] = run.elapsed + GAME.research.markSeconds;
+    markedTarget = { slot: best.slot, spawn: best.spawn };
+  }
+  let executionArrow = false;
+  let skyDarkener = false;
+  let arrowRainQueued = false;
+  let damageMultiplier = 1;
+  let bonusPierces = 0;
+  let overrideCount: number | undefined;
+  if (
+    ownsResearch(run, 'km-one-arrow-one-fate') &&
+    r.precisionVolleyCount % GAME.research.oneArrowEvery === 0
+  ) {
+    executionArrow = true;
+    damageMultiplier *= GAME.research.oneArrowDamage;
+    bonusPierces += 1;
+    overrideCount = 1;
+  }
+  if (
+    ownsResearch(run, 'km-sky-darkener') &&
+    r.khanVolleyCount % GAME.research.skyDarkenerEvery === 0
+  ) {
+    skyDarkener = true;
+    damageMultiplier *= GAME.research.skyDarkenerDamage;
+    overrideCount = Math.max(count, GAME.research.skyDarkenerArrows);
+  }
+  if (count > 1) {
+    r.wideVolleyCount = (r.wideVolleyCount ?? 0) + 1;
+    if (
+      ownsResearch(run, 'km-arrow-rain') &&
+      r.wideVolleyCount % GAME.research.arrowRainEvery === 0 &&
+      r.arrowRainAt === undefined
+    ) {
+      const target = candidates[0];
+      r.arrowRainAt = run.elapsed + GAME.research.arrowRainDelay;
+      r.arrowRainX = target?.x ?? 0;
+      r.arrowRainY = target?.y ?? 0;
+      r.arrowRainDamage = run.stats.damage * GAME.research.arrowRainDamage;
+      arrowRainQueued = true;
+    }
+  }
+  return {
+    markedTarget,
+    executionArrow,
+    skyDarkener,
+    arrowRainQueued,
+    damageMultiplier,
+    bonusPierces,
+    overrideCount,
+  };
+}
+export function claimArrowRainDrop(
+  run: RunState,
+): { x: number; y: number; damage: number; radius: number } | undefined {
+  if (run.phase !== 'playing' || !ownsResearch(run, 'km-arrow-rain')) return undefined;
+  const r = run.researchRuntime;
+  if (r?.arrowRainAt === undefined || run.elapsed < r.arrowRainAt) return undefined;
+  const drop = {
+    x: r.arrowRainX ?? 0,
+    y: r.arrowRainY ?? 0,
+    damage: r.arrowRainDamage ?? run.stats.damage * GAME.research.arrowRainDamage,
+    radius: GAME.research.arrowRainRadius,
+  };
+  r.arrowRainAt = undefined;
+  return drop;
+}
+export function recordPiercingHitOnEnemy(run: RunState, slot: number, spawn: number): void {
+  if (run.phase !== 'playing') return;
+  const r = (run.researchRuntime ??= {});
+  const key = enemyKey(slot, spawn);
+  if (ownsResearch(run, 'km-barbed-flight')) {
+    const bleedUntil = (r.bleedUntil ??= {});
+    const bleedStacks = (r.bleedStacks ??= {});
+    pruneExpired(bleedUntil, run.elapsed);
+    const active = (bleedUntil[key] ?? 0) > run.elapsed ? (bleedStacks[key] ?? 0) : 0;
+    bleedStacks[key] = Math.min(GAME.research.barbedFlightMaxStacks, active + 1);
+    bleedUntil[key] = run.elapsed + GAME.research.barbedFlightSeconds;
+  }
+  if (ownsResearch(run, 'km-sunder-the-ranks')) {
+    const sunderUntil = (r.sunderUntil ??= {});
+    const sunderStacks = (r.sunderStacks ??= {});
+    pruneExpired(sunderUntil, run.elapsed);
+    const active = (sunderUntil[key] ?? 0) > run.elapsed ? (sunderStacks[key] ?? 0) : 0;
+    sunderStacks[key] = Math.min(GAME.research.sunderMaxStacks, active + 1);
+    sunderUntil[key] = run.elapsed + GAME.research.sunderSeconds;
+  }
+}
+export function advanceEnemyBleed(run: RunState, slot: number, spawn: number, dt: number): number {
+  if (
+    run.phase !== 'playing' ||
+    !ownsResearch(run, 'km-barbed-flight') ||
+    !Number.isFinite(dt) ||
+    dt <= 0
+  )
+    return 0;
+  const r = run.researchRuntime;
+  const key = enemyKey(slot, spawn);
+  const until = r?.bleedUntil?.[key] ?? 0;
+  if (until <= run.elapsed) {
+    delete r?.bleedUntil?.[key];
+    delete r?.bleedStacks?.[key];
+    return 0;
+  }
+  const stacks = Math.min(GAME.research.barbedFlightMaxStacks, r?.bleedStacks?.[key] ?? 0);
+  const effectiveDt = Math.min(dt, until - run.elapsed);
+  return stacks * GAME.research.barbedFlightDamagePerSecond * run.stats.damage * effectiveDt;
+}
+export function enemySunderArmourReduction(run: RunState, slot: number, spawn: number): number {
+  if (!ownsResearch(run, 'km-sunder-the-ranks')) return 0;
+  const r = run.researchRuntime;
+  const key = enemyKey(slot, spawn);
+  if ((r?.sunderUntil?.[key] ?? 0) <= run.elapsed) return 0;
+  return (
+    Math.min(GAME.research.sunderMaxStacks, r?.sunderStacks?.[key] ?? 0) *
+    GAME.research.sunderPerStack
+  );
+}
+export function researchArmorMultiplier(
+  run: RunState,
+  slot: number,
+  spawn: number,
+  baseArmorMultiplier: number,
+  precisionHit = true,
+): number {
+  let reduction = Math.max(0, 1 - baseArmorMultiplier);
+  if (ownsResearch(run, 'km-eagle-eye') && precisionHit)
+    reduction *= 1 - GAME.research.eagleEyeArmorIgnore;
+  const sunder = enemySunderArmourReduction(run, slot, spawn);
+  return 1 - reduction + sunder;
+}
+export function eagleEyeOverkillSpill(
+  run: RunState,
+  hitDamage: number,
+  enemyHealth: number,
+  isBoss = false,
+): number {
+  if (!ownsResearch(run, 'km-eagle-eye') || isBoss || enemyHealth <= 0 || hitDamage <= enemyHealth)
+    return 0;
+  return (hitDamage - enemyHealth) * GAME.research.eagleEyeOverkillSpill;
+}
+export function researchBonusPierces(run: RunState, basePierces: number): number {
+  const piercing = basePierces > 0 || ownsResearch(run, 'piercing-shaft');
+  if (!piercing) return 0;
+  let bonus = 0;
+  if (ownsResearch(run, 'km-drilling-shafts')) bonus += GAME.research.drillingShaftsBonusPierce;
+  if (ownsResearch(run, 'km-world-piercer')) bonus += GAME.research.worldPiercerBonusPierces;
+  return bonus;
+}
+export function projectileDamageAfterPierce(run: RunState, currentDamage: number): number {
+  return ownsResearch(run, 'km-drilling-shafts')
+    ? currentDamage * GAME.research.drillingShaftsAfterHit
+    : currentDamage;
+}
+export function capWorldPiercerDamage(
+  run: RunState,
+  hitDamage: number,
+  baseDamage: number,
+  dealtSoFar: number,
+): number {
+  if (!ownsResearch(run, 'km-world-piercer')) return hitDamage;
+  const cap = baseDamage * GAME.research.worldPiercerMaxTotalDamage;
+  return Math.max(0, Math.min(hitDamage, cap - dealtSoFar));
+}
+export function stillHandActive(run: RunState): boolean {
+  if (!ownsResearch(run, 'km-still-hand')) return false;
+  const last = run.researchRuntime?.lastGallopAt;
+  return last === undefined || run.elapsed - last >= GAME.research.stillHandIdleSeconds;
+}
+export function stillHandCritChance(run: RunState): number {
+  return stillHandActive(run) ? GAME.research.stillHandCritChance : 0;
+}
+export function stillHandDamageMultiplier(run: RunState, roll?: number): number {
+  if (!stillHandActive(run)) return 1;
+  if (roll !== undefined)
+    return roll < GAME.research.stillHandCritChance ? GAME.research.stillHandCritDamage : 1;
+  const r = (run.researchRuntime ??= {});
+  r.stillHandShots = (r.stillHandShots ?? 0) + 1;
+  return r.stillHandShots % 7 === 0 ? GAME.research.stillHandCritDamage : 1;
+}
+export function circleOfShaftsVolley(
+  run: RunState,
+  count: number,
+  personal: boolean,
+): { count: number; damage: number } {
+  return personal &&
+    count > 1 &&
+    ownsResearch(run, 'km-circle-of-shafts') &&
+    run.clan.momentum > 0.5
+    ? {
+        count: GAME.research.circleOfShaftsArrows,
+        damage: GAME.research.circleOfShaftsDamage,
+      }
+    : { count: 0, damage: 0 };
+}
+export function researchAttackIntervalMultiplier(run: RunState): number {
+  return ownsResearch(run, 'km-one-arrow-one-fate') ? 1 / GAME.research.oneArrowFireRate : 1;
 }
 
 export function researchLayeredProtection(run: RunState): number {

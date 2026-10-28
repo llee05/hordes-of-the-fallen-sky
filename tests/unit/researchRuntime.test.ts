@@ -1,26 +1,42 @@
 import {
+  advanceEnemyBleed,
   advanceHoofTrails,
+  capWorldPiercerDamage,
+  circleOfShaftsVolley,
+  claimArrowRainDrop,
   claimHoofTrailDamage,
+  eagleEyeOverkillSpill,
   echoInterval,
   echoPrefers,
   enemyStaggerSlowMultiplier,
+  enemySunderArmourReduction,
   gallopingBarrage,
   isEnemyMarked,
   isEnemyStaggered,
+  isPrecisionMarked,
   markEnemy,
   packInstinctBonus,
+  projectileDamageAfterPierce,
   recordFriendlyHitOnEnemy,
   recordGallopThroughEnemy,
   recordKhanTarget,
+  recordKhanVolley,
   recordMaterialSpend,
+  recordPiercingHitOnEnemy,
   recordResearchEnemyKill,
   recordResearchShard,
   recordWaveEnded,
+  researchArmorMultiplier,
+  researchAttackIntervalMultiplier,
+  researchBonusPierces,
   researchEchoRelease,
   researchGallop,
   researchWaterRadius,
   riderAttackSpeedMultiplier,
   riderPrefersTarget,
+  stillHandActive,
+  stillHandCritChance,
+  stillHandDamageMultiplier,
   throatOfPreyMultiplier,
   updateEchoGuard,
   updateMarkedProximity,
@@ -445,6 +461,166 @@ describe('Etügen Eke (Civilisation) runtime effects', () => {
     damageClan(control, 8, undefined, 'starvation');
     damageClan(r, 8, undefined, 'starvation');
     expect(100 - r.clan.integrity).toBeCloseTo((100 - control.clan.integrity) * 0.5);
+    expect(decodeExpedition(captureExpedition(r, world())).run.researchRuntime).toEqual(
+      r.researchRuntime,
+    );
+  });
+});
+
+describe('Khükhedei Mergen (Archery) runtime effects', () => {
+  it('marks the highest-health target on every 3rd Khan volley for a +20% precision hit with Draw to Breath', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['km-draw-to-breath'] = 1;
+    const foes = [
+      { slot: 1, spawn: 1, health: 40 },
+      { slot: 2, spawn: 1, health: 95 },
+    ];
+    expect(recordKhanVolley(r, 1, foes).markedTarget).toBeUndefined();
+    expect(recordKhanVolley(r, 1, foes).markedTarget).toBeUndefined();
+    const third = recordKhanVolley(r, 1, foes);
+    expect(third.markedTarget).toEqual({ slot: 2, spawn: 1 });
+    expect(isEnemyMarked(r, 2, 1)).toBe(true);
+    expect(isPrecisionMarked(r, 2, 1)).toBe(true);
+    expect(recordFriendlyHitOnEnemy(r, 2, 1, 0.9)).toBeCloseTo(1.2);
+    expect(isPrecisionMarked(r, 2, 1)).toBe(false);
+    expect(recordFriendlyHitOnEnemy(r, 2, 1, 0.9)).toBe(1);
+  });
+
+  it('inflicts up to 3 stacks of 3 s bleed at 4% base arrow damage/s on piercing hits with Barbed Flight', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['km-barbed-flight'] = 1;
+    recordPiercingHitOnEnemy(r, 1, 1);
+    expect(advanceEnemyBleed(r, 1, 1, 1)).toBeCloseTo(r.stats.damage * 0.04);
+    recordPiercingHitOnEnemy(r, 1, 1);
+    recordPiercingHitOnEnemy(r, 1, 1);
+    recordPiercingHitOnEnemy(r, 1, 1);
+    expect(advanceEnemyBleed(r, 1, 1, 1)).toBeCloseTo(r.stats.damage * 0.12);
+    r.elapsed = 3.1;
+    expect(advanceEnemyBleed(r, 1, 1, 1)).toBe(0);
+  });
+
+  it('ignores 20% of enemy armour on precision hits and spills 25% of overkill on normal foes with Eagle Eye', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    expect(researchArmorMultiplier(r, 1, 1, 0.8, true)).toBeCloseTo(0.8);
+    r.upgrades['km-eagle-eye'] = 1;
+    expect(researchArmorMultiplier(r, 1, 1, 0.8, true)).toBeCloseTo(0.84);
+    expect(researchArmorMultiplier(r, 1, 1, 0.8, false)).toBeCloseTo(0.8);
+    expect(eagleEyeOverkillSpill(r, 60, 20, false)).toBeCloseTo(10);
+    expect(eagleEyeOverkillSpill(r, 60, 20, true)).toBe(0);
+  });
+
+  it('adds +1 pierce and decays damage by 8% per pierced target with Drilling Shafts', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['km-drilling-shafts'] = 1;
+    expect(researchBonusPierces(r, 0)).toBe(0);
+    expect(researchBonusPierces(r, 1)).toBe(1);
+    expect(projectileDamageAfterPierce(r, 100)).toBeCloseTo(92);
+    expect(projectileDamageAfterPierce(r, 92)).toBeCloseTo(84.64);
+  });
+
+  it('queues at most one delayed 50% area volley every 5th wide volley with Arrow Rain', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['km-arrow-rain'] = 1;
+    const foe = [{ slot: 0, spawn: 1, health: 50, x: 240, y: 180 }];
+    for (let i = 1; i <= 4; i++) expect(recordKhanVolley(r, 3, foe).arrowRainQueued).toBe(false);
+    expect(recordKhanVolley(r, 3, foe).arrowRainQueued).toBe(true);
+    expect(claimArrowRainDrop(r)).toBeUndefined();
+    for (let i = 1; i <= 5; i++) expect(recordKhanVolley(r, 3, foe).arrowRainQueued).toBe(false);
+    r.elapsed = 0.7;
+    expect(claimArrowRainDrop(r)).toMatchObject({
+      x: 240,
+      y: 180,
+      damage: r.stats.damage * 0.5,
+    });
+    expect(claimArrowRainDrop(r)).toBeUndefined();
+  });
+
+  it('grants +15% precision crit chance after 2 s without Gallop and clears on Gallop with The Still Hand', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['km-still-hand'] = 1;
+    expect(stillHandActive(r)).toBe(true);
+    expect(stillHandCritChance(r)).toBeCloseTo(0.15);
+    expect(stillHandDamageMultiplier(r, 0.1)).toBeCloseTo(1.5);
+    expect(stillHandDamageMultiplier(r, 0.2)).toBe(1);
+    researchGallop(r);
+    expect(stillHandActive(r)).toBe(false);
+    expect(stillHandCritChance(r)).toBe(0);
+    expect(stillHandDamageMultiplier(r, 0.05)).toBe(1);
+    r.elapsed = 2;
+    expect(stillHandActive(r)).toBe(true);
+  });
+
+  it('reduces pierced target armour by 4% per hit up to 20% for 4 s with Sunder the Ranks', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['km-sunder-the-ranks'] = 1;
+    for (let i = 1; i <= 6; i++) {
+      recordPiercingHitOnEnemy(r, 2, 1);
+      expect(enemySunderArmourReduction(r, 2, 1)).toBeCloseTo(Math.min(5, i) * 0.04);
+    }
+    expect(researchArmorMultiplier(r, 2, 1, 0.8, true)).toBeCloseTo(1);
+    r.elapsed = 4.1;
+    expect(enemySunderArmourReduction(r, 2, 1)).toBe(0);
+  });
+
+  it('fires 2 backward arrows at 35% damage on wide volleys at high momentum with Circle of Shafts', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['km-circle-of-shafts'] = 1;
+    r.clan.momentum = 0.4;
+    expect(circleOfShaftsVolley(r, 3, true)).toEqual({ count: 0, damage: 0 });
+    r.clan.momentum = 0.7;
+    expect(circleOfShaftsVolley(r, 1, true)).toEqual({ count: 0, damage: 0 });
+    expect(circleOfShaftsVolley(r, 3, false)).toEqual({ count: 0, damage: 0 });
+    expect(circleOfShaftsVolley(r, 3, true)).toEqual({ count: 2, damage: 0.35 });
+  });
+
+  it('fires a 240% piercing execution arrow every 4th volley and slows firing rate by 15% with One Arrow, One Fate', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['km-one-arrow-one-fate'] = 1;
+    expect(researchAttackIntervalMultiplier(r)).toBeCloseTo(1 / 0.85);
+    for (let i = 1; i <= 3; i++) expect(recordKhanVolley(r, 3).executionArrow).toBe(false);
+    const fourth = recordKhanVolley(r, 3);
+    expect(fourth).toMatchObject({
+      executionArrow: true,
+      damageMultiplier: 2.4,
+      bonusPierces: 1,
+      overrideCount: 1,
+    });
+  });
+
+  it('adds +6 pierces and caps total projectile damage at 300% base damage with World-Piercer', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['km-world-piercer'] = 1;
+    expect(researchBonusPierces(r, 1)).toBe(6);
+    let dealt = 0;
+    for (let i = 0; i < 5; i++) {
+      const hit = capWorldPiercerDamage(r, 80, 100, dealt);
+      dealt += hit;
+    }
+    expect(dealt).toBeCloseTo(300);
+    expect(capWorldPiercerDamage(r, 80, 100, dealt)).toBe(0);
+  });
+
+  it('turns every 6th Khan volley into a 360-degree barrage at 40% arrow damage with Sky Darkener', () => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['km-sky-darkener'] = 1;
+    for (let i = 1; i <= 5; i++) expect(recordKhanVolley(r, 2).skyDarkener).toBe(false);
+    const sixth = recordKhanVolley(r, 2);
+    expect(sixth).toMatchObject({
+      skyDarkener: true,
+      damageMultiplier: 0.4,
+      overrideCount: 12,
+    });
     expect(decodeExpedition(captureExpedition(r, world())).run.researchRuntime).toEqual(
       r.researchRuntime,
     );

@@ -25,7 +25,7 @@ describe('legal research route search', () => {
   }, 30000);
   it('keeps unavailable goals and exclusive conflicts truthful', () => {
     const s = state();
-    expect(planResearch(s, 'km-world-piercer').reasons[0]).toContain('Unavailable');
+    expect(planResearch(s, 'on-ancestral-legion').reasons[0]).toContain('Unavailable');
     s.upgrades = { power: 2, haste: 1, 'one-perfect-shot': 1 };
     expect(planResearch(s, 'km-world-piercer', true).reasons[0]).toContain('specialization');
   });

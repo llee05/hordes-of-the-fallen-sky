@@ -39,6 +39,17 @@ const IMPLEMENTED_HANDLERS = [
   'ee-bounty-in-scarcity',
   'ee-wandering-city',
   'ee-unbroken-seasons',
+  'km-draw-to-breath',
+  'km-barbed-flight',
+  'km-eagle-eye',
+  'km-drilling-shafts',
+  'km-arrow-rain',
+  'km-still-hand',
+  'km-sunder-the-ranks',
+  'km-circle-of-shafts',
+  'km-one-arrow-one-fate',
+  'km-world-piercer',
+  'km-sky-darkener',
 ] as const;
 
 export const RESEARCH: readonly ResearchDefinition[] = [

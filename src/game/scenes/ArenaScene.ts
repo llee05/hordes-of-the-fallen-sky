@@ -5,18 +5,31 @@ import {
   type ResearchDamageSource,
 } from '../state/researchMetrics';
 import {
+  advanceEnemyBleed,
+  capWorldPiercerDamage,
+  circleOfShaftsVolley,
+  claimArrowRainDrop,
   claimHoofTrailDamage,
+  eagleEyeOverkillSpill,
   enemyStaggerSlowMultiplier,
   isEnemyMarked,
+  ownsResearch,
   packInstinctBonus,
+  projectileDamageAfterPierce,
   recordFriendlyHitOnEnemy,
   recordGallopThroughEnemy,
   recordKhanTarget,
+  recordKhanVolley,
+  recordPiercingHitOnEnemy,
   recordResearchEnemyKill,
   recordResearchShard,
+  researchArmorMultiplier,
+  researchAttackIntervalMultiplier,
+  researchBonusPierces,
   researchGallop,
   riderAttackSpeedMultiplier,
   riderPrefersTarget,
+  stillHandDamageMultiplier,
   updateMarkedProximity,
   wagonResearchDefence,
 } from '../state/researchRuntime';
@@ -2441,6 +2454,10 @@ export class ArenaScene extends Phaser.Scene {
         );
         if (hoofDamage > 0) this.damageEnemy(enemy, hoofDamage);
       }
+      if (enemy.active) {
+        const bleedDamage = advanceEnemyBleed(this.run, enemy.tacticalSlot, enemy.spawnId, dt);
+        if (bleedDamage > 0) this.damageEnemy(enemy, bleedDamage, 'khan', false);
+      }
       if (enemy.burning > 0) {
         enemy.burning -= dt;
         this.damageEnemy(
@@ -2539,6 +2556,7 @@ export class ArenaScene extends Phaser.Scene {
     this.attackTimer =
       this.run.stats.attackInterval *
       this.run.clan.campEffects.multipliers.hostInterval *
+      researchAttackIntervalMultiplier(this.run) *
       (this.run.clan.formation === 'retreat' && momentum > 0.4 ? 0.7 : 1);
   }
 
@@ -2555,12 +2573,50 @@ export class ArenaScene extends Phaser.Scene {
     const volley = volleyFactors(this.run, count, owner === 'khan', ancestral);
     const direction = Math.atan2(target.y - y, target.x - x);
     const tempest = volley.tempest;
+    const candidates: { slot: number; spawn: number; health: number; x: number; y: number }[] = [
+      {
+        slot: target.tacticalSlot,
+        spawn: target.spawnId,
+        health: target.health,
+        x: target.x,
+        y: target.y,
+      },
+    ];
+    if (owner === 'khan') {
+      this.spatial.forEachNearby(target.x, target.y, 180, (e) => {
+        if (e.active && e !== target)
+          candidates.push({
+            slot: e.tacticalSlot,
+            spawn: e.spawnId,
+            health: e.health,
+            x: e.x,
+            y: e.y,
+          });
+      });
+    }
+    const khanVolley =
+      owner === 'khan'
+        ? recordKhanVolley(this.run, volley.count, candidates)
+        : {
+            executionArrow: false,
+            skyDarkener: false,
+            arrowRainQueued: false,
+            damageMultiplier: 1,
+            bonusPierces: 0,
+            overrideCount: undefined,
+          };
+    const stillHand = owner === 'khan' ? stillHandDamageMultiplier(this.run) : 1;
+    const arrowCount = khanVolley.overrideCount ?? volley.count;
+    const basePierces = this.run.patrons.bow.pierce + (charged ? 1 : 0) + khanVolley.bonusPierces;
+    const bonusPierces = owner === 'khan' ? researchBonusPierces(this.run, basePierces) : 0;
     let fired = false;
-    for (let i = 0; i < volley.count; i += 1) {
+    for (let i = 0; i < arrowCount; i += 1) {
       const bolt = this.projectiles.get(x, y, 'bolt') as Projectile | null;
       if (!bolt) break;
       fired = true;
-      const angle = direction + (i - (count - 1) / 2) * volley.spacing;
+      const angle = khanVolley.skyDarkener
+        ? direction + (i * Math.PI * 2) / arrowCount
+        : direction + (i - (arrowCount - 1) / 2) * volley.spacing;
       bolt.enableBody(true, x, y, true, true);
       bolt.barrage = undefined;
       bolt.source = owner === 'khan' ? 'khan' : undefined;
@@ -2576,7 +2632,7 @@ export class ArenaScene extends Phaser.Scene {
       bolt.setCircle(4.5, bolt.width / 2 - 4.5, bolt.height / 2 - 4.5);
       bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
       bolt.tempest = tempest;
-      bolt.pierces = this.run.patrons.bow.pierce + (charged ? 1 : 0);
+      bolt.pierces = basePierces + bonusPierces;
       bolt.pins = charged && (this.run.upgrades['piercing-shaft'] ?? 0) > 0;
       if (charged) bolt.setTint(0xe2c586);
       bolt.hitTargets.clear();
@@ -2587,7 +2643,45 @@ export class ArenaScene extends Phaser.Scene {
         this.run.stats.damage *
         (charged ? GAME.mounted.chargedDamage : 1) *
         multiplier *
-        volley.damage;
+        volley.damage *
+        khanVolley.damageMultiplier *
+        stillHand;
+      bolt.setData('base-damage', bolt.damage);
+      bolt.setData('dealt-damage', 0);
+      bolt.remaining = GAME.projectile.lifetime;
+      bolt.setVelocity(
+        Math.cos(angle) * GAME.projectile.speed * volley.speed,
+        Math.sin(angle) * GAME.projectile.speed * volley.speed,
+      );
+    }
+    const backward = circleOfShaftsVolley(this.run, count, owner === 'khan');
+    for (let i = 0; i < backward.count; i += 1) {
+      const bolt = this.projectiles.get(x, y, 'bolt') as Projectile | null;
+      if (!bolt) break;
+      fired = true;
+      const angle = direction + Math.PI + (i - (backward.count - 1) / 2) * 0.24;
+      bolt.enableBody(true, x, y, true, true);
+      bolt.barrage = undefined;
+      bolt.source = 'khan';
+      bolt.setData('terrain-previous', { x, y });
+      bolt
+        .setTexture('bolt')
+        .setScale(1)
+        .setDepth(9200)
+        .setRotation(angle + Math.PI / 4)
+        .setAlpha(1)
+        .clearTint();
+      bolt.setCircle(4.5, bolt.width / 2 - 4.5, bolt.height / 2 - 4.5);
+      bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
+      bolt.tempest = false;
+      bolt.pierces = basePierces + bonusPierces;
+      bolt.pins = false;
+      bolt.hitTargets.clear();
+      bolt.turn = 0;
+      if (bolt.fire) bolt.setTint(0xffa04e);
+      bolt.damage = this.run.stats.damage * multiplier * backward.damage;
+      bolt.setData('base-damage', bolt.damage);
+      bolt.setData('dealt-damage', 0);
       bolt.remaining = GAME.projectile.lifetime;
       bolt.setVelocity(
         Math.cos(angle) * GAME.projectile.speed * volley.speed,
@@ -2686,8 +2780,24 @@ export class ArenaScene extends Phaser.Scene {
       return;
     if (bolt.hitTargets.get(enemy) === enemy.spawnId) return;
     bolt.hitTargets.set(enemy, enemy.spawnId);
-    if (bolt.pierces > 0) bolt.pierces -= 1;
-    else bolt.disableBody(true, true);
+    const wasPiercing =
+      bolt.pierces > 0 ||
+      (this.run.upgrades['piercing-shaft'] ?? 0) > 0 ||
+      this.run.patrons.bow.pierce > 0;
+    if (wasPiercing) recordPiercingHitOnEnemy(this.run, enemy.tacticalSlot, enemy.spawnId);
+    const baseDamage = (bolt.getData('base-damage') as number | undefined) ?? bolt.damage;
+    const dealtSoFar = (bolt.getData('dealt-damage') as number | undefined) ?? 0;
+    const hitDamage = capWorldPiercerDamage(this.run, bolt.damage, baseDamage, dealtSoFar);
+    bolt.setData('dealt-damage', dealtSoFar + hitDamage);
+    if (bolt.pierces > 0) {
+      bolt.pierces -= 1;
+      bolt.damage = projectileDamageAfterPierce(this.run, bolt.damage);
+      if (
+        ownsResearch(this.run, 'km-world-piercer') &&
+        dealtSoFar + hitDamage >= baseDamage * GAME.research.worldPiercerMaxTotalDamage
+      )
+        bolt.disableBody(true, true);
+    } else bolt.disableBody(true, true);
     if (bolt.fire) enemy.burning = 2;
     if (bolt.pins && enemy.definition.behavior !== 'boss') {
       enemy.pinned = GAME.mounted.pinSeconds;
@@ -2695,7 +2805,7 @@ export class ArenaScene extends Phaser.Scene {
       enemy.tactics.remaining = GAME.tactics.chargeRecovery;
     }
     if (bolt.source === 'khan') recordKhanTarget(this.run, enemy.tacticalSlot, enemy.spawnId);
-    this.damageEnemy(enemy, bolt.damage, bolt.source === 'khan' ? 'khan' : 'allied-arrows');
+    this.damageEnemy(enemy, hitDamage, bolt.source === 'khan' ? 'khan' : 'allied-arrows');
   }
 
   private projectileReaches(projectile: Projectile): boolean {
@@ -2712,25 +2822,38 @@ export class ArenaScene extends Phaser.Scene {
     enemy: Enemy,
     amount: number,
     source: ResearchDamageSource = 'support-and-other',
+    triggerOnHit = true,
   ): void {
     if (!enemy.active) return;
     if (enemy === this.boss && this.run.finalStand?.phase === 'recovery')
       amount *= GAME.finalStand.vulnerableDamage;
     const beforeRatio = enemy.maxHealth > 0 ? enemy.health / enemy.maxHealth : 1;
     amount *= friendlyDamageMultiplier(this.run, beforeRatio);
-    if (
+    const hasArmor =
       (enemy.definition.armor !== undefined || enemy.definition.id === 'brute') &&
-      enemy.pinned <= 0
-    )
-      amount *= enemy.definition.armor ?? GAME.tactics.heavyArmor;
-    amount *= recordFriendlyHitOnEnemy(
+      enemy.pinned <= 0;
+    const baseArmor = hasArmor ? (enemy.definition.armor ?? GAME.tactics.heavyArmor) : 1;
+    amount *= researchArmorMultiplier(
       this.run,
       enemy.tacticalSlot,
       enemy.spawnId,
-      beforeRatio,
-      enemy.elite,
-      enemy.maxHealth > 0 ? (enemy.health - amount) / enemy.maxHealth : 1,
+      baseArmor,
+      source === 'khan',
     );
+    if (triggerOnHit) {
+      amount *= recordFriendlyHitOnEnemy(
+        this.run,
+        enemy.tacticalSlot,
+        enemy.spawnId,
+        beforeRatio,
+        enemy.elite,
+        enemy.maxHealth > 0 ? (enemy.health - amount) / enemy.maxHealth : 1,
+      );
+    }
+    const spill =
+      triggerOnHit && source === 'khan'
+        ? eagleEyeOverkillSpill(this.run, amount, enemy.health, enemy === this.boss)
+        : 0;
     if (amount >= 1) enemy.motion.hit();
     recordResearchDamage(
       this.run,
@@ -2772,6 +2895,10 @@ export class ArenaScene extends Phaser.Scene {
       this.run.clan.campEffects.multipliers.spiritGain;
     rewardPatronKill(this.run);
     if (enemy === this.boss) defeatSkybreaker(this.run);
+    if (spill > 0) {
+      const spillTarget = this.spatial.nearest(x, y, 220, (e) => e.active && e !== enemy);
+      if (spillTarget) this.damageEnemy(spillTarget, spill, 'khan', false);
+    }
     this.burst(x, y, 0xa58aad, 5);
     const gem = this.gems.get(x, y, 'gem') as Gem | null;
     if (gem) {
@@ -3416,6 +3543,13 @@ export class ArenaScene extends Phaser.Scene {
     this.supportTimer -= dt;
     this.wagonTimer -= dt;
     this.wardTimer -= dt;
+    const arrowRain = claimArrowRainDrop(this.run);
+    if (arrowRain) {
+      this.spatial.forEachNearby(arrowRain.x, arrowRain.y, arrowRain.radius, (enemy) =>
+        this.damageEnemy(enemy, arrowRain.damage, 'khan'),
+      );
+      this.burst(arrowRain.x, arrowRain.y, 0xe3c78c, 8);
+    }
     if (clan.buildings.sanctuary && this.supportTimer <= 0) {
       const anchor = isKhanActive(this.run) ? this.player : this.camp;
       const target =

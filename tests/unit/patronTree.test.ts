@@ -95,11 +95,12 @@ describe('the eight patron trees', () => {
     }
     expect(run.pendingUpgrades).toBe(51);
     expect(redeemMasteredResearch(run)).toBe(false);
+    run.pendingUpgrades = 100;
     for (const t of RESEARCH.filter(
       (t) => !t.unavailableReason && !UPGRADES.some((u) => u.id === t.id),
     ))
       applyResearch(run, t.id);
-    expect(run.pendingUpgrades).toBeLessThan(51);
+    expect(run.pendingUpgrades).toBeLessThan(100);
     expect(redeemMasteredResearch(run)).toBe(true);
     expect(run.pendingUpgrades).toBe(0);
   });
