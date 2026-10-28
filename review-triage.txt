@@ -1,0 +1,6 @@
+tier: Full
+head: 72e6013634c7  changed_files: 50  changed_lines: 6048
+reasons: core/save/platform path: package.json; core/save/platform path: src/game/config.ts; core/save/platform path: src/game/scenes/ArenaScene.ts; core/save/platform path: src/game/state/clan.ts; core/save/platform path: src/game/state/economy.ts; core/save/platform path: src/game/state/expeditionArchive.ts; core/save/platform path: src/game/state/khan.ts; core/save/platform path: src/game/state/patronSupportClock.ts; core/save/platform path: src/game/state/patrons.ts; core/save/platform path: src/game/state/progressionPreview.ts; core/save/platform path: src/game/state/research.ts; core/save/platform path: src/game/state/researchMetrics.ts; core/save/platform path: src/game/state/researchPaths.ts; core/save/platform path: src/game/state/researchRuntime.ts; core/save/platform path: src/game/state/run.ts
+checkpoint: none
+skip: none
+run: no-mistakes axi run --intent "<captain intent>" --verification-plan "<the exact test commands and specs you already ran, and what they proved>"

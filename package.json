@@ -12,6 +12,7 @@
     "build:web": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.desktop.json --noEmit && tsc -p tsconfig.playwright.json",
+    "research:benchmark": "node scripts/research-benchmark.mjs",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",

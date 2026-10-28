@@ -8,6 +8,7 @@ export interface TreeRequirement {
   title: string;
   rank: number;
   current: number;
+  any?: boolean;
 }
 export interface TreePrice {
   knowledge?: number;
@@ -35,6 +36,10 @@ export interface TreeNode {
   price?: TreePrice;
   excludes?: readonly { id: string; title: string }[];
   choiceGroup?: string;
+  modifierSources?: readonly { label: string; value: string }[];
+  tierLabel?: string;
+  confirmChoice?: boolean;
+  plannedRoute?: { nodes: { id: string; title: string }[]; price: TreePrice; reasons: string[] };
 }
 export interface TreeBranch {
   id: string;
@@ -49,6 +54,10 @@ export interface TreeBranch {
 export interface TreeViewState {
   category: string;
   query: string;
+  compact?: boolean;
+  zoom?: number;
+  pinned?: string;
+  confirmResearch?: string;
   branch?: string;
   node?: string;
   overview?: boolean;
@@ -185,10 +194,20 @@ export function graphLayout(branch: TreeBranch) {
 }
 export function branchMarkup(
   branch: TreeBranch,
-  options: { selectedNode?: string; inspector?: boolean } = {},
+  options: {
+    selectedNode?: string;
+    inspector?: boolean;
+    compact?: boolean;
+    zoom?: number;
+    pinnedRoute?: readonly string[];
+  } = {},
 ): string {
   const selected = selectedNode(branch, options.selectedNode),
-    route = treeAncestors(branch, selected.id),
+    route = new Set([
+      ...(selected.plannedRoute?.nodes.map((n) => n.id) ?? treeAncestors(branch, selected.id)),
+      selected.id,
+      ...(options.pinnedRoute ?? []),
+    ]),
     layout = graphLayout(branch);
   const edges = branch.nodes
     .flatMap((node) =>
@@ -208,7 +227,7 @@ export function branchMarkup(
     )
     .join('');
   return `<article class="tree-branch connected-branch" data-tree-branch="${escapeHtml(branch.id)}"><header class="tree-branch-heading"><span class="tree-illustration">${branch.illustration}</span><div><p class="eyebrow">${escapeHtml(branch.category)}</p><h3>${escapeHtml(branch.title)}</h3><p class="tree-progress">${escapeHtml(branch.progress)}</p></div></header><p class="tree-branch-description">${escapeHtml(branch.description)}</p>
- <div class="tree-graph-viewport" data-scroll-key="graph-${escapeHtml(branch.id)}" aria-label="${escapeHtml(branch.title)} prerequisite map"><div class="tree-graph" style="width:${layout.width}px;height:${layout.height}px"><svg class="tree-connections" viewBox="0 0 ${layout.width} ${layout.height}" aria-hidden="true">${edges}</svg>
+ <div class="tree-graph-viewport" data-scroll-key="graph-${escapeHtml(branch.id)}" aria-label="${escapeHtml(branch.title)} prerequisite map"><div class="tree-graph" data-compact="${!!options.compact}" style="width:${layout.width}px;height:${layout.height}px;zoom:${options.zoom ?? 1}"><svg class="tree-connections" viewBox="0 0 ${layout.width} ${layout.height}" aria-hidden="true">${edges}</svg>
  ${branch.nodes
    .map((node) => {
      const p = layout.points.get(node.id)!,
@@ -221,9 +240,9 @@ export function branchMarkup(
  ${options.inspector ? nodeInspector(branch, selected) : ''}</article>`;
 }
 export function nodeInspector(branch: TreeBranch, node: TreeNode): string {
-  const route = treeRoute(branch, node),
+  const route = node.plannedRoute ?? treeRoute(branch, node),
     ranks = node.ranks ?? { current: node.status === 'learned' ? 1 : 0, max: 1 };
-  const prerequisites =
+  const prerequisites: readonly TreeRequirement[] =
     node.prerequisites ??
     node.requires.map((id) => ({
       id,
@@ -238,22 +257,26 @@ export function nodeInspector(branch: TreeBranch, node: TreeNode): string {
   const alternatives = node.choiceGroup
     ? branch.nodes.filter((n) => n.id !== node.id && n.choiceGroup === node.choiceGroup)
     : [];
-  return `<section class="node-inspector" id="tree-node-inspector" aria-label="Selected technology"><div class="node-inspector-scroll" data-scroll-key="node-details"><div class="node-portrait" data-capstone="${node.kind === 'capstone'}">${clanMark(node.icon ?? 'spirit')}<span class="node-patron-seal">${branch.illustration}</span></div><p class="eyebrow">${escapeHtml(node.kind ?? 'Camp development')} · ${escapeHtml(statusLabel(node))}</p><h3>${escapeHtml(node.title)}</h3><p class="node-rank-summary">Rank ${ranks.current} / ${ranks.max}</p><p class="node-effect">${escapeHtml(node.description)}</p>
+  return `<section class="node-inspector" id="tree-node-inspector" aria-label="Selected technology"><div class="node-inspector-scroll" data-scroll-key="node-details"><div class="node-portrait" data-capstone="${node.kind === 'capstone'}">${clanMark(node.icon ?? 'spirit')}<span class="node-patron-seal">${branch.illustration}</span></div><p class="eyebrow">${escapeHtml(node.tierLabel ?? node.kind ?? 'Camp development')} · ${escapeHtml(statusLabel(node))}</p><h3>${escapeHtml(node.title)}</h3><p class="node-rank-summary">Rank ${ranks.current} / ${ranks.max}</p><p class="node-effect">${escapeHtml(node.description)}</p>
  ${preview.length ? `<section class="node-preview" aria-label="Purchase effect preview"><h4>With your current build</h4><dl>${preview.map((change) => `<div data-improves="${change.improves}"><dt>${escapeHtml(change.label)}</dt><dd><span>${escapeHtml(change.before)}</span><b aria-label="becomes">→</b><strong>${escapeHtml(change.after)}</strong></dd>${change.context ? `<small>${escapeHtml(change.context)}</small>` : ''}</div>`).join('')}</dl></section>` : ''}${node.forecast ? `<p class="tree-node-forecast">${escapeHtml(node.forecast)}</p>` : ''}
- ${prerequisites.length ? `<section class="node-prerequisites"><h4>Prerequisites</h4><ul>${prerequisites.map((r) => `<li data-met="${r.current >= r.rank}"><span aria-hidden="true">${r.current >= r.rank ? '✓' : '○'}</span><button data-tree-select="${escapeHtml(r.id)}" data-focus-key="requirement-${escapeHtml(r.id)}">${escapeHtml(r.title)} <small>${r.current} / ${r.rank} ranks</small></button></li>`).join('')}</ul></section>` : ''}
+ ${node.modifierSources?.length ? `<section class="node-modifier-sources"><h4>Building bonuses already included</h4><dl>${node.modifierSources.map((s) => `<div><dt>${escapeHtml(s.label)}</dt><dd>${escapeHtml(s.value)}</dd></div>`).join('')}</dl><p>The before/after comparison changes technology bonuses only.</p></section>` : ''}
+ ${prerequisites.length ? `<section class="node-prerequisites"><h4>Prerequisites</h4><ul>${prerequisites.map((r) => `<li data-met="${r.current >= r.rank}"><span aria-hidden="true">${r.current >= r.rank ? '✓' : '○'}</span><button data-tree-select="${escapeHtml(r.id)}" data-focus-key="requirement-${escapeHtml(r.id)}">${escapeHtml(r.title)} ${r.any ? '<small>ANY alternative</small>' : ''}<small>${r.current} / ${r.rank} ranks</small></button></li>`).join('')}</ul></section>` : ''}
  ${
-   route.nodes.length > 1
-     ? `<section class="node-route"><h4>Everything this upgrade needs</h4><p>${escapeHtml(priceText(route.price))}</p><div>${route.nodes
-         .map(
-           (n) =>
-             `<button data-tree-select="${escapeHtml(n.id)}" data-focus-key="route-${escapeHtml(n.id)}">${escapeHtml(n.title)}</button>`,
-         )
-         .join('<span aria-hidden="true">›</span>')}</div></section>`
-     : ''
+   node.plannedRoute?.reasons.length
+     ? `<section class="node-route"><h4>Route unavailable</h4><p>${escapeHtml(node.plannedRoute.reasons.join(' · '))}</p></section>`
+     : route.nodes.length > 1
+       ? `<section class="node-route"><h4>Everything this upgrade needs</h4><p>${escapeHtml(priceText(route.price))}</p><div>${route.nodes
+           .map(
+             (n) =>
+               `<button data-tree-select="${escapeHtml(n.id)}" data-focus-key="route-${escapeHtml(n.id)}">${escapeHtml(n.title)}</button>`,
+           )
+           .join('<span aria-hidden="true">›</span>')}</div></section>`
+       : ''
  }
  ${alternatives.length ? `<section class="node-comparison"><h4>Choose a specialization</h4><p>Only one of these per expedition.</p><div class="choice-comparison">${[node, ...alternatives].map((n) => `<article data-selected="${n.id === node.id}" data-status="${n.status}"><h5>${escapeHtml(n.title)}</h5><p>${escapeHtml(n.description)}</p><strong>${escapeHtml(n.cost)}</strong>${n.excludes?.length ? `<small>Closes: ${escapeHtml(n.excludes.map((e) => e.title).join(', '))}</small>` : ''}${n.id !== node.id ? `<button data-tree-select="${escapeHtml(n.id)}" data-focus-key="compare-${escapeHtml(n.id)}">Inspect alternative</button>` : '<small>Now inspecting</small>'}</article>`).join('')}</div></section>` : ''}
+ ${node.action.research ? `<button data-tree-pin="${escapeHtml(node.id)}" data-focus-key="pin-${escapeHtml(node.id)}">Pin research target</button>` : ''}
  ${node.excludes?.length ? `<section class="node-exclusions"><h4>Choosing this closes</h4><p>Everything else stays open.</p><ul>${node.excludes.map((n) => `<li>${escapeHtml(n.title)}</li>`).join('')}</ul></section>` : ''}
- </div><div class="node-purchase"><p class="node-purchase-status" role="status">${escapeHtml(node.reason)}</p><strong class="node-price">${escapeHtml(node.cost)}</strong><button class="tree-purchase" data-focus-key="purchase-${escapeHtml(node.id)}" ${attributes} ${node.status === 'available' ? '' : 'disabled'} aria-disabled="${node.status !== 'available'}">${node.status === 'learned' ? 'Learned' : node.status === 'excluded' ? 'Path closed' : node.action.building && !node.action.path ? escapeHtml(node.title) : `Learn ${escapeHtml(node.title)}`}</button></div></section>`;
+ </div><div class="node-purchase"><p class="node-purchase-status" role="status">${escapeHtml(node.reason)}</p><strong class="node-price">${escapeHtml(node.cost)}</strong><button class="tree-purchase" data-focus-key="purchase-${escapeHtml(node.id)}" ${attributes} ${node.status === 'available' ? '' : 'disabled'} aria-disabled="${node.status !== 'available'}">${node.status === 'learned' ? 'Learned' : node.status === 'excluded' ? 'Path closed' : node.action.building && !node.action.path ? escapeHtml(node.title) : `${node.confirmChoice ? 'Confirm choice: ' : 'Learn '}${escapeHtml(node.title)}`}</button></div></section>`;
 }
 export function progressionMenu(options: {
   title: string;
@@ -267,6 +290,7 @@ export function progressionMenu(options: {
   kind?: string;
   allLabel?: string;
   recipes?: string;
+  bridges?: string;
 }): string {
   const { branches, view } = options,
     query = searchText(view.query.trim());
@@ -279,10 +303,14 @@ export function progressionMenu(options: {
   );
   const branch = visible.find((b) => b.id === view.branch) ?? visible[0];
   const selected = branch ? selectedNode(branch, view.node) : undefined;
+  const pinnedRoute = branches
+    .flatMap((b) => b.nodes)
+    .find((n) => n.id === view.pinned)
+    ?.plannedRoute?.nodes.map((n) => n.id);
   const overview = view.overview;
   return `<section class="game-panel progression-panel" data-tree-kind="${escapeHtml(options.kind ?? 'progression')}">${heading(options.eyebrow, options.title, true, options.mark)}
- <div class="tree-toolbar"><div class="tree-summary">${options.summary.map((s) => `<span><strong>${escapeHtml(s.value)}</strong>${escapeHtml(s.label)}</span>`).join('')}</div><div class="tree-view-tools"><button data-tree-overview data-focus-key="tree-overview" aria-pressed="${!!overview}">Patron overview</button>${options.recipes ? `<button data-tree-recipes data-focus-key="tree-recipes" aria-pressed="${!!view.recipes}">Combinations</button>` : ''}</div></div>
+ <div class="tree-toolbar"><div class="tree-summary">${options.summary.map((s) => `<span><strong>${escapeHtml(s.value)}</strong>${escapeHtml(s.label)}</span>`).join('')}</div><div class="tree-view-tools">${options.kind === 'patrons' ? `<button data-tree-compact data-focus-key="tree-compact" aria-pressed="${!!view.compact}">Compact list</button><button data-tree-zoom="-0.1" data-focus-key="tree-zoom-out" aria-label="Zoom research map out">−</button><button data-tree-zoom="reset" data-focus-key="tree-zoom-reset" aria-label="Reset research map zoom">${Math.round((view.zoom ?? 1) * 100)}%</button><button data-tree-zoom="0.1" data-focus-key="tree-zoom-in" aria-label="Zoom research map in">+</button>${view.pinned ? `<button data-tree-select="${escapeHtml(view.pinned)}" data-focus-key="pinned-target">Pinned: ${escapeHtml(branches.flatMap((b) => b.nodes).find((n) => n.id === view.pinned)?.title ?? view.pinned)}</button>` : ''}` : ''}<button data-tree-overview data-focus-key="tree-overview" aria-pressed="${!!overview}">Patron overview</button>${options.recipes ? `<button data-tree-recipes data-focus-key="tree-recipes" aria-pressed="${!!view.recipes}">Combinations</button>` : ''}</div></div>
  <div class="tree-workspace${overview || view.recipes ? ' tree-workspace-overview' : ''}"><aside class="patron-navigation"><label class="tree-search-label">Find a branch<input type="search" id="tree-search" data-tree-search data-focus-key="tree-search" placeholder="Search names and effects" value="${escapeHtml(view.query)}"/></label><button class="tree-reset-filter" data-tree-filter="all" data-focus-key="filter-all">${escapeHtml(options.allLabel ?? 'All branches')}</button><nav aria-label="Patron traditions">${visible.map((b) => `<button class="patron-nav-item" data-tree-branch-select="${escapeHtml(b.id)}" data-nodes="${b.nodes.map((n) => escapeHtml(n.id)).join(' ')}" data-focus-key="branch-${escapeHtml(b.id)}" aria-pressed="${!overview && !view.recipes && branch?.id === b.id}"><span>${b.illustration}</span><span><strong>${escapeHtml(b.title)}</strong><small>${escapeHtml(b.category)} · ${escapeHtml(b.progress)}</small></span></button>`).join('')}</nav></aside>
- <div class="tree-main panel-body tree-scroll" data-scroll-key="tree-main">${view.recipes ? (options.recipes ?? '') : overview ? `<p class="panel-intro">${escapeHtml(options.introduction)}</p><div class="patron-overview">${visible.map((b) => `<button class="patron-overview-card" data-tree-branch-select="${escapeHtml(b.id)}" data-focus-key="overview-${escapeHtml(b.id)}"><span>${b.illustration}</span><p class="eyebrow">${escapeHtml(b.category)}</p><h3>${escapeHtml(b.title)}</h3><p>${escapeHtml(b.description)}</p><strong>${escapeHtml(b.progress)}</strong><small>${b.nodes.filter((n) => n.status === 'available').length} upgrades affordable now</small></button>`).join('')}</div>` : branch ? branchMarkup(branch, { selectedNode: selected!.id }) : '<p class="tree-empty" role="status">No branches match. Clear the search or pick another category.</p>'}</div>
+ <div class="tree-main panel-body tree-scroll" data-scroll-key="tree-main">${view.recipes ? (options.recipes ?? '') : overview ? `<p class="panel-intro">${escapeHtml(options.introduction)}</p><div class="patron-overview">${visible.map((b) => `<button class="patron-overview-card" data-branch-id="${escapeHtml(b.id)}" data-tree-branch-select="${escapeHtml(b.id)}" data-focus-key="overview-${escapeHtml(b.id)}"><span>${b.illustration}</span><p class="eyebrow">${escapeHtml(b.category)}</p><h3>${escapeHtml(b.title)}</h3><p>${escapeHtml(b.description)}</p><strong>${escapeHtml(b.progress)}</strong><small>${b.nodes.filter((n) => n.status === 'available').length} upgrades affordable now</small></button>`).join('')}</div>${options.bridges ?? ''}` : branch ? branchMarkup(branch, { selectedNode: selected!.id, compact: view.compact, zoom: view.zoom, pinnedRoute }) : '<p class="tree-empty" role="status">No branches match. Clear the search or pick another category.</p>'}</div>
  ${!overview && !view.recipes && branch && selected ? nodeInspector(branch, selected) : ''}</div><div class="tree-bottom-note">${escapeHtml(options.notice ?? '')}</div>${footer('Close tree')}</section>`;
 }

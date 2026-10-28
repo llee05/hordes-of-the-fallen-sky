@@ -5,7 +5,7 @@ import { migrateLegacyNomadicCamp } from './nomadicCampMigration';
 import { isExpeditionSave, isRecord, type ExpeditionSave } from '../../shared/expeditionSave';
 import { createRun } from './run';
 import { ALL_ENEMIES, SKYBREAKER } from '../data/enemies';
-import { UPGRADES } from '../data/upgrades';
+import { RESEARCH_BY_ID } from '../data/research';
 import { BUILDINGS, ROUTES, LOCATIONS, STARTING_TRADITIONS } from '../data/clan';
 import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
 import { STORY_ORDER, storyEncounter } from '../data/story';
@@ -249,6 +249,39 @@ const overrides: Record<string, Rule> = {
 };
 const optional: Record<string, Record<string, Rule>> = {
   '': {
+    researchPurchases: list(
+      object({
+        id: oneOf([...RESEARCH_BY_ID.keys()]),
+        rank: oneOf([1, 2]),
+        cost: oneOf([1, 2, 3]),
+        at: positive,
+      }),
+      174,
+    ),
+    researchObservations: object({
+      damage: object({ khan: positive, 'allied-arrows': positive, 'support-and-other': positive }),
+      frames: integer,
+      frameMilliseconds: positive,
+      worstFrameMilliseconds: positive,
+    }),
+    researchRuntime: object(
+      {},
+      {
+        lastGallopAt: number,
+        riverStacks: integer,
+        riverUntil: number,
+        lastHitAt: number,
+        lastHitGeneration: integer,
+        targetSlot: integer,
+        targetSpawn: integer,
+        targetUntil: number,
+        memoryStacks: integer,
+        memoryUntil: number,
+        echoReleases: integer,
+        echoAttacks: list(integer, GAME.patrons.ancestors.maximum),
+        echoNearCamp: boolean,
+      },
+    ),
     finalStand: object(
       {
         phase: oneOf(['advance', 'warning', 'recovery']),
@@ -498,9 +531,15 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
   const run = value.run as unknown as RunState;
   const world = value.world as unknown as WorldArchive;
   const ranksValid = Object.entries(run.upgrades).every(([id, rank]) => {
-    const definition = UPGRADES.find((entry) => entry.id === id);
-    return definition && rank <= definition.maxStacks;
+    const definition = RESEARCH_BY_ID.get(id);
+    return definition && !definition.unavailableReason && rank <= definition.maxRank;
   });
+  const purchases = run.researchPurchases ?? [];
+  const receiptsValid =
+    new Set(purchases.map((p) => `${p.id}:${p.rank}`)).size === purchases.length &&
+    purchases.every(
+      (p) => p.rank > 0 && p.rank <= (run.upgrades[p.id] ?? 0) && p.cost > 0 && p.at <= run.elapsed,
+    );
   const slots = new Set(world.enemies.map((e) => e.slot));
   const referencesValid =
     slots.size === world.enemies.length &&
@@ -517,6 +556,7 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
     );
   if (
     !ranksValid ||
+    !receiptsValid ||
     !referencesValid ||
     run.elapsed < 0 ||
     run.elapsed > 86400 ||

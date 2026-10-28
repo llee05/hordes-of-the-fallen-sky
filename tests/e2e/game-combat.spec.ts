@@ -32,7 +32,7 @@ test('automatic attacks defeat enemies and collected XP banks research without i
   await expect(page.locator('#research-points')).toHaveText('1');
   await page.keyboard.press('t');
   await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
-  await expect(page.locator('[data-tree-branch-select]')).toHaveCount(8);
+  await expect(page.locator('[data-tree-branch-select]')).toHaveCount(10);
   await page.screenshot({ path: 'test-results/desktop-upgrade.png', fullPage: true });
   await buyNode(page, 'power');
   await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();

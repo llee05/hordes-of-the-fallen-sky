@@ -389,7 +389,8 @@ const PATHS: readonly { patron: PatronId; technologies: readonly Technology[] }[
         title: 'Watchfires on the ridge',
         maxStacks: 1,
         requires: [need('caravan-foundations')],
-        description: 'The Wagon circle’s firing interval is 25% shorter. Needs a Wagon circle.',
+        description:
+          'Wagon defence fires 25% faster. Without a Wagon circle, a short-range guard shot deals 35% shared damage.',
         apply: (run) => {
           run.patrons.guardian.wagonInterval *= P.guardian.wagonInterval;
         },

@@ -1,5 +1,15 @@
-import { purchaseNomadicBuilding } from '../state/nomadicCamp';
-import type { NomadicBuildingId } from '../../shared/nomadicCamp.js';
+import { volleyFactors } from '../state/volley';
+import {
+  observeResearchFrame,
+  recordResearchDamage,
+  type ResearchDamageSource,
+} from '../state/researchMetrics';
+import {
+  recordKhanTarget,
+  recordResearchShard,
+  researchGallop,
+  wagonResearchDefence,
+} from '../state/researchRuntime';
 import {
   normalizeVisualSettings,
   resolveTerrainRenderer,
@@ -88,18 +98,17 @@ import {
   availableFormations,
   beginMigration,
   buildStructure,
-  burningTempest,
   canMigrate,
   damageClan,
   hasDevelopment,
   riderCount,
   type ClanProtection,
 } from '../state/clan';
-import { UPGRADES } from '../data/upgrades';
+import { RESEARCH_BY_ID } from '../data/research';
 import { Enemy, Gem, Projectile } from '../entities/actors';
 import { captureCampArchive, runFromCampArchive } from '../state/campArchive';
 import { purchaseEstate, type EstatePurchaseKind } from '../state/campEstate';
-import { applyUpgrade, createRun, gainExperience, redeemMasteredResearch } from '../state/run';
+import { applyResearch, createRun, gainExperience, redeemMasteredResearch } from '../state/run';
 import {
   advancePatrons,
   friendlyDamageMultiplier,
@@ -1513,6 +1522,7 @@ export class ArenaScene extends Phaser.Scene {
   dash(): void {
     if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.dashTimer > 0) return;
     this.run.combat.gallopSerial++;
+    researchGallop(this.run);
     this.dashRemaining = GAME.dash.duration;
     this.dashTimer = gallopCooldown(this.run);
     this.invulnerable = Math.max(this.invulnerable, GAME.dash.duration);
@@ -1521,9 +1531,9 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   research(id: string, rank: number): void {
-    const upgrade = UPGRADES.find((entry) => entry.id === id);
+    const upgrade = RESEARCH_BY_ID.get(id);
     const previousCooldown = gallopCooldown(this.run);
-    if (this.run.phase !== 'upgrade' || !upgrade || !applyUpgrade(this.run, upgrade, rank)) return;
+    if (this.run.phase !== 'upgrade' || !upgrade || !applyResearch(this.run, id, rank - 1)) return;
     this.requestCheckpoint();
     this.audio.play('research');
     this.dashTimer *= gallopCooldown(this.run) / previousCooldown;
@@ -1602,6 +1612,7 @@ export class ArenaScene extends Phaser.Scene {
       beginSuccession(this.run);
       this.hideFallenKhan();
     }
+    observeResearchFrame(this.run, delta);
     this.run.elapsed += dt;
     advancePatrons(this.run, dt);
     this.dashTimer = Math.max(0, this.dashTimer - dt);
@@ -2450,6 +2461,7 @@ export class ArenaScene extends Phaser.Scene {
         (1 + momentum * 0.3) * (retreat ? GAME.mounted.retreatDamage : 1),
         false,
         charged,
+        'khan',
       );
       hostFired ||= released;
       if (released && charged) {
@@ -2505,22 +2517,20 @@ export class ArenaScene extends Phaser.Scene {
     multiplier: number,
     ancestral = false,
     charged = false,
+    owner: 'khan' | 'rider' = 'rider',
   ): boolean {
+    const volley = volleyFactors(this.run, count, owner === 'khan', ancestral);
     const direction = Math.atan2(target.y - y, target.x - x);
-    const tempest = burningTempest(this.run);
+    const tempest = volley.tempest;
     let fired = false;
-    for (let i = 0; i < count + (tempest ? 2 : 0); i += 1) {
+    for (let i = 0; i < volley.count; i += 1) {
       const bolt = this.projectiles.get(x, y, 'bolt') as Projectile | null;
       if (!bolt) break;
       fired = true;
-      const angle =
-        direction +
-        (i - (count - 1) / 2) *
-          (tempest ? 0.28 : 0.12) *
-          (ancestral ? 1 : this.run.patrons.bow.spread);
+      const angle = direction + (i - (count - 1) / 2) * volley.spacing;
       bolt.enableBody(true, x, y, true, true);
       bolt.barrage = undefined;
-      bolt.source = undefined;
+      bolt.source = owner === 'khan' ? 'khan' : undefined;
       bolt.setData('terrain-previous', { x, y });
       bolt
         .setTexture('bolt')
@@ -2544,11 +2554,11 @@ export class ArenaScene extends Phaser.Scene {
         this.run.stats.damage *
         (charged ? GAME.mounted.chargedDamage : 1) *
         multiplier *
-        (this.run.clan.formation === 'encircle' && this.run.clan.momentum > 0.5 ? 1.3 : 1);
+        volley.damage;
       bolt.remaining = GAME.projectile.lifetime;
       bolt.setVelocity(
-        Math.cos(angle) * GAME.projectile.speed,
-        Math.sin(angle) * GAME.projectile.speed,
+        Math.cos(angle) * GAME.projectile.speed * volley.speed,
+        Math.sin(angle) * GAME.projectile.speed * volley.speed,
       );
     }
     if (fired) {
@@ -2610,10 +2620,8 @@ export class ArenaScene extends Phaser.Scene {
       if (bolt.turn) {
         const body = bolt.body as Phaser.Physics.Arcade.Body;
         const angle = Math.atan2(body.velocity.y, body.velocity.x) + bolt.turn * dt;
-        bolt.setVelocity(
-          Math.cos(angle) * GAME.projectile.speed,
-          Math.sin(angle) * GAME.projectile.speed,
-        );
+        const speed = body.velocity.length();
+        bolt.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
         bolt.setRotation(angle + Math.PI / 4);
       }
       if (bolt.remaining <= 0) bolt.disableBody(true, true);
@@ -2653,7 +2661,8 @@ export class ArenaScene extends Phaser.Scene {
       enemy.tactics.phase = 'recover';
       enemy.tactics.remaining = GAME.tactics.chargeRecovery;
     }
-    this.damageEnemy(enemy, bolt.damage);
+    if (bolt.source === 'khan') recordKhanTarget(this.run, enemy.tacticalSlot, enemy.spawnId);
+    this.damageEnemy(enemy, bolt.damage, bolt.source === 'khan' ? 'khan' : 'allied-arrows');
   }
 
   private projectileReaches(projectile: Projectile): boolean {
@@ -2666,7 +2675,11 @@ export class ArenaScene extends Phaser.Scene {
     return true;
   }
 
-  private damageEnemy(enemy: Enemy, amount: number): void {
+  private damageEnemy(
+    enemy: Enemy,
+    amount: number,
+    source: ResearchDamageSource = 'support-and-other',
+  ): void {
     if (!enemy.active) return;
     if (enemy === this.boss && this.run.finalStand?.phase === 'recovery')
       amount *= GAME.finalStand.vulnerableDamage;
@@ -2680,6 +2693,11 @@ export class ArenaScene extends Phaser.Scene {
     )
       amount *= enemy.definition.armor ?? GAME.tactics.heavyArmor;
     if (amount >= 1) enemy.motion.hit();
+    recordResearchDamage(
+      this.run,
+      source,
+      Math.min(Math.max(0, enemy.health), Math.max(0, amount)),
+    );
     enemy.health -= amount;
     if (enemy.health > 0) {
       if (amount >= 1)
@@ -2734,6 +2752,7 @@ export class ArenaScene extends Phaser.Scene {
       if (!gem.attracted) continue;
       if (distance < 18) {
         experience += gem.value;
+        recordResearchShard(this.run);
         gem.disableBody(true, true);
       } else {
         const step = Math.min(1, dt * (6 + 140 / distance));
@@ -3389,17 +3408,20 @@ export class ArenaScene extends Phaser.Scene {
         (clan.region === 3 ? 1.5 : 1) *
         clan.campEffects.multipliers.sanctuaryInterval;
     }
-    if (clan.buildings.wagon && this.wagonTimer <= 0) {
-      const target = this.spatial.nearest(this.camp.x, this.camp.y, 520);
+    const wagonResearch = wagonResearchDefence(this.run);
+    if (wagonResearch.active && this.wagonTimer <= 0) {
+      const target = this.spatial.nearest(this.camp.x, this.camp.y, wagonResearch.range);
       if (target)
         this.shootVolley(
           this.camp.x,
           this.camp.y,
           target,
           hasDevelopment(this.run, 'wagon', 'war-carts') ? 3 : 1,
-          (clan.stage === 'migration' && !hasDevelopment(this.run, 'wagon', 'war-carts')
-            ? 0.7
-            : 1.5) * clan.campEffects.multipliers.wagonDamage,
+          wagonResearch.fallback
+            ? wagonResearch.damage
+            : (clan.stage === 'migration' && !hasDevelopment(this.run, 'wagon', 'war-carts')
+                ? 0.7
+                : 1.5) * clan.campEffects.multipliers.wagonDamage,
         );
       this.wagonTimer = 0.9 * this.run.patrons.guardian.wagonInterval;
     }

@@ -1,3 +1,4 @@
+import { RESEARCH } from '../../src/game/data/research';
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
 import { UPGRADES } from '../../src/game/data/upgrades';
@@ -129,7 +130,8 @@ describe('choosing a new Khan', () => {
     ).toBe(true);
     expect(run.stats.maxHealth).toBe(120);
     expect(run.health).toBe(0);
-    for (const upgrade of UPGRADES) run.upgrades[upgrade.id] = upgrade.maxStacks;
+    for (const upgrade of RESEARCH.filter((t) => !t.unavailableReason))
+      run.upgrades[upgrade.id] = upgrade.maxRank;
     expect(redeemMasteredResearch(run)).toBe(true);
     expect(run.health).toBe(0);
     run.phase = 'playing';

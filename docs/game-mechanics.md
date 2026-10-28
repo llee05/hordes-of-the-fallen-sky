@@ -99,7 +99,7 @@ Each downward 20-point resolve band crossed by a hit removes one person, capped 
 
 ## 3. Spirit-stone / patron tech tree
 
-Collectible **spirit shards** carry XP; **Spirit** is a separate camp currency earned automatically on kills. Research is expedition progression, with **eight patrons, 42 technologies, and 50 authored ranks (41 learnable ranks after choosing one capstone per patron)**. Patrons can be mixed freely. Their combat abilities are original game mechanics; see [the complete patron tree](patron-tech-tree.md) for every technology, stable ID, exact modifier, and interaction.
+Collectible **spirit shards** carry XP; **Spirit** is a separate camp currency earned automatically on kills. Research is expedition progression, and patrons can be mixed freely. Their combat abilities are original game mechanics. See the [Research V2 implementation record](patron-research-v2.md) for the current registry and purchase contract, the [effect inventory](patron-research-v2-status.md) for availability, and the [V1 reference](patron-tech-tree.md) for original numerical effects.
 
 ```mermaid
 flowchart TD
@@ -111,14 +111,14 @@ flowchart TD
     Points --> Foundation[Choose any patron: foundation rank 1]
     Foundation --> A[Practice A: 1 point]
     Foundation --> B[Practice B: 1 point]
-    A --> CapstoneA[Focused capstone A: 2 points, foundation rank 2]
-    B --> CapstoneB[Alternative capstone B: 2 points, foundation rank 2]
-    Spirit --> Camp[Spiritual and cultural camp buildings]
+    A --> CapstoneA[Legacy Doctrine A: 2 points, foundation rank 2]
+    B --> CapstoneB[Legacy Doctrine B: 2 points, foundation rank 2]
+    Spirit --> Sanctuary[Spirit sanctuary and its chosen specialization]
 ```
 
-The XP threshold from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and so on. Excess XP carries over; a pickup can earn several levels and every earned point remains banked. Level-ups never open a popup or pause combat. Open the **Patron tech tree** with **T**, controller **LB**, the HUD, Pause, or the chronicle’s Traditions tab. Foundations and practices cost **one knowledge point per rank**. Practices unlock after foundation rank 1. A capstone requires foundation rank 2 and one named practice, and costs **two points**. Choose one capstone per patron; mix practices and patrons freely. A focused route costs five points. There are no random offers or rerolls. Archery has three capstones: precision, piercing, and wide volleys. Repeated percentage modifiers multiply except Lus's two additive slow ranks.
+The XP threshold from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and so on. Excess XP carries over; a pickup can earn several levels and every earned point remains banked. Level-ups never open a popup or pause combat. Open the **Patron tech tree** with **T**, controller **LB**, the HUD, Pause, or the chronicle’s Traditions tab. Research prices, prerequisites and exclusive choices are defined by the [current research contract](patron-research-v2.md#purchase-and-observation-interfaces); the [legacy path rules](patron-tech-tree.md#purchase-rules) remain compatible. There are no random offers or rerolls. Repeated legacy percentage modifiers multiply except Lus's two additive slow ranks.
 
-The table below outlines one capstone route per patron; the complete patron catalogue includes every alternative.
+The table below outlines one legacy Doctrine route per patron; the V1 reference includes the original alternatives.
 
 | Patron                          | Playstyle                | Foundation → practices → capstone                                                                                    |
 | ------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
@@ -133,7 +133,7 @@ The table below outlines one capstone route per patron; the complete patron cata
 
 The tree opens one connected patron graph with compact navigation, a comparison overview, and an inspector. Search ignores diacritics. Click a node to inspect before/after values, prerequisite routes, costs, and exclusive alternatives; use the explicit Learn button to purchase. Text distinguishes learned, available, prerequisites missing, resources missing, and excluded states. Purchases keep the tree open and preserve focus and scroll. Combinations show existing interactions and link between patron and camp requirements while keeping the world paused. Escape, T, controller B/LB, or the return button closes it with points unspent. Opening from Pause or the chronicle returns to that parent screen. Stored Spirit remains a separate camp currency.
 
-Once all 41 reachable ranks are mastered (excluding capstone alternatives), subsequent points grant **20 food and 15 materials each**, and a living Khan is fully healed when those points are converted. Conversion cannot revive a fallen Khan during succession. Blocked but unlearned technologies do not count as mastery.
+Once all implemented, nonexcluded research ranks are mastered, subsequent points grant **20 food and 15 materials each**, and a living Khan is fully healed when those points are converted. Conversion cannot revive a fallen Khan during succession. Temporarily blocked but implemented, nonexcluded technologies still prevent mastery; unavailable proposals do not.
 
 Each enemy drops its defined XP independent of scaled health. Shards begin following inside the attraction radius and collect within 18 world units. Once attracted, they keep following. At the 500-shard pool limit, new XP merges into an existing active shard. Uncollected XP travels to the next camp on arrival.
 
@@ -173,7 +173,7 @@ Ongod summons up to three visible ancestral riders, separate from the 16 living-
 
 Lus creates slowing fields around Khan and camp, reaching 24% slow within 230 units at full investment. Its capstone pulses around the Khan every 4 seconds for 75% shared damage and an 80-unit outward push. Its other practice adds one second to eruption warnings and halves eruption damage to Khan and clan.
 
-The Guardian's independent camp ward deals 65% shared damage every 2 seconds, including migration. Its radius starts at 125 and expands with the barricade to keep perimeter attackers in reach. It needs no Sacred Ovoo. Its Watchfires practice reduces the Wagon Yard's firing interval from 0.9 to 0.675 seconds. Full Sülde research restores 0.15 resolve per enemy kill. Support attacks use the same active-time simulation, damage/kill pipeline, and bounded projectile pools as other combat.
+The Guardian's independent camp ward deals 65% shared damage every 2 seconds, including migration. Its radius starts at 125 and expands with the barricade to keep perimeter attackers in reach. It stacks with the sanctuary's Ancestral ward and needs no sanctuary. Its Watchfires practice accelerates wagon defence; the [Guardian reference](patron-tech-tree.md#guardian-of-burkhan-khaldun--construction) describes its zero-building fallback. Full Sülde research restores 0.15 resolve per enemy kill. Support attacks use the same active-time simulation, damage/kill pipeline, and bounded projectile pools as other combat.
 
 ### Choosing a new Khan
 
@@ -328,26 +328,25 @@ The desktop game runs offline with local assets and native, validated, atomic sa
 
 ## 10. Source map for maintaining this brief
 
-| Area                                                           | Implementation                                                                                                   |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Starting stats and balance constants                           | [config.ts](../src/game/config.ts)                                                                               |
-| Khan damage, presence, succession timing                       | [state/khan.ts](../src/game/state/khan.ts)                                                                       |
-| Starting run, XP thresholds, upgrade application               | [state/run.ts](../src/game/state/run.ts)                                                                         |
-| Patron technology definitions and prerequisites                | [data/upgrades.ts](../src/game/data/upgrades.ts)                                                                 |
-| Camp building definitions and purchase rules                   | [data/nomadicCamp.ts](../src/game/data/nomadicCamp.ts), [state/nomadicCamp.ts](../src/game/state/nomadicCamp.ts) |
-| Legacy crafts, formations, routes, regions                     | [data/clan.ts](../src/game/data/clan.ts)                                                                         |
-| Typed camp effects and once-only purchase grants               | [state/camp.ts](../src/game/state/camp.ts)                                                                       |
-| Economy, staffing, purchases, protection, migration, identity  | [state/clan.ts](../src/game/state/clan.ts)                                                                       |
-| Patron metadata and playstyles                                 | [data/patrons.ts](../src/game/data/patrons.ts)                                                                   |
-| Neutral patron state, conditional damage, recovery, revival    | [state/patrons.ts](../src/game/state/patrons.ts)                                                                 |
-| Ancestral riders, terrain pulse, and mountain ward             | [PatronSupport.ts](../src/game/systems/PatronSupport.ts)                                                         |
-| Enemy definitions and spawn interval                           | [data/enemies.ts](../src/game/data/enemies.ts)                                                                   |
-| Combat, targeting, support attacks, hazards, phase transitions | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                                                |
-| Encounter content, choices, epilogue                           | [data/story.ts](../src/game/data/story.ts)                                                                       |
-| Encounter triggers and once-only rewards                       | [state/story.ts](../src/game/state/story.ts)                                                                     |
-| Prologue chapters                                              | [data/intro.ts](../src/game/data/intro.ts)                                                                       |
-| Menus, chronicle, help, input                                  | [GameUI.ts](../src/ui/GameUI.ts), [menuContent.ts](../src/ui/menuContent.ts)                                     |
-| Save and packaging details                                     | [README](../README.md#packaging-and-saves), [Steam preparation](../steam/README.md)                              |
+| Area                                                                                 | Implementation                                                                      |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Starting stats and balance constants                                                 | [config.ts](../src/game/config.ts)                                                  |
+| Khan damage, presence, succession timing                                             | [state/khan.ts](../src/game/state/khan.ts)                                          |
+| Starting run, XP thresholds, upgrade application                                     | [state/run.ts](../src/game/state/run.ts)                                            |
+| Research registry, prerequisites and runtime availability                            | [data/research.ts](../src/game/data/research.ts)                                    |
+| Building costs, stable path IDs, prerequisites, effects, formations, routes, regions | [data/clan.ts](../src/game/data/clan.ts)                                            |
+| Typed camp effects and once-only purchase grants                                     | [state/camp.ts](../src/game/state/camp.ts)                                          |
+| Economy, staffing, purchases, protection, migration, identity                        | [state/clan.ts](../src/game/state/clan.ts)                                          |
+| Patron metadata and playstyles                                                       | [data/patrons.ts](../src/game/data/patrons.ts)                                      |
+| Neutral patron state, conditional damage, recovery, revival                          | [state/patrons.ts](../src/game/state/patrons.ts)                                    |
+| Ancestral riders, terrain pulse, and mountain ward                                   | [PatronSupport.ts](../src/game/systems/PatronSupport.ts)                            |
+| Enemy definitions and spawn interval                                                 | [data/enemies.ts](../src/game/data/enemies.ts)                                      |
+| Combat, targeting, support attacks, hazards, phase transitions                       | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                   |
+| Encounter content, choices, epilogue                                                 | [data/story.ts](../src/game/data/story.ts)                                          |
+| Encounter triggers and once-only rewards                                             | [state/story.ts](../src/game/state/story.ts)                                        |
+| Prologue chapters                                                                    | [data/intro.ts](../src/game/data/intro.ts)                                          |
+| Menus, chronicle, help, input                                                        | [GameUI.ts](../src/ui/GameUI.ts), [menuContent.ts](../src/ui/menuContent.ts)        |
+| Save and packaging details                                                           | [README](../README.md#packaging-and-saves), [Steam preparation](../steam/README.md) |
 
 See [the progression UI guide](progression-ui.md) for adding technologies, buildings, and development nodes without rewriting the shared layout. Update this reference with balance or progression changes. A longer historical campaign, permanent civilization unlocks, and thousands of individually simulated people remain future work rather than hidden mechanics.
 

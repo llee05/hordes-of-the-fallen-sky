@@ -1,3 +1,4 @@
+import { researchWaterRadius, stillwaterRefuge } from './researchRuntime';
 import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import type { PatronEffects, RunState } from '../types';
@@ -43,7 +44,7 @@ export function friendlyDamageMultiplier(run: RunState, enemyHealthRatio: number
 }
 
 export function terrainSpeedMultiplier(run: RunState, distance: number): number {
-  return distance < run.patrons.water.radius ? Math.max(0.2, 1 - run.patrons.water.slow) : 1;
+  return distance < researchWaterRadius(run) ? Math.max(0.2, 1 - run.patrons.water.slow) : 1;
 }
 
 export function advancePatrons(run: RunState, dt: number): void {
@@ -51,7 +52,10 @@ export function advancePatrons(run: RunState, dt: number): void {
   run.health = Math.min(
     run.stats.maxHealth,
     run.health +
-      (run.patrons.hearth.regeneration + run.clan.campEffects.bonuses.commanderRecovery) * dt,
+      (run.patrons.hearth.regeneration +
+        run.clan.campEffects.bonuses.commanderRecovery +
+        (stillwaterRefuge(run) ? GAME.research.refugeRecovery : 0)) *
+        dt,
   );
 }
 

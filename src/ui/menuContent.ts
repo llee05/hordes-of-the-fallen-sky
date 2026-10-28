@@ -6,7 +6,7 @@ import { areaIntel } from './areaContent';
 import { BUILDINGS, FORMATIONS, REGIONS } from '../game/data/clan';
 import { PATRONS } from '../game/data/patrons';
 import { GAME } from '../game/config';
-import { UPGRADES } from '../game/data/upgrades';
+import { RESEARCH_BY_ID } from '../game/data/research';
 import { assignedWorkers, canMigrate, clanDoctrine, riderCount } from '../game/state/clan';
 import type { RunState } from '../game/types';
 import { campIllustration, clanMark } from './artwork';
@@ -50,15 +50,18 @@ export function journalMenu(run: RunState, tab: JournalTab): string {
   } else if (tab === 'story') {
     content = storyRecords(run);
   } else {
-    const entries = Object.entries(run.upgrades);
+    const entries = Object.entries(run.upgrades).filter(([, rank]) => rank > 0);
     content = `<div class="journal-chapter"><span class="eyebrow">WHAT YOUR PEOPLE HAVE LEARNED</span><h3>Patron traditions</h3><div class="traditions-list">${
       entries.length
         ? entries
             .map(([id, stacks]) => {
-              const upgrade = UPGRADES.find((entry) => entry.id === id);
+              const upgrade = RESEARCH_BY_ID.get(id);
               if (!upgrade) return '';
-              const patron = PATRONS.find((entry) => entry.id === upgrade.patron);
-              return `<article class="tradition-entry"><span>${clanMark(patron?.symbol ?? 'spirit')}</span><div><h4>${patron?.name ?? ''} · ${upgrade.title} <small>RANK ${stacks}</small></h4><p>${upgrade.description}</p></div></article>`;
+              const patrons =
+                upgrade.patronIds
+                  .map((patronId) => PATRONS.find((entry) => entry.id === patronId)!.name)
+                  .join(' + ') || 'General research';
+              return `<article class="tradition-entry"><span>${clanMark(`research:${id}`)}</span><div><h4>${patrons} · ${upgrade.title} <small>RANK ${stacks}</small></h4><p>${upgrade.description}</p></div></article>`;
             })
             .join('')
         : '<p class="journal-callout">Collect the shards fallen enemies drop. They become knowledge points for the tech tree.</p>'

@@ -1,3 +1,4 @@
+import { researchGrazing } from './researchRuntime';
 import { GAME } from '../config';
 import { ROUTES, startingTradition, type MigrationLocation } from '../data/clan';
 import type { RunState } from '../types';
@@ -51,7 +52,7 @@ export function economyRates(run: RunState, pasture = run.clan.pasture): Economy
   const grazing = clan.stage === 'migration' ? 0 : Math.max(0, Math.min(pasture, 100)) / 100;
   const foodProduction =
     (0.65 + (clan.buildings.herd ? 0.65 : 0)) *
-    grazing *
+    researchGrazing(run, grazing) *
     (clan.region === 1 ? 0.7 : 1) *
     patrons.land.food *
     multipliers.foodProduction *
@@ -115,7 +116,8 @@ function campFoodSeconds(run: RunState): number | undefined {
   if (slope === 0) return net < 0 ? food / -net : undefined;
   const pasture = Math.max(0, Math.min(1, run.clan.pasture / 100));
   const boundary = slope < 0 ? pasture / -slope : (1 - pasture) / slope;
-  const acceleration = economyRates(run, 100).foodProduction * slope;
+  const acceleration =
+    (economyRates(run, 100).foodProduction - economyRates(run, 0).foodProduction) * slope;
   const discriminant = net * net - 2 * acceleration * food;
   if (discriminant >= 0 && (net < 0 || acceleration < 0)) {
     // This form avoids cancellation when a gentle pasture change is close to a constant rate.

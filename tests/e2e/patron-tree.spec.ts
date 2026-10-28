@@ -14,7 +14,7 @@ test('eight patron traditions offer focused routes and exclude only the chosen c
   });
   await page.keyboard.press('t');
   await page.getByRole('button', { name: 'Patron overview' }).click();
-  await expect(page.locator('.patron-overview-card')).toHaveCount(8);
+  await expect(page.locator('.patron-overview-card')).toHaveCount(10);
   await inspectNode(page, 'caravan-foundations');
   await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
   await expect(page.locator('.tree-node[data-kind="capstone"]')).toHaveCount(2);
@@ -29,6 +29,8 @@ test('eight patron traditions offer focused routes and exclude only the chosen c
   await inspectNode(page, 'hold-the-passage');
   await expect(page.locator('.choice-comparison')).toContainText('A fortress on the road');
   await expect(page.locator('.node-preview')).toContainText('Clan damage reduction');
+  await page.locator('.tree-purchase').click();
+  await expect(page.locator('.tree-purchase')).toContainText('Confirm choice:');
   await page.locator('.tree-purchase').click();
   await expect(page.locator('[data-node="hold-the-passage"]')).toHaveAttribute(
     'data-status',

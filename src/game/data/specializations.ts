@@ -130,7 +130,7 @@ export const SPECIALIZATIONS: Record<PatronId, readonly Technology[]> = {
       maxStacks: 1,
       requires: [{ id: 'watchfires', rank: 1 }],
       description:
-        'Wagon circle arrows deal 50% more damage, in camp and on the march. Needs a Wagon circle.',
+        'Wagon defence deals 50% more damage, in camp and on the march. Without a Wagon circle, this also strengthens the short-range guard shot.',
       apply: (r) => {
         r.clan.campEffects.multipliers.wagonDamage *= S.fortressDamage;
       },
