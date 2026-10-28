@@ -7,12 +7,24 @@ import { advanceClan, beginMigration } from '../state/clan';
 import { createRun, gainExperience, applyUpgrade, upgradeBlocker } from '../state/run';
 import { damageClan } from '../state/clan';
 import { observeExpedition, markExpedition, metricStage } from '../state/expeditionMetrics';
+import { encounterEnemy } from '../state/encounters';
+
+function createPacingRng(seed = 0x42): () => number {
+  let a = seed >>> 0;
+  return () => {
+    let t = (a += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
 export const PACING_PLAYSTYLES = ['riding', 'guarding', 'migrating'] as const;
 /** A deterministic economy/progression pressure model, not a replacement for physical combat playtests. */
 export function pacingBenchmark(
   style: (typeof PACING_PLAYSTYLES)[number],
   tradition: StartingTraditionId,
+  random: () => number = createPacingRng(),
 ) {
   const run = createRun(tradition),
     config = GAME.pacing,
@@ -46,10 +58,11 @@ export function pacingBenchmark(
         run.phase = 'playing';
       }
     }
-    if (run.elapsed >= nextKill) {
+    while (run.elapsed >= nextKill) {
       markExpedition(run, 'fight');
       run.kills++;
-      gainExperience(run, 3);
+      const enemy = encounterEnemy(run, random);
+      gainExperience(run, enemy.definition.xp);
       nextKill += plan.killEvery;
       const choice = UPGRADES.find((u) => !upgradeBlocker(run, u));
       if (choice) applyUpgrade(run, choice);

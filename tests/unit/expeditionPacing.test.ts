@@ -25,4 +25,9 @@ it('exposes different knowledge, danger, travel and population outcomes rather t
   expect(b.clan.population).toBeGreaterThan(c.clan.population);
   expect(c.elapsed).toBeLessThan(a.elapsed);
   expect(a.metrics!.stages[0]!.damage).toBeGreaterThan(b.metrics!.stages[0]!.damage);
+  expect(a.level - 1).toBeGreaterThanOrEqual(45);
+  expect(b.level - 1).toBeGreaterThanOrEqual(45);
+  expect(c.level - 1).toBeGreaterThanOrEqual(45);
+  expect(a.level).toBeGreaterThan(b.level);
+  expect(b.level).toBeGreaterThan(c.level);
 });
