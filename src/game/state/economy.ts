@@ -102,15 +102,11 @@ export function crossingForecast(
     duration -
       (run.clan.stage === 'migration' && run.clan.routeId === route.id ? run.clan.stageTime : 0),
   );
-  const rates = economyRates(
+  const migration =
     run.clan.stage === 'migration'
       ? run
-      : {
-          ...run,
-          clan: { ...run.clan, stage: 'migration' },
-        },
-  );
-  const foodChange = rates.foodNet * remaining;
+      : { ...run, clan: { ...run.clan, stage: 'migration' as const } };
+  const { foodChange } = projectFood(migration, remaining);
   const foodNeeded = Math.max(0, -foodChange);
   const foodBeforeArrival = Math.max(0, run.clan.food + foodChange);
   const arrivalChange = route.food + run.clan.campEffects.bonuses.arrivalFood;
@@ -125,27 +121,43 @@ export function crossingForecast(
   };
 }
 
-/** Integrate the linear change in grazing until pasture reaches 0% or 100%, then the steady rate. */
-function campFoodSeconds(run: RunState): number | undefined {
-  const food = run.clan.food;
-  if (food <= 0) return 0;
-  const net = economyRates(run).foodNet;
-  const slope = -pastureDepletion(run) / 100;
-  if (slope === 0) return net < 0 ? food / -net : undefined;
-  const pasture = Math.max(0, Math.min(1, run.clan.pasture / 100));
-  const boundary = slope < 0 ? pasture / -slope : (1 - pasture) / slope;
-  const acceleration =
-    (economyRates(run, 100).foodProduction - economyRates(run, 0).foodProduction) * slope;
-  const discriminant = net * net - 2 * acceleration * food;
-  if (discriminant >= 0 && (net < 0 || acceleration < 0)) {
-    // This form avoids cancellation when a gentle pasture change is close to a constant rate.
-    const denominator = -net + Math.sqrt(discriminant);
-    const root = denominator > 0 ? (2 * food) / denominator : Infinity;
-    if (root <= boundary) return root;
+function projectFood(run: RunState, duration = Infinity) {
+  const projected = { ...run, clan: { ...run.clan } };
+  let elapsed = 0;
+  let foodChange = 0;
+  let foodSeconds: number | undefined = run.clan.food <= 0 ? 0 : undefined;
+  while (elapsed < duration) {
+    const pasture = Math.max(0, Math.min(100, projected.clan.pasture));
+    let slope = projected.clan.stage === 'migration' ? 0 : -pastureDepletion(projected);
+    if ((slope < 0 && pasture === 0) || (slope > 0 && pasture === 100)) slope = 0;
+    const pastureBoundary =
+      slope < 0 ? pasture / -slope : slope > 0 ? (100 - pasture) / slope : Infinity;
+    const buffRemaining =
+      (projected.researchRuntime?.vigilantHerdersUntil ?? 0) - projected.elapsed;
+    const segment = Math.min(
+      duration - elapsed,
+      pastureBoundary,
+      buffRemaining > 0 ? buffRemaining : Infinity,
+    );
+    const net = economyRates(projected, pasture).foodNet;
+    const acceleration =
+      ((economyRates(projected, 100).foodProduction - economyRates(projected, 0).foodProduction) *
+        slope) /
+      100;
+    const food = run.clan.food + foodChange;
+    const discriminant = net * net - 2 * acceleration * food;
+    if (foodSeconds === undefined && discriminant >= 0 && (net < 0 || acceleration < 0)) {
+      const denominator = -net + Math.sqrt(discriminant);
+      const root = denominator > 0 ? (2 * food) / denominator : Infinity;
+      if (root <= segment) foodSeconds = elapsed + root;
+    }
+    if (!Number.isFinite(segment)) break;
+    foodChange += net * segment + (acceleration * segment * segment) / 2;
+    elapsed += segment;
+    projected.elapsed = run.elapsed + elapsed;
+    projected.clan.pasture = Math.max(0, Math.min(100, pasture + slope * segment));
   }
-  const reserves = food + net * boundary + (acceleration * boundary * boundary) / 2;
-  const finalNet = economyRates(run, slope < 0 ? 0 : 100).foodNet;
-  return finalNet < 0 ? boundary + Math.max(0, reserves) / -finalNet : undefined;
+  return { foodChange, foodSeconds };
 }
 
 /** Forecasts use active seconds and hold population, improvements, and regional conditions fixed. */
@@ -155,10 +167,9 @@ export function economyForecast(run: RunState): EconomyForecast {
   if (run.clan.stage === 'migration') {
     const route = ROUTES.find((entry) => entry.id === run.clan.routeId);
     const remaining = route ? crossingForecast(run, route).remaining : 0;
-    const emptyAt = rates.foodNet < 0 ? Math.max(0, run.clan.food) / -rates.foodNet : Infinity;
-    if (emptyAt <= remaining) foodSeconds = emptyAt;
+    foodSeconds = projectFood(run, remaining).foodSeconds;
   } else {
-    foodSeconds = campFoodSeconds(run);
+    foodSeconds = projectFood(run).foodSeconds;
     if (
       run.clan.stage === 'final' &&
       foodSeconds !== undefined &&

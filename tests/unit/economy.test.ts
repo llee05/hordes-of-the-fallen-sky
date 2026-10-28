@@ -3,6 +3,7 @@ import { GAME } from '../../src/game/config';
 import { ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration, buildStructure } from '../../src/game/state/clan';
 import { crossingForecast, economyForecast, economyRates } from '../../src/game/state/economy';
+import { recordWaveEnded } from '../../src/game/state/researchRuntime';
 import { applyResearch } from '../../src/game/state/run';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
@@ -36,6 +37,96 @@ describe('economy forecasts', () => {
     }
     expect(elapsed).toBeCloseTo(seconds, 1);
   });
+
+  it.each([
+    { pasture: 0, food: 1, population: 8, buff: 0.1, recovering: false },
+    { pasture: 0, food: 0.1, population: 8, buff: 20, recovering: false },
+    { pasture: 5, food: 5, population: 40, buff: 20, recovering: false },
+    { pasture: 5, food: 0.1, population: 40, buff: 20, recovering: false },
+    { pasture: 5, food: 5, population: 40, buff: 0.1, recovering: true },
+    { pasture: 99, food: 5, population: 40, buff: 20, recovering: true },
+  ])('expires Vigilant Herders during camp projections: %o', (scenario) => {
+    const run = createRun();
+    run.phase = 'playing';
+    run.upgrades['ee-vigilant-herders'] = 1;
+    run.upgrades['ee-deep-roots'] = 1;
+    recordWaveEnded(run, false);
+    run.elapsed = GAME.research.vigilantHerdersSeconds - scenario.buff;
+    run.clan.pasture = scenario.pasture;
+    run.clan.food = scenario.food;
+    run.clan.population = scenario.population;
+    if (scenario.recovering) {
+      run.patrons.land.pastureUse = 0;
+      run.patrons.land.pastureRecovery = 1;
+    }
+    const before = structuredClone(run);
+    const seconds = economyForecast(run).foodSeconds!;
+    expect(run).toEqual(before);
+    expect(seconds).toBeGreaterThan(0);
+    run.clan.stage = 'final';
+    run.clan.stageTime = GAME.clan.finalDuration - seconds + 0.01;
+    expect(economyForecast(run).foodSeconds).toBeUndefined();
+    run.clan.stageTime -= 0.02;
+    expect(economyForecast(run).foodSeconds).toBeCloseTo(seconds);
+    run.clan.stage = 'camp';
+    run.clan.stageTime = 0;
+    let elapsed = 0;
+    while (run.clan.food > 0 && elapsed < 1000) {
+      run.elapsed += 0.001;
+      advanceClan(run, 0.001);
+      elapsed += 0.001;
+    }
+    expect(elapsed).toBeCloseTo(seconds, 1);
+  });
+
+  it.each([0.1, 20])(
+    'expires Vigilant Herders in crossing previews and migration shortages with %s seconds left',
+    (buff) => {
+      const run = createRun();
+      run.phase = 'playing';
+      run.upgrades['ee-vigilant-herders'] = 1;
+      run.upgrades['ee-wandering-city'] = 1;
+      recordWaveEnded(run, false);
+      run.elapsed = GAME.research.vigilantHerdersSeconds - buff;
+      run.clan.population = 24;
+      run.clan.food = 100;
+      run.clan.stageTime = GAME.clan.minimumCamp;
+      const route = ROUTES[0];
+      const before = structuredClone(run);
+      const preview = crossingForecast(run, route);
+      expect(run).toEqual(before);
+      run.phase = 'route';
+      expect(beginMigration(run, route.id)).toBe(true);
+      run.phase = 'playing';
+      expect(crossingForecast(run, route)).toEqual(preview);
+      const shortage = structuredClone(run);
+      shortage.clan.food = 1;
+      const seconds = economyForecast(shortage).foodSeconds!;
+      expect(seconds).toBeGreaterThan(0);
+      let elapsed = 0;
+      while (shortage.clan.food > 0 && elapsed < preview.remaining) {
+        shortage.elapsed += 0.001;
+        advanceClan(shortage, 0.001);
+        elapsed += 0.001;
+      }
+      expect(elapsed).toBeCloseTo(seconds, 1);
+      run.clan.stageTime += preview.remaining - 10;
+      const active = crossingForecast(run, route);
+      expect(active.remaining).toBeCloseTo(10);
+      elapsed = 0;
+      while (elapsed < active.remaining - 0.001) {
+        const dt = Math.min(0.001, active.remaining - 0.001 - elapsed);
+        run.elapsed += dt;
+        advanceClan(run, dt);
+        elapsed += dt;
+      }
+      const foodAtArrival = run.clan.food + economyRates(run).foodNet * 0.001;
+      expect(active.foodBeforeArrival).toBeCloseTo(foodAtArrival, 3);
+      expect(active.foodNeeded).toBeCloseTo(100 - foodAtArrival, 3);
+      expect(active.shortfall).toBe(0);
+      expect(active.foodAfterArrival).toBeCloseTo(foodAtArrival + active.arrivalChange, 3);
+    },
+  );
 
   it('uses the simulation rates with regional, patron, pasture, and camp modifiers', () => {
     const run = createRun();
