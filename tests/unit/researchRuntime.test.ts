@@ -425,19 +425,11 @@ describe('Etügen Eke (Civilisation) runtime effects', () => {
     expect(recordMaterialSpend(r, 27)).toBe(4);
   });
 
-  it('activates Bounty in Scarcity below 25 food and keeps +40% herding until reserves recover to 40', () => {
+  it('leaves Bounty in Scarcity unavailable until a real reserve percentage exists', () => {
     const r = createRun();
-    r.phase = 'playing';
-    r.upgrades['ee-bounty-in-scarcity'] = 1;
-    const base = economyRates(r).foodProduction;
-    r.clan.food = 30;
-    expect(economyRates(r).foodProduction).toBeCloseTo(base);
-    r.clan.food = 24;
-    expect(economyRates(r).foodProduction).toBeCloseTo(base * 1.4);
-    r.clan.food = 35;
-    expect(economyRates(r).foodProduction).toBeCloseTo(base * 1.4);
-    r.clan.food = 40;
-    expect(economyRates(r).foodProduction).toBeCloseTo(base);
+    r.pendingUpgrades = 100;
+    r.phase = 'upgrade';
+    expect(applyResearch(r, 'ee-bounty-in-scarcity', 0)).toBe(false);
   });
 
   it('produces 60% herd food and 50% camp materials while migrating with The Wandering City', () => {

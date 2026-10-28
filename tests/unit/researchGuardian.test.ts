@@ -78,3 +78,23 @@ describe('Guardian runtime mechanics', () => {
     expect(buildStructure(r, 'archery')).toBe(false);
   });
 });
+
+import { createRun as createNomadicRun } from '../../src/game/state/run';
+import { nomadicBuildingCost, purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
+it('current nomadic purchases apply first-construction discounts and the craftspeople refund in one transaction', () => {
+  const r = createNomadicRun();
+  r.phase = 'building';
+  r.clan.materials = 1000;
+  r.clan.spirit = 1000;
+  r.clan.population = 100;
+  r.upgrades['gu-city-of-felt-and-wood'] = 1;
+  r.upgrades['ee-camp-of-craftspeople'] = 1;
+  const cost = nomadicBuildingCost(r, 'artisans-ger')!;
+  expect(purchaseNomadicBuilding(r, 'artisans-ger')).toBe(true);
+  expect(r.clan.materials).toBe(1000 - cost.materials + Math.floor(cost.materials * 0.15));
+  expect(r.researchRuntime?.firstConstructionCrossing).toBe(0);
+  expect(r.researchRuntime?.craftspeopleRefundedCrossing).toBeUndefined();
+  expect(purchaseNomadicBuilding(r, 'archery-range')).toBe(true);
+  expect(r.researchRuntime?.firstConstructionCrossing).toBe(0);
+  expect(r.researchRuntime?.craftspeopleRefundedCrossing).toBe(0);
+});

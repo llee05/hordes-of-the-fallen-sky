@@ -1,3 +1,5 @@
+import { constructionMaterials, recordConstruction } from './researchGuardian';
+import { recordMaterialSpend } from './researchRuntime';
 import { markExpedition } from './expeditionMetrics';
 import { completeGuidance } from './guidance';
 import { rememberClan } from './legacy';
@@ -31,7 +33,11 @@ export function nomadicBuildingCost(run: RunState, id: NomadicBuildingId) {
   const next = nomadicBuilding(id).levels[camp ? nomadicBuildingLevel(camp, id) : 0];
   return next
     ? {
-        materials: Math.ceil(next.cost.materials * run.patrons.guardian.cost),
+        materials: constructionMaterials(
+          run,
+          !camp || nomadicBuildingLevel(camp, id) === 0,
+          Math.ceil(next.cost.materials * run.patrons.guardian.cost),
+        ),
         spirit: next.cost.spirit,
         workers: camp && nomadicBuildingLevel(camp, id) ? 0 : nomadicBuilding(id).workers,
       }
@@ -94,6 +100,8 @@ export function purchaseNomadicBuilding(
   const cost = nomadicBuildingCost(run, id)!;
   run.clan.materials -= cost.materials;
   run.clan.spirit -= cost.spirit;
+  recordMaterialSpend(run, cost.materials);
+  if (level === 0) recordConstruction(run);
   if ((CORE_CAMP_BUILDINGS as readonly string[]).includes(id)) {
     (camp.core as Record<string, number>)[id] = level + 1;
   } else if (level) {
