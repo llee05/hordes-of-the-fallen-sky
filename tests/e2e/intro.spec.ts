@@ -279,9 +279,8 @@ test('story works at Steam Deck size and disables painting motion on a live pref
   await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
   await expect(page.locator('.intro-story')).toHaveAttribute('data-scene', 'steppe');
   await expect(page.locator('.intro-story')).toHaveAttribute('data-camera', 'pan-east');
-  await expect(page.locator('.intro-layer')).toHaveCount(2);
   await expect
-    .poll(() => page.locator('.intro-painting').evaluate((image) => image.getAnimations().length))
+    .poll(() => page.locator('.intro-stage').evaluate((stage) => stage.getAnimations().length))
     .toBe(1);
   await expect
     .poll(() =>
@@ -327,4 +326,59 @@ test('story works at Steam Deck size and disables painting motion on a live pref
   }
   await page.getByRole('button', { name: /Skip intro/ }).click();
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
+});
+
+
+test('intro effects stay registered to each painting throughout camera motion and cropping', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/?terrain=2d');
+  await page.getByRole('button', { name: 'Replay introduction' }).click();
+  for (let chapter = 0; chapter < 5; chapter++) {
+    await expect.poll(() => page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(1536);
+    for (const viewport of [
+      { width: 1280, height: 800 },
+      { width: 1920, height: 800 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      const positions = [];
+      for (const time of [0, 12000, 24000]) {
+        const geometry = await page.locator('.intro-stage').evaluate((stage, time) => {
+          for (const animation of stage.getAnimations({ subtree: true })) {
+            animation.pause();
+            animation.currentTime = time;
+          }
+          const painting = stage.querySelector('.intro-painting')!;
+          const image = painting.getBoundingClientRect();
+          const atmosphere = stage.querySelector('.intro-atmosphere')!.getBoundingClientRect();
+          const cloth = stage.querySelector<SVGSVGElement>('.intro-cloth-overlay');
+          const point = cloth ? new DOMPoint(768, 512).matrixTransform(cloth.getScreenCTM()!) : null;
+          const mote = stage.querySelector('.intro-mote')!.getBoundingClientRect();
+          return {
+            image: { x: image.x, y: image.y, width: image.width, height: image.height },
+            atmosphere: { x: atmosphere.x, y: atmosphere.y, width: atmosphere.width, height: atmosphere.height },
+            clothCenter: point ? { x: point.x, y: point.y } : null,
+            moteX: (mote.x - image.x) / image.width,
+            paintedSurfaces: [...stage.querySelectorAll('*')].filter((element) =>
+              element instanceof HTMLImageElement || getComputedStyle(element).backgroundImage.includes('url('),
+            ).length,
+          };
+        }, time);
+        expect(geometry.paintedSurfaces).toBe(1);
+        expect(geometry.image.width / geometry.image.height).toBeCloseTo(1.5, 5);
+        for (const key of ['x', 'y', 'width', 'height'] as const) {
+          expect(geometry.atmosphere[key]).toBeCloseTo(geometry.image[key], 3);
+        }
+        if (geometry.clothCenter) {
+          expect(geometry.clothCenter.x).toBeCloseTo(geometry.image.x + geometry.image.width / 2, 3);
+          expect(geometry.clothCenter.y).toBeCloseTo(geometry.image.y + geometry.image.height / 2, 3);
+        }
+        positions.push(geometry);
+      }
+      expect(positions[0]!.image).not.toEqual(positions[2]!.image);
+      expect(Math.abs(positions[0]!.moteX - positions[2]!.moteX)).toBeGreaterThan(0.001);
+    }
+    await page.screenshot({ path: `test-results/intro-registered-${chapter}.png` });
+    if (chapter < 4) await page.keyboard.press('ArrowRight');
+  }
 });

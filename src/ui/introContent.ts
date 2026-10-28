@@ -22,7 +22,7 @@ const EMBER_SPECS: readonly (readonly [number, number, number, number, number])[
   [56, 71, 3, 7.1, -3.9],
 ];
 
-function sceneLayers(id: IntroSceneId, imageUrl: string): string {
+function sceneLayers(id: IntroSceneId): string {
   const dust = DUST_SPECS.map(
     ([x, y, size, duration, delay]) =>
       `<i class="intro-mote" style="--x:${x}%;--y:${y}%;--size:${size}px;--dur:${duration}s;--delay:${delay}s"></i>`,
@@ -33,9 +33,7 @@ function sceneLayers(id: IntroSceneId, imageUrl: string): string {
   ).join('');
 
   if (id === 'steppe') {
-    return `<div class="intro-layer intro-layer-mid" style="--layer-image:url('${imageUrl}')"></div>
-      <div class="intro-layer intro-layer-fore" style="--layer-image:url('${imageUrl}')"></div>
-      <div class="intro-atmosphere intro-atmo-steppe">
+    return `<div class="intro-atmosphere intro-atmo-steppe">
         <span class="intro-sun-wash"></span>
         <span class="intro-smoke-plume"><i></i><i></i><i></i></span>
         <svg class="intro-cloth-overlay intro-steppe-ribbons" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice">
@@ -47,9 +45,7 @@ function sceneLayers(id: IntroSceneId, imageUrl: string): string {
   }
 
   if (id === 'iron-vow') {
-    return `<div class="intro-layer intro-layer-mid" style="--layer-image:url('${imageUrl}')"></div>
-      <div class="intro-layer intro-layer-fore" style="--layer-image:url('${imageUrl}')"></div>
-      <div class="intro-atmosphere intro-atmo-vow">
+    return `<div class="intro-atmosphere intro-atmo-vow">
         <span class="intro-rift-pulse"></span>
         <span class="intro-brazier-glow brazier-left"></span>
         <span class="intro-brazier-glow brazier-right"></span>
@@ -59,9 +55,7 @@ function sceneLayers(id: IntroSceneId, imageUrl: string): string {
   }
 
   if (id === 'fallen-sky') {
-    return `<div class="intro-layer intro-layer-mid" style="--layer-image:url('${imageUrl}')"></div>
-      <div class="intro-layer intro-layer-fore" style="--layer-image:url('${imageUrl}')"></div>
-      <div class="intro-atmosphere intro-atmo-storm">
+    return `<div class="intro-atmosphere intro-atmo-storm">
         <span class="intro-vortex-gleam"></span>
         <span class="intro-frost-mist"></span>
         <svg class="intro-cloth-overlay intro-fallen-banner" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice">
@@ -72,9 +66,7 @@ function sceneLayers(id: IntroSceneId, imageUrl: string): string {
   }
 
   if (id === 'hearth') {
-    return `<div class="intro-layer intro-layer-mid" style="--layer-image:url('${imageUrl}')"></div>
-      <div class="intro-layer intro-layer-fore" style="--layer-image:url('${imageUrl}')"></div>
-      <div class="intro-atmosphere intro-atmo-hearth">
+    return `<div class="intro-atmosphere intro-atmo-hearth">
         <span class="intro-hearth-glow"></span>
         <span class="intro-distant-rift"></span>
         <svg class="intro-cloth-overlay intro-hearth-banner" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice">
@@ -85,9 +77,7 @@ function sceneLayers(id: IntroSceneId, imageUrl: string): string {
       </div>`;
   }
 
-  return `<div class="intro-layer intro-layer-mid" style="--layer-image:url('${imageUrl}')"></div>
-    <div class="intro-layer intro-layer-fore" style="--layer-image:url('${imageUrl}')"></div>
-    <div class="intro-atmosphere intro-atmo-caravan">
+  return `<div class="intro-atmosphere intro-atmo-caravan">
       <span class="intro-dawn-rays"></span>
       <span class="intro-storm-lightning"></span>
       <svg class="intro-cloth-overlay intro-caravan-banner" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice">
@@ -101,11 +91,17 @@ export function introMenu(index: number): string {
   const slide = INTRO_SLIDES[index]!;
   const last = index === INTRO_SLIDES.length - 1;
   const imageUrl = introImageUrl(slide.image);
-  return `<section class="intro-story" data-scene="${slide.id}" data-camera="${slide.camera}" style="--intro-focal:${slide.focalPoint}" aria-label="Opening story">
+  return `<section class="intro-story" data-scene="${slide.id}" data-camera="${slide.camera}" style="--intro-focal-x:${slide.focalPoint[0]}%;--intro-focal-y:${slide.focalPoint[1]}%" aria-label="Opening story">
     <div class="intro-art" aria-hidden="true">
       <div class="intro-stage">
-        <img class="intro-painting" src="${imageUrl}" alt="" width="1536" height="1024" decoding="async" />
-        ${sceneLayers(slide.id, imageUrl)}
+        <svg class="intro-canvas" viewBox="0 0 1536 1024">
+          <foreignObject width="1536" height="1024">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="intro-composition">
+              <img class="intro-painting" src="${imageUrl}" alt="" width="1536" height="1024" decoding="async" />
+              ${sceneLayers(slide.id)}
+            </div>
+          </foreignObject>
+        </svg>
       </div>
       <div class="intro-vignette"></div>
     </div>

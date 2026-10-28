@@ -2,15 +2,17 @@
 
 The five prologue illustrations were generated with the built-in `generate_image` tool (`image_gen` equivalent). The selected PNGs are bundled locally in `public/art/`, compressed at 1536 × 1024 each (~1.84–1.91 MiB per file, 9.85 MB total, down from 14.70 MB previously). There are no runtime image downloads or AI calls. `src/game/data/intro.ts` pairs each painting with the canonical short telling in [the world lore](../lore.md#opening-slideshow) and configures each chapter's camera motion and focal anchor for `src/ui/introContent.ts` and `src/intro.css`.
 
-The prologue follows the clan's account of Tengri and Etügen, the Last Court's Iron Vow, the unreturned, the surviving hearth, and the search for refuge. Every painting depicts invented events in the game's fictional setting, without personifying Tengri or Etügen or presenting the court's act as a historical ceremony. In the opening sequence, CSS-masked depth planes, slow camera pans, drifting steppe dust and ash motes, rising hearth embers, smoke plumes, and swaying ribbon/banner overlays bring subtle storybook motion to each slide while freezing completely when `prefers-reduced-motion: reduce` is active.
+The prologue follows the clan's account of Tengri and Etügen, the Last Court's Iron Vow, the unreturned, the surviving hearth, and the search for refuge. Every painting depicts invented events in the game's fictional setting, without personifying Tengri or Etügen or presenting the court's act as a historical ceremony. In the opening sequence, A single painting plane with independent atmospheric depth parallax, slow camera pans, drifting steppe dust and ash motes, rising hearth embers, smoke plumes, and swaying ribbon/banner overlays bring subtle storybook motion to each slide while freezing completely when `prefers-reduced-motion: reduce` is active.
 
 | Chapter                     | Painting                          | Camera & Motion                                                   |
 | --------------------------- | --------------------------------- | ----------------------------------------------------------------- |
-| I · Heaven and Earth        | `public/art/intro-steppe.png`     | `pan-east` · Foreground rider parallax, ovoo ribbons, smoke, dust |
+| I · Heaven and Earth        | `public/art/intro-steppe.png`     | `pan-east` · Foreground dust parallax, ovoo ribbons, smoke, dust |
 | II · The Iron Vow           | `public/art/intro-iron-vow.png`   | `rise-throne` · Sky-rift pulse, brazier flicker, rising embers    |
 | III · The Unreturned        | `public/art/intro-fallen-sky.png` | `surge-west` · Storm vortex gleam, frost mist, tattered banner    |
 | IV · The Living Hearth      | `public/art/intro-hearth.png`     | `pull-hearth` · Hearth firelight, rising embers, blue banner sway |
 | V · The Heart of the Steppe | `public/art/intro-caravan.png`    | `pan-pass` · Dawn god-rays, storm lightning, caravan banner sway  |
+
+Painting, cloth, smoke, embers, and lighting share a 1536 × 1024 image-coordinate canvas, cropped at the chapter’s focal anchor and moved by one camera transform. Dust and frost mist move independently to provide depth without repeating painted silhouettes.
 
 ## Painterly story sequence prompts
 
