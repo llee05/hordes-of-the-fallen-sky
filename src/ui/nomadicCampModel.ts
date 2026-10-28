@@ -70,7 +70,10 @@ export function nomadicBuildingArt(definition: NomadicBuildingDefinition, level:
 export function nomadicBuildingMenu(
   run: RunState,
   view: TreeViewState,
-  art: { landscape: () => string; plaque: (mark: string, name: string, detail: string) => string },
+  art: {
+    landscape: () => string;
+    plaque: (mark: string, name: string, detail: string, context?: string) => string;
+  },
 ): string {
   const camp = run.clan.nomadicCamp ?? createNomadicCamp();
   const selected =
@@ -96,7 +99,7 @@ export function nomadicBuildingMenu(
     slot?: number,
   ) => {
     const level = nomadicBuildingLevel(camp, definition.id);
-    return `<button class="camp-place ${definition.id === 'khans-ger' ? 'camp-encampment' : 'camp-facility'}" data-nomadic-site="${definition.id}" data-camp-site="${definition.id}" ${definition.id === 'khans-ger' ? 'data-camp-encampment' : ''} ${slot !== undefined ? `data-nomadic-slot="${slot}"` : ''} data-focus-key="nomadic-site-${definition.id}" data-established="true" data-level="${level}" data-match="${matches(definition)}" aria-pressed="${!!view.campPopup && view.campTarget === 'building' && selected.id === definition.id}" aria-label="${h(definition.title)}. Level ${level} of ${definition.levels.length}. Inspect improvements." style="--map-x:${position[0]}%;--map-y:${position[1]}%">${nomadicBuildingArt(definition, level)}${art.plaque(definition.icon, definition.title, `Level ${level} / ${definition.levels.length} · ${definition.category === 'Core' ? 'Permanent household' : definition.category}`)}</button>`;
+    return `<button class="camp-place ${definition.id === 'khans-ger' ? 'camp-encampment' : 'camp-facility'}" data-nomadic-site="${definition.id}" data-camp-site="${definition.id}" ${definition.id === 'khans-ger' ? 'data-camp-encampment' : ''} ${slot !== undefined ? `data-nomadic-slot="${slot}"` : ''} data-focus-key="nomadic-site-${definition.id}" data-established="true" data-level="${level}" data-match="${matches(definition)}" aria-pressed="${!!view.campPopup && view.campTarget === 'building' && selected.id === definition.id}" aria-label="${h(definition.title)}. Level ${level} of ${definition.levels.length}. Inspect improvements." style="--map-x:${position[0]}%;--map-y:${position[1]}%">${nomadicBuildingArt(definition, level)}${art.plaque(definition.icon, definition.title, `Level ${level}`, `of ${definition.levels.length} · ${definition.category === 'Core' ? 'Permanent household' : definition.category}`)}</button>`;
   };
   const choices = (slot?: number) =>
     `<div class="camp-building-choices">${NOMADIC_BUILDINGS.filter(
@@ -190,7 +193,7 @@ export function nomadicBuildingMenu(
     .map((slot, i) =>
       slot
         ? place(nomadicBuilding(slot.id), OPTIONAL_POSITIONS[i]!, i)
-        : `<button class="camp-place camp-empty-place" data-camp-slot="${i}" data-focus-key="plot-${i}" data-unlocked="true" aria-pressed="${!!view.campPopup && ((view.campTarget === 'slot' && view.campSlot === i) || (view.campTarget === 'building' && selectedLevel === 0 && selected.category !== 'Core' && (selectedSlot ?? camp.slots.indexOf(null)) === i))}" aria-label="Empty optional building slot ${i + 1}" style="--map-x:${OPTIONAL_POSITIONS[i]![0]}%;--map-y:${OPTIONAL_POSITIONS[i]![1]}%">${art.plaque('materials', 'Unclaimed ground', `Optional location ${i + 1} / 5`)}</button>`,
+        : `<button class="camp-place camp-empty-place" data-camp-slot="${i}" data-focus-key="plot-${i}" data-unlocked="true" aria-pressed="${!!view.campPopup && ((view.campTarget === 'slot' && view.campSlot === i) || (view.campTarget === 'building' && selectedLevel === 0 && selected.category !== 'Core' && (selectedSlot ?? camp.slots.indexOf(null)) === i))}" aria-label="Empty optional building slot ${i + 1}" style="--map-x:${OPTIONAL_POSITIONS[i]![0]}%;--map-y:${OPTIONAL_POSITIONS[i]![1]}%">${art.plaque('materials', 'Unclaimed ground', `Site ${i + 1}`)}</button>`,
     )
     .join('');
   return `<section class="game-panel camp-estate immersive-camp nomadic-camp"><header class="camp-estate-heading"><div class="camp-estate-title">${clanMark('banner')}<div><p class="eyebrow">BLUE BANNER CLAN · ${h(currentLocation(run).short)}</p><h2 id="overlay-title">The Khan's camp</h2></div></div><div class="camp-stores" aria-label="Camp resources">${[

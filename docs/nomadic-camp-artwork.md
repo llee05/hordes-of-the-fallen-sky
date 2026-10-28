@@ -1,17 +1,25 @@
 # Nomadic camp painting
 
-The camp uses two original PNGs made with the built-in `image_gen` tool. All art is bundled locally; the game never generates or downloads assets at runtime.
+The camp uses three original PNGs made with the built-in `image_gen` tool. All art is bundled locally; the game never generates or downloads assets at runtime.
 
 | Asset                                   | Size              | Use                                                                     |
 | --------------------------------------- | ----------------- | ----------------------------------------------------------------------- |
 | `public/art/nomadic-camp-terrain.png`   | 1774 × 887        | Continuous grassland panorama, paths, low banks, shrubs and rocks       |
 | `public/art/nomadic-camp-buildings.png` | 1254 × 1254, RGBA | Three successive stages each of ger, wagon workplace and archery ground |
 
-The building sheet uses `public/art/steppe-props.png` as a painting and material reference. The generated PNGs are preserved unchanged. Explicit frame rectangles in `nomadic-camp-buildings.json` clip the nine silhouettes in the shared SVG atlas renderer in `src/ui/artwork.ts`. Metadata ignores near-transparent gutter noise when establishing frame bounds; it does not modify the bitmap. The registry still owns level, scale and ornaments. Other building types reuse existing sheep, pack horses, cairns and banners. Interface shadows provide ground contact without changing map anchors, click targets, plaques or game state.
+The building sheet uses `public/art/steppe-props.png` as a painting and material reference. The architecture PNG is preserved unchanged; the camp-life panorama is compressed to an indexed PNG without changing its dimensions. Explicit frame rectangles in `nomadic-camp-buildings.json` clip the nine silhouettes in the shared SVG atlas renderer in `src/ui/artwork.ts`. Metadata ignores near-transparent gutter noise when establishing frame bounds; it does not modify the bitmap. The registry still owns level, scale and ornaments. Other building types reuse existing sheep, pack horses, cairns and banners. Interface shadows provide ground contact without changing map anchors, click targets, plaques or game state.
 
-The panorama fills the existing map bounds and supports compact panning. It has no built-in structures or text, so optional ownership remains visible and accurate. Artwork stays still while planning; there are no new clocks or animations.
+The camp-life panorama fills the existing map bounds and supports compact panning. It paints everyday households, workers and animals between clearings; the five permanent buildings and five optional workplaces remain state-driven overlays. The older quiet terrain panorama is retained as source artwork. Neither panorama contains interface text. Artwork stays still while planning; there are no new clocks or animations.
 
 More distinct portable-forge, healer, hunting, storyteller and training-equipment designs would further distinguish workplaces that currently share architecture. This milestone supplies the terrain and three-stage architecture families rather than inventing new gameplay or a separate management interface.
+
+## Estate polish artwork
+
+`public/art/nomadic-camp-life.png` is a 1774 × 887 indexed PNG made with the built-in `image_gen` tool, compressed to 192 colors with ImageMagick (1,125,334 bytes; no resize). The ornamental frame and centred parchment title use existing local cloth texture and CSS; plaques retain their diamond symbols, display the current level on the right, and expose level limits and categories to assistive technology. Search, provisions, combinations, inspection, purchases and keyboard actions retain their existing scene-owned state and focus keys. The centred footer returns to the steppe. Narrow screens retain horizontal map panning.
+
+Generation prompt:
+
+> Use case: stylized-concept. Asset type: production background painting for a nomadic steppe camp management interface, wide landscape 2:1. Create one dense continuous hand-painted manuscript illustration of a living Mongolian-inspired nomadic camp, seen from high three-quarter overhead, no horizon. Matte gouache, restrained brush grain, ochre and sage grasses, ivory felt, weathered wooden carts, turquoise and vermilion textile details, olive shadows, warm light upper left. Rich small-scale daily life: people in rust and indigo deels carrying water and felt, mending harness, preparing food, tending chestnut horses and sheep, children by a small cart. Small household gers, rolled felt, baskets, tied stores, tether ropes and woven rugs cluster along the outer edges and in the gaps between winding pale footpaths. Composition supports real game-controlled building sprites laid over this background: leave grassy clearings centred at percent coordinates 50,31;19,28;16,64;82,28;84,64;34,12;66,12;38,60;62,60;50,82. Do not paint buildings or fixed workplaces in those clearings. Populate the spaces BETWEEN them with miniature people, animals and portable household possessions, maintaining an even illustration density across the whole frame. Quiet terrain under future labels; daily-life details remain secondary to overlaid architecture. Original Central Asian geometric ornament on textiles, a lived-in portable camp rather than a town. No European buildings, stone walls, castle, pagodas, church, fields of crops. No sky, lettering, UI, labels, border, watermark, photorealism or glossy 3D.
 
 ## Terrain generation prompt
 
