@@ -277,9 +277,19 @@ test('story works at Steam Deck size and disables painting motion on a live pref
   await page.goto('/');
   await page.getByRole('button', { name: 'Replay introduction' }).click();
   await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
+  await expect(page.locator('.intro-story')).toHaveAttribute('data-scene', 'steppe');
+  await expect(page.locator('.intro-story')).toHaveAttribute('data-camera', 'pan-east');
+  await expect(page.locator('.intro-layer')).toHaveCount(2);
   await expect
     .poll(() => page.locator('.intro-painting').evaluate((image) => image.getAnimations().length))
     .toBe(1);
+  await expect
+    .poll(() =>
+      page
+        .locator('.intro-stage')
+        .evaluate((stage) => stage.getAnimations({ subtree: true }).length),
+    )
+    .toBeGreaterThan(5);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect
     .poll(() =>
@@ -288,7 +298,17 @@ test('story works at Steam Deck size and disables painting motion on a live pref
         .evaluate((story) => story.getAnimations({ subtree: true }).length),
     )
     .toBe(0);
+  const expectedScenes = [
+    ['steppe', 'pan-east'],
+    ['iron-vow', 'rise-throne'],
+    ['fallen-sky', 'surge-west'],
+    ['hearth', 'pull-hearth'],
+    ['caravan', 'pan-pass'],
+  ] as const;
   for (let chapter = 1; chapter <= 5; chapter++) {
+    const [sceneId, cameraId] = expectedScenes[chapter - 1]!;
+    await expect(page.locator('.intro-story')).toHaveAttribute('data-scene', sceneId);
+    await expect(page.locator('.intro-story')).toHaveAttribute('data-camera', cameraId);
     for (const viewport of [
       { width: 1280, height: 800 },
       { width: 960, height: 600 },
