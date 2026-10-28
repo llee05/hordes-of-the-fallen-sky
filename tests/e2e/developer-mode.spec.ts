@@ -9,7 +9,7 @@ test.describe.configure({ mode: 'parallel' });
 test('developer mode freezes the expedition and returns to the exact title, intro, story, or menu', async ({
   page,
 }) => {
-  await page.goto('/?terrain=2d');
+  await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await expect(page.locator('[data-developer-level]')).toHaveCount(DEVELOPER_LEVELS.length);
   await expect(page.getByRole('button', { name: 'Back ESC / F8' })).toBeFocused();
@@ -57,7 +57,7 @@ test('developer mode freezes the expedition and returns to the exact title, intr
 test('switching checkpoints clears old actors, hazards, boss state, succession, and research', async ({
   page,
 }) => {
-  await page.goto('/?terrain=2d');
+  await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-level="chapter:heart-of-the-steppe"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
@@ -126,7 +126,7 @@ test('switching checkpoints clears old actors, hazards, boss state, succession, 
 test('developer outcomes leave saved records intact and a normal new game clears developer mode', async ({
   page,
 }) => {
-  await page.goto('/?terrain=2d');
+  await page.goto('/');
   const saved = await page.evaluate(() => ({
     profile: localStorage.getItem('gloam-profile'),
     best: localStorage.getItem('gloam-best'),
@@ -175,7 +175,7 @@ test('developer outcomes leave saved records intact and a normal new game clears
 
 test('developer choices and Back stay usable in a narrow viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/?terrain=2d');
+  await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
   expect(

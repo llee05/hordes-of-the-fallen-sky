@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 import { openTitle, startExpedition, tapController } from './helpers';
-import { LANDSCAPES } from '../../src/game/data/landscapes';
 
 // Tests use isolated browser contexts; parallel mode also balances CI shards.
 test.describe.configure({ mode: 'parallel' });
@@ -24,7 +23,7 @@ for (const [id, name, short] of places)
       const scene = (window as any).__gloam.scene;
       scene.run.clan.stageTime = 45;
       scene.run.pendingUpgrades = 2;
-      (window as any).departureGround = scene.landscape.ground;
+      (window as any).departureGround = scene.landscape.world3d;
       scene.openRoutes();
     });
     const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
@@ -39,8 +38,10 @@ for (const [id, name, short] of places)
     await expect(page.locator('#objective')).toContainText(name);
     // The departure camp keeps its terrain until crossing completion.
     expect(
-      await page.evaluate(() => (window as any).__gloam.scene.landscape.ground.displayTexture.key),
-    ).toBe('ground');
+      await page.evaluate(
+        () => (window as any).__gloam.scene.landscape.world3d.terrain.region.scene.id,
+      ),
+    ).toBe('golden-pasture');
     expect(await page.evaluate(() => (window as any).__gloam.scene.run.story.crossings)).toEqual(
       [],
     );
@@ -53,18 +54,20 @@ for (const [id, name, short] of places)
       await page.evaluate(() => (window as any).__gloam.scene.cameras.main.flashEffect.reset());
       await page.screenshot({ path: 'test-results/altai-tavan-bogd-arrival.png' });
     }
-    expect(await page.evaluate(() => (window as any).__gloam.scene.landscape.regional.name)).toBe(
-      `landscape-${id}`,
-    );
-    const tile = LANDSCAPES[id].groundTile;
-    expect(
-      await page.evaluate(() => (window as any).__gloam.scene.landscape.ground.displayTexture.key),
-    ).toBe(tile ? `ground-${tile}` : 'ground');
     expect(
       await page.evaluate(
-        () => (window as any).__gloam.scene.landscape.ground === (window as any).departureGround,
+        () => (window as any).__gloam.scene.landscape.world3d.terrain.region.scene.id,
       ),
-    ).toBe(true);
+    ).toBe(id);
+    expect(
+      await page.evaluate(() => {
+        const previous = (window as any).departureGround;
+        return {
+          chunks: previous.chunks.size,
+          connected: previous.renderer.domElement.isConnected,
+        };
+      }),
+    ).toEqual({ chunks: 0, connected: false });
     expect(
       await page.evaluate(() => (window as any).__gloam.scene.run.story.crossings[0].locationId),
     ).toBe(id);

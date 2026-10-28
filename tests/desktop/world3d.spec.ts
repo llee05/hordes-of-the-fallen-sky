@@ -1,4 +1,3 @@
-import { preferAngledTerrain } from '../support/terrain';
 import { launchElectron, electronEnvironment } from '../support/electron';
 import { expect, test } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -24,7 +23,6 @@ test('orthographic terrain and console run in the existing Electron shell at bot
   });
   try {
     const page = await app.firstWindow();
-    await preferAngledTerrain(page);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.getByRole('button', { name: 'Developer mode F8' }).click();
@@ -76,6 +74,15 @@ test('orthographic terrain and console run in the existing Electron shell at bot
       expect(label!.x + label!.width).toBeLessThanOrEqual(size.width);
       await page.evaluate(() => (window as any).__gloam.scene.landscape.world3d.setDebug('off'));
       await page.screenshot({ path: `test-results/world3d/native-${size.width}.png` });
+      await page.keyboard.press('m');
+      await page.locator('[data-destination="belukha"]').click();
+      await expect(page.locator('#destination-detail [data-landscape="belukha"]')).toBeVisible();
+      expect(
+        await page
+          .locator('.route-dialog')
+          .evaluate((panel) => panel.scrollWidth <= panel.clientWidth),
+      ).toBe(true);
+      await page.keyboard.press('Escape');
     }
     expect(await page.evaluate(() => typeof (window as any).require)).toBe('undefined');
     expect(errors).toEqual([]);

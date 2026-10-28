@@ -1,4 +1,3 @@
-import { preferAngledTerrain } from '../support/terrain';
 import { expect, test } from '@playwright/test';
 import { openTitle, sceneFrames, startExpedition } from './helpers';
 
@@ -76,7 +75,6 @@ for (const location of ['bogd-khan-uul', 'otgontenger', 'orkhon-valley', 'eej-kh
   }) => {
     test.setTimeout(120000);
     await page.goto('/');
-    await preferAngledTerrain(page);
     await page.getByRole('button', { name: 'Developer mode F8' }).click();
     await page.locator(`[data-developer-level="destination:2:${location}"]`).click();
     await expect(page.getByRole('dialog')).toBeHidden();
@@ -136,7 +134,6 @@ test('terrain rules warn on real cliff-foot ground and woodland concealment reve
 }) => {
   test.setTimeout(120000);
   await page.goto('/');
-  await preferAngledTerrain(page);
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-level="destination:2:otgontenger"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();

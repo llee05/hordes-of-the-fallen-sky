@@ -14,9 +14,6 @@ import { purchaseNomadicBuilding } from '../state/nomadicCamp';
 import type { NomadicBuildingId } from '../../shared/nomadicCamp.js';
 import {
   normalizeVisualSettings,
-  resolveTerrainRenderer,
-  showSoftwareTerrainNotice,
-  webGLRendererName,
   effectAmount,
   type VisualSettings,
 } from '../../shared/visualSettings';
@@ -53,7 +50,6 @@ import {
 } from '../systems/enemyTactics';
 import type { SuccessorTrait } from '../data/successors';
 import type { ClanDamageCause } from '../state/clanSafety';
-import { wantsWorld3D } from '../world3d/worldProjection';
 import { projectGround } from '../world3d/worldProjection';
 import { projectileTerrainClear } from '../world3d/projectileTerrain';
 import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
@@ -152,7 +148,6 @@ import {
   syncFinalStand,
   advanceFinalStand,
   finalChapter,
-  passageProgress,
   acceptCampBarrage,
   defeatSkybreaker,
 } from '../state/finalStand';
@@ -259,27 +254,6 @@ export class ArenaScene extends Phaser.Scene {
   private saveMenuReturn: 'ready' | 'paused' | 'dead' | 'won' = 'ready';
   private saveMessage = '';
   private visualSettings: VisualSettings;
-  private rendererName?: string;
-
-  get terrainRenderer() {
-    return (
-      this.visualSettings.terrainRenderer ??
-      (wantsWorld3D() ? resolveTerrainRenderer(this.visualSettings, this.rendererName) : '2d')
-    );
-  }
-
-  get softwareTerrainNotice(): boolean {
-    return wantsWorld3D() && showSoftwareTerrainNotice(this.visualSettings, this.rendererName);
-  }
-
-  dismissSoftwareTerrainNotice(): void {
-    this.visualSettings.softwareTerrainNoticeDismissed = true;
-    void this.platform
-      .saveVisualSettings(this.visualSettings)
-      .catch(() => this.callbacks?.onSaveError());
-    this.publishPhase();
-  }
-
   constructor(private readonly platform: GamePlatform) {
     super('arena');
     this.visualSettings = normalizeVisualSettings(platform.profile.visualSettings);
@@ -366,11 +340,7 @@ export class ArenaScene extends Phaser.Scene {
     // drawings reuse one GraphicsBridge canvas texture.
     this.crossingMarkers = new FieldMarkers(this, this.fieldMarkers.warnings);
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
-    this.rendererName =
-      this.game.renderer.type === Phaser.WEBGL
-        ? webGLRendererName((this.game.renderer as Phaser.Renderer.WebGL.WebGLRenderer).gl)
-        : undefined;
-    this.landscape = new SteppeLandscape(this, this.terrainRenderer);
+    this.landscape = new SteppeLandscape(this);
     const center = GAME.worldSize / 2;
     this.camp = this.add
       .container(center, center)
@@ -1350,16 +1320,7 @@ export class ArenaScene extends Phaser.Scene {
     if (key === 'projectileContrast')
       this.visualSettings.projectileContrast =
         this.visualSettings.projectileContrast === 'high' ? 'standard' : 'high';
-    else if (key === 'terrainRenderer') {
-      this.visualSettings.terrainRenderer = this.terrainRenderer === '3d' ? '2d' : '3d';
-      this.landscape.terrainRenderer = this.terrainRenderer;
-      this.landscape.setRegion(
-        this.run.clan.region,
-        currentLocation(this.run),
-        this.run.clan.stage === 'migration' ? this.run.clan.routeId : undefined,
-      );
-      this.reconcileTerrain();
-    } else if (key === 'effectDensity')
+    else if (key === 'effectDensity')
       this.visualSettings.effectDensity =
         this.visualSettings.effectDensity === 'full'
           ? 'reduced'
@@ -1545,7 +1506,6 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
-    this.landscape.updateView(this.cameras.main);
     const controller = this.controller.poll();
     this.controllerMove.set(controller.x, controller.y);
     if (this.run.phase === 'intro') {
@@ -3135,12 +3095,7 @@ export class ArenaScene extends Phaser.Scene {
       rider.setDepth(100 + rider.y);
       this.riderShadows[i]!.setPosition(rider.x + 7, rider.y + 4).setDepth(99 + rider.y);
     }
-    this.landscape.update(
-      this.run.elapsed,
-      clan.region,
-      this.cameras.main,
-      clan.stage === 'final' ? passageProgress(this.run) : 0,
-    );
+    this.landscape.update(this.run.elapsed);
     this.updateHazards(dt);
   }
 

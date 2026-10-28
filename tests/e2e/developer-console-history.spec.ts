@@ -9,7 +9,7 @@ test('console history, validation, focus, and narrow layouts work without changi
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/?terrain=2d');
+  await page.goto('/');
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await page.keyboard.press('F10');
   const input = page.getByRole('textbox', { name: 'Command', exact: true });
@@ -60,7 +60,7 @@ test('console history, validation, focus, and narrow layouts work without changi
 test('Up recalls saved commands after reload and checkpoints, while Down restores the draft', async ({
   page,
 }) => {
-  await page.goto('/?terrain=2d');
+  await page.goto('/');
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused();
   await page.keyboard.press('Backquote');
   await command(page, 'status');

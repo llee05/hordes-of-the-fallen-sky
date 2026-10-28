@@ -1,6 +1,6 @@
 # The Living Steppe Tapestry
 
-Hordes of the Fallen Sky’s art direction combines the readable miniature scale of Thronefall, the illustrated silhouettes and painted surfaces of The Banner Saga, and the warm materials and geometric ornament of Mongolian and Central Asian textiles. The assets are original fantasy designs. The game keeps its top-down simulation and presents it with painted three-quarter-view sprites and ground-position depth sorting.
+Hordes of the Fallen Sky’s art direction combines the readable miniature scale of Thronefall, the illustrated silhouettes and painted surfaces of The Banner Saga, and the warm materials and geometric ornament of Mongolian and Central Asian textiles. The assets are original fantasy designs. The game keeps its top-down simulation and presents it with painted three-quarter-view sprites in the [angled world](world-3d.md).
 
 ## Visual language
 
@@ -10,17 +10,14 @@ All twelve locations share the same painting language and have distinct landscap
 Golden flowering meadows, frozen riverbanks, fractured slate corridors, woodland
 foothills, snow crowns and glacial ridges, extinct volcanic steppe, granite desert,
 and braided river pasture use their own surface palettes, vegetation, landforms,
-watercourses, and atmosphere. The White Silence lightly veils the chosen place;
-its geography persists across chapters. The final refuge retains its indigo basin,
-blue banners, opening passage, and red eclipse. Wind and particles use active time.
+and watercourses. Their geography persists across chapters.
 
-`data/landscapes.ts` authors each location's composition. The locally bundled
+`data/landscapes.ts` authors each location's painted preview. The locally bundled
 `steppe-scenery` atlas adds larch, pine, willow, foothill, snow dome, pyramid, glacier,
-white summits, extinct cone, desert granite, reeds, and slate crag cutouts. Sparse,
-seeded dressing leaves the camp and caravan corridor clear; large landforms sit
-behind combat actors and small props sort by ground position. All terrain remains
-walkable. Migration cards and destination details reuse the painted landmarks.
-See [the landscape catalog and rendering contract](location-landscapes.md) and
+white summits, extinct cone, desert granite, reeds, and slate crag cutouts.
+Migration cards and destination details reuse the painted landmarks.
+See [the landscape catalog](location-landscapes.md),
+[the battlefield rendering and navigation contract](world-3d.md), and
 [the full atlas generation prompt](location-scenery-prompt.md). These suggest the
 surrounding land rather than reconstructing real monuments or sacred ceremonies.
 
@@ -45,9 +42,9 @@ The original world-art PNGs, two character animation sheets, and the UI felt tex
 | Camp and terrain props    | `public/art/steppe-props.png`                                   | Ger, cart, two-color banners, sheep, stone outcrop, ribbon cairn              |
 | Atlas metadata            | `public/art/steppe-actors.json`, `public/art/steppe-props.json` | Named frames tightly bounded from the generated alpha                         |
 
-`src/game/assets/painterlyArt.ts` loads the shared character, civilian, camp prop, and scenery atlases, defines visual sizes, and configures collision circles in world units independently of image resolution. It also creates small deterministic brush, arrow, shard, dust, and shadow textures. `src/game/assets/SteppeLandscape.ts` owns decorative terrain and atmosphere. `ArenaScene` owns the simulation, depth ordering, and pooled actors. The Phaser renderer uses antialiasing and linear texture filtering. Painted sprites use fractional coordinates; the game does not round them into a pixel grid.
+`src/game/assets/painterlyArt.ts` loads the shared character, civilian, camp prop, and scenery atlases, defines visual sizes, and configures collision circles in world units independently of image resolution. It also creates small deterministic brush, arrow, shard, dust, and shadow textures. See [the scene guide](world-3d.md) for terrain rendering and simulation ownership. The Phaser renderer uses antialiasing and linear texture filtering. Painted sprites use fractional coordinates; the game does not round them into a pixel grid.
 
-Existing movement, formations, attack timing, collision radii, progression, construction, route rewards, native saves, and sandboxing are preserved. Decorative terrain remains walkable. The view is 2.5D presentation over a 2D simulation. Characters have four painted locomotion frames and two attack poses each, with left-facing mirroring and frame registration that keeps ground anchors stable. Gameplay time drives every character frame and defeat copy, so menus freeze their playback.
+Characters have four painted locomotion frames and two attack poses each, with left-facing mirroring and frame registration that keeps ground anchors stable. Gameplay time drives every character frame and defeat copy, so menus freeze their playback.
 
 ## UI material generation prompt
 

@@ -745,7 +745,7 @@ export class GameUI {
     else if (run.phase === 'epilogue') this.overlay.innerHTML = epilogueMenu(run);
     else if (run.phase === 'story-log') this.overlay.innerHTML = storyLogMenu(run);
     else if (run.phase === 'ready') {
-      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu">${latestSave ? `<button class="menu-button featured" data-action="continue-expedition" data-slot="${latestSave.slot}" data-primary>CONTINUE EXPEDITION <span>→</span></button>` : ''}<button class="menu-button featured" data-action="begin" data-primary>NEW GAME <span>→</span></button>${this.platform.profile.camp ? '<button class="menu-button" data-action="continue-camp" title="Take your saved camp and stores into a new expedition. Patron research and battle start over.">Continue clan camp</button>' : ''}${savedMenu}<button class="menu-button" data-action="starting-traditions">Starting tradition: ${startingTradition(run.startingTradition).title}</button><button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${developer}${quit}</nav><button class="story-preference" data-action="story-mode" aria-pressed="${run.story.enabled}">Camp scenes: ${run.story.enabled ? 'On' : 'Off'}</button>${this.scene.softwareTerrainNotice ? '<p class="settings-note" role="status">Software graphics detected. Terrain uses Flat 2D for smoother play. You can choose Angled 3D in Settings. <button class="secondary-button" data-action="dismiss-terrain-notice">Dismiss terrain notice</button></p>' : ''}<p class="title-caption">Two acts. Four pastures. One people to carry through.</p></section>`;
+      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu">${latestSave ? `<button class="menu-button featured" data-action="continue-expedition" data-slot="${latestSave.slot}" data-primary>CONTINUE EXPEDITION <span>→</span></button>` : ''}<button class="menu-button featured" data-action="begin" data-primary>NEW GAME <span>→</span></button>${this.platform.profile.camp ? '<button class="menu-button" data-action="continue-camp" title="Take your saved camp and stores into a new expedition. Patron research and battle start over.">Continue clan camp</button>' : ''}${savedMenu}<button class="menu-button" data-action="starting-traditions">Starting tradition: ${startingTradition(run.startingTradition).title}</button><button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${developer}${quit}</nav><button class="story-preference" data-action="story-mode" aria-pressed="${run.story.enabled}">Camp scenes: ${run.story.enabled ? 'On' : 'Off'}</button><p class="title-caption">Two acts. Four pastures. One people to carry through.</p></section>`;
     } else if (run.phase === 'paused') {
       this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">The steppe holds still until you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="research">Patron tech tree</button><button class="menu-button" data-action="restart">Start a new run</button>${savedMenu}<button class="menu-button" data-action="save-title">${snapshot.developerRun ? 'Return to title' : 'Save and return to title'}</button><button class="menu-button" data-action="story-log">Our remembered road</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${developer}${quit}</nav></section>`;
     } else if (run.phase === 'building')
@@ -762,7 +762,6 @@ export class GameUI {
         this.fullscreen,
         normalizeAudioMix(this.platform.profile.audioMix),
         normalizeVisualSettings(this.platform.profile.visualSettings),
-        this.scene.terrainRenderer,
       );
     else if (run.phase === 'help') this.overlay.innerHTML = helpMenu(run.guidance.enabled);
     else if (import.meta.env.DEV && run.phase === 'developer')
@@ -1139,14 +1138,12 @@ export class GameUI {
     else if (action === 'research') this.scene.openResearch();
     else if (action === 'build') this.scene.openBuildings();
     else if (action === 'routes') this.scene.openRoutes();
-    else if (action === 'dismiss-terrain-notice') this.scene.dismissSoftwareTerrainNotice();
     else if (action === 'sound') {
       this.scene.toggleAudio();
       this.updateSettingsControls();
     } else if (
       button.dataset.visualSetting === 'projectileContrast' ||
-      button.dataset.visualSetting === 'effectDensity' ||
-      button.dataset.visualSetting === 'terrainRenderer'
+      button.dataset.visualSetting === 'effectDensity'
     ) {
       this.scene.setVisualSetting(button.dataset.visualSetting);
       this.updateSettingsControls();
@@ -1184,13 +1181,6 @@ export class GameUI {
 
   private updateSettingsControls(): void {
     const visuals = normalizeVisualSettings(this.platform.profile.visualSettings);
-    const terrain = this.overlay.querySelector<HTMLButtonElement>(
-      '[data-visual-setting="terrainRenderer"]',
-    );
-    if (terrain) {
-      terrain.textContent = this.scene.terrainRenderer === '3d' ? 'Angled 3D' : 'Flat 2D';
-      terrain.setAttribute('aria-pressed', String(this.scene.terrainRenderer === '3d'));
-    }
     const contrast = this.overlay.querySelector<HTMLButtonElement>(
       '[data-visual-setting="projectileContrast"]',
     );

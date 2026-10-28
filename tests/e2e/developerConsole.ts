@@ -8,7 +8,7 @@ export async function command(page: Page, text: string): Promise<void> {
 }
 
 export async function checkpoint(page: Page): Promise<void> {
-  await page.goto('/?terrain=2d');
+  await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-level="chapter:broken-pass"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();

@@ -8,10 +8,8 @@ Backtick, Escape, or F10 closes it and restores the previous screen. **F10** is 
 alternate console shortcut. **F8** opens the separate level selector, which also
 retains an embedded console.
 
-The opt-in 3D terrain slice adds F6 for camera angle, F7 for terrain-only rendering,
-and expanded F9 overlays. Its console commands are `camera-angle 35..70`,
-`terrain-debug [mode]`, and `terrain-only [on|off]`. See [the 3D terrain guide](world-3d.md)
-for enabling the prototype and inspecting its geometry.
+See [the angled scene guide](world-3d.md#tools-and-limits) for camera controls,
+terrain-only rendering, debug overlays, and their console commands.
 
 Type a command and press Enter, or click the Khan/clan invincibility toggles.
 Up recalls older commands; Down moves forward and restores unfinished input after

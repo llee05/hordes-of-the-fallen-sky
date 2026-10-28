@@ -102,7 +102,6 @@ export interface TerrainChunk extends TerrainBounds {
   cliffs: readonly CliffModule[];
 }
 
-export type TerrainDebugMode = 'off' | 'elevation' | 'slope' | 'cliffs' | 'collision';
 export type TerrainDressingKind = 'rubble' | 'scrub' | 'conifer';
 
 export interface TerrainMaterialArt {
@@ -115,7 +114,6 @@ export interface TerrainMaterialArt {
 
 export interface TerrainArt {
   materials: Readonly<Record<TerrainMaterial, TerrainMaterialArt>>;
-  tileScale: number;
   dressing?: Readonly<
     Record<TerrainDressingKind, { texture: string; frame: string; width: number; tint: number }>
   >;

@@ -4,7 +4,7 @@ import { ArenaScene } from './scenes/ArenaScene';
 
 export function createGame(parent: HTMLElement, scene: ArenaScene): Phaser.Game {
   const game = new Phaser.Game({
-    type: Phaser.AUTO,
+    type: Phaser.WEBGL,
     parent,
     width: GAME.width,
     height: GAME.height,
