@@ -24,8 +24,12 @@ export function leadershipAttackSpeed(run: RunState): number {
 export function claimRiderVolley(run: RunState, index: number, nearest = false): boolean {
   if (run.phase !== 'playing' || !Number.isInteger(index) || index < 0 || index >= 16) return false;
   const times = ((run.researchRuntime ??= {}).riderFireAt ??= []);
+  while (times.length <= index) times.push(0);
   if ((times[index] ?? 0) > run.elapsed) return false;
   times[index] = run.elapsed + riderFiringInterval(run, nearest);
+  const counts = (run.researchRuntime!.riderVolleyCounts ??= []);
+  while (counts.length <= index) counts.push(0);
+  counts[index] = (counts[index] ?? 0) + 1;
   return true;
 }
 export function kurultaiAvailable(run: RunState): boolean {
@@ -79,4 +83,9 @@ export function leadershipMobility(run: RunState): number {
       ? GAME.research.bannerColumnMobility
       : 1)
   );
+}
+
+export function riderPairedVolley(run: RunState, index: number): boolean {
+  const count = run.researchRuntime?.riderVolleyCounts?.[index] ?? 0;
+  return count > 0 && (run.upgrades.haste ?? 0) > 0 && count % GAME.mounted.pairedEvery === 0;
 }

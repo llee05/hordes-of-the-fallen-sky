@@ -63,6 +63,9 @@ export interface ProjectileArchive extends BodyArchive {
   pierces: number;
   pins: boolean;
   echoIndex?: number;
+  precision?: boolean;
+  baseDamage?: number;
+  dealtDamage?: number;
   rotation: number;
   tint: number;
   previous?: Point;
@@ -294,6 +297,7 @@ const optional: Record<string, Record<string, Rule>> = {
         vulnerabilityUntil: dictionary(number),
         echoHits: dictionary(number),
         riderFireAt: list(number, 16),
+        riderVolleyCounts: list(integer, 16),
         hornUntil: number,
         hornCooldown: number,
         rallyUntil: number,
@@ -310,6 +314,8 @@ const optional: Record<string, Record<string, Rule>> = {
         lastStandUntil: number,
         lastStandCooldown: number,
         lastStandLow: boolean,
+        nearestCompanion: string,
+        echoFireAt: list(number, GAME.patrons.ancestors.maximum),
         lastGallopAt: number,
         riverStacks: integer,
         riverUntil: number,
@@ -360,6 +366,7 @@ const optional: Record<string, Record<string, Rule>> = {
         stillHandShots: integer,
         embersReturnUntil: number,
         khanStationaryNearCamp: boolean,
+        hearthCampInRange: boolean,
         ashBornInvulnerableUntil: number,
         ashBornPulsePending: boolean,
         firebreakUntil: number,
@@ -514,7 +521,15 @@ const projectile = object(
     tint: integer,
     hits: list(object({ slot: integer, spawnId: integer }), GAME.maxEnemies),
   },
-  { previous: point, barrage: integer, source: string, echoIndex: integer },
+  {
+    previous: point,
+    barrage: integer,
+    source: string,
+    echoIndex: integer,
+    precision: boolean,
+    baseDamage: positive,
+    dealtDamage: positive,
+  },
 );
 const threat = object(
   {

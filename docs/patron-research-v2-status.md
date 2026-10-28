@@ -179,3 +179,10 @@ and has a 20-second cooldown. Thousand Arrows supports from riders within 400 pa
 Last Stand accelerates the ward clock for eight seconds on crossing below 20% resolve;
 remaining below the threshold cannot retrigger it. Blood and Ember uses the shared
 healing path, including healing penalties and no revival during succession.
+
+Shared runtime hooks remain available to later system work: `researchRuntime.ts`
+owns Marked and the crossing material-spend ledger; `researchTerrain.ts` owns
+per-spawn slow/root history; `researchCompanions.ts` selects the nearest companion
+and releases echoes; `researchLeadership.ts` owns Banner Formation and rider
+release clocks. All clocks use active seconds, and their state is retained by
+`expeditionArchive.ts`. Rider/echo attack speed affects cadence rather than damage.

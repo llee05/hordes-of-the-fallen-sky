@@ -11,6 +11,7 @@ import {
   leadershipProtection,
   lastWagonSpeed,
   recordEliteAppearance,
+  riderPairedVolley,
 } from '../../src/game/state/researchLeadership';
 import { riderFiringInterval } from '../../src/game/state/researchRuntime';
 function run(...ids: string[]) {
@@ -74,4 +75,17 @@ describe('Sülde runtime mechanics', () => {
     expect(issueKurultai(r)).toBe(true);
     expect(r.clan.integrity).toBe(70);
   });
+});
+
+it('each rider counts its own paired releases while the Khan is absent', () => {
+  const r = run('haste');
+  r.khan.successionRemaining = 5;
+  r.health = 0;
+  expect(riderPairedVolley(r, 0)).toBe(false);
+  for (let i = 1; i <= 4; i++) {
+    expect(claimRiderVolley(r, 0)).toBe(true);
+    expect(riderPairedVolley(r, 0)).toBe(i === 4);
+    r.elapsed += riderFiringInterval(r);
+  }
+  expect(riderPairedVolley(r, 1)).toBe(false);
 });

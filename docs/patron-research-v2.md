@@ -140,10 +140,11 @@ rebalance or knowledge-award increase is committed. Live measurement (BH-40) con
 the economy supports late research tiers without altering awards, gates, or costs;
 recalibrating the benchmark aligns internal tooling with observed runs.
 
-The full 166-effect release gate remains unmet. This branch delivers the tested
-53-technology slice and complete gated catalogue. Individual wagons/follower health,
+The full 166-effect release gate remains unmet. The runtime now supports 118 technologies (65 of the 67 integration-deferred
+effects are connected); 48 remain unavailable. Some working effects remain behind
+unavailable prerequisites, as detailed in the status inventory. Individual wagons/follower health,
 structure repair/durability, provisions, discovery/ambush/route pools, temporary
-summon lifecycles and the separate camp branch remain explicit feature milestones.
+summon lifecycles and remaining camp hooks remain explicit feature milestones.
 
 Performance verification used the project's exclusive-lock hardware-WebGL suite.
 The browser pooled-combat case passes: 350 enemies, 19 textures, 29 draws and about

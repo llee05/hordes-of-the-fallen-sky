@@ -67,7 +67,8 @@ export function advancePatrons(run: RunState, dt: number): void {
     (landWaterActive(run) ? GAME.research.landWaterHealing : 0) +
     (hearthZone ? GAME.research.eternalHearthHealPerSecond : 0);
   if (regen > 0) healKhan(run, regen * dt);
-  if (hearthZone) restoreResolve(run, GAME.research.eternalHearthResolvePerSecond * dt);
+  if (hearthZone && run.researchRuntime?.hearthCampInRange)
+    restoreResolve(run, GAME.research.eternalHearthResolvePerSecond * dt);
 }
 
 export function rewardPatronKill(run: RunState): void {

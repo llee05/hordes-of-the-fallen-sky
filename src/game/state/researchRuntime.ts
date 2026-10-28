@@ -6,6 +6,8 @@ import type { RunState } from '../types';
 
 /** Optional for compatibility with older expedition saves. All timestamps use active seconds. */
 export interface ResearchRuntime {
+  nearestCompanion?: string;
+  echoFireAt?: number[];
   ghostAttacks?: number[];
   livingWaveKey?: string;
   livingWaveKills?: number;
@@ -20,6 +22,7 @@ export interface ResearchRuntime {
   arrowPlatformAt?: number;
   wardInside?: string[];
   riderFireAt?: number[];
+  riderVolleyCounts?: number[];
   hornUntil?: number;
   hornCooldown?: number;
   rallyUntil?: number;
@@ -92,6 +95,7 @@ export interface ResearchRuntime {
   stillHandShots?: number;
   embersReturnUntil?: number;
   khanStationaryNearCamp?: boolean;
+  hearthCampInRange?: boolean;
   ashBornInvulnerableUntil?: number;
   ashBornPulsePending?: boolean;
   firebreakUntil?: number;
@@ -158,13 +162,14 @@ export function recordFriendlyHitOnEnemy(
   healthRatioBefore: number,
   elite = false,
   healthRatioAfter = healthRatioBefore,
+  precision = true,
 ): number {
   if (run.phase !== 'playing') return 1;
   const r = (run.researchRuntime ??= {});
   const key = enemyKey(slot, spawn);
   const wasMarked = isEnemyMarked(run, slot, spawn);
   const precisionHit =
-    ownsResearch(run, 'km-draw-to-breath') && isPrecisionMarked(run, slot, spawn);
+    precision && ownsResearch(run, 'km-draw-to-breath') && isPrecisionMarked(run, slot, spawn);
   if (precisionHit) delete r.precisionMarkedUntil?.[key];
   if (ownsResearch(run, 'bc-throat-of-the-prey')) {
     if (r.throatSlot !== slot || r.throatSpawn !== spawn) {
@@ -461,10 +466,16 @@ export function updateEchoGuard(run: RunState, nearCamp: boolean): void {
   if (run.phase !== 'playing') return;
   (run.researchRuntime ??= {}).echoNearCamp = nearCamp && run.patrons.ancestors.count > 0;
 }
-export function updateCampfireVigil(run: RunState, stationaryNearCamp: boolean): void {
+export function updateCampfireVigil(
+  run: RunState,
+  stationaryNearCamp: boolean,
+  campDistance = Infinity,
+): void {
   if (run.phase !== 'playing') return;
-  (run.researchRuntime ??= {}).khanStationaryNearCamp =
-    stationaryNearCamp && run.health > 0 && run.khan.successionRemaining <= 0;
+  const active = run.health > 0 && run.khan.successionRemaining <= 0;
+  const r = (run.researchRuntime ??= {});
+  r.khanStationaryNearCamp = stationaryNearCamp && active;
+  r.hearthCampInRange = active && campDistance <= GAME.research.eternalHearthRadius;
 }
 export function campfireVigilActive(run: RunState): boolean {
   return (
@@ -519,7 +530,7 @@ export function recordKhanVolley(
     };
   const r = (run.researchRuntime ??= {});
   r.khanVolleyCount = (r.khanVolleyCount ?? 0) + 1;
-  r.precisionVolleyCount = (r.precisionVolleyCount ?? 0) + 1;
+  if (count === 1) r.precisionVolleyCount = (r.precisionVolleyCount ?? 0) + 1;
   let markedTarget: { slot: number; spawn: number } | undefined;
   if (
     ownsResearch(run, 'km-draw-to-breath') &&
@@ -540,8 +551,9 @@ export function recordKhanVolley(
   let bonusPierces = 0;
   let overrideCount: number | undefined;
   if (
+    count === 1 &&
     ownsResearch(run, 'km-one-arrow-one-fate') &&
-    r.precisionVolleyCount % GAME.research.oneArrowEvery === 0
+    (r.precisionVolleyCount ?? 0) % GAME.research.oneArrowEvery === 0
   ) {
     executionArrow = true;
     damageMultiplier *= GAME.research.oneArrowDamage;
@@ -658,7 +670,7 @@ export function researchArmorMultiplier(
   if (ownsResearch(run, 'km-eagle-eye') && precisionHit)
     reduction *= 1 - GAME.research.eagleEyeArmorIgnore;
   const sunder = enemySunderArmourReduction(run, slot, spawn);
-  return 1 - reduction + sunder;
+  return 1 - Math.max(0, reduction - sunder);
 }
 export function eagleEyeOverkillSpill(
   run: RunState,
@@ -701,13 +713,9 @@ export function stillHandActive(run: RunState): boolean {
 export function stillHandCritChance(run: RunState): number {
   return stillHandActive(run) ? GAME.research.stillHandCritChance : 0;
 }
-export function stillHandDamageMultiplier(run: RunState, roll?: number): number {
+export function stillHandDamageMultiplier(run: RunState, roll = Math.random()): number {
   if (!stillHandActive(run)) return 1;
-  if (roll !== undefined)
-    return roll < GAME.research.stillHandCritChance ? GAME.research.stillHandCritDamage : 1;
-  const r = (run.researchRuntime ??= {});
-  r.stillHandShots = (r.stillHandShots ?? 0) + 1;
-  return r.stillHandShots % 7 === 0 ? GAME.research.stillHandCritDamage : 1;
+  return roll < GAME.research.stillHandCritChance ? GAME.research.stillHandCritDamage : 1;
 }
 export function circleOfShaftsVolley(
   run: RunState,

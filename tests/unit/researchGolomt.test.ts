@@ -108,8 +108,13 @@ describe('Golomt runtime effects', () => {
     advancePatrons(r, 1);
     expect(r.health).toBe(50);
     r.elapsed = 60;
+    r.clan.integrity = 50;
     advancePatrons(r, 1);
-    expect(r.health).toBe(50.5);
+    expect(r.clan.integrity).toBe(50);
+    updateCampfireVigil(r, false, 100);
+    advancePatrons(r, 1);
+    expect(r.clan.integrity).toBeCloseTo(50.15);
+    expect(r.health).toBe(51);
     expect(eternalHearthPush(r, 50)).toBe(28);
     expect(eternalHearthPush(r, 50, true)).toBe(0);
     r.elapsed = 70;

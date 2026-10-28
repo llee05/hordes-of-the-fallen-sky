@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { claimEchoVolley, nearestCompanion } from '../state/researchCompanions';
 import { claimGhostArrow } from '../state/researchHybrids';
 import { claimWardEntries } from '../state/researchGuardian';
 import { remembranceEchoDamage } from '../state/researchEchoes';
@@ -15,6 +16,7 @@ import { campBoundary } from '../state/campBarrier';
 import type { SupportArchive } from '../state/expeditionArchive';
 import {
   echoPrefers,
+  eternalHearthActive,
   packInstinctBonus,
   researchEchoRelease,
   updateEchoGuard,
@@ -53,6 +55,13 @@ export class PatronSupport {
     }));
   }
 
+  companionPositions(): { kind: 'echo'; index: number; x: number; y: number }[] {
+    return this.spirits.flatMap((spirit, index) =>
+      spirit.image.visible
+        ? [{ kind: 'echo' as const, index, x: spirit.image.x, y: spirit.image.y }]
+        : [],
+    );
+  }
   relocate(position: GroundPosition): void {
     this.fields.clear();
     for (const spirit of this.spirits) {
@@ -117,6 +126,12 @@ export class PatronSupport {
           .fillCircle(position.x, position.y, waterRadius)
           .strokeCircle(position.x, position.y, waterRadius);
     }
+    if (eternalHearthActive(run) && khanActive)
+      this.fields
+        .lineStyle(2, 0xe6bd7b, 0.5)
+        .fillStyle(0xe6bd7b, 0.06)
+        .fillCircle(player.x, player.y, GAME.research.eternalHearthRadius)
+        .strokeCircle(player.x, player.y, GAME.research.eternalHearthRadius);
     if (effects.guardian.wardDamage > 0)
       this.fields.lineStyle(1, 0xd8bc7e, 0.3).strokeCircle(camp.x, camp.y, boundary.wardRadius);
 
@@ -131,7 +146,7 @@ export class PatronSupport {
       spirit.image.setVisible(active);
       spirit.shadow.setVisible(active);
       if (!active) continue;
-      const packMove = packInstinctBonus(run, index === 0).moveSpeed;
+      const packMove = packInstinctBonus(run, nearestCompanion(run, 'echo', index)).moveSpeed;
       const angle = run.elapsed * 0.45 * packMove + (index * Math.PI * 2) / count;
       const x = Phaser.Math.Linear(
         spirit.image.x,
@@ -149,15 +164,11 @@ export class PatronSupport {
       if (Math.abs(dx) > 0.1) spirit.image.setFlipX(dx < 0);
       spirit.shadow.setPosition(x + 7, y + 4).setDepth(99 + y);
       if (Math.hypot(x - camp.x, y - camp.y) <= GAME.research.quietRadius) echoNearCamp = true;
-      const preferred = step.releaseAncestors
-        ? spatial.nearest(x, y, GAME.patrons.ancestors.range, (e) =>
-            echoPrefers(run, e.tacticalSlot, e.spawnId),
-          )
-        : undefined;
-      const target =
-        preferred ??
-        (step.releaseAncestors ? spatial.nearest(x, y, GAME.patrons.ancestors.range) : undefined);
-      if (target) {
+      const preferred = spatial.nearest(x, y, GAME.patrons.ancestors.range, (e) =>
+        echoPrefers(run, e.tacticalSlot, e.spawnId),
+      );
+      const target = preferred ?? spatial.nearest(x, y, GAME.patrons.ancestors.range);
+      if (target && claimEchoVolley(run, index)) {
         const twin = researchEchoRelease(run, index);
         if (claimGhostArrow(run, index))
           actions.volley(

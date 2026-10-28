@@ -578,8 +578,9 @@ describe('Khükhedei Mergen (Archery) runtime effects', () => {
     r.phase = 'playing';
     r.upgrades['km-one-arrow-one-fate'] = 1;
     expect(researchAttackIntervalMultiplier(r)).toBeCloseTo(1 / 0.85);
-    for (let i = 1; i <= 3; i++) expect(recordKhanVolley(r, 3).executionArrow).toBe(false);
-    const fourth = recordKhanVolley(r, 3);
+    for (let i = 1; i <= 3; i++) expect(recordKhanVolley(r, 1).executionArrow).toBe(false);
+    expect(recordKhanVolley(r, 3).executionArrow).toBe(false);
+    const fourth = recordKhanVolley(r, 1);
     expect(fourth).toMatchObject({
       executionArrow: true,
       damageMultiplier: 2.4,

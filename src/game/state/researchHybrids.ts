@@ -12,6 +12,7 @@ export function claimGhostArrow(run: RunState, index: number): boolean {
   )
     return false;
   const attacks = ((run.researchRuntime ??= {}).ghostAttacks ??= []);
+  while (attacks.length <= index) attacks.push(0);
   attacks[index] = (attacks[index] ?? 0) + 1;
   return attacks[index]! % GAME.research.ghostArrowEvery === 0;
 }
