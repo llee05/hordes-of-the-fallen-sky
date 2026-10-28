@@ -6,7 +6,7 @@ The prologue follows the clan's account of Tengri and Etügen, the Last Court's 
 
 | Chapter                     | Painting                          | Camera & Motion                                                   |
 | --------------------------- | --------------------------------- | ----------------------------------------------------------------- |
-| I · Heaven and Earth        | `public/art/intro-steppe.png`     | `pan-east` · Foreground dust parallax, ovoo ribbons, smoke, dust |
+| I · Heaven and Earth        | `public/art/intro-steppe.png`     | `pan-east` · Foreground dust parallax, ovoo ribbons, smoke, dust  |
 | II · The Iron Vow           | `public/art/intro-iron-vow.png`   | `rise-throne` · Sky-rift pulse, brazier flicker, rising embers    |
 | III · The Unreturned        | `public/art/intro-fallen-sky.png` | `surge-west` · Storm vortex gleam, frost mist, tattered banner    |
 | IV · The Living Hearth      | `public/art/intro-hearth.png`     | `pull-hearth` · Hearth firelight, rising embers, blue banner sway |

@@ -328,13 +328,18 @@ test('story works at Steam Deck size and disables painting motion on a live pref
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
 });
 
-
-test('intro effects stay registered to each painting throughout camera motion and cropping', async ({ page }) => {
+test('intro effects stay registered to each painting throughout camera motion and cropping', async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.goto('/?terrain=2d');
   await page.getByRole('button', { name: 'Replay introduction' }).click();
   for (let chapter = 0; chapter < 5; chapter++) {
-    await expect.poll(() => page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(1536);
+    await expect
+      .poll(() =>
+        page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth),
+      )
+      .toBe(1536);
     for (const viewport of [
       { width: 1280, height: 800 },
       { width: 1920, height: 800 },
@@ -352,15 +357,24 @@ test('intro effects stay registered to each painting throughout camera motion an
           const image = painting.getBoundingClientRect();
           const atmosphere = stage.querySelector('.intro-atmosphere')!.getBoundingClientRect();
           const cloth = stage.querySelector<SVGSVGElement>('.intro-cloth-overlay');
-          const point = cloth ? new DOMPoint(768, 512).matrixTransform(cloth.getScreenCTM()!) : null;
+          const point = cloth
+            ? new DOMPoint(768, 512).matrixTransform(cloth.getScreenCTM()!)
+            : null;
           const mote = stage.querySelector('.intro-mote')!.getBoundingClientRect();
           return {
             image: { x: image.x, y: image.y, width: image.width, height: image.height },
-            atmosphere: { x: atmosphere.x, y: atmosphere.y, width: atmosphere.width, height: atmosphere.height },
+            atmosphere: {
+              x: atmosphere.x,
+              y: atmosphere.y,
+              width: atmosphere.width,
+              height: atmosphere.height,
+            },
             clothCenter: point ? { x: point.x, y: point.y } : null,
             moteX: (mote.x - image.x) / image.width,
-            paintedSurfaces: [...stage.querySelectorAll('*')].filter((element) =>
-              element instanceof HTMLImageElement || getComputedStyle(element).backgroundImage.includes('url('),
+            paintedSurfaces: [...stage.querySelectorAll('*')].filter(
+              (element) =>
+                element instanceof HTMLImageElement ||
+                getComputedStyle(element).backgroundImage.includes('url('),
             ).length,
           };
         }, time);
@@ -370,8 +384,14 @@ test('intro effects stay registered to each painting throughout camera motion an
           expect(geometry.atmosphere[key]).toBeCloseTo(geometry.image[key], 3);
         }
         if (geometry.clothCenter) {
-          expect(geometry.clothCenter.x).toBeCloseTo(geometry.image.x + geometry.image.width / 2, 3);
-          expect(geometry.clothCenter.y).toBeCloseTo(geometry.image.y + geometry.image.height / 2, 3);
+          expect(geometry.clothCenter.x).toBeCloseTo(
+            geometry.image.x + geometry.image.width / 2,
+            3,
+          );
+          expect(geometry.clothCenter.y).toBeCloseTo(
+            geometry.image.y + geometry.image.height / 2,
+            3,
+          );
         }
         positions.push(geometry);
       }
