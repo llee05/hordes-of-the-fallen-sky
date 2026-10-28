@@ -198,10 +198,15 @@ export function graphLayout(branch: TreeBranch) {
   );
   return { width, height: levels.length * 104 + 12, points };
 }
+function cssUrl(url: string): string {
+  return escapeHtml(
+    `url("${url.replace(/[\x00-\x1f\x7f"\\]/g, (character) => `\\${character.charCodeAt(0).toString(16)} `)}")`,
+  );
+}
 /** Artwork URLs are authored locally; only the selected branch receives image styles. */
 function artworkStyle(branch: TreeBranch): string {
   return branch.artwork
-    ? ` style="--research-landscape:url('${escapeHtml(branch.artwork.landscape)}');--research-detail:url('${escapeHtml(branch.artwork.detail)}')"`
+    ? ` style="--research-landscape:${cssUrl(branch.artwork.landscape)};--research-detail:${cssUrl(branch.artwork.detail)}"`
     : '';
 }
 export function branchMarkup(
@@ -244,7 +249,7 @@ export function branchMarkup(
    .map((node, index) => {
      const p = layout.points.get(node.id)!,
        rank = node.ranks ?? { current: node.status === 'learned' ? 1 : 0, max: 1 };
-     return `<button class="tree-node" data-node="${escapeHtml(node.id)}" data-tree-select="${escapeHtml(node.id)}" data-focus-key="${escapeHtml(node.id)}" data-level="${p.level}" data-status="${node.status}" data-kind="${node.kind ?? 'practice'}" data-route="${route.has(node.id)}" aria-pressed="${selected.id === node.id}" aria-controls="tree-node-inspector" aria-label="${escapeHtml(`${node.title}. ${statusLabel(node)}. ${rank.current} of ${rank.max} ranks. Inspect details.`)}" style="left:${p.x}px;top:${p.y}px">${branch.artwork ? `<span class="tree-node-vignette" aria-hidden="true" style="background-image:url('${escapeHtml(branch.artwork.vignettes[index % branch.artwork.vignettes.length]!)}')"></span>` : ''}<span class="tree-node-icon">${clanMark(node.icon ?? 'spirit')}</span><strong>${escapeHtml(node.title)}</strong><span class="tree-node-ranks" aria-hidden="true">${Array.from({ length: rank.max }, (_, i) => `<i data-filled="${i < rank.current}"></i>`).join('')}</span><span class="tree-node-state">${escapeHtml(statusLabel(node))}</span></button>`;
+     return `<button class="tree-node" data-node="${escapeHtml(node.id)}" data-tree-select="${escapeHtml(node.id)}" data-focus-key="${escapeHtml(node.id)}" data-level="${p.level}" data-status="${node.status}" data-kind="${node.kind ?? 'practice'}" data-route="${route.has(node.id)}" aria-pressed="${selected.id === node.id}" aria-controls="tree-node-inspector" aria-label="${escapeHtml(`${node.title}. ${statusLabel(node)}. ${rank.current} of ${rank.max} ranks. Inspect details.`)}" style="left:${p.x}px;top:${p.y}px">${branch.artwork ? `<span class="tree-node-vignette" aria-hidden="true" style="background-image:${cssUrl(branch.artwork.vignettes[index % branch.artwork.vignettes.length]!)}"></span>` : ''}<span class="tree-node-icon">${clanMark(node.icon ?? 'spirit')}</span><strong>${escapeHtml(node.title)}</strong><span class="tree-node-ranks" aria-hidden="true">${Array.from({ length: rank.max }, (_, i) => `<i data-filled="${i < rank.current}"></i>`).join('')}</span><span class="tree-node-state">${escapeHtml(statusLabel(node))}</span></button>`;
    })
    .join(
      '',

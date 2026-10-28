@@ -90,3 +90,75 @@ test('painted research remains usable on a narrow screen with reduced motion and
     );
   expect(animations).toBe(0);
 });
+
+test('research artwork renders from an apostrophe-bearing base URL', async ({ page }) => {
+  await page.route('**/research-url-regression', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<!doctype html><html><head><link rel="stylesheet" href="/src/research.css"></head><body></body></html>',
+    }),
+  );
+  await page.route("**/O'Connor/art/research/**", async (route) => {
+    const url = new URL(route.request().url());
+    url.pathname = url.pathname.replace("/O'Connor", '');
+    await route.fulfill({ response: await route.fetch({ url: url.href }) });
+  });
+  await page.goto('/research-url-regression');
+  const images = await page.evaluate(async () => {
+    const { progressionMenu, branchMarkup } =
+      // @ts-expect-error Vite serves renderer modules at this URL.
+      (await import('/src/ui/progressionTree.ts')) as typeof import('../../src/ui/progressionTree');
+    const { researchBranches } =
+      // @ts-expect-error Vite serves renderer modules at this URL.
+      (await import('/src/ui/researchContent.ts')) as typeof import('../../src/ui/researchContent');
+    const { createRun } =
+      // @ts-expect-error Vite serves renderer modules at this URL.
+      (await import('/src/game/state/run.ts')) as typeof import('../../src/game/state/run');
+    const branch = researchBranches(createRun())[0]!;
+    const base = new URL("/O'Connor/", document.baseURI);
+    const artwork = branch.artwork!;
+    const fromBase = (url: string) => new URL(`art/research/${url.split('/').pop()!}`, base).href;
+    branch.artwork = {
+      landscape: fromBase(artwork.landscape),
+      detail: fromBase(artwork.detail),
+      vignettes: artwork.vignettes.map(fromBase),
+    };
+    document.body.innerHTML = progressionMenu({
+      title: 'Patron tech tree',
+      eyebrow: 'Research',
+      mark: 'spirit',
+      kind: 'patrons',
+      introduction: '',
+      summary: [],
+      branches: [branch],
+      view: { category: 'all', query: '' },
+    });
+    const standalone = document.createElement('div');
+    standalone.dataset.treeKind = 'patrons';
+    standalone.innerHTML = branchMarkup(branch, { inspector: true });
+    document.body.append(standalone);
+    const elements = document.querySelectorAll('.tree-main, .node-portrait, .tree-node-vignette');
+    return Promise.all(
+      [...elements].map(async (element) => {
+        const css = getComputedStyle(element).backgroundImage;
+        const url = css.match(/url\("([^"\n]+)"\)/)?.[1];
+        if (!url) throw new Error(`Missing artwork for ${element.className}: ${css}`);
+        const image = new Image();
+        image.src = url;
+        await image.decode();
+        return { url: image.src, width: image.naturalWidth };
+      }),
+    );
+  });
+  expect([...new Set(images.map((image) => image.url.split('/').pop()))].sort()).toEqual([
+    'borte-chino-detail.webp',
+    'borte-chino-vignette-0.webp',
+    'borte-chino-vignette-1.webp',
+    'borte-chino-vignette-2.webp',
+    'borte-chino.webp',
+  ]);
+  for (const image of images) {
+    expect(image.url).toContain("/O'Connor/art/research/");
+    expect(image.width).toBeGreaterThan(0);
+  }
+});
