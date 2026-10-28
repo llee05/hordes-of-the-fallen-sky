@@ -23,11 +23,14 @@ foreground, while that plane travels 12 image pixels right and four up over
 The oversized stage protects frame edges. Reduced motion disables all transforms
 and particles, including when the preference changes live.
 
-The ten WebP layers add 1,451,912 bytes (approximately 1.38 MiB) (quality 86 background / 88
+The ten WebP layers add 1,341,130 bytes (approximately 1.28 MiB) (quality 86 background / 88
 foreground), compared with 9.39 MiB for the five reusable original PNGs. Each
 `public/art/{scene}-mask.svg` records the manually traced registered foreground
-mask. Rasterize on black, feather by 0.6 image pixels, then copy the mask to the
-original painting's alpha channel before WebP encoding. The transparent spectral
+mask. Start SVG rasterization with `-background none` before reading the SVG,
+flatten the white mask on black, feather by 0.6 image pixels, then copy the
+grayscale mask to the original painting's alpha channel before alpha-preserving
+WebP encoding. The intro browser regression samples decoded sky and subject
+pixels in every foreground as well as measuring relative layer motion. The transparent spectral
 mist patch is feathered separately inside its SVG. These masks are authoring
 metadata; no raster processing or AI calls run in the game.
 

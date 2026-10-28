@@ -345,6 +345,29 @@ test('intro effects stay registered to each painting throughout camera motion an
         page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth),
       )
       .toBe(1536);
+    const subject = [
+      [310, 300],
+      [768, 500],
+      [170, 510],
+      [768, 700],
+      [950, 500],
+    ][chapter]!;
+    const alpha = await page
+      .locator('.intro-painting')
+      .evaluate(async (image: HTMLImageElement, subject) => {
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext('2d')!;
+        context.drawImage(image, 0, 0);
+        return {
+          sky: context.getImageData(768, 16, 1, 1).data[3],
+          subject: context.getImageData(subject[0]!, subject[1]!, 1, 1).data[3],
+        };
+      }, subject);
+    expect(alpha.sky).toBe(0);
+    expect(alpha.subject).toBe(255);
     for (const viewport of [
       { width: 1280, height: 800 },
       { width: 1920, height: 800 },
