@@ -1,4 +1,8 @@
-import { researchKhanHitProtection, stillwaterRefuge } from './researchRuntime';
+import {
+  researchKhanHitProtection,
+  researchKhanSpeedMultiplier,
+  stillwaterRefuge,
+} from './researchRuntime';
 import { rememberFallenKhan, rememberChosenKhan } from './legacy';
 import { SUCCESSORS, type SuccessorTrait } from '../data/successors';
 import { GAME } from '../config';
@@ -81,5 +85,5 @@ export function chooseSuccessor(run: RunState, trait: SuccessorTrait): boolean {
   return true;
 }
 export function khanSpeedMultiplier(run: RunState): number {
-  return run.khan.trait ? SUCCESSORS[run.khan.trait].speed : 1;
+  return (run.khan.trait ? SUCCESSORS[run.khan.trait].speed : 1) * researchKhanSpeedMultiplier(run);
 }

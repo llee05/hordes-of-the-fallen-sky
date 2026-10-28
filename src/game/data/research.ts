@@ -25,6 +25,15 @@ const IMPLEMENTED_HANDLERS = [
   'on-memory-vessels',
   'on-quiet-council',
   'on-ancestral-archers',
+  'bc-scent-of-fear',
+  'bc-bounding-charge',
+  'bc-pack-instinct',
+  'bc-hounds-of-the-horizon',
+  'bc-wind-cutting-hooves',
+  'bc-throat-of-the-prey',
+  'bc-storm-chaser',
+  'bc-call-of-the-pack',
+  'bc-endless-pursuit',
 ] as const;
 
 export const RESEARCH: readonly ResearchDefinition[] = [

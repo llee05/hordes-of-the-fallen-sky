@@ -11,6 +11,7 @@ import { campBoundary } from '../state/campBarrier';
 import type { SupportArchive } from '../state/expeditionArchive';
 import {
   echoPrefers,
+  packInstinctBonus,
   researchEchoRelease,
   updateEchoGuard,
   researchWaterRadius,
@@ -119,16 +120,17 @@ export class PatronSupport {
       spirit.image.setVisible(active);
       spirit.shadow.setVisible(active);
       if (!active) continue;
-      const angle = run.elapsed * 0.45 + (index * Math.PI * 2) / count;
+      const packMove = packInstinctBonus(run, index === 0).moveSpeed;
+      const angle = run.elapsed * 0.45 * packMove + (index * Math.PI * 2) / count;
       const x = Phaser.Math.Linear(
         spirit.image.x,
         anchor.x + Math.cos(angle) * 80,
-        Math.min(1, dt * 5),
+        Math.min(1, dt * 5 * packMove),
       );
       const y = Phaser.Math.Linear(
         spirit.image.y,
         anchor.y + Math.sin(angle) * 60,
-        Math.min(1, dt * 5),
+        Math.min(1, dt * 5 * packMove),
       );
       const dx = x - spirit.image.x;
       const speed = Math.hypot(dx, y - spirit.image.y) / dt;

@@ -17,9 +17,302 @@ export interface ResearchRuntime {
   echoReleases?: number;
   echoAttacks?: number[];
   echoNearCamp?: boolean;
+  markedUntil?: Record<string, number>;
+  staggerUntil?: Record<string, number>;
+  staggerCooldownUntil?: Record<string, number>;
+  hoofTrails?: { x: number; y: number; until: number; gallopSerial: number }[];
+  hoofTrailHitSerial?: Record<string, number>;
+  throatSlot?: number;
+  throatSpawn?: number;
+  throatStacks?: number;
+  dashHitSerial?: number;
+  dashHitEnemies?: string[];
+  stormChaserUntil?: number;
+  momentumHoldUntil?: number;
+  markedNearKhan?: boolean;
+  endlessBurstUntil?: number;
+}
+function enemyKey(slot: number, spawn: number): string {
+  return `${slot}:${spawn}`;
+}
+function pruneExpired(map: Record<string, number>, now: number): void {
+  for (const [k, until] of Object.entries(map)) if (until <= now) delete map[k];
 }
 export function ownsResearch(run: RunState, id: string): boolean {
   return (run.upgrades[id] ?? 0) > 0;
+}
+/** Reusable Marked status (5 s default, refreshes rather than stacks). */
+export function markEnemy(
+  run: RunState,
+  slot: number,
+  spawn: number,
+  duration = GAME.research.markSeconds,
+): void {
+  if (run.phase !== 'playing' || !Number.isFinite(duration) || duration <= 0) return;
+  const r = (run.researchRuntime ??= {});
+  const marks = (r.markedUntil ??= {});
+  pruneExpired(marks, run.elapsed);
+  marks[enemyKey(slot, spawn)] = Math.max(
+    marks[enemyKey(slot, spawn)] ?? 0,
+    run.elapsed + duration,
+  );
+}
+export function isEnemyMarked(run: RunState, slot: number, spawn: number): boolean {
+  return (run.researchRuntime?.markedUntil?.[enemyKey(slot, spawn)] ?? 0) > run.elapsed;
+}
+export function markedPursuitMultiplier(run: RunState, slot: number, spawn: number): number {
+  return ownsResearch(run, 'bc-scent-of-fear') && isEnemyMarked(run, slot, spawn)
+    ? GAME.research.scentOfFearDamage
+    : 1;
+}
+export function throatOfPreyMultiplier(run: RunState, slot: number, spawn: number): number {
+  const r = run.researchRuntime;
+  if (
+    !ownsResearch(run, 'bc-throat-of-the-prey') ||
+    r?.throatSlot !== slot ||
+    r.throatSpawn !== spawn ||
+    !isEnemyMarked(run, slot, spawn)
+  )
+    return 1;
+  return (
+    1 +
+    Math.min(GAME.research.throatMaxStacks, r.throatStacks ?? 0) * GAME.research.throatRampPerHit
+  );
+}
+/** Applies marked-target damage bonuses and updates Scent of Fear / Throat of the Prey state. */
+export function recordFriendlyHitOnEnemy(
+  run: RunState,
+  slot: number,
+  spawn: number,
+  healthRatioBefore: number,
+  elite = false,
+  healthRatioAfter = healthRatioBefore,
+): number {
+  if (run.phase !== 'playing') return 1;
+  const r = (run.researchRuntime ??= {});
+  const wasMarked = isEnemyMarked(run, slot, spawn);
+  if (ownsResearch(run, 'bc-throat-of-the-prey')) {
+    if (r.throatSlot !== slot || r.throatSpawn !== spawn) {
+      r.throatSlot = slot;
+      r.throatSpawn = spawn;
+      r.throatStacks = 0;
+    }
+    if (elite && wasMarked)
+      r.throatStacks = Math.min(GAME.research.throatMaxStacks, (r.throatStacks ?? 0) + 1);
+    else if (!wasMarked) r.throatStacks = 0;
+  }
+  const mult =
+    (ownsResearch(run, 'bc-scent-of-fear') && wasMarked ? GAME.research.scentOfFearDamage : 1) *
+    (ownsResearch(run, 'bc-throat-of-the-prey') && elite && wasMarked
+      ? 1 + (r.throatStacks ?? 0) * GAME.research.throatRampPerHit
+      : 1);
+  if (
+    ownsResearch(run, 'bc-scent-of-fear') &&
+    (healthRatioBefore < 0.5 || (healthRatioAfter > 0 && healthRatioAfter < 0.5))
+  )
+    markEnemy(run, slot, spawn, GAME.research.markSeconds);
+  return mult;
+}
+export function recordGallopThroughEnemy(
+  run: RunState,
+  slot: number,
+  spawn: number,
+  isBoss = false,
+): {
+  staggered: boolean;
+  staggerSeconds: number;
+  bossSlow: number;
+  stormChaserVolley: boolean;
+} {
+  if (run.phase !== 'playing')
+    return { staggered: false, staggerSeconds: 0, bossSlow: 1, stormChaserVolley: false };
+  const r = (run.researchRuntime ??= {});
+  const key = enemyKey(slot, spawn);
+  let staggered = false;
+  let staggerSeconds = 0;
+  if (ownsResearch(run, 'bc-bounding-charge')) {
+    const cooldowns = (r.staggerCooldownUntil ??= {});
+    const staggers = (r.staggerUntil ??= {});
+    pruneExpired(cooldowns, run.elapsed);
+    pruneExpired(staggers, run.elapsed);
+    if ((cooldowns[key] ?? -Infinity) <= run.elapsed) {
+      cooldowns[key] = run.elapsed + GAME.research.boundingChargeCooldown;
+      staggers[key] = run.elapsed + GAME.research.boundingChargeStagger;
+      staggered = true;
+      staggerSeconds = GAME.research.boundingChargeStagger;
+    }
+  }
+  let stormChaserVolley = false;
+  if (ownsResearch(run, 'bc-storm-chaser')) {
+    const serial = run.combat.gallopSerial;
+    if (r.dashHitSerial !== serial) {
+      r.dashHitSerial = serial;
+      r.dashHitEnemies = [];
+    }
+    const hits = (r.dashHitEnemies ??= []);
+    if (!hits.includes(key) && hits.length < GAME.maxEnemies) hits.push(key);
+    if (
+      hits.length >= GAME.research.stormChaserTargets &&
+      (r.stormChaserUntil ?? -Infinity) <= run.elapsed
+    ) {
+      r.stormChaserUntil = run.elapsed + GAME.research.stormChaserCooldown;
+      stormChaserVolley = true;
+    }
+  }
+  return {
+    staggered,
+    staggerSeconds,
+    bossSlow: isBoss && staggered ? 1 - GAME.research.bossStaggerSlow : 1,
+    stormChaserVolley,
+  };
+}
+export function isEnemyStaggered(run: RunState, slot: number, spawn: number): boolean {
+  return (run.researchRuntime?.staggerUntil?.[enemyKey(slot, spawn)] ?? 0) > run.elapsed;
+}
+export function enemyStaggerSlowMultiplier(
+  run: RunState,
+  slot: number,
+  spawn: number,
+  isBoss = false,
+): number {
+  if (!isEnemyStaggered(run, slot, spawn)) return 1;
+  return isBoss ? 1 - GAME.research.bossStaggerSlow : 0;
+}
+export function packInstinctActive(run: RunState): boolean {
+  return ownsResearch(run, 'bc-pack-instinct') && run.clan.momentum > 0.5;
+}
+export function packInstinctBonus(
+  run: RunState,
+  isNearestCompanion = true,
+): { moveSpeed: number; attackSpeed: number } {
+  return packInstinctActive(run) && isNearestCompanion
+    ? {
+        moveSpeed: GAME.research.packInstinctMoveSpeed,
+        attackSpeed: 1 + GAME.research.packInstinctAttackSpeed,
+      }
+    : { moveSpeed: 1, attackSpeed: 1 };
+}
+export function riderPrefersTarget(run: RunState, slot: number, spawn: number): boolean {
+  return (
+    ownsResearch(run, 'bc-call-of-the-pack') &&
+    run.clan.momentum > 0.5 &&
+    isEnemyMarked(run, slot, spawn)
+  );
+}
+export function riderAttackSpeedMultiplier(run: RunState, isNearestCompanion = false): number {
+  let bonus = 0;
+  if (packInstinctActive(run) && isNearestCompanion) bonus += GAME.research.packInstinctAttackSpeed;
+  if (ownsResearch(run, 'bc-call-of-the-pack') && run.clan.momentum > 0.5)
+    bonus += GAME.research.callOfPackSpeed;
+  return 1 + bonus;
+}
+export function riderFiringInterval(run: RunState, isNearestCompanion = false): number {
+  return (
+    (run.stats.attackInterval * run.clan.campEffects.multipliers.hostInterval) /
+    riderAttackSpeedMultiplier(run, isNearestCompanion)
+  );
+}
+export function advanceHoofTrails(
+  run: RunState,
+  position: { x: number; y: number },
+  galloping: boolean,
+): void {
+  if (run.phase !== 'playing') return;
+  const r = run.researchRuntime;
+  if (r?.hoofTrails) r.hoofTrails = r.hoofTrails.filter((t) => t.until > run.elapsed);
+  if (!galloping || !ownsResearch(run, 'bc-wind-cutting-hooves')) return;
+  const rt = (run.researchRuntime ??= {});
+  const trails = (rt.hoofTrails ??= []);
+  const last = trails.at(-1);
+  if (
+    !last ||
+    last.gallopSerial !== run.combat.gallopSerial ||
+    Math.hypot(position.x - last.x, position.y - last.y) > GAME.mounted.trailSpacing
+  ) {
+    trails.push({
+      x: position.x,
+      y: position.y,
+      until: run.elapsed + GAME.research.hoofTrailSeconds,
+      gallopSerial: run.combat.gallopSerial,
+    });
+    if (trails.length > GAME.mounted.maxTrails) trails.shift();
+  }
+}
+export function claimHoofTrailDamage(
+  run: RunState,
+  slot: number,
+  spawn: number,
+  x: number,
+  y: number,
+): number {
+  if (run.phase !== 'playing' || !ownsResearch(run, 'bc-wind-cutting-hooves')) return 0;
+  const r = run.researchRuntime;
+  const trails = r?.hoofTrails;
+  if (!trails?.length) return 0;
+  const key = enemyKey(slot, spawn);
+  const hitSerials = (r!.hoofTrailHitSerial ??= {});
+  for (const trail of trails) {
+    if (trail.until <= run.elapsed) continue;
+    if (
+      Math.hypot(x - trail.x, y - trail.y) < GAME.mounted.trailRadius &&
+      hitSerials[key] !== trail.gallopSerial
+    ) {
+      if (Object.keys(hitSerials).length >= GAME.maxEnemies) {
+        const firstKey = Object.keys(hitSerials)[0];
+        if (firstKey) delete hitSerials[firstKey];
+      }
+      hitSerials[key] = trail.gallopSerial;
+      return run.stats.damage * GAME.research.hoofTrailDamage;
+    }
+  }
+  return 0;
+}
+export function updateMarkedProximity(run: RunState, nearKhan: boolean): void {
+  if (run.phase !== 'playing') return;
+  (run.researchRuntime ??= {}).markedNearKhan = nearKhan;
+}
+export function hasMarkedEnemyNearKhan(run: RunState): boolean {
+  const r = run.researchRuntime;
+  if (!r) return false;
+  if (r.markedNearKhan !== undefined) return r.markedNearKhan;
+  return Object.values(r.markedUntil ?? {}).some((until) => until > run.elapsed);
+}
+export function researchMomentumFloor(run: RunState): number {
+  const r = run.researchRuntime;
+  let floor = 0;
+  if (ownsResearch(run, 'bc-hounds-of-the-horizon') && (r?.momentumHoldUntil ?? 0) > run.elapsed)
+    floor = Math.max(floor, GAME.research.houndsMomentumFloor);
+  if (ownsResearch(run, 'bc-endless-pursuit') && hasMarkedEnemyNearKhan(run))
+    floor = Math.max(floor, GAME.research.endlessPursuitFloor);
+  return floor;
+}
+export function researchKhanSpeedMultiplier(run: RunState): number {
+  const r = run.researchRuntime;
+  return ownsResearch(run, 'bc-endless-pursuit') && (r?.endlessBurstUntil ?? 0) > run.elapsed
+    ? GAME.research.endlessPursuitBurstSpeed
+    : 1;
+}
+export function recordResearchEnemyKill(
+  run: RunState,
+  enemy: { slot: number; spawn: number; elite?: boolean; nearCamp?: boolean },
+): void {
+  if (run.phase !== 'playing') return;
+  const r = (run.researchRuntime ??= {});
+  const key = enemyKey(enemy.slot, enemy.spawn);
+  const wasMarked = isEnemyMarked(run, enemy.slot, enemy.spawn);
+  if (wasMarked && ownsResearch(run, 'bc-hounds-of-the-horizon')) {
+    const base = Math.max(r.momentumHoldUntil ?? 0, run.elapsed);
+    r.momentumHoldUntil = Math.min(
+      run.elapsed + GAME.research.houndsMomentumMax,
+      base + GAME.research.houndsMomentumAdd,
+    );
+    run.clan.momentum = Math.max(run.clan.momentum, GAME.research.houndsMomentumFloor);
+  }
+  if (ownsResearch(run, 'bc-endless-pursuit') && run.clan.momentum > 0.5) {
+    r.endlessBurstUntil = run.elapsed + GAME.research.endlessPursuitBurstSeconds;
+  }
+  delete r.markedUntil?.[key];
+  delete r.staggerUntil?.[key];
 }
 export function recordKhanTarget(run: RunState, slot: number, spawn: number): void {
   if (run.phase !== 'playing' || !ownsResearch(run, 'on-spirit-signal')) return;
@@ -30,6 +323,12 @@ export function recordKhanTarget(run: RunState, slot: number, spawn: number): vo
 }
 export function echoPrefers(run: RunState, slot: number, spawn: number): boolean {
   const r = run.researchRuntime;
+  if (
+    ownsResearch(run, 'bc-call-of-the-pack') &&
+    run.clan.momentum > 0.5 &&
+    isEnemyMarked(run, slot, spawn)
+  )
+    return true;
   return (
     ownsResearch(run, 'on-spirit-signal') &&
     r?.targetSlot === slot &&
@@ -55,12 +354,15 @@ export function recordResearchShard(run: RunState): void {
   );
   r.memoryUntil = run.elapsed + GAME.research.memorySeconds;
 }
-export function echoInterval(run: RunState): number {
+export function echoInterval(run: RunState, isNearestCompanion = false): number {
   const r = run.researchRuntime;
-  const bonus =
+  let bonus =
     ownsResearch(run, 'on-memory-vessels') && (r?.memoryUntil ?? 0) > run.elapsed
       ? (r?.memoryStacks ?? 0) * GAME.research.memorySpeed
       : 0;
+  if (ownsResearch(run, 'bc-call-of-the-pack') && run.clan.momentum > 0.5)
+    bonus += GAME.research.callOfPackSpeed;
+  if (packInstinctActive(run) && isNearestCompanion) bonus += GAME.research.packInstinctAttackSpeed;
   return run.patrons.ancestors.interval / (1 + bonus);
 }
 export function researchEchoRelease(run: RunState, index = 0): boolean {

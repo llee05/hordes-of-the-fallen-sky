@@ -5,9 +5,19 @@ import {
   type ResearchDamageSource,
 } from '../state/researchMetrics';
 import {
+  claimHoofTrailDamage,
+  enemyStaggerSlowMultiplier,
+  isEnemyMarked,
+  packInstinctBonus,
+  recordFriendlyHitOnEnemy,
+  recordGallopThroughEnemy,
   recordKhanTarget,
+  recordResearchEnemyKill,
   recordResearchShard,
   researchGallop,
+  riderAttackSpeedMultiplier,
+  riderPrefersTarget,
+  updateMarkedProximity,
   wagonResearchDefence,
 } from '../state/researchRuntime';
 import { purchaseNomadicBuilding } from '../state/nomadicCamp';
@@ -2095,6 +2105,16 @@ export class ArenaScene extends Phaser.Scene {
       warnings
         .lineStyle(1, 0x78b6ae, (0.3 * trail.remaining) / GAME.mounted.trailSeconds)
         .strokeCircle(trail.x, trail.y, GAME.mounted.trailRadius);
+    for (const trail of this.run.researchRuntime?.hoofTrails ?? [])
+      if (trail.until > this.run.elapsed)
+        warnings
+          .lineStyle(
+            1,
+            0xd8a868,
+            (0.35 * (trail.until - this.run.elapsed)) / GAME.research.hoofTrailSeconds,
+          )
+          .strokeCircle(trail.x, trail.y, GAME.mounted.trailRadius);
+    let markedNear = false;
     for (const enemy of this.enemies.getChildren() as Enemy[]) {
       const shadow = this.enemyShadows.get(enemy);
       shadow?.setVisible(enemy.active);
@@ -2194,6 +2214,18 @@ export class ArenaScene extends Phaser.Scene {
         );
       }
       if (enemy.elite) warnings.lineStyle(3, 0xe0bc76, 0.85).strokeCircle(enemy.x, enemy.y, 30);
+      if (
+        khanActive &&
+        playerDistance <= GAME.research.endlessPursuitRadius &&
+        isEnemyMarked(this.run, enemy.tacticalSlot, enemy.spawnId)
+      )
+        markedNear = true;
+      speed *= enemyStaggerSlowMultiplier(
+        this.run,
+        enemy.tacticalSlot,
+        enemy.spawnId,
+        behavior === 'boss',
+      );
       if (enemy.pinned > 0 || (finale && finale.phase !== 'advance')) speed = 0;
       if (
         this.run.combat.trails.some(
@@ -2367,6 +2399,28 @@ export class ArenaScene extends Phaser.Scene {
         enemy.lastGallop !== this.run.combat.gallopSerial
       ) {
         enemy.lastGallop = this.run.combat.gallopSerial;
+        const gallopHit = recordGallopThroughEnemy(
+          this.run,
+          enemy.tacticalSlot,
+          enemy.spawnId,
+          behavior === 'boss',
+        );
+        if (gallopHit.staggered && behavior !== 'boss') {
+          enemy.pinned = Math.max(enemy.pinned, gallopHit.staggerSeconds);
+          enemy.tactics.phase = 'recover';
+          enemy.tactics.remaining = Math.max(enemy.tactics.remaining, gallopHit.staggerSeconds);
+        }
+        if (gallopHit.stormChaserVolley)
+          this.shootVolley(
+            this.player.x,
+            this.player.y,
+            enemy,
+            this.run.stats.projectiles,
+            GAME.research.stormChaserDamage,
+            false,
+            false,
+            'khan',
+          );
         const d = Math.max(1, playerDistance),
           push = GAME.mounted.breakthroughPush;
         const desired = {
@@ -2376,6 +2430,16 @@ export class ArenaScene extends Phaser.Scene {
         const point =
           this.landscape.navigation?.slide(enemy, desired, GAME.terrain.actorClearance) ?? desired;
         enemy.setPosition(point.x, point.y);
+      }
+      if (enemy.active) {
+        const hoofDamage = claimHoofTrailDamage(
+          this.run,
+          enemy.tacticalSlot,
+          enemy.spawnId,
+          enemy.x,
+          enemy.y,
+        );
+        if (hoofDamage > 0) this.damageEnemy(enemy, hoofDamage);
       }
       if (enemy.burning > 0) {
         enemy.burning -= dt;
@@ -2392,6 +2456,7 @@ export class ArenaScene extends Phaser.Scene {
       )
         this.damageEnemy(enemy, dt * this.run.stats.damage * 18);
     }
+    updateMarkedProximity(this.run, markedNear);
   }
 
   private fire(): void {
@@ -2437,14 +2502,19 @@ export class ArenaScene extends Phaser.Scene {
     const count = riderCount(this.run);
     for (let i = 0; i < count; i += 1) {
       const rider = this.riders[i]!;
-      const riderTarget = this.spatial.nearest(
-        rider.x,
-        rider.y,
+      const range =
         GAME.projectile.range +
-          this.run.patrons.bow.range +
-          this.run.clan.campEffects.bonuses.range,
-        (e) => !this.landscape.navigation || this.landscape.navigation.lineClear(rider, e, 0),
-      );
+        this.run.patrons.bow.range +
+        this.run.clan.campEffects.bonuses.range;
+      const clear = (e: Enemy) =>
+        !this.landscape.navigation || this.landscape.navigation.lineClear(rider, e, 0);
+      const riderTarget =
+        this.spatial.nearest(
+          rider.x,
+          rider.y,
+          range,
+          (e) => clear(e) && riderPrefersTarget(this.run, e.tacticalSlot, e.spawnId),
+        ) ?? this.spatial.nearest(rider.x, rider.y, range, clear);
       if (riderTarget) {
         this.riderMotions[i]!.attack();
         if (this.riderSpeeds[i]! < 2)
@@ -2460,7 +2530,8 @@ export class ArenaScene extends Phaser.Scene {
             paired ? 2 : 1,
             (0.6 + (hasDevelopment(this.run, 'archery', 'veteran-riders') ? 0.3 : 0)) *
               this.run.patrons.banner.damage *
-              this.run.clan.campEffects.multipliers.riderDamage,
+              this.run.clan.campEffects.multipliers.riderDamage *
+              riderAttackSpeedMultiplier(this.run, i === 0),
           ) || hostFired;
       }
     }
@@ -2645,15 +2716,21 @@ export class ArenaScene extends Phaser.Scene {
     if (!enemy.active) return;
     if (enemy === this.boss && this.run.finalStand?.phase === 'recovery')
       amount *= GAME.finalStand.vulnerableDamage;
-    amount *= friendlyDamageMultiplier(
-      this.run,
-      enemy.maxHealth > 0 ? enemy.health / enemy.maxHealth : 1,
-    );
+    const beforeRatio = enemy.maxHealth > 0 ? enemy.health / enemy.maxHealth : 1;
+    amount *= friendlyDamageMultiplier(this.run, beforeRatio);
     if (
       (enemy.definition.armor !== undefined || enemy.definition.id === 'brute') &&
       enemy.pinned <= 0
     )
       amount *= enemy.definition.armor ?? GAME.tactics.heavyArmor;
+    amount *= recordFriendlyHitOnEnemy(
+      this.run,
+      enemy.tacticalSlot,
+      enemy.spawnId,
+      beforeRatio,
+      enemy.elite,
+      enemy.maxHealth > 0 ? (enemy.health - amount) / enemy.maxHealth : 1,
+    );
     if (amount >= 1) enemy.motion.hit();
     recordResearchDamage(
       this.run,
@@ -2667,6 +2744,12 @@ export class ArenaScene extends Phaser.Scene {
       return;
     }
     const { x, y } = enemy;
+    recordResearchEnemyKill(this.run, {
+      slot: enemy.tacticalSlot,
+      spawn: enemy.spawnId,
+      elite: enemy.elite,
+      nearCamp: Math.hypot(x - this.camp.x, y - this.camp.y) <= 260,
+    });
     const value = enemy.definition.xp;
     if (effectAmount(this.visualSettings) > 0) this.defeats.show(enemy);
     enemy.disableBody(true, true);
@@ -3081,9 +3164,10 @@ export class ArenaScene extends Phaser.Scene {
         navigation && !navigation.lineClear(rider, { x, y }, 18)
           ? navigation.waypoint(rider, anchor)
           : { x, y };
+      const packMove = packInstinctBonus(this.run, i === 0).moveSpeed;
       const next = {
-        x: Phaser.Math.Linear(rider.x, desired.x, Math.min(1, dt * 5)),
-        y: Phaser.Math.Linear(rider.y, desired.y, Math.min(1, dt * 5)),
+        x: Phaser.Math.Linear(rider.x, desired.x, Math.min(1, dt * 5 * packMove)),
+        y: Phaser.Math.Linear(rider.y, desired.y, Math.min(1, dt * 5 * packMove)),
       };
       const position = navigation?.slide(rider, next) ?? next;
       rider.setPosition(position.x, position.y);
