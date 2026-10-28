@@ -998,6 +998,7 @@ export class GameUI {
       });
       if (phase === 'building') {
         this.campSelection = button.dataset.branch as BuildingId;
+        view.campSlot = undefined;
         view.expanded = true;
         view.campPopup = true;
         view.campTarget = 'building';

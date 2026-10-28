@@ -40,6 +40,43 @@ test('five permanent cores and five optional locations assign purchases atomical
   await expect(page.getByRole('dialog')).toBeHidden();
 });
 
+for (const source of ['camp', 'patron'] as const) {
+  test(`combination links from ${source} discard an occupied construction location`, async ({
+    page,
+  }) => {
+    test.setTimeout(60000);
+    await page.locator('[data-camp-slot="0"]').click();
+    await page.locator('[data-nomadic-site="archery-range"]').click();
+    await page.locator('.tree-purchase').click();
+    await page.keyboard.press('Escape');
+    if (source === 'patron') {
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('t');
+    }
+    await page.getByRole('button', { name: 'Combinations', exact: true }).click();
+    await page
+      .locator('[data-synergy="burning-tempest"] [data-target-node="fletchers-workshop"]')
+      .click();
+    await expect(page.locator('.camp-popup-heading h3')).toHaveText("Fletcher's Workshop");
+    await expect(page.locator('.tree-purchase')).toBeEnabled();
+    await expect(page.getByRole('region', { name: 'Upgrade bonuses' })).toContainText(
+      'Khan arrows per volley',
+    );
+    await page.locator('.tree-purchase').click();
+    expect(
+      await page.evaluate(() =>
+        (window as any).__gloam.scene.run.clan.nomadicCamp.slots.slice(0, 2),
+      ),
+    ).toEqual([
+      { id: 'archery-range', level: 1 },
+      { id: 'fletchers-workshop', level: 1 },
+    ]);
+    expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
+      true,
+    );
+  });
+}
+
 test('headquarters unlock three visible ranks and core buildings never consume optional slots', async ({
   page,
 }) => {

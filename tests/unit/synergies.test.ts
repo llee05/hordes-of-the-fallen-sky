@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { SYNERGIES } from '../../src/game/data/synergies';
+import { SYNERGIES, NOMADIC_SYNERGIES } from '../../src/game/data/synergies';
+import { nomadicBuilding } from '../../src/game/data/nomadicCamp';
+import { createRun as createNomadicRun } from '../../src/game/state/run';
+import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
+import { synergyContent } from '../../src/ui/synergyContent';
 import { UPGRADES } from '../../src/game/data/upgrades';
 import { applyUpgrade } from '../../src/game/state/run';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { buildingCost, buildStructure } from '../../src/game/state/clan';
-import { synergyProgress } from '../../src/game/state/synergies';
+import { synergyProgress, nomadicSynergyProgress } from '../../src/game/state/synergies';
 import { ENCAMPMENT_TIERS } from '../../src/game/data/campEstate';
 import { estateCost } from '../../src/game/state/campEstate';
 
@@ -78,5 +82,85 @@ describe('discoverable combinations', () => {
     const progress = synergyProgress(run, recipe);
     expect(progress.complete).toBe(true);
     expect(progress.price.knowledge).toBe(0);
+  });
+});
+
+describe('nomadic combination locations', () => {
+  const recipe = NOMADIC_SYNERGIES.find((r) => r.id === 'burning-tempest')!;
+  function campRun(occupied = 0) {
+    const run = createNomadicRun();
+    run.phase = 'building';
+    Object.assign(run.clan, { materials: 10000, spirit: 1000, population: 40 });
+    const buildings = ['smiths-forge', 'scouts-watchpost', 'healers-ger', 'trading-post'] as const;
+    for (const id of buildings.slice(0, occupied)) {
+      expect(purchaseNomadicBuilding(run, id)).toBe(true);
+    }
+    return run;
+  }
+
+  it('closes a two-building route with one free location and preserves routes that fit', () => {
+    const run = campRun(4);
+    const before = structuredClone(run);
+    expect(nomadicSynergyProgress(run, recipe)).toMatchObject({ complete: false, closed: true });
+    expect(synergyContent(run)).toContain('No optional location available');
+    expect(synergyContent(run)).not.toContain('Plan a combination</small><h4>Burning Tempest');
+    expect(run).toEqual(before);
+
+    const viable = campRun(3);
+    expect(nomadicSynergyProgress(viable, recipe).closed).toBe(false);
+    expect(purchaseNomadicBuilding(viable, 'fletchers-workshop')).toBe(true);
+    expect(nomadicSynergyProgress(viable, recipe).closed).toBe(false);
+    expect(purchaseNomadicBuilding(viable, 'shamans-ger')).toBe(true);
+    expect(purchaseNomadicBuilding(viable, 'khans-ger')).toBe(true);
+    expect(purchaseNomadicBuilding(viable, 'fletchers-workshop')).toBe(true);
+    expect(purchaseNomadicBuilding(viable, 'khans-ger')).toBe(true);
+    expect(purchaseNomadicBuilding(viable, 'fletchers-workshop')).toBe(true);
+    for (const id of ['remembered-bow', 'sustained-pasture'])
+      expect(
+        nomadicSynergyProgress(
+          viable,
+          NOMADIC_SYNERGIES.find((r) => r.id === id)!,
+        ).closed,
+      ).toBe(false);
+    expect(nomadicSynergyProgress(viable, recipe)).toMatchObject({
+      complete: true,
+      closed: false,
+      price: { knowledge: 0, materials: 0, spirit: 0, workers: 0 },
+    });
+  });
+
+  it('counts distinct optional prerequisites in the closure, including shared dependencies', () => {
+    const fletcher = nomadicBuilding('fletchers-workshop').levels[0]!;
+    const shaman = nomadicBuilding('shamans-ger').levels[0]!;
+    const originalFletcher = fletcher.requires;
+    const originalShaman = shaman.requires;
+    fletcher.requires = shaman.requires = [{ building: 'archery-range', level: 1 }];
+    try {
+      expect(nomadicSynergyProgress(campRun(3), recipe).closed).toBe(true);
+      const run = campRun(2);
+      const progress = nomadicSynergyProgress(run, recipe);
+      expect(progress.closed).toBe(false);
+      const missing = [
+        ...nomadicBuilding('fletchers-workshop').levels,
+        shaman,
+        ...nomadicBuilding('khans-ger').levels.slice(1),
+        nomadicBuilding('archery-range').levels[0]!,
+      ];
+      expect(progress.price.materials).toBe(
+        missing.reduce((total, level) => total + level.cost.materials, 0),
+      );
+      expect(progress.price.spirit).toBe(
+        missing.reduce((total, level) => total + level.cost.spirit, 0),
+      );
+      expect(progress.price.workers).toBe(
+        (['fletchers-workshop', 'shamans-ger', 'archery-range'] as const).reduce(
+          (total, id) => total + nomadicBuilding(id).workers,
+          0,
+        ),
+      );
+    } finally {
+      fletcher.requires = originalFletcher;
+      shaman.requires = originalShaman;
+    }
   });
 });

@@ -176,10 +176,15 @@ export function nomadicSynergyProgress(
     }
     if (!current) workers += definition.workers;
   }
+  const missingLocations = [...desired.keys()].filter(
+    (id) => nomadicBuilding(id).category !== 'Core' && !nomadicBuildingLevel(camp, id),
+  ).length;
   return {
     requirements,
     complete: requirements.every((r) => r.current >= r.needed),
-    closed: requirements.some((r) => r.closed),
+    closed:
+      requirements.some((r) => r.closed) ||
+      missingLocations > camp.slots.filter((slot) => slot === null).length,
     price: { knowledge, materials, spirit, workers },
   };
 }

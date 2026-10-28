@@ -51,6 +51,8 @@ The Khan's Ger capacity governs new rescued or arriving households. Migration ne
 
 The camp keeps one picture, rather than adding permanent navigation or inspector columns. Each location is clickable through its art or nameplate. Hover and visible keyboard focus identify the selected nameplate; Escape/controller Back dismisses its popover before leaving management. Search, Provisions and Combinations remain available above the painting. Small windows pan the map and retain a bounded popover. No simulation or character clock advances while planning.
 
+Combination links inspect a building independently of the previously selected construction location. A combination is closed when its distinct missing optional buildings, including prerequisites, exceed the remaining locations; shared prerequisites count once.
+
 The panorama and three-stage ger, wagon-workplace and archery-ground paintings are bundled local assets. Higher ranks add canopies, carved entrances, stores and equipment; existing sheep, horses, cairns and banners complete the scene. See [the artwork record](nomadic-camp-artwork.md) for assets, atlas metadata and generation prompts. Portable forges, healer/herbal supplies, hunting racks, storyteller circles and distinct companion-training equipment would further improve workplace differentiation.
 
 ## Portable checkpoints and full expeditions
