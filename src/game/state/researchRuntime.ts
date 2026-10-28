@@ -4,6 +4,13 @@ import type { RunState } from '../types';
 
 /** Optional for compatibility with older expedition saves. All timestamps use active seconds. */
 export interface ResearchRuntime {
+  shardsGathered?: number;
+  shardStreak?: number;
+  shardStreakUntil?: number;
+  spiritBurstUntil?: number;
+  vulnerabilityUntil?: Record<string, number>;
+  echoHits?: Record<string, number>;
+
   slowSince?: Record<string, number>;
   slowSeenAt?: Record<string, number>;
   slowUntil?: Record<string, number>;

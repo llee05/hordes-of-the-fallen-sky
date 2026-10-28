@@ -34,10 +34,12 @@ export class Projectile extends Phaser.Physics.Arcade.Image {
   turn = 0;
   pierces = 0;
   pins = false;
+  echoIndex?: number;
   readonly hitTargets = new Map<Enemy, number>();
 }
 
 export class Gem extends Phaser.Physics.Arcade.Image {
   value = 0;
   attracted = false;
+  secondary = false;
 }

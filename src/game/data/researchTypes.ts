@@ -69,7 +69,11 @@ export type ResearchEffect =
         | 'lu-deep-current'
         | 'lu-river-that-remembers'
         | 'lu-eye-of-the-mountain'
-        | 'lu-land-in-motion';
+        | 'lu-land-in-motion'
+        | 'on-reverent-gathering'
+        | 'on-line-of-forebears'
+        | 'on-names-in-stone'
+        | 'on-infinite-remembrance';
     };
 export interface ResearchDefinition {
   id: string;

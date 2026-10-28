@@ -62,6 +62,7 @@ export interface ProjectileArchive extends BodyArchive {
   turn: number;
   pierces: number;
   pins: boolean;
+  echoIndex?: number;
   rotation: number;
   tint: number;
   previous?: Point;
@@ -93,7 +94,7 @@ export interface WorldArchive {
   enemies: EnemyArchive[];
   projectiles: ProjectileArchive[];
   hostileShots: ProjectileArchive[];
-  gems: (BodyArchive & { value: number; attracted: boolean })[];
+  gems: (BodyArchive & { value: number; attracted: boolean; secondary?: boolean })[];
   riders: (Point & { flip: boolean; motion: MotionArchive })[];
   support: SupportArchive;
   hazards: (Point & {
@@ -286,6 +287,12 @@ const optional: Record<string, Record<string, Rule>> = {
         rockArcCooldown: number,
         stoneTickAt: number,
         ridgePatches: list(object({ x: number, y: number, until: number }), 16),
+        shardsGathered: number,
+        shardStreak: number,
+        shardStreakUntil: number,
+        spiritBurstUntil: number,
+        vulnerabilityUntil: dictionary(number),
+        echoHits: dictionary(number),
         lastGallopAt: number,
         riverStacks: integer,
         riverUntil: number,
@@ -490,7 +497,7 @@ const projectile = object(
     tint: integer,
     hits: list(object({ slot: integer, spawnId: integer }), GAME.maxEnemies),
   },
-  { previous: point, barrage: integer, source: string },
+  { previous: point, barrage: integer, source: string, echoIndex: integer },
 );
 const threat = object(
   {
@@ -534,7 +541,10 @@ const worldShape = object({
   ),
   projectiles: list(projectile, GAME.maxProjectiles),
   hostileShots: list(projectile, 180),
-  gems: list(object({ ...bodyFields, value: positive, attracted: boolean }), GAME.maxGems),
+  gems: list(
+    object({ ...bodyFields, value: positive, attracted: boolean }, { secondary: boolean }),
+    GAME.maxGems,
+  ),
   riders: list(object({ x: number, y: number, flip: boolean, motion }), 16),
   support: object({
     ancestorTimer: number,

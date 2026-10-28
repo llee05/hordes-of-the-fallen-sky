@@ -5,6 +5,13 @@ import {
   resolveResearchEruption,
   claimTerrainWave,
 } from '../state/researchTerrain';
+import {
+  recordEchoHit,
+  echoVulnerability,
+  recordShardGathering,
+  researchSpiritYield,
+  remembranceMagnetRadius,
+} from '../state/researchEchoes';
 import { volleyFactors } from '../state/volley';
 import {
   observeResearchFrame,
@@ -746,6 +753,7 @@ export class ArenaScene extends Phaser.Scene {
           turn: p.turn,
           pierces: p.pierces,
           pins: p.pins,
+          echoIndex: p.echoIndex,
           rotation: p.rotation,
           tint: p.tintTopLeft,
           previous: p.getData('terrain-previous') as { x: number; y: number } | undefined,
@@ -807,7 +815,12 @@ export class ArenaScene extends Phaser.Scene {
       hostileShots: shots(this.hostileShots),
       gems: (this.gems.getChildren() as Gem[])
         .filter((g) => g.active)
-        .map((g) => ({ ...body(g), value: g.value, attracted: g.attracted })),
+        .map((g) => ({
+          ...body(g),
+          value: g.value,
+          attracted: g.attracted,
+          secondary: g.secondary,
+        })),
       riders: this.riders.map((r, i) => ({
         x: r.x,
         y: r.y,
@@ -882,6 +895,7 @@ export class ArenaScene extends Phaser.Scene {
         const p = group.get(saved.x, saved.y, hostile ? 'gem' : 'bolt') as Projectile;
         p.enableBody(true, saved.x, saved.y, true, true);
         const { x: _x, y: _y, vx, vy, flip, rotation, tint, previous, hits, ...state } = saved;
+        p.echoIndex = undefined;
         Object.assign(p, state);
         p.setScale(hostile ? 1.1 : 1)
           .setDepth(9200)
@@ -906,6 +920,7 @@ export class ArenaScene extends Phaser.Scene {
       gem.setScale(0.85).setDepth(3).setVelocity(saved.vx, saved.vy);
       gem.value = saved.value;
       gem.attracted = saved.attracted;
+      gem.secondary = saved.secondary ?? false;
     }
     world.riders.forEach((r, i) => {
       this.riders[i]!.setPosition(r.x, r.y)
@@ -1666,7 +1681,8 @@ export class ArenaScene extends Phaser.Scene {
     this.updateSupport(dt);
     this.patronSupport.update(this.run, dt, this.player, this.camp, this.spatial, {
       damage: (enemy, amount) => this.damageEnemy(enemy, amount),
-      volley: (x, y, target, multiplier) => this.shootVolley(x, y, target, 1, multiplier, true),
+      volley: (x, y, target, multiplier, index) =>
+        this.shootVolley(x, y, target, 1, multiplier, true, false, 'rider', index),
     });
     this.attackTimer -= dt;
     if (this.attackTimer <= 0) this.fire();
@@ -2595,6 +2611,7 @@ export class ArenaScene extends Phaser.Scene {
     ancestral = false,
     charged = false,
     owner: 'khan' | 'rider' = 'rider',
+    echoIndex?: number,
   ): boolean {
     const volley = volleyFactors(this.run, count, owner === 'khan', ancestral);
     const direction = Math.atan2(target.y - y, target.x - x);
@@ -2645,6 +2662,7 @@ export class ArenaScene extends Phaser.Scene {
         : direction + (i - (arrowCount - 1) / 2) * volley.spacing;
       bolt.enableBody(true, x, y, true, true);
       bolt.barrage = undefined;
+      bolt.echoIndex = ancestral ? echoIndex : undefined;
       bolt.source = owner === 'khan' ? 'khan' : undefined;
       bolt.setData('terrain-previous', { x, y });
       bolt
@@ -2688,6 +2706,7 @@ export class ArenaScene extends Phaser.Scene {
       const angle = direction + Math.PI + (i - (backward.count - 1) / 2) * 0.24;
       bolt.enableBody(true, x, y, true, true);
       bolt.barrage = undefined;
+      bolt.echoIndex = ancestral ? echoIndex : undefined;
       bolt.source = 'khan';
       bolt.setData('terrain-previous', { x, y });
       bolt
@@ -2830,6 +2849,8 @@ export class ArenaScene extends Phaser.Scene {
       enemy.tactics.phase = 'recover';
       enemy.tactics.remaining = GAME.tactics.chargeRecovery;
     }
+    if (bolt.echoIndex !== undefined)
+      recordEchoHit(this.run, enemy.tacticalSlot, enemy.spawnId, bolt.echoIndex);
     if (bolt.source === 'khan') recordKhanTarget(this.run, enemy.tacticalSlot, enemy.spawnId);
     this.damageEnemy(enemy, hitDamage, bolt.source === 'khan' ? 'khan' : 'allied-arrows');
   }
@@ -2853,6 +2874,7 @@ export class ArenaScene extends Phaser.Scene {
     if (!enemy.active) return;
     if (enemy === this.boss && this.run.finalStand?.phase === 'recovery')
       amount *= GAME.finalStand.vulnerableDamage;
+    amount *= echoVulnerability(this.run, enemy.tacticalSlot, enemy.spawnId);
     const beforeRatio = enemy.maxHealth > 0 ? enemy.health / enemy.maxHealth : 1;
     amount *= friendlyDamageMultiplier(this.run, beforeRatio);
     const hasArmor =
@@ -2918,6 +2940,7 @@ export class ArenaScene extends Phaser.Scene {
       value *
       0.4 *
       this.run.patrons.ancestors.spiritGain *
+      researchSpiritYield(this.run) *
       this.run.clan.campEffects.multipliers.spiritGain;
     rewardPatronKill(this.run);
     if (enemy === this.boss) defeatSkybreaker(this.run);
@@ -2931,6 +2954,7 @@ export class ArenaScene extends Phaser.Scene {
       gem.enableBody(true, x, y, true, true);
       gem.setTexture('gem').setScale(0.85).setDepth(3).setVelocity(0, 0);
       gem.value = value;
+      gem.secondary = false;
       gem.attracted = false;
     } else {
       // Preserve experience even if the gem pool is full.
@@ -2946,12 +2970,30 @@ export class ArenaScene extends Phaser.Scene {
       if (!gem.active) continue;
       const distance = Phaser.Math.Distance.Between(gem.x, gem.y, this.player.x, this.player.y);
       const retreat = this.run.clan.formation === 'retreat' && this.run.clan.momentum > 0.4;
-      if (distance < this.run.stats.pickupRadius * (retreat ? 1.7 : 1)) gem.attracted = true;
+      if (
+        distance <
+        Math.max(
+          this.run.stats.pickupRadius * (retreat ? 1.7 : 1),
+          remembranceMagnetRadius(this.run),
+        )
+      )
+        gem.attracted = true;
       if (!gem.attracted) continue;
       if (distance < 18) {
         experience += gem.value;
         recordResearchShard(this.run);
+        const bonus = recordShardGathering(this.run, gem.value, gem.secondary);
         gem.disableBody(true, true);
+        if (bonus > 0) {
+          const duplicate = this.gems.get(gem.x + 20, gem.y, 'gem') as Gem | null;
+          if (duplicate) {
+            duplicate.enableBody(true, gem.x + 20, gem.y, true, true);
+            duplicate.setTexture('gem').setScale(0.65).setDepth(3).setVelocity(0, 0);
+            duplicate.value = bonus;
+            duplicate.secondary = true;
+            duplicate.attracted = false;
+          } else experience += bonus;
+        }
       } else {
         const step = Math.min(1, dt * (6 + 140 / distance));
         gem.setPosition(

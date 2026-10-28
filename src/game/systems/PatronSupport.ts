@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { remembranceEchoDamage } from '../state/researchEchoes';
 import { claimWaterPush, researchKnockback } from '../state/researchTerrain';
 import { paintedImage } from '../assets/painterlyArt';
 import { CharacterMotion } from '../animation/CharacterMotion';
@@ -89,7 +90,7 @@ export class PatronSupport {
     spatial: SpatialHash<Enemy>,
     actions: {
       damage: (enemy: Enemy, amount: number) => void;
-      volley: (x: number, y: number, target: Enemy, multiplier: number) => void;
+      volley: (x: number, y: number, target: Enemy, multiplier: number, index: number) => void;
     },
   ): void {
     const step = this.clock.update(run, dt);
@@ -150,8 +151,15 @@ export class PatronSupport {
       if (target) {
         const twin = researchEchoRelease(run, index);
         spirit.motion.attack();
-        actions.volley(x, y, target, effects.ancestors.damage);
-        if (twin) actions.volley(x, y, target, effects.ancestors.damage * GAME.research.twinDamage);
+        actions.volley(x, y, target, effects.ancestors.damage * remembranceEchoDamage(run), index);
+        if (twin)
+          actions.volley(
+            x,
+            y,
+            target,
+            effects.ancestors.damage * GAME.research.twinDamage * remembranceEchoDamage(run),
+            index,
+          );
       }
       spirit.motion.advance(dt, speed, false);
       renderCharacter(spirit.image, spirit.motion);

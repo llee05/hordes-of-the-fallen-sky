@@ -1,6 +1,6 @@
 # Research V2 effect delivery status
 
-All 166 IDs are registered. 100 technologies have runtime effects; 66 proposed effects remain unavailable.
+All 166 IDs are registered. 104 technologies have runtime effects; 62 proposed effects remain unavailable.
 Some working effects have unavailable prerequisites and cannot yet be purchased in play. Catalogue
 reachability tests ignore only runtime availability; they do not enable these effects.
 A fresh expedition resets all research; full expedition saves retain purchases.
@@ -74,13 +74,13 @@ the documented zero-building guard-shot adaptation. No respec is offered.
 | `on-memory-vessels`           | **Working** — Each collected shard grants echoes +1% attack speed for 4 s, stacking to +15%.                  |
 | `on-quiet-council`            | **Working** — Ancestral echoes provide +5% clan resolve protection while near camp.                           |
 | `on-ancestral-archers`        | **Working** — Every fourth echo attack launches a twin arrow at 40% echo damage.                              |
-| `on-reverent-gathering`       | Reverent Gathering: runtime effect deferred at failed patron integration gate                                 |
+| `on-reverent-gathering`       | **Working** — on-reverent-gathering echo/shard effect connected and unit tested.                              |
 | `on-whispered-orders`         | Echo Guard/Pursue stances do not exist                                                                        |
-| `on-line-of-forebears`        | Line of Forebears: runtime effect deferred at failed patron integration gate                                  |
-| `on-names-in-stone`           | Names in Stone: runtime effect deferred at failed patron integration gate                                     |
+| `on-line-of-forebears`        | **Working** — on-line-of-forebears echo/shard effect connected and unit tested.                               |
+| `on-names-in-stone`           | **Working** — on-names-in-stone echo/shard effect connected and unit tested.                                  |
 | `on-bond-of-ashes`            | Permanent echoes have no expiry lifecycle                                                                     |
 | `on-ancestral-legion`         | Coordinated echo formation ownership does not exist                                                           |
-| `on-infinite-remembrance`     | Infinite Remembrance: runtime effect deferred at failed patron integration gate                               |
+| `on-infinite-remembrance`     | **Working** — on-infinite-remembrance echo/shard effect connected and unit tested.                            |
 | `on-council-of-many-voices`   | Temporary lesser-echo splitting and expiry do not exist                                                       |
 | `su-banner-orders`            | Riders have no Focus Fire command                                                                             |
 | `su-discipline-of-the-road`   | Riders have no individual loss model                                                                          |
@@ -142,3 +142,7 @@ Land in Motion heals 0.2 Khan health/s in water and deals 15% shared damage/s in
 Golomt defaults: Ash-Born pushes 75 paces within 140; fire pulses deal 120% shared
 damage within 150 at one-second intervals; Eternal Hearth heals 0.5 Khan health/s,
 restores 0.15 resolve/s, and pushes normal foes 28 paces/s within 160.
+
+Infinite Remembrance defaults to ten pickups with gaps below four active seconds,
+then four seconds of 500-pace shard attraction and +20% echo damage. Bonus shards
+carry a nonrecursive flag through saves; pool exhaustion preserves their XP.

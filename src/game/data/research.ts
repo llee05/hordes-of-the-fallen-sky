@@ -14,6 +14,11 @@ const TAGS: Readonly<Record<string, readonly string[]>> = {
   'burkhan-guardian': ['camp', 'projectile'],
 };
 const IMPLEMENTED_HANDLERS = [
+  'on-reverent-gathering',
+  'on-line-of-forebears',
+  'on-names-in-stone',
+  'on-infinite-remembrance',
+
   'lu-floodplain',
   'lu-geomancers-eye',
   'lu-stone-and-stream',
