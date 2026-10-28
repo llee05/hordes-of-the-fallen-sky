@@ -1,3 +1,4 @@
+import { wardRateMultiplier } from './researchHybrids';
 import { GAME } from '../config';
 import type { RunState } from '../types';
 import { isKhanActive } from './khan';
@@ -45,7 +46,7 @@ export class PatronSupportClock {
     const effects = run.patrons;
     this.ancestorTimer -= dt;
     this.waterTimer -= dt;
-    this.guardianTimer -= dt;
+    this.guardianTimer -= dt * wardRateMultiplier(run);
 
     const ancestorCount = Math.min(GAME.patrons.ancestors.maximum, effects.ancestors.count);
     if (ancestorCount === 0) this.ancestorTimer = 0;

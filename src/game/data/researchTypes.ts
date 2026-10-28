@@ -34,7 +34,6 @@ export type ResearchEffect =
         | 'bc-endless-pursuit'
         | 'ee-vigilant-herders'
         | 'ee-camp-of-craftspeople'
-        | 'ee-bounty-in-scarcity'
         | 'ee-wandering-city'
         | 'ee-unbroken-seasons'
         | 'km-draw-to-breath'
@@ -83,7 +82,12 @@ export type ResearchEffect =
         | 'gu-defended-passage'
         | 'gu-fast-unpacking'
         | 'gu-iron-rimmed-wagons'
-        | 'gu-city-of-felt-and-wood';
+        | 'gu-city-of-felt-and-wood'
+        | 'hy-ghost-fletched-arrows'
+        | 'hy-living-waters'
+        | 'hy-thousand-arrows'
+        | 'hy-last-stand-of-hearth'
+        | 'hy-blood-and-ember';
     };
 export interface ResearchDefinition {
   id: string;

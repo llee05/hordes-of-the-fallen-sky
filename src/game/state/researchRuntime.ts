@@ -1,3 +1,4 @@
+import { recordHybridKill, rewardLivingWaters } from './researchHybrids';
 import { leadershipAttackSpeed } from './researchLeadership';
 import { hasDevelopment } from './camp';
 import { GAME } from '../config';
@@ -5,6 +6,16 @@ import type { RunState } from '../types';
 
 /** Optional for compatibility with older expedition saves. All timestamps use active seconds. */
 export interface ResearchRuntime {
+  ghostAttacks?: number[];
+  livingWaveKey?: string;
+  livingWaveKills?: number;
+  livingWatersCooldown?: number;
+  thousandArrowsCooldown?: number;
+  bloodEmberCooldown?: number;
+  lastStandUntil?: number;
+  lastStandCooldown?: number;
+  lastStandLow?: boolean;
+
   firstConstructionCrossing?: number;
   arrowPlatformAt?: number;
   wardInside?: string[];
@@ -365,6 +376,7 @@ export function recordResearchEnemyKill(
   const r = (run.researchRuntime ??= {});
   const key = enemyKey(enemy.slot, enemy.spawn);
   const wasMarked = isEnemyMarked(run, enemy.slot, enemy.spawn);
+  recordHybridKill(run, enemy.elite === true && wasMarked, enemy.nearCamp === true);
   if (wasMarked && ownsResearch(run, 'bc-hounds-of-the-horizon')) {
     const base = Math.max(r.momentumHoldUntil ?? 0, run.elapsed);
     r.momentumHoldUntil = Math.min(
@@ -898,6 +910,7 @@ export function researchMaterialGrazing(
 }
 export function recordWaveEnded(run: RunState): void {
   if (run.phase !== 'playing') return;
+  rewardLivingWaters(run);
   if (ownsResearch(run, 'ee-vigilant-herders')) {
     const r = (run.researchRuntime ??= {});
     r.vigilantHerdersUntil = run.elapsed + GAME.research.vigilantHerdersSeconds;
@@ -911,25 +924,11 @@ export function recordWaveEnded(run: RunState): void {
     addClanResolve(run, GAME.research.shelterWoundedResolve);
   }
 }
-export function syncBountyInScarcity(run: RunState): boolean {
-  if (!ownsResearch(run, 'ee-bounty-in-scarcity')) return false;
-  const food = run.clan.food;
-  if (food < GAME.research.scarcityLowFood) {
-    if (run.phase === 'playing') (run.researchRuntime ??= {}).scarcityActive = true;
-    return true;
-  }
-  if (food >= GAME.research.scarcityRecoverFood) {
-    if (run.researchRuntime?.scarcityActive) run.researchRuntime.scarcityActive = false;
-    return false;
-  }
-  return Boolean(run.researchRuntime?.scarcityActive);
-}
 export function researchFoodProductionMultiplier(run: RunState): number {
   let mult = 1;
   const r = run.researchRuntime;
   if (ownsResearch(run, 'ee-vigilant-herders') && (r?.vigilantHerdersUntil ?? 0) > run.elapsed)
     mult *= GAME.research.vigilantHerdersBonus;
-  if (syncBountyInScarcity(run)) mult *= GAME.research.scarcityFoodBonus;
   return mult;
 }
 export function researchPastureRecoveryBonus(run: RunState): number {

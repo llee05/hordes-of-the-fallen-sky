@@ -14,6 +14,12 @@ const TAGS: Readonly<Record<string, readonly string[]>> = {
   'burkhan-guardian': ['camp', 'projectile'],
 };
 const IMPLEMENTED_HANDLERS = [
+  'hy-ghost-fletched-arrows',
+  'hy-living-waters',
+  'hy-thousand-arrows',
+  'hy-last-stand-of-hearth',
+  'hy-blood-and-ember',
+
   'gu-arrow-platforms',
   'gu-circling-volley',
   'gu-defended-passage',
@@ -66,7 +72,6 @@ const IMPLEMENTED_HANDLERS = [
   'bc-endless-pursuit',
   'ee-vigilant-herders',
   'ee-camp-of-craftspeople',
-  'ee-bounty-in-scarcity',
   'ee-wandering-city',
   'ee-unbroken-seasons',
   'km-draw-to-breath',

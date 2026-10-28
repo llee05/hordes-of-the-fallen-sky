@@ -1,6 +1,6 @@
 # Research V2 effect delivery status
 
-All 166 IDs are registered. 114 technologies have runtime effects; 52 proposed effects remain unavailable.
+All 166 IDs are registered. 118 technologies have runtime effects; 48 proposed effects remain unavailable.
 Some working effects have unavailable prerequisites and cannot yet be purchased in play. Catalogue
 reachability tests ignore only runtime availability; they do not enable these effects.
 A fresh expedition resets all research; full expedition saves retain purchases.
@@ -10,42 +10,42 @@ the documented zero-building guard-shot adaptation. No respec is offered.
 
 | Technology ID                 | Runtime status / outstanding integration                                                                      |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `bc-scent-of-fear`            | Scent of Fear: runtime effect deferred at failed patron integration gate                                      |
-| `bc-bounding-charge`          | Bounding Charge: runtime effect deferred at failed patron integration gate                                    |
-| `bc-pack-instinct`            | Pack Instinct: runtime effect deferred at failed patron integration gate                                      |
-| `bc-hounds-of-the-horizon`    | Hounds of the Horizon: runtime effect deferred at failed patron integration gate                              |
-| `bc-wind-cutting-hooves`      | Wind-Cutting Hooves: runtime effect deferred at failed patron integration gate                                |
+| `bc-scent-of-fear`            | **Working** — bc-scent-of-fear runtime effect connected and unit tested.                                      |
+| `bc-bounding-charge`          | **Working** — bc-bounding-charge runtime effect connected and unit tested.                                    |
+| `bc-pack-instinct`            | **Working** — bc-pack-instinct runtime effect connected and unit tested.                                      |
+| `bc-hounds-of-the-horizon`    | **Working** — bc-hounds-of-the-horizon runtime effect connected and unit tested.                              |
+| `bc-wind-cutting-hooves`      | **Working** — bc-wind-cutting-hooves runtime effect connected and unit tested.                                |
 | `bc-signals-in-the-dark`      | There is no unexplored point-of-interest discovery pool                                                       |
-| `bc-throat-of-the-prey`       | Throat of the Prey: runtime effect deferred at failed patron integration gate                                 |
-| `bc-storm-chaser`             | Storm Chaser: runtime effect deferred at failed patron integration gate                                       |
-| `bc-call-of-the-pack`         | Call of the Pack: runtime effect deferred at failed patron integration gate                                   |
+| `bc-throat-of-the-prey`       | **Working** — bc-throat-of-the-prey runtime effect connected and unit tested.                                 |
+| `bc-storm-chaser`             | **Working** — bc-storm-chaser runtime effect connected and unit tested.                                       |
+| `bc-call-of-the-pack`         | **Working** — bc-call-of-the-pack runtime effect connected and unit tested.                                   |
 | `bc-great-hunt`               | Spectral wolves need a bounded summon lifecycle                                                               |
 | `bc-rider-between-storms`     | Gallop charges and per-eruption immunity need a gameplay milestone                                            |
-| `bc-endless-pursuit`          | Endless Pursuit: runtime effect deferred at failed patron integration gate                                    |
+| `bc-endless-pursuit`          | **Working** — bc-endless-pursuit runtime effect connected and unit tested.                                    |
 | `ee-shared-tools`             | Material nodes have no stationary harvesting lifecycle                                                        |
 | `ee-winter-larder`            | Protected food reserves are not a separate resource channel                                                   |
 | `ee-deep-roots`               | **Working** — While stationary, pasture exhaustion reduces herding production 20% less.                       |
 | `ee-many-hands`               | Optional building count awaits the separate camp branch                                                       |
 | `ee-milk-and-meat`            | Travelling provisions have no inventory or capacity                                                           |
-| `ee-vigilant-herders`         | Vigilant Herders: runtime effect deferred at failed patron integration gate                                   |
-| `ee-camp-of-craftspeople`     | Camp of Craftspeople: runtime effect deferred at failed patron integration gate                               |
-| `ee-bounty-in-scarcity`       | Bounty in Scarcity: runtime effect deferred at failed patron integration gate                                 |
+| `ee-vigilant-herders`         | **Working** — ee-vigilant-herders runtime effect connected and unit tested.                                   |
+| `ee-camp-of-craftspeople`     | **Working** — ee-camp-of-craftspeople runtime effect connected and unit tested.                               |
+| `ee-bounty-in-scarcity`       | Food reserves have no capacity or percentage contract.                                                        |
 | `ee-households-of-the-steppe` | Storage and work capacity have no percentage modifier contract                                                |
-| `ee-wandering-city`           | The Wandering City: runtime effect deferred at failed patron integration gate                                 |
-| `ee-unbroken-seasons`         | Unbroken Seasons: runtime effect deferred at failed patron integration gate                                   |
+| `ee-wandering-city`           | **Working** — ee-wandering-city runtime effect connected and unit tested.                                     |
+| `ee-unbroken-seasons`         | **Working** — ee-unbroken-seasons runtime effect connected and unit tested.                                   |
 | `ee-people-of-the-sky`        | Optional building categories await the separate camp branch                                                   |
-| `km-draw-to-breath`           | Draw to Breath: runtime effect deferred at failed patron integration gate                                     |
-| `km-barbed-flight`            | Barbed Flight: runtime effect deferred at failed patron integration gate                                      |
+| `km-draw-to-breath`           | **Working** — km-draw-to-breath runtime effect connected and unit tested.                                     |
+| `km-barbed-flight`            | **Working** — km-barbed-flight runtime effect connected and unit tested.                                      |
 | `km-feathered-fan`            | **Working** — Wide volleys gain +10% effective lateral coverage but -5% single-target damage.                 |
-| `km-eagle-eye`                | Eagle Eye: runtime effect deferred at failed patron integration gate                                          |
-| `km-drilling-shafts`          | Drilling Shafts: runtime effect deferred at failed patron integration gate                                    |
-| `km-arrow-rain`               | Arrow Rain: runtime effect deferred at failed patron integration gate                                         |
-| `km-still-hand`               | The Still Hand: runtime effect deferred at failed patron integration gate                                     |
-| `km-sunder-the-ranks`         | Sunder the Ranks: runtime effect deferred at failed patron integration gate                                   |
-| `km-circle-of-shafts`         | Circle of Shafts: runtime effect deferred at failed patron integration gate                                   |
-| `km-one-arrow-one-fate`       | One Arrow, One Fate: runtime effect deferred at failed patron integration gate                                |
-| `km-world-piercer`            | World-Piercer: runtime effect deferred at failed patron integration gate                                      |
-| `km-sky-darkener`             | Sky Darkener: runtime effect deferred at failed patron integration gate                                       |
+| `km-eagle-eye`                | **Working** — km-eagle-eye runtime effect connected and unit tested.                                          |
+| `km-drilling-shafts`          | **Working** — km-drilling-shafts runtime effect connected and unit tested.                                    |
+| `km-arrow-rain`               | **Working** — km-arrow-rain runtime effect connected and unit tested.                                         |
+| `km-still-hand`               | **Working** — km-still-hand runtime effect connected and unit tested.                                         |
+| `km-sunder-the-ranks`         | **Working** — km-sunder-the-ranks runtime effect connected and unit tested.                                   |
+| `km-circle-of-shafts`         | **Working** — km-circle-of-shafts runtime effect connected and unit tested.                                   |
+| `km-one-arrow-one-fate`       | **Working** — km-one-arrow-one-fate runtime effect connected and unit tested.                                 |
+| `km-world-piercer`            | **Working** — km-world-piercer runtime effect connected and unit tested.                                      |
+| `km-sky-darkener`             | **Working** — km-sky-darkener runtime effect connected and unit tested.                                       |
 | `go-warm-ashes`               | **Working** — go-warm-ashes runtime effect connected and unit tested.                                         |
 | `go-layered-felt`             | **Working** — go-layered-felt runtime effect connected and unit tested.                                       |
 | `go-common-fire`              | **Working** — go-common-fire runtime effect connected and unit tested.                                        |
@@ -110,17 +110,17 @@ the documented zero-building guard-shot adaptation. No respec is offered.
 | `hy-wolfpack-riders`          | Rider movement-speed and personal-target pursuit need an AI milestone                                         |
 | `hy-shelter-and-plenty`       | Post-crossing food consumption has no distinct event                                                          |
 | `hy-pastures-on-the-road`     | Arrival already resets pasture to 100%; this would have no benefit                                            |
-| `hy-ghost-fletched-arrows`    | Ghost-Fletched Arrows: runtime effect deferred at failed patron integration gate                              |
+| `hy-ghost-fletched-arrows`    | **Working** — hy-ghost-fletched-arrows runtime effect connected and unit tested.                              |
 | `hy-stillwater-refuge`        | **Working** — While Khan stands in a slowing field, regenerate +0.25 health/s and gain 5% resistance.         |
 | `hy-river-of-spirits`         | **Working** — Shard pickups temporarily extend slowing radius by 5 paces, stacking up to 25 for 4 s.          |
 | `hy-wagon-bastion`            | Individual wagon proximity and rider Guard assignments do not exist                                           |
 | `hy-hunt-without-end`         | Temporary hunting echoes have no expiry lifecycle                                                             |
-| `hy-living-waters`            | Living Waters: runtime effect deferred at failed patron integration gate                                      |
-| `hy-thousand-arrows`          | Thousand Arrows: runtime effect deferred at failed patron integration gate                                    |
-| `hy-last-stand-of-hearth`     | Last Stand of the Hearth: runtime effect deferred at failed patron integration gate                           |
+| `hy-living-waters`            | **Working** — hy-living-waters runtime effect connected and unit tested.                                      |
+| `hy-thousand-arrows`          | **Working** — hy-thousand-arrows runtime effect connected and unit tested.                                    |
+| `hy-last-stand-of-hearth`     | **Working** — hy-last-stand-of-hearth runtime effect connected and unit tested.                               |
 | `hy-spirit-walled-passage`    | Structures have no damage channel                                                                             |
 | `hy-ancestor-host`            | Echo interception and formation ownership do not exist                                                        |
-| `hy-blood-and-ember`          | Blood and Ember: runtime effect deferred at failed patron integration gate                                    |
+| `hy-blood-and-ember`          | **Working** — hy-blood-and-ember runtime effect connected and unit tested.                                    |
 | `hy-fletched-from-herd`       | Well-provisioned crossings have no separate provision inventory                                               |
 | `gen-mapmaker`                | There is no unexplored point-of-interest discovery pool                                                       |
 | `gen-travel-rations`          | Travelling provisions have no separate capacity                                                               |
@@ -158,3 +158,24 @@ seconds; ricochets seek a normal foe within 180 paces and cannot ricochet again.
 City of Felt and Wood covers up to 40 materials after other cost modifiers.
 Fast Unpacking applies only after a completed crossing; both first-construction
 benefits use the existing purchase transaction and never consume on preview.
+
+Of the 67 formerly deferred effects, 65 are now connected. Two remain unavailable:
+Roadward Captains requires individual wagon hit events and rider escort assignments;
+Bounty in Scarcity requires real reserve capacity to evaluate its 25%/40% thresholds.
+Absolute food amounts are not substituted for those percentages.
+
+The following working effects still have unavailable ancestors; tests grant ownership
+directly to execute their runtime mechanics: Call of the Pack, Endless Pursuit,
+Camp of Craftspeople, The Wandering City, Unbroken Seasons, Horn of the Host,
+Banner Formation, The Last Wagon, The Great Kurultai, Defended Passage, Fast Unpacking,
+City of Felt and Wood, Living Waters, Thousand Arrows, Last Stand of the Hearth.
+The purchase validator retains every prerequisite and rejects these purchases until
+the corresponding discovery, camp, provisions, wagon, or structure systems land.
+
+Hybrid defaults: Ghost-Fletched arrows deal 35% echo damage and inherit piercing
+first, otherwise fire arrows, with no extra projectile-count modifier. Living Waters
+requires three near-camp kills in the current wave, restores 2 pasture and 2 food,
+and has a 20-second cooldown. Thousand Arrows supports from riders within 400 paces.
+Last Stand accelerates the ward clock for eight seconds on crossing below 20% resolve;
+remaining below the threshold cannot retrigger it. Blood and Ember uses the shared
+healing path, including healing penalties and no revival during succession.

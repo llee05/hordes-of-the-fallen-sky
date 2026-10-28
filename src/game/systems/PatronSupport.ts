@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { claimGhostArrow } from '../state/researchHybrids';
 import { claimWardEntries } from '../state/researchGuardian';
 import { remembranceEchoDamage } from '../state/researchEchoes';
 import { claimWaterPush, researchKnockback } from '../state/researchTerrain';
@@ -91,7 +92,14 @@ export class PatronSupport {
     spatial: SpatialHash<Enemy>,
     actions: {
       damage: (enemy: Enemy, amount: number) => void;
-      volley: (x: number, y: number, target: Enemy, multiplier: number, index: number) => void;
+      volley: (
+        x: number,
+        y: number,
+        target: Enemy,
+        multiplier: number,
+        index: number,
+        ghost?: boolean,
+      ) => void;
     },
   ): void {
     const step = this.clock.update(run, dt);
@@ -151,6 +159,15 @@ export class PatronSupport {
         (step.releaseAncestors ? spatial.nearest(x, y, GAME.patrons.ancestors.range) : undefined);
       if (target) {
         const twin = researchEchoRelease(run, index);
+        if (claimGhostArrow(run, index))
+          actions.volley(
+            x,
+            y,
+            target,
+            effects.ancestors.damage * GAME.research.ghostArrowDamage,
+            index,
+            true,
+          );
         spirit.motion.attack();
         actions.volley(x, y, target, effects.ancestors.damage * remembranceEchoDamage(run), index);
         if (twin)

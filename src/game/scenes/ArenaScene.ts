@@ -25,6 +25,7 @@ import {
   wagonDamageMultiplier,
   wagonRangeMultiplier,
 } from '../state/researchGuardian';
+import { claimThousandArrows, ghostArrowModifier } from '../state/researchHybrids';
 import { volleyFactors } from '../state/volley';
 import {
   observeResearchFrame,
@@ -1704,8 +1705,8 @@ export class ArenaScene extends Phaser.Scene {
     this.updateSupport(dt);
     this.patronSupport.update(this.run, dt, this.player, this.camp, this.spatial, {
       damage: (enemy, amount) => this.damageEnemy(enemy, amount),
-      volley: (x, y, target, multiplier, index) =>
-        this.shootVolley(x, y, target, 1, multiplier, true, false, 'rider', index),
+      volley: (x, y, target, multiplier, index, ghost) =>
+        this.shootVolley(x, y, target, 1, multiplier, true, false, 'rider', index, ghost),
     });
     this.attackTimer -= dt;
     if (this.attackTimer <= 0) this.fire();
@@ -2639,6 +2640,7 @@ export class ArenaScene extends Phaser.Scene {
     charged = false,
     owner: 'khan' | 'rider' | 'wagon' | 'wagon-ricochet' = 'rider',
     echoIndex?: number,
+    ghost = false,
   ): boolean {
     const volley = volleyFactors(this.run, count, owner === 'khan', ancestral);
     const direction = Math.atan2(target.y - y, target.x - x);
@@ -2676,8 +2678,11 @@ export class ArenaScene extends Phaser.Scene {
             overrideCount: undefined,
           };
     const stillHand = owner === 'khan' ? stillHandDamageMultiplier(this.run) : 1;
-    const arrowCount = khanVolley.overrideCount ?? volley.count;
-    const basePierces = this.run.patrons.bow.pierce + (charged ? 1 : 0) + khanVolley.bonusPierces;
+    const inherited = ghostArrowModifier(this.run);
+    const arrowCount = ghost ? 1 : (khanVolley.overrideCount ?? volley.count);
+    const basePierces = ghost
+      ? inherited.pierces
+      : this.run.patrons.bow.pierce + (charged ? 1 : 0) + khanVolley.bonusPierces;
     const bonusPierces = owner === 'khan' ? researchBonusPierces(this.run, basePierces) : 0;
     let fired = false;
     for (let i = 0; i < arrowCount; i += 1) {
@@ -2702,7 +2707,7 @@ export class ArenaScene extends Phaser.Scene {
         .clearTint();
       // Preserve the original 4.5-world-unit arrow radius at the new texture scale.
       bolt.setCircle(4.5, bolt.width / 2 - 4.5, bolt.height / 2 - 4.5);
-      bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
+      bolt.fire = ghost ? inherited.fire : hasDevelopment(this.run, 'archery', 'fire-arrows');
       bolt.tempest = tempest;
       bolt.pierces = basePierces + bonusPierces;
       bolt.pins = charged && (this.run.upgrades['piercing-shaft'] ?? 0) > 0;
@@ -2747,7 +2752,7 @@ export class ArenaScene extends Phaser.Scene {
         .setAlpha(1)
         .clearTint();
       bolt.setCircle(4.5, bolt.width / 2 - 4.5, bolt.height / 2 - 4.5);
-      bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
+      bolt.fire = ghost ? inherited.fire : hasDevelopment(this.run, 'archery', 'fire-arrows');
       bolt.tempest = false;
       bolt.pierces = basePierces + bonusPierces;
       bolt.pins = false;
@@ -3759,6 +3764,32 @@ export class ArenaScene extends Phaser.Scene {
     }
     const arrowRain = claimArrowRainDrop(this.run);
     if (arrowRain) {
+      if (claimThousandArrows(this.run)) {
+        for (let i = 0; i < riderCount(this.run); i++) {
+          const rider = this.riders[i]!;
+          if (
+            Math.hypot(rider.x - this.player.x, rider.y - this.player.y) >
+            GAME.research.thousandArrowsRadius
+          )
+            continue;
+          const target = this.spatial.nearest(
+            rider.x,
+            rider.y,
+            GAME.projectile.range + this.run.patrons.bow.range,
+          );
+          if (target)
+            this.shootVolley(
+              rider.x,
+              rider.y,
+              target,
+              1,
+              GAME.research.thousandArrowsDamage *
+                0.6 *
+                this.run.patrons.banner.damage *
+                this.run.clan.campEffects.multipliers.riderDamage,
+            );
+        }
+      }
       this.spatial.forEachNearby(arrowRain.x, arrowRain.y, arrowRain.radius, (enemy) =>
         this.damageEnemy(enemy, arrowRain.damage, 'khan'),
       );
