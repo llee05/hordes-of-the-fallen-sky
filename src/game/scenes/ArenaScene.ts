@@ -10,6 +10,8 @@ import {
   researchGallop,
   wagonResearchDefence,
 } from '../state/researchRuntime';
+import { purchaseNomadicBuilding } from '../state/nomadicCamp';
+import type { NomadicBuildingId } from '../../shared/nomadicCamp.js';
 import {
   normalizeVisualSettings,
   resolveTerrainRenderer,

@@ -10,7 +10,8 @@ import { wagonResearchDefence } from '../../src/game/state/researchRuntime';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
 import { world } from './fixtures/expedition';
 import { describe, expect, it } from 'vitest';
-import { createRun, applyResearch } from '../../src/game/state/run';
+import { applyResearch } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import {
   echoInterval,
   echoPrefers,

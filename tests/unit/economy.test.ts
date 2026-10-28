@@ -3,7 +3,8 @@ import { GAME } from '../../src/game/config';
 import { ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration, buildStructure } from '../../src/game/state/clan';
 import { crossingForecast, economyForecast, economyRates } from '../../src/game/state/economy';
-import { createRun, applyResearch } from '../../src/game/state/run';
+import { applyResearch } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 describe('economy forecasts', () => {
   it.each([

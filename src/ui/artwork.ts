@@ -1,4 +1,5 @@
 import { RESEARCH_ICONS } from './researchIcons';
+import nomadicSource from '/art/nomadic-camp-buildings.json?raw';
 import propsSource from '/art/steppe-props.json?raw';
 import actorsSource from '/art/steppe-actors.json?raw';
 import clanSource from '/art/steppe-clan-motion.json?raw';

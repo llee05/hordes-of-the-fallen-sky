@@ -168,7 +168,7 @@ time, food needed en route, food after arrival rewards or rescue costs, and shor
 before arrival. Estimates assume current households and improvements without future
 battle losses or purchases; risky routes remain your choice.
 
-For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For every camp cost, dependency, effect, and cultural source, see [the camp upgrade tree](docs/camp-upgrade-tree.md). For original technology balance and specialization routes, see [the V1 reference](docs/patron-tech-tree.md); the [V2 record](docs/patron-research-v2.md) covers the expanded registry and gated integrations. For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
+For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For current camp rules and effects, see [the nomadic camp guide](docs/nomadic-camp.md); historical craft details and cultural sources remain in [the legacy camp catalog](docs/camp-upgrade-tree.md). For original technology balance and specialization routes, see [the V1 reference](docs/patron-tech-tree.md); the [V2 record](docs/patron-research-v2.md) covers the expanded registry and gated integrations. For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
 
 ## Controls
 

@@ -1,7 +1,13 @@
 import { volleyFactors } from '../../src/game/state/volley';
 import { researchGallop } from '../../src/game/state/researchRuntime';
 import { describe, expect, it } from 'vitest';
-import { createRun, applyUpgrade, applyResearch, upgradeCost } from '../../src/game/state/run';
+import {
+  createRun as createNomadicRun,
+  applyUpgrade,
+  applyResearch,
+  upgradeCost,
+} from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { UPGRADES } from '../../src/game/data/upgrades';
 import {
   researchPreview,
@@ -12,7 +18,7 @@ import { buildStructure, clanDamageMultiplier } from '../../src/game/state/clan'
 const upgrade = (id: string) => UPGRADES.find((u) => u.id === id)!;
 describe('exact progression previews', () => {
   it.each([false, true])('matches firing factors during Barrage with Tempest=%s', (tempest) => {
-    const run = createRun();
+    const run = createNomadicRun();
     run.pendingUpgrades = 20;
     for (const id of [
       'power',
