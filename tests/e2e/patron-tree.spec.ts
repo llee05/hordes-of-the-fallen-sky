@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { closeOverlayOrPause, buyNode, inspectNode, openTitle, startExpedition } from './helpers';
+import {
+  closeOverlayOrPause,
+  buyNode,
+  inspectNode,
+  openTitle,
+  startExpedition,
+  selectCampBuilding,
+} from './helpers';
 
 test('eight patron traditions offer focused routes and exclude only the chosen capstone alternatives', async ({
   page,
@@ -47,7 +54,7 @@ test('eight patron traditions offer focused routes and exclude only the chosen c
   await page.screenshot({ path: 'test-results/patron-guardian-tree.png' });
   await closeOverlayOrPause(page);
   await page.keyboard.press('b');
-  await inspectNode(page, 'archery-base');
+  await selectCampBuilding(page, 'archery');
   await expect(page.locator('.node-price')).toContainText('20 materials');
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades)).toBe(5);
 });
