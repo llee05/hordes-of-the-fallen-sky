@@ -55,7 +55,7 @@ describe('Lus terrain mechanics', () => {
   it('Geomancer highlights earlier; Warning Signs grants a bounded dodge burst and Shifting Ridge expires', () => {
     const r = run('lu-geomancers-eye', 'lu-warning-signs', 'lu-shifting-ridge');
     expect(terrainWarningBonus(r)).toBe(1);
-    resolveResearchEruption(r, 0, 0, 70, { x: 80, y: 0 }, false);
+    resolveResearchEruption(r, 0, 0, 70, { x: 80, y: 0 }, false, true);
     expect(terrainDodgeSpeed(r)).toBe(1.2);
     expect(inRidgePatch(r, 70, 0)).toBe(true);
     r.elapsed = 3;
@@ -65,18 +65,18 @@ describe('Lus terrain mechanics', () => {
   });
   it('Eye of the Mountain grants crossing immunity and throttles rock arcs; distant misses do not count as dodges', () => {
     const r = run('lu-eye-of-the-mountain', 'lu-geomancers-eye');
-    expect(resolveResearchEruption(r, 0, 0, 70, { x: 0, y: 0 }, true)).toEqual({
+    expect(resolveResearchEruption(r, 0, 0, 70, { x: 0, y: 0 }, true, true)).toEqual({
       immune: true,
       rock: true,
     });
-    expect(resolveResearchEruption(r, 0, 0, 70, { x: 0, y: 0 }, true)).toEqual({
+    expect(resolveResearchEruption(r, 0, 0, 70, { x: 0, y: 0 }, true, true)).toEqual({
       immune: true,
       rock: false,
     });
     r.elapsed = 10;
-    expect(resolveResearchEruption(r, 0, 0, 70, { x: 0, y: 0 }, true).rock).toBe(true);
+    expect(resolveResearchEruption(r, 0, 0, 70, { x: 0, y: 0 }, true, true).rock).toBe(true);
     r.elapsed = 20;
-    resolveResearchEruption(r, 0, 0, 70, { x: 1000, y: 0 }, false);
+    resolveResearchEruption(r, 0, 0, 70, { x: 1000, y: 0 }, false, false);
     expect(terrainDodgeSpeed(r)).toBe(1);
   });
   it('River That Remembers and Land in Motion use active-second bounded pulses', () => {
@@ -93,3 +93,16 @@ describe('Lus terrain mechanics', () => {
     expect(claimTerrainWave(r).wave).toBe(true);
   });
 });
+
+it.each(['lu-geomancers-eye', 'lu-warning-signs'])(
+  '%s requires entering and safely leaving the warning',
+  (id) => {
+    const r = run(id);
+    resolveResearchEruption(r, 0, 0, 70, { x: 80, y: 0 }, false, false);
+    expect(terrainDodgeSpeed(r)).toBe(1);
+    resolveResearchEruption(r, 0, 0, 70, { x: 0, y: 0 }, false, true);
+    expect(terrainDodgeSpeed(r)).toBe(1);
+    resolveResearchEruption(r, 0, 0, 70, { x: 400, y: 0 }, false, true);
+    expect(terrainDodgeSpeed(r)).toBeGreaterThan(1);
+  },
+);

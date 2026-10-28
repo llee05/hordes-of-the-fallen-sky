@@ -132,3 +132,122 @@ test('World-Piercer applies its total damage budget after armour without ending 
   expect(result.hits).toBe(4);
   expect(result.total).toBeCloseTo(result.base * 3);
 });
+
+test('allied piercing bonuses and penalties agree while ghost arrows inherit one modifier', async ({
+  page,
+}) => {
+  const results = await page.evaluate(() => {
+    const s = (window as any).__gloam.scene,
+      r = s.run;
+    for (let i = 0; i < 20 && !s.enemies.countActive(true); i++) s.spawnEnemy();
+    const enemy = s.enemies.getFirstAlive();
+    enemy.setPosition(s.player.x + 80, s.player.y);
+    enemy.definition = { ...enemy.definition, behavior: 'chaser', armor: 1, speed: 0 };
+    enemy.health = enemy.maxHealth = 10000;
+    r.upgrades = { 'km-drilling-shafts': 1, 'km-world-piercer': 1, 'km-barbed-flight': 1 };
+    r.patrons.bow.pierce = 1;
+    r.clan.momentum = 0;
+    return ['khan', 'rider', 'echo', 'wagon', 'wagon-ricochet', 'ghost'].map((owner) => {
+      for (const bolt of s.projectiles.getChildren()) bolt.disableBody(true, true);
+      s.shootVolley(
+        s.player.x,
+        s.player.y,
+        enemy,
+        1,
+        1,
+        owner === 'echo' || owner === 'ghost',
+        false,
+        owner === 'khan'
+          ? 'khan'
+          : owner === 'wagon' || owner === 'wagon-ricochet'
+            ? owner
+            : 'rider',
+        0,
+        owner === 'ghost',
+      );
+      const bolt = s.projectiles.getFirstAlive(),
+        base = bolt.damage,
+        pierces = bolt.pierces;
+      let total = 0,
+        hits = 0;
+      while (bolt.active && hits < 12) {
+        enemy.spawnId++;
+        const before = enemy.health;
+        s.hitEnemy(bolt, enemy);
+        total += before - enemy.health;
+        hits++;
+      }
+      return { owner, base, pierces, damage: bolt.damage, total, hits };
+    });
+  });
+  for (const result of results) {
+    if (result.owner === 'ghost') {
+      expect(result.pierces).toBe(1);
+      expect(result.hits).toBe(2);
+      expect(result.damage).toBe(result.base);
+    } else {
+      expect(result.pierces).toBe(8);
+      expect(result.damage).toBeLessThan(result.base);
+      expect(result.total).toBeCloseTo(result.base * 3);
+    }
+  }
+});
+
+test('Warm Ashes does not heal when an elite survives the recovery transition', async ({
+  page,
+}) => {
+  const result = await page.evaluate(() => {
+    const s = (window as any).__gloam.scene,
+      r = s.run;
+    for (let i = 0; i < 20 && !s.enemies.countActive(true); i++) s.spawnEnemy();
+    const elite = s.enemies.getFirstAlive();
+    elite.elite = true;
+    elite.health = 10000;
+    elite.setPosition(s.player.x + 300, s.player.y);
+    r.upgrades = { 'go-warm-ashes': 1 };
+    r.clan.campEffects.bonuses.commanderRecovery = 0;
+    r.health = 50;
+    r.clan.stageTime = 63.99;
+    r.encounters.phase = 'elite';
+    s.update(0, 20);
+    const combat = { health: r.health, phase: r.encounters.phase, eliteActive: elite.active };
+    for (const e of s.enemies.getChildren()) e.disableBody(true, true);
+    for (const p of s.hostileShots.getChildren()) p.disableBody(true, true);
+    r.clan.stageTime = 63.99;
+    r.encounters.phase = 'elite';
+    s.update(0, 20);
+    return { combat, clearHealth: r.health };
+  });
+  expect(result.combat).toEqual({ health: 50, phase: 'recovery', eliteActive: true });
+  expect(result.clearHealth).toBe(55);
+});
+
+test('eruption warnings reward leaving an entered area and ignore stationary proximity', async ({
+  page,
+}) => {
+  const result = await page.evaluate(() => {
+    const s = (window as any).__gloam.scene,
+      r = s.run;
+    r.upgrades = { 'lu-geomancers-eye': 1, 'lu-warning-signs': 1 };
+    const x = s.player.x,
+      y = s.player.y;
+    const hazard = (offset: number) => ({
+      x: x + offset,
+      y,
+      remaining: 1,
+      warning: s.add.graphics(),
+    });
+    s.hazards = [hazard(80)];
+    s.updateHazards(1);
+    const nearby = r.researchRuntime?.dodgeUntil ?? 0;
+    s.hazards = [hazard(0)];
+    s.updateHazards(0.1);
+    const entered = s.hazards[0].researchEntered;
+    s.player.setPosition(x + 100, y);
+    s.updateHazards(1);
+    return { nearby, entered, until: r.researchRuntime.dodgeUntil, elapsed: r.elapsed };
+  });
+  expect(result.nearby).toBe(0);
+  expect(result.entered).toBe(true);
+  expect(result.until).toBe(result.elapsed + 3);
+});

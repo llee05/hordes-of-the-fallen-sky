@@ -33,6 +33,7 @@ import { isKhanActive } from './khan';
 import { markExpedition, metricCasualties, metricStage } from './expeditionMetrics';
 import { passageProgress } from './finalStand';
 import {
+  healKhan,
   recordMaterialSpend,
   researchCommonProtection,
   researchResolveProtection,
@@ -426,11 +427,7 @@ export function advanceClan(
     clan.stageTime = 0;
     clan.pasture = 100;
     restoreResolve(run, GAME.clan.arrival.resolve + bonuses.arrivalResolve);
-    if (isKhanActive(run))
-      run.health = Math.min(
-        run.stats.maxHealth,
-        run.health + GAME.clan.arrival.health + bonuses.arrivalHealth,
-      );
+    if (isKhanActive(run)) healKhan(run, GAME.clan.arrival.health + bonuses.arrivalHealth);
     clan.message =
       clan.stage === 'final'
         ? 'The Red Eclipse. Protect your people for three minutes while the mountain passage opens.'

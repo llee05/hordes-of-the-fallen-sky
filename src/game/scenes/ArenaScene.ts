@@ -262,6 +262,7 @@ export class ArenaScene extends Phaser.Scene {
     damage?: number;
     source?: 'seer';
     researchCrossed?: boolean;
+    researchEntered?: boolean;
   }[] = [];
   private hazardTimer: number = GAME.hazards.initialDelay;
   private gems!: Phaser.Physics.Arcade.Group;
@@ -771,6 +772,7 @@ export class ArenaScene extends Phaser.Scene {
           pins: p.pins,
           echoIndex: p.echoIndex,
           precision: p.getData('precision') as boolean | undefined,
+          ghost: p.getData('ghost') as boolean | undefined,
           baseDamage: p.getData('base-damage') as number | undefined,
           dealtDamage: p.getData('dealt-damage') as number | undefined,
           rotation: p.rotation,
@@ -917,6 +919,7 @@ export class ArenaScene extends Phaser.Scene {
         p.echoIndex = undefined;
         Object.assign(p, state);
         p.setData('precision', saved.precision);
+        p.setData('ghost', saved.ghost);
         p.setData('base-damage', saved.baseDamage);
         p.setData('dealt-damage', saved.dealtDamage);
         p.setScale(hostile ? 1.1 : 1)
@@ -1707,7 +1710,13 @@ export class ArenaScene extends Phaser.Scene {
     });
     syncFieldState(this.run);
     if (syncAreaEncounter(this.areaEncounter, this.run)) this.areaThreats = createAreaThreats();
-    if (advanceEncounters(this.run)) this.audio.play('encounter');
+    if (
+      advanceEncounters(
+        this.run,
+        this.enemies.countActive(true) > 0 || this.hostileShots.countActive(true) > 0,
+      )
+    )
+      this.audio.play('encounter');
     this.updateFieldObjectives(dt);
     this.updateCrossing(dt);
     this.updateFinalStand(dt);
@@ -2696,7 +2705,7 @@ export class ArenaScene extends Phaser.Scene {
     const basePierces = ghost
       ? inherited.pierces
       : this.run.patrons.bow.pierce + (charged ? 1 : 0) + khanVolley.bonusPierces;
-    const bonusPierces = owner === 'khan' ? researchBonusPierces(this.run, basePierces) : 0;
+    const bonusPierces = ghost ? 0 : researchBonusPierces(this.run, basePierces);
     let fired = false;
     for (let i = 0; i < arrowCount; i += 1) {
       const bolt = this.projectiles.get(x, y, 'bolt') as Projectile | null;
@@ -2739,6 +2748,7 @@ export class ArenaScene extends Phaser.Scene {
       bolt.setData('base-damage', bolt.damage);
       bolt.setData('dealt-damage', 0);
       bolt.setData('precision', precision);
+      bolt.setData('ghost', ghost);
       bolt.remaining =
         GAME.projectile.lifetime *
         (owner === 'wagon' || owner === 'wagon-ricochet' ? wagonRangeMultiplier(this.run) : 1);
@@ -2777,6 +2787,7 @@ export class ArenaScene extends Phaser.Scene {
       bolt.setData('base-damage', bolt.damage);
       bolt.setData('dealt-damage', 0);
       bolt.setData('precision', precision);
+      bolt.setData('ghost', ghost);
       bolt.remaining =
         GAME.projectile.lifetime *
         (owner === 'wagon' || owner === 'wagon-ricochet' ? wagonRangeMultiplier(this.run) : 1);
@@ -2877,10 +2888,12 @@ export class ArenaScene extends Phaser.Scene {
       return;
     if (bolt.hitTargets.get(enemy) === enemy.spawnId) return;
     bolt.hitTargets.set(enemy, enemy.spawnId);
+    const ghost = bolt.getData('ghost') === true;
     const wasPiercing =
-      bolt.pierces > 0 ||
-      (this.run.upgrades['piercing-shaft'] ?? 0) > 0 ||
-      this.run.patrons.bow.pierce > 0;
+      !ghost &&
+      (bolt.pierces > 0 ||
+        (this.run.upgrades['piercing-shaft'] ?? 0) > 0 ||
+        this.run.patrons.bow.pierce > 0);
     if (wasPiercing) recordPiercingHitOnEnemy(this.run, enemy.tacticalSlot, enemy.spawnId);
     const baseDamage = (bolt.getData('base-damage') as number | undefined) ?? bolt.damage;
     const dealtSoFar = (bolt.getData('dealt-damage') as number | undefined) ?? 0;
@@ -2888,7 +2901,7 @@ export class ArenaScene extends Phaser.Scene {
 
     if (bolt.pierces > 0) {
       bolt.pierces -= 1;
-      bolt.damage = projectileDamageAfterPierce(this.run, bolt.damage);
+      if (!ghost) bolt.damage = projectileDamageAfterPierce(this.run, bolt.damage);
     } else bolt.disableBody(true, true);
     if (bolt.fire) enemy.burning = 2;
     if (bolt.pins && enemy.definition.behavior !== 'boss') {
@@ -3690,6 +3703,12 @@ export class ArenaScene extends Phaser.Scene {
           .strokeCircle(hazard.x, hazard.y, radius);
       if (
         hazard.source !== 'seer' &&
+        isKhanActive(this.run) &&
+        Math.hypot(this.player.x - hazard.x, this.player.y - hazard.y) < radius
+      )
+        hazard.researchEntered = true;
+      if (
+        hazard.source !== 'seer' &&
         !hazard.researchCrossed &&
         this.dashRemaining > 0 &&
         Math.hypot(this.player.x - hazard.x, this.player.y - hazard.y) < radius &&
@@ -3703,6 +3722,7 @@ export class ArenaScene extends Phaser.Scene {
           radius,
           this.player,
           true,
+          hazard.researchEntered === true,
         );
         if (crossing.rock)
           this.spatial.forEachNearby(hazard.x, hazard.y, GAME.research.rockArcRadius, (enemy) =>
@@ -3721,6 +3741,7 @@ export class ArenaScene extends Phaser.Scene {
               radius,
               this.player,
               this.dashRemaining > 0,
+              hazard.researchEntered === true,
             )
           : { immune: false, rock: false };
       if (eruption.rock)

@@ -44,7 +44,7 @@ describe('Cross-patron runtime mechanics', () => {
     r.clan.pasture = 99;
     r.clan.food = 10;
     for (let i = 0; i < 3; i++) recordHybridKill(r, false, true);
-    recordWaveEnded(r);
+    recordWaveEnded(r, false);
     expect(r.clan.food).toBe(12);
     expect(r.clan.pasture).toBe(100);
     expect(rewardLivingWaters(r)).toBe(false);

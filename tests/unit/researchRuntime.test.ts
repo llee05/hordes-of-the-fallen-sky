@@ -400,10 +400,10 @@ describe('Etügen Eke (Civilisation) runtime effects', () => {
     r.phase = 'playing';
     r.upgrades['ee-vigilant-herders'] = 1;
     const base = economyRates(r).foodProduction;
-    recordWaveEnded(r);
+    recordWaveEnded(r, false);
     expect(economyRates(r).foodProduction).toBeCloseTo(base * 1.3);
     r.elapsed = 10;
-    recordWaveEnded(r);
+    recordWaveEnded(r, false);
     expect(economyRates(r).foodProduction).toBeCloseTo(base * 1.3);
     r.elapsed = 29;
     expect(economyRates(r).foodProduction).toBeCloseTo(base * 1.3);

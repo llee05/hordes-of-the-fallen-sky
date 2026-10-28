@@ -47,7 +47,7 @@ export function encounterPlan(run: RunState) {
   };
 }
 /** Returns a transition once, on active simulation time; opening menus cannot consume warnings. */
-export function advanceEncounters(run: RunState): boolean {
+export function advanceEncounters(run: RunState, combatActive: boolean): boolean {
   if (run.phase !== 'playing') return false;
   const plan = encounterPlan(run),
     state = run.encounters;
@@ -58,7 +58,7 @@ export function advanceEncounters(run: RunState): boolean {
   }
   const changed = state.phase !== plan.phase;
   state.phase = plan.phase;
-  if (changed && plan.phase === 'recovery') recordWaveEnded(run);
+  if (changed && plan.phase === 'recovery') recordWaveEnded(run, combatActive);
   return changed && (plan.phase === 'warning' || plan.phase === 'elite');
 }
 export function encounterEnemy(run: RunState, random = Math.random) {

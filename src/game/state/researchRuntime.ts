@@ -79,7 +79,6 @@ export interface ResearchRuntime {
   craftspeopleRefundedCrossing?: number;
   crossingMaterialsSpent?: number;
   crossingSpentIndex?: number;
-  scarcityActive?: boolean;
   khanVolleyCount?: number;
   precisionVolleyCount?: number;
   wideVolleyCount?: number;
@@ -92,7 +91,6 @@ export interface ResearchRuntime {
   arrowRainX?: number;
   arrowRainY?: number;
   arrowRainDamage?: number;
-  stillHandShots?: number;
   embersReturnUntil?: number;
   khanStationaryNearCamp?: boolean;
   hearthCampInRange?: boolean;
@@ -289,7 +287,9 @@ export function riderAttackSpeedMultiplier(run: RunState, isNearestCompanion = f
 }
 export function riderFiringInterval(run: RunState, isNearestCompanion = false): number {
   return (
-    (run.stats.attackInterval * run.clan.campEffects.multipliers.hostInterval) /
+    (run.stats.attackInterval *
+      run.clan.campEffects.multipliers.hostInterval *
+      (run.clan.formation === 'retreat' && run.clan.momentum > 0.4 ? 0.7 : 1)) /
     riderAttackSpeedMultiplier(run, isNearestCompanion)
   );
 }
@@ -916,14 +916,14 @@ export function researchMaterialGrazing(
   const roadGrazing = Math.max(0, Math.min(pasture, 100)) / 100;
   return roadGrazing * GAME.research.wanderingCityMaterialRate;
 }
-export function recordWaveEnded(run: RunState): void {
+export function recordWaveEnded(run: RunState, combatActive: boolean): void {
   if (run.phase !== 'playing') return;
   rewardLivingWaters(run);
   if (ownsResearch(run, 'ee-vigilant-herders')) {
     const r = (run.researchRuntime ??= {});
     r.vigilantHerdersUntil = run.elapsed + GAME.research.vigilantHerdersSeconds;
   }
-  if (ownsResearch(run, 'go-warm-ashes')) {
+  if (!combatActive && ownsResearch(run, 'go-warm-ashes')) {
     healKhan(run, GAME.research.warmAshesHeal);
   }
   if (ownsResearch(run, 'go-shelter-the-wounded')) {

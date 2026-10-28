@@ -89,3 +89,20 @@ it('each rider counts its own paired releases while the Khan is absent', () => {
   }
   expect(riderPairedVolley(r, 1)).toBe(false);
 });
+
+it('preserves retreat firing cadence above forty percent momentum for every rider', () => {
+  const r = run();
+  const base = riderFiringInterval(r);
+  r.clan.formation = 'retreat';
+  r.clan.momentum = 0.4;
+  expect(riderFiringInterval(r)).toBe(base);
+  r.clan.momentum = 0.41;
+  expect(riderFiringInterval(r)).toBeCloseTo(base * 0.7);
+  for (const index of [0, 1]) {
+    expect(claimRiderVolley(r, index)).toBe(true);
+    expect(r.researchRuntime?.riderFireAt?.[index]).toBeCloseTo(base * 0.7);
+  }
+  r.upgrades['su-horn-of-the-host'] = 1;
+  recordEliteAppearance(r);
+  expect(riderFiringInterval(r)).toBeCloseTo((base * 0.7) / 1.25);
+});

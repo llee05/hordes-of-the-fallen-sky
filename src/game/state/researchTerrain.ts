@@ -90,6 +90,7 @@ export function resolveResearchEruption(
   radius: number,
   player: { x: number; y: number },
   galloping: boolean,
+  entered: boolean,
 ): { immune: boolean; rock: boolean } {
   if (run.phase !== 'playing' || run.health <= 0 || run.khan.successionRemaining > 0)
     return { immune: false, rock: false };
@@ -101,20 +102,26 @@ export function resolveResearchEruption(
     r.rockArcCooldown = run.elapsed + GAME.research.rockArcCooldown;
     rock = true;
   }
-  // Only a local dodge counts, rather than every distant eruption on the map.
-  if ((!inside || immune) && Math.hypot(player.x - x, player.y - y) <= radius + 180) {
-    if (ownsResearch(run, 'lu-geomancers-eye') && (r.dodgeCooldown ?? -Infinity) <= run.elapsed) {
-      const signs = ownsResearch(run, 'lu-warning-signs');
-      r.dodgeUntil =
-        run.elapsed +
-        (signs ? GAME.research.warningSignsSeconds : GAME.research.geomancerSpeedSeconds);
-      r.dodgeCooldown = run.elapsed + GAME.research.warningSignsCooldown;
-    }
-    if (ownsResearch(run, 'lu-shifting-ridge')) {
-      const patches = (r.ridgePatches ??= []);
-      patches.push({ x: x + radius, y, until: run.elapsed + GAME.research.ridgeSeconds });
-      if (patches.length > 16) patches.shift();
-    }
+  if (
+    (!inside || immune) &&
+    entered &&
+    (ownsResearch(run, 'lu-geomancers-eye') || ownsResearch(run, 'lu-warning-signs')) &&
+    (r.dodgeCooldown ?? -Infinity) <= run.elapsed
+  ) {
+    const signs = ownsResearch(run, 'lu-warning-signs');
+    r.dodgeUntil =
+      run.elapsed +
+      (signs ? GAME.research.warningSignsSeconds : GAME.research.geomancerSpeedSeconds);
+    r.dodgeCooldown = run.elapsed + GAME.research.warningSignsCooldown;
+  }
+  if (
+    (!inside || immune) &&
+    Math.hypot(player.x - x, player.y - y) <= radius + 180 &&
+    ownsResearch(run, 'lu-shifting-ridge')
+  ) {
+    const patches = (r.ridgePatches ??= []);
+    patches.push({ x: x + radius, y, until: run.elapsed + GAME.research.ridgeSeconds });
+    if (patches.length > 16) patches.shift();
   }
   return { immune, rock };
 }

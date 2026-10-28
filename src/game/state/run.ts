@@ -9,7 +9,6 @@ import {
   purchaseResearch,
   researchState,
   researchExcluded,
-  researchReachable,
   validateResearchPurchase,
 } from './research';
 import { GAME } from '../config';
@@ -125,7 +124,10 @@ export function redeemMasteredResearch(run: RunState): boolean {
   if (
     run.pendingUpgrades < 1 ||
     RESEARCH.some(
-      (entry) => (run.upgrades[entry.id] ?? 0) < entry.maxRank && researchReachable(run, entry.id),
+      (entry) =>
+        !entry.unavailableReason &&
+        !researchExcluded(run, entry.id) &&
+        (run.upgrades[entry.id] ?? 0) < entry.maxRank,
     )
   )
     return false;

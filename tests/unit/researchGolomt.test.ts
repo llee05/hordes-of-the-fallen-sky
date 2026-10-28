@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { createRun } from '../../src/game/state/run';
 import { damageKhan } from '../../src/game/state/khan';
 import { advancePatrons } from '../../src/game/state/patrons';
-import { clanDamageMultiplier } from '../../src/game/state/clan';
+import { GAME } from '../../src/game/config';
+import { advanceClan, beginMigration, clanDamageMultiplier } from '../../src/game/state/clan';
 import {
   claimAshBornPulse,
   claimFlameRefusesPulse,
@@ -23,16 +24,16 @@ describe('Golomt runtime effects', () => {
     const r = run('go-warm-ashes', 'go-shelter-the-wounded');
     r.health = 50;
     r.clan.integrity = 50;
-    recordWaveEnded(r);
+    recordWaveEnded(r, false);
     expect(r.health).toBeCloseTo(55 + (r.stats.maxHealth - 55) * 0.03);
     expect(r.clan.integrity).toBe(52);
     r.health = 0;
     r.khan.successionRemaining = 5;
-    recordWaveEnded(r);
+    recordWaveEnded(r, false);
     expect(r.health).toBe(0);
     r.phase = 'paused';
     const resolve = r.clan.integrity;
-    recordWaveEnded(r);
+    recordWaveEnded(r, false);
     expect(r.clan.integrity).toBe(resolve);
   });
   it('Embers Return heals surviving low-health hits with an active-time cooldown', () => {
@@ -120,4 +121,32 @@ describe('Golomt runtime effects', () => {
     r.elapsed = 70;
     expect(eternalHearthPush(r, 50)).toBe(0);
   });
+});
+
+it('arrival healing scales base and camp bonuses, converts overheal and preserves succession', () => {
+  for (const fallen of [false, true]) {
+    const r = run('go-fortress-of-felt', 'go-household-oath');
+    r.clan.food = 10000;
+    r.clan.stageTime = GAME.clan.minimumCamp;
+    r.clan.campEffects.bonuses.arrivalHealth = 10;
+    r.phase = 'route';
+    expect(beginMigration(r, 'refuge')).toBe(true);
+    r.phase = 'playing';
+    r.health = fallen ? 0 : 20;
+    r.khan.successionRemaining = fallen ? 5 : 0;
+    expect(advanceClan(r, 100)).toBe('arrived');
+    expect(r.health).toBe(fallen ? 0 : 20 + (GAME.clan.arrival.health + 10) * 0.8);
+    if (fallen) expect(r.khan.successionRemaining).toBe(5);
+  }
+  const r = run('go-household-oath');
+  r.clan.food = 10000;
+  r.clan.stageTime = GAME.clan.minimumCamp;
+  r.phase = 'route';
+  expect(beginMigration(r, 'refuge')).toBe(true);
+  r.phase = 'playing';
+  r.clan.integrity = 40;
+  r.health = r.stats.maxHealth;
+  const before = r.clan.integrity;
+  expect(advanceClan(r, 100)).toBe('arrived');
+  expect(r.clan.integrity).toBe(before + GAME.clan.arrival.resolve + 1);
 });

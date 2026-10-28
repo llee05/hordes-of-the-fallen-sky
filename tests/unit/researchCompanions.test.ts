@@ -95,13 +95,16 @@ describe('shared research runtime integration', () => {
         hits: [],
         echoIndex: 1,
         precision: false,
+        ghost: true,
         baseDamage: 10,
         dealtDamage: 20,
       },
     ];
+    w.hazards = [{ x: 1, y: 2, remaining: 1, researchEntered: true }];
     const decoded = decodeExpedition(captureExpedition(r, w));
     expect(decoded.run.researchRuntime).toEqual(r.researchRuntime);
     expect(decoded.world.projectiles).toEqual(w.projectiles);
+    expect(decoded.world.hazards).toEqual(w.hazards);
   });
 });
 

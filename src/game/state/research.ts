@@ -77,42 +77,6 @@ export function researchExcluded(
     t.requiresAny.every((r) => researchExcluded(state, r.id, new Set(visited)))
   );
 }
-export function researchReachable(
-  state: Pick<ResearchState, 'upgrades' | 'researchPurchases'>,
-  id: string,
-  visited = new Set<string>(),
-): boolean {
-  const t = RESEARCH_BY_ID.get(id);
-  if (!t || visited.has(id) || t.unavailableReason || researchExcluded(state, id)) return false;
-  visited.add(id);
-  const canSatisfy = (r: ResearchRequirement) =>
-    (state.upgrades[r.id] ?? 0) >= r.rank || researchReachable(state, r.id, new Set(visited));
-  if (!t.requiresAll.every(canSatisfy)) return false;
-  if (t.requiresAny.length > 0 && !t.requiresAny.some(canSatisfy)) return false;
-  const spent = researchSpend(state);
-  for (const p of PATRONS) {
-    const minimum = t.minSpendByPatron[p.id] ?? 0;
-    if (spent[p.id] >= minimum) continue;
-    let maxPotential = spent[p.id];
-    const groupMax = new Map<string, number>();
-    for (const other of RESEARCH) {
-      if (other.id === id || other.patronIds.length !== 1 || other.patronIds[0] !== p.id) continue;
-      const owned = Math.min(other.maxRank, state.upgrades[other.id] ?? 0);
-      if (owned >= other.maxRank || !researchReachable(state, other.id, new Set(visited))) continue;
-      let remainingCost = 0;
-      for (let i = owned; i < other.maxRank; i++) remainingCost += other.pointCostPerRank[i]!;
-      if (other.exclusiveGroup)
-        groupMax.set(
-          other.exclusiveGroup,
-          Math.max(groupMax.get(other.exclusiveGroup) ?? 0, remainingCost),
-        );
-      else maxPotential += remainingCost;
-    }
-    for (const cost of groupMax.values()) maxPotential += cost;
-    if (maxPotential < minimum) return false;
-  }
-  return true;
-}
 /** All blockers are computed before mutation. expectedRank is the current owned rank. */
 export function validateResearchPurchase(
   state: ResearchState,

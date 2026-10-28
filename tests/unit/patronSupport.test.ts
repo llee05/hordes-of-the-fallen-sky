@@ -14,8 +14,8 @@ function enabledRun() {
   return run;
 }
 
-const allFire = { ancestorCount: 3, releaseAncestors: true, pulseWater: true, ward: true };
-const noneFire = { ancestorCount: 3, releaseAncestors: false, pulseWater: false, ward: false };
+const allFire = { ancestorCount: 3, pulseWater: true, ward: true };
+const noneFire = { ancestorCount: 3, pulseWater: false, ward: false };
 
 describe('patron support cadence', () => {
   it('freezes every timer and release outside playing', () => {
@@ -57,33 +57,15 @@ describe('patron support cadence', () => {
     expect(clock.update(run, 0.25)).toEqual(allFire);
   });
 
-  it('releases ancestors immediately, then at the configured active-second interval', () => {
-    const run = enabledRun();
-    run.patrons.ancestors.interval = 1.5;
-    const clock = new PatronSupportClock();
-    expect(clock.update(run, 0.25)?.releaseAncestors).toBe(true);
-    for (let cycle = 0; cycle < 3; cycle++) {
-      for (let tick = 0; tick < 5; tick++)
-        expect(clock.update(run, 0.25)?.releaseAncestors).toBe(false);
-      expect(clock.update(run, 0.25)?.releaseAncestors).toBe(true);
-    }
-    run.patrons.ancestors.interval = 0.5;
-    expect(clock.update(run, 1.5)?.releaseAncestors).toBe(true);
-    expect(clock.capture().ancestorTimer).toBe(0.5);
-    expect(clock.update(run, 0.25)?.releaseAncestors).toBe(false);
-    expect(clock.update(run, 0.25)?.releaseAncestors).toBe(true);
-  });
-
-  it('bounds ancestors and resets their timer while none are present', () => {
+  it('bounds ancestor presentation without owning their firing cadence', () => {
     const run = enabledRun();
     const clock = new PatronSupportClock();
+    clock.restore({ ancestorTimer: 999, waterTimer: 0, guardianTimer: 0 });
     run.patrons.ancestors.count = 999;
     expect(clock.update(run, 0.25)?.ancestorCount).toBe(GAME.patrons.ancestors.maximum);
-    run.patrons.ancestors.count = 0;
-    expect(clock.update(run, 0.25)).toMatchObject({ ancestorCount: 0, releaseAncestors: false });
     expect(clock.capture().ancestorTimer).toBe(0);
-    run.patrons.ancestors.count = 1;
-    expect(clock.update(run, 0.25)?.releaseAncestors).toBe(true);
+    run.patrons.ancestors.count = 0;
+    expect(clock.update(run, 0.25)?.ancestorCount).toBe(0);
   });
 
   it('fires water and wards on their own cadences', () => {
@@ -130,7 +112,7 @@ describe('patron support cadence', () => {
     const clock = new PatronSupportClock();
     expect(clock.update(run, 100)).toEqual(allFire);
     expect(clock.capture()).toEqual({
-      ancestorTimer: run.patrons.ancestors.interval,
+      ancestorTimer: 0,
       waterTimer: GAME.patrons.water.pulseEvery,
       guardianTimer: GAME.patrons.guardian.wardEvery,
     });

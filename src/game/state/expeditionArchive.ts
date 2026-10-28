@@ -64,6 +64,7 @@ export interface ProjectileArchive extends BodyArchive {
   pins: boolean;
   echoIndex?: number;
   precision?: boolean;
+  ghost?: boolean;
   baseDamage?: number;
   dealtDamage?: number;
   rotation: number;
@@ -106,6 +107,7 @@ export interface WorldArchive {
     damage?: number;
     source?: 'seer';
     researchCrossed?: boolean;
+    researchEntered?: boolean;
   })[];
   areaEncounter: AreaEncounterState;
   areaThreats: AreaThreatState;
@@ -350,7 +352,6 @@ const optional: Record<string, Record<string, Rule>> = {
         craftspeopleRefundedCrossing: integer,
         crossingMaterialsSpent: positive,
         crossingSpentIndex: integer,
-        scarcityActive: boolean,
         khanVolleyCount: integer,
         precisionVolleyCount: integer,
         wideVolleyCount: integer,
@@ -363,7 +364,6 @@ const optional: Record<string, Record<string, Rule>> = {
         arrowRainX: number,
         arrowRainY: number,
         arrowRainDamage: positive,
-        stillHandShots: integer,
         embersReturnUntil: number,
         khanStationaryNearCamp: boolean,
         hearthCampInRange: boolean,
@@ -527,6 +527,7 @@ const projectile = object(
     source: string,
     echoIndex: integer,
     precision: boolean,
+    ghost: boolean,
     baseDamage: positive,
     dealtDamage: positive,
   },
@@ -590,7 +591,13 @@ const worldShape = object({
   hazards: list(
     object(
       { x: number, y: number, remaining: number },
-      { radius: positive, damage: positive, source: oneOf(['seer']), researchCrossed: boolean },
+      {
+        radius: positive,
+        damage: positive,
+        source: oneOf(['seer']),
+        researchCrossed: boolean,
+        researchEntered: boolean,
+      },
     ),
     100,
   ),

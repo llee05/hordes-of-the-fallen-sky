@@ -186,3 +186,12 @@ per-spawn slow/root history; `researchCompanions.ts` selects the nearest compani
 and releases echoes; `researchLeadership.ts` owns Banner Formation and rider
 release clocks. All clocks use active seconds, and their state is retained by
 `expeditionArchive.ts`. Rider/echo attack speed affects cadence rather than damage.
+
+Warm Ashes is checked at the encounter recovery transition and grants no healing
+while enemies or hostile projectiles remain active. Crossing-arrival healing,
+including camp bonuses, follows Fortress of Felt and Household Oath rules.
+Geomancer's Eye and Warning Signs require entering a warning area and safely
+leaving it, or crossing it under Eye of the Mountain's Gallop protection.
+Normal allied piercing arrows receive Drilling Shafts and World-Piercer bonuses
+and penalties together; Ghost-Fletched arrows retain only their selected modifier.
+Echo releases use per-echo active-time clocks; legacy ancestor timers remain readable.
