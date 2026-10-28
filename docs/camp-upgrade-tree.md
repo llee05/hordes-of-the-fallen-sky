@@ -2,19 +2,13 @@
 
 This is the legacy craft catalog retained for save migration and its cultural references. The current five-core/five-choice system is documented in [the nomadic camp guide](nomadic-camp.md).
 
-The following tables catalogue the **37 original household crafts** retained by the estate upgrade. The full camp now has eight facilities, 55 level/craft developments, five central tiers, and six two-rank internal paths; see [the nomadic camp model](nomadic-camp.md) for level gates, plots, and save behavior. Its new crafts draw on Mongolian household work, herding, preserved provisions, mounted organisation, and relay travel. Every listed effect below is implemented; the numerical bonuses and supernatural attacks are original game design. [Cultural context and sources](#cultural-context-and-sources) distinguish those adaptations from historical or living practice.
+The following tables catalogue the **37 original household crafts** used by older saves. They draw on Mongolian household work, herding, preserved provisions, mounted organisation, and relay travel. The numerical bonuses and supernatural attacks are original game design. [Cultural context and sources](#cultural-context-and-sources) distinguish those adaptations from historical or living practice.
 
-## Purchase and travel rules
+## Reading the legacy catalog
 
-Open **B**, controller **X**, or Develop camp. The world pauses. Spend materials, and Spirit where listed; construction reserves workers on establishment. The household crafts below require no extra workers; internal encampment developments use their own allowance and worker reservation. The starting Family gers are already established. The seven initially absent building definitions total **170 materials, 12 Spirit, and 13 workers** before Guardian discounts. A new clan can establish only the facilities that fit its unlocked plots, reaching six plots including Family gers at camp tier 5; the total is a catalogue comparison, not an all-building purchase route. The starting eight people also need household growth to staff larger work crews.
+These tables and diagrams describe historical purchase paths, not choices available in the current camp. Stable IDs, dependencies, exclusive groups and prices remain relevant when validating old saves and reconstructing retired contributions for migration. See [the current camp guide](nomadic-camp.md#portable-checkpoints-and-full-expeditions) for mapping and refunds, and [the checkpoint contract](camp-checkpoints.md) for continuation behavior.
 
-The five original branches retain their **either/or specialization pair**. Their shared craft is independent of that choice, and each specialization has its own deeper development. Choosing one specialization excludes the other and its descendants. Feltmakers, provisions, and relay have four complementary crafts each; these can be learned together. Feltmakers also have a mutually exclusive fourth-level pair, described in the nomadic camp guide. Their final craft requires both named parents, not either parent.
-
-Every node is a one-time purchase. The original 37 crafts include alternatives: their theoretical maximum is **27 compatible crafts** across all eight facilities, before the new clan’s plot allowance limits which facilities it can establish. There is no fixed two-level limit. Resources, effects, staffing, and chosen paths travel through every crossing. Construction waits until the caravan unpacks. New Game resets the clan; Continue clan camp restores its portable checkpoint into a fresh expedition.
-
-Personal regeneration and arrival healing require a living Khan. They never bypass the ten-second succession countdown; camp resources and clan recovery still work while a successor is being chosen.
-
-All prices below are **individual material prices before discounts**; `+S` indicates additional stored Spirit. Two Guardian foundation ranks apply ×0.81 to each material price, rounded up. Workers and Spirit are unaffected. Percentage effects multiply with other camp upgrades, patron effects, and formations; flat recovery and arrival rewards add. Timers use active gameplay seconds and freeze in menus. “Stationary” includes the final stand.
+All prices below are **individual material prices before discounts**; `+S` indicates additional stored Spirit. Guardian material discounts round up. Percentage effects multiply; flat recovery and arrival rewards add. The legacy callbacks remain in the source for archive reconstruction, not for new purchases.
 
 ## Family gers · households and hospitality
 
@@ -215,11 +209,9 @@ All four developments can be learned together. This is the fictional clan's cour
 
 With Borts stores, crossing supply rewards add **23 food and 10 materials** before route rewards. These supplies are paid only when a crossing completes, including the third crossing; opening menus, setting off, or replaying story records never pays them again. Failed crossings grant no arrival reward. Family messengers adds people only on the blue-banner route, without adding extra rescued riders. Arrival bonuses do not repeat during the final stand.
 
-## Simulation and extension points
+## Legacy implementation
 
-[data/clan.ts](../src/game/data/clan.ts) defines stable IDs, categories, costs, dependencies, exclusive groups, immediate grants, and typed ongoing effects. [config.ts](../src/game/config.ts) holds the new balance values in `GAME.camp`. [state/camp.ts](../src/game/state/camp.ts) creates neutral effect state and applies successful purchases once; [state/clan.ts](../src/game/state/clan.ts) validates purchases and drives economy, protection, transport, and arrival rewards. Combat and recovery consume those effects through the existing scene/patron systems.
-
-The camp scene displays occupied and empty plots. Search or a construction chooser exposes all eight facility types. Selecting a site opens an anchored parchment; its optional foldout derives levels and forks from content definitions. Accent-insensitive search highlights sites by building name, craft, or effect, finding `ortoo` as well as `Örtöö`. The chronicle lists every learned development. The workshop, provisioning ger, and relay have representations using existing local painted props; felt and provisions pack into carts while travelling. See [the progression UI guide](progression-ui.md) for further extensions.
+[data/clan.ts](../src/game/data/clan.ts) and [data/campEstate.ts](../src/game/data/campEstate.ts) retain the historical content definitions. [state/nomadicCampMigration.ts](../src/game/state/nomadicCampMigration.ts) maps ownership, refunds retired purchases and replaces their ongoing contributions. For current authoring, see [the nomadic camp guide](nomadic-camp.md#state-rendering-and-simulation).
 
 ## Cultural context and sources
 

@@ -32,23 +32,23 @@ crossing and final stand remain at the fictional Heart of the Steppe. See
 
 ## 2. Starting state and resources
 
-| Resource / measure | Start                   | Sources                                                                                                          | Uses and consequences                                                                                                                                                                                                      |
-| ------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Food               | 70                      | Grazing, herding grounds, winter stores, river crossings, story choices, rewards after mastering every tradition | Consumed by people, including during migration. Blue-banner rescue costs 18 food on arrival. Zero food triggers starvation checks.                                                                                         |
-| Materials          | 50                      | Passive camp gathering, more population, ridge crossings, story choices, rewards after mastering every tradition | Construct and specialize camp buildings. No ongoing building maintenance cost.                                                                                                                                             |
-| Spirit             | 0                       | Kills grant `enemy XP ×0.4` (×0.5 with Spirit thread); ridge arrival grants 10; some story choices grant 4       | Pay for the spirit sanctuary and its specialization. Stored Spirit does not buy tradition ranks. It is not consumed by lightning, wards, arrows, or migration.                                                             |
-| Spirit shards / XP | Level 1, 0 XP           | Collect drops from defeated enemies                                                                              | Fill the current level's XP threshold and bank knowledge points for the tech tree. Collection does not deduct stored Spirit.                                                                                               |
-| People             | 8                       | Family-ger development; blue-banner arrivals                                                                     | Produce materials, consume food, provide worker capacity. Losses come from starvation and resolve damage. Population gains are capped at 120.                                                                              |
-| Workers            | 0 assigned of 8         | Existing population                                                                                              | Construction requires sufficient total population for assigned jobs. Workers are reserved by established buildings, not spent. No manual job reassignment or worker production penalty is simulated.                       |
-| Herd / horses      | 3                       | Establish herding grounds (+4); river arrival (+2)                                                               | Each horse increases migration mobility by 1.2% of the base. Starvation and clan losses remove livestock. Route rewards cap herd at 40. Herd size does not independently change grazing income or limit rider recruitment. |
-| Clan resolve       | 100 / 100               | Hearthkeepers, felt armor, Sülde kills, arrivals (+12), [Skybreaker defeat](final-stand.md), story choices (+5)  | Clan-wide survival meter, internally called integrity. Attacks and starvation reduce it; crossing damage thresholds can also cost people and livestock.                                                                    |
-| Khan health        | 100 / 100               | Golomt, Börte Chino, arrivals (+25), full recovery after mastering all patrons                                   | Personal health; at zero, choose a new Khan after 10 active seconds while the clan fights on. Enemy contact, hostile shots, and eruptions damage it.                                                                       |
-| Pasture            | 100%                    | Refreshed on arrival; Etügen reduces depletion and adds recovery                                                 | Scales food and material production. Without patron bonuses, depletes to zero over 210 stationary seconds, including the final stand. Does not deplete during crossings.                                                   |
-| Momentum           | 0–100%                  | Riding builds it; stopping drains it                                                                             | Improves Khan arrow damage and targeting range; activates moving formation bonuses.                                                                                                                                        |
-| Threat             | 0–100%                  | Region and time in the current stage                                                                             | A pressure indicator. Spawn intervals use their own stage/region formula; the displayed threat value is not an additional damage multiplier.                                                                               |
-| Identity           | Iron 0, Sky 0, Wander 0 | Construction, specialization, route choices, story choices                                                       | Determines the clan's descriptive identity and epilogue. Grants no additional stat modifiers or technology locks.                                                                                                          |
+| Resource / measure | Start                   | Sources                                                                                                                   | Uses and consequences                                                                                                                                                                                                      |
+| ------------------ | ----------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Food               | 70                      | Grazing, camp production, river crossings, story choices, rewards after mastering every tradition                         | Consumed by people, including during migration. Blue-banner rescue costs 18 food on arrival. Zero food triggers starvation checks.                                                                                         |
+| Materials          | 50                      | Passive camp gathering, more population, ridge crossings, story choices, rewards after mastering every tradition          | Construct and upgrade camp buildings. No ongoing building maintenance cost.                                                                                                                                                |
+| Spirit             | 0                       | Kills grant `enemy XP ×0.4` (×0.5 with Spirit thread); ridge arrival grants 10; some story choices grant 4                | Construct and upgrade spiritual and cultural buildings. Stored Spirit does not buy tradition ranks. It is not consumed by lightning, wards, arrows, or migration.                                                          |
+| Spirit shards / XP | Level 1, 0 XP           | Collect drops from defeated enemies                                                                                       | Fill the current level's XP threshold and bank knowledge points for the tech tree. Collection does not deduct stored Spirit.                                                                                               |
+| People             | 8                       | Blue-banner arrivals, field rescues, story choices                                                                        | Produce materials, consume food, provide worker capacity. Losses come from starvation and resolve damage. Population gains obey the camp capacity described in [the camp guide](nomadic-camp.md).                          |
+| Workers            | 0 assigned of 8         | Existing population                                                                                                       | Construction requires sufficient total population for assigned jobs. Workers are reserved by established buildings, not spent. No manual job reassignment or worker production penalty is simulated.                       |
+| Herd / horses      | 3                       | Field rescues (+3); river arrival (+2)                                                                                    | Each horse increases migration mobility by 1.2% of the base. Starvation and clan losses remove livestock. Route rewards cap herd at 40. Herd size does not independently change grazing income or limit rider recruitment. |
+| Clan resolve       | 100 / 100               | Communal Hearth, Ancestral Standard, Sülde kills, arrivals (+12), [Skybreaker defeat](final-stand.md), story choices (+5) | Clan-wide survival meter, internally called integrity. Attacks and starvation reduce it; crossing damage thresholds can also cost people and livestock.                                                                    |
+| Khan health        | 100 / 100               | Golomt, Börte Chino, arrivals (+25), full recovery after mastering all patrons                                            | Personal health; at zero, choose a new Khan after 10 active seconds while the clan fights on. Enemy contact, hostile shots, and eruptions damage it.                                                                       |
+| Pasture            | 100%                    | Refreshed on arrival; Etügen reduces depletion and adds recovery                                                          | Scales food and material production. Without patron bonuses, depletes to zero over 210 stationary seconds, including the final stand. Does not deplete during crossings.                                                   |
+| Momentum           | 0–100%                  | Riding builds it; stopping drains it                                                                                      | Improves Khan arrow damage and targeting range; activates moving formation bonuses.                                                                                                                                        |
+| Threat             | 0–100%                  | Region and time in the current stage                                                                                      | A pressure indicator. Spawn intervals use their own stage/region formula; the displayed threat value is not an additional damage multiplier.                                                                               |
+| Identity           | Iron 0, Sky 0, Wander 0 | Construction, upgrades, route choices, story choices                                                                      | Determines the clan's descriptive identity and epilogue. Grants no additional stat modifiers or technology locks.                                                                                                          |
 
-The opening camp already has **Family gers at level 1**, represented by two tents. These tents are one logical building entry. The Khan begins with one accompanying rider, one arrow per personal volley, and no learned traditions.
+The opening camp foundations are described in [the nomadic camp guide](nomadic-camp.md). The Khan begins with one accompanying rider, one arrow per personal volley, and no learned traditions.
 
 ### Economy and scarcity
 
@@ -64,11 +64,10 @@ or rescue cost. Arrival supplies cannot cover an earlier shortage on the road.
 The HUD shows net food per second and the projected time until stores empty, or
 whether food lasts to arrival/the final passage. Shortages within 30 active seconds
 add a persistent warning, including for large clans with more than 15 food remaining.
-The camp inspector displays current production, consumption, net food, and material
-rates. Eligible development cards show changes to those rates, immediate food grants,
-food duration, and changes to the range of crossing food costs by evaluating the actual purchase on an isolated run copy through
-`state/developmentPreview.ts`. Resource costs may be planned for, but missing workers,
-prerequisites, learned crafts, and exclusive choices still block a preview. Inspection
+The camp Provisions panel displays current production, consumption, net food, and material
+rates. Building inspectors preview the actual purchase on an isolated run copy through
+`ui/nomadicCampModel.ts` and `state/progressionPreview.ts`. Resource costs may be planned
+for, but missing workers, prerequisites, or construction locations still block a preview. Inspection
 never spends resources, grants rewards or guidance, or writes to the actual chronicle.
 Route estimates show travel time, food consumed before arrival, food after the arrival
 transaction, and any en-route shortfall; they never disable a route.
@@ -76,13 +75,13 @@ transaction, and any en-route shortfall; they never disable a route.
 Let `P = pasture / 100`, `N = population`, and `W = 0.7` at Silent River or `1` elsewhere:
 
 ```text
-Food consumed / second = N × 0.025 × (0.5 with Winter stores, otherwise 1) × Etügen consumption modifier × camp consumption modifier
+Food consumed / second = N × 0.025 × Etügen consumption modifier × camp consumption modifier
 Food produced / second while stationary = (0.65 + 0.65 if Herding grounds exist) × P × W × Etügen food modifier × camp food production modifier
 Materials produced / second while stationary = (0.28 + N × 0.018) × P × Etügen material modifier × camp material production modifier
 Pasture lost / second while stationary = (100 / 210) × Etügen depletion modifier × camp depletion modifier − Etügen recovery
 ```
 
-At the starting camp, full pasture produces 0.65 food/second against consumption of 0.2, for a net gain of 0.45. Materials initially grow by 0.424/second. Production declines with pasture; consumption does not. There is no passive Spirit income, trading, crafting inventory, housing capacity, or individually simulated gathering unit.
+Starting production includes the free core buildings’ continuing effects. Production declines with pasture; consumption does not. There is no passive Spirit income, trading, crafting inventory, or individually simulated gathering unit. Population capacity follows the Khan’s Ger level; see [the camp guide](nomadic-camp.md).
 
 During migration, food is consumed but food/material production stops. When food is zero at a 12-second stage-time boundary, starvation removes one person and one horse, records a casualty, and deals 8 raw resolve damage. This can cause an additional resolve-threshold casualty. Checks follow the stage clock rather than a fresh 12-second grace period after food runs out.
 
@@ -91,13 +90,12 @@ Resolve damage multiplies all applicable protection:
 ```text
 Final resolve damage = raw damage
                      × 0.7 with Caravan guard
-                     × 0.5 with Felt armor
-                     × 0.8 with Ancestral ward
                      × Guardian patron protection (1 before research)
-                     × camp craft protection (1 before crafts)
+                     × camp protection modifier
+                     × starting-tradition protection modifier
 ```
 
-The three camp/formation bonuses together leave 28% of raw damage. Two Guardian foundation ranks and Hold the passage multiply this by 0.648, leaving 18.144% before further camp crafts. Each downward 20-point resolve band crossed by a hit removes one person, capped at the remaining population: a hit from 100 to 80 loses one, to 60 loses two, and to 40 loses three. Count bands after all protection, using resolve clamped at zero; partial damage within a band causes no casualty. A hit crossing any number of bands still removes at most one horse, with herd size floored at zero. Chronicle entries and companion reactions reflect the actual casualties from the hit. Repairs can restore resolve, but do not resurrect casualties.
+Each downward 20-point resolve band crossed by a hit removes one person, capped at the remaining population: a hit from 100 to 80 loses one, to 60 loses two, and to 40 loses three. Count bands after all protection, using resolve clamped at zero; partial damage within a band causes no casualty. A hit crossing any number of bands still removes at most one horse, with herd size floored at zero. Chronicle entries and companion reactions reflect the actual casualties from the hit. Repairs can restore resolve, but do not resurrect casualties.
 
 ## 3. Spirit-stone / patron tech tree
 
@@ -115,7 +113,7 @@ flowchart TD
     Foundation --> B[Practice B: 1 point]
     A --> CapstoneA[Focused capstone A: 2 points, foundation rank 2]
     B --> CapstoneB[Alternative capstone B: 2 points, foundation rank 2]
-    Spirit --> Sanctuary[Spirit sanctuary and its chosen specialization]
+    Spirit --> Camp[Spiritual and cultural camp buildings]
 ```
 
 The XP threshold from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and so on. Excess XP carries over; a pickup can earn several levels and every earned point remains banked. Level-ups never open a popup or pause combat. Open the **Patron tech tree** with **T**, controller **LB**, the HUD, Pause, or the chronicle’s Traditions tab. Foundations and practices cost **one knowledge point per rank**. Practices unlock after foundation rank 1. A capstone requires foundation rank 2 and one named practice, and costs **two points**. Choose one capstone per patron; mix practices and patrons freely. A focused route costs five points. There are no random offers or rerolls. Archery has three capstones: precision, piercing, and wide volleys. Repeated percentage modifiers multiply except Lus's two additive slow ranks.
@@ -141,85 +139,7 @@ Each enemy drops its defined XP independent of scaled health. Shards begin follo
 
 ## 4. Camp development and upgrade tree
 
-Press **B** to open one painted, paused nomadic camp. Click a building or plot to open a nearby parchment with its level, description, benefits, exact costs, requirements, and explicit purchase action. Unfold its vertical level path or exclusive specialisations when needed; there are no permanent side panels. Search, provisions, and combinations use temporary parchments. Escape or controller Back dismisses the parchment first, then leaves the camp. The explicit Return button leaves immediately. Ambient smoke, fire, grass, and banners respect reduced motion; simulation and character poses stay frozen.
-
-The central **Clan Encampment** has five tiers, from Wandering Clan to Imperial Ordo, unlocking **2, 3, 4, 5, then 6 building plots**. Family gers occupy the first plot permanently. All eight facility types remain available; a clan chooses which facilities to establish within its unlocked space. Facilities have three levels; archery, sanctuary, wagons, and feltmakers have an exclusive fourth-level specialisation. The catalogue retains the 37 original crafts and adds 16 common level upgrades and two felt choices, for **55 developments / 63 facility nodes including establishment**. Ancestor exclusions and shared, multi-parent crafts still apply.
-
-The encampment also unlocks an independent allowance of **1, 2, 3, 4, then 6 internal developments**. Clan Council, Ancestral Hearth, Master Craftsmen, War Council, Supply Organisation, and Travelling Merchants each have two ranks with actual continuing gameplay effects. These reserve workers, but never building plots. Higher camp tiers require improved Family gers; higher facility levels require the appropriate camp tier. See [the portable camp guide](nomadic-camp.md) for definitions, exact costs, and effects.
-
-Purchases are immediate, validated, and charged once. Every acquired tier, facility, craft, internal rank, and effect travels with the clan. Construction is unavailable while packed. There is no duplicate establishment, demolition, respecialisation, or building upkeep. Bases and new internal developments reserve workers; zero-worker improvements remain usable after population losses. Existing camps without the new estate fields retain their prior craft rules and facilities on import.
-
-| Building                 | Establishment cost      | Workers | Core effect and development direction                                                                                                                   |
-| ------------------------ | ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Family gers**          | Provided at the start   | 0       | Hearthkeepers (+6 people and 0.25 stationary resolve/second) or Refugee beacons (+10 people); shared felt lining and deeper hospitality/apprenticeship. |
-| **Archery grounds**      | 24 materials            | 3       | +3 riders and two formations. Fire arrows or Veteran riders, shared bow craft, then resin or Arban drills.                                              |
-| **Herding grounds**      | 20 materials            | 2       | +4 horses, +0.65 base food/second, Feigned retreat. Remount herds or Winter stores, shared seasonal grazing, then reserve horses or dairy.              |
-| **Spirit sanctuary**     | 20 materials +12 Spirit | 2       | Lightning. Wind shamans or Ancestral ward, shared remembrance, then storm watch or ancestral tales.                                                     |
-| **Wagon circle**         | 26 materials            | 1       | Camp/caravan volleys. War carts or Felt armor, shared lashings, then wheelwrights or layered screens.                                                   |
-| **Feltmakers’ workshop** | 22 materials            | 2       | Material gathering ×1.15; wool sorting, protective covers, folding pack frames, and master felt craft.                                                  |
-| **Provisioning ger**     | 28 materials            | 2       | +25 food and food production ×1.15; aaruul, borts, hospitality, and shared arrival provisions.                                                          |
-| **Örtöö relay**          | 30 materials            | 1       | Migration mobility ×1.08; scouts, supplies, family messengers, and fresh horses on arrival.                                                             |
-
-The seven initially absent base definitions total **170 materials +12 Spirit** before patron discounts; they cannot all fit within the six-plot allowance in a new clan. The base Family gers definition would cost 18 materials and welcome six people, but cannot be purchased again in a normal run. Original specializations cost 1.5× base resources, rounded up: 27 for gers, 36 for archery, 30 for herding, 30 +18 Spirit for the sanctuary, and 39 for wagons. The new crafts have explicit individual prices. Guardian discounts multiply every material price by 0.9 per foundation rank, rounded up; Spirit and worker requirements stay unchanged.
-
-```mermaid
-flowchart TD
-    Camp[Travelling camp: materials, Spirit, workers] --> Ger[Family gers: provided]
-    Camp --> Bow[Archery grounds]
-    Camp --> Herd[Herding grounds]
-    Camp --> Spirit[Spirit sanctuary]
-    Camp --> Wagon[Wagon circle]
-    Camp --> Felt[Feltmakers' workshop]
-    Camp --> Food[Provisioning ger]
-    Camp --> Relay[Örtöö relay]
-    Felt --> Wool[Wool sorting]
-    Felt --> Covers[Weatherproof covers]
-    Wool --> Master[Master felt craft: both required]
-    Covers --> Master
-    Food --> Aaruul[Aaruul drying]
-    Food --> Borts[Borts stores]
-    Aaruul --> Shared[Shared provisions: both required]
-    Borts --> Shared
-    Relay --> Scouts[Pasture scouts]
-    Relay --> Caches[Supply caches]
-    Scouts --> Horses[Fresh horses: both required]
-    Caches --> Horses
-```
-
-### Original specializations and deeper crafts
-
-| Branch           | Original specialization benefits                                                                                                                      | Shared craft                                                        | Deeper development after that specialization                                                                                                                                                                                              |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Family gers      | **Hearthkeepers:** +6 people and 0.25 stationary resolve/second; **Refugee beacons:** +10 people.                                                     | **Felt-lined households:** 22 materials, clan damage ×0.9.          | **A place at every hearth:** 36, requires Hearthkeepers, +0.15 stationary resolve/second and +10 arrival healing. **Household apprentices:** 36, requires Refugee beacons, materials ×1.2.                                                |
-| Archery grounds  | **Fire arrows:** 2-second burns at shared damage ×0.45/second; **Veteran riders:** +3 riders, companion multiplier 0.6 →0.9.                          | **Horn-and-sinew bowyers:** 28, +30 Khan/companion targeting range. | **Prepared resin bundles:** 42, requires Fire arrows, burn damage ×1.3. **Arban drills:** 42, requires Veterans, companion damage ×1.2 and host firing interval ×0.9.                                                                     |
-| Herding grounds  | **Remount herds:** Khan speed ×1.12 and mobility ×1.2; **Winter stores:** +45 food and consumption ×0.5.                                              | **Seasonal grazing knowledge:** 24, pasture depletion ×0.85.        | **A horse held in reserve:** 36, requires Remounts, +3 horses and gallop cooldown ×0.9. **The herders’ dairy reserve:** 32, requires Winter stores, +25 food and food production ×1.2.                                                    |
-| Spirit sanctuary | **Wind shamans:** lightning every 1.8 seconds; **Ancestral ward:** damage ×1.5 within a minimum radius of 125 every 1.2 seconds and clan damage ×0.8. | **Remembered ovoos:** 24 +8 Spirit, +6 arrival resolve.             | **Keepers of the storm watch:** 40 +18 Spirit, requires Wind shamans, lightning interval ×0.85. **Names beside the hearth:** 38 +16 Spirit, requires Ancestral ward, +0.15 active Khan healing/second and +0.1 stationary resolve/second. |
-| Wagon circle     | **War carts:** 3 arrows and full stationary damage during migration; **Felt armor:** clan damage ×0.5 and +30 immediate resolve.                      | **Rawhide lashings:** 26, mobility ×1.08.                           | **Wheelwright crews:** 40, requires War carts, wagon damage ×1.25. **Layered felt screens:** 38, requires Felt armor, clan damage ×0.9 again.                                                                                             |
-
-Lightning looks for targets within 520 of Khan, then camp, and affects a 70-unit radius. It and wards continue during migration. Both camp wards reach at least 125 units, expanding to 5 units beyond the barricade's melee attack range when the camp grows. Red Eclipse multiplies lightning intervals by 1.5, giving 2.295 seconds with Wind shamans and Storm watch. Wagon volleys target within 520 every 0.9 seconds (0.675 with Guardian Watchfires), for shared damage ×1.5 stationary or ×0.7 migrating unless War carts are learned. Independent support timers are not changed by host haste.
-
-**Burning Tempest** still combines Fire arrows and Wind shamans without another purchase. Every friendly volley gains two additional arrows with a wider fan and alternating curvature ±0.65 radians/second. Khan, companion, ancestral, and wagon arrows participate. Prepared resin strengthens burns; hits refresh rather than stack separate burn timers. Choosing Veterans or Ancestral ward excludes this combination.
-
-### Complementary craft, provision, and relay developments
-
-| Branch     | Development and cost                     | Effect / requirement                                                               |
-| ---------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |
-| Feltmakers | **Wool sorting circles:** 24             | Material gathering ×1.15 again.                                                    |
-| Feltmakers | **Weatherproof ger covers:** 28          | Food consumption ×0.9, including migration.                                        |
-| Feltmakers | **Folding pack frames:** 28              | Migration mobility ×1.1.                                                           |
-| Feltmakers | **Felt passed between generations:** 42  | Requires sorting **and** covers; clan damage ×0.9.                                 |
-| Provisions | **Aaruul drying racks:** 26              | +20 food immediately; consumption ×0.9.                                            |
-| Provisions | **Borts travel stores:** 28              | +15 food per successful crossing.                                                  |
-| Provisions | **Airag hospitality:** 24                | +4 people and +10 resolve immediately, respecting caps.                            |
-| Provisions | **Provisions for every household:** 42   | Requires aaruul **and** borts; +10 arrival healing and +6 arrival resolve.         |
-| Relay      | **Pasture scouts:** 28                   | Pasture depletion ×0.9.                                                            |
-| Relay      | **Supplies along the road:** 32          | +10 materials and +8 food per successful crossing.                                 |
-| Relay      | **Messengers to scattered families:** 30 | Blue-banner arrivals welcome 3 additional people; rescued-rider reward stays 2.    |
-| Relay      | **Fresh horses on the road:** 44         | Requires scouts **and** supplies; +1 horse and +4 resolve per successful crossing. |
-
-Arrival benefits are paid once, after completing the crossing, including the third crossing. They add to route rewards and never repeat in the final stand. Food and material production stop while travelling; consumption reductions and mobility continue. Khan recovery uses active time during travel; resolve recovery requires a stationary camp. Population and horses remain capped at 120 and forty.
-
-See [the complete camp tree](camp-upgrade-tree.md) for all eight branch diagrams, stable IDs, interaction examples, and sourced cultural context. Shared node data and typed camp effects support further level steps, specialisations, and internal ranks without changing the popup or purchase code. New building miniatures can supply presentation coordinates and assemblies independently of their gameplay definition.
+See [the nomadic camp guide](nomadic-camp.md) for the current building catalog, construction and upgrade rules, inspector controls, costs, effects, and legacy-save migration. The retired craft catalog and its cultural sources remain in [the legacy camp reference](camp-upgrade-tree.md).
 
 ## 5. Mounted combat and formations
 
@@ -227,19 +147,25 @@ See [the complete camp tree](camp-upgrade-tree.md) for all eight branch diagrams
 
 The Khan starts with 100 health, 190 movement speed, 16 damage, a 0.6-second firing interval, 85 shard attraction radius, and one arrow per volley. Attacks automatically choose the nearest available enemy within targeting range; there is no manual aim or attack input.
 
-Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Before research/crafts, Khan targeting range is `440 + 120 × momentum`; personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum gives 560 targeting range and +30% personal damage.
+Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Before research or building upgrades, Khan targeting range is `440 + 120 × momentum`; personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum gives 560 targeting range and +30% personal damage.
 
-Accompanying riders each fire one arrow per host volley, at 60% of the shared damage stat, or 90% with Veteran riders. Their targeting range starts at 440; Khükhedei Mergen adds up to 60 and Horn-and-sinew bowyers adds 30 to Khan and rider targeting range. Sülde multiplies rider damage by 1.25; Arban drills adds ×1.2 and a ×0.9 host firing interval. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
+Accompanying riders each fire one arrow per host volley, at 60% of the shared damage stat before patron and camp modifiers. Their targeting range starts at 440; Khükhedei Mergen adds up to 60 to Khan and rider targeting range. Sülde multiplies rider damage by 1.25; camp escort benefits stack through the ongoing rider-damage modifier. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
 
 ```text
 min(16, 1 starting rider
-        + 3 with Archery grounds
-        + 3 with Veteran riders
+        + starting-tradition riders
+        + 3 with Archery Range
         + Sülde rider recruitment (up to 4)
         + 2 per completed blue-banner crossing)
 ```
 
 Arrows travel at 440 world units/second for 1.6 seconds and normally disappear on their first hit. Khükhedei Mergen unlocks one additional pierced enemy. Each arrow hits a pooled enemy incarnation at most once; its hit history resets on reuse. There are no critical hits. Targeting range determines when a volley is fired, rather than its entire travel distance. The shared projectile pool holds 250 friendly arrows, which can limit very large simultaneous volleys.
+
+### Camp attacks and Burning Tempest
+
+Sacred Ovoo lightning searches within 520 units of the living Khan, then the camp, and deals three times shared damage in a 70-unit radius. Its base interval is 3.5 seconds, or 1.8 with Shaman’s Ger, multiplied by the camp’s sanctuary-interval modifier and by 1.5 during Red Eclipse. The Wagon Yard fires within 520 units every 0.9 seconds, at shared damage ×1.5 while stationary or ×0.7 during migration. These support clocks continue during migration and succession and remain independent of host firing haste.
+
+The building requirements for **Burning Tempest** are listed in [the camp overview](../README.md#build-defend-migrate). Every friendly volley gains two additional arrows, a wider fan and alternating curvature ±0.65 radians/second. Khan, companion, ancestral and wagon arrows participate. Fire-arrow hits apply a two-second burn at shared damage ×0.45 per second, multiplied by the camp burn-damage modifier; hits refresh the timer rather than stacking separate burns.
 
 ### Patron support and terrain
 
@@ -247,7 +173,7 @@ Ongod summons up to three visible ancestral riders, separate from the 16 living-
 
 Lus creates slowing fields around Khan and camp, reaching 24% slow within 230 units at full investment. Its capstone pulses around the Khan every 4 seconds for 75% shared damage and an 80-unit outward push. Its other practice adds one second to eruption warnings and halves eruption damage to Khan and clan.
 
-The Guardian's independent camp ward deals 65% shared damage every 2 seconds, including migration. Its radius starts at 125 and expands with the barricade to keep perimeter attackers in reach. It stacks with the sanctuary's Ancestral ward and needs no sanctuary. Its Watchfires practice reduces a constructed Wagon circle's firing interval from 0.9 to 0.675 seconds. Full Sülde research restores 0.15 resolve per enemy kill. Support attacks use the same active-time simulation, damage/kill pipeline, and bounded projectile pools as other combat.
+The Guardian's independent camp ward deals 65% shared damage every 2 seconds, including migration. Its radius starts at 125 and expands with the barricade to keep perimeter attackers in reach. It needs no Sacred Ovoo. Its Watchfires practice reduces the Wagon Yard's firing interval from 0.9 to 0.675 seconds. Full Sülde research restores 0.15 resolve per enemy kill. Support attacks use the same active-time simulation, damage/kill pipeline, and bounded projectile pools as other combat.
 
 ### Choosing a new Khan
 
@@ -263,16 +189,16 @@ Clan population or resolve reaching zero ends the expedition during the countdow
 
 ### Gallop
 
-**Space / controller A** gallops in the current or last facing direction at speed 570 for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop. Börte Chino can reduce the cooldown to 2.25 seconds; reserve horses multiply it by 0.9 again, reaching 2.025 with both. Golomt reduces Khan damage, provides active-time regeneration, and can prevent one lethal hit per expedition; clan loss still ends the expedition.
+**Space / controller A** gallops in the current or last facing direction at speed 570 for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop. Börte Chino can reduce the cooldown to 2.25 seconds. Golomt reduces Khan damage, provides active-time regeneration, and can prevent one lethal hit per expedition; clan loss still ends the expedition.
 
 ### Formation tree
 
-| Formation       | Unlock                    | Positioning and benefit                                                                                                                                        |
-| --------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Caravan guard   | Starting formation        | Riders stay around camp/caravan. All clan damage ×0.7, regardless of Khan distance.                                                                            |
-| Encirclement    | Establish Archery grounds | Riders circle an enemy near the Khan, or the Khan if none is nearby. At momentum above 0.5, friendly arrow damage ×1.3, including wagon arrows.                |
-| Charging wedge  | Establish Archery grounds | Riders line up behind the Khan. While galloping, enemies within 64 units take `damage stat ×18` per second. This is continuous damage, not one hit per gallop. |
-| Feigned retreat | Establish Herding grounds | Riders spread around the Khan. At momentum above 0.4, host firing interval ×0.7 and shard attraction radius ×1.7.                                              |
+| Formation       | Unlock                   | Positioning and benefit                                                                                                                                        |
+| --------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Caravan guard   | Starting formation       | Riders stay around camp/caravan. All clan damage ×0.7, regardless of Khan distance.                                                                            |
+| Encirclement    | Construct Archery Range  | Riders circle an enemy near the Khan, or the Khan if none is nearby. At momentum above 0.5, friendly arrow damage ×1.3, including wagon arrows.                |
+| Charging wedge  | Construct Archery Range  | Riders line up behind the Khan. While galloping, enemies within 64 units take `damage stat ×18` per second. This is continuous damage, not one hit per gallop. |
+| Feigned retreat | Starting Herding Grounds | Riders spread around the Khan. At momentum above 0.4, host firing interval ×0.7 and shard attraction radius ×1.7.                                              |
 
 Press **F / right bumper** to cycle unlocked formations during play. Effects replace the previous formation's benefit; changing formation has no resource cost or cooldown. Momentum's personal damage bonus and Encirclement's arrow bonus multiply together.
 
@@ -290,18 +216,19 @@ Actual crossing progress is:
 
 ```text
 Mobility = (1 + herd × 0.012)
-         × (1.2 with Remount herds, otherwise 1)
          × (0.8 when leaving Silent River, otherwise 1)
          × Sülde mobility modifier (1.15 with No wagon left behind)
-         × camp mobility modifiers (lashings, pack frames, relay)
-Progress = stage time × Mobility / route base duration
+         × camp mobility modifier
+         × current-location mobility modifier
+         × starting-tradition mobility modifier
+Progress = stage time × Mobility / (route base duration × destination crossing modifier)
 ```
 
-Three starting horses make a nominal 60-second crossing take about 57.9 seconds outside winter. Population does not directly slow the caravan, but increases provisions needed. Herd losses can reduce calculated progress because mobility uses the current herd.
+Starting crossing forecasts include the three horses, free core benefits, current location, and destination. Population does not directly slow the caravan, but increases provisions needed. Herd losses can reduce calculated progress because mobility uses the current herd.
 
 The caravan moves east automatically across 1,150 world units as progress reaches 100%. It does not wait for the Khan or depend on remaining within an escort radius. Defend it because nearby enemies and hostile shots damage the clan. You can fight, gallop, change formations, collect shards, and use the tech tree during travel; construction waits for unpacking.
 
-Rewards are not paid when choosing the route. On successful arrival, route rewards apply, the next region begins, pasture resets to 100%, resolve recovers by 12, and Khan health recovers by 25, each capped at its maximum. Buildings, specializations, resources, traditions, and riders carry over. Enemies, projectiles, and eruption warnings are cleared; uncollected shards move to the new camp. Arrivals reset the stage clock, not total active journey time.
+Rewards are not paid when choosing the route. On successful arrival, route rewards apply, the next region begins, pasture resets to 100%, resolve recovers by 12, and Khan health recovers by 25, each capped at its maximum. Buildings, resources, traditions, and riders carry over. Enemies, projectiles, and eruption warnings are cleared; uncollected shards move to the new camp. Arrivals reset the stage clock, not total active journey time.
 
 ## 7. Enemies, pressure, and hazards
 
@@ -355,7 +282,7 @@ Current settings display the chosen place; destination-specific dialogue, revise
 display titles, and ending callbacks are proposed in
 [the story architecture](../story-architecture.md), rather than implemented here.
 
-Establishing or specializing a building adds **+2 identity**: gers/herding → Wander, archery/wagon → Iron, sanctuary → Sky. Selecting a route adds +2 of its identity at departure, independently of the delayed arrival rewards. The starting gers grant no identity points.
+Each purchased building level adds **+2 identity** according to its registry doctrine: Military → Iron, Spiritual & cultural → Sky, Core and Economy & survival → Wander. Free core level 1 grants no points. Selecting a route adds +2 of its identity at departure, independently of the delayed arrival rewards.
 
 The strongest identity becomes the clan's name once any score reaches 4:
 
@@ -395,31 +322,32 @@ Touch preview supports dragging the battlefield to ride and tapping command butt
 
 Simulation, physics, economy, migration, combat animations, cooldowns, and the run timer advance only during active play. Title, prologue, story, epilogue, records, pause, traditions, camp development, routes, chronicle, settings, help, defeat, and victory stop them. Losing window focus pauses active combat. UI motion respects the operating system's reduced-motion preference; menus and values respond without waiting for animation.
 
-The profile retains longest journey, audio settings, developer command history, and the portable camp checkpoint described below. A battle cannot be resumed after quitting. New expeditions reset resources, buildings, traditions, identity, story records, casualties, and crossings. The camp-scene preference survives run restarts within the app session. There is no permanent spirit-stone wallet, permanent meta-tech tree, achievement system, Steamworks progression, or campaign save in this prototype.
+The profile retains longest journey, audio settings, developer command history, and the portable camp checkpoint described below. Full battle resumption is documented in [the expedition save contract](expedition-saves.md). New expeditions reset resources, buildings, traditions, identity, story records, casualties, and crossings. The camp-scene preference survives run restarts within the app session. There is no permanent spirit-stone wallet, permanent meta-tech tree, achievement system, Steamworks progression, or campaign save in this prototype.
 
 The desktop game runs offline with local assets and native, validated, atomic saves. Browser preview has separate saves. The technology stack is TypeScript, Phaser 3, Vite, and Electron; there is no runtime AI service or backend.
 
 ## 10. Source map for maintaining this brief
 
-| Area                                                                                 | Implementation                                                                      |
-| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| Starting stats and balance constants                                                 | [config.ts](../src/game/config.ts)                                                  |
-| Khan damage, presence, succession timing                                             | [state/khan.ts](../src/game/state/khan.ts)                                          |
-| Starting run, XP thresholds, upgrade application                                     | [state/run.ts](../src/game/state/run.ts)                                            |
-| Patron technology definitions and prerequisites                                      | [data/upgrades.ts](../src/game/data/upgrades.ts)                                    |
-| Building costs, stable path IDs, prerequisites, effects, formations, routes, regions | [data/clan.ts](../src/game/data/clan.ts)                                            |
-| Typed camp effects and once-only purchase grants                                     | [state/camp.ts](../src/game/state/camp.ts)                                          |
-| Economy, staffing, purchases, protection, migration, identity                        | [state/clan.ts](../src/game/state/clan.ts)                                          |
-| Patron metadata and playstyles                                                       | [data/patrons.ts](../src/game/data/patrons.ts)                                      |
-| Neutral patron state, conditional damage, recovery, revival                          | [state/patrons.ts](../src/game/state/patrons.ts)                                    |
-| Ancestral riders, terrain pulse, and mountain ward                                   | [PatronSupport.ts](../src/game/systems/PatronSupport.ts)                            |
-| Enemy definitions and spawn interval                                                 | [data/enemies.ts](../src/game/data/enemies.ts)                                      |
-| Combat, targeting, support attacks, hazards, phase transitions                       | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                   |
-| Encounter content, choices, epilogue                                                 | [data/story.ts](../src/game/data/story.ts)                                          |
-| Encounter triggers and once-only rewards                                             | [state/story.ts](../src/game/state/story.ts)                                        |
-| Prologue chapters                                                                    | [data/intro.ts](../src/game/data/intro.ts)                                          |
-| Menus, chronicle, help, input                                                        | [GameUI.ts](../src/ui/GameUI.ts), [menuContent.ts](../src/ui/menuContent.ts)        |
-| Save and packaging details                                                           | [README](../README.md#packaging-and-saves), [Steam preparation](../steam/README.md) |
+| Area                                                           | Implementation                                                                                                   |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Starting stats and balance constants                           | [config.ts](../src/game/config.ts)                                                                               |
+| Khan damage, presence, succession timing                       | [state/khan.ts](../src/game/state/khan.ts)                                                                       |
+| Starting run, XP thresholds, upgrade application               | [state/run.ts](../src/game/state/run.ts)                                                                         |
+| Patron technology definitions and prerequisites                | [data/upgrades.ts](../src/game/data/upgrades.ts)                                                                 |
+| Camp building definitions and purchase rules                   | [data/nomadicCamp.ts](../src/game/data/nomadicCamp.ts), [state/nomadicCamp.ts](../src/game/state/nomadicCamp.ts) |
+| Legacy crafts, formations, routes, regions                     | [data/clan.ts](../src/game/data/clan.ts)                                                                         |
+| Typed camp effects and once-only purchase grants               | [state/camp.ts](../src/game/state/camp.ts)                                                                       |
+| Economy, staffing, purchases, protection, migration, identity  | [state/clan.ts](../src/game/state/clan.ts)                                                                       |
+| Patron metadata and playstyles                                 | [data/patrons.ts](../src/game/data/patrons.ts)                                                                   |
+| Neutral patron state, conditional damage, recovery, revival    | [state/patrons.ts](../src/game/state/patrons.ts)                                                                 |
+| Ancestral riders, terrain pulse, and mountain ward             | [PatronSupport.ts](../src/game/systems/PatronSupport.ts)                                                         |
+| Enemy definitions and spawn interval                           | [data/enemies.ts](../src/game/data/enemies.ts)                                                                   |
+| Combat, targeting, support attacks, hazards, phase transitions | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                                                |
+| Encounter content, choices, epilogue                           | [data/story.ts](../src/game/data/story.ts)                                                                       |
+| Encounter triggers and once-only rewards                       | [state/story.ts](../src/game/state/story.ts)                                                                     |
+| Prologue chapters                                              | [data/intro.ts](../src/game/data/intro.ts)                                                                       |
+| Menus, chronicle, help, input                                  | [GameUI.ts](../src/ui/GameUI.ts), [menuContent.ts](../src/ui/menuContent.ts)                                     |
+| Save and packaging details                                     | [README](../README.md#packaging-and-saves), [Steam preparation](../steam/README.md)                              |
 
 See [the progression UI guide](progression-ui.md) for adding technologies, buildings, and development nodes without rewriting the shared layout. Update this reference with balance or progression changes. A longer historical campaign, permanent civilization unlocks, and thousands of individually simulated people remain future work rather than hidden mechanics.
 

@@ -132,7 +132,7 @@ Purchases and completed crossings save the portable camp checkpoint. **Continue 
 
 **The Khan is a title carried by successive leaders.** If he falls, the clan spends **10 active seconds choosing a new Khan** while riders, ancestral echoes, and camp defenses keep fighting. A visible countdown marks succession. The successor returns at the current camp or moving caravan with full maximum health, a ready gallop, and 3 seconds of protection. During the countdown, optionally choose an outrider (+5% riding speed) or hearthguard (8% less Khan damage) using 1 / 2, controller left / right, or the HUD. Their trait lasts for that generation; leaving the choice alone returns an unmodified successor. All research, resources, buildings, and journey progress carry on. Menus pause the countdown. Golomt’s Last Ember saves the current Khan immediately once per expedition; its charge does not refresh for successors. Losing the clan’s people or resolve still ends the expedition.
 
-A portable barricade of lashed wooden hurdles and indigo and rust felt bands surrounds the camp. It expands around growing households and new crafts, then travels as low wheeled screens around the caravan. Enemies stop at its edge and repeatedly attack clan resolve until defeated; hostile shots strike the barrier itself. Struck panels briefly jolt and brighten, and worn wood and frayed cloth reflect low resolve. Your Khan, riders, and camp defenses can still defeat the attackers. Packing up makes attackers pursue the moving caravan again when it leaves their reach. The barricade uses the clan's existing resolve and protection rather than a separate health pool.
+A portable barricade of lashed wooden hurdles and indigo and rust felt bands surrounds the camp. It expands around growing households and workplaces, then travels as low wheeled screens around the caravan. Enemies stop at its edge and repeatedly attack clan resolve until defeated; hostile shots strike the barrier itself. Struck panels briefly jolt and brighten, and worn wood and frayed cloth reflect low resolve. Your Khan, riders, and camp defenses can still defeat the attackers. Packing up makes attackers pursue the moving caravan again when it leaves their reach. The barricade uses the clan's existing resolve and protection rather than a separate health pool.
 
 Battles alternate warned assaults, featured enemies, and recovery windows. Optional supply carts, loose herds, stranded households, and enemy gatherings invite short rides away from camp. Terrain-aware enemies use the current area’s passes, ramps, dry ground, and river crossings. Sustained riding charges a stronger volley; key technologies add paired rider shots, pinning arrows, and a slowing gallop wake.
 
@@ -152,15 +152,14 @@ households, winter conditions, and learned improvements; food can be increasing 
 and still run out later. During crossings and the final stand, it reports whether
 supplies last to arrival or the passage opening. Imminent shortages remain visible
 when tips are hidden. In the camp inspector, **Provisions & gathering** breaks down
-production, consumption, and material gathering, while eligible craft cards preview
-their before/after rates, immediate food grants, time until stores empty, and the
-range of food needed across the available crossing routes. You can
-preview a craft while saving up its resource cost. Route cards show estimated travel
+production, consumption, and material gathering. Eligible building inspectors preview
+the actual purchase’s changes to combat and economy values, including food duration
+and crossing costs. You can preview an upgrade while saving up its resource cost. Route cards show estimated travel
 time, food needed en route, food after arrival rewards or rescue costs, and shortages
 before arrival. Estimates assume current households and improvements without future
 battle losses or purchases; risky routes remain your choice.
 
-For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For every camp cost, dependency, effect, and cultural source, see [the camp upgrade tree](docs/camp-upgrade-tree.md). For all 42 technologies and specialization routes, see [the patron tech tree](docs/patron-tech-tree.md). For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
+For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For current camp rules and effects, see [the nomadic camp guide](docs/nomadic-camp.md); historical craft details and cultural sources remain in [the legacy camp catalog](docs/camp-upgrade-tree.md). For all 42 technologies and specialization routes, see [the patron tech tree](docs/patron-tech-tree.md). For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
 
 ## Controls
 
@@ -221,7 +220,9 @@ src/game/state/run.ts          Experience, traditions, run lifecycle
 src/game/state/khan.ts         Khan presence, lethal hits, and active-time succession
 src/game/state/clan.ts         Economy, construction, migration, victory
 src/game/state/camp.ts         Typed camp effects, neutral defaults, and once-only grants
-src/game/data/clan.ts          Buildings, specializations, routes, regions, formations
+src/game/data/clan.ts          Legacy crafts, routes, regions, formations
+src/game/data/nomadicCamp.ts   Current camp building registry and level effects
+src/game/state/nomadicCamp.ts  Validated building purchases and compatibility projections
 src/game/data/landscapes.ts    Twelve location palettes, landmarks, vegetation, water, weather
 src/game/data/enemies.ts       Five enemies, two elites, and the Skybreaker
 src/game/data/patrons.ts       Eight patrons, playstyles, symbols, and descriptions
@@ -239,8 +240,9 @@ src/ui/GameUI.ts               Full-window HUD, title/pause menus, focus and inp
 src/ui/menuContent.ts          Camp, route, chronicle, settings, and help panels
 src/ui/progressionTree.ts      Shared data-driven progression tree renderer
 src/ui/researchContent.ts      Patron branches, ranks, and research state
-src/ui/campContent.ts          Camp nodes, prerequisites, costs, and exclusive paths
-src/ui/campModel.ts            Painted camp scene with anchored upgrade parchments
+src/ui/campContent.ts          Legacy camp nodes and shared parchment detail rendering
+src/ui/campModel.ts            Camp panorama and nameplate composition
+src/ui/nomadicCampModel.ts     Building locations, chooser, previews, and upgrade popovers
 src/camp.css                  Camp landscape, sites, and responsive inspector layout
 src/platform/                 Narrow native capability bridge and browser fallback
 desktop/                      Secure Electron lifecycle and atomic profile storage
