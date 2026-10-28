@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { claimWardEntries } from '../state/researchGuardian';
 import { remembranceEchoDamage } from '../state/researchEchoes';
 import { claimWaterPush, researchKnockback } from '../state/researchTerrain';
 import { paintedImage } from '../assets/painterlyArt';
@@ -191,6 +192,17 @@ export class PatronSupport {
           Phaser.Math.Clamp(enemy.y + ny * displacement, 24, GAME.worldSize - 24),
         );
       });
+    }
+    if (effects.guardian.wardDamage > 0) {
+      const nearby: Enemy[] = [];
+      spatial.forEachNearby(camp.x, camp.y, boundary.wardRadius, (enemy) => nearby.push(enemy));
+      const entries = claimWardEntries(
+        run,
+        nearby.map((enemy) => `${enemy.tacticalSlot}:${enemy.spawnId}`),
+      );
+      for (const enemy of nearby)
+        if (entries.includes(`${enemy.tacticalSlot}:${enemy.spawnId}`))
+          actions.damage(enemy, run.stats.damage * effects.guardian.wardDamage);
     }
     if (step.ward) {
       spatial.forEachNearby(camp.x, camp.y, boundary.wardRadius, (enemy) =>

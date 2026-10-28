@@ -19,6 +19,12 @@ import {
   bannerFormation,
   bannerDamage,
 } from '../state/researchLeadership';
+import {
+  claimArrowPlatform,
+  circlingVolley,
+  wagonDamageMultiplier,
+  wagonRangeMultiplier,
+} from '../state/researchGuardian';
 import { volleyFactors } from '../state/volley';
 import {
   observeResearchFrame,
@@ -2631,7 +2637,7 @@ export class ArenaScene extends Phaser.Scene {
     multiplier: number,
     ancestral = false,
     charged = false,
-    owner: 'khan' | 'rider' = 'rider',
+    owner: 'khan' | 'rider' | 'wagon' | 'wagon-ricochet' = 'rider',
     echoIndex?: number,
   ): boolean {
     const volley = volleyFactors(this.run, count, owner === 'khan', ancestral);
@@ -2684,7 +2690,8 @@ export class ArenaScene extends Phaser.Scene {
       bolt.enableBody(true, x, y, true, true);
       bolt.barrage = undefined;
       bolt.echoIndex = ancestral ? echoIndex : undefined;
-      bolt.source = owner === 'khan' ? 'khan' : undefined;
+      bolt.source =
+        owner === 'khan' || owner === 'wagon' || owner === 'wagon-ricochet' ? owner : undefined;
       bolt.setData('terrain-previous', { x, y });
       bolt
         .setTexture('bolt')
@@ -2713,7 +2720,9 @@ export class ArenaScene extends Phaser.Scene {
         stillHand;
       bolt.setData('base-damage', bolt.damage);
       bolt.setData('dealt-damage', 0);
-      bolt.remaining = GAME.projectile.lifetime;
+      bolt.remaining =
+        GAME.projectile.lifetime *
+        (owner === 'wagon' || owner === 'wagon-ricochet' ? wagonRangeMultiplier(this.run) : 1);
       bolt.setVelocity(
         Math.cos(angle) * GAME.projectile.speed * volley.speed,
         Math.sin(angle) * GAME.projectile.speed * volley.speed,
@@ -2748,7 +2757,9 @@ export class ArenaScene extends Phaser.Scene {
       bolt.damage = this.run.stats.damage * multiplier * backward.damage;
       bolt.setData('base-damage', bolt.damage);
       bolt.setData('dealt-damage', 0);
-      bolt.remaining = GAME.projectile.lifetime;
+      bolt.remaining =
+        GAME.projectile.lifetime *
+        (owner === 'wagon' || owner === 'wagon-ricochet' ? wagonRangeMultiplier(this.run) : 1);
       bolt.setVelocity(
         Math.cos(angle) * GAME.projectile.speed * volley.speed,
         Math.sin(angle) * GAME.projectile.speed * volley.speed,
@@ -2874,6 +2885,29 @@ export class ArenaScene extends Phaser.Scene {
       recordEchoHit(this.run, enemy.tacticalSlot, enemy.spawnId, bolt.echoIndex);
     if (bolt.source === 'khan') recordKhanTarget(this.run, enemy.tacticalSlot, enemy.spawnId);
     this.damageEnemy(enemy, hitDamage, bolt.source === 'khan' ? 'khan' : 'allied-arrows');
+    if (bolt.source === 'wagon' && circlingVolley(this.run, enemy.definition.behavior === 'boss')) {
+      const next = this.spatial.nearest(
+        enemy.x,
+        enemy.y,
+        GAME.research.circlingVolleyRadius,
+        (candidate) =>
+          candidate !== enemy &&
+          candidate.active &&
+          candidate.definition.behavior !== 'boss' &&
+          bolt.hitTargets.get(candidate) !== candidate.spawnId,
+      );
+      if (next)
+        this.shootVolley(
+          enemy.x,
+          enemy.y,
+          next,
+          1,
+          hitDamage / this.run.stats.damage,
+          false,
+          false,
+          'wagon-ricochet',
+        );
+    }
   }
 
   private projectileReaches(projectile: Projectile): boolean {
@@ -3763,20 +3797,41 @@ export class ArenaScene extends Phaser.Scene {
         (clan.region === 3 ? 1.5 : 1) *
         clan.campEffects.multipliers.sanctuaryInterval;
     }
+    if (this.run.clan.buildings.wagon && ownsResearch(this.run, 'gu-arrow-platforms')) {
+      const target = this.spatial.nearest(
+        this.camp.x,
+        this.camp.y,
+        GAME.research.arrowPlatformRange,
+      );
+      if (target && claimArrowPlatform(this.run))
+        this.shootVolley(
+          this.camp.x,
+          this.camp.y,
+          target,
+          1,
+          GAME.research.arrowPlatformDamage,
+          false,
+          false,
+          'wagon',
+        );
+    }
     const wagonResearch = wagonResearchDefence(this.run);
     if (wagonResearch.active && this.wagonTimer <= 0) {
-      const target = this.spatial.nearest(this.camp.x, this.camp.y, wagonResearch.range);
+      const target = this.spatial.nearest(
+        this.camp.x,
+        this.camp.y,
+        wagonResearch.range * wagonRangeMultiplier(this.run),
+      );
       if (target)
         this.shootVolley(
           this.camp.x,
           this.camp.y,
           target,
           hasDevelopment(this.run, 'wagon', 'war-carts') ? 3 : 1,
-          wagonResearch.fallback
-            ? wagonResearch.damage
-            : (clan.stage === 'migration' && !hasDevelopment(this.run, 'wagon', 'war-carts')
-                ? 0.7
-                : 1.5) * clan.campEffects.multipliers.wagonDamage,
+          wagonResearch.damage * wagonDamageMultiplier(this.run),
+          false,
+          false,
+          'wagon',
         );
       this.wagonTimer = 0.9 * this.run.patrons.guardian.wagonInterval;
     }

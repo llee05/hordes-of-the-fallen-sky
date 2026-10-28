@@ -20,6 +20,7 @@ import {
   starvationReaction,
 } from '../data/storyReactions';
 import { beginCrossingEncounter, settleCrossingEncounter } from './crossingEncounters';
+import { constructionMaterials, recordConstruction } from './researchGuardian';
 import { leadershipProtection } from './researchLeadership';
 import { GAME } from '../config';
 import { BUILDINGS, ROUTES, startingTradition } from '../data/clan';
@@ -139,11 +140,15 @@ export function buildingCost(
   const definition = BUILDINGS.find((building) => building.id === id)!;
   const development = definition.paths.find((entry) => entry.id === path);
   return {
-    materials: Math.ceil(
-      (path === undefined
-        ? definition.materials
-        : (development?.materials ?? Math.ceil(definition.materials * 1.5))) *
-        run.patrons.guardian.cost,
+    materials: constructionMaterials(
+      run,
+      path === undefined,
+      Math.ceil(
+        (path === undefined
+          ? definition.materials
+          : (development?.materials ?? Math.ceil(definition.materials * 1.5))) *
+          run.patrons.guardian.cost,
+      ),
     ),
     spirit:
       path === undefined
@@ -204,6 +209,7 @@ export function buildStructure(
   clan.materials -= cost.materials;
   clan.spirit -= cost.spirit;
   recordMaterialSpend(run, cost.materials);
+  if (path === undefined) recordConstruction(run);
   if (path === undefined) reserveBuildingSlot(run, id, slot);
   clan.buildings[id] += 1;
   clan.identity[definition.doctrine] += 2;

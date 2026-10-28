@@ -1,6 +1,6 @@
 # Research V2 effect delivery status
 
-All 166 IDs are registered. 108 technologies have runtime effects; 58 proposed effects remain unavailable.
+All 166 IDs are registered. 114 technologies have runtime effects; 52 proposed effects remain unavailable.
 Some working effects have unavailable prerequisites and cannot yet be purchased in play. Catalogue
 reachability tests ignore only runtime availability; they do not enable these effects.
 A fresh expedition resets all research; full expedition saves retain purchases.
@@ -94,18 +94,18 @@ the documented zero-building guard-shot adaptation. No respec is offered.
 | `su-great-kurultai`           | **Working** — su-great-kurultai leadership effect connected and unit tested.                                  |
 | `su-host-without-end`         | Temporary elite riders have no encounter-scoped lifecycle                                                     |
 | `su-unbroken-caravan`         | Individual wagon destruction prevention does not exist                                                        |
-| `gu-arrow-platforms`          | Arrow Platforms: runtime effect deferred at failed patron integration gate                                    |
+| `gu-arrow-platforms`          | **Working** — gu-arrow-platforms defence/construction effect connected and unit tested.                       |
 | `gu-shelter-stakes`           | Structures have no individual durability                                                                      |
 | `gu-repair-crews`             | Structures have no durability or material repair channel                                                      |
-| `gu-circling-volley`          | Circling Volley: runtime effect deferred at failed patron integration gate                                    |
-| `gu-defended-passage`         | Defended Passage: runtime effect deferred at failed patron integration gate                                   |
-| `gu-fast-unpacking`           | Fast Unpacking: runtime effect deferred at failed patron integration gate                                     |
-| `gu-iron-rimmed-wagons`       | Iron-Rimmed Wagons: runtime effect deferred at failed patron integration gate                                 |
+| `gu-circling-volley`          | **Working** — gu-circling-volley defence/construction effect connected and unit tested.                       |
+| `gu-defended-passage`         | **Working** — gu-defended-passage defence/construction effect connected and unit tested.                      |
+| `gu-fast-unpacking`           | **Working** — gu-fast-unpacking defence/construction effect connected and unit tested.                        |
+| `gu-iron-rimmed-wagons`       | **Working** — gu-iron-rimmed-wagons defence/construction effect connected and unit tested.                    |
 | `gu-ring-of-stones`           | Structure protection has no durability channel                                                                |
 | `gu-moving-workshop`          | Structure rebuilding has no time or repair-waste channel                                                      |
 | `gu-fortress-upon-wheels`     | The separate core Wagon Yard stance contract is not available                                                 |
 | `gu-sacred-bulwark`           | Structures have no durability or damage channel                                                               |
-| `gu-city-of-felt-and-wood`    | City of Felt and Wood: runtime effect deferred at failed patron integration gate                              |
+| `gu-city-of-felt-and-wood`    | **Working** — gu-city-of-felt-and-wood defence/construction effect connected and unit tested.                 |
 | `hy-galloping-barrage`        | **Working** — Firing a volley within 2 s of a Gallop gives that volley +20% projectile speed and +10% damage. |
 | `hy-wolfpack-riders`          | Rider movement-speed and personal-target pursuit need an AI milestone                                         |
 | `hy-shelter-and-plenty`       | Post-crossing food consumption has no distinct event                                                          |
@@ -152,3 +152,9 @@ Column (retreat), and remains selectable each crossing. Defaults: Wedge +10% rid
 damage; Ring 10% clan protection; Column +10% migration mobility. Great Kurultai
 is issued with R or the Rally host button, once per crossing. Roadward Captains
 remains unavailable because there are no individual wagon hit events or escort assignments.
+
+Guardian defaults: Arrow Platforms uses a 220-pace, 60%-damage guard shot every six
+seconds; ricochets seek a normal foe within 180 paces and cannot ricochet again.
+City of Felt and Wood covers up to 40 materials after other cost modifiers.
+Fast Unpacking applies only after a completed crossing; both first-construction
+benefits use the existing purchase transaction and never consume on preview.

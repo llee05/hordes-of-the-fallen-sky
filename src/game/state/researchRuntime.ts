@@ -5,6 +5,9 @@ import type { RunState } from '../types';
 
 /** Optional for compatibility with older expedition saves. All timestamps use active seconds. */
 export interface ResearchRuntime {
+  firstConstructionCrossing?: number;
+  arrowPlatformAt?: number;
+  wardInside?: string[];
   riderFireAt?: number[];
   hornUntil?: number;
   hornCooldown?: number;

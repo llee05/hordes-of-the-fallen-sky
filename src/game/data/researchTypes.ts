@@ -77,7 +77,13 @@ export type ResearchEffect =
         | 'su-horn-of-the-host'
         | 'su-banner-formation'
         | 'su-last-wagon'
-        | 'su-great-kurultai';
+        | 'su-great-kurultai'
+        | 'gu-arrow-platforms'
+        | 'gu-circling-volley'
+        | 'gu-defended-passage'
+        | 'gu-fast-unpacking'
+        | 'gu-iron-rimmed-wagons'
+        | 'gu-city-of-felt-and-wood';
     };
 export interface ResearchDefinition {
   id: string;
