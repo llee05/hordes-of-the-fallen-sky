@@ -338,7 +338,7 @@ const optional: Record<string, Record<string, Rule>> = {
           object({ x: number, y: number, until: number, gallopSerial: integer }),
           GAME.mounted.maxTrails,
         ),
-        hoofTrailHitSerial: dictionary(integer),
+        hoofTrailHits: dictionary(integer),
         throatSlot: integer,
         throatSpawn: integer,
         throatStacks: integer,

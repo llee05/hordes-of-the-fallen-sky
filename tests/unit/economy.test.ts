@@ -199,3 +199,37 @@ describe('economy forecasts', () => {
     }
   });
 });
+
+it.each([8, 40])(
+  'Wandering City forecasts match migration production for %i people',
+  (population) => {
+    const run = createRun();
+    run.upgrades['ee-wandering-city'] = 1;
+    run.clan.population = population;
+    run.clan.food = 1;
+    run.clan.stageTime = GAME.clan.minimumCamp;
+    const before = structuredClone(run);
+    const route = ROUTES[0];
+    const preview = crossingForecast(run, route);
+    expect(run).toEqual(before);
+    run.phase = 'route';
+    expect(beginMigration(run, route.id)).toBe(true);
+    run.phase = 'playing';
+    const rates = economyRates(run);
+    expect(preview.foodNeeded).toBeCloseTo(Math.max(0, -rates.foodNet * preview.duration));
+    expect(preview.foodBeforeArrival).toBeCloseTo(
+      Math.max(0, 1 + rates.foodNet * preview.duration),
+    );
+    if (rates.foodNet >= 0) {
+      expect(preview.shortfall).toBe(0);
+      expect(economyForecast(run).foodSeconds).toBeUndefined();
+    } else {
+      expect(preview.shortfall).toBeGreaterThan(0);
+      expect(economyForecast(run).foodSeconds).toBeCloseTo(1 / -rates.foodNet);
+    }
+    advanceClan(run, 0.1);
+    expect(run.clan.food).toBeCloseTo(1 + rates.foodNet * 0.1);
+    const active = crossingForecast(run, route);
+    expect(active.foodNeeded).toBeCloseTo(Math.max(0, -rates.foodNet * active.remaining));
+  },
+);

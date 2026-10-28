@@ -3,7 +3,7 @@ import { claimEchoVolley, nearestCompanion } from '../state/researchCompanions';
 import { claimGhostArrow } from '../state/researchHybrids';
 import { claimWardEntries } from '../state/researchGuardian';
 import { remembranceEchoDamage } from '../state/researchEchoes';
-import { claimWaterPush, researchKnockback } from '../state/researchTerrain';
+import { claimWaterPush, researchKnockback, researchEnemySlowed } from '../state/researchTerrain';
 import { paintedImage } from '../assets/painterlyArt';
 import { CharacterMotion } from '../animation/CharacterMotion';
 import { renderCharacter } from '../animation/CharacterVisuals';
@@ -210,9 +210,16 @@ export class PatronSupport {
         const ny = distance > 0 ? dy / distance : 0;
         const force = researchKnockback(
           run,
-          effects.water.slow > 0,
+          researchEnemySlowed(
+            run,
+            enemy.tacticalSlot,
+            enemy.spawnId,
+            Math.min(distance, Math.hypot(enemy.x - camp.x, enemy.y - camp.y)),
+            enemy,
+          ),
           enemy.definition.behavior === 'boss',
         );
+        if (force === 0) return;
         const displacement =
           (GAME.patrons.water.push - (distance > waterRadius * 0.5 ? push.pull : 0)) * force;
         enemy.setPosition(

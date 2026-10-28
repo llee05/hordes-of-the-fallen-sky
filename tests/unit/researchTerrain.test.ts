@@ -6,6 +6,7 @@ import {
   inRidgePatch,
   landWaterActive,
   researchEnemySlow,
+  researchEnemySlowed,
   researchKnockback,
   resolveResearchEruption,
   terrainDodgeSpeed,
@@ -106,3 +107,29 @@ it.each(['lu-geomancers-eye', 'lu-warning-signs'])(
     expect(terrainDodgeSpeed(r)).toBeGreaterThan(1);
   },
 );
+
+it('Shifting Ridge waits for resolution, then creates a patch for distant misses', () => {
+  const r = run('lu-shifting-ridge', 'lu-eye-of-the-mountain');
+  resolveResearchEruption(r, 0, 0, 70, { x: 0, y: 0 }, true, true, false);
+  expect(inRidgePatch(r, 70, 0)).toBe(false);
+  resolveResearchEruption(r, 0, 0, 70, { x: 1000, y: 0 }, false, true);
+  expect(r.researchRuntime?.ridgePatches).toHaveLength(1);
+  expect(inRidgePatch(r, 70, 0)).toBe(true);
+  r.elapsed = 4;
+  expect(inRidgePatch(r, 70, 0)).toBe(false);
+});
+
+it('all pushes recognise current, lingering and patch slows while bosses resist displacement', () => {
+  const r = run('lu-stone-and-stream', 'lu-floodplain');
+  expect(researchEnemySlowed(r, 0, 1, 10, { x: 0, y: 0 })).toBe(true);
+  researchEnemySlow(r, 0, 1, 10, 0.1);
+  r.elapsed = 0.5;
+  expect(researchEnemySlowed(r, 0, 1, 1000, { x: 1000, y: 0 })).toBe(true);
+  expect(researchEnemySlowed(r, 0, 2, 1000, { x: 1000, y: 0 })).toBe(false);
+  r.elapsed = 1;
+  expect(researchEnemySlowed(r, 0, 1, 1000, { x: 1000, y: 0 })).toBe(false);
+  r.researchRuntime!.ridgePatches = [{ x: 1000, y: 0, until: 5 }];
+  const slowed = researchEnemySlowed(r, 0, 1, 1000, { x: 1000, y: 0 });
+  expect(researchKnockback(r, slowed, false)).toBe(1.2);
+  expect(researchKnockback(r, slowed, true)).toBe(0);
+});

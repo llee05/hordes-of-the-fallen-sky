@@ -319,6 +319,11 @@ describe('Börte Chino (Hunting) runtime effects', () => {
     r.combat.gallopSerial = 2;
     advanceHoofTrails(r, { x: 100, y: 100 }, true);
     expect(claimHoofTrailDamage(r, 0, 1, 110, 100)).toBeCloseTo(r.stats.damage * 0.65);
+    for (let frame = 0; frame < 10; frame++)
+      expect(claimHoofTrailDamage(r, 0, 1, 110, 100)).toBe(0);
+    expect(claimHoofTrailDamage(r, 0, 2, 110, 100)).toBeGreaterThan(0);
+    expect(claimHoofTrailDamage(r, 0, 2, 110, 100)).toBeGreaterThan(0);
+    expect(claimHoofTrailDamage(r, 0, 2, 110, 100)).toBe(0);
     r.elapsed = 2.1;
     advanceHoofTrails(r, { x: 100, y: 100 }, false);
     expect(claimHoofTrailDamage(r, 2, 1, 110, 100)).toBe(0);

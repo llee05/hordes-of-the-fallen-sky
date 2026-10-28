@@ -65,7 +65,7 @@ export interface ResearchRuntime {
   staggerUntil?: Record<string, number>;
   staggerCooldownUntil?: Record<string, number>;
   hoofTrails?: { x: number; y: number; until: number; gallopSerial: number }[];
-  hoofTrailHitSerial?: Record<string, number>;
+  hoofTrailHits?: Record<string, number>;
   throatSlot?: number;
   throatSpawn?: number;
   throatStacks?: number;
@@ -330,19 +330,16 @@ export function claimHoofTrailDamage(
   const r = run.researchRuntime;
   const trails = r?.hoofTrails;
   if (!trails?.length) return 0;
-  const key = enemyKey(slot, spawn);
-  const hitSerials = (r!.hoofTrailHitSerial ??= {});
+  const hits = (r!.hoofTrailHits ??= {});
+  const active = new Set(
+    trails.filter((trail) => trail.until > run.elapsed).map((trail) => trail.gallopSerial),
+  );
+  for (const key of Object.keys(hits)) if (!active.has(Number(key.split(':')[0]))) delete hits[key];
   for (const trail of trails) {
     if (trail.until <= run.elapsed) continue;
-    if (
-      Math.hypot(x - trail.x, y - trail.y) < GAME.mounted.trailRadius &&
-      hitSerials[key] !== trail.gallopSerial
-    ) {
-      if (Object.keys(hitSerials).length >= GAME.maxEnemies) {
-        const firstKey = Object.keys(hitSerials)[0];
-        if (firstKey) delete hitSerials[firstKey];
-      }
-      hitSerials[key] = trail.gallopSerial;
+    const key = `${trail.gallopSerial}:${slot}`;
+    if (Math.hypot(x - trail.x, y - trail.y) < GAME.mounted.trailRadius && hits[key] !== spawn) {
+      hits[key] = spawn;
       return run.stats.damage * GAME.research.hoofTrailDamage;
     }
   }

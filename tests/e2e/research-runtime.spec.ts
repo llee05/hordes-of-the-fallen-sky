@@ -251,3 +251,72 @@ test('eruption warnings reward leaving an entered area and ignore stationary pro
   expect(result.entered).toBe(true);
   expect(result.until).toBe(result.elapsed + 3);
 });
+
+for (const attack of ['seer', 'cinder'] as const) {
+  test(`Warm Ashes waits while a defeated enemy leaves ${attack} damage`, async ({ page }) => {
+    const result = await page.evaluate((attack) => {
+      const s = (window as any).__gloam.scene,
+        r = s.run;
+      r.upgrades = { 'go-warm-ashes': 1 };
+      r.clan.campEffects.bonuses.commanderRecovery = 0;
+      r.health = 50;
+      const point = { x: s.player.x + 500, y: s.player.y };
+      if (attack === 'seer')
+        s.hazards.push({
+          ...point,
+          source: 'seer',
+          remaining: 1,
+          warning: s.add.graphics(),
+          damage: 10,
+        });
+      else
+        s.areaThreats.threats.push({
+          ...point,
+          id: 1,
+          kind: 'cinder',
+          age: 2.1,
+          warning: 2,
+          impacted: true,
+          nextTick: 3,
+          owner: '0:1',
+        });
+      r.clan.stageTime = 63.99;
+      r.encounters.phase = 'elite';
+      s.update(0, 20);
+      const blocked = r.health;
+      for (const hazard of s.hazards) hazard.warning.destroy();
+      s.hazards = [];
+      s.areaThreats.threats = [];
+      r.clan.stageTime = 63.99;
+      r.encounters.phase = 'elite';
+      s.update(0, 20);
+      return { blocked, clear: r.health };
+    }, attack);
+    expect(result).toEqual({ blocked: 50, clear: 55 });
+  });
+}
+
+test('Shifting Ridge creates one patch at eruption resolution after a protected crossing', async ({
+  page,
+}) => {
+  const result = await page.evaluate(() => {
+    const s = (window as any).__gloam.scene,
+      r = s.run;
+    r.upgrades = { 'lu-eye-of-the-mountain': 1, 'lu-shifting-ridge': 1 };
+    const x = s.player.x,
+      y = s.player.y;
+    s.hazards = [{ x, y, remaining: 2, warning: s.add.graphics() }];
+    s.dashRemaining = 1;
+    s.updateHazards(0.1);
+    const crossing = {
+      crossed: s.hazards[0].researchCrossed,
+      patches: r.researchRuntime?.ridgePatches?.length ?? 0,
+    };
+    s.player.setPosition(x + 500, y);
+    s.dashRemaining = 0;
+    s.updateHazards(2);
+    return { crossing, patches: r.researchRuntime.ridgePatches };
+  });
+  expect(result.crossing).toEqual({ crossed: true, patches: 0 });
+  expect(result.patches).toHaveLength(1);
+});

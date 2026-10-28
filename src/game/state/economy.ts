@@ -102,8 +102,17 @@ export function crossingForecast(
     duration -
       (run.clan.stage === 'migration' && run.clan.routeId === route.id ? run.clan.stageTime : 0),
   );
-  const foodNeeded = economyRates(run).foodConsumption * remaining;
-  const foodBeforeArrival = Math.max(0, run.clan.food - foodNeeded);
+  const rates = economyRates(
+    run.clan.stage === 'migration'
+      ? run
+      : {
+          ...run,
+          clan: { ...run.clan, stage: 'migration' },
+        },
+  );
+  const foodChange = rates.foodNet * remaining;
+  const foodNeeded = Math.max(0, -foodChange);
+  const foodBeforeArrival = Math.max(0, run.clan.food + foodChange);
   const arrivalChange = route.food + run.clan.campEffects.bonuses.arrivalFood;
   return {
     duration,
@@ -146,12 +155,7 @@ export function economyForecast(run: RunState): EconomyForecast {
   if (run.clan.stage === 'migration') {
     const route = ROUTES.find((entry) => entry.id === run.clan.routeId);
     const remaining = route ? crossingForecast(run, route).remaining : 0;
-    const emptyAt =
-      run.clan.food <= 0
-        ? 0
-        : rates.foodConsumption > 0
-          ? run.clan.food / rates.foodConsumption
-          : Infinity;
+    const emptyAt = rates.foodNet < 0 ? Math.max(0, run.clan.food) / -rates.foodNet : Infinity;
     if (emptyAt <= remaining) foodSeconds = emptyAt;
   } else {
     foodSeconds = campFoodSeconds(run);

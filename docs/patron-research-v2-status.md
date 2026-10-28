@@ -188,10 +188,18 @@ release clocks. All clocks use active seconds, and their state is retained by
 `expeditionArchive.ts`. Rider/echo attack speed affects cadence rather than damage.
 
 Warm Ashes is checked at the encounter recovery transition and grants no healing
-while enemies or hostile projectiles remain active. Crossing-arrival healing,
+while enemies, hostile projectiles, seer warnings, or lingering damaging enemy
+area attacks remain active. Crossing-arrival healing,
 including camp bonuses, follows Fortress of Felt and Household Oath rules.
 Geomancer's Eye and Warning Signs require entering a warning area and safely
 leaving it, or crossing it under Eye of the Mountain's Gallop protection.
 Normal allied piercing arrows receive Drilling Shafts and World-Piercer bonuses
 and penalties together; Ghost-Fletched arrows retain only their selected modifier.
 Echo releases use per-echo active-time clocks; legacy ancestor timers remain readable.
+
+Shifting Ridge places its patch only when an eruption resolves outside the Khan,
+regardless of distance; protected warning crossings do not place patches early.
+Stone and Stream applies to Gallop, Returning Current, Ash-Born and Eternal Hearth,
+including lingering slows and slowing ground patches, without displacing bosses.
+Crossing previews and migration shortage forecasts include Wandering City production.
+Overlapping hoof trails retain a separate damage claim for each active dash and enemy spawn.

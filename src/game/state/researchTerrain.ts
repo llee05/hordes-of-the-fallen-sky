@@ -53,6 +53,30 @@ export function researchEnemySlow(
     : 0;
   return Math.max(0.2, 1 - Math.max(strength, run.patrons.water.slow) - ramp);
 }
+export function researchEnemySlowed(
+  run: RunState,
+  slot: number,
+  spawn: number,
+  distance: number,
+  point: { x: number; y: number },
+): boolean {
+  const r = run.researchRuntime;
+  const key = `${slot}:${spawn}`;
+  return (
+    (run.patrons.water.slow > 0 && distance < researchWaterRadius(run)) ||
+    (r?.slowUntil?.[key] ?? 0) > run.elapsed ||
+    (r?.rootUntil?.[key] ?? 0) > run.elapsed ||
+    (r?.staggerUntil?.[key] ?? 0) > run.elapsed ||
+    (r?.ridgePatches ?? []).some(
+      (p) =>
+        p.until > run.elapsed &&
+        Math.hypot(point.x - p.x, point.y - p.y) < GAME.research.ridgeRadius,
+    ) ||
+    run.combat.trails.some(
+      (t) => Math.hypot(point.x - t.x, point.y - t.y) < GAME.mounted.trailRadius,
+    )
+  );
+}
 export function researchKnockback(run: RunState, slowed: boolean, boss: boolean): number {
   if (boss) return 0;
   return slowed && ownsResearch(run, 'lu-stone-and-stream') ? GAME.research.stoneStreamForce : 1;
@@ -91,6 +115,7 @@ export function resolveResearchEruption(
   player: { x: number; y: number },
   galloping: boolean,
   entered: boolean,
+  resolving = true,
 ): { immune: boolean; rock: boolean } {
   if (run.phase !== 'playing' || run.health <= 0 || run.khan.successionRemaining > 0)
     return { immune: false, rock: false };
@@ -114,11 +139,7 @@ export function resolveResearchEruption(
       (signs ? GAME.research.warningSignsSeconds : GAME.research.geomancerSpeedSeconds);
     r.dodgeCooldown = run.elapsed + GAME.research.warningSignsCooldown;
   }
-  if (
-    (!inside || immune) &&
-    Math.hypot(player.x - x, player.y - y) <= radius + 180 &&
-    ownsResearch(run, 'lu-shifting-ridge')
-  ) {
+  if (resolving && !inside && ownsResearch(run, 'lu-shifting-ridge')) {
     const patches = (r.ridgePatches ??= []);
     patches.push({ x: x + radius, y, until: run.elapsed + GAME.research.ridgeSeconds });
     if (patches.length > 16) patches.shift();

@@ -1,5 +1,7 @@
 import {
   researchEnemySlow,
+  researchEnemySlowed,
+  researchKnockback,
   inRidgePatch,
   terrainWarningBonus,
   resolveResearchEruption,
@@ -1713,7 +1715,16 @@ export class ArenaScene extends Phaser.Scene {
     if (
       advanceEncounters(
         this.run,
-        this.enemies.countActive(true) > 0 || this.hostileShots.countActive(true) > 0,
+        this.enemies.countActive(true) > 0 ||
+          this.hostileShots.countActive(true) > 0 ||
+          this.hazards.some((hazard) => hazard.source === 'seer') ||
+          this.areaThreats.threats.some(
+            (threat) =>
+              !!threat.owner &&
+              threat.impacted &&
+              GAME.areaCombat.threats[threat.kind].tickDamage > 0 &&
+              threat.age < threat.warning + GAME.areaCombat.threats[threat.kind].duration,
+          ),
       )
     )
       this.audio.play('encounter');
@@ -2527,14 +2538,29 @@ export class ArenaScene extends Phaser.Scene {
             'khan',
           );
         const d = Math.max(1, playerDistance),
-          push = GAME.mounted.breakthroughPush;
-        const desired = {
-          x: enemy.x + ((enemy.x - this.player.x) / d) * push,
-          y: enemy.y + ((enemy.y - this.player.y) / d) * push,
-        };
-        const point =
-          this.landscape.navigation?.slide(enemy, desired, GAME.terrain.actorClearance) ?? desired;
-        enemy.setPosition(point.x, point.y);
+          push =
+            GAME.mounted.breakthroughPush *
+            researchKnockback(
+              this.run,
+              researchEnemySlowed(
+                this.run,
+                enemy.tacticalSlot,
+                enemy.spawnId,
+                Math.min(playerDistance, campDistance),
+                enemy,
+              ),
+              behavior === 'boss',
+            );
+        if (push > 0) {
+          const desired = {
+            x: enemy.x + ((enemy.x - this.player.x) / d) * push,
+            y: enemy.y + ((enemy.y - this.player.y) / d) * push,
+          };
+          const point =
+            this.landscape.navigation?.slide(enemy, desired, GAME.terrain.actorClearance) ??
+            desired;
+          enemy.setPosition(point.x, point.y);
+        }
       }
       if (enemy.active) {
         const hoofDamage = claimHoofTrailDamage(
@@ -3723,6 +3749,7 @@ export class ArenaScene extends Phaser.Scene {
           this.player,
           true,
           hazard.researchEntered === true,
+          false,
         );
         if (crossing.rock)
           this.spatial.forEachNearby(hazard.x, hazard.y, GAME.research.rockArcRadius, (enemy) =>
@@ -3806,8 +3833,19 @@ export class ArenaScene extends Phaser.Scene {
         if (!enemy.active) return;
         const boss = enemy.definition.behavior === 'boss';
         const push =
-          (ashPulse && !boss && distance <= ashPulse.radius ? ashPulse.push : 0) +
-          eternalHearthPush(this.run, distance, boss) * dt;
+          ((ashPulse && !boss && distance <= ashPulse.radius ? ashPulse.push : 0) +
+            eternalHearthPush(this.run, distance, boss) * dt) *
+          researchKnockback(
+            this.run,
+            researchEnemySlowed(
+              this.run,
+              enemy.tacticalSlot,
+              enemy.spawnId,
+              Math.min(distance, Math.hypot(enemy.x - this.camp.x, enemy.y - this.camp.y)),
+              enemy,
+            ),
+            boss,
+          );
         if (push > 0)
           enemy.setPosition(
             enemy.x + (distance ? dx / distance : 1) * push,
