@@ -60,7 +60,7 @@ export function researchEnemySlow(
   const ramp = ownsResearch(run, 'lu-deep-current')
     ? Math.min(1, duration / GAME.research.deepCurrentAfter) * GAME.research.deepCurrentSlow
     : 0;
-  return Math.max(0.2, 1 - Math.max(strength, run.patrons.water.slow) - ramp);
+  return Math.max(0.2, 1 - (strength || run.patrons.water.slow) - ramp);
 }
 export function researchEnemySlowed(
   run: RunState,

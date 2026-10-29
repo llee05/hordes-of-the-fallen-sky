@@ -131,25 +131,6 @@ export function markEnemy(
 export function isEnemyMarked(run: RunState, slot: number, spawn: number): boolean {
   return (run.researchRuntime?.markedUntil?.[enemyKey(slot, spawn)] ?? 0) > run.elapsed;
 }
-export function markedPursuitMultiplier(run: RunState, slot: number, spawn: number): number {
-  return ownsResearch(run, 'bc-scent-of-fear') && isEnemyMarked(run, slot, spawn)
-    ? GAME.research.scentOfFearDamage
-    : 1;
-}
-export function throatOfPreyMultiplier(run: RunState, slot: number, spawn: number): number {
-  const r = run.researchRuntime;
-  if (
-    !ownsResearch(run, 'bc-throat-of-the-prey') ||
-    r?.throatSlot !== slot ||
-    r.throatSpawn !== spawn ||
-    !isEnemyMarked(run, slot, spawn)
-  )
-    return 1;
-  return (
-    1 +
-    Math.min(GAME.research.throatMaxStacks, r.throatStacks ?? 0) * GAME.research.throatRampPerHit
-  );
-}
 export function isPrecisionMarked(run: RunState, slot: number, spawn: number): boolean {
   return (run.researchRuntime?.precisionMarkedUntil?.[enemyKey(slot, spawn)] ?? 0) > run.elapsed;
 }
@@ -707,9 +688,6 @@ export function stillHandActive(run: RunState): boolean {
   if (!ownsResearch(run, 'km-still-hand')) return false;
   const last = run.researchRuntime?.lastGallopAt;
   return last === undefined || run.elapsed - last >= GAME.research.stillHandIdleSeconds;
-}
-export function stillHandCritChance(run: RunState): number {
-  return stillHandActive(run) ? GAME.research.stillHandCritChance : 0;
 }
 export function stillHandDamageMultiplier(run: RunState, roll = Math.random()): number {
   if (!stillHandActive(run)) return 1;

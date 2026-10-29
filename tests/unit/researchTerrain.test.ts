@@ -29,6 +29,21 @@ describe('Lus terrain mechanics', () => {
     r.elapsed = 1;
     expect(researchEnemySlow(r, 0, 1, 1000, 0.5)).toBe(1);
   });
+  it.each([false, true])(
+    'isolated ridge patches use their own slow strength (boss: %s)',
+    (boss) => {
+      const r = run('lu-shifting-ridge');
+      r.patrons.water.slow = 0.42;
+      expect(researchEnemySlow(r, 0, 1, 1000, 0.1, boss, true)).toBeCloseTo(0.8);
+      expect(researchEnemySlow(r, 1, 1, 10, 0.1, boss, true)).toBeCloseTo(0.58);
+      expect(researchEnemySlow(r, 2, 1, 1000, 0.1, boss)).toBe(1);
+      r.patrons.water.slow = 0.1;
+      expect(researchEnemySlow(r, 3, 1, 10, 0.1, boss, true)).toBeCloseTo(0.8);
+      r.upgrades['lu-deep-current'] = 1;
+      r.elapsed = 3;
+      expect(researchEnemySlow(r, 0, 1, 1000, 3, boss, true)).toBeCloseTo(0.68);
+    },
+  );
   it('Frozen Bank roots after continuous slow and Deep Current ramps strength, exempting bosses', () => {
     const r = run('lu-frozen-bank', 'lu-deep-current');
     researchEnemySlow(r, 0, 1, 10, 1);

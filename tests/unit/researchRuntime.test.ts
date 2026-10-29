@@ -35,9 +35,7 @@ import {
   riderAttackSpeedMultiplier,
   riderPrefersTarget,
   stillHandActive,
-  stillHandCritChance,
   stillHandDamageMultiplier,
-  throatOfPreyMultiplier,
   updateEchoGuard,
   updateMarkedProximity,
   wagonResearchDefence,
@@ -339,9 +337,9 @@ describe('Börte Chino (Hunting) runtime effects', () => {
       const mult = recordFriendlyHitOnEnemy(r, 4, 1, 0.6, true);
       expect(mult).toBeCloseTo(1 + Math.min(8, i) * 0.03);
     }
-    expect(throatOfPreyMultiplier(r, 4, 1)).toBeCloseTo(1.24);
+    expect(recordFriendlyHitOnEnemy(r, 4, 1, 0.6, true)).toBeCloseTo(1.24);
     expect(recordFriendlyHitOnEnemy(r, 5, 1, 0.6, false)).toBe(1);
-    expect(throatOfPreyMultiplier(r, 4, 1)).toBe(1);
+    expect(recordFriendlyHitOnEnemy(r, 4, 1, 0.6, true)).toBeCloseTo(1.03);
   });
 
   it('fires Storm Chaser volley when dashing through 3+ enemies with a 4 s cooldown', () => {
@@ -542,15 +540,18 @@ describe('Khükhedei Mergen (Archery) runtime effects', () => {
     r.phase = 'playing';
     r.upgrades['km-still-hand'] = 1;
     expect(stillHandActive(r)).toBe(true);
-    expect(stillHandCritChance(r)).toBeCloseTo(0.15);
+    expect(stillHandDamageMultiplier(r, 0.149)).toBeCloseTo(1.5);
+    expect(stillHandDamageMultiplier(r, 0.15)).toBe(1);
     expect(stillHandDamageMultiplier(r, 0.1)).toBeCloseTo(1.5);
     expect(stillHandDamageMultiplier(r, 0.2)).toBe(1);
     researchGallop(r);
     expect(stillHandActive(r)).toBe(false);
-    expect(stillHandCritChance(r)).toBe(0);
     expect(stillHandDamageMultiplier(r, 0.05)).toBe(1);
+    r.elapsed = 1.99;
+    expect(stillHandDamageMultiplier(r, 0.1)).toBe(1);
     r.elapsed = 2;
     expect(stillHandActive(r)).toBe(true);
+    expect(stillHandDamageMultiplier(r, 0.1)).toBeCloseTo(1.5);
   });
 
   it('reduces pierced target armour by 4% per hit up to 20% for 4 s with Sunder the Ranks', () => {
