@@ -8,8 +8,8 @@ describe('readable encounter pacing', () => {
     r.phase = 'playing';
     expect(encounterPlan(r).phase).toBe('probing');
     r.clan.stageTime = 18;
-    expect(advanceEncounters(r)).toBe(true);
-    expect(advanceEncounters(r)).toBe(false);
+    expect(advanceEncounters(r, false)).toBe(true);
+    expect(advanceEncounters(r, false)).toBe(false);
     const direction = encounterPlan(r).angle;
     r.clan.stageTime = 26;
     expect(encounterPlan(r).phase).toBe('assault');
@@ -27,10 +27,10 @@ describe('readable encounter pacing', () => {
     r.clan.stageTime = 53;
     r.elapsed = 56;
     const before = structuredClone(r);
-    expect(advanceEncounters(r)).toBe(false);
+    expect(advanceEncounters(r, false)).toBe(false);
     expect(r).toEqual(before);
     r.phase = 'playing';
-    advanceEncounters(r);
+    advanceEncounters(r, false);
     r.elapsed = 52;
     expect(encounterEnemy(r).elite).toBe(false);
     r.elapsed = 56;
@@ -41,7 +41,7 @@ describe('readable encounter pacing', () => {
     for (let i = 0; i < 30; i++)
       expect(encounterEnemy(r).definition.unlockAt).toBeLessThanOrEqual(56);
     r.clan.stageTime += 70;
-    advanceEncounters(r);
+    advanceEncounters(r, false);
     expect(r.encounters.eliteSpawned).toBe(false);
   });
 });

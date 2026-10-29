@@ -101,12 +101,18 @@ test('water fields slow enemies and extend eruption warnings while reducing erup
     run.patrons.water.slow = 0.24;
     run.patrons.water.warning = 1;
     run.patrons.water.hazardDamage = 0.5;
+    // Measure field movement outside the camp boundary, where attackers hold position.
+    scene.player.setPosition(scene.camp.x + 600, scene.camp.y + 600);
     for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
     const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);
     enemy.setPosition(scene.player.x + 120, scene.player.y);
+    run.patrons.water.slow = 0;
+    scene.updateEnemies(0.01);
+    const terrainSpeed = enemy.body.velocity.length();
+    run.patrons.water.slow = 0.24;
     scene.updateEnemies(0.01);
     const speed = enemy.body.velocity.length();
-    const expectedSpeed = enemy.definition.speed * 0.76;
+    const expectedSpeed = terrainSpeed * 0.76;
     run.clan.region = 2;
     scene.player.setPosition(scene.camp.x, scene.camp.y + 30);
     scene.hazardTimer = 0;

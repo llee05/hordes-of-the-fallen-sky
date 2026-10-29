@@ -1,6 +1,7 @@
 import { GAME } from '../config';
 import type { RunState } from '../types';
 import { isKhanActive } from './khan';
+import { advanceHoofTrails, researchMomentumFloor } from './researchRuntime';
 export interface GroundPoint {
   x: number;
   y: number;
@@ -57,7 +58,9 @@ export function advanceMountedCombat(
     ? Math.min(GAME.mounted.chargeSeconds, c.rideSeconds + dt)
     : Math.max(0, c.rideSeconds - dt * 2);
   if (turn < 0.2) run.clan.momentum *= 0.8;
+  run.clan.momentum = Math.max(researchMomentumFloor(run), run.clan.momentum);
   c.ready = c.rideSeconds >= GAME.mounted.chargeSeconds;
+  advanceHoofTrails(run, position, galloping);
   if (
     galloping &&
     (run.upgrades['turned-earth'] ?? 0) > 0 &&

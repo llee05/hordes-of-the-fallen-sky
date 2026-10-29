@@ -1,4 +1,13 @@
-import { researchKhanHitProtection, stillwaterRefuge } from './researchRuntime';
+import { lastWagonSpeed } from './researchLeadership';
+import { terrainDodgeSpeed } from './researchTerrain';
+import {
+  ashBornInvulnerable,
+  recordKhanSurvivedHit,
+  recordLastEmberRevival,
+  researchKhanHitProtection,
+  researchKhanSpeedMultiplier,
+  stillwaterRefuge,
+} from './researchRuntime';
 import { rememberFallenKhan, rememberChosenKhan } from './legacy';
 import { SUCCESSORS, type SuccessorTrait } from '../data/successors';
 import { GAME } from '../config';
@@ -23,21 +32,31 @@ export function damageKhan(
   run: RunState,
   amount: number,
 ): 'hit' | 'revived' | 'fallen' | undefined {
-  if (run.phase !== 'playing' || !isKhanActive(run) || !Number.isFinite(amount) || amount <= 0)
+  if (
+    run.phase !== 'playing' ||
+    !isKhanActive(run) ||
+    !Number.isFinite(amount) ||
+    amount <= 0 ||
+    ashBornInvulnerable(run)
+  )
     return;
   run.health = Math.max(
     0,
     run.health -
       amount *
         (stillwaterRefuge(run) ? GAME.research.refugeProtection : 1) *
-        researchKhanHitProtection(run) *
+        researchKhanHitProtection(run, amount) *
         run.patrons.hearth.damageTaken *
         (run.khan.trait ? SUCCESSORS[run.khan.trait].protection : 1),
   );
-  if (run.health > 0) return 'hit';
+  if (run.health > 0) {
+    recordKhanSurvivedHit(run);
+    return 'hit';
+  }
   if (run.patrons.hearth.revives > 0) {
     run.patrons.hearth.revives -= 1;
     run.health = run.stats.maxHealth * GAME.patrons.fire.revival;
+    recordLastEmberRevival(run);
     return 'revived';
   }
   beginSuccession(run);
@@ -81,5 +100,10 @@ export function chooseSuccessor(run: RunState, trait: SuccessorTrait): boolean {
   return true;
 }
 export function khanSpeedMultiplier(run: RunState): number {
-  return run.khan.trait ? SUCCESSORS[run.khan.trait].speed : 1;
+  return (
+    (run.khan.trait ? SUCCESSORS[run.khan.trait].speed : 1) *
+    researchKhanSpeedMultiplier(run) *
+    terrainDodgeSpeed(run) *
+    lastWagonSpeed(run)
+  );
 }

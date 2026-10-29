@@ -1,3 +1,34 @@
+import {
+  researchEnemySlow,
+  researchEnemySlowed,
+  researchKnockback,
+  inRidgePatch,
+  terrainWarningBonus,
+  resolveResearchEruption,
+  claimTerrainWave,
+} from '../state/researchTerrain';
+import {
+  recordEchoHit,
+  echoVulnerability,
+  recordShardGathering,
+  researchSpiritYield,
+  remembranceMagnetRadius,
+} from '../state/researchEchoes';
+import {
+  claimRiderVolley,
+  recordEliteAppearance,
+  issueKurultai,
+  bannerFormation,
+  bannerDamage,
+} from '../state/researchLeadership';
+import {
+  claimArrowPlatform,
+  circlingVolley,
+  wagonDamageMultiplier,
+  wagonRangeMultiplier,
+} from '../state/researchGuardian';
+import { nearestCompanion, selectNearestCompanion } from '../state/researchCompanions';
+import { claimThousandArrows, ghostArrowModifier } from '../state/researchHybrids';
 import { volleyFactors } from '../state/volley';
 import {
   observeResearchFrame,
@@ -5,9 +36,36 @@ import {
   type ResearchDamageSource,
 } from '../state/researchMetrics';
 import {
+  advanceEnemyBleed,
+  capWorldPiercerDamage,
+  circleOfShaftsVolley,
+  claimArrowRainDrop,
+  claimAshBornPulse,
+  claimFlameRefusesPulse,
+  claimHoofTrailDamage,
+  eagleEyeOverkillSpill,
+  enemyStaggerSlowMultiplier,
+  eternalHearthPush,
+  isEnemyMarked,
+  ownsResearch,
+  packInstinctBonus,
+  projectileDamageAfterPierce,
+  recordFriendlyHitOnEnemy,
+  recordGallopThroughEnemy,
   recordKhanTarget,
+  recordKhanVolley,
+  recordPiercingHitOnEnemy,
+  recordResearchEnemyKill,
   recordResearchShard,
+  researchArmorMultiplier,
+  researchAttackIntervalMultiplier,
+  researchBonusPierces,
   researchGallop,
+  researchWaterRadius,
+  riderPrefersTarget,
+  stillHandDamageMultiplier,
+  updateCampfireVigil,
+  updateMarkedProximity,
   wagonResearchDefence,
 } from '../state/researchRuntime';
 import { purchaseNomadicBuilding } from '../state/nomadicCamp';
@@ -112,7 +170,6 @@ import {
   friendlyDamageMultiplier,
   gallopCooldown,
   rewardPatronKill,
-  terrainSpeedMultiplier,
 } from '../state/patrons';
 import {
   advanceSuccession,
@@ -205,6 +262,8 @@ export class ArenaScene extends Phaser.Scene {
     radius?: number;
     damage?: number;
     source?: 'seer';
+    researchCrossed?: boolean;
+    researchEntered?: boolean;
   }[] = [];
   private hazardTimer: number = GAME.hazards.initialDelay;
   private gems!: Phaser.Physics.Arcade.Group;
@@ -457,6 +516,7 @@ export class ArenaScene extends Phaser.Scene {
     bindAction('B', () => this.openBuildings());
     bindAction('M', () => this.openRoutes());
     bindAction('F', () => this.cycleFormation());
+    bindAction('R', () => this.rallyHost());
     bindAction('ONE', () => this.selectSuccessor('outrider'));
     bindAction('TWO', () => this.selectSuccessor('hearthguard'));
     bindAction('J', () => this.toggleJournal());
@@ -711,6 +771,11 @@ export class ArenaScene extends Phaser.Scene {
           turn: p.turn,
           pierces: p.pierces,
           pins: p.pins,
+          echoIndex: p.echoIndex,
+          precision: p.getData('precision') as boolean | undefined,
+          ghost: p.getData('ghost') as boolean | undefined,
+          baseDamage: p.getData('base-damage') as number | undefined,
+          dealtDamage: p.getData('dealt-damage') as number | undefined,
           rotation: p.rotation,
           tint: p.tintTopLeft,
           previous: p.getData('terrain-previous') as { x: number; y: number } | undefined,
@@ -772,7 +837,12 @@ export class ArenaScene extends Phaser.Scene {
       hostileShots: shots(this.hostileShots),
       gems: (this.gems.getChildren() as Gem[])
         .filter((g) => g.active)
-        .map((g) => ({ ...body(g), value: g.value, attracted: g.attracted })),
+        .map((g) => ({
+          ...body(g),
+          value: g.value,
+          attracted: g.attracted,
+          secondary: g.secondary,
+        })),
       riders: this.riders.map((r, i) => ({
         x: r.x,
         y: r.y,
@@ -847,7 +917,12 @@ export class ArenaScene extends Phaser.Scene {
         const p = group.get(saved.x, saved.y, hostile ? 'gem' : 'bolt') as Projectile;
         p.enableBody(true, saved.x, saved.y, true, true);
         const { x: _x, y: _y, vx, vy, flip, rotation, tint, previous, hits, ...state } = saved;
+        p.echoIndex = undefined;
         Object.assign(p, state);
+        p.setData('precision', saved.precision);
+        p.setData('ghost', saved.ghost);
+        p.setData('base-damage', saved.baseDamage);
+        p.setData('dealt-damage', saved.dealtDamage);
         p.setScale(hostile ? 1.1 : 1)
           .setDepth(9200)
           .setRotation(rotation)
@@ -871,6 +946,7 @@ export class ArenaScene extends Phaser.Scene {
       gem.setScale(0.85).setDepth(3).setVelocity(saved.vx, saved.vy);
       gem.value = saved.value;
       gem.attracted = saved.attracted;
+      gem.secondary = saved.secondary ?? false;
     }
     world.riders.forEach((r, i) => {
       this.riders[i]!.setPosition(r.x, r.y)
@@ -1285,13 +1361,23 @@ export class ArenaScene extends Phaser.Scene {
     this.audio.play('depart');
   }
 
+  rallyHost(): void {
+    if (issueKurultai(this.run)) {
+      this.run.clan.message = 'The Great Kurultai: the host rallies for fifteen seconds.';
+      this.callbacks?.onHud(this.snapshot());
+    }
+  }
+
   cycleFormation(): void {
     if (this.run.phase !== 'playing') return;
     const formations = availableFormations(this.run);
     if (formations.length > 1) completeGuidance(this.run, 'formation');
     this.run.clan.formation =
       formations[(formations.indexOf(this.run.clan.formation) + 1) % formations.length]!;
-    this.run.clan.message = FORMATIONS[this.run.clan.formation].description;
+    this.run.clan.message =
+      (ownsResearch(this.run, 'su-banner-formation')
+        ? `Banner ${bannerFormation(this.run)}. `
+        : '') + FORMATIONS[this.run.clan.formation].description;
     this.callbacks?.onHud(this.snapshot());
   }
 
@@ -1576,6 +1662,13 @@ export class ArenaScene extends Phaser.Scene {
     }
     observeResearchFrame(this.run, delta);
     this.run.elapsed += dt;
+    updateCampfireVigil(
+      this.run,
+      isKhanActive(this.run) &&
+        this.player.body!.velocity.lengthSq() <= 1 &&
+        Math.hypot(this.player.x - this.camp.x, this.player.y - this.camp.y) < 300,
+      Math.hypot(this.player.x - this.camp.x, this.player.y - this.camp.y),
+    );
     advancePatrons(this.run, dt);
     this.dashTimer = Math.max(0, this.dashTimer - dt);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
@@ -1591,6 +1684,12 @@ export class ArenaScene extends Phaser.Scene {
     }
     if (outcome === 'arrived') this.arrive();
     if (this.run.phase !== 'playing') return;
+    selectNearestCompanion(this.run, this.player, [
+      ...this.riders.flatMap((rider, index) =>
+        rider.visible ? [{ kind: 'rider' as const, index, x: rider.x, y: rider.y }] : [],
+      ),
+      ...this.patronSupport.companionPositions(),
+    ]);
     this.updateCamp(dt);
     if (this.run.phase !== 'playing') return;
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
@@ -1612,7 +1711,22 @@ export class ArenaScene extends Phaser.Scene {
     });
     syncFieldState(this.run);
     if (syncAreaEncounter(this.areaEncounter, this.run)) this.areaThreats = createAreaThreats();
-    if (advanceEncounters(this.run)) this.audio.play('encounter');
+    if (
+      advanceEncounters(
+        this.run,
+        this.enemies.countActive(true) > 0 ||
+          this.hostileShots.countActive(true) > 0 ||
+          this.hazards.some((hazard) => hazard.source === 'seer') ||
+          this.areaThreats.threats.some(
+            (threat) =>
+              !!threat.owner &&
+              threat.impacted &&
+              GAME.areaCombat.threats[threat.kind].tickDamage > 0 &&
+              threat.age < threat.warning + GAME.areaCombat.threats[threat.kind].duration,
+          ),
+      )
+    )
+      this.audio.play('encounter');
     this.updateFieldObjectives(dt);
     this.updateCrossing(dt);
     this.updateFinalStand(dt);
@@ -1625,10 +1739,12 @@ export class ArenaScene extends Phaser.Scene {
     this.updateSupport(dt);
     this.patronSupport.update(this.run, dt, this.player, this.camp, this.spatial, {
       damage: (enemy, amount) => this.damageEnemy(enemy, amount),
-      volley: (x, y, target, multiplier) => this.shootVolley(x, y, target, 1, multiplier, true),
+      volley: (x, y, target, multiplier, index, ghost) =>
+        this.shootVolley(x, y, target, 1, multiplier, true, false, 'rider', index, ghost),
     });
     this.attackTimer -= dt;
     if (this.attackTimer <= 0) this.fire();
+    this.fireRiders();
     this.spawnTimer -= dt;
     if (this.spawnTimer <= 0) {
       const spawned = this.spawnEnemy();
@@ -1843,6 +1959,7 @@ export class ArenaScene extends Phaser.Scene {
     if (!enemy) return false;
     this.initializeEnemy(enemy, definition, x, y);
     enemy.elite ||= !forced && !!selection.elite;
+    if (enemy.elite || isBoss) recordEliteAppearance(this.run);
     enemy.objectiveId = directive?.objectiveId;
     enemy.crossingId = directive?.crossingId;
     if (isBoss)
@@ -2095,6 +2212,16 @@ export class ArenaScene extends Phaser.Scene {
       warnings
         .lineStyle(1, 0x78b6ae, (0.3 * trail.remaining) / GAME.mounted.trailSeconds)
         .strokeCircle(trail.x, trail.y, GAME.mounted.trailRadius);
+    for (const trail of this.run.researchRuntime?.hoofTrails ?? [])
+      if (trail.until > this.run.elapsed)
+        warnings
+          .lineStyle(
+            1,
+            0xd8a868,
+            (0.35 * (trail.until - this.run.elapsed)) / GAME.research.hoofTrailSeconds,
+          )
+          .strokeCircle(trail.x, trail.y, GAME.mounted.trailRadius);
+    let markedNear = false;
     for (const enemy of this.enemies.getChildren() as Enemy[]) {
       const shadow = this.enemyShadows.get(enemy);
       shadow?.setVisible(enemy.active);
@@ -2168,7 +2295,15 @@ export class ArenaScene extends Phaser.Scene {
       let speed =
         enemy.definition.speed *
         (1 + clan.region * 0.1) *
-        terrainSpeedMultiplier(this.run, Math.min(playerDistance, campDistance)) *
+        researchEnemySlow(
+          this.run,
+          enemy.tacticalSlot,
+          enemy.spawnId,
+          Math.min(playerDistance, campDistance),
+          dt,
+          enemy.definition.behavior === 'boss',
+          inRidgePatch(this.run, enemy.x, enemy.y),
+        ) *
         Math.max(
           0.65,
           1 /
@@ -2194,6 +2329,18 @@ export class ArenaScene extends Phaser.Scene {
         );
       }
       if (enemy.elite) warnings.lineStyle(3, 0xe0bc76, 0.85).strokeCircle(enemy.x, enemy.y, 30);
+      if (
+        khanActive &&
+        playerDistance <= GAME.research.endlessPursuitRadius &&
+        isEnemyMarked(this.run, enemy.tacticalSlot, enemy.spawnId)
+      )
+        markedNear = true;
+      speed *= enemyStaggerSlowMultiplier(
+        this.run,
+        enemy.tacticalSlot,
+        enemy.spawnId,
+        behavior === 'boss',
+      );
       if (enemy.pinned > 0 || (finale && finale.phase !== 'advance')) speed = 0;
       if (
         this.run.combat.trails.some(
@@ -2367,15 +2514,66 @@ export class ArenaScene extends Phaser.Scene {
         enemy.lastGallop !== this.run.combat.gallopSerial
       ) {
         enemy.lastGallop = this.run.combat.gallopSerial;
+        const gallopHit = recordGallopThroughEnemy(
+          this.run,
+          enemy.tacticalSlot,
+          enemy.spawnId,
+          behavior === 'boss',
+        );
+        if (gallopHit.staggered && behavior !== 'boss') {
+          enemy.pinned = Math.max(enemy.pinned, gallopHit.staggerSeconds);
+          enemy.tactics.phase = 'recover';
+          enemy.tactics.remaining = Math.max(enemy.tactics.remaining, gallopHit.staggerSeconds);
+        }
+        if (gallopHit.stormChaserVolley)
+          this.shootVolley(
+            this.player.x,
+            this.player.y,
+            enemy,
+            this.run.stats.projectiles,
+            GAME.research.stormChaserDamage,
+            false,
+            false,
+            'khan',
+          );
         const d = Math.max(1, playerDistance),
-          push = GAME.mounted.breakthroughPush;
-        const desired = {
-          x: enemy.x + ((enemy.x - this.player.x) / d) * push,
-          y: enemy.y + ((enemy.y - this.player.y) / d) * push,
-        };
-        const point =
-          this.landscape.navigation?.slide(enemy, desired, GAME.terrain.actorClearance) ?? desired;
-        enemy.setPosition(point.x, point.y);
+          push =
+            GAME.mounted.breakthroughPush *
+            researchKnockback(
+              this.run,
+              researchEnemySlowed(
+                this.run,
+                enemy.tacticalSlot,
+                enemy.spawnId,
+                Math.min(playerDistance, campDistance),
+                enemy,
+              ),
+              behavior === 'boss',
+            );
+        if (push > 0) {
+          const desired = {
+            x: enemy.x + ((enemy.x - this.player.x) / d) * push,
+            y: enemy.y + ((enemy.y - this.player.y) / d) * push,
+          };
+          const point =
+            this.landscape.navigation?.slide(enemy, desired, GAME.terrain.actorClearance) ??
+            desired;
+          enemy.setPosition(point.x, point.y);
+        }
+      }
+      if (enemy.active) {
+        const hoofDamage = claimHoofTrailDamage(
+          this.run,
+          enemy.tacticalSlot,
+          enemy.spawnId,
+          enemy.x,
+          enemy.y,
+        );
+        if (hoofDamage > 0) this.damageEnemy(enemy, hoofDamage);
+      }
+      if (enemy.active) {
+        const bleedDamage = advanceEnemyBleed(this.run, enemy.tacticalSlot, enemy.spawnId, dt);
+        if (bleedDamage > 0) this.damageEnemy(enemy, bleedDamage, 'khan', false);
       }
       if (enemy.burning > 0) {
         enemy.burning -= dt;
@@ -2392,6 +2590,7 @@ export class ArenaScene extends Phaser.Scene {
       )
         this.damageEnemy(enemy, dt * this.run.stats.damage * 18);
     }
+    updateMarkedProximity(this.run, markedNear);
   }
 
   private fire(): void {
@@ -2431,44 +2630,58 @@ export class ArenaScene extends Phaser.Scene {
         this.burst(this.player.x, this.player.y, 0xe3c78c, 5);
       }
     }
-    const paired =
-      (this.run.upgrades.haste ?? 0) > 0 &&
-      (this.run.combat.volleys + 1) % GAME.mounted.pairedEvery === 0;
+    if (hostFired) this.run.combat.volleys++;
+    this.attackTimer =
+      this.run.stats.attackInterval *
+      this.run.clan.campEffects.multipliers.hostInterval *
+      researchAttackIntervalMultiplier(this.run) *
+      (this.run.clan.formation === 'retreat' && momentum > 0.4 ? 0.7 : 1);
+  }
+
+  private fireRiders(): void {
     const count = riderCount(this.run);
     for (let i = 0; i < count; i += 1) {
       const rider = this.riders[i]!;
-      const riderTarget = this.spatial.nearest(
-        rider.x,
-        rider.y,
+      const range =
         GAME.projectile.range +
-          this.run.patrons.bow.range +
-          this.run.clan.campEffects.bonuses.range,
-        (e) => !this.landscape.navigation || this.landscape.navigation.lineClear(rider, e, 0),
-      );
-      if (riderTarget) {
+        this.run.patrons.bow.range +
+        this.run.clan.campEffects.bonuses.range;
+      const clear = (e: Enemy) =>
+        !this.landscape.navigation || this.landscape.navigation.lineClear(rider, e, 0);
+      const riderTarget =
+        this.spatial.nearest(
+          rider.x,
+          rider.y,
+          range,
+          (e) => clear(e) && riderPrefersTarget(this.run, e.tacticalSlot, e.spawnId),
+        ) ?? this.spatial.nearest(rider.x, rider.y, range, clear);
+      if (
+        riderTarget &&
+        claimRiderVolley(
+          this.run,
+          i,
+          (paired) =>
+            this.shootVolley(
+              rider.x,
+              rider.y,
+              riderTarget,
+              paired ? 2 : 1,
+              (0.6 + (hasDevelopment(this.run, 'archery', 'veteran-riders') ? 0.3 : 0)) *
+                this.run.patrons.banner.damage *
+                this.run.clan.campEffects.multipliers.riderDamage *
+                bannerDamage(this.run),
+            ),
+          nearestCompanion(this.run, 'rider', i),
+        )
+      ) {
         this.riderMotions[i]!.attack();
         if (this.riderSpeeds[i]! < 2)
           rider.setFlipX(
             (this.landscape.world3d?.screenX(riderTarget.x - rider.x, riderTarget.y - rider.y) ??
               riderTarget.x - rider.x) < 0,
           );
-        hostFired =
-          this.shootVolley(
-            rider.x,
-            rider.y,
-            riderTarget,
-            paired ? 2 : 1,
-            (0.6 + (hasDevelopment(this.run, 'archery', 'veteran-riders') ? 0.3 : 0)) *
-              this.run.patrons.banner.damage *
-              this.run.clan.campEffects.multipliers.riderDamage,
-          ) || hostFired;
       }
     }
-    if (hostFired) this.run.combat.volleys++;
-    this.attackTimer =
-      this.run.stats.attackInterval *
-      this.run.clan.campEffects.multipliers.hostInterval *
-      (this.run.clan.formation === 'retreat' && momentum > 0.4 ? 0.7 : 1);
   }
 
   private shootVolley(
@@ -2476,23 +2689,73 @@ export class ArenaScene extends Phaser.Scene {
     y: number,
     target: Enemy,
     count: number,
-    multiplier: number,
+    damageOrMultiplier: number,
     ancestral = false,
     charged = false,
-    owner: 'khan' | 'rider' = 'rider',
+    owner: 'khan' | 'rider' | 'wagon' | 'wagon-ricochet' = 'rider',
+    echoIndex?: number,
+    ghost = false,
+    origin?: Enemy,
   ): boolean {
-    const volley = volleyFactors(this.run, count, owner === 'khan', ancestral);
+    const volley =
+      owner === 'wagon-ricochet'
+        ? { tempest: false, count: 1, spacing: 0, damage: 1, speed: 1 }
+        : volleyFactors(this.run, count, owner === 'khan', ancestral);
     const direction = Math.atan2(target.y - y, target.x - x);
-    const tempest = volley.tempest;
-    let fired = false;
-    for (let i = 0; i < volley.count; i += 1) {
-      const bolt = this.projectiles.get(x, y, 'bolt') as Projectile | null;
+    const tempest = !ghost && volley.tempest;
+    const candidates: { slot: number; spawn: number; health: number; x: number; y: number }[] = [
+      {
+        slot: target.tacticalSlot,
+        spawn: target.spawnId,
+        health: target.health,
+        x: target.x,
+        y: target.y,
+      },
+    ];
+    if (owner === 'khan') {
+      this.spatial.forEachNearby(target.x, target.y, 180, (e) => {
+        if (e.active && e !== target)
+          candidates.push({
+            slot: e.tacticalSlot,
+            spawn: e.spawnId,
+            health: e.health,
+            x: e.x,
+            y: e.y,
+          });
+      });
+    }
+    const first = this.projectiles.get(x, y, 'bolt') as Projectile | null;
+    if (!first) return false;
+    const khanVolley =
+      owner === 'khan'
+        ? recordKhanVolley(this.run, volley.count, candidates)
+        : {
+            executionArrow: false,
+            skyDarkener: false,
+            arrowRainQueued: false,
+            damageMultiplier: 1,
+            bonusPierces: 0,
+            overrideCount: undefined,
+          };
+    const precision = owner === 'khan' && volley.count === 1;
+    const stillHand = precision ? stillHandDamageMultiplier(this.run) : 1;
+    const inherited = ghostArrowModifier(this.run);
+    const arrowCount = ghost ? 1 : (khanVolley.overrideCount ?? volley.count);
+    const basePierces = ghost
+      ? inherited.pierces
+      : this.run.patrons.bow.pierce + (charged ? 1 : 0) + khanVolley.bonusPierces;
+    const bonusPierces = ghost ? 0 : researchBonusPierces(this.run, basePierces);
+    for (let i = 0; i < arrowCount; i += 1) {
+      const bolt = i === 0 ? first : (this.projectiles.get(x, y, 'bolt') as Projectile | null);
       if (!bolt) break;
-      fired = true;
-      const angle = direction + (i - (count - 1) / 2) * volley.spacing;
+      const angle = khanVolley.skyDarkener
+        ? direction + (i * Math.PI * 2) / arrowCount
+        : direction + (i - (arrowCount - 1) / 2) * volley.spacing;
       bolt.enableBody(true, x, y, true, true);
       bolt.barrage = undefined;
-      bolt.source = owner === 'khan' ? 'khan' : undefined;
+      bolt.echoIndex = ancestral ? echoIndex : undefined;
+      bolt.source =
+        owner === 'khan' || owner === 'wagon' || owner === 'wagon-ricochet' ? owner : undefined;
       bolt.setData('terrain-previous', { x, y });
       bolt
         .setTexture('bolt')
@@ -2503,31 +2766,78 @@ export class ArenaScene extends Phaser.Scene {
         .clearTint();
       // Preserve the original 4.5-world-unit arrow radius at the new texture scale.
       bolt.setCircle(4.5, bolt.width / 2 - 4.5, bolt.height / 2 - 4.5);
-      bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
+      bolt.fire = ghost ? inherited.fire : hasDevelopment(this.run, 'archery', 'fire-arrows');
       bolt.tempest = tempest;
-      bolt.pierces = this.run.patrons.bow.pierce + (charged ? 1 : 0);
+      bolt.pierces = basePierces + bonusPierces;
       bolt.pins = charged && (this.run.upgrades['piercing-shaft'] ?? 0) > 0;
       if (charged) bolt.setTint(0xe2c586);
       bolt.hitTargets.clear();
+      if (origin) bolt.hitTargets.set(origin, origin.spawnId);
       bolt.turn = tempest ? (i % 2 ? 1 : -1) * 0.65 : 0;
       if (bolt.fire) bolt.setTint(0xffa04e);
       if (ancestral) bolt.setTint(0x91ded6);
       bolt.damage =
-        this.run.stats.damage *
-        (charged ? GAME.mounted.chargedDamage : 1) *
-        multiplier *
-        volley.damage;
-      bolt.remaining = GAME.projectile.lifetime;
+        owner === 'wagon-ricochet'
+          ? damageOrMultiplier
+          : this.run.stats.damage *
+            (charged ? GAME.mounted.chargedDamage : 1) *
+            damageOrMultiplier *
+            volley.damage *
+            khanVolley.damageMultiplier *
+            stillHand;
+      bolt.setData('base-damage', bolt.damage);
+      bolt.setData('dealt-damage', 0);
+      bolt.setData('precision', precision);
+      bolt.setData('ghost', ghost);
+      bolt.remaining =
+        GAME.projectile.lifetime *
+        (owner === 'wagon' || owner === 'wagon-ricochet' ? wagonRangeMultiplier(this.run) : 1);
       bolt.setVelocity(
         Math.cos(angle) * GAME.projectile.speed * volley.speed,
         Math.sin(angle) * GAME.projectile.speed * volley.speed,
       );
     }
-    if (fired) {
-      markExpedition(this.run, 'fight');
-      this.audio.play('shoot', { x, y });
+    const backward = circleOfShaftsVolley(this.run, count, owner === 'khan');
+    for (let i = 0; i < backward.count; i += 1) {
+      const bolt = this.projectiles.get(x, y, 'bolt') as Projectile | null;
+      if (!bolt) break;
+      const angle = direction + Math.PI + (i - (backward.count - 1) / 2) * 0.24;
+      bolt.enableBody(true, x, y, true, true);
+      bolt.barrage = undefined;
+      bolt.echoIndex = ancestral ? echoIndex : undefined;
+      bolt.source = 'khan';
+      bolt.setData('terrain-previous', { x, y });
+      bolt
+        .setTexture('bolt')
+        .setScale(1)
+        .setDepth(9200)
+        .setRotation(angle + Math.PI / 4)
+        .setAlpha(1)
+        .clearTint();
+      bolt.setCircle(4.5, bolt.width / 2 - 4.5, bolt.height / 2 - 4.5);
+      bolt.fire = ghost ? inherited.fire : hasDevelopment(this.run, 'archery', 'fire-arrows');
+      bolt.tempest = false;
+      bolt.pierces = basePierces + bonusPierces;
+      bolt.pins = false;
+      bolt.hitTargets.clear();
+      bolt.turn = 0;
+      if (bolt.fire) bolt.setTint(0xffa04e);
+      bolt.damage = this.run.stats.damage * damageOrMultiplier * backward.damage;
+      bolt.setData('base-damage', bolt.damage);
+      bolt.setData('dealt-damage', 0);
+      bolt.setData('precision', precision);
+      bolt.setData('ghost', ghost);
+      bolt.remaining =
+        GAME.projectile.lifetime *
+        (owner === 'wagon' || owner === 'wagon-ricochet' ? wagonRangeMultiplier(this.run) : 1);
+      bolt.setVelocity(
+        Math.cos(angle) * GAME.projectile.speed * volley.speed,
+        Math.sin(angle) * GAME.projectile.speed * volley.speed,
+      );
     }
-    return fired;
+    markExpedition(this.run, 'fight');
+    this.audio.play('shoot', { x, y });
+    return true;
   }
 
   private fireHostile(enemy: Enemy, angle: number): Projectile | undefined {
@@ -2615,16 +2925,70 @@ export class ArenaScene extends Phaser.Scene {
       return;
     if (bolt.hitTargets.get(enemy) === enemy.spawnId) return;
     bolt.hitTargets.set(enemy, enemy.spawnId);
-    if (bolt.pierces > 0) bolt.pierces -= 1;
-    else bolt.disableBody(true, true);
+    const ghost = bolt.getData('ghost') === true;
+    const wasPiercing =
+      !ghost &&
+      (bolt.pierces > 0 ||
+        (this.run.upgrades['piercing-shaft'] ?? 0) > 0 ||
+        this.run.patrons.bow.pierce > 0);
+    if (wasPiercing) recordPiercingHitOnEnemy(this.run, enemy.tacticalSlot, enemy.spawnId);
+    const baseDamage = (bolt.getData('base-damage') as number | undefined) ?? bolt.damage;
+    const dealtSoFar = (bolt.getData('dealt-damage') as number | undefined) ?? 0;
+    const hitDamage = bolt.damage;
+
+    if (bolt.pierces > 0) {
+      bolt.pierces -= 1;
+      if (!ghost) bolt.damage = projectileDamageAfterPierce(this.run, bolt.damage);
+    } else bolt.disableBody(true, true);
     if (bolt.fire) enemy.burning = 2;
     if (bolt.pins && enemy.definition.behavior !== 'boss') {
       enemy.pinned = GAME.mounted.pinSeconds;
       enemy.tactics.phase = 'recover';
       enemy.tactics.remaining = GAME.tactics.chargeRecovery;
     }
+    if (bolt.echoIndex !== undefined)
+      recordEchoHit(this.run, enemy.tacticalSlot, enemy.spawnId, bolt.echoIndex);
     if (bolt.source === 'khan') recordKhanTarget(this.run, enemy.tacticalSlot, enemy.spawnId);
-    this.damageEnemy(enemy, bolt.damage, bolt.source === 'khan' ? 'khan' : 'allied-arrows');
+    const remainingBudget =
+      ownsResearch(this.run, 'km-world-piercer') && wasPiercing
+        ? capWorldPiercerDamage(this.run, Infinity, baseDamage, dealtSoFar)
+        : undefined;
+    const dealt = this.damageEnemy(
+      enemy,
+      hitDamage,
+      bolt.source === 'khan' ? 'khan' : 'allied-arrows',
+      true,
+      bolt.getData('precision') === true,
+      remainingBudget,
+    );
+    bolt.setData('dealt-damage', dealtSoFar + dealt);
+    if (remainingBudget !== undefined && dealt >= remainingBudget) bolt.disableBody(true, true);
+    if (bolt.source === 'wagon' && circlingVolley(this.run, enemy.definition.behavior === 'boss')) {
+      const next = this.spatial.nearest(
+        enemy.x,
+        enemy.y,
+        GAME.research.circlingVolleyRadius,
+        (candidate) =>
+          candidate !== enemy &&
+          candidate.active &&
+          candidate.definition.behavior !== 'boss' &&
+          bolt.hitTargets.get(candidate) !== candidate.spawnId,
+      );
+      if (next)
+        this.shootVolley(
+          enemy.x,
+          enemy.y,
+          next,
+          1,
+          hitDamage,
+          false,
+          false,
+          'wagon-ricochet',
+          undefined,
+          false,
+          enemy,
+        );
+    }
   }
 
   private projectileReaches(projectile: Projectile): boolean {
@@ -2641,19 +3005,44 @@ export class ArenaScene extends Phaser.Scene {
     enemy: Enemy,
     amount: number,
     source: ResearchDamageSource = 'support-and-other',
-  ): void {
-    if (!enemy.active) return;
+    triggerOnHit = true,
+    precision = false,
+    budget = Infinity,
+  ): number {
+    if (!enemy.active) return 0;
     if (enemy === this.boss && this.run.finalStand?.phase === 'recovery')
       amount *= GAME.finalStand.vulnerableDamage;
-    amount *= friendlyDamageMultiplier(
-      this.run,
-      enemy.maxHealth > 0 ? enemy.health / enemy.maxHealth : 1,
-    );
-    if (
+    amount *= echoVulnerability(this.run, enemy.tacticalSlot, enemy.spawnId);
+    const beforeRatio = enemy.maxHealth > 0 ? enemy.health / enemy.maxHealth : 1;
+    amount *= friendlyDamageMultiplier(this.run, beforeRatio);
+    const hasArmor =
       (enemy.definition.armor !== undefined || enemy.definition.id === 'brute') &&
-      enemy.pinned <= 0
-    )
-      amount *= enemy.definition.armor ?? GAME.tactics.heavyArmor;
+      enemy.pinned <= 0;
+    const baseArmor = hasArmor ? (enemy.definition.armor ?? GAME.tactics.heavyArmor) : 1;
+    amount *= researchArmorMultiplier(
+      this.run,
+      enemy.tacticalSlot,
+      enemy.spawnId,
+      baseArmor,
+      precision,
+    );
+    if (triggerOnHit) {
+      amount *= recordFriendlyHitOnEnemy(
+        this.run,
+        enemy.tacticalSlot,
+        enemy.spawnId,
+        beforeRatio,
+        enemy.elite,
+        enemy.maxHealth > 0 ? (enemy.health - amount) / enemy.maxHealth : 1,
+        precision,
+      );
+    }
+    amount = Math.min(amount, budget);
+    const actual = Math.min(Math.max(0, enemy.health), Math.max(0, amount));
+    const spill =
+      triggerOnHit && source === 'khan' && precision && !enemy.elite
+        ? eagleEyeOverkillSpill(this.run, amount, enemy.health, enemy === this.boss)
+        : 0;
     if (amount >= 1) enemy.motion.hit();
     recordResearchDamage(
       this.run,
@@ -2664,9 +3053,15 @@ export class ArenaScene extends Phaser.Scene {
     if (enemy.health > 0) {
       if (amount >= 1)
         this.audio.play(enemy.definition.texture === 'earth' ? 'stoneImpact' : 'impact', enemy);
-      return;
+      return actual;
     }
     const { x, y } = enemy;
+    recordResearchEnemyKill(this.run, {
+      slot: enemy.tacticalSlot,
+      spawn: enemy.spawnId,
+      elite: enemy.elite,
+      nearCamp: Math.hypot(x - this.camp.x, y - this.camp.y) <= 260,
+    });
     const value = enemy.definition.xp;
     if (effectAmount(this.visualSettings) > 0) this.defeats.show(enemy);
     enemy.disableBody(true, true);
@@ -2686,21 +3081,28 @@ export class ArenaScene extends Phaser.Scene {
       value *
       0.4 *
       this.run.patrons.ancestors.spiritGain *
+      researchSpiritYield(this.run) *
       this.run.clan.campEffects.multipliers.spiritGain;
     rewardPatronKill(this.run);
     if (enemy === this.boss) defeatSkybreaker(this.run);
+    if (spill > 0) {
+      const spillTarget = this.spatial.nearest(x, y, 220, (e) => e.active && e !== enemy);
+      if (spillTarget) this.damageEnemy(spillTarget, spill, 'khan', false);
+    }
     this.burst(x, y, 0xa58aad, 5);
     const gem = this.gems.get(x, y, 'gem') as Gem | null;
     if (gem) {
       gem.enableBody(true, x, y, true, true);
       gem.setTexture('gem').setScale(0.85).setDepth(3).setVelocity(0, 0);
       gem.value = value;
+      gem.secondary = false;
       gem.attracted = false;
     } else {
       // Preserve experience even if the gem pool is full.
       const active = this.gems.getFirstAlive() as Gem | null;
       if (active) active.value += value;
     }
+    return actual;
   }
 
   private collectGems(dt: number): void {
@@ -2710,12 +3112,30 @@ export class ArenaScene extends Phaser.Scene {
       if (!gem.active) continue;
       const distance = Phaser.Math.Distance.Between(gem.x, gem.y, this.player.x, this.player.y);
       const retreat = this.run.clan.formation === 'retreat' && this.run.clan.momentum > 0.4;
-      if (distance < this.run.stats.pickupRadius * (retreat ? 1.7 : 1)) gem.attracted = true;
+      if (
+        distance <
+        Math.max(
+          this.run.stats.pickupRadius * (retreat ? 1.7 : 1),
+          remembranceMagnetRadius(this.run),
+        )
+      )
+        gem.attracted = true;
       if (!gem.attracted) continue;
       if (distance < 18) {
         experience += gem.value;
         recordResearchShard(this.run);
+        const bonus = recordShardGathering(this.run, gem.value, gem.secondary);
         gem.disableBody(true, true);
+        if (bonus > 0) {
+          const duplicate = this.gems.get(gem.x + 20, gem.y, 'gem') as Gem | null;
+          if (duplicate) {
+            duplicate.enableBody(true, gem.x + 20, gem.y, true, true);
+            duplicate.setTexture('gem').setScale(0.65).setDepth(3).setVelocity(0, 0);
+            duplicate.value = bonus;
+            duplicate.secondary = true;
+            duplicate.attracted = false;
+          } else experience += bonus;
+        }
       } else {
         const step = Math.min(1, dt * (6 + 140 / distance));
         gem.setPosition(
@@ -3081,9 +3501,13 @@ export class ArenaScene extends Phaser.Scene {
         navigation && !navigation.lineClear(rider, { x, y }, 18)
           ? navigation.waypoint(rider, anchor)
           : { x, y };
+      const packMove = packInstinctBonus(
+        this.run,
+        nearestCompanion(this.run, 'rider', i),
+      ).moveSpeed;
       const next = {
-        x: Phaser.Math.Linear(rider.x, desired.x, Math.min(1, dt * 5)),
-        y: Phaser.Math.Linear(rider.y, desired.y, Math.min(1, dt * 5)),
+        x: Phaser.Math.Linear(rider.x, desired.x, Math.min(1, dt * 5 * packMove)),
+        y: Phaser.Math.Linear(rider.y, desired.y, Math.min(1, dt * 5 * packMove)),
       };
       const position = navigation?.slide(rider, next) ?? next;
       rider.setPosition(position.x, position.y);
@@ -3298,7 +3722,12 @@ export class ArenaScene extends Phaser.Scene {
         .fillCircle(x, y, 70)
         .lineStyle(2, 0xe6bd7b, 0.8)
         .strokeCircle(x, y, 70);
-      this.hazards.push({ x, y, remaining: 2 + this.run.patrons.water.warning, warning });
+      this.hazards.push({
+        x,
+        y,
+        remaining: 2 + this.run.patrons.water.warning + terrainWarningBonus(this.run),
+        warning,
+      });
       this.hazardTimer = clan.region === 3 ? 6 : 10;
     }
     for (let i = this.hazards.length - 1; i >= 0; i -= 1) {
@@ -3312,10 +3741,59 @@ export class ArenaScene extends Phaser.Scene {
           .fillCircle(hazard.x, hazard.y, radius)
           .lineStyle(2, 0xcba0c6, 0.8)
           .strokeCircle(hazard.x, hazard.y, radius);
+      if (
+        hazard.source !== 'seer' &&
+        isKhanActive(this.run) &&
+        Math.hypot(this.player.x - hazard.x, this.player.y - hazard.y) < radius
+      )
+        hazard.researchEntered = true;
+      if (
+        hazard.source !== 'seer' &&
+        !hazard.researchCrossed &&
+        this.dashRemaining > 0 &&
+        Math.hypot(this.player.x - hazard.x, this.player.y - hazard.y) < radius &&
+        ownsResearch(this.run, 'lu-eye-of-the-mountain')
+      ) {
+        hazard.researchCrossed = true;
+        const crossing = resolveResearchEruption(
+          this.run,
+          hazard.x,
+          hazard.y,
+          radius,
+          this.player,
+          true,
+          hazard.researchEntered === true,
+          false,
+        );
+        if (crossing.rock)
+          this.spatial.forEachNearby(hazard.x, hazard.y, GAME.research.rockArcRadius, (enemy) =>
+            this.damageEnemy(enemy, this.run.stats.damage * GAME.research.rockArcDamage),
+          );
+      }
       if (hazard.remaining > 0) continue;
       this.burst(hazard.x, hazard.y, clan.region === 3 ? 0xbf6558 : 0x796d4d, 12);
       this.audio.play('thunder', hazard);
-      if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.player.x, this.player.y) < radius)
+      const eruption =
+        hazard.source !== 'seer'
+          ? resolveResearchEruption(
+              this.run,
+              hazard.x,
+              hazard.y,
+              radius,
+              this.player,
+              this.dashRemaining > 0,
+              hazard.researchEntered === true,
+            )
+          : { immune: false, rock: false };
+      if (eruption.rock)
+        this.spatial.forEachNearby(hazard.x, hazard.y, GAME.research.rockArcRadius, (enemy) =>
+          this.damageEnemy(enemy, this.run.stats.damage * GAME.research.rockArcDamage),
+        );
+      if (
+        !hazard.researchCrossed &&
+        !eruption.immune &&
+        Phaser.Math.Distance.Between(hazard.x, hazard.y, this.player.x, this.player.y) < radius
+      )
         this.takeDamage((hazard.damage ?? 20) * this.run.patrons.water.hazardDamage);
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.camp.x, this.camp.y) < radius + 25)
         this.damageClan(
@@ -3332,6 +3810,100 @@ export class ArenaScene extends Phaser.Scene {
     this.supportTimer -= dt;
     this.wagonTimer -= dt;
     this.wardTimer -= dt;
+    const terrain = claimTerrainWave(this.run);
+    if (terrain.wave || terrain.stone)
+      this.spatial.forEachNearby(
+        this.player.x,
+        this.player.y,
+        researchWaterRadius(this.run),
+        (enemy) => {
+          if (terrain.wave && enemy.definition.behavior !== 'boss') {
+            delete this.run.researchRuntime?.staggerCooldownUntil?.[
+              `${enemy.tacticalSlot}:${enemy.spawnId}`
+            ];
+            enemy.pinned = 0;
+          }
+          this.damageEnemy(
+            enemy,
+            this.run.stats.damage *
+              ((terrain.wave ? GAME.research.riverWaveDamage : 0) +
+                (terrain.stone ? GAME.research.landStoneDamage : 0)),
+          );
+        },
+      );
+    const ashPulse = claimAshBornPulse(this.run);
+    const flamePulse = claimFlameRefusesPulse(this.run);
+    if (isKhanActive(this.run)) {
+      const radius = Math.max(
+        ashPulse?.radius ?? 0,
+        flamePulse?.radius ?? 0,
+        GAME.research.eternalHearthRadius,
+      );
+      this.spatial.forEachNearby(this.player.x, this.player.y, radius, (enemy) => {
+        const dx = enemy.x - this.player.x;
+        const dy = enemy.y - this.player.y;
+        const distance = Math.hypot(dx, dy);
+        if (flamePulse && distance <= flamePulse.radius) this.damageEnemy(enemy, flamePulse.damage);
+        if (!enemy.active) return;
+        const boss = enemy.definition.behavior === 'boss';
+        const push =
+          ((ashPulse && !boss && distance <= ashPulse.radius ? ashPulse.push : 0) +
+            eternalHearthPush(this.run, distance, boss) * dt) *
+          researchKnockback(
+            this.run,
+            researchEnemySlowed(
+              this.run,
+              enemy.tacticalSlot,
+              enemy.spawnId,
+              Math.min(distance, Math.hypot(enemy.x - this.camp.x, enemy.y - this.camp.y)),
+              enemy,
+            ),
+            boss,
+          );
+        if (push > 0)
+          enemy.setPosition(
+            enemy.x + (distance ? dx / distance : 1) * push,
+            enemy.y + (distance ? dy / distance : 0) * push,
+          );
+      });
+    }
+    const arrowRain = claimArrowRainDrop(this.run);
+    if (arrowRain) {
+      claimThousandArrows(this.run, () => {
+        let released = false;
+        for (let i = 0; i < riderCount(this.run); i++) {
+          const rider = this.riders[i]!;
+          if (
+            Math.hypot(rider.x - this.player.x, rider.y - this.player.y) >
+            GAME.research.thousandArrowsRadius
+          )
+            continue;
+          const target = this.spatial.nearest(
+            rider.x,
+            rider.y,
+            GAME.projectile.range + this.run.patrons.bow.range,
+          );
+          if (target) {
+            const fired = this.shootVolley(
+              rider.x,
+              rider.y,
+              target,
+              1,
+              GAME.research.thousandArrowsDamage *
+                0.6 *
+                this.run.patrons.banner.damage *
+                this.run.clan.campEffects.multipliers.riderDamage,
+            );
+            released ||= fired;
+          }
+        }
+        return released;
+      });
+      this.spatial.forEachNearby(arrowRain.x, arrowRain.y, arrowRain.radius, (enemy) =>
+        this.damageEnemy(enemy, arrowRain.damage, 'khan'),
+      );
+      this.burst(arrowRain.x, arrowRain.y, 0xe3c78c, 8);
+    }
     if (clan.buildings.sanctuary && this.supportTimer <= 0) {
       const anchor = isKhanActive(this.run) ? this.player : this.camp;
       const target =
@@ -3365,20 +3937,43 @@ export class ArenaScene extends Phaser.Scene {
         (clan.region === 3 ? 1.5 : 1) *
         clan.campEffects.multipliers.sanctuaryInterval;
     }
+    if (this.run.clan.buildings.wagon && ownsResearch(this.run, 'gu-arrow-platforms')) {
+      const target = this.spatial.nearest(
+        this.camp.x,
+        this.camp.y,
+        GAME.research.arrowPlatformRange * wagonRangeMultiplier(this.run),
+      );
+      if (target)
+        claimArrowPlatform(this.run, () =>
+          this.shootVolley(
+            this.camp.x,
+            this.camp.y,
+            target,
+            1,
+            GAME.research.arrowPlatformDamage * wagonDamageMultiplier(this.run),
+            false,
+            false,
+            'wagon',
+          ),
+        );
+    }
     const wagonResearch = wagonResearchDefence(this.run);
     if (wagonResearch.active && this.wagonTimer <= 0) {
-      const target = this.spatial.nearest(this.camp.x, this.camp.y, wagonResearch.range);
+      const target = this.spatial.nearest(
+        this.camp.x,
+        this.camp.y,
+        wagonResearch.range * wagonRangeMultiplier(this.run),
+      );
       if (target)
         this.shootVolley(
           this.camp.x,
           this.camp.y,
           target,
           hasDevelopment(this.run, 'wagon', 'war-carts') ? 3 : 1,
-          wagonResearch.fallback
-            ? wagonResearch.damage
-            : (clan.stage === 'migration' && !hasDevelopment(this.run, 'wagon', 'war-carts')
-                ? 0.7
-                : 1.5) * clan.campEffects.multipliers.wagonDamage,
+          wagonResearch.damage * wagonDamageMultiplier(this.run),
+          false,
+          false,
+          'wagon',
         );
       this.wagonTimer = 0.9 * this.run.patrons.guardian.wagonInterval;
     }

@@ -62,6 +62,11 @@ export interface ProjectileArchive extends BodyArchive {
   turn: number;
   pierces: number;
   pins: boolean;
+  echoIndex?: number;
+  precision?: boolean;
+  ghost?: boolean;
+  baseDamage?: number;
+  dealtDamage?: number;
   rotation: number;
   tint: number;
   previous?: Point;
@@ -93,10 +98,17 @@ export interface WorldArchive {
   enemies: EnemyArchive[];
   projectiles: ProjectileArchive[];
   hostileShots: ProjectileArchive[];
-  gems: (BodyArchive & { value: number; attracted: boolean })[];
+  gems: (BodyArchive & { value: number; attracted: boolean; secondary?: boolean })[];
   riders: (Point & { flip: boolean; motion: MotionArchive })[];
   support: SupportArchive;
-  hazards: (Point & { remaining: number; radius?: number; damage?: number; source?: 'seer' })[];
+  hazards: (Point & {
+    remaining: number;
+    radius?: number;
+    damage?: number;
+    source?: 'seer';
+    researchCrossed?: boolean;
+    researchEntered?: boolean;
+  })[];
   areaEncounter: AreaEncounterState;
   areaThreats: AreaThreatState;
 }
@@ -267,6 +279,46 @@ const optional: Record<string, Record<string, Rule>> = {
     researchRuntime: object(
       {},
       {
+        slowSince: dictionary(number),
+        slowSeenAt: dictionary(number),
+        slowUntil: dictionary(number),
+        slowStrength: dictionary(number),
+        rootUntil: dictionary(number),
+        rootCooldown: dictionary(number),
+        terrainPulseAt: number,
+        undertowAt: number,
+        floodgateAt: number,
+        dodgeUntil: number,
+        dodgeCooldown: number,
+        rockArcCooldown: number,
+        stoneTickAt: number,
+        ridgePatches: list(object({ x: number, y: number, until: number }), 16),
+        shardsGathered: number,
+        shardStreak: number,
+        shardStreakUntil: number,
+        spiritBurstUntil: number,
+        vulnerabilityUntil: dictionary(number),
+        echoHits: dictionary(number),
+        riderFireAt: list(number, 16),
+        riderVolleyCounts: list(integer, 16),
+        hornUntil: number,
+        hornCooldown: number,
+        rallyUntil: number,
+        rallyCrossing: number,
+        firstConstructionCrossing: integer,
+        arrowPlatformAt: number,
+        wardInside: list(string, GAME.maxEnemies),
+        ghostAttacks: list(integer, GAME.patrons.ancestors.maximum),
+        livingWaveKey: string,
+        livingWaveKills: number,
+        livingWatersCooldown: number,
+        thousandArrowsCooldown: number,
+        bloodEmberCooldown: number,
+        lastStandUntil: number,
+        lastStandCooldown: number,
+        lastStandLow: boolean,
+        nearestCompanion: string,
+        echoFireAt: list(number, GAME.patrons.ancestors.maximum),
         lastGallopAt: number,
         riverStacks: integer,
         riverUntil: number,
@@ -280,6 +332,50 @@ const optional: Record<string, Record<string, Rule>> = {
         echoReleases: integer,
         echoAttacks: list(integer, GAME.patrons.ancestors.maximum),
         echoNearCamp: boolean,
+        markedUntil: dictionary(number),
+        staggerUntil: dictionary(number),
+        staggerCooldownUntil: dictionary(number),
+        hoofTrails: list(
+          object({ x: number, y: number, until: number, gallopSerial: integer }),
+          GAME.mounted.maxTrails,
+        ),
+        hoofTrailHits: dictionary(integer),
+        throatSlot: integer,
+        throatSpawn: integer,
+        throatStacks: integer,
+        dashHitSerial: integer,
+        dashHitEnemies: list(string, GAME.maxEnemies),
+        stormChaserUntil: number,
+        momentumHoldUntil: number,
+        markedNearKhan: boolean,
+        endlessBurstUntil: number,
+        vigilantHerdersUntil: number,
+        craftspeopleRefundedCrossing: integer,
+        crossingMaterialsSpent: positive,
+        crossingSpentIndex: integer,
+        khanVolleyCount: integer,
+        precisionVolleyCount: integer,
+        wideVolleyCount: integer,
+        precisionMarkedUntil: dictionary(number),
+        bleedStacks: dictionary(integer),
+        bleedUntil: dictionary(number),
+        sunderStacks: dictionary(integer),
+        sunderUntil: dictionary(number),
+        arrowRainAt: number,
+        arrowRainX: number,
+        arrowRainY: number,
+        arrowRainDamage: positive,
+        warmAshesPending: boolean,
+        embersReturnUntil: number,
+        khanStationaryNearCamp: boolean,
+        hearthCampInRange: boolean,
+        ashBornInvulnerableUntil: number,
+        ashBornPulsePending: boolean,
+        firebreakUntil: number,
+        householdOathUntil: number,
+        flameHealUntil: number,
+        flamePulsesRemaining: integer,
+        flameNextPulseAt: number,
       },
     ),
     finalStand: object(
@@ -427,7 +523,16 @@ const projectile = object(
     tint: integer,
     hits: list(object({ slot: integer, spawnId: integer }), GAME.maxEnemies),
   },
-  { previous: point, barrage: integer, source: string },
+  {
+    previous: point,
+    barrage: integer,
+    source: string,
+    echoIndex: integer,
+    precision: boolean,
+    ghost: boolean,
+    baseDamage: positive,
+    dealtDamage: positive,
+  },
 );
 const threat = object(
   {
@@ -471,7 +576,10 @@ const worldShape = object({
   ),
   projectiles: list(projectile, GAME.maxProjectiles),
   hostileShots: list(projectile, 180),
-  gems: list(object({ ...bodyFields, value: positive, attracted: boolean }), GAME.maxGems),
+  gems: list(
+    object({ ...bodyFields, value: positive, attracted: boolean }, { secondary: boolean }),
+    GAME.maxGems,
+  ),
   riders: list(object({ x: number, y: number, flip: boolean, motion }), 16),
   support: object({
     ancestorTimer: number,
@@ -485,7 +593,13 @@ const worldShape = object({
   hazards: list(
     object(
       { x: number, y: number, remaining: number },
-      { radius: positive, damage: positive, source: oneOf(['seer']) },
+      {
+        radius: positive,
+        damage: positive,
+        source: oneOf(['seer']),
+        researchCrossed: boolean,
+        researchEntered: boolean,
+      },
     ),
     100,
   ),

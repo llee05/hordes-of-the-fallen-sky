@@ -84,7 +84,7 @@ describe('the eight patron trees', () => {
       expect(run.patrons).toEqual(snapshot.patrons);
     }
   });
-  it('redeems mastery after every reachable choice, preserving the cost of unchosen specializations', () => {
+  it('preserves points for locked working technologies after reachable choices', () => {
     const run = createRun();
     run.pendingUpgrades = 100;
     for (const patron of PATRONS) {
@@ -95,13 +95,14 @@ describe('the eight patron trees', () => {
     }
     expect(run.pendingUpgrades).toBe(51);
     expect(redeemMasteredResearch(run)).toBe(false);
+    run.pendingUpgrades = 100;
     for (const t of RESEARCH.filter(
       (t) => !t.unavailableReason && !UPGRADES.some((u) => u.id === t.id),
     ))
       applyResearch(run, t.id);
-    expect(run.pendingUpgrades).toBeLessThan(51);
-    expect(redeemMasteredResearch(run)).toBe(true);
-    expect(run.pendingUpgrades).toBe(0);
+    expect(run.pendingUpgrades).toBeLessThan(100);
+    expect(redeemMasteredResearch(run)).toBe(false);
+    expect(run.pendingUpgrades).toBeGreaterThan(0);
   });
   it('makes every playstyle mechanically distinct and allows mixing independent patrons', () => {
     const wolf = master('borte-chino');

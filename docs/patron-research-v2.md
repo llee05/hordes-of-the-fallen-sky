@@ -43,9 +43,10 @@ multi-arrow volleys, separately from rider and echo shots.
 **Phase 3 gate is not passed:** Ongod's Bond of Ashes has no expiring echo lifecycle;
 Whispered Orders has no echo stances; Ancestral Legion needs coordinated formation
 ownership; Council of Many Voices needs temporary lesser-echo lifecycle. These
-systems require their own gameplay milestone. Remaining Archery/Ongod effects are
-registered but unavailable at this gate; no claim of two complete Mythic paths is
-made. The shipped portion is a tested compatibility and early-research slice.
+systems require their own gameplay milestone. This describes the original gate.
+Later runtime integrations are tracked in the
+[effect inventory](patron-research-v2-status.md); its availability labels supersede
+this initial slice.
 
 ## Interface and camp boundary
 
@@ -140,10 +141,11 @@ rebalance or knowledge-award increase is committed. Live measurement (BH-40) con
 the economy supports late research tiers without altering awards, gates, or costs;
 recalibrating the benchmark aligns internal tooling with observed runs.
 
-The full 166-effect release gate remains unmet. This branch delivers the tested
-53-technology slice and complete gated catalogue. Individual wagons/follower health,
+The full-catalogue release gate remains unmet. The
+[effect inventory](patron-research-v2-status.md) owns current wired, purchasable and
+prerequisite-blocked totals. Individual wagons/follower health,
 structure repair/durability, provisions, discovery/ambush/route pools, temporary
-summon lifecycles and the separate camp branch remain explicit feature milestones.
+summon lifecycles and remaining camp hooks remain explicit feature milestones.
 
 Performance verification used the project's exclusive-lock hardware-WebGL suite.
 The browser pooled-combat case passes: 350 enemies, 19 textures, 29 draws and about
@@ -151,9 +153,9 @@ The browser pooled-combat case passes: 350 enemies, 19 textures, 29 draws and ab
 34 draws and about 60.56 FPS, then fails the existing `<20` texture assertion. Per
 firstmate's confirmed baseline, the extra blank warnings texture is the existing
 main-branch defect tracked by the [separate pending fix](https://github.com/llee05/hordes-of-the-fallen-sky/pull/30).
-Texture bridge, renderer, assets and actor sources are unchanged from `main`; this
-branch adds no texture allocations. The assertion is retained unchanged. Native
-performance is therefore recorded as a known baseline failure, not a clean pass.
+These measurements predate the deferred-effect integration. The assertion is
+retained unchanged. Native performance is therefore recorded as a known baseline
+failure, not a clean pass.
 
 ## Review corrections
 
@@ -164,3 +166,10 @@ Personal volley previews and firing share `state/volley.ts`, including Burning T
 All 166 technologies have a distinct `research:<id>` icon key. `src/ui/researchIcons.ts` authors each icon as a distinct subject/detail pair rendered through the existing 48-unit inline SVG brass silhouette system in `src/ui/artwork.ts`. Patron seals remain separate secondary badges. The unit regression checks both 166 unique keys and 166 distinct rendered drawings.
 
 Tempest steering preserves each arrow’s launch speed throughout flight, including active Galloping Barrage. The chronicle’s Traditions panel resolves learned ranks through the full research registry, with the same technology icons as the tree and labels for general, patron and hybrid research.
+
+Hounds of the Horizon extends momentum only above 50%; marked finishers never
+create momentum. Projectile allocation precedes Khan volley events. Rider, echo,
+Arrow Platforms and Thousand Arrows release claims receive an emission callback
+and commit their clocks and counters only when it returns true. Echo twin and
+ghost cadence counts successful primary echo attacks. A partially emitted volley
+counts once; an exhausted projectile pool consumes no release.

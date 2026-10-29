@@ -83,11 +83,11 @@ describe('V2 research registry and transaction', () => {
     const s = state();
     s.upgrades = { power: 2, haste: 1, 'hy-galloping-barrage': 1, 'gen-mapmaker': 1 };
     expect(researchSpend(s)['khukhedei-mergen']).toBe(3);
-    expect(validateResearchPurchase(s, 'km-world-piercer', 0).reasonCodes).toContain(
+    expect(validateResearchPurchase(s, 'on-ancestral-legion', 0).reasonCodes).toContain(
       'unimplemented',
     );
     const before = structuredClone(s);
-    expect(purchaseResearch(s, 'km-world-piercer', 0).allowed).toBe(false);
+    expect(purchaseResearch(s, 'on-ancestral-legion', 0).allowed).toBe(false);
     expect(s).toEqual(before);
   });
 });

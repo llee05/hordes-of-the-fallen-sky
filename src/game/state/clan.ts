@@ -20,6 +20,8 @@ import {
   starvationReaction,
 } from '../data/storyReactions';
 import { beginCrossingEncounter, settleCrossingEncounter } from './crossingEncounters';
+import { constructionMaterials, recordConstruction } from './researchGuardian';
+import { leadershipProtection } from './researchLeadership';
 import { GAME } from '../config';
 import { BUILDINGS, ROUTES, startingTradition } from '../data/clan';
 import type { BuildingId, ClanState, Formation, RunState } from '../types';
@@ -30,7 +32,13 @@ import { completeGuidance } from './guidance';
 import { isKhanActive } from './khan';
 import { markExpedition, metricCasualties, metricStage } from './expeditionMetrics';
 import { passageProgress } from './finalStand';
-import { researchResolveProtection, researchCommonProtection } from './researchRuntime';
+import {
+  healKhan,
+  recordMaterialSpend,
+  researchCommonProtection,
+  researchResolveProtection,
+  researchStarvationMultiplier,
+} from './researchRuntime';
 
 export function createClan(): ClanState {
   return {
@@ -117,6 +125,7 @@ export function burningTempest(run: RunState): boolean {
 }
 
 export function availableFormations(run: RunState): Formation[] {
+  if ((run.upgrades['su-banner-formation'] ?? 0) > 0) return ['guard', 'wedge', 'retreat'];
   return [
     'guard',
     ...(run.clan.buildings.archery ? (['encircle', 'wedge'] as const) : []),
@@ -132,11 +141,15 @@ export function buildingCost(
   const definition = BUILDINGS.find((building) => building.id === id)!;
   const development = definition.paths.find((entry) => entry.id === path);
   return {
-    materials: Math.ceil(
-      (path === undefined
-        ? definition.materials
-        : (development?.materials ?? Math.ceil(definition.materials * 1.5))) *
-        run.patrons.guardian.cost,
+    materials: constructionMaterials(
+      run,
+      path === undefined,
+      Math.ceil(
+        (path === undefined
+          ? definition.materials
+          : (development?.materials ?? Math.ceil(definition.materials * 1.5))) *
+          run.patrons.guardian.cost,
+      ),
     ),
     spirit:
       path === undefined
@@ -196,6 +209,8 @@ export function buildStructure(
   completeGuidance(run, 'build');
   clan.materials -= cost.materials;
   clan.spirit -= cost.spirit;
+  recordMaterialSpend(run, cost.materials);
+  if (path === undefined) recordConstruction(run);
   if (path === undefined) reserveBuildingSlot(run, id, slot);
   clan.buildings[id] += 1;
   clan.identity[definition.doctrine] += 2;
@@ -271,6 +286,7 @@ export function clanDamageMultiplier(run: RunState): number {
     run.patrons.guardian.protection *
     researchResolveProtection(run) *
     researchCommonProtection(run) *
+    leadershipProtection(run) *
     run.clan.campEffects.multipliers.clanProtection *
     startingTradition(run.startingTradition).balance.protection
   );
@@ -285,7 +301,8 @@ export function damageClan(
 ): void {
   if (protectionOptions?.invincible || !Number.isFinite(amount) || amount <= 0) return;
   const clan = run.clan;
-  const protection = clanDamageMultiplier(run);
+  const protection =
+    clanDamageMultiplier(run) * (cause === 'starvation' ? researchStarvationMultiplier(run) : 1);
   const previousPopulation = clan.population;
   const previous = clan.integrity;
   clan.integrity = Math.max(0, previous - amount * protection);
@@ -343,7 +360,9 @@ export function advanceClan(
       dt * ((hasDevelopment(run, 'ger', 'hearthkeepers') ? 0.25 : 0) + bonuses.resolveRecovery),
     );
   } else {
-    clan.food += dt * economyRates(run).foodNet;
+    const rates = economyRates(run);
+    clan.food += dt * rates.foodNet;
+    clan.materials += dt * rates.materials;
     const route = ROUTES.find((r) => r.id === clan.routeId)!;
     clan.migrationProgress = Math.min(1, clan.stageTime / crossingDuration(run, route));
   }
@@ -408,11 +427,7 @@ export function advanceClan(
     clan.stageTime = 0;
     clan.pasture = 100;
     restoreResolve(run, GAME.clan.arrival.resolve + bonuses.arrivalResolve);
-    if (isKhanActive(run))
-      run.health = Math.min(
-        run.stats.maxHealth,
-        run.health + GAME.clan.arrival.health + bonuses.arrivalHealth,
-      );
+    if (isKhanActive(run)) healKhan(run, GAME.clan.arrival.health + bonuses.arrivalHealth);
     clan.message =
       clan.stage === 'final'
         ? 'The Red Eclipse. Protect your people for three minutes while the mountain passage opens.'
