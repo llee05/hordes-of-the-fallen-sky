@@ -469,6 +469,7 @@ test('Arrow Platforms inherit Iron-Rimmed Wagons guard range and migration damag
     const shoot = (stage: string, distance: number) => {
       for (const bolt of s.projectiles.getChildren()) bolt.disableBody(true, true);
       r.clan.stage = stage;
+      if (stage === 'migration') r.clan.routeId = 'river';
       enemy.setPosition(s.camp.x + distance, s.camp.y);
       s.spatial.rebuild(s.enemies.getChildren());
       r.researchRuntime = {};
@@ -485,6 +486,8 @@ test('Arrow Platforms inherit Iron-Rimmed Wagons guard range and migration damag
       outside: shoot('migration', 243),
     };
   });
+  // The migration fixture must remain playable after the guard shot is released.
+  await page.evaluate(() => (window as any).__gloam.scene.update(0, 20));
   expect(result.camp).toHaveLength(1);
   expect(result.camp[0]!.damage).toBeCloseTo(12);
   expect(result.migration).toHaveLength(1);
