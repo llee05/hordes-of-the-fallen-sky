@@ -500,10 +500,9 @@ test('a rider finisher cannot create Hounds momentum for a stationary Khan', asy
   const result = await page.evaluate(async () => {
     const s = (window as any).__gloam.scene,
       r = s.run;
-    // @ts-expect-error Vite serves this module inside the browser.
-    const { markEnemy } = (await import('/src/game/state/researchRuntime.ts')) as typeof import(
-      '../../src/game/state/researchRuntime'
-    );
+    const { markEnemy } =
+      // @ts-expect-error Vite serves this module inside the browser.
+      (await import('/src/game/state/researchRuntime.ts')) as typeof import('../../src/game/state/researchRuntime');
     for (let i = 0; i < 20 && !s.enemies.countActive(true); i++) s.spawnEnemy();
     const enemy = s.enemies.getFirstAlive();
     enemy.setPosition(s.player.x + 100, s.player.y);
@@ -571,8 +570,14 @@ for (const count of [1, 2]) {
       const echoes = () =>
         s.patronSupport.update(r, 0.016, s.player, s.camp, s.spatial, {
           damage: () => {},
-          volley: (x: number, y: number, target: any, damage: number, index: number, ghost?: boolean) =>
-            s.shootVolley(x, y, target, 1, damage, true, false, 'rider', index, ghost),
+          volley: (
+            x: number,
+            y: number,
+            target: any,
+            damage: number,
+            index: number,
+            ghost?: boolean,
+          ) => s.shootVolley(x, y, target, 1, damage, true, false, 'rider', index, ghost),
         });
       echoes();
       s.wagonTimer = s.supportTimer = s.wardTimer = 999;

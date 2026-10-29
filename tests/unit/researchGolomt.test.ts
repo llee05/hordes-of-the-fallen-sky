@@ -149,7 +149,9 @@ it('arrival healing scales base and camp bonuses, converts overheal and preserve
   r.health = r.stats.maxHealth;
   const before = r.clan.integrity;
   expect(advanceClan(r, 100)).toBe('arrived');
-  expect(r.clan.integrity).toBe(before + GAME.clan.arrival.resolve + GAME.crossings.safeResolve + 1);
+  expect(r.clan.integrity).toBe(
+    before + GAME.clan.arrival.resolve + GAME.crossings.safeResolve + 1,
+  );
 });
 
 it('retains Warm Ashes through combat and menus, then pays once without another recovery transition', () => {
