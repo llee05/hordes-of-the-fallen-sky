@@ -43,9 +43,10 @@ multi-arrow volleys, separately from rider and echo shots.
 **Phase 3 gate is not passed:** Ongod's Bond of Ashes has no expiring echo lifecycle;
 Whispered Orders has no echo stances; Ancestral Legion needs coordinated formation
 ownership; Council of Many Voices needs temporary lesser-echo lifecycle. These
-systems require their own gameplay milestone. Remaining Archery/Ongod effects are
-registered but unavailable at this gate; no claim of two complete Mythic paths is
-made. The shipped portion is a tested compatibility and early-research slice.
+systems require their own gameplay milestone. This describes the original gate.
+Later runtime integrations are tracked in the
+[effect inventory](patron-research-v2-status.md); its availability labels supersede
+this initial slice.
 
 ## Interface and camp boundary
 
@@ -140,9 +141,9 @@ rebalance or knowledge-award increase is committed. Live measurement (BH-40) con
 the economy supports late research tiers without altering awards, gates, or costs;
 recalibrating the benchmark aligns internal tooling with observed runs.
 
-The full 166-effect release gate remains unmet. 118 runtime effects are wired (65 of the 67 integration-deferred
-effects are connected), but 15 are blocked by unavailable prerequisites. The working
-total is 103; 63 remain unavailable, as detailed in the status inventory. Individual wagons/follower health,
+The full-catalogue release gate remains unmet. The
+[effect inventory](patron-research-v2-status.md) owns current wired, purchasable and
+prerequisite-blocked totals. Individual wagons/follower health,
 structure repair/durability, provisions, discovery/ambush/route pools, temporary
 summon lifecycles and remaining camp hooks remain explicit feature milestones.
 
@@ -152,9 +153,9 @@ The browser pooled-combat case passes: 350 enemies, 19 textures, 29 draws and ab
 34 draws and about 60.56 FPS, then fails the existing `<20` texture assertion. Per
 firstmate's confirmed baseline, the extra blank warnings texture is the existing
 main-branch defect tracked by the [separate pending fix](https://github.com/llee05/hordes-of-the-fallen-sky/pull/30).
-Texture bridge, renderer, assets and actor sources are unchanged from `main`; this
-branch adds no texture allocations. The assertion is retained unchanged. Native
-performance is therefore recorded as a known baseline failure, not a clean pass.
+These measurements predate the deferred-effect integration. The assertion is
+retained unchanged. Native performance is therefore recorded as a known baseline
+failure, not a clean pass.
 
 ## Review corrections
 

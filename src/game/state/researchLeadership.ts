@@ -30,7 +30,8 @@ export function claimRiderVolley(
   if (run.phase !== 'playing' || !Number.isInteger(index) || index < 0 || index >= 16) return false;
   if ((run.researchRuntime?.riderFireAt?.[index] ?? 0) > run.elapsed) return false;
   const count = (run.researchRuntime?.riderVolleyCounts?.[index] ?? 0) + 1;
-  if (!release((run.upgrades.haste ?? 0) > 0 && count % GAME.mounted.pairedEvery === 0)) return false;
+  if (!release((run.upgrades.haste ?? 0) > 0 && count % GAME.mounted.pairedEvery === 0))
+    return false;
   const r = (run.researchRuntime ??= {});
   const times = (r.riderFireAt ??= []);
   while (times.length <= index) times.push(0);

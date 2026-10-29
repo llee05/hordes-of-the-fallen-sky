@@ -171,7 +171,13 @@ export class PatronSupport {
       if (
         target &&
         claimEchoVolley(run, index, () =>
-          actions.volley(x, y, target, effects.ancestors.damage * remembranceEchoDamage(run), index),
+          actions.volley(
+            x,
+            y,
+            target,
+            effects.ancestors.damage * remembranceEchoDamage(run),
+            index,
+          ),
         )
       ) {
         const twin = researchEchoRelease(run, index);

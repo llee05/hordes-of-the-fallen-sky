@@ -54,7 +54,8 @@ The opening camp foundations are described in [the nomadic camp guide](nomadic-c
 
 `state/economy.ts` supplies the simulation's food/material rates, pasture depletion,
 and caravan mobility. Its read-only `economyForecast` estimates active seconds until
-food stores empty, integrating changing pasture up to its 0–100% bounds. It holds
+food stores empty, integrating changing pasture up to its 0–100% bounds and the
+remaining active duration of temporary production bonuses. It holds
 population, developments, and regional conditions fixed and assumes no combat losses
 or future purchases. Final-stand estimates stop at the passage opening; migration
 estimates stop at arrival. `crossingForecast` exposes remaining travel time, food
@@ -72,7 +73,8 @@ never spends resources, grants rewards or guidance, or writes to the actual chro
 Route estimates show travel time, food consumed before arrival, food after the arrival
 transaction, and any en-route shortfall; they never disable a route.
 
-Let `P = pasture / 100`, `N = population`, and `W = 0.7` at Silent River or `1` elsewhere:
+Before conditional research effects, let `P = pasture / 100`, `N = population`,
+and `W = 0.7` at Silent River or `1` elsewhere:
 
 ```text
 Food consumed / second = N × 0.025 × Etügen consumption modifier × camp consumption modifier
@@ -83,9 +85,13 @@ Pasture lost / second while stationary = (100 / 210) × Etügen depletion modifi
 
 Starting production includes the free core buildings’ continuing effects. Production declines with pasture; consumption does not. There is no passive Spirit income, trading, crafting inventory, or individually simulated gathering unit. Population capacity follows the Khan’s Ger level; see [the camp guide](nomadic-camp.md).
 
-During migration, food is consumed but food/material production stops. When food is zero at a 12-second stage-time boundary, starvation removes one person and one horse, records a casualty, and deals 8 raw resolve damage. This can cause an additional resolve-threshold casualty. Checks follow the stage clock rather than a fresh 12-second grace period after food runs out.
+During migration, food is consumed and baseline food/material production stops.
+Conditional research can change grazing, production, pasture recovery and starvation
+protection; see the [effect inventory](patron-research-v2-status.md) for delivery
+status and the authoritative [economy selectors](../src/game/state/economy.ts) for
+the combined rates. When food is zero at a 12-second stage-time boundary, starvation removes one person and one horse, records a casualty, and deals 8 raw resolve damage. This can cause an additional resolve-threshold casualty. Checks follow the stage clock rather than a fresh 12-second grace period after food runs out.
 
-Resolve damage multiplies all applicable protection:
+Before conditional research protection, resolve damage multiplies these baseline factors:
 
 ```text
 Final resolve damage = raw damage
@@ -149,7 +155,10 @@ The Khan starts with 100 health, 190 movement speed, 16 damage, a 0.6-second fir
 
 Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Before research or building upgrades, Khan targeting range is `440 + 120 × momentum`; personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum gives 560 targeting range and +30% personal damage.
 
-Accompanying riders each fire one arrow per host volley, at 60% of the shared damage stat before patron and camp modifiers. Their targeting range starts at 440; Khükhedei Mergen adds up to 60 to Khan and rider targeting range. Sülde multiplies rider damage by 1.25; camp escort benefits stack through the ongoing rider-damage modifier. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
+Accompanying riders use per-rider active-time release clocks and each fire one
+arrow per successful release, at 60% of the shared damage stat before patron and
+camp modifiers. Research attack-speed bonuses change their cadence rather than
+the damage of each shot. Their targeting range starts at 440; Khükhedei Mergen adds up to 60 to Khan and rider targeting range. Sülde multiplies rider damage by 1.25; camp escort benefits stack through the ongoing rider-damage modifier. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
 
 ```text
 min(16, 1 starting rider
@@ -159,13 +168,15 @@ min(16, 1 starting rider
         + 2 per completed blue-banner crossing)
 ```
 
-Arrows travel at 440 world units/second for 1.6 seconds and normally disappear on their first hit. Khükhedei Mergen unlocks one additional pierced enemy. Each arrow hits a pooled enemy incarnation at most once; its hit history resets on reuse. There are no critical hits. Targeting range determines when a volley is fired, rather than its entire travel distance. The shared projectile pool holds 250 friendly arrows, which can limit very large simultaneous volleys.
+Arrows travel at 440 world units/second for 1.6 seconds and normally disappear on their first hit. Khükhedei Mergen unlocks one additional pierced enemy. Each arrow hits a pooled enemy incarnation at most once; its hit history resets on reuse. Still Hand enables conditional precision critical hits; research can also add
+bleed, armour reduction, extra piercing and projectile damage caps. See the
+[effect inventory](patron-research-v2-status.md) for current availability. Targeting range determines when a volley is fired, rather than its entire travel distance. The shared projectile pool holds 250 friendly arrows, which can limit very large simultaneous volleys.
 
 ### Camp attacks and Burning Tempest
 
 Sacred Ovoo lightning searches within 520 units of the living Khan, then the camp, and deals three times shared damage in a 70-unit radius. Its base interval is 3.5 seconds, or 1.8 with Shaman’s Ger, multiplied by the camp’s sanctuary-interval modifier and by 1.5 during Red Eclipse. The Wagon Yard fires within 520 units every 0.9 seconds, at shared damage ×1.5 while stationary or ×0.7 during migration. These support clocks continue during migration and succession and remain independent of host firing haste.
 
-The building requirements for **Burning Tempest** are listed in [the camp overview](../README.md#build-defend-migrate). Every friendly volley gains two additional arrows, a wider fan and alternating curvature ±0.65 radians/second. Khan, companion, ancestral and wagon arrows participate. Fire-arrow hits apply a two-second burn at shared damage ×0.45 per second, multiplied by the camp burn-damage modifier; hits refresh the timer rather than stacking separate burns.
+The building requirements for **Burning Tempest** are listed in [the camp overview](../README.md#build-defend-migrate). Ordinary friendly volleys gain two additional arrows, a wider fan and alternating curvature ±0.65 radians/second. Khan, companion, ancestral and wagon arrows participate; Ghost-Fletched arrows inherit only their selected modifier, and wagon ricochets emit a single arrow without reapplying volley bonuses. Fire-arrow hits apply a two-second burn at shared damage ×0.45 per second, multiplied by the camp burn-damage modifier; hits refresh the timer rather than stacking separate burns.
 
 ### Patron support and terrain
 
@@ -228,7 +239,7 @@ Starting crossing forecasts include the three horses, free core benefits, curren
 
 The caravan moves east automatically across 1,150 world units as progress reaches 100%. It does not wait for the Khan or depend on remaining within an escort radius. Defend it because nearby enemies and hostile shots damage the clan. You can fight, gallop, change formations, collect shards, and use the tech tree during travel; construction waits for unpacking.
 
-Rewards are not paid when choosing the route. On successful arrival, route rewards apply, the next region begins, pasture resets to 100%, resolve recovers by 12, and Khan health recovers by 25, each capped at its maximum. Buildings, resources, traditions, and riders carry over. Enemies, projectiles, and eruption warnings are cleared; uncollected shards move to the new camp. Arrivals reset the stage clock, not total active journey time.
+Rewards are not paid when choosing the route. On successful arrival, route rewards apply, the next region begins, pasture resets to 100%, resolve recovers by 12, and Khan health receives 25 base healing, subject to research healing modifiers and excess-healing effects; resolve and health remain capped at their maxima. Buildings, resources, traditions, and riders carry over. Enemies, projectiles, and eruption warnings are cleared; uncollected shards move to the new camp. Arrivals reset the stage clock, not total active journey time.
 
 ## 7. Enemies, pressure, and hazards
 
