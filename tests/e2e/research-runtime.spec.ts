@@ -492,3 +492,146 @@ test('Arrow Platforms inherit Iron-Rimmed Wagons guard range and migration damag
   expect(result.migration[0]!.remaining).toBe(result.camp[0]!.remaining);
   expect(result.outside).toEqual([]);
 });
+
+test('a rider finisher cannot create Hounds momentum for a stationary Khan', async ({ page }) => {
+  const result = await page.evaluate(async () => {
+    const s = (window as any).__gloam.scene,
+      r = s.run;
+    // @ts-expect-error Vite serves this module inside the browser.
+    const { markEnemy } = (await import('/src/game/state/researchRuntime.ts')) as typeof import(
+      '../../src/game/state/researchRuntime'
+    );
+    for (let i = 0; i < 20 && !s.enemies.countActive(true); i++) s.spawnEnemy();
+    const enemy = s.enemies.getFirstAlive();
+    enemy.setPosition(s.player.x + 100, s.player.y);
+    enemy.health = 1;
+    r.upgrades = { 'bc-hounds-of-the-horizon': 1 };
+    r.clan.momentum = 0;
+    r.researchRuntime = {};
+    markEnemy(r, enemy.tacticalSlot, enemy.spawnId);
+    s.shootVolley(s.player.x, s.player.y, enemy, 1, 1, false, false, 'rider');
+    s.hitEnemy(s.projectiles.getFirstAlive(), enemy);
+    return {
+      defeated: !enemy.active,
+      momentum: r.clan.momentum,
+      hold: r.researchRuntime.momentumHoldUntil ?? 0,
+    };
+  });
+  expect(result).toEqual({ defeated: true, momentum: 0, hold: 0 });
+});
+
+for (const count of [1, 2]) {
+  test(`full projectile pools preserve release events (${count} Khan arrows)`, async ({ page }) => {
+    const result = await page.evaluate((count) => {
+      const s = (window as any).__gloam.scene,
+        r = s.run;
+      for (let i = 0; i < 20 && !s.enemies.countActive(true); i++) s.spawnEnemy();
+      const enemy = s.enemies.getFirstAlive();
+      enemy.setPosition(s.player.x + 100, s.player.y);
+      enemy.health = enemy.maxHealth = 10000;
+      s.spatial.rebuild([enemy]);
+      r.upgrades = {
+        'km-arrow-rain': 1,
+        'km-one-arrow-one-fate': 1,
+        'km-sky-darkener': 1,
+        'on-ancestral-archers': 1,
+        'hy-ghost-fletched-arrows': 1,
+        'gu-arrow-platforms': 1,
+        'hy-thousand-arrows': 1,
+        haste: 1,
+      };
+      r.clan.paths.archery = [];
+      r.clan.paths.sanctuary = [];
+      r.clan.momentum = 0;
+      r.stats.damage = 20;
+      r.patrons.ancestors.count = 1;
+      r.clan.buildings.wagon = 1;
+      r.researchRuntime = {
+        khanVolleyCount: 5,
+        precisionVolleyCount: 3,
+        wideVolleyCount: 4,
+        riderVolleyCounts: [3],
+        riderFireAt: [0],
+        echoAttacks: [3],
+        ghostAttacks: [4],
+        echoFireAt: [0],
+      };
+      for (let i = 0; i < 250; i++) {
+        const bolt = s.projectiles.get(s.player.x, s.player.y, 'bolt');
+        if (!bolt) break;
+        bolt.enableBody(true, s.player.x, s.player.y, true, true);
+      }
+      const pool = s.projectiles.countActive(true);
+      const before = structuredClone(r.researchRuntime);
+      const failed = s.shootVolley(s.player.x, s.player.y, enemy, count, 1, false, false, 'khan');
+      s.fireRiders();
+      const echoes = () =>
+        s.patronSupport.update(r, 0.016, s.player, s.camp, s.spatial, {
+          damage: () => {},
+          volley: (x: number, y: number, target: any, damage: number, index: number, ghost?: boolean) =>
+            s.shootVolley(x, y, target, 1, damage, true, false, 'rider', index, ghost),
+        });
+      echoes();
+      s.wagonTimer = s.supportTimer = s.wardTimer = 999;
+      s.updateSupport(0);
+      const after = Object.fromEntries(
+        Object.keys(before).map((key) => [key, structuredClone(r.researchRuntime[key])]),
+      );
+      const rainBefore = r.researchRuntime.arrowRainAt ?? null;
+      const platformBefore = r.researchRuntime.arrowPlatformAt ?? null;
+      const freeOne = () => {
+        const bolt = s.projectiles.getFirstAlive();
+        bolt.disableBody(true, true);
+        return bolt;
+      };
+      const reserved = freeOne();
+      const released = s.shootVolley(s.player.x, s.player.y, enemy, count, 1, false, false, 'khan');
+      const volley = {
+        damage: reserved.damage,
+        count: r.researchRuntime.khanVolleyCount,
+        precision: r.researchRuntime.precisionVolleyCount,
+        wide: r.researchRuntime.wideVolleyCount,
+        rain: r.researchRuntime.arrowRainAt ?? null,
+      };
+      freeOne();
+      s.fireRiders();
+      const rider = r.researchRuntime.riderVolleyCounts[0];
+      const riderAt = r.researchRuntime.riderFireAt[0];
+      freeOne();
+      echoes();
+      return {
+        pool,
+        before,
+        after,
+        failed,
+        released,
+        rainBefore,
+        platformBefore,
+        volley,
+        rider,
+        riderAt,
+        echo: r.researchRuntime.echoAttacks[0],
+        ghost: r.researchRuntime.ghostAttacks[0],
+        echoAt: r.researchRuntime.echoFireAt[0],
+        echoReleases: r.researchRuntime.echoReleases,
+      };
+    }, count);
+    expect(result.pool).toBe(250);
+    expect(result.failed).toBe(false);
+    expect(result.after).toEqual(result.before);
+    expect(result.rainBefore).toBeNull();
+    expect(result.platformBefore).toBeNull();
+    expect(result.released).toBe(true);
+    expect(result.volley.damage).toBeCloseTo(20 * 0.4 * (count === 1 ? 2.4 : 1));
+    expect(result.volley.count).toBe(6);
+    expect(result.volley.precision).toBe(count === 1 ? 4 : 3);
+    expect(result.volley.wide).toBe(count === 2 ? 5 : 4);
+    expect(result.volley.rain === null).toBe(count === 1);
+    expect(result.rider).toBe(4);
+    expect(result.riderAt).toBeGreaterThan(0);
+    expect(result.echo).toBe(4);
+    expect(result.ghost).toBe(5);
+    expect(result.echoAt).toBeGreaterThan(0);
+    expect(result.echoReleases).toBe(1);
+  });
+}

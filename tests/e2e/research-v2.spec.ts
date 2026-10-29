@@ -150,6 +150,7 @@ test('V2 target, shard and volley effects are consumed by actual scene gameplay 
       damage: () => {},
       volley: () => {
         shots++;
+        return true;
       },
     });
     return {

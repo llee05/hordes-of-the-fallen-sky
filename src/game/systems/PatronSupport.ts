@@ -108,7 +108,7 @@ export class PatronSupport {
         multiplier: number,
         index: number,
         ghost?: boolean,
-      ) => void;
+      ) => boolean;
     },
   ): void {
     const step = this.clock.update(run, dt);
@@ -168,7 +168,12 @@ export class PatronSupport {
         echoPrefers(run, e.tacticalSlot, e.spawnId),
       );
       const target = preferred ?? spatial.nearest(x, y, GAME.patrons.ancestors.range);
-      if (target && claimEchoVolley(run, index)) {
+      if (
+        target &&
+        claimEchoVolley(run, index, () =>
+          actions.volley(x, y, target, effects.ancestors.damage * remembranceEchoDamage(run), index),
+        )
+      ) {
         const twin = researchEchoRelease(run, index);
         if (claimGhostArrow(run, index))
           actions.volley(
@@ -180,7 +185,6 @@ export class PatronSupport {
             true,
           );
         spirit.motion.attack();
-        actions.volley(x, y, target, effects.ancestors.damage * remembranceEchoDamage(run), index);
         if (twin)
           actions.volley(
             x,

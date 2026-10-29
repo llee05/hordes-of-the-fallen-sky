@@ -63,10 +63,11 @@ export function rewardLivingWaters(run: RunState): boolean {
   run.clan.food += GAME.research.livingWatersFood;
   return true;
 }
-export function claimThousandArrows(run: RunState): boolean {
+export function claimThousandArrows(run: RunState, release: () => boolean): boolean {
   if (run.phase !== 'playing' || !ownsResearch(run, 'hy-thousand-arrows')) return false;
+  if ((run.researchRuntime?.thousandArrowsCooldown ?? -Infinity) > run.elapsed || !release())
+    return false;
   const r = (run.researchRuntime ??= {});
-  if ((r.thousandArrowsCooldown ?? -Infinity) > run.elapsed) return false;
   r.thousandArrowsCooldown = run.elapsed + GAME.research.thousandArrowsCooldown;
   return true;
 }

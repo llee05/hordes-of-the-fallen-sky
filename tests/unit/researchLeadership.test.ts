@@ -11,7 +11,6 @@ import {
   leadershipProtection,
   lastWagonSpeed,
   recordEliteAppearance,
-  riderPairedVolley,
 } from '../../src/game/state/researchLeadership';
 import { riderFiringInterval } from '../../src/game/state/researchRuntime';
 function run(...ids: string[]) {
@@ -26,10 +25,10 @@ describe('Sülde runtime mechanics', () => {
     const base = riderFiringInterval(r);
     recordEliteAppearance(r);
     expect(riderFiringInterval(r)).toBe(base / 1.25);
-    expect(claimRiderVolley(r, 0)).toBe(true);
-    expect(claimRiderVolley(r, 0)).toBe(false);
+    expect(claimRiderVolley(r, 0, () => true)).toBe(true);
+    expect(claimRiderVolley(r, 0, () => true)).toBe(false);
     r.elapsed = base / 1.25;
-    expect(claimRiderVolley(r, 0)).toBe(true);
+    expect(claimRiderVolley(r, 0, () => true)).toBe(true);
     r.elapsed = 5;
     recordEliteAppearance(r);
     expect(leadershipAttackSpeed(r)).toBe(0);
@@ -37,7 +36,7 @@ describe('Sülde runtime mechanics', () => {
     recordEliteAppearance(r);
     expect(leadershipAttackSpeed(r)).toBe(0.25);
     r.phase = 'paused';
-    expect(claimRiderVolley(r, 1)).toBe(false);
+    expect(claimRiderVolley(r, 1, () => true)).toBe(false);
   });
   it('Banner Formation makes Wedge, Ring and Column selectable without buildings and applies distinct effects', () => {
     const r = run('su-banner-formation');
@@ -81,13 +80,21 @@ it('each rider counts its own paired releases while the Khan is absent', () => {
   const r = run('haste');
   r.khan.successionRemaining = 5;
   r.health = 0;
-  expect(riderPairedVolley(r, 0)).toBe(false);
   for (let i = 1; i <= 4; i++) {
-    expect(claimRiderVolley(r, 0)).toBe(true);
-    expect(riderPairedVolley(r, 0)).toBe(i === 4);
+    expect(
+      claimRiderVolley(r, 0, (paired) => {
+        expect(paired).toBe(i === 4);
+        return true;
+      }),
+    ).toBe(true);
     r.elapsed += riderFiringInterval(r);
   }
-  expect(riderPairedVolley(r, 1)).toBe(false);
+  expect(
+    claimRiderVolley(r, 1, (paired) => {
+      expect(paired).toBe(false);
+      return true;
+    }),
+  ).toBe(true);
 });
 
 it('preserves retreat firing cadence above forty percent momentum for every rider', () => {
@@ -99,10 +106,21 @@ it('preserves retreat firing cadence above forty percent momentum for every ride
   r.clan.momentum = 0.41;
   expect(riderFiringInterval(r)).toBeCloseTo(base * 0.7);
   for (const index of [0, 1]) {
-    expect(claimRiderVolley(r, index)).toBe(true);
+    expect(claimRiderVolley(r, index, () => true)).toBe(true);
     expect(r.researchRuntime?.riderFireAt?.[index]).toBeCloseTo(base * 0.7);
   }
   r.upgrades['su-horn-of-the-host'] = 1;
   recordEliteAppearance(r);
   expect(riderFiringInterval(r)).toBeCloseTo((base * 0.7) / 1.25);
+});
+
+it('failed rider allocations preserve release counts and clocks', () => {
+  const r = run('haste');
+  r.researchRuntime = { riderVolleyCounts: [3], riderFireAt: [0] };
+  const before = structuredClone(r.researchRuntime);
+  expect(claimRiderVolley(r, 0, () => false)).toBe(false);
+  expect(r.researchRuntime).toEqual(before);
+  expect(claimRiderVolley(r, 0, (paired) => paired)).toBe(true);
+  expect(r.researchRuntime?.riderVolleyCounts).toEqual([4]);
+  expect(r.researchRuntime?.riderFireAt?.[0]).toBeGreaterThan(0);
 });

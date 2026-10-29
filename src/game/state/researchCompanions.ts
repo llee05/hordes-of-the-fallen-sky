@@ -21,7 +21,7 @@ export function selectNearestCompanion(
 export function nearestCompanion(run: RunState, kind: 'rider' | 'echo', index: number): boolean {
   return run.researchRuntime?.nearestCompanion === `${kind}:${index}`;
 }
-export function claimEchoVolley(run: RunState, index: number): boolean {
+export function claimEchoVolley(run: RunState, index: number, release: () => boolean): boolean {
   if (
     run.phase !== 'playing' ||
     !Number.isInteger(index) ||
@@ -29,10 +29,10 @@ export function claimEchoVolley(run: RunState, index: number): boolean {
     index >= Math.min(run.patrons.ancestors.count, GAME.patrons.ancestors.maximum)
   )
     return false;
+  if ((run.researchRuntime?.echoFireAt?.[index] ?? 0) > run.elapsed || !release()) return false;
   const r = (run.researchRuntime ??= {}),
     times = (r.echoFireAt ??= []);
   while (times.length <= index) times.push(0);
-  if ((times[index] ?? 0) > run.elapsed) return false;
   times[index] = run.elapsed + echoInterval(run, nearestCompanion(run, 'echo', index));
   return true;
 }

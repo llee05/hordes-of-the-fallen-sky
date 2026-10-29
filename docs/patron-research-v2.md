@@ -165,3 +165,10 @@ Personal volley previews and firing share `state/volley.ts`, including Burning T
 All 166 technologies have a distinct `research:<id>` icon key. `src/ui/researchIcons.ts` authors each icon as a distinct subject/detail pair rendered through the existing 48-unit inline SVG brass silhouette system in `src/ui/artwork.ts`. Patron seals remain separate secondary badges. The unit regression checks both 166 unique keys and 166 distinct rendered drawings.
 
 Tempest steering preserves each arrow’s launch speed throughout flight, including active Galloping Barrage. The chronicle’s Traditions panel resolves learned ranks through the full research registry, with the same technology icons as the tree and labels for general, patron and hybrid research.
+
+Hounds of the Horizon extends momentum only above 50%; marked finishers never
+create momentum. Projectile allocation precedes Khan volley events. Rider, echo,
+Arrow Platforms and Thousand Arrows release claims receive an emission callback
+and commit their clocks and counters only when it returns true. Echo twin and
+ghost cadence counts successful primary echo attacks. A partially emitted volley
+counts once; an exhausted projectile pool consumes no release.

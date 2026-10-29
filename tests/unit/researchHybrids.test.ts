@@ -56,13 +56,13 @@ describe('Cross-patron runtime mechanics', () => {
   });
   it('Thousand Arrows gates supporting volleys for eight active seconds', () => {
     const r = run('hy-thousand-arrows');
-    expect(claimThousandArrows(r)).toBe(true);
-    expect(claimThousandArrows(r)).toBe(false);
+    expect(claimThousandArrows(r, () => true)).toBe(true);
+    expect(claimThousandArrows(r, () => true)).toBe(false);
     r.elapsed = 8;
-    expect(claimThousandArrows(r)).toBe(true);
+    expect(claimThousandArrows(r, () => true)).toBe(true);
     r.phase = 'paused';
     r.elapsed = 20;
-    expect(claimThousandArrows(r)).toBe(false);
+    expect(claimThousandArrows(r, () => true)).toBe(false);
   });
   it('Last Stand of the Hearth accelerates real ward pulses for eight seconds and requires a new threshold crossing', () => {
     const r = run('hy-last-stand-of-hearth');
@@ -100,4 +100,12 @@ describe('Cross-patron runtime mechanics', () => {
     recordResearchEnemyKill(r, { slot: 0, spawn: 4, elite: true });
     expect(r.health).toBe(0);
   });
+});
+
+it('Thousand Arrows keeps its release ready if no supporting projectile is emitted', () => {
+  const r = run('hy-thousand-arrows');
+  expect(claimThousandArrows(r, () => false)).toBe(false);
+  expect(r.researchRuntime).toBeUndefined();
+  expect(claimThousandArrows(r, () => true)).toBe(true);
+  expect(r.researchRuntime?.thousandArrowsCooldown).toBe(8);
 });

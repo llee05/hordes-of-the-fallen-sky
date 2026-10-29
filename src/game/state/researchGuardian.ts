@@ -22,15 +22,15 @@ export function constructionMaterials(
 export function recordConstruction(run: RunState): void {
   (run.researchRuntime ??= {}).firstConstructionCrossing = run.story.crossings.length;
 }
-export function claimArrowPlatform(run: RunState): boolean {
+export function claimArrowPlatform(run: RunState, release: () => boolean): boolean {
   if (
     run.phase !== 'playing' ||
     !run.clan.buildings.wagon ||
     !ownsResearch(run, 'gu-arrow-platforms')
   )
     return false;
+  if ((run.researchRuntime?.arrowPlatformAt ?? 0) > run.elapsed || !release()) return false;
   const r = (run.researchRuntime ??= {});
-  if ((r.arrowPlatformAt ?? 0) > run.elapsed) return false;
   r.arrowPlatformAt = run.elapsed + GAME.research.arrowPlatformEvery;
   return true;
 }

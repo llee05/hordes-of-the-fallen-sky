@@ -362,13 +362,12 @@ export function recordResearchEnemyKill(
   const key = enemyKey(enemy.slot, enemy.spawn);
   const wasMarked = isEnemyMarked(run, enemy.slot, enemy.spawn);
   recordHybridKill(run, enemy.elite === true && wasMarked, enemy.nearCamp === true);
-  if (wasMarked && ownsResearch(run, 'bc-hounds-of-the-horizon')) {
+  if (wasMarked && run.clan.momentum > 0.5 && ownsResearch(run, 'bc-hounds-of-the-horizon')) {
     const base = Math.max(r.momentumHoldUntil ?? 0, run.elapsed);
     r.momentumHoldUntil = Math.min(
       run.elapsed + GAME.research.houndsMomentumMax,
       base + GAME.research.houndsMomentumAdd,
     );
-    run.clan.momentum = Math.max(run.clan.momentum, GAME.research.houndsMomentumFloor);
   }
   if (ownsResearch(run, 'bc-endless-pursuit') && run.clan.momentum > 0.5) {
     r.endlessBurstUntil = run.elapsed + GAME.research.endlessPursuitBurstSeconds;

@@ -305,6 +305,19 @@ describe('Börte Chino (Hunting) runtime effects', () => {
     expect(r.clan.momentum).toBeGreaterThan(0.5);
   });
 
+  it.each([0, 0.5])('marked finishers do not create high momentum from %s', (momentum) => {
+    const r = createRun();
+    r.phase = 'playing';
+    r.upgrades['bc-hounds-of-the-horizon'] = 1;
+    r.clan.momentum = momentum;
+    markEnemy(r, 1, 1);
+    recordResearchEnemyKill(r, { slot: 1, spawn: 1 });
+    expect(r.clan.momentum).toBe(momentum);
+    expect(r.researchRuntime?.momentumHoldUntil).toBeUndefined();
+    advanceMountedCombat(r, 1, { x: 0, y: 0 }, false);
+    expect(r.clan.momentum).toBeLessThanOrEqual(momentum);
+  });
+
   it('leaves a 2 s damaging hoof trail that hits each enemy at most once per dash', () => {
     const r = createRun();
     r.phase = 'playing';

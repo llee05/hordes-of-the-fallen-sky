@@ -16,7 +16,6 @@ import {
 } from '../state/researchEchoes';
 import {
   claimRiderVolley,
-  riderPairedVolley,
   recordEliteAppearance,
   issueKurultai,
   bannerFormation,
@@ -2656,23 +2655,31 @@ export class ArenaScene extends Phaser.Scene {
           range,
           (e) => clear(e) && riderPrefersTarget(this.run, e.tacticalSlot, e.spawnId),
         ) ?? this.spatial.nearest(rider.x, rider.y, range, clear);
-      if (riderTarget && claimRiderVolley(this.run, i, nearestCompanion(this.run, 'rider', i))) {
+      if (
+        riderTarget &&
+        claimRiderVolley(
+          this.run,
+          i,
+          (paired) =>
+            this.shootVolley(
+              rider.x,
+              rider.y,
+              riderTarget,
+              paired ? 2 : 1,
+              (0.6 + (hasDevelopment(this.run, 'archery', 'veteran-riders') ? 0.3 : 0)) *
+                this.run.patrons.banner.damage *
+                this.run.clan.campEffects.multipliers.riderDamage *
+                bannerDamage(this.run),
+            ),
+          nearestCompanion(this.run, 'rider', i),
+        )
+      ) {
         this.riderMotions[i]!.attack();
         if (this.riderSpeeds[i]! < 2)
           rider.setFlipX(
             (this.landscape.world3d?.screenX(riderTarget.x - rider.x, riderTarget.y - rider.y) ??
               riderTarget.x - rider.x) < 0,
           );
-        this.shootVolley(
-          rider.x,
-          rider.y,
-          riderTarget,
-          riderPairedVolley(this.run, i) ? 2 : 1,
-          (0.6 + (hasDevelopment(this.run, 'archery', 'veteran-riders') ? 0.3 : 0)) *
-            this.run.patrons.banner.damage *
-            this.run.clan.campEffects.multipliers.riderDamage *
-            bannerDamage(this.run),
-        );
       }
     }
   }
@@ -2717,6 +2724,8 @@ export class ArenaScene extends Phaser.Scene {
           });
       });
     }
+    const first = this.projectiles.get(x, y, 'bolt') as Projectile | null;
+    if (!first) return false;
     const khanVolley =
       owner === 'khan'
         ? recordKhanVolley(this.run, volley.count, candidates)
@@ -2736,11 +2745,9 @@ export class ArenaScene extends Phaser.Scene {
       ? inherited.pierces
       : this.run.patrons.bow.pierce + (charged ? 1 : 0) + khanVolley.bonusPierces;
     const bonusPierces = ghost ? 0 : researchBonusPierces(this.run, basePierces);
-    let fired = false;
     for (let i = 0; i < arrowCount; i += 1) {
-      const bolt = this.projectiles.get(x, y, 'bolt') as Projectile | null;
+      const bolt = i === 0 ? first : (this.projectiles.get(x, y, 'bolt') as Projectile | null);
       if (!bolt) break;
-      fired = true;
       const angle = khanVolley.skyDarkener
         ? direction + (i * Math.PI * 2) / arrowCount
         : direction + (i - (arrowCount - 1) / 2) * volley.spacing;
@@ -2794,7 +2801,6 @@ export class ArenaScene extends Phaser.Scene {
     for (let i = 0; i < backward.count; i += 1) {
       const bolt = this.projectiles.get(x, y, 'bolt') as Projectile | null;
       if (!bolt) break;
-      fired = true;
       const angle = direction + Math.PI + (i - (backward.count - 1) / 2) * 0.24;
       bolt.enableBody(true, x, y, true, true);
       bolt.barrage = undefined;
@@ -2829,11 +2835,9 @@ export class ArenaScene extends Phaser.Scene {
         Math.sin(angle) * GAME.projectile.speed * volley.speed,
       );
     }
-    if (fired) {
-      markExpedition(this.run, 'fight');
-      this.audio.play('shoot', { x, y });
-    }
-    return fired;
+    markExpedition(this.run, 'fight');
+    this.audio.play('shoot', { x, y });
+    return true;
   }
 
   private fireHostile(enemy: Enemy, angle: number): Projectile | undefined {
@@ -3865,7 +3869,8 @@ export class ArenaScene extends Phaser.Scene {
     }
     const arrowRain = claimArrowRainDrop(this.run);
     if (arrowRain) {
-      if (claimThousandArrows(this.run)) {
+      claimThousandArrows(this.run, () => {
+        let released = false;
         for (let i = 0; i < riderCount(this.run); i++) {
           const rider = this.riders[i]!;
           if (
@@ -3878,8 +3883,8 @@ export class ArenaScene extends Phaser.Scene {
             rider.y,
             GAME.projectile.range + this.run.patrons.bow.range,
           );
-          if (target)
-            this.shootVolley(
+          if (target) {
+            const fired = this.shootVolley(
               rider.x,
               rider.y,
               target,
@@ -3889,8 +3894,11 @@ export class ArenaScene extends Phaser.Scene {
                 this.run.patrons.banner.damage *
                 this.run.clan.campEffects.multipliers.riderDamage,
             );
+            released ||= fired;
+          }
         }
-      }
+        return released;
+      });
       this.spatial.forEachNearby(arrowRain.x, arrowRain.y, arrowRain.radius, (enemy) =>
         this.damageEnemy(enemy, arrowRain.damage, 'khan'),
       );
@@ -3935,16 +3943,18 @@ export class ArenaScene extends Phaser.Scene {
         this.camp.y,
         GAME.research.arrowPlatformRange * wagonRangeMultiplier(this.run),
       );
-      if (target && claimArrowPlatform(this.run))
-        this.shootVolley(
-          this.camp.x,
-          this.camp.y,
-          target,
-          1,
-          GAME.research.arrowPlatformDamage * wagonDamageMultiplier(this.run),
-          false,
-          false,
-          'wagon',
+      if (target)
+        claimArrowPlatform(this.run, () =>
+          this.shootVolley(
+            this.camp.x,
+            this.camp.y,
+            target,
+            1,
+            GAME.research.arrowPlatformDamage * wagonDamageMultiplier(this.run),
+            false,
+            false,
+            'wagon',
+          ),
         );
     }
     const wagonResearch = wagonResearchDefence(this.run);

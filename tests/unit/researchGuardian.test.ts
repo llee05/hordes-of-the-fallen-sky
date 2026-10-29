@@ -19,15 +19,15 @@ function run(...ids: string[]) {
 describe('Guardian runtime mechanics', () => {
   it('Arrow Platforms require the real Wagon circle and release at most every six active seconds', () => {
     const r = run('gu-arrow-platforms');
-    expect(claimArrowPlatform(r)).toBe(false);
+    expect(claimArrowPlatform(r, () => true)).toBe(false);
     r.clan.buildings.wagon = 1;
-    expect(claimArrowPlatform(r)).toBe(true);
-    expect(claimArrowPlatform(r)).toBe(false);
+    expect(claimArrowPlatform(r, () => true)).toBe(true);
+    expect(claimArrowPlatform(r, () => true)).toBe(false);
     r.elapsed = 6;
-    expect(claimArrowPlatform(r)).toBe(true);
+    expect(claimArrowPlatform(r, () => true)).toBe(true);
     r.phase = 'paused';
     r.elapsed = 12;
-    expect(claimArrowPlatform(r)).toBe(false);
+    expect(claimArrowPlatform(r, () => true)).toBe(false);
   });
   it('Circling Volley rolls fifteen percent once, excluding bosses', () => {
     const r = run('gu-circling-volley');
@@ -97,4 +97,13 @@ it('current nomadic purchases apply first-construction discounts and the craftsp
   expect(purchaseNomadicBuilding(r, 'archery-range')).toBe(true);
   expect(r.researchRuntime?.firstConstructionCrossing).toBe(0);
   expect(r.researchRuntime?.craftspeopleRefundedCrossing).toBe(0);
+});
+
+it('Arrow Platforms keep their release ready when projectile allocation fails', () => {
+  const r = run('gu-arrow-platforms');
+  r.clan.buildings.wagon = 1;
+  expect(claimArrowPlatform(r, () => false)).toBe(false);
+  expect(r.researchRuntime).toBeUndefined();
+  expect(claimArrowPlatform(r, () => true)).toBe(true);
+  expect(r.researchRuntime?.arrowPlatformAt).toBe(6);
 });

@@ -28,17 +28,17 @@ describe('shared research runtime integration', () => {
     expect(nearestCompanion(r, 'echo', 1)).toBe(true);
     expect(nearestCompanion(r, 'rider', 0)).toBe(false);
     expect(packInstinctBonus(r, nearestCompanion(r, 'rider', 0)).attackSpeed).toBe(1);
-    expect(claimEchoVolley(r, 0)).toBe(true);
-    expect(claimEchoVolley(r, 1)).toBe(true);
+    expect(claimEchoVolley(r, 0, () => true)).toBe(true);
+    expect(claimEchoVolley(r, 1, () => true)).toBe(true);
     const first = r.researchRuntime!.echoFireAt!;
     expect(first[1]).toBeCloseTo(first[0]! / 1.1);
     r.elapsed = first[1]!;
-    expect(claimEchoVolley(r, 1)).toBe(true);
-    expect(claimEchoVolley(r, 0)).toBe(false);
+    expect(claimEchoVolley(r, 1, () => true)).toBe(true);
+    expect(claimEchoVolley(r, 0, () => true)).toBe(false);
     r.phase = 'paused';
     selectNearestCompanion(r, { x: 0, y: 0 }, []);
     expect(nearestCompanion(r, 'echo', 1)).toBe(true);
-    expect(claimEchoVolley(r, 1)).toBe(false);
+    expect(claimEchoVolley(r, 1, () => true)).toBe(false);
   });
   it('Sunder never creates negative armour or amplifies unarmoured targets', () => {
     const r = createRun();
@@ -116,10 +116,20 @@ it('saves release clocks even when only a later companion finds a target', () =>
   r.phase = 'playing';
   r.patrons.ancestors.count = 3;
   r.upgrades['hy-ghost-fletched-arrows'] = 1;
-  expect(claimEchoVolley(r, 2)).toBe(true);
-  expect(claimRiderVolley(r, 3)).toBe(true);
+  expect(claimEchoVolley(r, 2, () => true)).toBe(true);
+  expect(claimRiderVolley(r, 3, () => true)).toBe(true);
   claimGhostArrow(r, 2);
   expect(decodeExpedition(captureExpedition(r, world())).run.researchRuntime).toEqual(
     r.researchRuntime,
   );
+});
+
+it('failed echo allocations preserve their release clock', () => {
+  const r = createRun();
+  r.phase = 'playing';
+  r.patrons.ancestors.count = 1;
+  expect(claimEchoVolley(r, 0, () => false)).toBe(false);
+  expect(r.researchRuntime).toBeUndefined();
+  expect(claimEchoVolley(r, 0, () => true)).toBe(true);
+  expect(r.researchRuntime?.echoFireAt?.[0]).toBeGreaterThan(0);
 });
