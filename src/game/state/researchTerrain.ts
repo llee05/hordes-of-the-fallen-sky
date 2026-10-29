@@ -19,12 +19,14 @@ export function researchEnemySlow(
     now = run.elapsed;
   const seen = (r.slowSeenAt ??= {}),
     since = (r.slowSince ??= {}),
-    until = (r.slowUntil ??= {});
+    until = (r.slowUntil ??= {}),
+    strengths = (r.slowStrength ??= {});
   for (const k of Object.keys(seen))
     if (seen[k]! < now - 12) {
       delete seen[k];
       delete since[k];
       delete until[k];
+      delete strengths[k];
       delete r.rootUntil?.[k];
       delete r.rootCooldown?.[k];
     }
@@ -40,8 +42,10 @@ export function researchEnemySlow(
     )
       since[key] = now - dt;
     seen[key] = now;
-    if (strength > 0)
+    if (strength > 0) {
+      strengths[key] = strength;
       until[key] = now + (ownsResearch(run, 'lu-floodplain') ? GAME.research.floodplainSeconds : 0);
+    }
   } else {
     delete since[key];
     return 1;
@@ -60,7 +64,7 @@ export function researchEnemySlow(
   const ramp = ownsResearch(run, 'lu-deep-current')
     ? Math.min(1, duration / GAME.research.deepCurrentAfter) * GAME.research.deepCurrentSlow
     : 0;
-  return Math.max(0.2, 1 - (strength || run.patrons.water.slow) - ramp);
+  return Math.max(0.2, 1 - (strength || (strengths[key] ?? run.patrons.water.slow)) - ramp);
 }
 export function researchEnemySlowed(
   run: RunState,

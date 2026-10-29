@@ -370,7 +370,7 @@ for (const pierces of [0, 1]) {
         .filter((enemy: any) => enemy.active)
         .slice(0, 2);
       for (const [i, enemy] of targets.entries()) {
-        enemy.setPosition(s.player.x + 80 + i * 40, s.player.y);
+        enemy.body.reset(s.player.x + 80 + i * 40, s.player.y);
         enemy.definition = {
           ...enemy.definition,
           id: 'test-target',
@@ -408,9 +408,21 @@ for (const pierces of [0, 1]) {
           tempest: bolt.tempest,
           turn: bolt.turn,
         }));
+        const ricochet = ricochets[0];
+        const sourceBefore = targets[0].health;
+        ricochet.body.reset(targets[0].body.center.x, targets[0].body.center.y);
+        const sourceOverlap = s.physics.overlap(ricochet, targets[0], s.hitEnemy, undefined, s);
+        const sourceAfter = targets[0].health;
+        const survivesSource = ricochet.active;
         const before = targets[1].health;
-        s.hitEnemy(ricochets[0], targets[1]);
+        ricochet.body.reset(targets[1].body.center.x, targets[1].body.center.y);
+        const nextOverlap = s.physics.overlap(ricochet, targets[1], s.hitEnemy, undefined, s);
         return {
+          sourceOverlap,
+          sourceBefore,
+          sourceAfter,
+          survivesSource,
+          nextOverlap,
           initialCount,
           originalDamage,
           arrows,
@@ -423,6 +435,10 @@ for (const pierces of [0, 1]) {
         Math.random = random;
       }
     }, pierces);
+    expect(result.sourceOverlap).toBe(true);
+    expect(result.sourceAfter).toBe(result.sourceBefore);
+    expect(result.survivesSource).toBe(true);
+    expect(result.nextOverlap).toBe(true);
     expect(result.initialCount).toBe(3);
     expect(result.originalDamage).toBeCloseTo(20 * 0.6 * 1.3);
     expect(result.arrows).toEqual([{ damage: result.originalDamage, tempest: false, turn: 0 }]);
@@ -430,3 +446,49 @@ for (const pierces of [0, 1]) {
     expect(result.afterHit).toBe(pierces);
   });
 }
+
+test('Arrow Platforms inherit Iron-Rimmed Wagons guard range and migration damage', async ({
+  page,
+}) => {
+  const result = await page.evaluate(() => {
+    const s = (window as any).__gloam.scene,
+      r = s.run;
+    for (let i = 0; i < 20 && !s.enemies.countActive(true); i++) s.spawnEnemy();
+    const enemy = s.enemies.getFirstAlive();
+    enemy.setPosition(s.camp.x + 230, s.camp.y);
+    enemy.health = enemy.maxHealth = 10000;
+    s.spatial.rebuild(s.enemies.getChildren());
+    r.upgrades = { 'gu-arrow-platforms': 1, 'gu-iron-rimmed-wagons': 1 };
+    r.clan.buildings.wagon = 1;
+    r.clan.paths.wagon = [];
+    r.clan.paths.archery = [];
+    r.clan.paths.sanctuary = [];
+    r.clan.formation = 'guard';
+    r.clan.momentum = 0;
+    r.stats.damage = 20;
+    const shoot = (stage: string, distance: number) => {
+      for (const bolt of s.projectiles.getChildren()) bolt.disableBody(true, true);
+      r.clan.stage = stage;
+      enemy.setPosition(s.camp.x + distance, s.camp.y);
+      s.spatial.rebuild(s.enemies.getChildren());
+      r.researchRuntime = {};
+      s.wagonTimer = s.supportTimer = s.wardTimer = 999;
+      s.updateSupport(0);
+      return s.projectiles
+        .getChildren()
+        .filter((bolt: any) => bolt.active)
+        .map((bolt: any) => ({ damage: bolt.damage, remaining: bolt.remaining }));
+    };
+    return {
+      camp: shoot('camp', 230),
+      migration: shoot('migration', 230),
+      outside: shoot('migration', 243),
+    };
+  });
+  expect(result.camp).toHaveLength(1);
+  expect(result.camp[0]!.damage).toBeCloseTo(12);
+  expect(result.migration).toHaveLength(1);
+  expect(result.migration[0]!.damage).toBeCloseTo(14.4);
+  expect(result.migration[0]!.remaining).toBe(result.camp[0]!.remaining);
+  expect(result.outside).toEqual([]);
+});

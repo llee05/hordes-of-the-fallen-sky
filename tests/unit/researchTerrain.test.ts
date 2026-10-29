@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
+import { world } from './fixtures/expedition';
 import { createRun } from '../../src/game/state/run';
 import {
   claimTerrainWave,
@@ -180,4 +182,34 @@ it('Floodplain preserves continuous Frozen Bank and Deep Current progress across
   expect(researchEnemySlow(r, 0, 1, 1000, 2)).toBe(1);
   r.elapsed = 4.1;
   expect(researchEnemySlow(r, 0, 1, 10, 0.1)).toBeCloseTo(0.756);
+});
+
+it.each([false, true])(
+  'Floodplain retains ridge strength through exit and saves (boss: %s)',
+  (boss) => {
+    const r = run('lu-floodplain');
+    r.patrons.water.slow = 0.42;
+    expect(researchEnemySlow(r, 0, 1, 1000, 0.1, boss, true)).toBeCloseTo(0.8);
+    r.elapsed = 0.5;
+    const restored = decodeExpedition(captureExpedition(r, world())).run;
+    expect(researchEnemySlow(restored, 0, 1, 1000, 0.5, boss)).toBeCloseTo(0.8);
+    expect(researchEnemySlow(restored, 0, 2, 1000, 0.5, boss)).toBe(1);
+    restored.elapsed = 1;
+    expect(researchEnemySlow(restored, 0, 1, 1000, 0.5, boss)).toBe(1);
+    expect(researchEnemySlow(restored, 0, 1, 10, 0.1, boss, true)).toBeCloseTo(0.58);
+    restored.elapsed = 1.5;
+    expect(researchEnemySlow(restored, 0, 1, 1000, 0.5, boss)).toBeCloseTo(0.58);
+    restored.elapsed = 14;
+    researchEnemySlow(restored, 1, 1, 1000, 0.1, boss);
+    expect(restored.researchRuntime?.slowStrength?.['0:1']).toBeUndefined();
+  },
+);
+
+it('older Floodplain saves without source strength retain their water slow', () => {
+  const r = run('lu-floodplain');
+  researchEnemySlow(r, 0, 1, 10, 0.1);
+  delete r.researchRuntime!.slowStrength;
+  r.elapsed = 0.5;
+  const restored = decodeExpedition(captureExpedition(r, world())).run;
+  expect(researchEnemySlow(restored, 0, 1, 1000, 0.5)).toBeCloseTo(0.76);
 });

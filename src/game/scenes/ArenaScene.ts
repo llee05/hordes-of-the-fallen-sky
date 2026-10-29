@@ -2688,6 +2688,7 @@ export class ArenaScene extends Phaser.Scene {
     owner: 'khan' | 'rider' | 'wagon' | 'wagon-ricochet' = 'rider',
     echoIndex?: number,
     ghost = false,
+    origin?: Enemy,
   ): boolean {
     const volley =
       owner === 'wagon-ricochet'
@@ -2764,6 +2765,7 @@ export class ArenaScene extends Phaser.Scene {
       bolt.pins = charged && (this.run.upgrades['piercing-shaft'] ?? 0) > 0;
       if (charged) bolt.setTint(0xe2c586);
       bolt.hitTargets.clear();
+      if (origin) bolt.hitTargets.set(origin, origin.spawnId);
       bolt.turn = tempest ? (i % 2 ? 1 : -1) * 0.65 : 0;
       if (bolt.fire) bolt.setTint(0xffa04e);
       if (ancestral) bolt.setTint(0x91ded6);
@@ -2969,7 +2971,19 @@ export class ArenaScene extends Phaser.Scene {
           bolt.hitTargets.get(candidate) !== candidate.spawnId,
       );
       if (next)
-        this.shootVolley(enemy.x, enemy.y, next, 1, hitDamage, false, false, 'wagon-ricochet');
+        this.shootVolley(
+          enemy.x,
+          enemy.y,
+          next,
+          1,
+          hitDamage,
+          false,
+          false,
+          'wagon-ricochet',
+          undefined,
+          false,
+          enemy,
+        );
     }
   }
 
@@ -3919,7 +3933,7 @@ export class ArenaScene extends Phaser.Scene {
       const target = this.spatial.nearest(
         this.camp.x,
         this.camp.y,
-        GAME.research.arrowPlatformRange,
+        GAME.research.arrowPlatformRange * wagonRangeMultiplier(this.run),
       );
       if (target && claimArrowPlatform(this.run))
         this.shootVolley(
@@ -3927,7 +3941,7 @@ export class ArenaScene extends Phaser.Scene {
           this.camp.y,
           target,
           1,
-          GAME.research.arrowPlatformDamage,
+          GAME.research.arrowPlatformDamage * wagonDamageMultiplier(this.run),
           false,
           false,
           'wagon',

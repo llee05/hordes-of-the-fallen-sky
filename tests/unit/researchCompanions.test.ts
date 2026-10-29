@@ -60,6 +60,7 @@ describe('shared research runtime integration', () => {
       slowSince: { '0:1': 1 },
       slowSeenAt: { '0:1': 2 },
       slowUntil: { '0:1': 3 },
+      slowStrength: { '0:1': 0.2 },
       rootUntil: { '0:1': 2.6 },
       rootCooldown: { '0:1': 10 },
       ridgePatches: [{ x: 1, y: 2, until: 4 }],

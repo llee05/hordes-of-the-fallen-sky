@@ -282,6 +282,7 @@ const optional: Record<string, Record<string, Rule>> = {
         slowSince: dictionary(number),
         slowSeenAt: dictionary(number),
         slowUntil: dictionary(number),
+        slowStrength: dictionary(number),
         rootUntil: dictionary(number),
         rootCooldown: dictionary(number),
         terrainPulseAt: number,

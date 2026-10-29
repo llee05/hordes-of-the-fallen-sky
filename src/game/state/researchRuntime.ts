@@ -38,6 +38,7 @@ export interface ResearchRuntime {
   slowSince?: Record<string, number>;
   slowSeenAt?: Record<string, number>;
   slowUntil?: Record<string, number>;
+  slowStrength?: Record<string, number>;
   rootUntil?: Record<string, number>;
   rootCooldown?: Record<string, number>;
   terrainPulseAt?: number;
