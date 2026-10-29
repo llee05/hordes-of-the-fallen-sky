@@ -5,6 +5,7 @@ import {
   isNomadicCamp,
 } from '../../src/shared/nomadicCamp';
 import { NOMADIC_BUILDINGS, OPTIONAL_NOMADIC_BUILDINGS } from '../../src/game/data/nomadicCamp';
+import { campBuildingArt } from '../../src/ui/campScene';
 import { createRun } from '../../src/game/state/run';
 import {
   nomadicBuildingBlocker,
@@ -32,7 +33,9 @@ describe('nomadic camp registry and transactions', () => {
     expect(OPTIONAL_NOMADIC_BUILDINGS).toHaveLength(14);
     for (const definition of NOMADIC_BUILDINGS) {
       expect(definition.levels.map((level) => level.level)).toEqual([1, 2, 3]);
-      expect(new Set(definition.levels.map((level) => JSON.stringify(level.visual))).size).toBe(3);
+      expect(
+        new Set(definition.levels.map((level) => campBuildingArt(definition.id, level.level))).size,
+      ).toBe(3);
     }
   });
   it('constructs once in the selected location, deducts the real cost and prevents duplicates or replacement', () => {

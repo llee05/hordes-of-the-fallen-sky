@@ -742,29 +742,6 @@
   }
 }
 
-.nomadic-building-art {
-  position: relative;
-  isolation: isolate;
-  height: calc(86px * var(--building-size, 1));
-}
-.camp-encampment .nomadic-building-art {
-  height: calc(132px * var(--building-size, 1));
-}
-.nomadic-ornament {
-  position: absolute;
-  width: 28px;
-  height: 65%;
-  bottom: 0;
-  right: calc(-5px + var(--ornament) * 23px);
-}
-@media (max-height: 650px) {
-  .nomadic-building-art {
-    height: calc(58px * var(--building-size, 1));
-  }
-  .camp-encampment .nomadic-building-art {
-    height: calc(86px * var(--building-size, 1));
-  }
-}
 @media (max-width: 1000px) {
   .nomadic-camp .camp-stores {
     gap: 9px;
@@ -1003,4 +980,111 @@
   .nomadic-camp .panel-footer {
     gap: 0;
   }
+}
+
+/* Composited estate painting: one landscape, separately painted buildings on
+   stable 2:1 scene anchors. Sites are sized in percent of the scene width so
+   artwork and labels stay registered at every display size. */
+.nomadic-camp .camp-map-scroll {
+  z-index: 0;
+  container-type: size;
+  display: grid;
+  background: #3b4a3c;
+}
+.nomadic-camp .camp-map {
+  width: max(760px, min(100cqw, 200cqh));
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 2;
+  margin: auto;
+  isolation: isolate;
+  box-shadow:
+    inset 0 0 0 1px #8e754b,
+    inset 0 0 40px #3b402c44;
+}
+.nomadic-camp .camp-map-painting {
+  z-index: 0;
+}
+.nomadic-camp .camp-panorama {
+  filter: saturate(0.92);
+}
+/* A zero-height site sits on its ground line without creating a stacking
+   context, so nearer art overlaps farther art while every label stays on top. */
+.nomadic-camp .camp-place {
+  left: calc((var(--x) - var(--site-w) / 2) * 1%);
+  top: calc(var(--y) * 1%);
+  width: calc(var(--site-w) * 1%);
+  height: 0;
+  transform: none;
+}
+.nomadic-camp .camp-place-art {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: var(--layer, 0);
+  width: 100%;
+  height: auto;
+  margin: 0;
+}
+.nomadic-camp .camp-scene-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(2px 3px 1.5px #343d2955);
+  transition: filter 0.15s ease;
+}
+.nomadic-camp .camp-place-art::before {
+  bottom: 1%;
+  left: 8%;
+  width: 84%;
+  height: 16%;
+}
+.nomadic-camp .camp-empty-art .camp-scene-art {
+  opacity: 0.82;
+  filter: none;
+}
+.nomadic-camp .camp-place:is(:hover, [aria-pressed='true'], :focus-visible) .camp-scene-art {
+  filter: drop-shadow(0 0 1.5px #f6e2a8) drop-shadow(0 0 1px #f6e2a8)
+    drop-shadow(2px 3px 1.5px #343d2955);
+}
+.nomadic-camp .camp-place .camp-plaque {
+  position: absolute;
+  z-index: 200;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  min-width: 132px;
+  max-width: 190px;
+  min-height: 25px;
+  padding: 3px 7px 3px 17px;
+  gap: 8px;
+}
+.nomadic-camp .camp-place .camp-plaque strong {
+  font-size: 12px;
+}
+.nomadic-camp .camp-place .camp-plaque small {
+  font-size: 10px;
+}
+.nomadic-camp .camp-place .camp-plaque-badge {
+  top: 3px;
+  left: -11px;
+  width: 19px;
+  height: 19px;
+}
+.nomadic-camp .camp-place .camp-plaque-badge .clan-mark {
+  width: 15px;
+  height: 15px;
+}
+.nomadic-camp .camp-encampment .camp-plaque {
+  min-width: 160px;
+  border-top-width: 2px;
+}
+.nomadic-camp .camp-encampment .camp-plaque strong {
+  font-size: 14px;
+}
+.nomadic-camp .camp-facility[data-match='false'],
+.nomadic-camp .camp-empty-place[data-match='false'] {
+  opacity: 0.5;
 }
