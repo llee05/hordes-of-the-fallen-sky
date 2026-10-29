@@ -192,6 +192,7 @@ it.each([false, true])(
     expect(researchEnemySlow(r, 0, 1, 1000, 0.1, boss, true)).toBeCloseTo(0.8);
     r.elapsed = 0.5;
     const restored = decodeExpedition(captureExpedition(r, world())).run;
+    restored.phase = 'playing';
     expect(researchEnemySlow(restored, 0, 1, 1000, 0.5, boss)).toBeCloseTo(0.8);
     expect(researchEnemySlow(restored, 0, 2, 1000, 0.5, boss)).toBe(1);
     restored.elapsed = 1;
@@ -211,5 +212,6 @@ it('older Floodplain saves without source strength retain their water slow', () 
   delete r.researchRuntime!.slowStrength;
   r.elapsed = 0.5;
   const restored = decodeExpedition(captureExpedition(r, world())).run;
+  restored.phase = 'playing';
   expect(researchEnemySlow(restored, 0, 1, 1000, 0.5)).toBeCloseTo(0.76);
 });
