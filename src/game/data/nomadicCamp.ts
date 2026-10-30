@@ -60,11 +60,6 @@ export interface NomadicBuildingLevel {
   title: string;
   cost: { materials: number; spirit: number };
   effects: NomadicBuildingEffects;
-  visual: {
-    art: 'ger' | 'wagon' | 'herd' | 'archery' | 'sanctuary' | 'banner';
-    scale: number;
-    ornament: number;
-  };
   requires?: { building: NomadicBuildingId; level: number }[];
 }
 export interface NomadicBuildingDefinition {
@@ -76,20 +71,15 @@ export interface NomadicBuildingDefinition {
   doctrine: Doctrine;
   workers: number;
   levels: readonly NomadicBuildingLevel[];
-  /** Core anchors stay fixed; optional instances use their persistent slot's anchor. */
-  position?: readonly [number, number];
 }
 const C = GAME.camp.nomadic;
-type Art = NomadicBuildingLevel['visual']['art'];
 function define(
   id: NomadicBuildingId,
   title: string,
   category: NomadicBuildingDefinition['category'],
   description: string,
   icon: string,
-  art: Art,
   effects: readonly NomadicBuildingEffects[],
-  position?: readonly [number, number],
 ): NomadicBuildingDefinition {
   return {
     id,
@@ -97,7 +87,6 @@ function define(
     category,
     description,
     icon,
-    position,
     doctrine:
       category === 'Military' ? 'iron' : category === 'Spiritual & cultural' ? 'sky' : 'wander',
     workers: category === 'Core' ? 0 : C.workers,
@@ -109,7 +98,6 @@ function define(
         spirit: category === 'Spiritual & cultural' ? C.spirit[i]! : 0,
       },
       effects: effect,
-      visual: { art, scale: 1 + i * 0.12, ornament: i },
       ...(i > 0 && id !== 'khans-ger'
         ? { requires: [{ building: 'khans-ger' as const, level: i + 1 }] }
         : {}),
@@ -128,13 +116,11 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Core',
     'The central household leads the clan and organises the growth of every workplace.',
     'ger',
-    'ger',
     repeat({
       ongoing: { multipliers: { materialProduction: C.production } },
       populationCapacity: C.populationCapacity,
       future: { leadership: C.futureEfficiency },
     }),
-    [50, 31],
   ),
   define(
     'horse-lines',
@@ -142,12 +128,10 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Core',
     'Hitching lines, remounts and careful packing keep the travelling camp moving.',
     'horse',
-    'herd',
     repeat({
       ongoing: { multipliers: { mobility: C.mobility } },
       future: { mountSpeed: C.futureEfficiency, mountEffectiveness: C.futureEfficiency },
     }),
-    [19, 28],
   ),
   define(
     'herding-grounds',
@@ -155,12 +139,10 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Core',
     'The livestock provide food and the materials of a portable household.',
     'horse',
-    'herd',
     repeat({
       ongoing: { multipliers: { foodProduction: C.production } },
       future: { leather: 1, wool: 1 },
     }),
-    [16, 64],
   ),
   define(
     'communal-hearth',
@@ -168,21 +150,18 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Core',
     'Shared meals waste less food, restore the Khan and keep the people together.',
     'hearth',
-    'ger',
     repeat({
       ongoing: {
         multipliers: { consumption: C.efficiency },
         bonuses: { commanderRecovery: C.recovery, resolveRecovery: C.recovery },
       },
     }),
-    [82, 28],
   ),
   define(
     'wagon-yard',
     'Wagon Yard',
     'Core',
     'Stores and decorated carts carry the clan and its tools to another pasture.',
-    'wagon',
     'wagon',
     repeat({
       ongoing: {
@@ -191,7 +170,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
       },
       future: { storageCapacity: C.futureCapacity, relocationEfficiency: C.futureEfficiency },
     }),
-    [84, 64],
   ),
   define(
     'archery-range',
@@ -199,7 +177,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Military',
     'Riders practice the moving shot, improving ranged damage, firing cadence and piercing.',
     'bow',
-    'archery',
     [
       { player: { damage: C.damage }, attackInterval: C.interval },
       { player: { damage: C.damage }, attackInterval: C.interval },
@@ -212,7 +189,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Military',
     'A portable forge strengthens weapons and prepares work for future equipment crafting.',
     'materials',
-    'wagon',
     repeat({
       player: { damage: C.damage },
       ongoing: { multipliers: { clanProtection: C.protection } },
@@ -225,7 +201,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Military',
     'Train a stronger escort and preserve room for future recruited companions.',
     'banner',
-    'archery',
     repeat({
       ongoing: { multipliers: { riderDamage: C.production } },
       future: {
@@ -241,7 +216,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Military',
     'Scouts read the road ahead and practice locating distant supplies.',
     'mountain',
-    'banner',
     repeat({
       player: { pickupRadius: C.range },
       ongoing: { bonuses: { arrivalMaterials: C.arrivalMaterials } },
@@ -258,7 +232,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Military',
     'Prepare additional shafts, careful fletching and specialised ammunition.',
     'bow',
-    'ger',
     [
       { player: { projectiles: 1 } },
       { attackInterval: C.interval },
@@ -271,7 +244,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Military',
     'Portable stakes and watchfires protect the households from attackers.',
     'sanctuary',
-    'banner',
     repeat({
       ongoing: { multipliers: { clanProtection: C.protection } },
       future: { guardStrength: C.futureEfficiency },
@@ -283,7 +255,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Economy & survival',
     'Hunters supplement the herd and prepare for future hunting expeditions.',
     'bow',
-    'ger',
     repeat({
       ongoing: {
         multipliers: { foodProduction: C.production },
@@ -298,7 +269,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Economy & survival',
     'Felt, clothing and shared tools make material gathering and resource use more efficient.',
     'materials',
-    'ger',
     repeat({
       ongoing: { multipliers: { materialProduction: C.production, consumption: C.efficiency } },
       future: { craftingEfficiency: C.futureEfficiency, equipmentCrafting: 1 },
@@ -309,7 +279,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Trading Post',
     'Economy & survival',
     'A meeting place for merchants, recorded for future commerce and rare goods.',
-    'wagon',
     'wagon',
     repeat({
       ongoing: { bonuses: { arrivalMaterials: C.arrivalMaterials } },
@@ -322,7 +291,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Economy & survival',
     'Medicine strengthens the Khan and supports recovery while the clan rests.',
     'hearth',
-    'ger',
     repeat({
       player: { maxHealth: C.health },
       ongoing: { bonuses: { commanderRecovery: C.recovery } },
@@ -334,7 +302,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Sacred Ovoo',
     'Spiritual & cultural',
     'A fictional sanctuary of the travelling clan, offering spiritual protection and stronger camp lightning.',
-    'sanctuary',
     'sanctuary',
     repeat({
       ongoing: {
@@ -353,7 +320,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Spiritual & cultural',
     'A place for the story world’s spiritual arts; rituals and cleansing remain future mechanics.',
     'spirit',
-    'ger',
     repeat({
       unlocks: [{ building: 'sanctuary', path: 'wind-shamans' }],
       ongoing: { multipliers: { burnDamage: C.production } },
@@ -370,7 +336,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Spiritual & cultural',
     'The clan’s ceremonial banner steadies the living host beneath its ancestral colours.',
     'banner',
-    'banner',
     repeat({
       ongoing: {
         multipliers: { riderDamage: C.production },
@@ -385,7 +350,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'Spiritual & cultural',
     'Oral histories preserve knowledge, improving experience and technology progression while lore discoveries await future integration.',
     'journal',
-    'ger',
     repeat({
       ongoing: { multipliers: { spiritGain: C.production } },
       experience: C.production,

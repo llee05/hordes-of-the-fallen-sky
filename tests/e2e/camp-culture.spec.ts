@@ -60,8 +60,8 @@ test('advanced art and reserved workers remain readable and bounded across deskt
   await buyNomadicLevel(page, 'artisans-ger', 3);
   await expect(page.locator('[data-camp-site="artisans-ger"]')).toHaveAttribute('data-level', '3');
   await expect(
-    page.locator('[data-camp-site="artisans-ger"] [data-visual-level="3"] .nomadic-ornament'),
-  ).toHaveCount(2);
+    page.locator('[data-camp-site="artisans-ger"] [data-visual-level="3"] img'),
+  ).toHaveAttribute('src', /camp-scene\/artisans-ger-3\.webp$/);
   expect(
     await page.evaluate(
       () => (window as any).__gloam.scene.run.clan.campEffects.multipliers.materialProduction,

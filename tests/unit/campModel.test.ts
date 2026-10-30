@@ -84,6 +84,7 @@ describe('nomadic manuscript camp and shared purchase inspector', () => {
         nomadicSelection: 'healers-ger',
       });
       expect(html).toContain(`data-visual-level="${rank}"`);
+      expect(html).toContain(`camp-scene/healers-ger-${rank}.webp`);
       expect(html).toContain(`Building level ${rank} / 3`);
       if (rank === 3) {
         expect(html).toContain('All building levels completed');
