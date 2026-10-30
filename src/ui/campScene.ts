@@ -49,6 +49,7 @@ if (OPTIONAL_CAMP_SITES.length !== OPTIONAL_CAMP_SLOTS)
 const OPTIONAL_WIDTH: Partial<Record<OptionalCampBuildingId, number>> = {
   'scouts-watchpost': 0.6,
   'sacred-ovoo': 0.85,
+  'ancestral-standard': 0.65,
 };
 
 export function campSceneSite(id: NomadicBuildingId, slot?: number): CampSceneSite {

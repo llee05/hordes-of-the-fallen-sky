@@ -1009,30 +1009,40 @@
 .nomadic-camp .camp-panorama {
   filter: saturate(0.92);
 }
-/* A zero-height site sits on its ground line without creating a stacking
-   context, so nearer art overlaps farther art while every label stays on top. */
+/* Each site sits on its ground line without creating a stacking context, so
+   nearer art overlaps farther art while every label stays on top. A compact
+   height gives the button a clear hit area around its label and ground anchor. */
 .nomadic-camp .camp-place {
   left: calc((var(--x) - var(--site-w) / 2) * 1%);
   top: calc(var(--y) * 1%);
   width: calc(var(--site-w) * 1%);
-  height: 0;
+  height: 30px;
   transform: none;
 }
 .nomadic-camp .camp-place-art {
   position: absolute;
-  bottom: 0;
+  bottom: 30px;
   left: 0;
   z-index: var(--layer, 0);
   width: 100%;
   height: auto;
   margin: 0;
+  pointer-events: auto;
 }
-.nomadic-camp .camp-scene-art {
+.nomadic-camp .camp-place-art .camp-scene-art {
   display: block;
   width: 100%;
   height: auto;
   filter: drop-shadow(2px 3px 1.5px #343d2955);
   transition: filter 0.15s ease;
+}
+.nomadic-camp .camp-building-choice .camp-scene-art,
+.nomadic-camp .clan-building-art .camp-scene-art {
+  display: block;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 .nomadic-camp .camp-place-art::before {
   bottom: 1%;
