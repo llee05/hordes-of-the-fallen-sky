@@ -72,6 +72,9 @@ camp branch supplies that contract. No camp structures or save IDs are repurpose
 The [effect inventory](patron-research-v2-status.md) lists every unimplemented effect.
 Registered, purchasable and functional counts are intentionally distinct; the inventory
 is the reference for delivery status.
+`tests/unit/researchStatusDoc.test.ts` checks that it has one row per expansion, that
+rows are **Working** exactly when the handler is wired and reachable, and that its header
+counts match the registry, so update the inventory in the same change that enables a handler.
 
 The [research artwork guide](research-artwork.md) records the painted masthead,
 per-patron landscapes, matching inspector art, shared vignette sets and local lazy
