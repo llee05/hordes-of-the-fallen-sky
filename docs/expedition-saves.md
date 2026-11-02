@@ -23,6 +23,7 @@ enemy statuses keyed by pool slot and spawn, pending attacks and healing, and
 once-per-crossing spend/construction/rally claims. Projectiles retain precision and
 ghost identity plus damage-budget accounting; bonus shards retain their
 nonrecursive pickup flag. Observations retain damage groups and frame aggregates. A new expedition starts without these optional records.
+Each research system declares its `researchRuntime` keys as a typed slice with save rules beside its runtime code; `state/researchRuntimeRules.ts` combines the slices, which never share a key, and `tests/unit/researchRuntimeRules.test.ts` snapshots the accepted keys and round-trips every one.
 
 Snapshots preserve the entire run, including already-applied camp/patron/stat effects, unspent points and XP, Last Ember charges, succession and selected traits, crossing rewards and escort state, field objectives, clan memories and resolved story transcripts. Lasting story effects are already applied to `clan.campEffects`; companion trust is recomputed from the transcripts, so it needs no separate field. They also preserve player/camp/rider positions, velocity and facing, animation clocks, combat/support/encounter timers, hazards, live enemies, both projectile pools, and dropped XP.
 

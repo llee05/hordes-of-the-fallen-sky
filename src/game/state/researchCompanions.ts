@@ -1,6 +1,20 @@
 import { GAME } from '../config';
 import type { RunState } from '../types';
 import { echoInterval } from './researchRuntime';
+import { list, number, string, type Rule } from './archiveRules';
+
+/**
+ * Nearest-companion selection and echo release clocks.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface CompanionRuntime {
+  nearestCompanion?: string;
+  echoFireAt?: number[];
+}
+export const COMPANION_RUNTIME_RULES = {
+  nearestCompanion: string,
+  echoFireAt: list(number, GAME.patrons.ancestors.maximum),
+} satisfies Record<keyof CompanionRuntime, Rule>;
 export function selectNearestCompanion(
   run: RunState,
   player: { x: number; y: number },
