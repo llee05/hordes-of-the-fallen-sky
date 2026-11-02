@@ -4,6 +4,18 @@ import { createCampEstate } from './campEstate';
 import { migrateLegacyNomadicCamp } from './nomadicCampMigration';
 import { isExpeditionSave, isRecord, type ExpeditionSave } from '../../shared/expeditionSave';
 import { createRun } from './run';
+import {
+  boolean,
+  dictionary,
+  integer,
+  list,
+  number,
+  object,
+  oneOf,
+  positive,
+  string,
+  type Rule,
+} from './archiveRules';
 import { ALL_ENEMIES, SKYBREAKER } from '../data/enemies';
 import { RESEARCH_BY_ID } from '../data/research';
 import { BUILDINGS, ROUTES, LOCATIONS, STARTING_TRADITIONS } from '../data/clan';
@@ -113,30 +125,6 @@ export interface WorldArchive {
   areaThreats: AreaThreatState;
 }
 
-type Rule = (value: unknown) => boolean;
-const number: Rule = (v) => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) <= 1e9;
-const positive: Rule = (v) => number(v) && (v as number) >= 0;
-const integer: Rule = (v) => positive(v) && Number.isInteger(v);
-const string: Rule = (v) => typeof v === 'string';
-const boolean: Rule = (v) => typeof v === 'boolean';
-const oneOf =
-  (values: readonly unknown[]): Rule =>
-  (v) =>
-    values.includes(v);
-const list =
-  (rule: Rule, maximum = 2000): Rule =>
-  (v) =>
-    Array.isArray(v) && v.length <= maximum && v.every(rule);
-const dictionary =
-  (rule: Rule): Rule =>
-  (v) =>
-    isRecord(v) && Object.values(v).every(rule);
-function object(required: Record<string, Rule>, optional: Record<string, Rule> = {}): Rule {
-  return (v) =>
-    isRecord(v) &&
-    Object.entries(required).every(([key, rule]) => rule(v[key])) &&
-    Object.keys(v).every((key) => key in required || (key in optional && optional[key]!(v[key])));
-}
 const point = object({ x: number, y: number });
 const bodyFields = { x: number, y: number, vx: number, vy: number, flip: boolean };
 const motion = object({
