@@ -5,6 +5,8 @@ import { openTitle, startExpedition } from './helpers';
 test('destination previews retain landscape descriptions, river channels, threat intel, and frozen gameplay', async ({
   page,
 }) => {
+  // This test covers three former 30 s specs, after a cold start under software rendering.
+  test.setTimeout(90000);
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
@@ -68,6 +70,8 @@ test('destination previews retain landscape descriptions, river channels, threat
 
 // A later-chapter map is built from the current destination rather than the starting pasture.
 test('a map opened from Eej Khairkhan previews Orkhon Valley’s landscape', async ({ page }) => {
+  // A cold start plus a streamed 3D destination exceeds 30 s under software rendering.
+  test.setTimeout(60000);
   await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-level="destination:2:eej-khairkhan"]').click();
