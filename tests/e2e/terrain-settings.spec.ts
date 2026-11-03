@@ -1,55 +1,66 @@
 import { expect, test } from '@playwright/test';
 
-for (const terrainRenderer of ['2d', '3d']) {
-  test(`legacy ${terrainRenderer} profiles always load the angled world`, async ({ page }) => {
-    const errors: string[] = [];
-    page.on('pageerror', (error) => errors.push(error.message));
-    await page.addInitScript((terrainRenderer) => {
-      if (!localStorage.getItem('gloam-profile'))
-        localStorage.setItem(
-          'gloam-profile',
-          JSON.stringify({
-            version: 1,
-            bestSeconds: 55,
-            muted: true,
-            visualSettings: {
-              terrainRenderer,
-              projectileContrast: 'high',
-              effectDensity: 'reduced',
-            },
-          }),
+test('legacy 2d and 3d profiles always load the angled world', async ({ browser }) => {
+  test.setTimeout(120000);
+  for (const terrainRenderer of ['2d', '3d']) {
+    await test.step(`legacy ${terrainRenderer} profile`, async () => {
+      const context = await browser.newContext();
+      try {
+        const page = await context.newPage();
+        const errors: string[] = [];
+        page.on('pageerror', (error) => errors.push(error.message));
+        await page.addInitScript((terrainRenderer) => {
+          if (!localStorage.getItem('gloam-profile'))
+            localStorage.setItem(
+              'gloam-profile',
+              JSON.stringify({
+                version: 1,
+                bestSeconds: 55,
+                muted: true,
+                visualSettings: {
+                  terrainRenderer,
+                  projectileContrast: 'high',
+                  effectDensity: 'reduced',
+                },
+              }),
+            );
+          // A software driver must never select a different renderer.
+          for (const context of [WebGLRenderingContext, WebGL2RenderingContext]) {
+            const original = context.prototype.getParameter;
+            context.prototype.getParameter = function (parameter: number) {
+              return parameter === 37446
+                ? 'ANGLE (Vulkan SwiftShader Device)'
+                : original.call(this, parameter);
+            };
+          }
+        }, terrainRenderer);
+        await page.goto('/?terrain=2d');
+        await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1);
+        await expect(page.getByText('Software graphics detected', { exact: false })).toHaveCount(0);
+        await page.getByRole('button', { name: 'Settings', exact: true }).click();
+        await expect(page.getByRole('button', { name: 'Terrain', exact: true })).toHaveCount(0);
+        await expect(
+          page.getByRole('button', { name: 'Projectile contrast', exact: true }),
+        ).toHaveText('High');
+        await expect(page.getByRole('button', { name: 'Effect density', exact: true })).toHaveText(
+          'reduced',
         );
-      // A software driver must never select a different renderer.
-      for (const context of [WebGLRenderingContext, WebGL2RenderingContext]) {
-        const original = context.prototype.getParameter;
-        context.prototype.getParameter = function (parameter: number) {
-          return parameter === 37446
-            ? 'ANGLE (Vulkan SwiftShader Device)'
-            : original.call(this, parameter);
-        };
+        await page.getByRole('button', { name: 'Projectile contrast', exact: true }).click();
+        await page.reload();
+        await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1, {
+          timeout: 15000,
+        });
+        await page.getByRole('button', { name: 'Settings', exact: true }).click();
+        await expect(
+          page.getByRole('button', { name: 'Projectile contrast', exact: true }),
+        ).toHaveText('Standard');
+        expect(errors).toEqual([]);
+      } finally {
+        await context.close();
       }
-    }, terrainRenderer);
-    await page.goto('/?terrain=2d');
-    await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1);
-    await expect(page.getByText('Software graphics detected', { exact: false })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Settings', exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Terrain', exact: true })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Projectile contrast', exact: true })).toHaveText(
-      'High',
-    );
-    await expect(page.getByRole('button', { name: 'Effect density', exact: true })).toHaveText(
-      'reduced',
-    );
-    await page.getByRole('button', { name: 'Projectile contrast', exact: true }).click();
-    await page.reload();
-    await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1);
-    await page.getByRole('button', { name: 'Settings', exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Projectile contrast', exact: true })).toHaveText(
-      'Standard',
-    );
-    expect(errors).toEqual([]);
-  });
-}
+    });
+  }
+});
 
 for (const scenario of [
   { location: 'golden-pasture', level: 'chapter:golden-pasture' },

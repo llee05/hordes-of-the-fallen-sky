@@ -118,34 +118,36 @@ test('intro reads at the player’s pace with frozen simulation, back, completio
   expect(errors).toEqual([]);
 });
 
-for (const chapter of [0, 1, 2, 3, 4]) {
-  test(`skip chapter ${chapter + 1} into gameplay with camp scenes off`, async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('button', { name: 'Camp scenes: On' }).click();
-    await page.getByRole('button', { name: /NEW GAME/ }).click();
-    await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
-    for (let i = 0; i < chapter; i++) await page.keyboard.press('ArrowRight');
-    if (chapter === 1) await closeOverlayOrPause(page);
-    else if (chapter === 2) await page.keyboard.press('p');
-    else await page.getByRole('button', { name: /Skip intro/ }).click();
-    await expect(page.getByRole('dialog')).toBeHidden();
-    expect(
-      await page.evaluate(() => {
-        const scene = (window as any).__gloam.scene;
-        return {
-          phase: scene.run.phase,
-          paused: scene.physics.world.isPaused,
-          dash: scene.dashTimer,
-        };
-      }),
-    ).toEqual({ phase: 'playing', paused: false, dash: 0 });
-    await closeOverlayOrPause(page);
-    await page.getByRole('button', { name: 'Start a new run' }).click();
-    await expect(page.getByRole('button', { name: 'Camp scenes: Off' })).toBeVisible();
-    await page.getByRole('button', { name: /NEW GAME/ }).click();
-    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
-  });
-}
+test('skip chapters 1 to 5 into gameplay with camp scenes off', async ({ page }) => {
+  test.setTimeout(120000);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Camp scenes: On' }).click();
+  for (const chapter of [0, 1, 2, 3, 4]) {
+    await test.step(`skip chapter ${chapter + 1}`, async () => {
+      await page.getByRole('button', { name: /NEW GAME/ }).click();
+      await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
+      for (let i = 0; i < chapter; i++) await page.keyboard.press('ArrowRight');
+      if (chapter === 1) await closeOverlayOrPause(page);
+      else if (chapter === 2) await page.keyboard.press('p');
+      else await page.getByRole('button', { name: /Skip intro/ }).click();
+      await expect(page.getByRole('dialog')).toBeHidden();
+      expect(
+        await page.evaluate(() => {
+          const scene = (window as any).__gloam.scene;
+          return {
+            phase: scene.run.phase,
+            paused: scene.physics.world.isPaused,
+            dash: scene.dashTimer,
+          };
+        }),
+      ).toEqual({ phase: 'playing', paused: false, dash: 0 });
+      await closeOverlayOrPause(page);
+      await page.getByRole('button', { name: 'Start a new run' }).click();
+      await expect(page.getByRole('button', { name: 'Camp scenes: Off' })).toBeVisible();
+    });
+  }
+});
 
 test('replaying the introduction completes or skips back to the frozen title at every chapter', async ({
   page,

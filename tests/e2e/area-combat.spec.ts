@@ -69,65 +69,68 @@ test('native spell warnings cancel on pinning, pause in menus, and leave bounded
   expect(effects.graphics).toBeGreaterThan(0);
 });
 
-for (const location of ['bogd-khan-uul', 'otgontenger', 'orkhon-valley', 'eej-khairkhan'])
-  test(`native ${location} encounters use the real terrain and retain shared enemies`, async ({
-    page,
-  }) => {
-    test.setTimeout(120000);
-    await page.goto('/');
-    await page.getByRole('button', { name: 'Developer mode F8' }).click();
-    await page.locator(`[data-developer-level="destination:2:${location}"]`).click();
-    await expect(page.getByRole('dialog')).toBeHidden();
-    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
-    await expect
-      .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.locationId))
-      .toBe(location);
-    await expect
-      .poll(
-        () => page.evaluate(() => (window as any).__gloam.scene.landscape.world3d?.pendingChunks),
-        { timeout: 45000 },
-      )
-      .toBe(0);
-    const audit = await page.evaluate(async () => {
-      const s = (window as any).__gloam.scene;
-      s.setPhase('paused');
-      s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
-      for (const e of s.enemies.getChildren()) e.disableBody(true, true);
-      s.run.clan.stageTime = 40;
-      let successes = 0;
-      for (let i = 0; i < 50; i++) if (s.spawnEnemy()) successes++;
-      const enemies = s.enemies.getChildren().filter((e: any) => e.active),
-        before = enemies.length;
-      s.updateEnemies(0.001);
-      s.updateCharacterAnimations(0.001);
-      const { AREA_ENCOUNTERS } = (await import(
-        // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
-        '/src/game/data/areaEncounters.ts'
-      )) as typeof import('../../src/game/data/areaEncounters');
-      const home = s.run.clan.locationId;
-      return {
-        home,
-        successes,
-        valid: enemies.every((e: any) => s.landscape.navigation.isWalkable(e.x, e.y, 24, true)),
-        shared: enemies.filter((e: any) => !e.definition.home).length,
-        locals: enemies.filter((e: any) => e.definition.home === home).length,
-        foreign: enemies.filter((e: any) => e.definition.home && e.definition.home !== home).length,
-        seen: [...new Set(enemies.map((e: any) => e.definition.id))],
-        expected: AREA_ENCOUNTERS[home as keyof typeof AREA_ENCOUNTERS].natives,
-        poses: enemies.every((e: any) => String(e.frame.name).startsWith(e.definition.texture)),
-        culled: before - s.enemies.countActive(true),
-      };
+test('native encounters use the real terrain and retain shared enemies', async ({ page }) => {
+  test.setTimeout(120000);
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Developer mode F8' })).toBeVisible();
+  for (const location of ['bogd-khan-uul', 'otgontenger', 'orkhon-valley', 'eej-khairkhan']) {
+    await test.step(location, async () => {
+      await page.keyboard.press('F8');
+      await page.locator(`[data-developer-level="destination:2:${location}"]`).click();
+      await expect(page.getByRole('dialog')).toBeHidden();
+      await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
+      await expect
+        .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.locationId))
+        .toBe(location);
+      await expect
+        .poll(
+          () => page.evaluate(() => (window as any).__gloam.scene.landscape.world3d?.pendingChunks),
+          { timeout: 45000 },
+        )
+        .toBe(0);
+      const audit = await page.evaluate(async () => {
+        const s = (window as any).__gloam.scene;
+        s.setPhase('paused');
+        s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
+        for (const e of s.enemies.getChildren()) e.disableBody(true, true);
+        s.run.clan.stageTime = 40;
+        let successes = 0;
+        for (let i = 0; i < 50; i++) if (s.spawnEnemy()) successes++;
+        const enemies = s.enemies.getChildren().filter((e: any) => e.active),
+          before = enemies.length;
+        s.updateEnemies(0.001);
+        s.updateCharacterAnimations(0.001);
+        const { AREA_ENCOUNTERS } = (await import(
+          // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+          '/src/game/data/areaEncounters.ts'
+        )) as typeof import('../../src/game/data/areaEncounters');
+        const home = s.run.clan.locationId;
+        return {
+          home,
+          successes,
+          valid: enemies.every((e: any) => s.landscape.navigation.isWalkable(e.x, e.y, 24, true)),
+          shared: enemies.filter((e: any) => !e.definition.home).length,
+          locals: enemies.filter((e: any) => e.definition.home === home).length,
+          foreign: enemies.filter((e: any) => e.definition.home && e.definition.home !== home)
+            .length,
+          seen: [...new Set(enemies.map((e: any) => e.definition.id))],
+          expected: AREA_ENCOUNTERS[home as keyof typeof AREA_ENCOUNTERS].natives,
+          poses: enemies.every((e: any) => String(e.frame.name).startsWith(e.definition.texture)),
+          culled: before - s.enemies.countActive(true),
+        };
+      });
+      expect(audit.home).toBe(location);
+      expect(audit.successes).toBe(50);
+      expect(audit.valid).toBe(true);
+      expect(audit.foreign).toBe(0);
+      expect(audit.culled).toBe(0);
+      expect(audit.locals).toBeGreaterThan(10);
+      expect(audit.shared).toBeGreaterThan(0);
+      expect(audit.poses).toBe(true);
+      for (const id of audit.expected) expect(audit.seen).toContain(id);
     });
-    expect(audit.home).toBe(location);
-    expect(audit.successes).toBe(50);
-    expect(audit.valid).toBe(true);
-    expect(audit.foreign).toBe(0);
-    expect(audit.culled).toBe(0);
-    expect(audit.locals).toBeGreaterThan(10);
-    expect(audit.shared).toBeGreaterThan(0);
-    expect(audit.poses).toBe(true);
-    for (const id of audit.expected) expect(audit.seen).toContain(id);
-  });
+  }
+});
 
 test('terrain rules warn on real cliff-foot ground and woodland concealment reveals without leaking into reused actors', async ({
   page,

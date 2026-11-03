@@ -1,75 +1,79 @@
 import { expect, test } from '@playwright/test';
 import { openTitle, startExpedition } from './helpers';
-for (const route of ['river', 'ridge', 'refuge'])
-  test(`${route} crossing has a warned encounter with once-only arrival benefits`, async ({
-    page,
-  }) => {
-    await openTitle(page);
-    await startExpedition(page);
-    await page.evaluate(() => {
-      const s = (window as any).__gloam.scene;
-      s.developerTools.invincible = s.developerTools.clanInvincible = true;
-      s.spawnTimer = s.attackTimer = 999;
-      s.run.clan.stageTime = 45;
-      for (const e of s.enemies.getChildren()) e.disableBody(true, true);
-    });
-    await expect(page.locator('#migrate')).toBeEnabled();
-    await page.locator('#migrate').click();
-    await expect(page.locator(`[data-route="${route}"]`)).toContainText('Optional:');
-    await page.locator(`[data-route="${route}"]`).click();
-    await page.evaluate(() => {
-      const s = (window as any).__gloam.scene;
-      s.run.clan.migrationProgress = 0.2;
-      s.updateCrossing(0.01);
-    });
-    await page.locator('#pause').click();
-    const frozen = await page.evaluate(() => (window as any).__gloam.scene.run.crossing.remaining);
-    await page.waitForTimeout(250);
-    expect(await page.evaluate(() => (window as any).__gloam.scene.run.crossing.remaining)).toBe(
-      frozen,
-    );
-    await page.keyboard.press('Escape');
-    const result = await page.evaluate(() => {
-      const s = (window as any).__gloam.scene,
-        c = s.run.crossing;
-      s.run.clan.migrationProgress = 0.2;
-      s.updateCrossing(4);
-      for (let i = 0; i < 12; i++) s.updateCrossing(0.7);
-      const wave = s.enemies.getChildren().filter((e: any) => e.active && e.crossingId === c.key);
-      for (const e of wave) s.damageEnemy(e, 99999);
-      if (c.escort) {
-        Object.assign(c.escort, { x: s.camp.x + 20, y: s.camp.y + 20 });
-        s.player.body.reset(s.camp.x, s.camp.y + 100);
-        s.updateCrossing(2);
+test('crossing routes have warned encounters with once-only arrival benefits', async ({ page }) => {
+  test.setTimeout(120000);
+  for (const route of ['river', 'ridge', 'refuge']) {
+    await test.step(`${route} crossing`, async () => {
+      await openTitle(page);
+      await startExpedition(page);
+      await page.evaluate(() => {
+        const s = (window as any).__gloam.scene;
+        s.developerTools.invincible = s.developerTools.clanInvincible = true;
+        s.spawnTimer = s.attackTimer = 999;
+        s.run.clan.stageTime = 45;
+        for (const e of s.enemies.getChildren()) e.disableBody(true, true);
+      });
+      await expect(page.locator('#migrate')).toBeEnabled();
+      await page.locator('#migrate').click();
+      await expect(page.locator(`[data-route="${route}"]`)).toContainText('Optional:');
+      await page.locator(`[data-route="${route}"]`).click();
+      await page.evaluate(() => {
+        const s = (window as any).__gloam.scene;
+        s.run.clan.migrationProgress = 0.2;
+        s.updateCrossing(0.01);
+      });
+      await page.locator('#pause').click();
+      const frozen = await page.evaluate(
+        () => (window as any).__gloam.scene.run.crossing.remaining,
+      );
+      await page.waitForTimeout(250);
+      expect(await page.evaluate(() => (window as any).__gloam.scene.run.crossing.remaining)).toBe(
+        frozen,
+      );
+      await page.keyboard.press('Escape');
+      const result = await page.evaluate(() => {
+        const s = (window as any).__gloam.scene,
+          c = s.run.crossing;
+        s.run.clan.migrationProgress = 0.2;
+        s.updateCrossing(4);
+        for (let i = 0; i < 12; i++) s.updateCrossing(0.7);
+        const wave = s.enemies.getChildren().filter((e: any) => e.active && e.crossingId === c.key);
+        for (const e of wave) s.damageEnemy(e, 99999);
+        if (c.escort) {
+          Object.assign(c.escort, { x: s.camp.x + 20, y: s.camp.y + 20 });
+          s.player.body.reset(s.camp.x, s.camp.y + 100);
+          s.updateCrossing(2);
+        }
+        s.run.clan.integrity = 50;
+        const materials = s.run.clan.materials;
+        s.run.clan.stageTime = 1000;
+        s.update(0, 16);
+        return {
+          route: c.route,
+          spawned: c.spawned,
+          defeated: c.defeated,
+          paid: c.paid,
+          phase: s.run.clan.stage,
+          region: s.run.clan.region,
+          people: s.run.clan.population,
+          resolve: s.run.clan.integrity,
+          materials: s.run.clan.materials - materials,
+          memories: s.run.legacy.memories.map((m: any) => m.title),
+        };
+      });
+      expect(result).toMatchObject({ route, paid: true, phase: 'camp', region: 1 });
+      expect(result.defeated).toBe(result.spawned);
+      expect(result.spawned).toBeGreaterThanOrEqual(4);
+      if (route === 'river') expect(result.resolve).toBe(78);
+      if (route === 'ridge') {
+        expect(result.resolve).toBe(72);
+        // Resource subtraction can leave 38 as 37.99999999999999.
+        expect(Number(result.materials.toFixed(9))).toBeGreaterThanOrEqual(38);
       }
-      s.run.clan.integrity = 50;
-      const materials = s.run.clan.materials;
-      s.run.clan.stageTime = 1000;
-      s.update(0, 16);
-      return {
-        route: c.route,
-        spawned: c.spawned,
-        defeated: c.defeated,
-        paid: c.paid,
-        phase: s.run.clan.stage,
-        region: s.run.clan.region,
-        people: s.run.clan.population,
-        resolve: s.run.clan.integrity,
-        materials: s.run.clan.materials - materials,
-        memories: s.run.legacy.memories.map((m: any) => m.title),
-      };
+      if (route === 'refuge') expect(result.people).toBe(18);
     });
-    expect(result).toMatchObject({ route, paid: true, phase: 'camp', region: 1 });
-    expect(result.defeated).toBe(result.spawned);
-    expect(result.spawned).toBeGreaterThanOrEqual(4);
-    if (route === 'river') expect(result.resolve).toBe(78);
-    if (route === 'ridge') {
-      expect(result.resolve).toBe(72);
-      // Resource subtraction can leave 38 as 37.99999999999999.
-      expect(Number(result.materials.toFixed(9))).toBeGreaterThanOrEqual(38);
-    }
-    if (route === 'refuge') expect(result.people).toBe(18);
-  });
+  }
+});
 test('the angled river route carves an actual connected ford and preserves live actors', async ({
   page,
 }) => {
