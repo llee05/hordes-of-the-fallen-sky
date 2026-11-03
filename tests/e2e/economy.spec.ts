@@ -3,6 +3,7 @@ import {
   selectCampBuilding,
   closeOverlayOrPause,
   buyNomadicLevel,
+  expectFrozen,
   openTitle,
   startExpedition,
 } from './helpers';
@@ -64,8 +65,11 @@ test('route estimates separate travel food from arrival gifts and risky routes r
   await expect(river).toBeEnabled();
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.setViewportSize({ width: 960, height: 600 });
-  await page.waitForTimeout(200);
-  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
+  expect(
+    await expectFrozen(page, () =>
+      page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+    ),
+  ).toBe(before);
   await page.screenshot({ path: 'test-results/economy-routes.png' });
   await river.click();
   await expect(page.getByRole('dialog')).toBeHidden();
@@ -75,8 +79,7 @@ test('route estimates separate travel food from arrival gifts and risky routes r
     await page.evaluate(() => (window as any).__gloam.scene.run.clan.food),
   ).toBeLessThanOrEqual(1);
   await closeOverlayOrPause(page);
-  const outlook = await page.locator('#food-outlook').textContent();
-  await page.waitForTimeout(200);
+  const outlook = await expectFrozen(page, () => page.locator('#food-outlook').textContent());
   await expect(page.locator('#food-outlook')).toHaveText(outlook!);
 });
 

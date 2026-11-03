@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { closeOverlayOrPause, startExpedition, openTitle } from './helpers';
+import { closeOverlayOrPause, expectFrozen, startExpedition, openTitle } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await openTitle(page);
@@ -64,17 +64,12 @@ test('mounted gaits and bow release animate without changing collision geometry'
     expect(Math.abs(sample.centerY)).toBeLessThan(0.1);
   }
   await closeOverlayOrPause(page);
-  const paused = await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    return { frame: scene.player.frame.name, x: scene.player.x, y: scene.player.y };
-  });
-  await page.waitForTimeout(300);
-  expect(
-    await page.evaluate(() => {
+  await expectFrozen(page, () =>
+    page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       return { frame: scene.player.frame.name, x: scene.player.x, y: scene.player.y };
     }),
-  ).toEqual(paused);
+  );
   await closeOverlayOrPause(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -152,21 +147,14 @@ test('all creature clips advance and freeze with camp planning', async ({ page }
   expect(frames.size).toBe(6);
   for (const seen of frames.values()) expect(seen.size).toBeGreaterThanOrEqual(2);
   await page.keyboard.press('b');
-  const frozen = await page.evaluate(() =>
-    (window as any).__gloam.scene.enemies
-      .getChildren()
-      .filter((enemy: any) => enemy.active)
-      .map((enemy: any) => ({ frame: enemy.frame.name, x: enemy.x, y: enemy.y })),
-  );
-  await page.waitForTimeout(300);
-  expect(
-    await page.evaluate(() =>
+  await expectFrozen(page, () =>
+    page.evaluate(() =>
       (window as any).__gloam.scene.enemies
         .getChildren()
         .filter((enemy: any) => enemy.active)
         .map((enemy: any) => ({ frame: enemy.frame.name, x: enemy.x, y: enemy.y })),
     ),
-  ).toEqual(frozen);
+  );
 });
 
 test('defeat sprites stay bounded, pause, and preserve immediate body removal, XP, and reuse', async ({
@@ -204,14 +192,15 @@ test('defeat sprites stay bounded, pause, and preserve immediate body removal, X
     };
   });
   expect(result).toMatchObject({ kills: 40, xp: 120, bodies: 0, echoes: 32, allocated: 32 });
-  await page.waitForTimeout(350);
   expect(
-    await page.evaluate(() => {
-      const echo = (window as any).__gloam.scene.defeats.images
-        .getChildren()
-        .find((image: any) => image.active);
-      return { alpha: echo.alpha, y: echo.y, scale: echo.scaleY };
-    }),
+    await expectFrozen(page, () =>
+      page.evaluate(() => {
+        const echo = (window as any).__gloam.scene.defeats.images
+          .getChildren()
+          .find((image: any) => image.active);
+        return { alpha: echo.alpha, y: echo.y, scale: echo.scaleY };
+      }),
+    ),
   ).toEqual(result.echo);
   await closeOverlayOrPause(page);
   await expect

@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { selectCampBuilding, closeOverlayOrPause, buyNode, startExpedition } from './helpers';
+import {
+  selectCampBuilding,
+  closeOverlayOrPause,
+  buyNode,
+  expectFrozen,
+  startExpedition,
+} from './helpers';
 
 // Tests use isolated browser contexts; parallel mode also balances CI shards.
 test.describe.configure({ mode: 'parallel' });
@@ -130,16 +136,17 @@ test('camp work and research sound in menus while world cues and cadence are sto
   await buyNode(page, 'archery-base');
   expect(await heard(page)).toContain('build');
   expect(await page.evaluate(() => (window as any).__gloam.scene.audio.play('shoot'))).toBe(false);
-  await page.waitForTimeout(200);
   expect(
-    await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      return {
-        time: scene.run.elapsed,
-        activity: scene.audio.activity,
-        hoof: scene.audio.hoofDistance,
-      };
-    }),
+    await expectFrozen(page, () =>
+      page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        return {
+          time: scene.run.elapsed,
+          activity: scene.audio.activity,
+          hoof: scene.audio.hoofDistance,
+        };
+      }),
+    ),
   ).toEqual(frozen);
   await closeOverlayOrPause(page);
   await page.evaluate(() => {
@@ -235,10 +242,11 @@ test('independent volume sliders persist, reference auditions stay in Settings, 
   await page.locator('.audio-reference-controls summary').click();
   await page.getByRole('slider', { name: 'Combat volume', exact: true }).fill('0');
   await page.getByRole('button', { name: 'Bow', exact: true }).click();
-  await page.waitForTimeout(180);
   expect(
-    await page.evaluate(
-      () => (window as any).heardAuditions.filter((kind: string) => kind === 'shoot').length,
+    await expectFrozen(page, () =>
+      page.evaluate(
+        () => (window as any).heardAuditions.filter((kind: string) => kind === 'shoot').length,
+      ),
     ),
   ).toBe(0);
   await page.getByRole('button', { name: 'Parchment', exact: true }).click();

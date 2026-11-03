@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { selectCampBuilding, closeOverlayOrPause, buyNode, startExpedition } from './helpers';
+import {
+  selectCampBuilding,
+  closeOverlayOrPause,
+  buyNode,
+  expectFrozen,
+  startExpedition,
+} from './helpers';
 
 test('companions acknowledge camp work and the chronicle retains the real Khan succession', async ({
   page,
@@ -27,12 +33,8 @@ test('companions acknowledge camp work and the chronicle retains the real Khan s
     'Khan 1',
   );
   await expect(page.locator('.khan-records')).toContainText('7 banished by the host');
-  const before = await page.evaluate(() =>
-    JSON.stringify((window as any).__gloam.scene.run.legacy),
-  );
-  await page.waitForTimeout(200);
-  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run.legacy))).toBe(
-    before,
+  await expectFrozen(page, () =>
+    page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run.legacy)),
   );
   await closeOverlayOrPause(page);
   await page.evaluate(() => {

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { closeOverlayOrPause, tapController } from './helpers';
+import { closeOverlayOrPause, expectFrozen, tapController } from './helpers';
 
 test('intro reads at the player’s pace with frozen simulation, back, completion, and a fresh expedition', async ({
   page,
@@ -11,16 +11,17 @@ test('intro reads at the player’s pace with frozen simulation, back, completio
   await page.goto('/');
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused();
   await expect(page.locator('.intro-story')).toHaveCount(0);
-  await page.waitForTimeout(300);
   expect(
-    await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      return {
-        phase: scene.run.phase,
-        elapsed: scene.run.elapsed,
-        paused: scene.physics.world.isPaused,
-      };
-    }),
+    await expectFrozen(page, () =>
+      page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        return {
+          phase: scene.run.phase,
+          elapsed: scene.run.elapsed,
+          paused: scene.physics.world.isPaused,
+        };
+      }),
+    ),
   ).toEqual({ phase: 'ready', elapsed: 0, paused: true });
   await page.getByRole('button', { name: /NEW GAME/ }).click();
   await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
@@ -49,17 +50,18 @@ test('intro reads at the player’s pace with frozen simulation, back, completio
   await page.keyboard.press('b');
   await page.keyboard.press('m');
   await page.keyboard.press('j');
-  await page.waitForTimeout(600);
   expect(
-    await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      return {
-        elapsed: scene.run.elapsed,
-        food: scene.run.clan.food,
-        x: scene.player.x,
-        frame: scene.player.frame.name,
-      };
-    }),
+    await expectFrozen(page, () =>
+      page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        return {
+          elapsed: scene.run.elapsed,
+          food: scene.run.clan.food,
+          x: scene.player.x,
+          frame: scene.player.frame.name,
+        };
+      }),
+    ),
   ).toEqual(before);
   expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
     true,
@@ -183,14 +185,15 @@ test('held keyboard confirmation completes the prologue without galloping or ope
   for (let chapter = 1; chapter < 5; chapter++) await page.keyboard.press('ArrowRight');
   await page.keyboard.down('Enter');
   await expect(page.getByRole('dialog')).toBeHidden();
-  await page.waitForTimeout(300);
-  await page.keyboard.up('Enter');
   expect(
-    await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      return { phase: scene.run.phase, dash: scene.dashTimer };
-    }),
+    await expectFrozen(page, () =>
+      page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        return { phase: scene.run.phase, dash: scene.dashTimer };
+      }),
+    ),
   ).toEqual({ phase: 'playing', dash: 0 });
+  await page.keyboard.up('Enter');
 });
 
 test('controller starts, advances, skips, replays, and never leaks a held confirm into gameplay', async ({
@@ -237,8 +240,9 @@ test('controller starts, advances, skips, replays, and never leaks a held confir
     (window as any).testController.buttons[0].pressed = true;
   });
   await expect(continueExpedition).toBeFocused();
-  await page.waitForTimeout(300);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('ready');
+  expect(
+    await expectFrozen(page, () => page.evaluate(() => (window as any).__gloam.scene.run.phase)),
+  ).toBe('ready');
   await page.evaluate(() => {
     (window as any).testController.buttons[0].pressed = false;
   });
@@ -252,12 +256,13 @@ test('controller starts, advances, skips, replays, and never leaks a held confir
     (window as any).testController.buttons[0].pressed = true;
   });
   await expect(page.getByRole('dialog')).toBeHidden();
-  await page.waitForTimeout(400);
   expect(
-    await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      return { phase: scene.run.phase, dash: scene.dashTimer };
-    }),
+    await expectFrozen(page, () =>
+      page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        return { phase: scene.run.phase, dash: scene.dashTimer };
+      }),
+    ),
   ).toEqual({ phase: 'playing', dash: 0 });
   await page.evaluate(() => {
     (window as any).testController.buttons[0].pressed = false;

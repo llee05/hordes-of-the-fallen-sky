@@ -4,6 +4,7 @@ import {
   selectCampBuilding,
   closeOverlayOrPause,
   buyNode,
+  expectFrozen,
   openTitle,
   startExpedition,
 } from './helpers';
@@ -92,8 +93,7 @@ test('wooden hurdles receive local melee and missile impacts, with feedback froz
   const struck = frozen.pieces.filter((piece) => piece.impact > 0);
   expect(struck).toHaveLength(1);
   expect(struck[0]!.x).toBeGreaterThan(2600 + 100);
-  await page.waitForTimeout(250);
-  expect(await barrierState(page)).toEqual(frozen);
+  expect(await expectFrozen(page, () => barrierState(page))).toEqual(frozen);
   await closeOverlayOrPause(page);
   await expect
     .poll(async () => (await barrierState(page)).pieces.every((piece) => piece.impact === 0))
@@ -216,9 +216,7 @@ test('the same bounded barrier follows the caravan, freezes, redeploys on arriva
     )
     .toEqual({ outsideClearance: true, withinAttackReach: true });
   await closeOverlayOrPause(page);
-  const frozen = await barrierState(page);
-  await page.waitForTimeout(200);
-  expect(await barrierState(page)).toEqual(frozen);
+  await expectFrozen(page, () => barrierState(page));
   await closeOverlayOrPause(page);
   await page.screenshot({ path: 'test-results/caravan-barrier.png' });
   await page.evaluate(() => {

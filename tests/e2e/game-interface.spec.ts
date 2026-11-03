@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { closeOverlayOrPause, openTitle, startExpedition } from './helpers';
+import { closeOverlayOrPause, expectFrozen, openTitle, startExpedition } from './helpers';
 
 // Each test owns its browser context and game; CI shards may schedule them independently.
 test.describe.configure({ mode: 'parallel' });
@@ -150,9 +150,9 @@ test('desktop menus keep the battlefield edge to edge and return settings and he
   await startExpedition(page);
   await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await page.waitForTimeout(200);
-  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
+  await expectFrozen(page, () =>
+    page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+  );
   await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('paused');
@@ -168,17 +168,12 @@ test('the clan chronicle pauses the expedition, supports keyboard tabs, and open
   await page.keyboard.press('Tab');
   await expect(page.getByRole('heading', { name: 'A people on the move.' })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'The journey' })).toBeFocused();
-  const before = await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    return { run: JSON.stringify(scene.run), x: scene.player.x, y: scene.player.y };
-  });
-  await page.waitForTimeout(200);
-  expect(
-    await page.evaluate(() => {
+  await expectFrozen(page, () =>
+    page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       return { run: JSON.stringify(scene.run), x: scene.player.x, y: scene.player.y };
     }),
-  ).toEqual(before);
+  );
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('tab', { name: 'Your clan' })).toHaveAttribute(
     'aria-selected',

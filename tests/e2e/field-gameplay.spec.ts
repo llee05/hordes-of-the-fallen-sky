@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { expectFrozen, openTitle, startExpedition } from './helpers';
 
 test('optional carts freeze in camp planning, pay once, and disappear on migration', async ({
   page,
@@ -18,8 +18,10 @@ test('optional carts freeze in camp planning, pay once, and disappear on migrati
     structuredClone((window as any).__gloam.scene.run.field),
   );
   await page.locator('#build').click();
-  await page.waitForTimeout(300);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.field)).toEqual(before);
+  const frozen = await expectFrozen(page, () =>
+    page.evaluate(() => structuredClone((window as any).__gloam.scene.run.field)),
+  );
+  expect(frozen).toEqual(before);
   await page.locator('[data-action="exit-camp"]').first().click();
   const result = await page.evaluate(() => {
     const s = (window as any).__gloam.scene,

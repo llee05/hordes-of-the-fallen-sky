@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { expectFrozen, openTitle, startExpedition } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await openTitle(page);
@@ -89,9 +89,7 @@ test('rally and Banner Formation controls work at desktop and narrow widths and 
   await expect(page.locator('#rally-host')).toBeInViewport();
   await page.screenshot({ path: testInfo.outputPath('research-runtime-narrow.png') });
   await page.keyboard.press('t');
-  const elapsed = await page.evaluate(() => (window as any).__gloam.scene.run.elapsed);
-  await page.waitForTimeout(150);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.elapsed)).toBe(elapsed);
+  await expectFrozen(page, () => page.evaluate(() => (window as any).__gloam.scene.run.elapsed));
 });
 
 test('World-Piercer applies its total damage budget after armour without ending the arrow early', async ({

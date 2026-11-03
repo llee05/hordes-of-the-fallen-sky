@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { closeOverlayOrPause, openTitle, startExpedition } from './helpers';
+import { closeOverlayOrPause, expectFrozen, openTitle, startExpedition } from './helpers';
 
 // Headless software rendering can need many wall-clock seconds for one active second.
 // Preserve exact combat assertions while allowing the real simulation to reach them.
@@ -89,17 +89,17 @@ test('camp attackers stop outside the tents, repeat protected damage, freeze in 
     // Reaching the camp commits to attacking it even when the Khan rides closer.
     scene.player.setPosition(enemy.x + 28, enemy.y);
   });
-  await page.waitForTimeout(200);
-  const holding = await siegeState(page);
+  const holding = await expectFrozen(page, async () => {
+    const s = await siegeState(page);
+    return { x: s.x, y: s.y, speed: s.speed, resolve: s.resolve };
+  });
   expect(holding.x).toBe(first.x);
   expect(holding.y).toBe(first.y);
   expect(holding.speed).toBe(0);
   expect(holding.resolve).toBe(first.resolve);
   await page.keyboard.press('b');
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'building');
-  const frozen = await siegeState(page);
-  await page.waitForTimeout(200);
-  expect(await siegeState(page)).toEqual(frozen);
+  await expectFrozen(page, () => siegeState(page));
   await closeOverlayOrPause(page);
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await activeExpect
@@ -228,8 +228,8 @@ test('attackers chase the caravan again and cannot damage it while it is out of 
   await page.evaluate(() => {
     (window as any).campAttacker.clanAttackTimer = 0;
   });
-  await page.waitForTimeout(200);
-  expect((await siegeState(page)).resolve).toBe(before.resolve);
+  const resolve = await expectFrozen(page, async () => (await siegeState(page)).resolve);
+  expect(resolve).toBe(before.resolve);
   await page.evaluate(() => {
     const enemy = (window as any).campAttacker;
     enemy.definition = { ...enemy.definition, speed: 120 };

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { selectCampBuilding, buyNode, closeOverlayOrPause } from './helpers';
+import { selectCampBuilding, buyNode, closeOverlayOrPause, expectFrozen } from './helpers';
 import { beginStory, choose, campTime, cross } from './storyHelpers';
 
 test('complete the two acts, all eight choices, three crossings, and a survivor-based epilogue', async ({
@@ -20,16 +20,17 @@ test('complete the two acts, all eight choices, three crossings, and a survivor-
   });
   await page.keyboard.press('b');
   await page.keyboard.press('m');
-  await page.waitForTimeout(250);
   expect(
-    await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      return {
-        elapsed: scene.run.elapsed,
-        food: scene.run.clan.food,
-        frame: scene.player.frame.name,
-      };
-    }),
+    await expectFrozen(page, () =>
+      page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        return {
+          elapsed: scene.run.elapsed,
+          food: scene.run.clan.food,
+          frame: scene.player.frame.name,
+        };
+      }),
+    ),
   ).toEqual(initial);
   await page.screenshot({ path: 'test-results/story-first-fire.png' });
   await choose(page, 'share-work');

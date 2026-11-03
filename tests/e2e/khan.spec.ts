@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { closeOverlayOrPause, buyNode, openTitle, startExpedition } from './helpers';
+import { closeOverlayOrPause, buyNode, expectFrozen, openTitle, startExpedition } from './helpers';
 
 // Tests use isolated browser contexts; parallel mode also balances CI shards.
 test.describe.configure({ mode: 'parallel' });
@@ -136,9 +136,9 @@ test('pause and research freeze succession, and healing research cannot bypass t
   });
   await fall(page);
   await closeOverlayOrPause(page);
-  const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await page.waitForTimeout(200);
-  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
+  const before = await expectFrozen(page, () =>
+    page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+  );
   await page.getByRole('button', { name: 'Patron tech tree', exact: true }).click();
   await buyNode(page, 'vitality');
   const state = await page.evaluate(() => (window as any).__gloam.scene.run);

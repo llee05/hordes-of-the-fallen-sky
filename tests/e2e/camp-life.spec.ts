@@ -5,6 +5,7 @@ import {
   buyNode,
   openTitle,
   startExpedition,
+  expectFrozen,
 } from './helpers';
 
 test('people work, households and herd reflect growth and losses, and menus freeze their activity', async ({
@@ -47,9 +48,7 @@ test('people work, households and herd reflect growth and losses, and menus free
         actor.image.alpha,
       ]);
     });
-  const paused = await snapshot();
-  await page.waitForTimeout(250);
-  expect(await snapshot()).toEqual(paused);
+  await expectFrozen(page, snapshot);
   await closeOverlayOrPause(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -94,9 +93,9 @@ test('packing begins immediately, pauses with the world, and arrival relocates t
     .toBeGreaterThan(0);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.stage)).toBe('migration');
   await closeOverlayOrPause(page);
-  const remaining = await page.evaluate(() => (window as any).__gloam.scene.packingRemaining);
-  await page.waitForTimeout(200);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.packingRemaining)).toBe(remaining);
+  await expectFrozen(page, () =>
+    page.evaluate(() => (window as any).__gloam.scene.packingRemaining),
+  );
   await closeOverlayOrPause(page);
   await page.screenshot({ path: 'test-results/packing-caravan.png' });
   await page.evaluate(() => {
