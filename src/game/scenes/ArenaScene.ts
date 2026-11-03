@@ -75,12 +75,6 @@ import {
   effectAmount,
   type VisualSettings,
 } from '../../shared/visualSettings';
-import {
-  edgeWarnings,
-  incomingTime,
-  type ScreenDanger,
-  type EliteMarker,
-} from '../systems/combatReadability';
 import Phaser from 'phaser';
 import {
   ART_WIDTH,
@@ -108,7 +102,6 @@ import {
 } from '../systems/enemyTactics';
 import type { SuccessorTrait } from '../data/successors';
 import type { ClanDamageCause } from '../state/clanSafety';
-import { projectGround } from '../world3d/worldProjection';
 import { projectileTerrainClear } from '../world3d/projectileTerrain';
 import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
 import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
@@ -187,7 +180,7 @@ import { normalizeAudioMix } from '../../shared/audioSettings';
 import type { SoundKind } from '../audio/soundPalette';
 import { environmentForLocation } from '../audio/mixing';
 import { SpatialHash } from '../systems/SpatialHash';
-import { cameraZoomLimits, clampCameraZoom, enemySpawnPosition } from '../systems/CameraView';
+import { clampCameraZoom, enemySpawnPosition } from '../systems/CameraView';
 import { ActionKeys } from '../systems/ActionKeys';
 import { GamepadInput } from '../systems/GamepadInput';
 import type { GamePlatform } from '../../platform/GamePlatform';
@@ -203,6 +196,7 @@ import type { ExpeditionSave, SaveSlot } from '../../shared/expeditionSave';
 import { createArenaTimers, type ArenaTimers } from './arena/ArenaTimers';
 import type { ArenaContext } from './arena/ArenaContext';
 import { ArenaEffects } from './arena/ArenaEffects';
+import { HudPresenter } from './arena/HudPresenter';
 import { markExpedition, metricStage, observeExpedition } from '../state/expeditionMetrics';
 import {
   syncFinalStand,
@@ -280,6 +274,7 @@ export class ArenaScene extends Phaser.Scene {
   /** The shared world handed to scene systems; every member reads the scene live. */
   private readonly arena: ArenaContext = this.createArenaContext();
   private readonly effects = new ArenaEffects(this.arena);
+  private readonly hudPresenter = new HudPresenter(this.arena);
   private hudTimer = 0;
   private cameraZoom: number = GAME.camera.defaultZoom;
   private wheelZoomDelta = 0;
@@ -1498,89 +1493,6 @@ export class ArenaScene extends Phaser.Scene {
       .setDepth(9200);
     const radius = 5.4 / shot.scaleX;
     shot.setCircle(radius, shot.width / 2 - radius, shot.height / 2 - radius);
-  }
-
-  private screenPoint(point: { x: number; y: number }): { x: number; y: number } {
-    if (this.landscape.world3d) return this.landscape.world3d.screenPoint(point);
-    const camera = this.cameras.main;
-    return {
-      x: camera.width / 2 + (point.x - camera.midPoint.x) * camera.zoom,
-      y: camera.height / 2 + (point.y - camera.midPoint.y) * camera.zoom,
-    };
-  }
-
-  private combatReadability(): {
-    warnings: ReturnType<typeof edgeWarnings>;
-    elites: EliteMarker[];
-  } {
-    const width = this.scale.width,
-      height = this.scale.height;
-    const threats: ScreenDanger[] = [],
-      elites: EliteMarker[] = [];
-    const campRadius = campBoundary(this.run).radius;
-    for (const [index, shot] of (this.hostileShots.getChildren() as Projectile[]).entries()) {
-      if (!shot.active) continue;
-      const p = this.screenPoint(shot),
-        body = shot.body!;
-      const playerHit = isKhanActive(this.run)
-        ? incomingTime(shot, body.velocity, this.player, 35)
-        : undefined;
-      const campHit = incomingTime(shot, body.velocity, this.camp, campRadius);
-      const eta = Math.min(playerHit ?? Infinity, campHit ?? Infinity);
-      if (eta <= Math.min(4, shot.remaining))
-        threats.push({
-          id: `shot-${index}`,
-          label:
-            playerHit !== undefined && playerHit <= (campHit ?? Infinity)
-              ? 'Incoming projectile'
-              : 'Camp under fire',
-          ...p,
-          eta,
-        });
-    }
-    for (const enemy of this.enemies.getChildren() as Enemy[]) {
-      if (!enemy.active) continue;
-      const p = this.screenPoint(enemy),
-        key = `${enemy.tacticalSlot}:${enemy.spawnId}`;
-      if (
-        (enemy.elite || enemy.definition.tacticalRole === 'bulwark') &&
-        enemy !== this.boss &&
-        p.x > 30 &&
-        p.x < width - 30 &&
-        p.y > 70 &&
-        p.y < height - 60
-      )
-        elites.push({
-          id: key,
-          x: p.x / width,
-          y: Math.max(
-            0.06,
-            (p.y - enemy.displayHeight * enemy.originY * this.cameraZoom - 8) / height,
-          ),
-          label: enemy.elite ? 'ELITE' : 'ARMOURED',
-          health: enemy.health / enemy.maxHealth,
-        });
-      if (enemy.tactics.phase === 'windup')
-        threats.push({ id: key, label: 'Charging enemy', ...p, eta: enemy.tactics.remaining });
-      else if (enemy === this.boss && this.run.finalStand?.phase === 'warning')
-        threats.push({
-          id: key,
-          label: 'Skybreaker barrage',
-          ...p,
-          eta: this.run.finalStand.remaining,
-        });
-      else if (
-        enemy.definition.behavior === 'ranged' &&
-        enemy.attackTimer > 0 &&
-        enemy.attackTimer < 0.8 &&
-        Math.min(
-          Math.hypot(enemy.x - this.player.x, enemy.y - this.player.y),
-          Math.hypot(enemy.x - this.camp.x, enemy.y - this.camp.y),
-        ) < 650
-      )
-        threats.push({ id: key, label: 'Ranged attack', ...p, eta: enemy.attackTimer });
-    }
-    return { warnings: edgeWarnings(threats, width, height), elites: elites.slice(0, 6) };
   }
 
   toggleAudio(): boolean {
@@ -3304,64 +3216,10 @@ export class ArenaScene extends Phaser.Scene {
     if (wasPlaying && phase === 'paused' && !this.saveBusy) void this.saveExpedition();
   }
 
-  private campPressure(): string {
-    const sectors = new Array<number>(8).fill(0);
-    let incoming = 0,
-      attacking = 0;
-    const boundary = campBoundary(this.run);
-    for (const e of this.enemies.getChildren() as Enemy[]) {
-      if (!e.active) continue;
-      const dx = e.x - this.camp.x,
-        dy = e.y - this.camp.y,
-        distance = Math.hypot(dx, dy);
-      if (distance > 650) continue;
-      incoming++;
-      if (distance <= boundary.attackRange + 2) attacking++;
-      const screen = projectGround(
-        dx,
-        dy,
-        0,
-        this.landscape.world3d?.angle ?? 90,
-        this.landscape.world3d?.yaw ?? 0,
-      );
-      const sector = (Math.round(Math.atan2(screen.y, screen.x) / (Math.PI / 4)) + 8) % 8;
-      sectors[sector]! += e.definition.damage / Math.max(80, distance);
-    }
-    if (!incoming) return 'Camp approaches clear';
-    const strongest = sectors.indexOf(Math.max(...sectors));
-    return `${['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'][strongest]} Camp: ${incoming} approaching${attacking ? ` · ${attacking} at the barricade` : ''}`;
-  }
-
   private snapshot(): HudSnapshot {
-    const dx = this.camp.x - this.player.x;
-    const dy = this.camp.y - this.player.y;
-    const direction = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'][
-      (Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) + 8) % 8
-    ]!;
-    const objective = this.run.field.objective;
-    const offset = objective
-      ? projectGround(
-          objective.x - this.player.x,
-          objective.y - this.player.y,
-          0,
-          this.landscape.world3d?.angle ?? 90,
-          this.landscape.world3d?.yaw ?? 0,
-        )
-      : undefined;
-    const fieldBearing = offset
-      ? `${['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'][(Math.round(Math.atan2(offset.y, offset.x) / (Math.PI / 4)) + 8) % 8]} ${Math.round(Math.hypot(objective!.x - this.player.x, objective!.y - this.player.y))} paces`
-      : undefined;
-    const zoomLimits = cameraZoomLimits(this.cameras.main.width, this.cameras.main.height);
-    return {
-      combatReadability: this.combatReadability(),
-      saves: {
-        entries: this.platform.saves,
-        canSave: this.canSaveExpedition,
-        busy: this.saveBusy,
-        message: this.saveMessage,
-      },
-      campPressure: this.campPressure(),
-      fieldBearing,
+    return this.hudPresenter.snapshot({
+      introSlide: this.introSlide,
+      best: this.best,
       developerRun: this.developerRun,
       developerConsole:
         import.meta.env.DEV && this.developerTools
@@ -3370,17 +3228,14 @@ export class ArenaScene extends Phaser.Scene {
               canCheat: this.canUseDeveloperCheats(),
             }
           : undefined,
-      zoom: this.cameras.main.zoom,
-      minZoom: zoomLimits.min,
-      maxZoom: zoomLimits.max,
-      run: this.run,
-      introSlide: this.introSlide,
-      dashReady: Math.max(0, 1 - this.timers.dashTimer / gallopCooldown(this.run)),
-      dashCooldown: gallopCooldown(this.run),
-      best: this.best,
-      bossHealth: this.boss?.active ? this.boss.health / SKYBREAKER.health : undefined,
-      clanBearing: `${direction} CLAN · ${Math.round(Math.hypot(dx, dy))} PACES`,
-    };
+      saves: {
+        entries: this.platform.saves,
+        canSave: this.canSaveExpedition,
+        busy: this.saveBusy,
+        message: this.saveMessage,
+      },
+      boss: this.boss,
+    });
   }
   private publishPhase(): void {
     const snapshot = this.snapshot();
