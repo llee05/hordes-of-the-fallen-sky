@@ -9,15 +9,16 @@ in the scene.
 
 ## Modules
 
-| Module                   | Owns                                                                                                       | Lifetime                 |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `ArenaScene.ts`          | lifecycle, `update` order, public API, menus and phases, capture/restore composition, test-hook forwarders | scene                    |
-| `arena/ArenaContext.ts`  | the shared world: live getters over the scene's run, timers and world objects                              | scene                    |
-| `arena/ArenaTimers.ts`   | the nine saved timers as one record (`WorldArchive['timers']`)                                             | scene, reset in `create` |
-| `arena/ArenaEffects.ts`  | spark bursts and dust puffs                                                                                | scene                    |
-| `arena/HudPresenter.ts`  | the HUD snapshot, combat-readability markers, camp pressure, and the shared `bearingArrow` helper          | scene                    |
-| `arena/CampPresenter.ts` | camp drawing, the barrier, clan life, banner sway, the camp label, and the gers that fade on departure     | each `create`            |
-| `arena/ArenaInput.ts`    | key, wheel, touch and controller bindings, the movement intent, and the touch joystick                     | scene, bound in `create` |
+| Module                      | Owns                                                                                                       | Lifetime                 |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `ArenaScene.ts`             | lifecycle, `update` order, public API, menus and phases, capture/restore composition, test-hook forwarders | scene                    |
+| `arena/ArenaContext.ts`     | the shared world: live getters over the scene's run, timers and world objects                              | scene                    |
+| `arena/ArenaTimers.ts`      | the nine saved timers as one record (`WorldArchive['timers']`)                                             | scene, reset in `create` |
+| `arena/ArenaEffects.ts`     | spark bursts and dust puffs                                                                                | scene                    |
+| `arena/HudPresenter.ts`     | the HUD snapshot, combat-readability markers, camp pressure, and the shared `bearingArrow` helper          | scene                    |
+| `arena/CampPresenter.ts`    | camp drawing, the barrier, clan life, banner sway, the camp label, and the gers that fade on departure     | each `create`            |
+| `arena/ArenaInput.ts`       | key, wheel, touch and controller bindings, the movement intent, and the touch joystick                     | scene, bound in `create` |
+| `arena/ArenaPersistence.ts` | the save queue and generation guard, checkpoints, camp saves, autosave, and load/delete status             | scene, reset in `create` |
 
 "Scene" lifetime means one instance for the scene object. Field initialisers run once, but
 `create` runs on every `scene.restart`, so per-run state is reset there. `ArenaInput` must
@@ -25,6 +26,9 @@ survive a restart: it keeps the scene's single `GamepadInput` and `ActionKeys`. 
 controller would forget held buttons, so a held confirm or back would fire again after a
 load, and a new `ActionKeys` would lose the dedupe for key events Phaser replays. The scene
 removes all keyboard listeners on shutdown and `bind` adds them again.
+`ArenaPersistence` also survives a restart: it keeps the pending write and the save generation.
+`reset` increments the generation, so a write queued before a restart finishes without
+touching the new scene.
 
 ## Shared context
 

@@ -154,7 +154,7 @@ import {
 } from '../state/clan';
 import { RESEARCH_BY_ID } from '../data/research';
 import { Enemy, Gem, Projectile } from '../entities/actors';
-import { captureCampArchive, runFromCampArchive } from '../state/campArchive';
+import { runFromCampArchive } from '../state/campArchive';
 import { purchaseEstate, type EstatePurchaseKind } from '../state/campEstate';
 import { applyResearch, createRun, gainExperience, redeemMasteredResearch } from '../state/run';
 import {
@@ -185,7 +185,6 @@ import { GamepadInput } from '../systems/GamepadInput';
 import type { GamePlatform } from '../../platform/GamePlatform';
 import type { BuildingId, EnemyDefinition, HudSnapshot, RunState } from '../types';
 import {
-  captureExpedition,
   decodeExpedition,
   type BodyArchive,
   type ProjectileArchive,
@@ -198,6 +197,7 @@ import { ArenaEffects } from './arena/ArenaEffects';
 import { HudPresenter } from './arena/HudPresenter';
 import { CampPresenter } from './arena/CampPresenter';
 import { ArenaInput } from './arena/ArenaInput';
+import { ArenaPersistence } from './arena/ArenaPersistence';
 import { markExpedition, metricStage, observeExpedition } from '../state/expeditionMetrics';
 import {
   syncFinalStand,
@@ -284,19 +284,25 @@ export class ArenaScene extends Phaser.Scene {
   private guidanceEnabled = true;
   private storyLogReturn: 'paused' | 'won' | 'dead' = 'paused';
   private facing = new Phaser.Math.Vector2(0, 1);
-  private expeditionStarted = false;
-  private saveBusy = false;
-  private pendingSceneSave: Promise<boolean> = Promise.resolve(true);
-  private autosaveRemaining: number = GAME.saves.autosaveInterval;
-  private checkpointQueued = false;
-  private checkpointDirty = false;
-  private saveGeneration = 0;
+  /** Created once, so the pending write and save generation survive a restart. */
+  private readonly persistence: ArenaPersistence;
   private saveMenuReturn: 'ready' | 'paused' | 'dead' | 'won' = 'ready';
-  private saveMessage = '';
   private visualSettings: VisualSettings;
   constructor(private readonly platform: GamePlatform) {
     super('arena');
     this.visualSettings = normalizeVisualSettings(platform.profile.visualSettings);
+    const scene = this;
+    this.persistence = new ArenaPersistence(platform, {
+      get run() {
+        return scene.run;
+      },
+      get developerRun() {
+        return scene.developerRun;
+      },
+      captureWorld: () => scene.captureWorld(),
+      publishPhase: () => scene.publishPhase(),
+      onSaveError: () => scene.callbacks?.onSaveError(),
+    });
     this.audio.muted = platform.profile.muted;
     this.audio.setMix(normalizeAudioMix(platform.profile.audioMix));
     void this.audio.prepare();
@@ -369,13 +375,7 @@ export class ArenaScene extends Phaser.Scene {
 
   create(data?: { developerLevel?: string; expedition?: ExpeditionSave }): void {
     this.audio.reset();
-    this.saveGeneration++;
-    this.expeditionStarted = false;
-    this.saveBusy = false;
-    this.autosaveRemaining = GAME.saves.autosaveInterval;
-    this.checkpointQueued = false;
-    this.checkpointDirty = false;
-    this.saveMessage = '';
+    this.persistence.reset();
     const developerRun =
       import.meta.env.DEV && data?.developerLevel
         ? createDeveloperRun(data.developerLevel)
@@ -534,58 +534,17 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   get canSaveExpedition(): boolean {
-    return (
-      this.expeditionStarted &&
-      !this.developerRun &&
-      !this.run.legacy.outcome &&
-      this.run.clan.population > 0 &&
-      this.run.clan.integrity > 0
-    );
+    return this.persistence.canSave;
   }
 
   saveExpedition(slot: SaveSlot = 'auto'): Promise<boolean> {
-    if (!this.canSaveExpedition) return Promise.resolve(false);
-    const generation = this.saveGeneration;
-    const operation = this.pendingSceneSave
-      .catch(() => false)
-      .then(() => (generation === this.saveGeneration ? this.persistExpedition(slot) : false));
-    this.pendingSceneSave = operation;
-    return operation;
-  }
-
-  private async persistExpedition(slot: SaveSlot): Promise<boolean> {
-    if (!this.canSaveExpedition || this.saveBusy) return false;
-    const generation = this.saveGeneration;
-    this.saveBusy = true;
-    this.checkpointDirty = false;
-    this.saveMessage = 'Saving…';
-    if (this.run.phase === 'saves') this.publishPhase();
-    try {
-      const snapshot = captureExpedition(this.run, this.captureWorld());
-      await this.platform.saveExpedition(slot, snapshot);
-      if (generation !== this.saveGeneration) return true;
-      this.autosaveRemaining = GAME.saves.autosaveInterval;
-      this.saveMessage = slot === 'auto' ? 'Autosave complete.' : 'Expedition saved.';
-      return true;
-    } catch {
-      if (generation !== this.saveGeneration) return false;
-      this.saveMessage =
-        'Saving failed. Your previous save is still available. Check available storage and try again.';
-      this.callbacks?.onSaveError();
-      return false;
-    } finally {
-      if (generation === this.saveGeneration) {
-        this.saveBusy = false;
-        if (this.run.phase === 'saves') this.publishPhase();
-        if (this.checkpointDirty) this.requestCheckpoint();
-      }
-    }
+    return this.persistence.save(slot);
   }
 
   openSaves(): void {
     if (!['ready', 'paused', 'dead', 'won'].includes(this.run.phase)) return;
     this.saveMenuReturn = this.run.phase as typeof this.saveMenuReturn;
-    this.saveMessage = this.platform.saveStorageError
+    this.persistence.message = this.platform.saveStorageError
       ? 'Save storage could not be read. Try opening this menu again.'
       : '';
     this.setPhase('saves');
@@ -595,42 +554,25 @@ export class ArenaScene extends Phaser.Scene {
         if (this.run.phase === 'saves') this.publishPhase();
       })
       .catch(() => {
-        this.saveMessage = 'Save storage could not be read.';
+        this.persistence.message = 'Save storage could not be read.';
         if (this.run.phase === 'saves') this.publishPhase();
       });
   }
 
-  async loadSavedExpedition(slot: SaveSlot): Promise<void> {
-    if (this.saveBusy) return;
-    this.saveBusy = true;
-    this.saveMessage = 'Loading…';
-    if (this.run.phase === 'saves') this.publishPhase();
-    try {
-      await this.loadExpedition(slot);
-    } catch (error) {
-      this.saveMessage = error instanceof Error ? error.message : 'This save could not be loaded.';
-      if (this.run.phase !== 'saves') {
-        this.saveMenuReturn = this.run.phase as typeof this.saveMenuReturn;
-        this.setPhase('saves');
-      }
-    } finally {
-      this.saveBusy = false;
-      if (this.run.phase === 'saves') this.publishPhase();
-    }
+  loadSavedExpedition(slot: SaveSlot): Promise<void> {
+    return this.persistence.load(
+      () => this.loadExpedition(slot),
+      () => {
+        if (this.run.phase !== 'saves') {
+          this.saveMenuReturn = this.run.phase as typeof this.saveMenuReturn;
+          this.setPhase('saves');
+        }
+      },
+    );
   }
 
-  async deleteSavedExpedition(slot: SaveSlot): Promise<void> {
-    if (this.run.phase !== 'saves' || this.saveBusy) return;
-    this.saveBusy = true;
-    try {
-      await this.platform.deleteExpedition(slot);
-      this.saveMessage = 'Save deleted.';
-    } catch {
-      this.saveMessage = 'The save could not be deleted. Try again.';
-    } finally {
-      this.saveBusy = false;
-      this.publishPhase();
-    }
+  deleteSavedExpedition(slot: SaveSlot): Promise<void> {
+    return this.persistence.delete(slot);
   }
 
   async saveAndReturnToTitle(): Promise<void> {
@@ -642,17 +584,7 @@ export class ArenaScene extends Phaser.Scene {
 
   async prepareToClose(): Promise<boolean> {
     if (this.run.phase === 'playing') this.setPhase('paused');
-    try {
-      await this.pendingSceneSave;
-      // A new write can recover from an earlier transient storage error.
-      await this.platform.flush().catch(() => undefined);
-      if (this.canSaveExpedition && !(await this.saveExpedition())) return false;
-      await this.platform.flush();
-      return true;
-    } catch {
-      this.callbacks?.onSaveError();
-      return false;
-    }
+    return this.persistence.prepareToClose();
   }
 
   async loadExpedition(slot: SaveSlot): Promise<void> {
@@ -766,7 +698,7 @@ export class ArenaScene extends Phaser.Scene {
     const { run, world } = decodeExpedition(save);
     this.run = run;
     this.input.keyboard!.resetKeys();
-    this.expeditionStarted = true;
+    this.persistence.started = true;
     this.storiesEnabled = run.story.enabled;
     this.guidanceEnabled = run.guidance.enabled;
     Object.assign(this.timers, world.timers);
@@ -899,29 +831,6 @@ export class ArenaScene extends Phaser.Scene {
     this.beginExpedition();
   }
 
-  private saveCamp(): void {
-    if (this.developerRun) return;
-    void this.platform
-      .saveCamp(captureCampArchive(this.run))
-      .catch(() => this.callbacks?.onSaveError());
-    this.requestCheckpoint();
-  }
-
-  private requestCheckpoint(): void {
-    if (!this.canSaveExpedition) return;
-    this.checkpointDirty = true;
-    if (this.checkpointQueued) return;
-    this.checkpointQueued = true;
-    const generation = this.saveGeneration;
-    // Arrival and purchases finish all synchronous state/terrain changes before capture.
-    queueMicrotask(() => {
-      if (generation !== this.saveGeneration) return;
-      this.checkpointQueued = false;
-      this.autosaveRemaining = 0;
-      if (!this.saveBusy) void this.saveExpedition();
-    });
-  }
-
   openStartingTraditions(): void {
     if (this.run.phase === 'ready') this.setPhase('traditions');
   }
@@ -947,13 +856,12 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private beginExpedition(): void {
-    this.expeditionStarted = true;
+    this.persistence.begin();
     metricStage(this.run);
-    this.autosaveRemaining = 0.5;
     this.cameras.main.setFollowOffset(0, 0);
     this.setPhase('playing');
     this.presentStory();
-    this.requestCheckpoint();
+    this.persistence.requestCheckpoint();
     this.audio.play('arrive');
   }
 
@@ -973,7 +881,7 @@ export class ArenaScene extends Phaser.Scene {
 
   chooseStory(choice?: string): void {
     if (this.run.phase !== 'story' || !resolveStory(this.run, choice)) return;
-    this.requestCheckpoint();
+    this.persistence.requestCheckpoint();
     // Check for a queued arrival beat before resuming any simulation.
     this.run.phase = 'playing';
     if (this.presentStory()) return;
@@ -1097,7 +1005,7 @@ export class ArenaScene extends Phaser.Scene {
       return;
     }
     if (this.run.phase === 'saves') {
-      if (!this.saveBusy) this.setPhase(this.saveMenuReturn);
+      if (!this.persistence.busy) this.setPhase(this.saveMenuReturn);
       return;
     }
     if (this.run.phase === 'intro') this.skipIntro();
@@ -1211,7 +1119,7 @@ export class ArenaScene extends Phaser.Scene {
 
   improveNomadicCamp(id: NomadicBuildingId, slot?: number): void {
     if (!purchaseNomadicBuilding(this.run, id, slot)) return;
-    this.saveCamp();
+    this.persistence.saveCamp();
     this.campPresenter.refresh();
     this.audio.play('build');
     this.publishPhase();
@@ -1219,7 +1127,7 @@ export class ArenaScene extends Phaser.Scene {
 
   improveEstate(kind: EstatePurchaseKind, id: string, rank: number): void {
     if (!purchaseEstate(this.run, kind, id, rank)) return;
-    this.saveCamp();
+    this.persistence.saveCamp();
     this.campPresenter.refresh();
     this.audio.play('build');
     this.publishPhase();
@@ -1228,7 +1136,7 @@ export class ArenaScene extends Phaser.Scene {
   construct(id: BuildingId, path?: string, slot?: number): void {
     const previousCooldown = gallopCooldown(this.run);
     if (!buildStructure(this.run, id, path, slot)) return;
-    this.saveCamp();
+    this.persistence.saveCamp();
     this.timers.dashTimer *= gallopCooldown(this.run) / previousCooldown;
     this.campPresenter.refresh();
     this.audio.play('build');
@@ -1237,7 +1145,7 @@ export class ArenaScene extends Phaser.Scene {
 
   chooseRoute(id: string, destinationId?: string): void {
     if (!beginMigration(this.run, id, destinationId)) return;
-    this.requestCheckpoint();
+    this.persistence.requestCheckpoint();
     this.campPresenter.beginPacking();
     this.areaThreats = createAreaThreats();
     this.areaEncounter = createAreaEncounter();
@@ -1390,7 +1298,7 @@ export class ArenaScene extends Phaser.Scene {
     const upgrade = RESEARCH_BY_ID.get(id);
     const previousCooldown = gallopCooldown(this.run);
     if (this.run.phase !== 'upgrade' || !upgrade || !applyResearch(this.run, id, rank - 1)) return;
-    this.requestCheckpoint();
+    this.persistence.requestCheckpoint();
     this.audio.play('research');
     this.timers.dashTimer *= gallopCooldown(this.run) / previousCooldown;
     this.run.clan.message = `${upgrade.title} — rank ${rank} learned.`;
@@ -1516,11 +1424,7 @@ export class ArenaScene extends Phaser.Scene {
     this.collectGems(dt);
     if (this.run.phase !== 'playing') return;
     this.updateAreaCombat(dt);
-    this.autosaveRemaining -= dt;
-    if (this.autosaveRemaining <= 0 && !this.saveBusy) {
-      this.autosaveRemaining = GAME.saves.autosaveInterval;
-      void this.saveExpedition();
-    }
+    this.persistence.tick(dt);
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
       this.finish('dead');
       return;
@@ -2991,7 +2895,7 @@ export class ArenaScene extends Phaser.Scene {
       this.input.keyboard!.disableGlobalCapture();
     else this.input.keyboard!.enableGlobalCapture();
     this.publishPhase();
-    if (wasPlaying && phase === 'paused' && !this.saveBusy) void this.saveExpedition();
+    if (wasPlaying && phase === 'paused' && !this.persistence.busy) void this.saveExpedition();
   }
 
   private snapshot(): HudSnapshot {
@@ -3009,8 +2913,8 @@ export class ArenaScene extends Phaser.Scene {
       saves: {
         entries: this.platform.saves,
         canSave: this.canSaveExpedition,
-        busy: this.saveBusy,
-        message: this.saveMessage,
+        busy: this.persistence.busy,
+        message: this.persistence.message,
       },
       boss: this.boss,
     });
@@ -3550,7 +3454,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private arrive(): void {
-    this.saveCamp();
+    this.persistence.saveCamp();
     const center = GAME.worldSize / 2;
     // Each crossing leads to a new handcrafted arena; structures travel with the clan.
     this.campPresenter.relocate();
@@ -3580,6 +3484,12 @@ export class ArenaScene extends Phaser.Scene {
 
   // Development test hooks read through window.__gloam.scene; see tests/e2e/scene-hooks.spec.ts.
   // Not private: noUnusedLocals rejects private members that only tests use.
+  get saveBusy(): boolean {
+    return this.persistence.busy;
+  }
+  requestCheckpoint(): void {
+    this.persistence.requestCheckpoint();
+  }
   get joystick(): Phaser.GameObjects.Graphics | undefined {
     return this.controls.joystick;
   }
