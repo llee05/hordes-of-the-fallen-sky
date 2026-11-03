@@ -150,8 +150,10 @@ test('desktop menus keep the battlefield edge to edge and return settings and he
   await startExpedition(page);
   await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await expectFrozen(page, () =>
-    page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+    13,
   );
   await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
@@ -168,11 +170,14 @@ test('the clan chronicle pauses the expedition, supports keyboard tabs, and open
   await page.keyboard.press('Tab');
   await expect(page.getByRole('heading', { name: 'A people on the move.' })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'The journey' })).toBeFocused();
-  await expectFrozen(page, () =>
-    page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      return { run: JSON.stringify(scene.run), x: scene.player.x, y: scene.player.y };
-    }),
+  await expectFrozen(
+    page,
+    () =>
+      page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        return { run: JSON.stringify(scene.run), x: scene.player.x, y: scene.player.y };
+      }),
+    13,
   );
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('tab', { name: 'Your clan' })).toHaveAttribute(

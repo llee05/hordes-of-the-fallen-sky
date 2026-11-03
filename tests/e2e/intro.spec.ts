@@ -12,15 +12,18 @@ test('intro reads at the player’s pace with frozen simulation, back, completio
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused();
   await expect(page.locator('.intro-story')).toHaveCount(0);
   expect(
-    await expectFrozen(page, () =>
-      page.evaluate(() => {
-        const scene = (window as any).__gloam.scene;
-        return {
-          phase: scene.run.phase,
-          elapsed: scene.run.elapsed,
-          paused: scene.physics.world.isPaused,
-        };
-      }),
+    await expectFrozen(
+      page,
+      () =>
+        page.evaluate(() => {
+          const scene = (window as any).__gloam.scene;
+          return {
+            phase: scene.run.phase,
+            elapsed: scene.run.elapsed,
+            paused: scene.physics.world.isPaused,
+          };
+        }),
+      19,
     ),
   ).toEqual({ phase: 'ready', elapsed: 0, paused: true });
   await page.getByRole('button', { name: /NEW GAME/ }).click();
@@ -51,16 +54,19 @@ test('intro reads at the player’s pace with frozen simulation, back, completio
   await page.keyboard.press('m');
   await page.keyboard.press('j');
   expect(
-    await expectFrozen(page, () =>
-      page.evaluate(() => {
-        const scene = (window as any).__gloam.scene;
-        return {
-          elapsed: scene.run.elapsed,
-          food: scene.run.clan.food,
-          x: scene.player.x,
-          frame: scene.player.frame.name,
-        };
-      }),
+    await expectFrozen(
+      page,
+      () =>
+        page.evaluate(() => {
+          const scene = (window as any).__gloam.scene;
+          return {
+            elapsed: scene.run.elapsed,
+            food: scene.run.clan.food,
+            x: scene.player.x,
+            frame: scene.player.frame.name,
+          };
+        }),
+      38,
     ),
   ).toEqual(before);
   expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
@@ -186,11 +192,14 @@ test('held keyboard confirmation completes the prologue without galloping or ope
   await page.keyboard.down('Enter');
   await expect(page.getByRole('dialog')).toBeHidden();
   expect(
-    await expectFrozen(page, () =>
-      page.evaluate(() => {
-        const scene = (window as any).__gloam.scene;
-        return { phase: scene.run.phase, dash: scene.dashTimer };
-      }),
+    await expectFrozen(
+      page,
+      () =>
+        page.evaluate(() => {
+          const scene = (window as any).__gloam.scene;
+          return { phase: scene.run.phase, dash: scene.dashTimer };
+        }),
+      19,
     ),
   ).toEqual({ phase: 'playing', dash: 0 });
   await page.keyboard.up('Enter');
@@ -241,7 +250,11 @@ test('controller starts, advances, skips, replays, and never leaks a held confir
   });
   await expect(continueExpedition).toBeFocused();
   expect(
-    await expectFrozen(page, () => page.evaluate(() => (window as any).__gloam.scene.run.phase)),
+    await expectFrozen(
+      page,
+      () => page.evaluate(() => (window as any).__gloam.scene.run.phase),
+      19,
+    ),
   ).toBe('ready');
   await page.evaluate(() => {
     (window as any).testController.buttons[0].pressed = false;
@@ -257,11 +270,14 @@ test('controller starts, advances, skips, replays, and never leaks a held confir
   });
   await expect(page.getByRole('dialog')).toBeHidden();
   expect(
-    await expectFrozen(page, () =>
-      page.evaluate(() => {
-        const scene = (window as any).__gloam.scene;
-        return { phase: scene.run.phase, dash: scene.dashTimer };
-      }),
+    await expectFrozen(
+      page,
+      () =>
+        page.evaluate(() => {
+          const scene = (window as any).__gloam.scene;
+          return { phase: scene.run.phase, dash: scene.dashTimer };
+        }),
+      25,
     ),
   ).toEqual({ phase: 'playing', dash: 0 });
   await page.evaluate(() => {

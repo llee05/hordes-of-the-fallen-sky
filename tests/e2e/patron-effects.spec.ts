@@ -84,7 +84,7 @@ test('ancestor riders attack, animate, and freeze their poses and positions in t
         frame: spirit.image.frame.name,
       })),
     );
-  const before = await expectFrozen(page, snapshot);
+  const before = await expectFrozen(page, snapshot, 16);
   await page.keyboard.press('Escape');
   await expect.poll(async () => JSON.stringify(await snapshot())).not.toBe(JSON.stringify(before));
   await page.screenshot({ path: 'test-results/ancestor-riders.png' });

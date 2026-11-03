@@ -24,8 +24,10 @@ test('camp planning spends resources, unlocks riders and builds the Burning Temp
   });
   await page.keyboard.press('b');
   await expect(page.getByRole('heading', { name: "The Khan's camp" })).toBeVisible();
-  await expectFrozen(page, () =>
-    page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+    13,
   );
   await selectCampBuilding(page, 'archery');
   await buyNomadicLevel(page, 'archery-range');
@@ -59,14 +61,18 @@ test('migration moves a vulnerable caravan, preserves the build and awards survi
   await expect(page.locator('#migrate')).toBeEnabled();
   await page.keyboard.press('m');
   await expect(page.getByRole('heading', { name: 'Where the grass still grows.' })).toBeVisible();
-  await expectFrozen(page, () => page.evaluate(() => (window as any).__gloam.scene.run.elapsed));
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => (window as any).__gloam.scene.run.elapsed),
+    13,
+  );
   await page.screenshot({ path: 'test-results/route-choice.png', fullPage: true });
   await page.getByRole('button', { name: /Answer the blue banners/ }).click();
   await expect(page.locator('#stage-label')).toHaveText('THE GREAT FLIGHT');
   await expect(page.locator('#build')).toBeDisabled();
   await expect(page.locator('#population')).toHaveText('8');
   const initialCamp = await page.evaluate(() => (window as any).__gloam.scene.camp.x);
-  await sceneFrames(page, 3);
+  await sceneFrames(page, 10);
   expect(await page.evaluate(() => (window as any).__gloam.scene.camp.x)).toBeGreaterThan(
     initialCamp,
   );

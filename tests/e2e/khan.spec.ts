@@ -136,8 +136,10 @@ test('pause and research freeze succession, and healing research cannot bypass t
   });
   await fall(page);
   await closeOverlayOrPause(page);
-  const before = await expectFrozen(page, () =>
-    page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+  const before = await expectFrozen(
+    page,
+    () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+    13,
   );
   await page.getByRole('button', { name: 'Patron tech tree', exact: true }).click();
   await buyNode(page, 'vitality');

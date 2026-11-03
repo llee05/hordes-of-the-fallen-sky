@@ -89,7 +89,11 @@ test('rally and Banner Formation controls work at desktop and narrow widths and 
   await expect(page.locator('#rally-host')).toBeInViewport();
   await page.screenshot({ path: testInfo.outputPath('research-runtime-narrow.png') });
   await page.keyboard.press('t');
-  await expectFrozen(page, () => page.evaluate(() => (window as any).__gloam.scene.run.elapsed));
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => (window as any).__gloam.scene.run.elapsed),
+    10,
+  );
 });
 
 test('World-Piercer applies its total damage budget after armour without ending the arrow early', async ({

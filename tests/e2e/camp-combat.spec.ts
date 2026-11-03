@@ -89,17 +89,21 @@ test('camp attackers stop outside the tents, repeat protected damage, freeze in 
     // Reaching the camp commits to attacking it even when the Khan rides closer.
     scene.player.setPosition(enemy.x + 28, enemy.y);
   });
-  const holding = await expectFrozen(page, async () => {
-    const s = await siegeState(page);
-    return { x: s.x, y: s.y, speed: s.speed, resolve: s.resolve };
-  });
+  const holding = await expectFrozen(
+    page,
+    async () => {
+      const s = await siegeState(page);
+      return { x: s.x, y: s.y, speed: s.speed, resolve: s.resolve };
+    },
+    13,
+  );
   expect(holding.x).toBe(first.x);
   expect(holding.y).toBe(first.y);
   expect(holding.speed).toBe(0);
   expect(holding.resolve).toBe(first.resolve);
   await page.keyboard.press('b');
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'building');
-  await expectFrozen(page, () => siegeState(page));
+  await expectFrozen(page, () => siegeState(page), 13);
   await closeOverlayOrPause(page);
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await activeExpect
@@ -228,7 +232,7 @@ test('attackers chase the caravan again and cannot damage it while it is out of 
   await page.evaluate(() => {
     (window as any).campAttacker.clanAttackTimer = 0;
   });
-  const resolve = await expectFrozen(page, async () => (await siegeState(page)).resolve);
+  const resolve = await expectFrozen(page, async () => (await siegeState(page)).resolve, 13);
   expect(resolve).toBe(before.resolve);
   await page.evaluate(() => {
     const enemy = (window as any).campAttacker;

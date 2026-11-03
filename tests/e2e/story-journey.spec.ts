@@ -21,15 +21,18 @@ test('complete the two acts, all eight choices, three crossings, and a survivor-
   await page.keyboard.press('b');
   await page.keyboard.press('m');
   expect(
-    await expectFrozen(page, () =>
-      page.evaluate(() => {
-        const scene = (window as any).__gloam.scene;
-        return {
-          elapsed: scene.run.elapsed,
-          food: scene.run.clan.food,
-          frame: scene.player.frame.name,
-        };
-      }),
+    await expectFrozen(
+      page,
+      () =>
+        page.evaluate(() => {
+          const scene = (window as any).__gloam.scene;
+          return {
+            elapsed: scene.run.elapsed,
+            food: scene.run.clan.food,
+            frame: scene.player.frame.name,
+          };
+        }),
+      16,
     ),
   ).toEqual(initial);
   await page.screenshot({ path: 'test-results/story-first-fire.png' });

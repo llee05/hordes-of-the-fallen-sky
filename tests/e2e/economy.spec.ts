@@ -66,8 +66,10 @@ test('route estimates separate travel food from arrival gifts and risky routes r
   const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   await page.setViewportSize({ width: 960, height: 600 });
   expect(
-    await expectFrozen(page, () =>
-      page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+    await expectFrozen(
+      page,
+      () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+      13,
     ),
   ).toBe(before);
   await page.screenshot({ path: 'test-results/economy-routes.png' });
@@ -79,7 +81,7 @@ test('route estimates separate travel food from arrival gifts and risky routes r
     await page.evaluate(() => (window as any).__gloam.scene.run.clan.food),
   ).toBeLessThanOrEqual(1);
   await closeOverlayOrPause(page);
-  const outlook = await expectFrozen(page, () => page.locator('#food-outlook').textContent());
+  const outlook = await expectFrozen(page, () => page.locator('#food-outlook').textContent(), 13);
   await expect(page.locator('#food-outlook')).toHaveText(outlook!);
 });
 

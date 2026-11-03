@@ -83,7 +83,11 @@ test('starts, moves, dashes, pauses, resumes, and resets a run', async ({ page }
   await expect(page.locator('#dash-label')).toContainText('RECHARGING');
   await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
-  await expectFrozen(page, () => page.evaluate(() => (window as any).__gloam.scene.run.elapsed));
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => (window as any).__gloam.scene.run.elapsed),
+    25,
+  );
   await page.getByRole('button', { name: /RETURN TO THE STEPPE/ }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await closeOverlayOrPause(page);

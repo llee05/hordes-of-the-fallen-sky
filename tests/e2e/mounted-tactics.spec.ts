@@ -67,8 +67,10 @@ test('seer danger zones warn and strike in the opening area, while menus freeze 
     s.updateHazards(0.01);
   });
   await page.locator('#build').click();
-  await expectFrozen(page, () =>
-    page.evaluate(() => (window as any).__gloam.scene.hazards.map((h: any) => h.remaining)),
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => (window as any).__gloam.scene.hazards.map((h: any) => h.remaining)),
+    16,
   );
   await page.locator('[data-action="exit-camp"]').first().click();
   const hit = await page.evaluate(() => {

@@ -18,8 +18,10 @@ test('optional carts freeze in camp planning, pay once, and disappear on migrati
     structuredClone((window as any).__gloam.scene.run.field),
   );
   await page.locator('#build').click();
-  const frozen = await expectFrozen(page, () =>
-    page.evaluate(() => structuredClone((window as any).__gloam.scene.run.field)),
+  const frozen = await expectFrozen(
+    page,
+    () => page.evaluate(() => structuredClone((window as any).__gloam.scene.run.field)),
+    19,
   );
   expect(frozen).toEqual(before);
   await page.locator('[data-action="exit-camp"]').first().click();

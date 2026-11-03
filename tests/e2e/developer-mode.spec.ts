@@ -13,8 +13,10 @@ test('developer mode freezes the expedition and returns to the exact title, intr
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await expect(page.locator('[data-developer-level]')).toHaveCount(DEVELOPER_LEVELS.length);
   await expect(page.getByRole('button', { name: 'Back ESC / F8' })).toBeFocused();
-  await expectFrozen(page, () =>
-    page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+    13,
   );
   await closeOverlayOrPause(page);
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
@@ -79,11 +81,18 @@ test('switching checkpoints clears old actors, hazards, boss state, succession, 
   });
   await expect(page.locator('#khan-succession')).toBeVisible();
   await page.keyboard.press('F8');
-  await expectFrozen(page, () =>
-    page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      return { run: JSON.stringify(scene.run), frames: scene.playerMotion.frame, x: scene.camp.x };
-    }),
+  await expectFrozen(
+    page,
+    () =>
+      page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        return {
+          run: JSON.stringify(scene.run),
+          frames: scene.playerMotion.frame,
+          x: scene.camp.x,
+        };
+      }),
+    13,
   );
   await page.locator('[data-developer-level="chapter:golden-pasture"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();

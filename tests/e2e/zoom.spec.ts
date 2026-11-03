@@ -53,7 +53,7 @@ test('buttons, keyboard, and wheel zoom the battlefield with bounds and a reset,
   // One native event must not be processed again when Phaser replays its key queue.
   await page.keyboard.down('=');
   await expect(page.locator('#zoom-level')).toHaveText('110%');
-  await expectFrozen(page, () => page.locator('#zoom-level').textContent());
+  await expectFrozen(page, () => page.locator('#zoom-level').textContent(), 10);
   await page.keyboard.up('=');
   await expect(page.locator('#zoom-level')).toHaveText('110%');
 });

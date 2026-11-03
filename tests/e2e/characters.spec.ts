@@ -64,11 +64,14 @@ test('mounted gaits and bow release animate without changing collision geometry'
     expect(Math.abs(sample.centerY)).toBeLessThan(0.1);
   }
   await closeOverlayOrPause(page);
-  await expectFrozen(page, () =>
-    page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      return { frame: scene.player.frame.name, x: scene.player.x, y: scene.player.y };
-    }),
+  await expectFrozen(
+    page,
+    () =>
+      page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        return { frame: scene.player.frame.name, x: scene.player.x, y: scene.player.y };
+      }),
+    19,
   );
   await closeOverlayOrPause(page);
   await page.evaluate(() => {
@@ -147,13 +150,16 @@ test('all creature clips advance and freeze with camp planning', async ({ page }
   expect(frames.size).toBe(6);
   for (const seen of frames.values()) expect(seen.size).toBeGreaterThanOrEqual(2);
   await page.keyboard.press('b');
-  await expectFrozen(page, () =>
-    page.evaluate(() =>
-      (window as any).__gloam.scene.enemies
-        .getChildren()
-        .filter((enemy: any) => enemy.active)
-        .map((enemy: any) => ({ frame: enemy.frame.name, x: enemy.x, y: enemy.y })),
-    ),
+  await expectFrozen(
+    page,
+    () =>
+      page.evaluate(() =>
+        (window as any).__gloam.scene.enemies
+          .getChildren()
+          .filter((enemy: any) => enemy.active)
+          .map((enemy: any) => ({ frame: enemy.frame.name, x: enemy.x, y: enemy.y })),
+      ),
+    19,
   );
 });
 
@@ -193,13 +199,16 @@ test('defeat sprites stay bounded, pause, and preserve immediate body removal, X
   });
   expect(result).toMatchObject({ kills: 40, xp: 120, bodies: 0, echoes: 32, allocated: 32 });
   expect(
-    await expectFrozen(page, () =>
-      page.evaluate(() => {
-        const echo = (window as any).__gloam.scene.defeats.images
-          .getChildren()
-          .find((image: any) => image.active);
-        return { alpha: echo.alpha, y: echo.y, scale: echo.scaleY };
-      }),
+    await expectFrozen(
+      page,
+      () =>
+        page.evaluate(() => {
+          const echo = (window as any).__gloam.scene.defeats.images
+            .getChildren()
+            .find((image: any) => image.active);
+          return { alpha: echo.alpha, y: echo.y, scale: echo.scaleY };
+        }),
+      22,
     ),
   ).toEqual(result.echo);
   await closeOverlayOrPause(page);

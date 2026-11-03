@@ -137,15 +137,18 @@ test('camp work and research sound in menus while world cues and cadence are sto
   expect(await heard(page)).toContain('build');
   expect(await page.evaluate(() => (window as any).__gloam.scene.audio.play('shoot'))).toBe(false);
   expect(
-    await expectFrozen(page, () =>
-      page.evaluate(() => {
-        const scene = (window as any).__gloam.scene;
-        return {
-          time: scene.run.elapsed,
-          activity: scene.audio.activity,
-          hoof: scene.audio.hoofDistance,
-        };
-      }),
+    await expectFrozen(
+      page,
+      () =>
+        page.evaluate(() => {
+          const scene = (window as any).__gloam.scene;
+          return {
+            time: scene.run.elapsed,
+            activity: scene.audio.activity,
+            hoof: scene.audio.hoofDistance,
+          };
+        }),
+      13,
     ),
   ).toEqual(frozen);
   await closeOverlayOrPause(page);
@@ -243,10 +246,13 @@ test('independent volume sliders persist, reference auditions stay in Settings, 
   await page.getByRole('slider', { name: 'Combat volume', exact: true }).fill('0');
   await page.getByRole('button', { name: 'Bow', exact: true }).click();
   expect(
-    await expectFrozen(page, () =>
-      page.evaluate(
-        () => (window as any).heardAuditions.filter((kind: string) => kind === 'shoot').length,
-      ),
+    await expectFrozen(
+      page,
+      () =>
+        page.evaluate(
+          () => (window as any).heardAuditions.filter((kind: string) => kind === 'shoot').length,
+        ),
+      12,
     ),
   ).toBe(0);
   await page.getByRole('button', { name: 'Parchment', exact: true }).click();

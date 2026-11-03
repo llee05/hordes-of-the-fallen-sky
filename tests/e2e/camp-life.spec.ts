@@ -48,7 +48,7 @@ test('people work, households and herd reflect growth and losses, and menus free
         actor.image.alpha,
       ]);
     });
-  await expectFrozen(page, snapshot);
+  await expectFrozen(page, snapshot, 16);
   await closeOverlayOrPause(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
@@ -93,8 +93,10 @@ test('packing begins immediately, pauses with the world, and arrival relocates t
     .toBeGreaterThan(0);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.stage)).toBe('migration');
   await closeOverlayOrPause(page);
-  await expectFrozen(page, () =>
-    page.evaluate(() => (window as any).__gloam.scene.packingRemaining),
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => (window as any).__gloam.scene.packingRemaining),
+    13,
   );
   await closeOverlayOrPause(page);
   await page.screenshot({ path: 'test-results/packing-caravan.png' });

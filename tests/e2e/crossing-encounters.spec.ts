@@ -23,8 +23,10 @@ for (const route of ['river', 'ridge', 'refuge'])
       s.updateCrossing(0.01);
     });
     await page.locator('#pause').click();
-    await expectFrozen(page, () =>
-      page.evaluate(() => (window as any).__gloam.scene.run.crossing.remaining),
+    await expectFrozen(
+      page,
+      () => page.evaluate(() => (window as any).__gloam.scene.run.crossing.remaining),
+      16,
     );
     await page.keyboard.press('Escape');
     const result = await page.evaluate(() => {

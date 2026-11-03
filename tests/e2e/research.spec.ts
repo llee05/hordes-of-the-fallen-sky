@@ -25,8 +25,10 @@ test('inspection never spends points; explicit purchases use exact ranks and cur
   await expect(page.locator('.node-preview')).toContainText('Shared attack damage');
   await expect(page.locator('.node-preview')).toContainText('20');
   expect(
-    await expectFrozen(page, () =>
-      page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+    await expectFrozen(
+      page,
+      () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+      13,
     ),
   ).toBe(before);
   await buyNode(page, 'power');
@@ -156,8 +158,10 @@ test('controller confirms inspection, then purchases explicitly and retains unsp
   });
   await expect(page.locator('.node-rank-summary')).toHaveText('Rank 1 / 2');
   expect(
-    await expectFrozen(page, () =>
-      page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades),
+    await expectFrozen(
+      page,
+      () => page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades),
+      13,
     ),
   ).toBe(1);
   await page.evaluate(() => {

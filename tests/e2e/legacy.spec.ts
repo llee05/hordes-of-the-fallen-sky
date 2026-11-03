@@ -33,8 +33,10 @@ test('companions acknowledge camp work and the chronicle retains the real Khan s
     'Khan 1',
   );
   await expect(page.locator('.khan-records')).toContainText('7 banished by the host');
-  await expectFrozen(page, () =>
-    page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run.legacy)),
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run.legacy)),
+    13,
   );
   await closeOverlayOrPause(page);
   await page.evaluate(() => {

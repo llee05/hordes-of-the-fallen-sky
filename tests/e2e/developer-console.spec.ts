@@ -39,11 +39,14 @@ test('console pauses gameplay and accepts real keyboard input', async ({ page })
     'true',
   );
   expect(
-    await expectFrozen(page, () =>
-      page.evaluate(() => ({
-        run: JSON.stringify((window as any).__gloam.scene.run),
-        x: (window as any).__gloam.scene.player.x,
-      })),
+    await expectFrozen(
+      page,
+      () =>
+        page.evaluate(() => ({
+          run: JSON.stringify((window as any).__gloam.scene.run),
+          x: (window as any).__gloam.scene.player.x,
+        })),
+      10,
     ),
   ).toEqual(frozen);
   await page.keyboard.press('Escape');
