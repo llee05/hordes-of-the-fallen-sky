@@ -85,9 +85,8 @@ import {
   preloadPainterlyArt,
   styleActor,
 } from '../assets/painterlyArt';
-import { ClanLife } from '../assets/ClanLife';
-import { CampBarrier } from '../assets/CampBarrier';
-import { campShelters } from '../state/campLife';
+import type { ClanLife } from '../assets/ClanLife';
+import type { CampBarrier } from '../assets/CampBarrier';
 import { barrierContact, campBoundary } from '../state/campBarrier';
 import { SteppeLandscape } from '../assets/SteppeLandscape';
 import { TerrainCollision } from '../terrain/TerrainCollision';
@@ -197,6 +196,7 @@ import { createArenaTimers, type ArenaTimers } from './arena/ArenaTimers';
 import type { ArenaContext } from './arena/ArenaContext';
 import { ArenaEffects } from './arena/ArenaEffects';
 import { HudPresenter } from './arena/HudPresenter';
+import { CampPresenter } from './arena/CampPresenter';
 import { markExpedition, metricStage, observeExpedition } from '../state/expeditionMetrics';
 import {
   syncFinalStand,
@@ -224,21 +224,15 @@ export class ArenaScene extends Phaser.Scene {
   private camp!: Phaser.GameObjects.Container;
   private riders: Phaser.GameObjects.Image[] = [];
   private hostileShots!: Phaser.Physics.Arcade.Group;
-  private campLabel!: Phaser.GameObjects.Text;
   private landscape!: SteppeLandscape;
+  private campPresenter!: CampPresenter;
   private terrainCollision!: TerrainCollision;
-  private clanLife!: ClanLife;
   private crossingMarkers!: FieldMarkers;
   private areaEffects!: Phaser.GameObjects.Graphics;
   private areaEncounter = createAreaEncounter();
   private areaThreats = createAreaThreats();
   private fieldMarkers!: FieldMarkers;
   private passageMarkers: FieldMarkers[] = [];
-  private campBarrier!: CampBarrier;
-  private campPopulation = -1;
-  private campHerd = -1;
-  private packedGers: { image: Phaser.GameObjects.Image; x: number; y: number }[] = [];
-  private packingRemaining = 0;
   private riderShadows: Phaser.GameObjects.Image[] = [];
   private readonly playerMotion = new CharacterMotion('player');
   private riderMotions: CharacterMotion[] = [];
@@ -419,8 +413,6 @@ export class ArenaScene extends Phaser.Scene {
     this.playerMotion.reset('player');
     this.enemyShadows.clear();
     this.dustTimer = 0;
-    this.packedGers = [];
-    this.packingRemaining = 0;
     this.boss = undefined;
     this.hazards = [];
     this.facing.set(0, 1);
@@ -446,19 +438,7 @@ export class ArenaScene extends Phaser.Scene {
       .container(center, center)
       .setScale(CAMP_VISUAL_SCALE)
       .setDepth(100 + center);
-    this.campBarrier = new CampBarrier(this);
-    this.refreshCamp();
-    this.clanLife = new ClanLife(this);
-    this.campLabel = this.add
-      .text(center, center - 125 * CAMP_VISUAL_SCALE, 'YOUR CLAN', {
-        fontFamily: 'Georgia',
-        fontSize: '11px',
-        color: '#f5e6bf',
-        backgroundColor: '#34483bb3',
-        padding: { x: 8, y: 4 },
-      })
-      .setOrigin(0.5)
-      .setDepth(9500);
+    this.campPresenter = new CampPresenter(this.arena);
     for (let i = 0; i < 16; i += 1) {
       this.riders.push(paintedImage(this, center, center, 'rider').setVisible(false));
       this.riderMotions.push(new CharacterMotion('rider', i * 0.137));
@@ -902,13 +882,7 @@ export class ArenaScene extends Phaser.Scene {
       currentLocation(run),
       run.clan.stage === 'migration' ? run.clan.routeId : undefined,
     );
-    this.camp.setPosition(world.camp.x, world.camp.y);
-    this.camp.setDepth(100 + world.camp.y);
-    this.campLabel
-      .setPosition(world.camp.x, world.camp.y - 112 * CAMP_VISUAL_SCALE)
-      .setText(run.clan.stage === 'migration' ? 'PROTECT THE CARAVAN  →' : 'YOUR CLAN');
-    this.refreshCamp();
-    this.campBarrier.relocate(run, this.camp);
+    this.campPresenter.restore(world.camp);
     this.player.enableBody(true, world.player.x, world.player.y, true, true);
     this.player.setVelocity(world.player.vx, world.player.vy).setFlipX(world.player.flip);
     this.facing.set(world.facing.x, world.facing.y);
@@ -1025,7 +999,7 @@ export class ArenaScene extends Phaser.Scene {
     this.developerRun = false;
     if (import.meta.env.DEV)
       this.developerTools = createDeveloperTools(this.platform.profile.developerCommandHistory);
-    this.refreshCamp();
+    this.campPresenter.refresh();
     this.audio.unlock();
     this.beginExpedition();
   }
@@ -1065,7 +1039,7 @@ export class ArenaScene extends Phaser.Scene {
     this.run.phase = 'traditions';
     this.run.story.enabled = this.storiesEnabled;
     this.run.guidance.enabled = this.guidanceEnabled;
-    this.refreshCamp();
+    this.campPresenter.refresh();
     this.publishPhase();
   }
 
@@ -1343,7 +1317,7 @@ export class ArenaScene extends Phaser.Scene {
   improveNomadicCamp(id: NomadicBuildingId, slot?: number): void {
     if (!purchaseNomadicBuilding(this.run, id, slot)) return;
     this.saveCamp();
-    this.refreshCamp();
+    this.campPresenter.refresh();
     this.audio.play('build');
     this.publishPhase();
   }
@@ -1351,7 +1325,7 @@ export class ArenaScene extends Phaser.Scene {
   improveEstate(kind: EstatePurchaseKind, id: string, rank: number): void {
     if (!purchaseEstate(this.run, kind, id, rank)) return;
     this.saveCamp();
-    this.refreshCamp();
+    this.campPresenter.refresh();
     this.audio.play('build');
     this.publishPhase();
   }
@@ -1361,7 +1335,7 @@ export class ArenaScene extends Phaser.Scene {
     if (!buildStructure(this.run, id, path, slot)) return;
     this.saveCamp();
     this.timers.dashTimer *= gallopCooldown(this.run) / previousCooldown;
-    this.refreshCamp();
+    this.campPresenter.refresh();
     this.audio.play('build');
     this.publishPhase();
   }
@@ -1369,25 +1343,14 @@ export class ArenaScene extends Phaser.Scene {
   chooseRoute(id: string, destinationId?: string): void {
     if (!beginMigration(this.run, id, destinationId)) return;
     this.requestCheckpoint();
-    for (const ger of this.camp.list) {
-      if (!(ger instanceof Phaser.GameObjects.Image) || ger.name !== 'ger') continue;
-      const x = ger.x * this.camp.scaleX;
-      const y = ger.y * this.camp.scaleY;
-      const image = this.add
-        .image(this.camp.x + x, this.camp.y + y, ger.texture.key, ger.frame.name)
-        .setOrigin(ger.originX, ger.originY)
-        .setScale(ger.scaleX * this.camp.scaleX, ger.scaleY * this.camp.scaleY)
-        .setDepth(100 + this.camp.y + y);
-      this.packedGers.push({ image, x, y });
-    }
+    this.campPresenter.beginPacking();
     this.areaThreats = createAreaThreats();
     this.areaEncounter = createAreaEncounter();
     syncAreaEncounter(this.areaEncounter, this.run);
     this.areaEffects.clear();
-    this.packingRemaining = 2.4;
     this.landscape.setRegion(this.run.clan.region, currentLocation(this.run), id);
     this.reconcileTerrain();
-    this.refreshCamp();
+    this.campPresenter.refresh();
     this.setPhase('playing');
     this.audio.play('depart');
   }
@@ -3251,80 +3214,9 @@ export class ArenaScene extends Phaser.Scene {
     this.joystick?.clear();
   }
 
-  private refreshCamp(): void {
-    this.camp.removeAll(true);
-    const migrating = this.run.clan.stage === 'migration';
-    const add = (x: number, y: number, key: string, scale = 2.5): Phaser.GameObjects.Image => {
-      const width = ((ART_WIDTH[key] ?? 60) * scale) / 2.5;
-      this.camp.add(
-        this.add
-          .image(x + 10, y + 6, 'shadow')
-          .setDisplaySize(width * 1.05, width * 0.31)
-          .setAlpha(0.7)
-          .setDepth(y - 1),
-      );
-      const image = paintedImage(this, x, y, key, width).setDepth(y).setName(key);
-      image.setData('restScale', image.scaleX);
-      this.camp.add(image);
-      return image;
-    };
-    for (const shelter of campShelters(this.run))
-      add(
-        shelter.x,
-        shelter.y,
-        migrating ? 'cart' : 'ger',
-        shelter.x === -64 || shelter.x === 65 ? 2.5 : 2,
-      ).setData('household', true);
-    add(10, -45, 'banner', 3.2);
-    if (this.run.clan.buildings.archery) add(-130, -35, 'banner');
-    if (this.run.clan.buildings.sanctuary) add(128, 58, 'pillar', 2.5);
-    if (this.run.clan.buildings.wagon) {
-      add(-95, 55, 'cart', 2);
-      add(100, 0, 'cart', 2);
-    }
-    if (this.run.clan.buildings.felt)
-      add(-190, -75, migrating ? 'cart' : 'ger', 1.7).setData('buildingId', 'felt');
-    if (this.run.clan.buildings.provisions)
-      add(178, -70, migrating ? 'cart' : 'ger', 1.7).setData('buildingId', 'provisions');
-    if (this.run.clan.buildings.relay) {
-      add(185, 75, 'cart', 1.7).setData('buildingId', 'relay');
-      add(185, 45, 'banner', 2);
-    }
-    this.campPopulation = this.run.clan.population;
-    this.campHerd = this.run.clan.herd;
-    this.camp.sort('depth');
-    this.campBarrier.refresh(this.run, this.camp);
-  }
-
   private updateCamp(dt: number): void {
     const clan = this.run.clan;
-    const center = GAME.worldSize / 2;
-    if (clan.population !== this.campPopulation || clan.herd !== this.campHerd) this.refreshCamp();
-    if (clan.stage === 'migration') this.camp.x = center + clan.migrationProgress * 1150;
-    this.camp.setDepth(100 + this.camp.y);
-    this.campBarrier.update(this.run, dt, this.camp);
-    this.clanLife.update(this.run, dt, this.camp);
-    this.packingRemaining = Math.max(0, this.packingRemaining - dt);
-    for (const ger of this.packedGers) {
-      ger.image
-        .setPosition(this.camp.x + ger.x, this.camp.y + ger.y)
-        .setAlpha(this.packingRemaining / 2.4)
-        .setDepth(100 + this.camp.y + ger.y);
-    }
-    if (this.packingRemaining === 0 && this.packedGers.length) {
-      for (const ger of this.packedGers) ger.image.destroy();
-      this.packedGers = [];
-    }
-    for (const child of this.camp.list)
-      if (child instanceof Phaser.GameObjects.Image && child.name === 'banner') {
-        const rest = child.getData('restScale') as number;
-        child
-          .setScale(rest * (1 + Math.sin(this.run.elapsed * 2.3 + child.x) * 0.035), rest)
-          .setAngle(Math.sin(this.run.elapsed * 1.7 + child.x) * 1.2);
-      }
-    this.campLabel
-      .setPosition(this.camp.x, this.camp.y - 112 * CAMP_VISUAL_SCALE)
-      .setText(clan.stage === 'migration' ? 'PROTECT THE CARAVAN  →' : 'YOUR CLAN');
+    this.campPresenter.update(dt);
     const count = riderCount(this.run);
     for (let i = 0; i < this.riders.length; i += 1) {
       const rider = this.riders[i]!;
@@ -3851,10 +3743,7 @@ export class ArenaScene extends Phaser.Scene {
     this.saveCamp();
     const center = GAME.worldSize / 2;
     // Each crossing leads to a new handcrafted arena; structures travel with the clan.
-    this.clanLife.relocate();
-    this.packingRemaining = 0;
-    for (const ger of this.packedGers) ger.image.destroy();
-    this.packedGers = [];
+    this.campPresenter.relocate();
     this.camp.setPosition(center, center);
     this.player.setPosition(center, center + 100).setVelocity(0, 0);
     this.patronSupport.relocate(isKhanActive(this.run) ? this.player : this.camp);
@@ -3872,7 +3761,7 @@ export class ArenaScene extends Phaser.Scene {
     this.areaEffects.clear();
     this.landscape.setRegion(this.run.clan.region, currentLocation(this.run));
     this.reconcileTerrain();
-    this.refreshCamp();
+    this.campPresenter.refresh();
     this.campBarrier.relocate(this.run, this.camp);
     this.cameras.main.flash(500, 225, 215, 180);
     if (!this.presentStory()) this.publishPhase();
@@ -3881,6 +3770,18 @@ export class ArenaScene extends Phaser.Scene {
 
   // Development test hooks read through window.__gloam.scene; see tests/e2e/scene-hooks.spec.ts.
   // Not private: noUnusedLocals rejects private members that only tests use.
+  get campBarrier(): CampBarrier {
+    return this.campPresenter.campBarrier;
+  }
+  get clanLife(): ClanLife {
+    return this.campPresenter.clanLife;
+  }
+  get packedGers(): CampPresenter['packedGers'] {
+    return this.campPresenter.packedGers;
+  }
+  get packingRemaining(): number {
+    return this.campPresenter.packingRemaining;
+  }
   burst(x: number, y: number, color: number, count: number): void {
     this.effects.burst(x, y, color, count);
   }

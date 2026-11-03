@@ -9,13 +9,14 @@ in the scene.
 
 ## Modules
 
-| Module                  | Owns                                                                                                       | Lifetime                 |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `ArenaScene.ts`         | lifecycle, `update` order, public API, menus and phases, capture/restore composition, test-hook forwarders | scene                    |
-| `arena/ArenaContext.ts` | the shared world: live getters over the scene's run, timers and world objects                              | scene                    |
-| `arena/ArenaTimers.ts`  | the nine saved timers as one record (`WorldArchive['timers']`)                                             | scene, reset in `create` |
-| `arena/ArenaEffects.ts` | spark bursts and dust puffs                                                                                | scene                    |
-| `arena/HudPresenter.ts` | the HUD snapshot, combat-readability markers, camp pressure, and the shared `bearingArrow` helper          | scene                    |
+| Module                   | Owns                                                                                                       | Lifetime                 |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `ArenaScene.ts`          | lifecycle, `update` order, public API, menus and phases, capture/restore composition, test-hook forwarders | scene                    |
+| `arena/ArenaContext.ts`  | the shared world: live getters over the scene's run, timers and world objects                              | scene                    |
+| `arena/ArenaTimers.ts`   | the nine saved timers as one record (`WorldArchive['timers']`)                                             | scene, reset in `create` |
+| `arena/ArenaEffects.ts`  | spark bursts and dust puffs                                                                                | scene                    |
+| `arena/HudPresenter.ts`  | the HUD snapshot, combat-readability markers, camp pressure, and the shared `bearingArrow` helper          | scene                    |
+| `arena/CampPresenter.ts` | camp drawing, the barrier, clan life, banner sway, the camp label, and the gers that fade on departure     | each `create`            |
 
 "Scene" lifetime means one instance for the scene object. Field initialisers run once, but
 `create` runs on every `scene.restart`, so per-run state is reset there.
