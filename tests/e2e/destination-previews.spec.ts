@@ -65,3 +65,18 @@ test('destination previews retain landscape descriptions, river channels, threat
   await expect(page.locator('[data-area-intel="golden-pasture"]')).toContainText('Thistle prowler');
   await expect(page.locator('[data-area-intel="belukha"]')).toHaveCount(0);
 });
+
+// A later-chapter map is built from the current destination rather than the starting pasture.
+test('a map opened from Eej Khairkhan previews Orkhon Valley’s landscape', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Developer mode F8' }).click();
+  await page.locator('[data-developer-level="destination:2:eej-khairkhan"]').click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(page.locator('#location')).toHaveText('EEJ KHAIRKHAN');
+  await page.keyboard.press('m');
+  await page.locator('[data-destination="orkhon-valley"]').click();
+  await expect(page.locator('#destination-detail [data-landscape="orkhon-valley"]')).toBeVisible();
+  await expect(page.locator('#destination-detail')).toContainText(
+    LANDSCAPES['orkhon-valley'].description,
+  );
+});
