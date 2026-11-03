@@ -17,9 +17,14 @@ in the scene.
 | `arena/ArenaEffects.ts`  | spark bursts and dust puffs                                                                                | scene                    |
 | `arena/HudPresenter.ts`  | the HUD snapshot, combat-readability markers, camp pressure, and the shared `bearingArrow` helper          | scene                    |
 | `arena/CampPresenter.ts` | camp drawing, the barrier, clan life, banner sway, the camp label, and the gers that fade on departure     | each `create`            |
+| `arena/ArenaInput.ts`    | key, wheel, touch and controller bindings, the movement intent, and the touch joystick                     | scene, bound in `create` |
 
 "Scene" lifetime means one instance for the scene object. Field initialisers run once, but
-`create` runs on every `scene.restart`, so per-run state is reset there.
+`create` runs on every `scene.restart`, so per-run state is reset there. `ArenaInput` must
+survive a restart: it keeps the scene's single `GamepadInput` and `ActionKeys`. A new
+controller would forget held buttons, so a held confirm or back would fire again after a
+load, and a new `ActionKeys` would lose the dedupe for key events Phaser replays. The scene
+removes all keyboard listeners on shutdown and `bind` adds them again.
 
 ## Shared context
 
@@ -39,7 +44,7 @@ onto a separate field would load into a field nobody reads, and the save would s
 `update` converts Phaser's millisecond delta to seconds, caps a step at 0.05 s, and runs the
 steps below in this order. The order is behaviour: moving a step changes play.
 
-1. Controller polling and menu dispatch; stop unless the phase is still `playing`.
+1. Controller polling and menu dispatch (`ArenaInput.pollController`); stop unless the phase is still `playing`.
 2. Present a queued story; observe expedition and research metrics; begin succession if the Khan fell.
 3. Advance elapsed time, campfire vigil and patrons; decay dash, invulnerability and gallop.
 4. Advance the clan: finish on loss or victory, or arrive at the next camp.

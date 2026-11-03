@@ -197,6 +197,7 @@ import type { ArenaContext } from './arena/ArenaContext';
 import { ArenaEffects } from './arena/ArenaEffects';
 import { HudPresenter } from './arena/HudPresenter';
 import { CampPresenter } from './arena/CampPresenter';
+import { ArenaInput } from './arena/ArenaInput';
 import { markExpedition, metricStage, observeExpedition } from '../state/expeditionMetrics';
 import {
   syncFinalStand,
@@ -254,24 +255,20 @@ export class ArenaScene extends Phaser.Scene {
     researchEntered?: boolean;
   }[] = [];
   private gems!: Phaser.Physics.Arcade.Group;
-  private keys!: Record<
-    'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd',
-    Phaser.Input.Keyboard.Key
-  >;
   private readonly spatial = new SpatialHash<Enemy>();
   private readonly audio = new GameAudio();
   private readonly controller = new GamepadInput();
   private readonly actionKeys = new ActionKeys();
-  private controllerMove = new Phaser.Math.Vector2();
   private callbacks?: ArenaCallbacks;
   private readonly timers: ArenaTimers = createArenaTimers();
   /** The shared world handed to scene systems; every member reads the scene live. */
   private readonly arena: ArenaContext = this.createArenaContext();
   private readonly effects = new ArenaEffects(this.arena);
   private readonly hudPresenter = new HudPresenter(this.arena);
+  /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
+  private readonly controls = new ArenaInput(this.arena, this.controller, this.actionKeys);
   private hudTimer = 0;
   private cameraZoom: number = GAME.camera.defaultZoom;
-  private wheelZoomDelta = 0;
   private best = 0;
   private researchReturnPhase: 'playing' | 'journal' | 'paused' = 'playing';
   private progressionStack: ('upgrade' | 'building')[] = [];
@@ -287,9 +284,6 @@ export class ArenaScene extends Phaser.Scene {
   private guidanceEnabled = true;
   private storyLogReturn: 'paused' | 'won' | 'dead' = 'paused';
   private facing = new Phaser.Math.Vector2(0, 1);
-  private touchMove = new Phaser.Math.Vector2();
-  private dragOrigin?: Phaser.Math.Vector2;
-  private joystick?: Phaser.GameObjects.Graphics;
   private expeditionStarted = false;
   private saveBusy = false;
   private pendingSceneSave: Promise<boolean> = Promise.resolve(true);
@@ -402,7 +396,6 @@ export class ArenaScene extends Phaser.Scene {
     this.introStartsRun = false;
     Object.assign(this.timers, createArenaTimers());
     this.hudTimer = 0;
-    this.wheelZoomDelta = 0;
     this.researchReturnPhase = 'playing';
     this.progressionStack = [];
     this.utilityReturnPhase = 'ready';
@@ -416,8 +409,6 @@ export class ArenaScene extends Phaser.Scene {
     this.boss = undefined;
     this.hazards = [];
     this.facing.set(0, 1);
-    this.touchMove.set(0, 0);
-    this.dragOrigin = undefined;
     this.best = this.platform.profile.bestSeconds;
 
     createPainterlyEffects(this);
@@ -505,124 +496,28 @@ export class ArenaScene extends Phaser.Scene {
       this.scale.off(Phaser.Scale.Events.RESIZE, resizeZoom),
     );
 
-    this.keys = this.input.keyboard!.addKeys({
-      up: 'UP',
-      down: 'DOWN',
-      left: 'LEFT',
-      right: 'RIGHT',
-      w: 'W',
-      a: 'A',
-      s: 'S',
-      d: 'D',
-    }) as typeof this.keys;
-    const bindAction = (key: string, action: () => void): void => {
-      this.input.keyboard!.on(`keydown-${key}`, (event: KeyboardEvent) => {
-        if (
-          key !== 'ESC' &&
-          key !== 'F8' &&
-          key !== 'F10' &&
-          !(key === 'BACKTICK' && ['console', 'developer'].includes(this.run.phase)) &&
-          event.target instanceof HTMLElement &&
-          event.target.closest('input, textarea, select')
-        )
-          return;
-        if (['F6', 'F7', 'F9', 'F10', 'BACKTICK'].includes(key)) event.preventDefault();
-        if (this.actionKeys.consume(event)) {
-          action();
-        }
-      });
-    };
-    bindAction('ESC', () => this.togglePause());
-    bindAction('P', () => this.togglePause());
-    bindAction('B', () => this.openBuildings());
-    bindAction('M', () => this.openRoutes());
-    bindAction('F', () => this.cycleFormation());
-    bindAction('R', () => this.rallyHost());
-    bindAction('ONE', () => this.selectSuccessor('outrider'));
-    bindAction('TWO', () => this.selectSuccessor('hearthguard'));
-    bindAction('J', () => this.toggleJournal());
-    bindAction('T', () => this.openResearch());
-    if (import.meta.env.DEV) {
-      bindAction('F8', () => this.toggleDeveloperMenu());
-      bindAction('F9', () => this.landscape.cycleTerrainDebug());
-      bindAction('F7', () => {
-        const world = this.landscape.world3d;
-        if (world) world.setTerrainOnly(!world.terrainOnly);
-      });
-      bindAction('F6', () => {
-        const world = this.landscape.world3d;
-        if (world) world.setAngle(world.angle < 48 ? 48 : world.angle < 60 ? 60 : 40);
-      });
-      bindAction('F10', () => this.toggleDeveloperConsole());
-      bindAction('BACKTICK', () => this.toggleDeveloperConsole());
-    }
-    const bindZoom = (key: string, steps: number): void => {
-      this.input.keyboard!.on(`keydown-${key}`, (event: KeyboardEvent) => {
-        if (
-          !this.actionKeys.consume(event) ||
-          this.run.phase !== 'playing' ||
-          event.ctrlKey ||
-          event.metaKey ||
-          event.altKey ||
-          (event.target instanceof HTMLElement && event.target.closest('input, textarea, select'))
-        )
-          return;
-        event.preventDefault();
-        this.changeZoom(steps);
-      });
-    };
-    for (const key of ['PLUS', 'NUMPAD_ADD']) bindZoom(key, 1);
-    for (const key of ['MINUS', 'NUMPAD_SUBTRACT']) bindZoom(key, -1);
-    for (const key of ['ZERO', 'NUMPAD_ZERO']) bindZoom(key, 0);
-    this.input.on(
-      'wheel',
-      (
-        pointer: Phaser.Input.Pointer,
-        _over: Phaser.GameObjects.GameObject[],
-        _dx: number,
-        dy: number,
-      ) => {
-        const event = pointer.event as WheelEvent;
-        if (this.run.phase !== 'playing' || event.ctrlKey || event.metaKey) return;
-        if (Math.sign(dy) !== Math.sign(this.wheelZoomDelta)) this.wheelZoomDelta = 0;
-        this.wheelZoomDelta += dy;
-        const steps = Math.trunc(this.wheelZoomDelta / GAME.camera.wheelStep);
-        if (steps) {
-          this.wheelZoomDelta %= GAME.camera.wheelStep;
-          this.changeZoom(-steps);
-        }
-      },
-    );
-    this.input.keyboard!.on('keydown-TAB', (event: KeyboardEvent) => {
-      if (this.run.phase !== 'playing' || !this.actionKeys.consume(event)) return;
-      event.preventDefault();
-      this.toggleJournal();
+    this.controls.bind({
+      togglePause: () => this.togglePause(),
+      openBuildings: () => this.openBuildings(),
+      openRoutes: () => this.openRoutes(),
+      cycleFormation: () => this.cycleFormation(),
+      rallyHost: () => this.rallyHost(),
+      selectSuccessor: (trait) => this.selectSuccessor(trait),
+      toggleJournal: () => this.toggleJournal(),
+      openResearch: () => this.openResearch(),
+      toggleDeveloperMenu: () => this.toggleDeveloperMenu(),
+      toggleDeveloperConsole: () => this.toggleDeveloperConsole(),
+      changeZoom: (steps) => this.changeZoom(steps),
+      dash: () => this.dash(),
+      skipIntro: () => this.skipIntro(),
+      menuInput: (action) => this.callbacks?.onMenuInput(action),
     });
-    // Native Space activation remains available to focused menu buttons.
-    this.input.keyboard!.removeCapture('SPACE');
-    bindAction('SPACE', () => this.dash());
-
-    // Drag anywhere in the arena for analog movement on touch screens.
-    this.joystick = this.add.graphics().setScrollFactor(0).setDepth(10000);
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.wasTouch && this.run.phase === 'playing')
-        this.dragOrigin = new Phaser.Math.Vector2(pointer.x, pointer.y);
-    });
-    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (!this.dragOrigin) return;
-      this.touchMove
-        .set(pointer.x - this.dragOrigin.x, pointer.y - this.dragOrigin.y)
-        .limit(45)
-        .scale(1 / 45);
-    });
-    this.input.on('pointerup', () => this.clearTouch());
-    this.input.on('pointerupoutside', () => this.clearTouch());
     this.game.events.on(Phaser.Core.Events.BLUR, this.pauseOnBlur, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.audio.reset();
       this.game.events.off(Phaser.Core.Events.BLUR, this.pauseOnBlur, this);
       this.input.keyboard!.removeAllListeners();
-      this.clearTouch();
+      this.controls.clearTouch();
     });
     this.events.off(Phaser.Scenes.Events.DESTROY, this.audio.destroy, this.audio);
     this.events.once(Phaser.Scenes.Events.DESTROY, this.audio.destroy, this.audio);
@@ -1504,60 +1399,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
-    const controller = this.controller.poll();
-    this.controllerMove.set(controller.x, controller.y);
-    if (this.run.phase === 'intro') {
-      if (controller.back || controller.pause) this.skipIntro();
-      else {
-        if (controller.next) this.callbacks?.onMenuInput('next');
-        if (controller.previous) this.callbacks?.onMenuInput('previous');
-        if (controller.confirm) this.callbacks?.onMenuInput('confirm');
-      }
-      return;
-    }
-    const phaseBeforeInput = this.run.phase;
-    if (
-      controller.pause ||
-      (controller.back &&
-        [
-          'playing',
-          'paused',
-          'building',
-          'upgrade',
-          'route',
-          'journal',
-          'settings',
-          'help',
-          'story',
-          'epilogue',
-          'story-log',
-          'traditions',
-          'developer',
-          'console',
-        ].includes(this.run.phase))
-    )
-      this.togglePause();
-    else if (controller.research) this.openResearch();
-    else if (this.run.phase === 'playing') {
-      if (controller.zoomReset) this.changeZoom(0);
-      else if (controller.zoomIn) this.changeZoom(1);
-      else if (controller.zoomOut) this.changeZoom(-1);
-      if (!isKhanActive(this.run)) {
-        if (controller.previous) this.selectSuccessor('outrider');
-        else if (controller.next) this.selectSuccessor('hearthguard');
-      }
-      if (controller.confirm) this.dash();
-      if (controller.build) this.openBuildings();
-      else if (controller.migrate) this.openRoutes();
-      else if (controller.formation) this.cycleFormation();
-      else if (controller.journal) this.toggleJournal();
-    } else {
-      if (controller.journal && this.run.phase === 'journal') this.toggleJournal();
-      if (controller.next) this.callbacks?.onMenuInput('next');
-      if (controller.previous) this.callbacks?.onMenuInput('previous');
-      if (controller.confirm) this.callbacks?.onMenuInput('confirm');
-    }
-    if (this.run.phase !== phaseBeforeInput) return;
+    if (!this.controls.pollController()) return;
     if (this.run.phase !== 'playing') return;
     if (this.presentStory()) return;
     const dt = Math.min(delta / 1000, 0.05);
@@ -1700,16 +1542,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private movePlayer(dt: number): void {
-    const x =
-      Number(this.keys.right.isDown || this.keys.d.isDown) -
-      Number(this.keys.left.isDown || this.keys.a.isDown);
-    const y =
-      Number(this.keys.down.isDown || this.keys.s.isDown) -
-      Number(this.keys.up.isDown || this.keys.w.isDown);
-    const movement = new Phaser.Math.Vector2(x, y);
-    if (movement.lengthSq() > 0) movement.normalize();
-    else if (this.controllerMove.lengthSq() > 0) movement.copy(this.controllerMove);
-    else movement.copy(this.touchMove);
+    const movement = this.controls.movement();
     if (this.landscape.world3d) {
       const rotated = this.landscape.world3d.movement(movement.x, movement.y);
       movement.set(rotated.x, rotated.y);
@@ -1740,24 +1573,7 @@ export class ArenaScene extends Phaser.Scene {
       this.dustTimer = 0.12 / Math.max(0.1, effectAmount(this.visualSettings));
     }
     this.aura.setPosition(this.player.x, this.player.y);
-    // Scroll factor alone does not cancel camera zoom for the screen-space joystick.
-    const camera = this.cameras.main;
-    const inverseZoom = 1 / camera.zoom;
-    this.joystick!.setScale(inverseZoom)
-      .setPosition((camera.width / 2) * (1 - inverseZoom), (camera.height / 2) * (1 - inverseZoom))
-      .clear();
-    if (this.dragOrigin) {
-      this.joystick!.lineStyle(2, 0xc8df9b, 0.3).strokeCircle(
-        this.dragOrigin.x,
-        this.dragOrigin.y,
-        45,
-      );
-      this.joystick!.fillStyle(0xc8df9b, 0.3).fillCircle(
-        this.dragOrigin.x + this.touchMove.x * 45,
-        this.dragOrigin.y + this.touchMove.y * 45,
-        12,
-      );
-    }
+    this.controls.drawJoystick();
   }
 
   private spawnEnemy(
@@ -3106,7 +2922,7 @@ export class ArenaScene extends Phaser.Scene {
     this.aura.setVisible(false);
     this.timers.dashRemaining = 0;
     this.run.clan.momentum = 0;
-    this.clearTouch();
+    this.controls.clearTouch();
     this.patronSupport.relocate(this.camp);
     this.cameras.main.startFollow(this.camp, true, 0.09, 0.09).setFollowOffset(0, 0);
     this.callbacks?.onHud(this.snapshot());
@@ -3138,7 +2954,7 @@ export class ArenaScene extends Phaser.Scene {
     this.timers.dashRemaining = this.timers.dashTimer = 0;
     this.timers.attackTimer = this.dustTimer = 0;
     this.timers.invulnerable = GAME.khan.returnProtection;
-    this.clearTouch();
+    this.controls.clearTouch();
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09).setFollowOffset(0, 0);
     this.effects.burst(x, y, 0xf1c27b, 12);
     this.audio.play('succession');
@@ -3159,8 +2975,7 @@ export class ArenaScene extends Phaser.Scene {
     const wasPlaying = this.run.phase === 'playing';
     this.run.phase = phase;
     this.audio.setPlaying(phase === 'playing', phase === 'building');
-    this.wheelZoomDelta = 0;
-    this.clearTouch();
+    this.controls.release();
     if (phase === 'playing') {
       this.input.keyboard!.addCapture(['SPACE', 'TAB']);
       this.physics.resume();
@@ -3207,11 +3022,6 @@ export class ArenaScene extends Phaser.Scene {
   }
   private pauseOnBlur(): void {
     if (this.run.phase === 'playing') this.setPhase('paused');
-  }
-  private clearTouch(): void {
-    this.dragOrigin = undefined;
-    this.touchMove.set(0, 0);
-    this.joystick?.clear();
   }
 
   private updateCamp(dt: number): void {
@@ -3770,6 +3580,12 @@ export class ArenaScene extends Phaser.Scene {
 
   // Development test hooks read through window.__gloam.scene; see tests/e2e/scene-hooks.spec.ts.
   // Not private: noUnusedLocals rejects private members that only tests use.
+  get joystick(): Phaser.GameObjects.Graphics | undefined {
+    return this.controls.joystick;
+  }
+  get dragOrigin(): Phaser.Math.Vector2 | undefined {
+    return this.controls.dragOrigin;
+  }
   get campBarrier(): CampBarrier {
     return this.campPresenter.campBarrier;
   }
