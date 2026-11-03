@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { closeOverlayOrPause, expectFrozen, tapController } from './helpers';
+import { closeOverlayOrPause, expectFrozen, sceneFrames, tapController } from './helpers';
 
 test('intro reads at the player’s pace with frozen simulation, back, completion, and a fresh expedition', async ({
   page,
@@ -203,6 +203,13 @@ test('held keyboard confirmation completes the prologue without galloping or ope
     ),
   ).toEqual({ phase: 'playing', dash: 0 });
   await page.keyboard.up('Enter');
+  await sceneFrames(page, 3);
+  expect(
+    await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      return { phase: scene.run.phase, dash: scene.dashTimer };
+    }),
+  ).toEqual({ phase: 'playing', dash: 0 });
 });
 
 test('controller starts, advances, skips, replays, and never leaks a held confirm into gameplay', async ({
