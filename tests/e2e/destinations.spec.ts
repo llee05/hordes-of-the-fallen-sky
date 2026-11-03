@@ -89,17 +89,18 @@ test('destination inspection preserves focus and paused state across responsive 
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.run.clan.stageTime = 45;
-    scene.openRoutes();
+    (window as any).__gloam.scene.run.clan.stageTime = 45;
   });
-  const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
   for (const viewport of [
     { width: 1280, height: 800 },
     { width: 960, height: 600 },
     { width: 390, height: 844 },
   ]) {
     await test.step(`${viewport.width}×${viewport.height}`, async () => {
+      // Reopen at each width so Escape dismissal is checked for every layout.
+      await page.evaluate(() => (window as any).__gloam.scene.openRoutes());
+      await expect(page.getByRole('dialog')).toBeVisible();
+      const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
       await page.setViewportSize(viewport);
       for (const [id, name] of places) {
         const button = page.locator(`[data-destination="${id}"]`);
@@ -117,10 +118,10 @@ test('destination inspection preserves focus and paused state across responsive 
         before,
       );
       await page.screenshot({ path: `test-results/destinations-${viewport.width}.png` });
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog')).toBeHidden();
     });
   }
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog')).toBeHidden();
 });
 
 test('keyboard and controller select a destination before confirming the journey', async ({

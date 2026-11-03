@@ -122,10 +122,9 @@ test('skip chapters 1 to 5 into gameplay with camp scenes off', async ({ page })
   test.setTimeout(120000);
   await page.goto('/');
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();
+  await page.getByRole('button', { name: /NEW GAME/ }).click();
   for (const chapter of [0, 1, 2, 3, 4]) {
     await test.step(`skip chapter ${chapter + 1}`, async () => {
-      await page.getByRole('button', { name: /NEW GAME/ }).click();
-      await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
       for (let i = 0; i < chapter; i++) await page.keyboard.press('ArrowRight');
       if (chapter === 1) await closeOverlayOrPause(page);
@@ -145,6 +144,9 @@ test('skip chapters 1 to 5 into gameplay with camp scenes off', async ({ page })
       await closeOverlayOrPause(page);
       await page.getByRole('button', { name: 'Start a new run' }).click();
       await expect(page.getByRole('button', { name: 'Camp scenes: Off' })).toBeVisible();
+      // Every skipped chapter, including the last, must leave New Game opening the intro.
+      await page.getByRole('button', { name: /NEW GAME/ }).click();
+      await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
     });
   }
 });
