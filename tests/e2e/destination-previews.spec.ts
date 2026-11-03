@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { LANDSCAPES } from '../../src/game/data/landscapes';
 import { openTitle, startExpedition } from './helpers';
 
-test('destination threat previews are readable, freeze gameplay and keep the current area’s identity', async ({
+test('destination previews retain landscape descriptions, river channels, threat intel, and frozen gameplay', async ({
   page,
 }) => {
   await openTitle(page);
@@ -14,6 +15,23 @@ test('destination threat previews are readable, freeze gameplay and keep the cur
   await expect(page.locator('#migrate')).toBeEnabled();
   await page.locator('#migrate').click();
   const frozen = await page.locator('#timer').textContent();
+
+  await expect(page.locator('#destination-detail [data-river-kind="frozen"]')).toBeVisible();
+
+  await page.locator('[data-destination="orkhon-valley"]').click();
+  await expect(page.locator('#destination-detail [data-landscape="orkhon-valley"]')).toBeVisible();
+  await expect(page.locator('#destination-detail')).toContainText(
+    LANDSCAPES['orkhon-valley'].description,
+  );
+  await expect(
+    page.locator('#destination-detail [data-river-kind="braided"] [data-river-channel]'),
+  ).toHaveCount(2);
+  expect(
+    await page
+      .locator('#destination-detail [data-river-channel]')
+      .evaluateAll((paths) => paths.every((path) => !path.getAttribute('d')?.includes('NaN'))),
+  ).toBe(true);
+
   for (const size of [
     { width: 1280, height: 800 },
     { width: 960, height: 600 },
@@ -35,6 +53,7 @@ test('destination threat previews are readable, freeze gameplay and keep the cur
     expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(size.width);
     await page.screenshot({ path: `test-results/area-intel-${size.width}.png` });
   }
+
   await expect(page.locator('#timer')).toHaveText(frozen!);
   expect(
     await page.evaluate(
