@@ -4,7 +4,7 @@ import { openTitle, startExpedition } from './helpers';
 // Browser tests reach ArenaScene members by name through window.__gloam.scene.
 // When code moves out of the scene, each name must keep working through a
 // forwarder, or the specs that use it fail far from the cause. This list is the
-// contract.
+// contract; see docs/arena-scene.md.
 
 /** Live objects and arrays that tests read or change in place; reads return the same object. */
 const LIVE = [

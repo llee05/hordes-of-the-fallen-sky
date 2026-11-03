@@ -201,6 +201,8 @@ import {
 } from '../state/expeditionArchive';
 import type { ExpeditionSave, SaveSlot } from '../../shared/expeditionSave';
 import { createArenaTimers, type ArenaTimers } from './arena/ArenaTimers';
+import type { ArenaContext } from './arena/ArenaContext';
+import { ArenaEffects } from './arena/ArenaEffects';
 import { markExpedition, metricStage, observeExpedition } from '../state/expeditionMetrics';
 import {
   syncFinalStand,
@@ -275,6 +277,9 @@ export class ArenaScene extends Phaser.Scene {
   private controllerMove = new Phaser.Math.Vector2();
   private callbacks?: ArenaCallbacks;
   private readonly timers: ArenaTimers = createArenaTimers();
+  /** The shared world handed to scene systems; every member reads the scene live. */
+  private readonly arena: ArenaContext = this.createArenaContext();
+  private readonly effects = new ArenaEffects(this.arena);
   private hudTimer = 0;
   private cameraZoom: number = GAME.camera.defaultZoom;
   private wheelZoomDelta = 0;
@@ -312,6 +317,62 @@ export class ArenaScene extends Phaser.Scene {
     this.audio.muted = platform.profile.muted;
     this.audio.setMix(normalizeAudioMix(platform.profile.audioMix));
     void this.audio.prepare();
+  }
+
+  private createArenaContext(): ArenaContext {
+    const scene = this;
+    return {
+      scene,
+      get run() {
+        return scene.run;
+      },
+      get timers() {
+        return scene.timers;
+      },
+      get player() {
+        return scene.player;
+      },
+      get camp() {
+        return scene.camp;
+      },
+      get enemies() {
+        return scene.enemies;
+      },
+      get projectiles() {
+        return scene.projectiles;
+      },
+      get hostileShots() {
+        return scene.hostileShots;
+      },
+      get gems() {
+        return scene.gems;
+      },
+      get landscape() {
+        return scene.landscape;
+      },
+      get spatial() {
+        return scene.spatial;
+      },
+      get audio() {
+        return scene.audio;
+      },
+      get visualSettings() {
+        return scene.visualSettings;
+      },
+      get facing() {
+        return scene.facing;
+      },
+      get cameraZoom() {
+        return scene.cameraZoom;
+      },
+      get developerTools() {
+        return scene.developerTools;
+      },
+      get effects() {
+        return scene.effects;
+      },
+      hud: { refresh: () => scene.callbacks?.onHud(scene.snapshot()) },
+    };
   }
 
   connect(callbacks: ArenaCallbacks): void {
@@ -1552,7 +1613,7 @@ export class ArenaScene extends Phaser.Scene {
     this.timers.dashTimer = gallopCooldown(this.run);
     this.timers.invulnerable = Math.max(this.timers.invulnerable, GAME.dash.duration);
     this.audio.play('dash');
-    this.burst(this.player.x, this.player.y, 0xc8df9b, 7);
+    this.effects.burst(this.player.x, this.player.y, 0xc8df9b, 7);
   }
 
   research(id: string, rank: number): void {
@@ -1800,19 +1861,7 @@ export class ArenaScene extends Phaser.Scene {
     this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
     this.dustTimer -= dt;
     if (moving && effectAmount(this.visualSettings) > 0 && this.dustTimer <= 0) {
-      const dust = this.add
-        .image(this.player.x - this.facing.x * 14, this.player.y + 3, 'dust')
-        .setDepth(98 + this.player.y)
-        .setAlpha(this.timers.dashRemaining > 0 ? 0.8 : 0.35)
-        .setScale(0.4);
-      this.tweens.add({
-        targets: dust,
-        alpha: 0,
-        scale: 1.3,
-        x: dust.x - this.facing.x * 15,
-        duration: 700,
-        onComplete: () => dust.destroy(),
-      });
+      this.effects.dust(this.player.x, this.player.y, this.facing.x, this.timers.dashRemaining > 0);
       this.dustTimer = 0.12 / Math.max(0.1, effectAmount(this.visualSettings));
     }
     this.aura.setPosition(this.player.x, this.player.y);
@@ -2417,7 +2466,7 @@ export class ArenaScene extends Phaser.Scene {
         enemy.clanAttackTimer = GAME.camp.enemyAttack.interval;
         const impact = this.campBarrier.hit(this.camp, enemy);
         this.audio.play('barrier', impact);
-        this.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
+        this.effects.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
       }
       if (
         (behavior === 'ranged' || (behavior === 'boss' && !finale)) &&
@@ -2603,7 +2652,7 @@ export class ArenaScene extends Phaser.Scene {
       hostFired ||= released;
       if (released && charged) {
         spendMountedVolley(this.run);
-        this.burst(this.player.x, this.player.y, 0xe3c78c, 5);
+        this.effects.burst(this.player.x, this.player.y, 0xe3c78c, 5);
       }
     }
     if (hostFired) this.run.combat.volleys++;
@@ -2885,7 +2934,7 @@ export class ArenaScene extends Phaser.Scene {
           this.damageClan(shot.damage * 0.5, 'attack', shot.source);
         const impact = this.campBarrier.hit(this.camp, shot);
         this.audio.play('barrier', impact);
-        this.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
+        this.effects.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
         shot.disableBody(true, true);
       }
     }
@@ -3065,7 +3114,7 @@ export class ArenaScene extends Phaser.Scene {
       const spillTarget = this.spatial.nearest(x, y, 220, (e) => e.active && e !== enemy);
       if (spillTarget) this.damageEnemy(spillTarget, spill, 'khan', false);
     }
-    this.burst(x, y, 0xa58aad, 5);
+    this.effects.burst(x, y, 0xa58aad, 5);
     const gem = this.gems.get(x, y, 'gem') as Gem | null;
     if (gem) {
       gem.enableBody(true, x, y, true, true);
@@ -3152,11 +3201,11 @@ export class ArenaScene extends Phaser.Scene {
     this.timers.invulnerable = GAME.invulnerability;
     if (effectAmount(this.visualSettings) > 0) this.cameras.main.shake(90, 0.003);
     this.audio.play(outcome === 'fallen' ? 'fall' : 'hit');
-    this.burst(this.player.x, this.player.y, 0xdd967c, 8);
+    this.effects.burst(this.player.x, this.player.y, 0xdd967c, 8);
     if (outcome === 'revived') {
       this.audio.play('level');
       this.run.clan.message = 'The last ember holds. Your Khan rides again.';
-      this.burst(this.player.x, this.player.y, 0xf1c27b, 12);
+      this.effects.burst(this.player.x, this.player.y, 0xf1c27b, 12);
     } else if (outcome === 'fallen') this.hideFallenKhan();
   }
 
@@ -3216,7 +3265,7 @@ export class ArenaScene extends Phaser.Scene {
     this.timers.invulnerable = GAME.khan.returnProtection;
     this.clearTouch();
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09).setFollowOffset(0, 0);
-    this.burst(x, y, 0xf1c27b, 12);
+    this.effects.burst(x, y, 0xf1c27b, 12);
     this.audio.play('succession');
     this.callbacks?.onHud(this.snapshot());
   }
@@ -3345,28 +3394,6 @@ export class ArenaScene extends Phaser.Scene {
     this.dragOrigin = undefined;
     this.touchMove.set(0, 0);
     this.joystick?.clear();
-  }
-
-  private burst(x: number, y: number, color: number, count: number): void {
-    count = Math.ceil(count * effectAmount(this.visualSettings));
-    // Short-lived feedback only; gameplay actors use bounded pools above.
-    for (let i = 0; i < count; i += 1) {
-      const spark = this.add
-        .image(x, y, 'spark')
-        .setDisplaySize(9, 9)
-        .setTint(color)
-        .setDepth(9600);
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 8 + Math.random() * 20;
-      this.tweens.add({
-        targets: spark,
-        x: x + Math.cos(angle) * distance,
-        y: y + Math.sin(angle) * distance,
-        alpha: 0,
-        duration: 180 + Math.random() * 160,
-        onComplete: () => spark.destroy(),
-      });
-    }
   }
 
   private refreshCamp(): void {
@@ -3747,7 +3774,7 @@ export class ArenaScene extends Phaser.Scene {
           );
       }
       if (hazard.remaining > 0) continue;
-      this.burst(hazard.x, hazard.y, clan.region === 3 ? 0xbf6558 : 0x796d4d, 12);
+      this.effects.burst(hazard.x, hazard.y, clan.region === 3 ? 0xbf6558 : 0x796d4d, 12);
       this.audio.play('thunder', hazard);
       const eruption =
         hazard.source !== 'seer'
@@ -3878,7 +3905,7 @@ export class ArenaScene extends Phaser.Scene {
       this.spatial.forEachNearby(arrowRain.x, arrowRain.y, arrowRain.radius, (enemy) =>
         this.damageEnemy(enemy, arrowRain.damage, 'khan'),
       );
-      this.burst(arrowRain.x, arrowRain.y, 0xe3c78c, 8);
+      this.effects.burst(arrowRain.x, arrowRain.y, 0xe3c78c, 8);
     }
     if (clan.buildings.sanctuary && this.timers.supportTimer <= 0) {
       const anchor = isKhanActive(this.run) ? this.player : this.camp;
@@ -3960,7 +3987,7 @@ export class ArenaScene extends Phaser.Scene {
         campBoundary(this.run).wardRadius,
         (enemy) => this.damageEnemy(enemy, this.run.stats.damage * 1.5),
       );
-      this.burst(this.camp.x, this.camp.y, 0x8acfe2, 8);
+      this.effects.burst(this.camp.x, this.camp.y, 0x8acfe2, 8);
       this.timers.wardTimer = 1.2;
     }
   }
@@ -3999,6 +4026,9 @@ export class ArenaScene extends Phaser.Scene {
 
   // Development test hooks read through window.__gloam.scene; see tests/e2e/scene-hooks.spec.ts.
   // Not private: noUnusedLocals rejects private members that only tests use.
+  burst(x: number, y: number, color: number, count: number): void {
+    this.effects.burst(x, y, color, count);
+  }
   get spawnTimer(): number {
     return this.timers.spawnTimer;
   }
