@@ -258,49 +258,47 @@ test('eruption warnings reward leaving an entered area and ignore stationary pro
   expect(result.until).toBe(result.elapsed + 3);
 });
 
-test('Warm Ashes waits while a defeated enemy leaves damage', async ({ page }) => {
-  for (const attack of ['seer', 'cinder'] as const) {
-    await test.step(attack, async () => {
-      const result = await page.evaluate((attack) => {
-        const s = (window as any).__gloam.scene,
-          r = s.run;
-        r.upgrades = { 'go-warm-ashes': 1 };
-        r.clan.campEffects.bonuses.commanderRecovery = 0;
-        r.health = 50;
-        const point = { x: s.player.x + 500, y: s.player.y };
-        if (attack === 'seer')
-          s.hazards.push({
-            ...point,
-            source: 'seer',
-            remaining: 1,
-            warning: s.add.graphics(),
-            damage: 10,
-          });
-        else
-          s.areaThreats.threats.push({
-            ...point,
-            id: 1,
-            kind: 'cinder',
-            age: 2.1,
-            warning: 2,
-            impacted: true,
-            nextTick: 3,
-            owner: '0:1',
-          });
-        r.clan.stageTime = 63.99;
-        r.encounters.phase = 'elite';
-        s.update(0, 20);
-        const blocked = r.health;
-        for (const hazard of s.hazards) hazard.warning.destroy();
-        s.hazards = [];
-        s.areaThreats.threats = [];
-        s.update(0, 20);
-        return { blocked, clear: r.health };
-      }, attack);
-      expect(result).toEqual({ blocked: 50, clear: 55 });
-    });
-  }
-});
+for (const attack of ['seer', 'cinder'] as const) {
+  test(`Warm Ashes waits while a defeated enemy leaves ${attack} damage`, async ({ page }) => {
+    const result = await page.evaluate((attack) => {
+      const s = (window as any).__gloam.scene,
+        r = s.run;
+      r.upgrades = { 'go-warm-ashes': 1 };
+      r.clan.campEffects.bonuses.commanderRecovery = 0;
+      r.health = 50;
+      const point = { x: s.player.x + 500, y: s.player.y };
+      if (attack === 'seer')
+        s.hazards.push({
+          ...point,
+          source: 'seer',
+          remaining: 1,
+          warning: s.add.graphics(),
+          damage: 10,
+        });
+      else
+        s.areaThreats.threats.push({
+          ...point,
+          id: 1,
+          kind: 'cinder',
+          age: 2.1,
+          warning: 2,
+          impacted: true,
+          nextTick: 3,
+          owner: '0:1',
+        });
+      r.clan.stageTime = 63.99;
+      r.encounters.phase = 'elite';
+      s.update(0, 20);
+      const blocked = r.health;
+      for (const hazard of s.hazards) hazard.warning.destroy();
+      s.hazards = [];
+      s.areaThreats.threats = [];
+      s.update(0, 20);
+      return { blocked, clear: r.health };
+    }, attack);
+    expect(result).toEqual({ blocked: 50, clear: 55 });
+  });
+}
 
 test('Shifting Ridge creates one patch at eruption resolution after a protected crossing', async ({
   page,
@@ -359,97 +357,95 @@ test('Ghost-Fletched arrows inherit one modifier even with Burning Tempest owned
   expect(result.ghosts).toEqual([{ tempest: false, turn: 0, fire: false, pierces: 2 }]);
 });
 
-test('wagon ricochet preserves one arrow and its damage with Burning Tempest and Encircle', async ({
-  page,
-}) => {
-  for (const pierces of [0, 1]) {
-    await test.step(`${pierces} pierces`, async () => {
-      const result = await page.evaluate((pierces) => {
-        const s = (window as any).__gloam.scene,
-          r = s.run;
-        for (let i = 0; i < 20 && s.enemies.countActive(true) < 2; i++) s.spawnEnemy();
-        const targets = s.enemies
+for (const pierces of [0, 1]) {
+  test(`wagon ricochet preserves one arrow and its damage with Burning Tempest and Encircle (${pierces} pierces)`, async ({
+    page,
+  }) => {
+    const result = await page.evaluate((pierces) => {
+      const s = (window as any).__gloam.scene,
+        r = s.run;
+      for (let i = 0; i < 20 && s.enemies.countActive(true) < 2; i++) s.spawnEnemy();
+      const targets = s.enemies
+        .getChildren()
+        .filter((enemy: any) => enemy.active)
+        .slice(0, 2);
+      for (const [i, enemy] of targets.entries()) {
+        enemy.body.reset(s.player.x + 80 + i * 40, s.player.y);
+        enemy.definition = {
+          ...enemy.definition,
+          id: 'test-target',
+          behavior: 'chaser',
+          armor: 1,
+          speed: 0,
+        };
+        enemy.health = enemy.maxHealth = 10000;
+        enemy.pinned = 0;
+      }
+      for (const bolt of s.projectiles.getChildren()) bolt.disableBody(true, true);
+      s.spatial.rebuild(s.enemies.getChildren());
+      r.upgrades = { 'gu-circling-volley': 1 };
+      r.clan.paths.archery = ['fire-arrows'];
+      r.clan.paths.sanctuary = ['wind-shamans'];
+      r.clan.formation = 'encircle';
+      r.clan.momentum = 1;
+      r.patrons.bow.pierce = pierces;
+      r.stats.damage = 20;
+      s.shootVolley(s.player.x, s.player.y, targets[0], 1, 0.6, false, false, 'wagon');
+      const ordinary = s.projectiles.getChildren().filter((bolt: any) => bolt.active);
+      const original = ordinary[0];
+      const initialCount = ordinary.length;
+      const originalDamage = original.damage;
+      for (const bolt of ordinary.slice(1)) bolt.disableBody(true, true);
+      const random = Math.random;
+      try {
+        Math.random = () => 0;
+        s.hitEnemy(original, targets[0]);
+        const ricochets = s.projectiles
           .getChildren()
-          .filter((enemy: any) => enemy.active)
-          .slice(0, 2);
-        for (const [i, enemy] of targets.entries()) {
-          enemy.body.reset(s.player.x + 80 + i * 40, s.player.y);
-          enemy.definition = {
-            ...enemy.definition,
-            id: 'test-target',
-            behavior: 'chaser',
-            armor: 1,
-            speed: 0,
-          };
-          enemy.health = enemy.maxHealth = 10000;
-          enemy.pinned = 0;
-        }
-        for (const bolt of s.projectiles.getChildren()) bolt.disableBody(true, true);
-        s.spatial.rebuild(s.enemies.getChildren());
-        r.upgrades = { 'gu-circling-volley': 1 };
-        r.clan.paths.archery = ['fire-arrows'];
-        r.clan.paths.sanctuary = ['wind-shamans'];
-        r.clan.formation = 'encircle';
-        r.clan.momentum = 1;
-        r.patrons.bow.pierce = pierces;
-        r.stats.damage = 20;
-        s.shootVolley(s.player.x, s.player.y, targets[0], 1, 0.6, false, false, 'wagon');
-        const ordinary = s.projectiles.getChildren().filter((bolt: any) => bolt.active);
-        const original = ordinary[0];
-        const initialCount = ordinary.length;
-        const originalDamage = original.damage;
-        for (const bolt of ordinary.slice(1)) bolt.disableBody(true, true);
-        const random = Math.random;
-        try {
-          Math.random = () => 0;
-          s.hitEnemy(original, targets[0]);
-          const ricochets = s.projectiles
+          .filter((bolt: any) => bolt.active && bolt.source === 'wagon-ricochet');
+        const arrows = ricochets.map((bolt: any) => ({
+          damage: bolt.damage,
+          tempest: bolt.tempest,
+          turn: bolt.turn,
+        }));
+        const ricochet = ricochets[0];
+        const sourceBefore = targets[0].health;
+        ricochet.body.reset(targets[0].body.center.x, targets[0].body.center.y);
+        const sourceOverlap = s.physics.overlap(ricochet, targets[0], s.hitEnemy, undefined, s);
+        const sourceAfter = targets[0].health;
+        const survivesSource = ricochet.active;
+        const before = targets[1].health;
+        ricochet.body.reset(targets[1].body.center.x, targets[1].body.center.y);
+        const nextOverlap = s.physics.overlap(ricochet, targets[1], s.hitEnemy, undefined, s);
+        return {
+          sourceOverlap,
+          sourceBefore,
+          sourceAfter,
+          survivesSource,
+          nextOverlap,
+          initialCount,
+          originalDamage,
+          arrows,
+          dealt: before - targets[1].health,
+          afterHit: s.projectiles
             .getChildren()
-            .filter((bolt: any) => bolt.active && bolt.source === 'wagon-ricochet');
-          const arrows = ricochets.map((bolt: any) => ({
-            damage: bolt.damage,
-            tempest: bolt.tempest,
-            turn: bolt.turn,
-          }));
-          const ricochet = ricochets[0];
-          const sourceBefore = targets[0].health;
-          ricochet.body.reset(targets[0].body.center.x, targets[0].body.center.y);
-          const sourceOverlap = s.physics.overlap(ricochet, targets[0], s.hitEnemy, undefined, s);
-          const sourceAfter = targets[0].health;
-          const survivesSource = ricochet.active;
-          const before = targets[1].health;
-          ricochet.body.reset(targets[1].body.center.x, targets[1].body.center.y);
-          const nextOverlap = s.physics.overlap(ricochet, targets[1], s.hitEnemy, undefined, s);
-          return {
-            sourceOverlap,
-            sourceBefore,
-            sourceAfter,
-            survivesSource,
-            nextOverlap,
-            initialCount,
-            originalDamage,
-            arrows,
-            dealt: before - targets[1].health,
-            afterHit: s.projectiles
-              .getChildren()
-              .filter((bolt: any) => bolt.active && bolt.source === 'wagon-ricochet').length,
-          };
-        } finally {
-          Math.random = random;
-        }
-      }, pierces);
-      expect(result.sourceOverlap).toBe(true);
-      expect(result.sourceAfter).toBe(result.sourceBefore);
-      expect(result.survivesSource).toBe(true);
-      expect(result.nextOverlap).toBe(true);
-      expect(result.initialCount).toBe(3);
-      expect(result.originalDamage).toBeCloseTo(20 * 0.6 * 1.3);
-      expect(result.arrows).toEqual([{ damage: result.originalDamage, tempest: false, turn: 0 }]);
-      expect(result.dealt).toBeCloseTo(result.originalDamage);
-      expect(result.afterHit).toBe(pierces);
-    });
-  }
-});
+            .filter((bolt: any) => bolt.active && bolt.source === 'wagon-ricochet').length,
+        };
+      } finally {
+        Math.random = random;
+      }
+    }, pierces);
+    expect(result.sourceOverlap).toBe(true);
+    expect(result.sourceAfter).toBe(result.sourceBefore);
+    expect(result.survivesSource).toBe(true);
+    expect(result.nextOverlap).toBe(true);
+    expect(result.initialCount).toBe(3);
+    expect(result.originalDamage).toBeCloseTo(20 * 0.6 * 1.3);
+    expect(result.arrows).toEqual([{ damage: result.originalDamage, tempest: false, turn: 0 }]);
+    expect(result.dealt).toBeCloseTo(result.originalDamage);
+    expect(result.afterHit).toBe(pierces);
+  });
+}
 
 test('Arrow Platforms inherit Iron-Rimmed Wagons guard range and migration damage', async ({
   page,
@@ -526,135 +522,124 @@ test('a rider finisher cannot create Hounds momentum for a stationary Khan', asy
   expect(result).toEqual({ defeated: true, momentum: 0, hold: 0 });
 });
 
-test('full projectile pools preserve release events', async ({ page }) => {
-  for (const count of [1, 2]) {
-    await test.step(`${count} Khan arrows`, async () => {
-      const result = await page.evaluate((count) => {
-        const s = (window as any).__gloam.scene,
-          r = s.run;
-        for (let i = 0; i < 20 && !s.enemies.countActive(true); i++) s.spawnEnemy();
-        const enemy = s.enemies.getFirstAlive();
-        enemy.setPosition(s.player.x + 100, s.player.y);
-        enemy.health = enemy.maxHealth = 10000;
-        s.spatial.rebuild([enemy]);
-        r.upgrades = {
-          'km-arrow-rain': 1,
-          'km-one-arrow-one-fate': 1,
-          'km-sky-darkener': 1,
-          'on-ancestral-archers': 1,
-          'hy-ghost-fletched-arrows': 1,
-          'gu-arrow-platforms': 1,
-          'hy-thousand-arrows': 1,
-          haste: 1,
-        };
-        r.clan.paths.archery = [];
-        r.clan.paths.sanctuary = [];
-        r.clan.momentum = 0;
-        r.stats.damage = 20;
-        r.patrons.ancestors.count = 1;
-        r.clan.buildings.wagon = 1;
-        r.researchRuntime = {
-          khanVolleyCount: 5,
-          precisionVolleyCount: 3,
-          wideVolleyCount: 4,
-          riderVolleyCounts: [3],
-          riderFireAt: [0],
-          echoAttacks: [3],
-          ghostAttacks: [4],
-          echoFireAt: [0],
-        };
-        for (let i = 0; i < 250; i++) {
-          const bolt = s.projectiles.get(s.player.x, s.player.y, 'bolt');
-          if (!bolt) break;
-          bolt.enableBody(true, s.player.x, s.player.y, true, true);
-        }
-        const pool = s.projectiles.countActive(true);
-        const before = structuredClone(r.researchRuntime);
-        const failed = s.shootVolley(s.player.x, s.player.y, enemy, count, 1, false, false, 'khan');
-        s.fireRiders();
-        const echoes = () =>
-          s.patronSupport.update(r, 0.016, s.player, s.camp, s.spatial, {
-            damage: () => {},
-            volley: (
-              x: number,
-              y: number,
-              target: any,
-              damage: number,
-              index: number,
-              ghost?: boolean,
-            ) => s.shootVolley(x, y, target, 1, damage, true, false, 'rider', index, ghost),
-          });
-        echoes();
-        s.wagonTimer = s.supportTimer = s.wardTimer = 999;
-        s.updateSupport(0);
-        const after = Object.fromEntries(
-          Object.keys(before).map((key) => [key, structuredClone(r.researchRuntime[key])]),
-        );
-        const rainBefore = r.researchRuntime.arrowRainAt ?? null;
-        const platformBefore = r.researchRuntime.arrowPlatformAt ?? null;
-        const freeOne = () => {
-          const bolt = s.projectiles.getFirstAlive();
-          bolt.disableBody(true, true);
-          return bolt;
-        };
-        const reserved = freeOne();
-        const released = s.shootVolley(
-          s.player.x,
-          s.player.y,
-          enemy,
-          count,
-          1,
-          false,
-          false,
-          'khan',
-        );
-        const volley = {
-          damage: reserved.damage,
-          count: r.researchRuntime.khanVolleyCount,
-          precision: r.researchRuntime.precisionVolleyCount,
-          wide: r.researchRuntime.wideVolleyCount,
-          rain: r.researchRuntime.arrowRainAt ?? null,
-        };
-        freeOne();
-        s.fireRiders();
-        const rider = r.researchRuntime.riderVolleyCounts[0];
-        const riderAt = r.researchRuntime.riderFireAt[0];
-        freeOne();
-        echoes();
-        return {
-          pool,
-          before,
-          after,
-          failed,
-          released,
-          rainBefore,
-          platformBefore,
-          volley,
-          rider,
-          riderAt,
-          echo: r.researchRuntime.echoAttacks[0],
-          ghost: r.researchRuntime.ghostAttacks[0],
-          echoAt: r.researchRuntime.echoFireAt[0],
-          echoReleases: r.researchRuntime.echoReleases,
-        };
-      }, count);
-      expect(result.pool).toBe(250);
-      expect(result.failed).toBe(false);
-      expect(result.after).toEqual(result.before);
-      expect(result.rainBefore).toBeNull();
-      expect(result.platformBefore).toBeNull();
-      expect(result.released).toBe(true);
-      expect(result.volley.damage).toBeCloseTo(20 * 0.4 * (count === 1 ? 2.4 : 1));
-      expect(result.volley.count).toBe(6);
-      expect(result.volley.precision).toBe(count === 1 ? 4 : 3);
-      expect(result.volley.wide).toBe(count === 2 ? 5 : 4);
-      expect(result.volley.rain === null).toBe(count === 1);
-      expect(result.rider).toBe(4);
-      expect(result.riderAt).toBeGreaterThan(0);
-      expect(result.echo).toBe(4);
-      expect(result.ghost).toBe(5);
-      expect(result.echoAt).toBeGreaterThan(0);
-      expect(result.echoReleases).toBe(1);
-    });
-  }
-});
+for (const count of [1, 2]) {
+  test(`full projectile pools preserve release events (${count} Khan arrows)`, async ({ page }) => {
+    const result = await page.evaluate((count) => {
+      const s = (window as any).__gloam.scene,
+        r = s.run;
+      for (let i = 0; i < 20 && !s.enemies.countActive(true); i++) s.spawnEnemy();
+      const enemy = s.enemies.getFirstAlive();
+      enemy.setPosition(s.player.x + 100, s.player.y);
+      enemy.health = enemy.maxHealth = 10000;
+      s.spatial.rebuild([enemy]);
+      r.upgrades = {
+        'km-arrow-rain': 1,
+        'km-one-arrow-one-fate': 1,
+        'km-sky-darkener': 1,
+        'on-ancestral-archers': 1,
+        'hy-ghost-fletched-arrows': 1,
+        'gu-arrow-platforms': 1,
+        'hy-thousand-arrows': 1,
+        haste: 1,
+      };
+      r.clan.paths.archery = [];
+      r.clan.paths.sanctuary = [];
+      r.clan.momentum = 0;
+      r.stats.damage = 20;
+      r.patrons.ancestors.count = 1;
+      r.clan.buildings.wagon = 1;
+      r.researchRuntime = {
+        khanVolleyCount: 5,
+        precisionVolleyCount: 3,
+        wideVolleyCount: 4,
+        riderVolleyCounts: [3],
+        riderFireAt: [0],
+        echoAttacks: [3],
+        ghostAttacks: [4],
+        echoFireAt: [0],
+      };
+      for (let i = 0; i < 250; i++) {
+        const bolt = s.projectiles.get(s.player.x, s.player.y, 'bolt');
+        if (!bolt) break;
+        bolt.enableBody(true, s.player.x, s.player.y, true, true);
+      }
+      const pool = s.projectiles.countActive(true);
+      const before = structuredClone(r.researchRuntime);
+      const failed = s.shootVolley(s.player.x, s.player.y, enemy, count, 1, false, false, 'khan');
+      s.fireRiders();
+      const echoes = () =>
+        s.patronSupport.update(r, 0.016, s.player, s.camp, s.spatial, {
+          damage: () => {},
+          volley: (
+            x: number,
+            y: number,
+            target: any,
+            damage: number,
+            index: number,
+            ghost?: boolean,
+          ) => s.shootVolley(x, y, target, 1, damage, true, false, 'rider', index, ghost),
+        });
+      echoes();
+      s.wagonTimer = s.supportTimer = s.wardTimer = 999;
+      s.updateSupport(0);
+      const after = Object.fromEntries(
+        Object.keys(before).map((key) => [key, structuredClone(r.researchRuntime[key])]),
+      );
+      const rainBefore = r.researchRuntime.arrowRainAt ?? null;
+      const platformBefore = r.researchRuntime.arrowPlatformAt ?? null;
+      const freeOne = () => {
+        const bolt = s.projectiles.getFirstAlive();
+        bolt.disableBody(true, true);
+        return bolt;
+      };
+      const reserved = freeOne();
+      const released = s.shootVolley(s.player.x, s.player.y, enemy, count, 1, false, false, 'khan');
+      const volley = {
+        damage: reserved.damage,
+        count: r.researchRuntime.khanVolleyCount,
+        precision: r.researchRuntime.precisionVolleyCount,
+        wide: r.researchRuntime.wideVolleyCount,
+        rain: r.researchRuntime.arrowRainAt ?? null,
+      };
+      freeOne();
+      s.fireRiders();
+      const rider = r.researchRuntime.riderVolleyCounts[0];
+      const riderAt = r.researchRuntime.riderFireAt[0];
+      freeOne();
+      echoes();
+      return {
+        pool,
+        before,
+        after,
+        failed,
+        released,
+        rainBefore,
+        platformBefore,
+        volley,
+        rider,
+        riderAt,
+        echo: r.researchRuntime.echoAttacks[0],
+        ghost: r.researchRuntime.ghostAttacks[0],
+        echoAt: r.researchRuntime.echoFireAt[0],
+        echoReleases: r.researchRuntime.echoReleases,
+      };
+    }, count);
+    expect(result.pool).toBe(250);
+    expect(result.failed).toBe(false);
+    expect(result.after).toEqual(result.before);
+    expect(result.rainBefore).toBeNull();
+    expect(result.platformBefore).toBeNull();
+    expect(result.released).toBe(true);
+    expect(result.volley.damage).toBeCloseTo(20 * 0.4 * (count === 1 ? 2.4 : 1));
+    expect(result.volley.count).toBe(6);
+    expect(result.volley.precision).toBe(count === 1 ? 4 : 3);
+    expect(result.volley.wide).toBe(count === 2 ? 5 : 4);
+    expect(result.volley.rain === null).toBe(count === 1);
+    expect(result.rider).toBe(4);
+    expect(result.riderAt).toBeGreaterThan(0);
+    expect(result.echo).toBe(4);
+    expect(result.ghost).toBe(5);
+    expect(result.echoAt).toBeGreaterThan(0);
+    expect(result.echoReleases).toBe(1);
+  });
+}
