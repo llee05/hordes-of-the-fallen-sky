@@ -4,7 +4,6 @@ import {
   closeOverlayOrPause,
   expectFrozen,
   openTitle,
-  sceneFrames,
   selectCampBuilding,
   startExpedition,
 } from './helpers';
@@ -72,7 +71,7 @@ test('migration moves a vulnerable caravan, preserves the build and awards survi
   await expect(page.locator('#build')).toBeDisabled();
   await expect(page.locator('#population')).toHaveText('8');
   const initialCamp = await page.evaluate(() => (window as any).__gloam.scene.camp.x);
-  await sceneFrames(page, 10);
+  await page.waitForTimeout(250);
   expect(await page.evaluate(() => (window as any).__gloam.scene.camp.x)).toBeGreaterThan(
     initialCamp,
   );
