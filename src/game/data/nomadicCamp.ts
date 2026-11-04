@@ -345,7 +345,7 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'storytellers-hearth',
     "Storyteller's Hearth",
     'Spiritual & cultural',
-    'Oral histories preserve knowledge, improving experience and technology progression while lore discoveries await future integration.',
+    'Oral histories preserve knowledge, improving experience and Spirit gain while lore discoveries await future integration.',
     'journal',
     repeat({
       ongoing: { multipliers: { spiritGain: C.production } },
