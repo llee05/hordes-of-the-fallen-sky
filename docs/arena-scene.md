@@ -5,7 +5,7 @@ the order of each simulation step, the public API that `GameUI` calls, and every
 phase transition. Focused scene systems in `src/game/scenes/arena/` hold the rest. Rules
 stay in renderer-independent `state/` modules; scene systems only drive Phaser objects and
 call those rules. The split is in progress: the combat core has moved, while area threats, hazards, camp
-defences, the encounter directors and character animation still live in the scene.
+defences, the encounter directors and enemy animation still live in the scene.
 
 ## Modules
 
@@ -34,16 +34,17 @@ controller would forget held buttons, so a held confirm or back would fire again
 load, and a new `ActionKeys` would lose the dedupe for key events Phaser replays. The scene
 removes all keyboard listeners on shutdown and `bind` adds them again.
 
+`ArenaPersistence` also survives a restart: it keeps the pending write and the save generation.
+`reset` increments the generation, dropping saves that have not started and preventing
+completion handlers for in-flight saves from updating the new session. A platform write
+already in flight can still finish.
+
 ## Enemy pool identity
 
 The enemy pool's slot order is part of a save's identity. Projectile hit records, area-threat
 owners (`slot:spawnId`) and tactical slots all name enemies by pool slot, and each slot keeps a
 generation (`spawnId`) that grows on every spawn. `EnemyDirector.restorePool` recreates every
 saved slot in order, active or not, so restore must rebuild the pool before projectiles.
-`ArenaPersistence` also survives a restart: it keeps the pending write and the save generation.
-`reset` increments the generation, dropping saves that have not started and preventing
-completion handlers for in-flight saves from updating the new session. A platform write
-already in flight can still finish.
 
 ## Shared context
 
