@@ -1,3 +1,4 @@
+import { GAME } from '../../src/game/config';
 import { expect, test, type Page } from '@playwright/test';
 import { closeOverlayOrPause, expectFrozen, openTitle, startExpedition } from './helpers';
 
@@ -38,6 +39,7 @@ async function siegeState(page: Page) {
       x: enemy.x,
       y: enemy.y,
       distance: Math.hypot(enemy.x - scene.camp.x, enemy.y - scene.camp.y),
+      radius: scene.campBarrier.radius,
       speed: enemy.body.velocity.length(),
       cooldown: enemy.clanAttackTimer,
       frame: enemy.frame.name,
@@ -83,8 +85,8 @@ test(
       spirit: 0,
       gems: 0,
     });
-    expect(first.distance).toBeGreaterThan(110);
-    expect(first.distance).toBeLessThanOrEqual(120);
+    expect(first.distance).toBeGreaterThan(first.radius - 1);
+    expect(first.distance).toBeLessThanOrEqual(first.radius + GAME.camp.barrier.attackReach);
     await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       const enemy = (window as any).campAttacker;
