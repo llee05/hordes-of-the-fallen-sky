@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "test:local": "node scripts/local-tests.mjs local",
     "test:e2e": "node scripts/local-tests.mjs e2e",
+    "test:e2e:core": "node scripts/local-tests.mjs core",
     "test:e2e:changed": "node scripts/local-tests.mjs review",
     "test:pages": "playwright test --config playwright.pages.config.ts",
     "format": "prettier --write .",

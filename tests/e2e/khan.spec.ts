@@ -33,98 +33,100 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test('the clan fights on while choosing a new Khan, who returns protected at camp', async ({
-  page,
-}) => {
-  await expect(page.locator('.health-heading').first()).toContainText('THE KHAN');
-  await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.player.setPosition(scene.camp.x + 600, scene.camp.y);
-    scene.run.upgrades.power = 1;
-    scene.run.stats.damage = 20;
-    scene.run.pendingUpgrades = 3;
-    for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
-    const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);
-    enemy.setPosition(scene.camp.x + 60, scene.camp.y);
-    enemy.health = enemy.maxHealth = 10000;
-    enemy.definition = { ...enemy.definition, speed: 0 };
-  });
-  await fall(page);
-  await expect(page.locator('#dash')).toBeDisabled();
-  const waiting = await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    return {
-      phase: scene.run.phase,
-      active: scene.player.active,
-      body: scene.player.body.enable,
-      visible: scene.player.visible,
-      shadow: scene.shadow.visible,
-      health: scene.run.health,
-      remaining: scene.run.khan.successionRemaining,
-      elapsed: scene.run.elapsed,
-    };
-  });
-  expect(waiting).toMatchObject({
-    phase: 'playing',
-    active: false,
-    body: false,
-    visible: false,
-    shadow: false,
-    health: 0,
-  });
-  expect(waiting.remaining).toBeGreaterThan(9);
-  await page.keyboard.down('d');
-  await page.keyboard.press('Space');
-  await expect
-    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.integrity))
-    .toBeLessThan(100);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.momentum)).toBe(0);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.dashRemaining)).toBe(0);
-  await page.keyboard.up('d');
-  for (const viewport of [
-    { width: 1440, height: 1000 },
-    { width: 1280, height: 800 },
-    { width: 390, height: 844 },
-  ]) {
-    await page.setViewportSize(viewport);
-    const progress = (await page.locator('.tradition-hud').boundingBox())!;
-    const vitals = (await page.locator('.vitals-hud').boundingBox())!;
-    expect(progress.y).toBeGreaterThanOrEqual(0);
-    expect(progress.y + progress.height).toBeLessThanOrEqual(vitals.y);
-  }
-  await page.screenshot({ path: 'test-results/mobile-khan-succession.png' });
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.screenshot({ path: 'test-results/choosing-new-khan.png' });
-  await chooseSoon(page, 2);
-  const chosen = await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.takeDamage(1000); // The new Khan's entry protection prevents an immediate repeat death.
-    return {
-      active: scene.player.active,
-      body: scene.player.body.enable,
-      health: scene.run.health,
-      x: scene.player.x - scene.camp.x,
-      y: scene.player.y - scene.camp.y,
-      protection: scene.invulnerable,
-      points: scene.run.pendingUpgrades,
-      damage: scene.run.stats.damage,
-      learned: scene.run.upgrades.power,
-    };
-  });
-  expect(chosen).toMatchObject({
-    active: true,
-    body: true,
-    health: 100,
-    points: 3,
-    damage: 20,
-    learned: 1,
-  });
-  expect(Math.abs(chosen.x)).toBeLessThan(3);
-  expect(chosen.y).toBeCloseTo(90, 0);
-  expect(chosen.protection).toBeGreaterThan(2);
-  await expect(page.locator('#khan-title')).toHaveText('THE KHAN · 2');
-  await expect(page.locator('#dash')).toBeEnabled();
-});
+test(
+  'the clan fights on while choosing a new Khan, who returns protected at camp',
+  { tag: '@core' },
+  async ({ page }) => {
+    await expect(page.locator('.health-heading').first()).toContainText('THE KHAN');
+    await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      scene.player.setPosition(scene.camp.x + 600, scene.camp.y);
+      scene.run.upgrades.power = 1;
+      scene.run.stats.damage = 20;
+      scene.run.pendingUpgrades = 3;
+      for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
+      const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);
+      enemy.setPosition(scene.camp.x + 60, scene.camp.y);
+      enemy.health = enemy.maxHealth = 10000;
+      enemy.definition = { ...enemy.definition, speed: 0 };
+    });
+    await fall(page);
+    await expect(page.locator('#dash')).toBeDisabled();
+    const waiting = await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      return {
+        phase: scene.run.phase,
+        active: scene.player.active,
+        body: scene.player.body.enable,
+        visible: scene.player.visible,
+        shadow: scene.shadow.visible,
+        health: scene.run.health,
+        remaining: scene.run.khan.successionRemaining,
+        elapsed: scene.run.elapsed,
+      };
+    });
+    expect(waiting).toMatchObject({
+      phase: 'playing',
+      active: false,
+      body: false,
+      visible: false,
+      shadow: false,
+      health: 0,
+    });
+    expect(waiting.remaining).toBeGreaterThan(9);
+    await page.keyboard.down('d');
+    await page.keyboard.press('Space');
+    await expect
+      .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.integrity))
+      .toBeLessThan(100);
+    expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.momentum)).toBe(0);
+    expect(await page.evaluate(() => (window as any).__gloam.scene.dashRemaining)).toBe(0);
+    await page.keyboard.up('d');
+    for (const viewport of [
+      { width: 1440, height: 1000 },
+      { width: 1280, height: 800 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      const progress = (await page.locator('.tradition-hud').boundingBox())!;
+      const vitals = (await page.locator('.vitals-hud').boundingBox())!;
+      expect(progress.y).toBeGreaterThanOrEqual(0);
+      expect(progress.y + progress.height).toBeLessThanOrEqual(vitals.y);
+    }
+    await page.screenshot({ path: 'test-results/mobile-khan-succession.png' });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.screenshot({ path: 'test-results/choosing-new-khan.png' });
+    await chooseSoon(page, 2);
+    const chosen = await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      scene.takeDamage(1000); // The new Khan's entry protection prevents an immediate repeat death.
+      return {
+        active: scene.player.active,
+        body: scene.player.body.enable,
+        health: scene.run.health,
+        x: scene.player.x - scene.camp.x,
+        y: scene.player.y - scene.camp.y,
+        protection: scene.invulnerable,
+        points: scene.run.pendingUpgrades,
+        damage: scene.run.stats.damage,
+        learned: scene.run.upgrades.power,
+      };
+    });
+    expect(chosen).toMatchObject({
+      active: true,
+      body: true,
+      health: 100,
+      points: 3,
+      damage: 20,
+      learned: 1,
+    });
+    expect(Math.abs(chosen.x)).toBeLessThan(3);
+    expect(chosen.y).toBeCloseTo(90, 0);
+    expect(chosen.protection).toBeGreaterThan(2);
+    await expect(page.locator('#khan-title')).toHaveText('THE KHAN · 2');
+    await expect(page.locator('#dash')).toBeEnabled();
+  },
+);
 
 test('pause and research freeze succession, and healing research cannot bypass the delay', async ({
   page,

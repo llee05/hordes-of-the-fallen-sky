@@ -44,51 +44,55 @@ test('piercing arrows hit each pooled incarnation once and clear their history o
   });
 });
 
-test('ancestor riders attack, animate, and freeze their poses and positions in the tech tree', async ({
-  page,
-}) => {
-  await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.run.patrons.ancestors.count = 3;
-    for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
-    const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);
-    enemy.health = enemy.maxHealth = 10000;
-    enemy.definition = { ...enemy.definition, speed: 0 };
-    enemy.setPosition(scene.player.x + 230, scene.player.y);
-  });
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          (window as any).__gloam.scene.patronSupport.spirits.filter(
-            (spirit: any) => spirit.image.visible,
-          ).length,
-      ),
-    )
-    .toBe(3);
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          (window as any).__gloam.scene.enemies.getChildren().find((enemy: any) => enemy.active)
-            .health,
-      ),
-    )
-    .toBeLessThan(10000);
-  await page.keyboard.press('t');
-  const snapshot = () =>
-    page.evaluate(() =>
-      (window as any).__gloam.scene.patronSupport.spirits.map((spirit: any) => ({
-        x: spirit.image.x,
-        y: spirit.image.y,
-        frame: spirit.image.frame.name,
-      })),
-    );
-  const before = await expectFrozen(page, snapshot, 16);
-  await page.keyboard.press('Escape');
-  await expect.poll(async () => JSON.stringify(await snapshot())).not.toBe(JSON.stringify(before));
-  await page.screenshot({ path: 'test-results/ancestor-riders.png' });
-});
+test(
+  'ancestor riders attack, animate, and freeze their poses and positions in the tech tree',
+  { tag: '@core' },
+  async ({ page }) => {
+    await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      scene.run.patrons.ancestors.count = 3;
+      for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
+      const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);
+      enemy.health = enemy.maxHealth = 10000;
+      enemy.definition = { ...enemy.definition, speed: 0 };
+      enemy.setPosition(scene.player.x + 230, scene.player.y);
+    });
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (window as any).__gloam.scene.patronSupport.spirits.filter(
+              (spirit: any) => spirit.image.visible,
+            ).length,
+        ),
+      )
+      .toBe(3);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (window as any).__gloam.scene.enemies.getChildren().find((enemy: any) => enemy.active)
+              .health,
+        ),
+      )
+      .toBeLessThan(10000);
+    await page.keyboard.press('t');
+    const snapshot = () =>
+      page.evaluate(() =>
+        (window as any).__gloam.scene.patronSupport.spirits.map((spirit: any) => ({
+          x: spirit.image.x,
+          y: spirit.image.y,
+          frame: spirit.image.frame.name,
+        })),
+      );
+    const before = await expectFrozen(page, snapshot, 16);
+    await page.keyboard.press('Escape');
+    await expect
+      .poll(async () => JSON.stringify(await snapshot()))
+      .not.toBe(JSON.stringify(before));
+    await page.screenshot({ path: 'test-results/ancestor-riders.png' });
+  },
+);
 
 test('water fields slow enemies and extend eruption warnings while reducing eruption damage', async ({
   page,

@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { needsFullSuite, selectedTests, smokeTests } from '../../scripts/e2e-review.mjs';
+import { areaSpecs, needsFullSuite, selectedTests, smokeTests } from '../../scripts/e2e-review.mjs';
 
 describe('browser review selection', () => {
   it.each([
-    'src/game/state/clan.ts',
-    'src/tapestry.css',
-    'src/story.md',
-    'public/credits.md',
     'public/art/steppe.png',
+    'src/game/scenes/ArenaScene.ts',
+    'src/game/terrain/MountainTerrain.ts',
+    'src/game/world3d/World3DRenderer.ts',
+    'src/shared/expeditionSave.ts',
+    'src/platform/GamePlatform.ts',
+    'src/game/systems/GamepadInput.ts',
     'playwright.config.ts',
     'playwright.graphics.ts',
     'tests/support/checkGraphics.ts',
@@ -16,13 +18,20 @@ describe('browser review selection', () => {
     'scripts/e2e-review.mjs',
     'index.html',
     'new-unknown-file.ts',
-  ])('keeps the full suite for application/config/unknown changes: %s', (file) => {
-    expect(needsFullSuite([file])).toBe(true);
-  });
+  ])(
+    'keeps the full suite for art, terrain, renderer, save, input, split, and config changes: %s',
+    (file) => {
+      expect(needsFullSuite([file])).toBe(true);
+    },
+  );
 
-  it('allows docs, native-only changes, and browser test edits through the import selector', () => {
+  it('routes modular application code and safe documentation/test changes through the fast core + area review path', () => {
     expect(
       needsFullSuite([
+        'src/game/state/clan.ts',
+        'src/tapestry.css',
+        'src/story.md',
+        'public/credits.md',
         'README.md',
         'docs/final-stand.md',
         'desktop/main.ts',
@@ -31,7 +40,14 @@ describe('browser review selection', () => {
         'tests/e2e/helpers.ts',
       ]),
     ).toBe(false);
-    expect(needsFullSuite(['README.md', 'src/main.ts'])).toBe(true);
+    expect(needsFullSuite(['README.md', 'src/game/scenes/ArenaScene.ts'])).toBe(true);
+  });
+
+  it('maps touched application areas to targeted e2e specs', () => {
+    expect(areaSpecs(['src/game/state/clan.ts'])).toContain('tests/e2e/clan-safety.spec.ts');
+    expect(areaSpecs(['src/game/state/research.ts'])).toContain('tests/e2e/research.spec.ts');
+    expect(areaSpecs(['src/game/audio/assets.ts'])).toEqual(['tests/e2e/audio.spec.ts']);
+    expect(areaSpecs(['tests/e2e/zoom.spec.ts'])).toEqual(['tests/e2e/zoom.spec.ts']);
   });
 
   it('retains full coverage when a source file moves into a documentation path', () => {

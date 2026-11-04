@@ -7,47 +7,54 @@ import {
   closeOverlayOrPause,
 } from './helpers';
 
-test('camp construction previews real resources, worker reservation and headquarters prerequisites', async ({
-  page,
-}) => {
-  await openTitle(page);
-  await startExpedition(page);
-  await page.evaluate(() => {
-    const s = (window as any).__gloam.scene;
-    s.run.clan.materials = 500;
-    s.run.clan.spirit = 0;
-    s.run.clan.population = 1;
-  });
-  await page.keyboard.press('b');
-  await expect(page.locator('.camp-map-cores button')).toHaveCount(5);
-  await expect(page.locator('[data-camp-slot]')).toHaveCount(5);
-  await selectCampBuilding(page, 'sacred-ovoo');
-  await expect(page.locator('.node-price')).toContainText('8 Spirit');
-  await expect(page.locator('.tree-purchase')).toBeDisabled();
-  await selectCampBuilding(page, 'archery-range');
-  const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await expect(page.locator('.node-price')).toContainText('24 materials');
-  await expect(page.locator('.camp-gains')).toContainText('Shared attack damage');
-  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
-  await buyNomadicLevel(page, 'archery-range');
-  await expect(page.locator('.node-purchase-status')).toContainText("Khan's Ger level 2");
-  await selectCampBuilding(page, 'smiths-forge');
-  await expect(page.locator('.node-purchase-status')).toContainText('More families needed');
-  await expect(page.locator('.tree-purchase')).toBeDisabled();
-  await closeOverlayOrPause(page);
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.clan.population = 8;
-  });
-  await page.keyboard.press('b');
-  await buyNomadicLevel(page, 'archery-range', 3);
-  await expect(page.locator('[data-camp-site="archery-range"]')).toHaveAttribute('data-level', '3');
-  await expect(page.locator('.tree-purchase')).toBeDisabled();
-  const completed = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await page.evaluate(() => (window as any).__gloam.scene.improveNomadicCamp('archery-range'));
-  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(
-    completed,
-  );
-});
+test(
+  'camp construction previews real resources, worker reservation and headquarters prerequisites',
+  { tag: '@core' },
+  async ({ page }) => {
+    await openTitle(page);
+    await startExpedition(page);
+    await page.evaluate(() => {
+      const s = (window as any).__gloam.scene;
+      s.run.clan.materials = 500;
+      s.run.clan.spirit = 0;
+      s.run.clan.population = 1;
+    });
+    await page.keyboard.press('b');
+    await expect(page.locator('.camp-map-cores button')).toHaveCount(5);
+    await expect(page.locator('[data-camp-slot]')).toHaveCount(5);
+    await selectCampBuilding(page, 'sacred-ovoo');
+    await expect(page.locator('.node-price')).toContainText('8 Spirit');
+    await expect(page.locator('.tree-purchase')).toBeDisabled();
+    await selectCampBuilding(page, 'archery-range');
+    const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
+    await expect(page.locator('.node-price')).toContainText('24 materials');
+    await expect(page.locator('.camp-gains')).toContainText('Shared attack damage');
+    expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(
+      before,
+    );
+    await buyNomadicLevel(page, 'archery-range');
+    await expect(page.locator('.node-purchase-status')).toContainText("Khan's Ger level 2");
+    await selectCampBuilding(page, 'smiths-forge');
+    await expect(page.locator('.node-purchase-status')).toContainText('More families needed');
+    await expect(page.locator('.tree-purchase')).toBeDisabled();
+    await closeOverlayOrPause(page);
+    await page.evaluate(() => {
+      (window as any).__gloam.scene.run.clan.population = 8;
+    });
+    await page.keyboard.press('b');
+    await buyNomadicLevel(page, 'archery-range', 3);
+    await expect(page.locator('[data-camp-site="archery-range"]')).toHaveAttribute(
+      'data-level',
+      '3',
+    );
+    await expect(page.locator('.tree-purchase')).toBeDisabled();
+    const completed = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
+    await page.evaluate(() => (window as any).__gloam.scene.improveNomadicCamp('archery-range'));
+    expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(
+      completed,
+    );
+  },
+);
 
 test('authored building effects and cost changes flow through the inspector and real purchase', async ({
   page,

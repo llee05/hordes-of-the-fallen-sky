@@ -1,130 +1,132 @@
 import { expect, test } from '@playwright/test';
 import { closeOverlayOrPause, expectFrozen, sceneFrames, tapController } from './helpers';
 
-test('intro reads at the player’s pace with frozen simulation, back, completion, and a fresh expedition', async ({
-  page,
-}) => {
-  // Five full-page paintings plus two expeditions exceed 30s on CI's software renderer.
-  test.setTimeout(process.env.CI ? 90000 : 60000);
-  const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
-  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused();
-  await expect(page.locator('.intro-story')).toHaveCount(0);
-  expect(
-    await expectFrozen(
-      page,
-      () =>
-        page.evaluate(() => {
-          const scene = (window as any).__gloam.scene;
-          return {
-            phase: scene.run.phase,
-            elapsed: scene.run.elapsed,
-            paused: scene.physics.world.isPaused,
-          };
-        }),
-      19,
-    ),
-  ).toEqual({ phase: 'ready', elapsed: 0, paused: true });
-  await page.getByRole('button', { name: /NEW GAME/ }).click();
-  await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
-  await expect(page.locator('#intro-caption')).toContainText('Tengri, Eternal Heaven');
-  await expect(page.locator('#intro-caption')).toContainText('Etügen, Mother Earth');
-  await expect(page.locator('.intro-pages')).toHaveAttribute('aria-label', 'Chapter 1 of 5');
-  await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
-  await expect(page.getByRole('button', { name: '← Back' })).toBeDisabled();
-  await expect(page.locator('#game-hud')).toHaveAttribute('inert', '');
-  await expect(page.locator('#menu-record')).toBeHidden();
-  await expect
-    .poll(() =>
-      page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth),
-    )
-    .toBe(1536);
-  const before = await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.startRun(); // Cannot bypass the intro's paused phase.
-    return {
-      elapsed: scene.run.elapsed,
-      food: scene.run.clan.food,
-      x: scene.player.x,
-      frame: scene.player.frame.name,
-    };
-  });
-  await page.keyboard.press('b');
-  await page.keyboard.press('m');
-  await page.keyboard.press('j');
-  expect(
-    await expectFrozen(
-      page,
-      () =>
-        page.evaluate(() => {
-          const scene = (window as any).__gloam.scene;
-          return {
-            elapsed: scene.run.elapsed,
-            food: scene.run.clan.food,
-            x: scene.player.x,
-            frame: scene.player.frame.name,
-          };
-        }),
-      38,
-    ),
-  ).toEqual(before);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
-    true,
-  );
-  await page.screenshot({ path: 'test-results/intro-steppe.png' });
-  // Focus stays inside the story. Disabled Back is omitted from Tab navigation.
-  await page.keyboard.press('Tab');
-  await expect(page.getByRole('button', { name: /Skip intro/ })).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
-  await page.keyboard.press('Enter');
-  await expect(page.getByRole('heading', { name: 'A vow that broke the world.' })).toBeVisible();
-  await expect(page.locator('#intro-caption')).toContainText('the Last Court');
-  await page.keyboard.press('ArrowLeft');
-  await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
-  await page.keyboard.press('ArrowRight');
-  await page.screenshot({ path: 'test-results/intro-iron-vow.png' });
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByRole('heading', { name: 'The unreturned ride.' })).toBeVisible();
-  await page.screenshot({ path: 'test-results/intro-fallen-sky.png' });
-  await page.getByRole('button', { name: '← Back' }).click();
-  await expect(page.getByRole('heading', { name: 'A vow that broke the world.' })).toBeVisible();
-  await page.keyboard.press('ArrowRight');
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByRole('heading', { name: 'Keep the hearth alive.' })).toBeVisible();
-  await expect(page.locator('#intro-caption')).toContainText('Eight of us remained');
-  await page.screenshot({ path: 'test-results/intro-hearth.png' });
-  await page.keyboard.press('Enter');
-  await expect(page.getByRole('heading', { name: 'A road beneath the sky.' })).toBeVisible();
-  await expect(page.locator('#intro-caption')).toContainText('Guard the wagons');
-  await expect(page.locator('.intro-pages')).toHaveAttribute('aria-label', 'Chapter 5 of 5');
-  await expect(page.getByRole('button', { name: /Raise the blue banner/ })).toBeFocused();
-  await page.screenshot({ path: 'test-results/intro-caravan.png' });
-  await page.keyboard.press('Space');
-  await expect(page.getByRole('heading', { name: 'A place beside the fire.' })).toBeVisible();
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.elapsed)).toBe(0);
-  await page.getByRole('button', { name: /Share the work/ }).click();
-  await expect(page.getByRole('dialog')).toBeHidden();
-  await closeOverlayOrPause(page);
-  await page.getByRole('button', { name: 'Start a new run' }).click();
-  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
-  // The pause autosave (f780c79) takes primary focus; keyboard focus must stay visible.
-  const continueExpedition = page.getByRole('button', { name: /CONTINUE EXPEDITION/ });
-  await expect(continueExpedition).toBeFocused();
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Shift+Tab');
-  await expect(continueExpedition).toBeFocused();
-  await expect(continueExpedition).toHaveCSS('outline-style', 'solid');
-  await expect(continueExpedition).toHaveCSS('outline-width', '2px');
-  await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toHaveCount(0);
-  await page.getByRole('button', { name: /NEW GAME/ }).click();
-  await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
-  await closeOverlayOrPause(page);
-  await expect(page.getByRole('heading', { name: 'A place beside the fire.' })).toBeVisible();
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.story.records)).toEqual([]);
-  expect(errors).toEqual([]);
-});
+test(
+  'intro reads at the player’s pace with frozen simulation, back, completion, and a fresh expedition',
+  { tag: '@core' },
+  async ({ page }) => {
+    // Five full-page paintings plus two expeditions exceed 30s on CI's software renderer.
+    test.setTimeout(process.env.CI ? 90000 : 60000);
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused();
+    await expect(page.locator('.intro-story')).toHaveCount(0);
+    expect(
+      await expectFrozen(
+        page,
+        () =>
+          page.evaluate(() => {
+            const scene = (window as any).__gloam.scene;
+            return {
+              phase: scene.run.phase,
+              elapsed: scene.run.elapsed,
+              paused: scene.physics.world.isPaused,
+            };
+          }),
+        19,
+      ),
+    ).toEqual({ phase: 'ready', elapsed: 0, paused: true });
+    await page.getByRole('button', { name: /NEW GAME/ }).click();
+    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
+    await expect(page.locator('#intro-caption')).toContainText('Tengri, Eternal Heaven');
+    await expect(page.locator('#intro-caption')).toContainText('Etügen, Mother Earth');
+    await expect(page.locator('.intro-pages')).toHaveAttribute('aria-label', 'Chapter 1 of 5');
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
+    await expect(page.getByRole('button', { name: '← Back' })).toBeDisabled();
+    await expect(page.locator('#game-hud')).toHaveAttribute('inert', '');
+    await expect(page.locator('#menu-record')).toBeHidden();
+    await expect
+      .poll(() =>
+        page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth),
+      )
+      .toBe(1536);
+    const before = await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      scene.startRun(); // Cannot bypass the intro's paused phase.
+      return {
+        elapsed: scene.run.elapsed,
+        food: scene.run.clan.food,
+        x: scene.player.x,
+        frame: scene.player.frame.name,
+      };
+    });
+    await page.keyboard.press('b');
+    await page.keyboard.press('m');
+    await page.keyboard.press('j');
+    expect(
+      await expectFrozen(
+        page,
+        () =>
+          page.evaluate(() => {
+            const scene = (window as any).__gloam.scene;
+            return {
+              elapsed: scene.run.elapsed,
+              food: scene.run.clan.food,
+              x: scene.player.x,
+              frame: scene.player.frame.name,
+            };
+          }),
+        38,
+      ),
+    ).toEqual(before);
+    expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
+      true,
+    );
+    await page.screenshot({ path: 'test-results/intro-steppe.png' });
+    // Focus stays inside the story. Disabled Back is omitted from Tab navigation.
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('button', { name: /Skip intro/ })).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('heading', { name: 'A vow that broke the world.' })).toBeVisible();
+    await expect(page.locator('#intro-caption')).toContainText('the Last Court');
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
+    await page.keyboard.press('ArrowRight');
+    await page.screenshot({ path: 'test-results/intro-iron-vow.png' });
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByRole('heading', { name: 'The unreturned ride.' })).toBeVisible();
+    await page.screenshot({ path: 'test-results/intro-fallen-sky.png' });
+    await page.getByRole('button', { name: '← Back' }).click();
+    await expect(page.getByRole('heading', { name: 'A vow that broke the world.' })).toBeVisible();
+    await page.keyboard.press('ArrowRight');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByRole('heading', { name: 'Keep the hearth alive.' })).toBeVisible();
+    await expect(page.locator('#intro-caption')).toContainText('Eight of us remained');
+    await page.screenshot({ path: 'test-results/intro-hearth.png' });
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('heading', { name: 'A road beneath the sky.' })).toBeVisible();
+    await expect(page.locator('#intro-caption')).toContainText('Guard the wagons');
+    await expect(page.locator('.intro-pages')).toHaveAttribute('aria-label', 'Chapter 5 of 5');
+    await expect(page.getByRole('button', { name: /Raise the blue banner/ })).toBeFocused();
+    await page.screenshot({ path: 'test-results/intro-caravan.png' });
+    await page.keyboard.press('Space');
+    await expect(page.getByRole('heading', { name: 'A place beside the fire.' })).toBeVisible();
+    expect(await page.evaluate(() => (window as any).__gloam.scene.run.elapsed)).toBe(0);
+    await page.getByRole('button', { name: /Share the work/ }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await closeOverlayOrPause(page);
+    await page.getByRole('button', { name: 'Start a new run' }).click();
+    await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
+    // The pause autosave (f780c79) takes primary focus; keyboard focus must stay visible.
+    const continueExpedition = page.getByRole('button', { name: /CONTINUE EXPEDITION/ });
+    await expect(continueExpedition).toBeFocused();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
+    await expect(continueExpedition).toBeFocused();
+    await expect(continueExpedition).toHaveCSS('outline-style', 'solid');
+    await expect(continueExpedition).toHaveCSS('outline-width', '2px');
+    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toHaveCount(0);
+    await page.getByRole('button', { name: /NEW GAME/ }).click();
+    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
+    await closeOverlayOrPause(page);
+    await expect(page.getByRole('heading', { name: 'A place beside the fire.' })).toBeVisible();
+    expect(await page.evaluate(() => (window as any).__gloam.scene.run.story.records)).toEqual([]);
+    expect(errors).toEqual([]);
+  },
+);
 
 test('skip chapters 1 to 5 into gameplay with camp scenes off', async ({ page }) => {
   test.setTimeout(120000);

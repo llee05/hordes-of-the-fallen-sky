@@ -9,7 +9,7 @@ checks and the Pages artwork smoke, which never starts gameplay. See [current te
 `npm run test:perf` runs only the two `@perf` browser/Electron combat resource
 and FPS tests, with their existing budgets unchanged. It holds
 `flock -x /tmp/bh-playwright.lock` through the build and both suites.
-`test:e2e`, `test:e2e:changed`, `test:desktop`, and `test:local` exclude `@perf`
+`test:e2e`, `test:e2e:core`, `test:e2e:changed`, `test:desktop`, and `test:local` exclude `@perf`
 and hold `flock -s` on that same file. Ordinary suites can overlap each other
 (use distinct `E2E_PORT` values), but wait behind a performance run. Each command
 waits in one blocking foreground acquisition; do not add an outer lock.
@@ -51,10 +51,12 @@ flock /tmp/bh-playwright.lock env E2E_PORT=5268 \
 ```
 
 `test:e2e:changed` automatically includes keyboard/lifecycle and default 3D smoke
-tests. Without `--spec`, it uses Playwright's changed-spec/import selection for
-browser-test and documentation changes. Application, asset, dependency, config,
-and unknown changes fall back to the full suite. Missing base refs and invalid
-focused patterns fail the command rather than silently running no coverage.
+tests alongside the fast 29-test `@core` subset. Without `--spec`, application code changes
+run the `@core` subset plus the specs mapped to touched areas. Changes to `public/art`,
+terrain or renderer code, saves, input, ArenaScene, dependency/build configs, or unknown
+files fall back to the full suite (pass `--full` to force the full suite explicitly).
+Missing base refs and invalid focused patterns fail the command rather than silently
+running no coverage.
 
 Bare `playwright test --only-changed=origin/main` is unsafe as a general gameplay
 review gate here. Most tests load the application with `page.goto` and mutate it
