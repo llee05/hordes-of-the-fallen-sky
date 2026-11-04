@@ -69,6 +69,11 @@ test(
   'camp attackers stop outside the tents, repeat protected damage, freeze in menus, and only reward a defeat',
   { tag: '@core' },
   async ({ page }) => {
+    await page.evaluate(() => {
+      const run = (window as any).__gloam.scene.run;
+      // Isolate attack damage from passive camp resolve recovery so resolve changes only on hits.
+      run.clan.campEffects.bonuses.resolveRecovery = 0;
+    });
     await placeAttacker(page, 0, -190, 90);
     // Observe the first tick promptly so the interval assertion measures the full attack cadence.
     await activeExpect
