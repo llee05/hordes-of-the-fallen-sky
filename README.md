@@ -239,7 +239,7 @@ src/game/assets/landscapeLayout.ts Seeded scenery placement and clear caravan co
 src/game/assets/ClanLife.ts     Bounded workers, pack horses, and active-time camp activity
 src/game/state/campLife.ts      Workplaces, population-driven shelters, and visual routes
 public/art/                   Bundled painted PNGs and atlas frame metadata
-src/game/scenes/ArenaScene.ts  Simulation, mounted host, combat, regional arenas
+src/game/scenes/ArenaScene.ts  Arena coordinator
 src/ui/GameUI.ts               Full-window HUD, title/pause menus, focus and input
 src/ui/menuContent.ts          Camp, route, chronicle, settings, and help panels
 src/ui/progressionTree.ts      Shared data-driven progression tree renderer
@@ -252,6 +252,8 @@ src/platform/                 Narrow native capability bridge and browser fallba
 desktop/                      Secure Electron lifecycle and atomic profile storage
 scripts/                      Build staging, packaging, icon, SteamPipe preparation
 ```
+
+See [the arena module map and simulation order](docs/arena-scene.md) for scene responsibilities.
 
 Actors use bounded pools and a spatial grid. Combat, economy, and physics stop in menus and on focus loss. Construction, route rewards, and banked knowledge points live in renderer-independent state modules. The renderer keeps sandboxing, context isolation, and disabled Node integration. `window.__gloam` remains a development-only test/inspection hook, absent from production.
 
