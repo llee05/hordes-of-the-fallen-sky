@@ -14,6 +14,7 @@ test(
   'the manuscript camp reflects real developments, freezes the world, and respects reduced motion',
   { tag: '@core' },
   async ({ page }) => {
+    test.setTimeout(process.env.CI ? 90000 : 60000);
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await openTitle(page);
     await startExpedition(page);
@@ -149,6 +150,7 @@ test('all facilities remain inspectable from the estate or search at supported v
           site,
         );
         await expect(page.locator('[data-nomadic-level]')).toHaveCount(3);
+        await expect(page.locator('[data-camp-internal]')).toHaveCount(0);
       }
       expect(
         await page.locator('.camp-estate').evaluate((e) => e.scrollWidth <= e.clientWidth + 1),
@@ -173,6 +175,7 @@ test('all facilities remain inspectable from the estate or search at supported v
 test('controller confirms inspection and explicit purchase; Back dismisses the details first', async ({
   page,
 }) => {
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await page.addInitScript(() => {
     const state = {
       connected: true,

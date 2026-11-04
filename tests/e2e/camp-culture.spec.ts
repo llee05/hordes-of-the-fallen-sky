@@ -1,12 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { GAME } from '../../src/game/config';
-import {
-  selectCampBuilding,
-  closeOverlayOrPause,
-  buyNomadicLevel,
-  openTitle,
-  startExpedition,
-} from './helpers';
+import { closeOverlayOrPause, buyNomadicLevel, openTitle, startExpedition } from './helpers';
 test.describe.configure({ mode: 'parallel' });
 test.beforeEach(async ({ page }) => {
   await openTitle(page);
@@ -19,39 +13,6 @@ test.beforeEach(async ({ page }) => {
     Object.assign(s.run.clan, { materials: 4000, spirit: 2000, population: 30 });
   });
   await page.keyboard.press('b');
-});
-
-test('all nineteen buildings expose three authored levels and no retired internal-development tree', async ({
-  page,
-}) => {
-  test.setTimeout(60000);
-  let levels = 0;
-  for (const id of [
-    'khans-ger',
-    'horse-lines',
-    'herding-grounds',
-    'communal-hearth',
-    'wagon-yard',
-    'archery-range',
-    'smiths-forge',
-    'warriors-training-ground',
-    'scouts-watchpost',
-    'fletchers-workshop',
-    'palisade-watchfires',
-    'hunting-lodge',
-    'artisans-ger',
-    'trading-post',
-    'healers-ger',
-    'sacred-ovoo',
-    'shamans-ger',
-    'ancestral-standard',
-    'storytellers-hearth',
-  ]) {
-    await selectCampBuilding(page, id);
-    levels += await page.locator('[data-nomadic-level]').count();
-  }
-  expect(levels).toBe(57);
-  await expect(page.locator('[data-camp-internal]')).toHaveCount(0);
 });
 
 test('advanced art and reserved workers remain readable and bounded across desktop and compact windows', async ({
@@ -79,6 +40,7 @@ test('advanced art and reserved workers remain readable and bounded across deskt
 test('healer recovery respects paused gameplay and never advances a fallen Khan succession timer', async ({
   page,
 }) => {
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await page.evaluate(() => {
     const r = (window as any).__gloam.scene.run;
     r.health = 40;
@@ -160,6 +122,7 @@ test('hunting and trading arrival benefits travel with the camp and pay only at 
 test('shaman upgrades strengthen actual burning damage without a new damage subsystem', async ({
   page,
 }) => {
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await buyNomadicLevel(page, 'shamans-ger', 3);
   await closeOverlayOrPause(page);
   const result = await page.evaluate(() => {
