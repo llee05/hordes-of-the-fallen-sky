@@ -9,7 +9,7 @@ import {
   normalizeVisualSettings,
   type VisualSettings,
 } from '../../shared/visualSettings';
-import { CharacterMotion, isCharacterKind } from '../animation/CharacterMotion';
+import { CharacterMotion } from '../animation/CharacterMotion';
 import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
 import type { CampBarrier } from '../assets/CampBarrier';
 import type { ClanLife } from '../assets/ClanLife';
@@ -27,9 +27,8 @@ import { environmentForLocation } from '../audio/mixing';
 import type { SoundKind } from '../audio/soundPalette';
 import { GAME } from '../config';
 import { AREA_ENCOUNTERS, type AreaThreatKind } from '../data/areaEncounters';
-import { FORMATIONS, ROUTES, STARTING_TRADITIONS, type StartingTraditionId } from '../data/clan';
+import { FORMATIONS, STARTING_TRADITIONS, type StartingTraditionId } from '../data/clan';
 import { CROSSING_ENCOUNTERS } from '../data/crossings';
-import { ALL_ENEMIES, SKYBREAKER, encounterSpawnDelay } from '../data/enemies';
 import { INTRO_SLIDES } from '../data/intro';
 import type { SuccessorTrait } from '../data/successors';
 import { createDeveloperTools, executeDeveloperCommand } from '../dev/commands';
@@ -37,7 +36,6 @@ import { DEVELOPER_LEVELS, createDeveloperRun } from '../dev/levels';
 import { Enemy, Gem, Projectile } from '../entities/actors';
 import {
   advanceAreaEncounter,
-  areaArrivalAngle,
   createAreaEncounter,
   syncAreaEncounter,
 } from '../state/areaEncounters';
@@ -65,15 +63,9 @@ import {
 } from '../state/clan';
 import type { ClanDamageCause } from '../state/clanSafety';
 import { advanceCrossingEncounter } from '../state/crossingEncounters';
-import {
-  advanceEncounters,
-  encounterEnemy,
-  encounterPlan,
-  supportingAreaEnemy,
-} from '../state/encounters';
+import { advanceEncounters, supportingAreaEnemy } from '../state/encounters';
 import {
   decodeExpedition,
-  type BodyArchive,
   type ProjectileArchive,
   type WorldArchive,
 } from '../state/expeditionArchive';
@@ -112,10 +104,9 @@ import { createRun, gainExperience } from '../state/run';
 import { openNextStory, resolveStory } from '../state/story';
 import { volleyFactors } from '../state/volley';
 import { ActionKeys } from '../systems/ActionKeys';
-import { areaRiverTangent, areaSurface, habitatPreference } from '../systems/AreaHabitat';
+import { areaSurface, habitatPreference } from '../systems/AreaHabitat';
 import { GameAudio } from '../systems/Audio';
-import { clampCameraZoom, enemySpawnPosition } from '../systems/CameraView';
-import { projectedEnemySpawnPosition } from '../systems/EnemySpawning';
+import { clampCameraZoom } from '../systems/CameraView';
 import {
   advanceCharge,
   createEnemyTactics,
@@ -133,7 +124,9 @@ import { ArenaEffects } from './arena/ArenaEffects';
 import { ArenaInput } from './arena/ArenaInput';
 import { ArenaPersistence } from './arena/ArenaPersistence';
 import { createArenaTimers, type ArenaTimers } from './arena/ArenaTimers';
+import { captureBody } from './arena/bodyArchive';
 import { CampPresenter } from './arena/CampPresenter';
+import { EnemyDirector, type SpawnDirective } from './arena/EnemyDirector';
 import { HudPresenter } from './arena/HudPresenter';
 
 export interface ArenaCallbacks {
@@ -168,9 +161,7 @@ export class ArenaScene extends Phaser.Scene {
   private riderMotions: CharacterMotion[] = [];
   private riderSpeeds: number[] = [];
   private defeats!: DefeatSprites;
-  private enemyShadows = new Map<Enemy, Phaser.GameObjects.Image>();
   private dustTimer = 0;
-  private boss?: Enemy;
   private hazards: {
     x: number;
     y: number;
@@ -191,6 +182,7 @@ export class ArenaScene extends Phaser.Scene {
   private readonly arena: ArenaContext = this.createArenaContext();
   private readonly effects = new ArenaEffects(this.arena);
   private readonly hudPresenter = new HudPresenter(this.arena);
+  private readonly enemyDirector = this.createEnemyDirector();
   /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
   private readonly controls = new ArenaInput(this.arena, this.controller, this.actionKeys);
   private hudTimer = 0;
@@ -288,6 +280,15 @@ export class ArenaScene extends Phaser.Scene {
     };
   }
 
+  private createEnemyDirector(): EnemyDirector {
+    const scene = this;
+    return new EnemyDirector(this.arena, {
+      get areaEncounter() {
+        return scene.areaEncounter;
+      },
+    });
+  }
+
   connect(callbacks: ArenaCallbacks): void {
     this.callbacks = callbacks;
     if (this.player) this.publishPhase();
@@ -326,9 +327,8 @@ export class ArenaScene extends Phaser.Scene {
     this.riderMotions = [];
     this.riderSpeeds = [];
     this.playerMotion.reset('player');
-    this.enemyShadows.clear();
+    this.enemyDirector.reset();
     this.dustTimer = 0;
-    this.boss = undefined;
     this.hazards = [];
     this.facing.set(0, 1);
     this.best = this.platform.profile.bestSeconds;
@@ -516,15 +516,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private captureWorld(): WorldArchive {
-    const body = (
-      actor: Phaser.Physics.Arcade.Sprite | Phaser.Physics.Arcade.Image,
-    ): BodyArchive => ({
-      x: actor.x,
-      y: actor.y,
-      vx: actor.body!.velocity.x,
-      vy: actor.body!.velocity.y,
-      flip: actor.flipX,
-    });
+    const body = captureBody;
     const pool = this.enemies.getChildren() as Enemy[];
     const shots = (group: Phaser.Physics.Arcade.Group): ProjectileArchive[] =>
       (group.getChildren() as Projectile[])
@@ -559,37 +551,7 @@ export class ArenaScene extends Phaser.Scene {
       facing: { x: this.facing.x, y: this.facing.y },
       zoom: this.cameraZoom,
       timers: { ...this.timers },
-      generations: pool.map((e) => e.spawnId),
-      enemies: pool.flatMap((e, slot) =>
-        e.active
-          ? [
-              {
-                ...body(e),
-                slot,
-                definition: e.definition.id,
-                state: {
-                  health: e.health,
-                  elite: e.elite,
-                  maxHealth: e.maxHealth,
-                  spawnId: e.spawnId,
-                  attackTimer: e.attackTimer,
-                  clanAttackTimer: e.clanAttackTimer,
-                  chargeTimer: e.chargeTimer,
-                  burning: e.burning,
-                  pinned: e.pinned,
-                  lastGallop: e.lastGallop,
-                  dangerTimer: e.dangerTimer,
-                  tacticalSlot: e.tacticalSlot,
-                  objectiveId: e.objectiveId,
-                  crossingId: e.crossingId,
-                  preparingAttack: e.preparingAttack,
-                  tactics: e.tactics,
-                },
-                motion: e.motion.capture(),
-              },
-            ]
-          : [],
-      ),
+      ...this.enemyDirector.capturePool(),
       projectiles: shots(this.projectiles),
       hostileShots: shots(this.hostileShots),
       gems: (this.gems.getChildren() as Gem[])
@@ -637,27 +599,7 @@ export class ArenaScene extends Phaser.Scene {
     this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
     this.aura.setPosition(this.player.x, this.player.y);
     if (!isKhanActive(run)) this.hideFallenKhan();
-    const pool = world.generations.map((spawnId, slot) => {
-      const enemy = this.enemies.create(0, 0, ...artTexture('wolf')) as Enemy;
-      const saved = world.enemies.find((e) => e.slot === slot);
-      if (!saved) {
-        enemy.spawnId = spawnId;
-        enemy.disableBody(true, true);
-        return enemy;
-      }
-      const definition = [...ALL_ENEMIES, SKYBREAKER].find((e) => e.id === saved.definition)!;
-      this.initializeEnemy(enemy, definition, saved.x, saved.y);
-      Object.assign(enemy, saved.state);
-      enemy.setVelocity(saved.vx, saved.vy).setFlipX(saved.flip);
-      enemy.motion.restore(saved.motion);
-      renderCharacter(enemy, enemy.motion);
-      enemy.setDepth(100 + enemy.y);
-      this.enemyShadows
-        .get(enemy)!
-        .setPosition(enemy.x + 6, enemy.y + 4)
-        .setDepth(99 + enemy.y);
-      return enemy;
-    });
+    const pool = this.enemyDirector.restorePool(world);
     const restoreShots = (
       group: Phaser.Physics.Arcade.Group,
       shots: ProjectileArchive[],
@@ -1111,7 +1053,7 @@ export class ArenaScene extends Phaser.Scene {
     }
     this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
     this.aura.setPosition(this.player.x, this.player.y);
-    for (const [enemy, shadow] of this.enemyShadows)
+    for (const [enemy, shadow] of this.enemyDirector.shadows)
       if (enemy.active) shadow.setPosition(enemy.x + 6, enemy.y + 4).setDepth(99 + enemy.y);
     this.riders.forEach((rider, index) => {
       if (!rider.visible) return;
@@ -1250,19 +1192,7 @@ export class ArenaScene extends Phaser.Scene {
     this.timers.attackTimer -= dt;
     if (this.timers.attackTimer <= 0) this.fire();
     this.fireRiders();
-    this.timers.spawnTimer -= dt;
-    if (this.timers.spawnTimer <= 0) {
-      const spawned = this.spawnEnemy();
-      this.timers.spawnTimer =
-        encounterSpawnDelay(
-          this.run.clan.stageTime,
-          this.run.clan.region,
-          this.run.clan.stage === 'migration'
-            ? (ROUTES.find((r) => r.id === this.run.clan.routeId)?.danger ?? 1)
-            : 1,
-          spawned,
-        ) * (spawned ? encounterPlan(this.run).interval : 1);
-    }
+    this.enemyDirector.tickSpawns(dt);
     this.updateProjectiles(dt);
     this.collectGems(dt);
     if (this.run.phase !== 'playing') return;
@@ -1278,13 +1208,7 @@ export class ArenaScene extends Phaser.Scene {
       this.hudTimer = GAME.hud.updateInterval;
       this.callbacks?.onHud(this.snapshot());
     }
-    if (
-      this.run.clan.stage === 'final' &&
-      !this.run.clan.finalBossSpawned &&
-      this.run.clan.stageTime >= GAME.finalStand.bossDelay
-    ) {
-      if (this.spawnEnemy(SKYBREAKER)) this.run.clan.finalBossSpawned = true;
-    }
+    this.enemyDirector.tickFinalBoss();
     this.presentStory();
   }
 
@@ -1321,152 +1245,6 @@ export class ArenaScene extends Phaser.Scene {
     }
     this.aura.setPosition(this.player.x, this.player.y);
     this.controls.drawJoystick();
-  }
-
-  private spawnEnemy(
-    forced?: EnemyDefinition,
-    directive?: {
-      point?: { x: number; y: number };
-      angle?: number;
-      objectiveId?: number;
-      crossingId?: string;
-      campOnly?: boolean;
-    },
-  ): boolean {
-    if (this.enemies.countActive(true) >= GAME.maxEnemies) return false;
-    const selection = encounterEnemy(this.run);
-    const definition = forced ?? selection.definition;
-    const isBoss = definition.behavior === 'boss';
-    const plan = encounterPlan(this.run);
-    const camera = this.cameras.main;
-    const anchor =
-      directive?.campOnly || !isKhanActive(this.run) || Math.random() < 0.45
-        ? this.camp
-        : this.player;
-    const area = AREA_ENCOUNTERS[currentLocation(this.run).id];
-    const base =
-      area.pattern === 'banks'
-        ? areaRiverTangent(
-            this.landscape.navigation?.terrain,
-            currentLocation(this.run).id,
-            anchor,
-            plan.angle,
-          )
-        : plan.angle;
-    const angle =
-      directive?.angle ??
-      (['warning', 'assault', 'elite'].includes(plan.phase)
-        ? areaArrivalAngle(this.areaEncounter, this.run, base) +
-          Phaser.Math.FloatBetween(-0.35, 0.35)
-        : Phaser.Math.FloatBetween(0, Math.PI * 2));
-    const viewWidth = camera.width / camera.zoom;
-    const viewHeight = camera.height / camera.zoom;
-    const view = {
-      x: camera.midPoint.x - viewWidth / 2,
-      y: camera.midPoint.y - viewHeight / 2,
-      width: viewWidth,
-      height: viewHeight,
-    };
-    const navigation = this.landscape.navigation;
-    const world = this.landscape.world3d;
-    let point;
-    if (directive?.point) {
-      point = directive.point;
-      if (navigation && !navigation.isWalkable(point.x, point.y, GAME.terrain.actorClearance, true))
-        return false;
-    } else if (world?.spawnView && navigation) {
-      point = projectedEnemySpawnPosition(
-        world.spawnView,
-        anchor,
-        isKhanActive(this.run) ? this.player : undefined,
-        angle,
-        {
-          heightAt: (x, y) =>
-            world.terrain.actorHeight(x, y) * world.terrain.region.biome.heightScale,
-          walkable: (x, y) => navigation.isWalkable(x, y, GAME.terrain.actorClearance, true),
-          preference:
-            definition.home && definition.habitat
-              ? (x, y) =>
-                  habitatPreference(
-                    areaSurface(navigation.terrain, currentLocation(this.run).id, x, y),
-                    definition.habitat!,
-                  )
-              : undefined,
-        },
-      );
-      if (!point) return false;
-    } else {
-      point = enemySpawnPosition(view, anchor, angle);
-      if (navigation) {
-        let safe = navigation.nearestWalkable(point);
-        // Prefer connected ground beyond the view; never start a pooled actor inside a cliff.
-        for (let attempt = 0; attempt < 12; attempt++) {
-          const candidate = enemySpawnPosition(view, anchor, angle + (attempt * Math.PI) / 6);
-          if (navigation.isWalkable(candidate.x, candidate.y, GAME.terrain.actorClearance, true)) {
-            safe = candidate;
-            break;
-          }
-        }
-        if (!safe) return false;
-        point = safe;
-      }
-    }
-    const { x, y } = point;
-    if (
-      isKhanActive(this.run) &&
-      Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) <
-        GAME.spawning.minimumPlayerDistance
-    )
-      return false;
-    const enemy = this.enemies.get(x, y, ...artTexture(definition.texture)) as Enemy | null;
-    if (!enemy) return false;
-    this.initializeEnemy(enemy, definition, x, y);
-    enemy.elite ||= !forced && !!selection.elite;
-    enemy.objectiveId = directive?.objectiveId;
-    enemy.crossingId = directive?.crossingId;
-    if (isBoss)
-      this.run.clan.message =
-        'THE SKYBREAKER — hold the line. Your people are the victory condition.';
-    if (!forced && selection.elite) this.run.encounters.eliteSpawned = true;
-    if (!directive?.point) this.areaEncounter.arrivals++;
-    return true;
-  }
-
-  private initializeEnemy(enemy: Enemy, definition: EnemyDefinition, x: number, y: number): void {
-    const isBoss = definition.behavior === 'boss';
-    enemy.enableBody(true, x, y, true, true);
-    const width = (ART_WIDTH[definition.texture] ?? 50) * (definition.scale / (isBoss ? 4 : 2));
-    styleActor(enemy, definition.texture, width, 5 * definition.scale);
-    enemy.setTint(definition.tint ?? 0xffffff);
-    if (!this.enemyShadows.has(enemy)) this.enemyShadows.set(enemy, this.add.image(x, y, 'shadow'));
-    this.enemyShadows
-      .get(enemy)!
-      .setDisplaySize(width * 0.9, width * 0.3)
-      .setVisible(true);
-    enemy.definition = definition;
-    enemy.elite = !!definition.elite;
-    enemy.health = definition.health * (isBoss ? 1 : 1 + this.run.elapsed / 1200);
-    enemy.maxHealth = enemy.health;
-    enemy.spawnId += 1;
-    enemy.setAlpha(1).setAngle(0).setVelocity(0, 0);
-    enemy.attackTimer = 1.5;
-    enemy.clanAttackTimer = 0;
-    enemy.chargeTimer = 0;
-    enemy.burning = 0;
-    enemy.tactics = createEnemyTactics();
-    enemy.tacticalSlot = this.enemies.getChildren().indexOf(enemy);
-    enemy.pinned = 0;
-    enemy.lastGallop = -1;
-    enemy.dangerTimer = definition.ability
-      ? GAME.areaCombat.abilityEvery + (enemy.tacticalSlot % 7) * 0.15
-      : GAME.tactics.seerEvery;
-    enemy.objectiveId = undefined;
-    enemy.crossingId = undefined;
-    if (isBoss) this.boss = enemy;
-    if (!isCharacterKind(definition.texture))
-      throw new Error(`Missing character animation: ${definition.texture}`);
-    enemy.motion.reset(definition.texture, Math.random());
-    enemy.preparingAttack = false;
   }
 
   private updateFinalStand(dt: number): void {
@@ -1506,8 +1284,14 @@ export class ArenaScene extends Phaser.Scene {
         (e) => e.active && Math.hypot(e.x - work.x!, e.y - work.y!) < GAME.finalStand.contestRadius,
       ),
     );
-    const event = advanceFinalStand(this.run, dt, !!this.boss?.active, this.player, contested);
-    const boss = this.boss;
+    const event = advanceFinalStand(
+      this.run,
+      dt,
+      !!this.enemyDirector.boss?.active,
+      this.player,
+      contested,
+    );
+    const boss = this.enemyDirector.boss;
     if (!boss?.active) return;
     const chapter = finalChapter(this.run);
     if (event === 'warning') {
@@ -1539,7 +1323,7 @@ export class ArenaScene extends Phaser.Scene {
       this.run.clan.message = 'The Skybreaker falters. Its exposed form takes 50% more damage.';
       if (chapter > 0)
         for (let i = 0; i < GAME.finalStand.assaultCount; i++)
-          this.spawnEnemy(
+          this.enemyDirector.spawn(
             supportingAreaEnemy(this.run, state.cycle + i, [i ? 'hollow-seer' : 'ghost-rider']),
             { angle: (state.approach * Math.PI) / 2 + (i ? 0.3 : -0.3), campOnly: true },
           );
@@ -1584,7 +1368,7 @@ export class ArenaScene extends Phaser.Scene {
           : c.route === 'ridge'
             ? 0
             : Math.PI;
-      if (this.spawnEnemy(enemy, { angle, crossingId: c.key, campOnly: true })) {
+      if (this.enemyDirector.spawn(enemy, { angle, crossingId: c.key, campOnly: true })) {
         c.spawned++;
         c.spawnDelay = GAME.crossings.spawnInterval;
       } else c.spawnDelay = GAME.spawning.retryInterval;
@@ -1638,7 +1422,7 @@ export class ArenaScene extends Phaser.Scene {
       const point = nav ? nav.nearestWalkable(desired) : desired;
       if (
         point &&
-        this.spawnEnemy(supportingAreaEnemy(this.run, o.guards, ['wisp']), {
+        this.enemyDirector.spawn(supportingAreaEnemy(this.run, o.guards, ['wisp']), {
           point,
           objectiveId: o.id,
         })
@@ -1675,7 +1459,7 @@ export class ArenaScene extends Phaser.Scene {
         .lineStyle(1, 0x78b6ae, (0.3 * trail.remaining) / GAME.mounted.trailSeconds)
         .strokeCircle(trail.x, trail.y, GAME.mounted.trailRadius);
     for (const enemy of this.enemies.getChildren() as Enemy[]) {
-      const shadow = this.enemyShadows.get(enemy);
+      const shadow = this.enemyDirector.shadows.get(enemy);
       shadow?.setVisible(enemy.active);
       if (!enemy.active) continue;
       const objective = this.run.field.objective;
@@ -1689,7 +1473,7 @@ export class ArenaScene extends Phaser.Scene {
       )
         warnings.lineStyle(2, 0xdfbc74, 0.8).strokeCircle(enemy.x, enemy.y, 22);
       let campDistance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.camp.x, this.camp.y);
-      const finaleWarning = enemy === this.boss ? this.run.finalStand : undefined;
+      const finaleWarning = enemy === this.enemyDirector.boss ? this.run.finalStand : undefined;
       if (finaleWarning?.phase === 'warning' && finaleWarning.aim)
         warnings
           .lineStyle(4, 0xdc976a, 0.85)
@@ -1718,7 +1502,7 @@ export class ArenaScene extends Phaser.Scene {
       if (
         playerDistance > GAME.spawning.despawnDistance &&
         campDistance > GAME.spawning.despawnDistance &&
-        enemy !== this.boss &&
+        enemy !== this.enemyDirector.boss &&
         !this.landscape.world3d?.nearView(enemy, GAME.spawning.viewRetentionMargin)
       ) {
         enemy.disableBody(true, true);
@@ -2234,7 +2018,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private damageEnemy(enemy: Enemy, amount: number): number {
     if (!enemy.active) return 0;
-    if (enemy === this.boss && this.run.finalStand?.phase === 'recovery')
+    if (enemy === this.enemyDirector.boss && this.run.finalStand?.phase === 'recovery')
       amount *= GAME.finalStand.vulnerableDamage;
     const hasArmor =
       (enemy.definition.armor !== undefined || enemy.definition.id === 'brute') &&
@@ -2254,7 +2038,7 @@ export class ArenaScene extends Phaser.Scene {
     if (effectAmount(this.visualSettings) > 0) this.defeats.show(enemy);
     enemy.disableBody(true, true);
     this.audio.play('defeat', { x, y });
-    this.enemyShadows.get(enemy)?.setVisible(false);
+    this.enemyDirector.shadows.get(enemy)?.setVisible(false);
     this.run.kills += 1;
     if (this.run.crossing && enemy.crossingId === this.run.crossing.key)
       this.run.crossing.defeated++;
@@ -2266,7 +2050,7 @@ export class ArenaScene extends Phaser.Scene {
     )
       objective.defeated++;
     this.run.clan.spirit += value * 0.4 * this.run.clan.campEffects.multipliers.spiritGain;
-    if (enemy === this.boss) defeatSkybreaker(this.run);
+    if (enemy === this.enemyDirector.boss) defeatSkybreaker(this.run);
     this.effects.burst(x, y, 0xa58aad, 5);
     const gem = this.gems.get(x, y, 'gem') as Gem | null;
     if (gem) {
@@ -2450,7 +2234,7 @@ export class ArenaScene extends Phaser.Scene {
         busy: this.persistence.busy,
         message: this.persistence.message,
       },
-      boss: this.boss,
+      boss: this.enemyDirector.boss,
     });
   }
   private publishPhase(): void {
@@ -2865,6 +2649,12 @@ export class ArenaScene extends Phaser.Scene {
   }
   burst(x: number, y: number, color: number, count: number): void {
     this.effects.burst(x, y, color, count);
+  }
+  get boss(): Enemy | undefined {
+    return this.enemyDirector.boss;
+  }
+  spawnEnemy(forced?: EnemyDefinition, directive?: SpawnDirective): boolean {
+    return this.enemyDirector.spawn(forced, directive);
   }
   get spawnTimer(): number {
     return this.timers.spawnTimer;
