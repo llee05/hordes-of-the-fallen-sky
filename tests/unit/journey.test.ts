@@ -22,11 +22,22 @@ describe('named migration destinations', () => {
       'Eej Khairkhan',
       'Orkhon Valley',
     ]);
+    expect(places.map((place) => place.short)).toEqual([
+      'OTGONTENGER',
+      'BOGD KHAN UUL',
+      'ALTAI TAVAN BOGD',
+      'KHAN TENGRI',
+      'BELUKHA · ÜCH-SÜMER',
+      'ALTAN OVOO',
+      'EEJ KHAIRKHAN',
+      'ORKHON VALLEY',
+    ]);
     expect(new Set(LOCATIONS.map((place) => place.id)).size).toBe(LOCATIONS.length);
     const run = createRun();
     const before = structuredClone(run);
     expect(availableDestinations(run)).toHaveLength(9);
     expect(currentLocation(run).id).toBe('golden-pasture');
+    expect(currentLocation(run).short).toBe('GOLDEN PASTURE');
     expect(run).toEqual(before);
   });
 
@@ -53,6 +64,7 @@ describe('named migration destinations', () => {
         const forecast = crossingForecast(run, route, place);
         expect(beginMigration(run, route.id, place.id)).toBe(true);
         expect(currentLocation(run).id).toBe('golden-pasture');
+        expect(currentLocation(run).short).toBe('GOLDEN PASTURE');
         expect(run.clan.food).toBe(before.clan.food);
         expect(run.clan.population).toBe(before.clan.population);
         expect(run.story.crossings).toHaveLength(0);
@@ -67,6 +79,7 @@ describe('named migration destinations', () => {
         run.phase = 'playing';
         expect(advanceClan(run, forecast.duration / 2 + 0.001)).toBe('arrived');
         expect(currentLocation(run).id).toBe(place.id);
+        expect(currentLocation(run).short).toBe(place.short);
         expect(run.clan.destinationId).toBeUndefined();
         expect(run.clan.food).toBeCloseTo(forecast.foodAfterArrival, 2);
         expect(run.clan.population).toBe(before.clan.population + route.population);

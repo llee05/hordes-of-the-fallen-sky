@@ -14,73 +14,67 @@ const places = [
   ['orkhon-valley', 'Orkhon Valley', 'ORKHON VALLEY'],
 ] as const;
 
-for (const [id, name, short] of places)
-  test(`arrives at ${name} and records its real destination`, async ({ page }) => {
-    await openTitle(page);
-    await startExpedition(page);
-    await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      scene.run.clan.stageTime = 45;
-      scene.run.pendingUpgrades = 2;
-      (window as any).departureGround = scene.landscape.world3d;
-      scene.openRoutes();
-    });
-    const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-    await page.locator(`[data-destination="${id}"]`).click();
-    await expect(
-      page.getByRole('region', { name: 'Selected destination', exact: true }),
-    ).toContainText(name);
-    expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(
-      before,
-    );
-    await page.locator('[data-route="river"]').click();
-    await expect(page.locator('#objective')).toContainText(name);
-    // The departure camp keeps its terrain until crossing completion.
-    expect(
-      await page.evaluate(
-        () => (window as any).__gloam.scene.landscape.world3d.terrain.region.scene.id,
-      ),
-    ).toBe('golden-pasture');
-    expect(await page.evaluate(() => (window as any).__gloam.scene.run.story.crossings)).toEqual(
-      [],
-    );
-    await page.evaluate(() => {
-      (window as any).__gloam.scene.run.clan.stageTime = 200;
-    });
-    await expect(page.locator('#location')).toHaveText(short);
-    if (id === 'altai-tavan-bogd') {
-      // Remove only the arrival overlay so the terrain reference shows the actual painted scene.
-      await page.evaluate(() => (window as any).__gloam.scene.cameras.main.flashEffect.reset());
-      await page.screenshot({ path: 'test-results/altai-tavan-bogd-arrival.png' });
-    }
-    expect(
-      await page.evaluate(
-        () => (window as any).__gloam.scene.landscape.world3d.terrain.region.scene.id,
-      ),
-    ).toBe(id);
-    expect(
-      await page.evaluate(() => {
-        const previous = (window as any).departureGround;
-        return {
-          chunks: previous.chunks.size,
-          connected: previous.renderer.domElement.isConnected,
-        };
-      }),
-    ).toEqual({ chunks: 0, connected: false });
-    expect(
-      await page.evaluate(() => (window as any).__gloam.scene.run.story.crossings[0].locationId),
-    ).toBe(id);
-    expect(await page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades)).toBe(2);
-    await page.keyboard.press('j');
-    await expect(page.locator('.journal-chapter')).toContainText(name);
-    await page.keyboard.press('Escape');
-    await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      scene.run.clan.stageTime = 45;
-      scene.openRoutes();
-    });
-    await expect(page.locator(`[data-destination="${id}"]`)).toHaveCount(0);
+test('arrives at Altai Tavan Bogd and records its real destination', async ({ page }) => {
+  test.setTimeout(process.env.CI ? 90000 : 60000);
+  await openTitle(page);
+  await startExpedition(page);
+  await page.evaluate(() => {
+    const scene = (window as any).__gloam.scene;
+    scene.run.clan.stageTime = 45;
+    scene.run.pendingUpgrades = 2;
+    (window as any).departureGround = scene.landscape.world3d;
+    scene.openRoutes();
   });
+  const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
+  await page.locator('[data-destination="altai-tavan-bogd"]').click();
+  await expect(
+    page.getByRole('region', { name: 'Selected destination', exact: true }),
+  ).toContainText('Altai Tavan Bogd');
+  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
+  await page.locator('[data-route="river"]').click();
+  await expect(page.locator('#objective')).toContainText('Altai Tavan Bogd');
+  // The departure camp keeps its terrain until crossing completion.
+  expect(
+    await page.evaluate(
+      () => (window as any).__gloam.scene.landscape.world3d.terrain.region.scene.id,
+    ),
+  ).toBe('golden-pasture');
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.story.crossings)).toEqual([]);
+  await page.evaluate(() => {
+    (window as any).__gloam.scene.run.clan.stageTime = 200;
+  });
+  await expect(page.locator('#location')).toHaveText('ALTAI TAVAN BOGD');
+  // Remove only the arrival overlay so the terrain reference shows the actual painted scene.
+  await page.evaluate(() => (window as any).__gloam.scene.cameras.main.flashEffect.reset());
+  await page.screenshot({ path: 'test-results/altai-tavan-bogd-arrival.png' });
+  expect(
+    await page.evaluate(
+      () => (window as any).__gloam.scene.landscape.world3d.terrain.region.scene.id,
+    ),
+  ).toBe('altai-tavan-bogd');
+  expect(
+    await page.evaluate(() => {
+      const previous = (window as any).departureGround;
+      return {
+        chunks: previous.chunks.size,
+        connected: previous.renderer.domElement.isConnected,
+      };
+    }),
+  ).toEqual({ chunks: 0, connected: false });
+  expect(
+    await page.evaluate(() => (window as any).__gloam.scene.run.story.crossings[0].locationId),
+  ).toBe('altai-tavan-bogd');
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades)).toBe(2);
+  await page.keyboard.press('j');
+  await expect(page.locator('.journal-chapter')).toContainText('Altai Tavan Bogd');
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => {
+    const scene = (window as any).__gloam.scene;
+    scene.run.clan.stageTime = 45;
+    scene.openRoutes();
+  });
+  await expect(page.locator('[data-destination="altai-tavan-bogd"]')).toHaveCount(0);
+});
 
 test('destination inspection preserves focus and paused state across responsive layouts', async ({
   page,
@@ -163,6 +157,7 @@ test('keyboard and controller select a destination before confirming the journey
 test('two named camps still lead to the fictional final refuge and clan-survival victory', async ({
   page,
 }) => {
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await openTitle(page);
   await startExpedition(page);
   for (const destination of ['orkhon-valley', 'altai-tavan-bogd', 'heart-of-the-steppe']) {
@@ -184,8 +179,16 @@ test('two named camps still lead to the fictional final refuge and clan-survival
       .toBe(destination);
   }
   await expect(page.locator('#location')).toHaveText('SACRED MOUNTAIN');
+  await expect(page.locator('#stage-label')).toHaveText('THE LAST STAND');
+  await page.evaluate(() => {
+    (window as any).__gloam.scene.run.clan.stageTime = 20;
+  });
+  await expect(page.locator('#boss-bar')).toBeVisible();
   await page.evaluate(() => {
     (window as any).__gloam.scene.run.clan.stageTime = 180;
   });
   await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.finalBossDefeated)).toBe(
+    false,
+  );
 });

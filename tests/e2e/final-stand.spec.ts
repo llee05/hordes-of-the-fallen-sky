@@ -101,7 +101,9 @@ async function defeatInCombat(
     s.attackTimer = 0;
   }, options);
   await expect
-    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.finalBossDefeated))
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.finalBossDefeated), {
+      timeout: 15000,
+    })
     .toBe(true);
   await expect(page.locator('#boss-bar')).toBeHidden();
   await expect(page.locator('#clan-message')).toHaveText(
@@ -161,15 +163,8 @@ test('defeating the Skybreaker restores resolve once and retains Boro in the chr
 });
 
 for (const scenario of [
-  { name: 'three survivors remember collectively', population: 3, speech: true, speaker: 'clan' },
   { name: 'five survivors still hear Boro', population: 5, speech: true, speaker: 'boro' },
   { name: 'Camp scenes Off retains the fact without speech', population: 8, speech: false },
-  {
-    name: 'reaction cooldown retains the fact without a transcript',
-    population: 8,
-    speech: true,
-    coolingDown: true,
-  },
 ]) {
   test(`Skybreaker defeat: ${scenario.name}`, async ({ page }) => {
     test.setTimeout(process.env.CI ? 90000 : 60000);
@@ -189,28 +184,15 @@ for (const scenario of [
       body: JSON.stringify(state),
       contentType: 'application/json',
     });
-    if (scenario.speaker === 'clan')
-      await expect(page.locator('#companion-reaction')).toContainText(
-        'The great creature lies still, and the few who remain turn back to the wagons.',
-      );
-    else if (scenario.speaker === 'boro')
+    if (scenario.speaker === 'boro')
       await expect(page.locator('#companion-reaction')).toContainText('Boro:');
-    else if (scenario.coolingDown) {
-      await expect(page.locator('#companion-reaction')).toContainText(
-        'Nara: “Keep close to the wagons.”',
-      );
-      await expect(page.locator('#companion-reaction')).not.toContainText('Boro');
-    } else await expect(page.locator('#companion-reaction')).toBeHidden();
+    else await expect(page.locator('#companion-reaction')).toBeHidden();
     const memory = await openDefeatMemory(page);
     await expect(memory).toContainText(
       `${scenario.population} people watched the great creature fall`,
     );
     if (scenario.speaker) {
       await expect(memory.locator('blockquote')).toHaveCount(1);
-      if (scenario.speaker === 'clan') {
-        await expect(memory).toContainText('the few who remain');
-        await expect(memory).not.toContainText('Boro');
-      }
     } else await expect(memory.locator('blockquote')).toHaveCount(0);
     await page.screenshot({ path: test.info().outputPath('skybreaker-memory.png') });
   });

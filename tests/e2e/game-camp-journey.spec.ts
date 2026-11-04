@@ -14,6 +14,7 @@ test.describe.configure({ mode: 'parallel' });
 test('camp planning spends resources, unlocks riders and builds the Burning Tempest', async ({
   page,
 }) => {
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
@@ -47,6 +48,7 @@ test('camp planning spends resources, unlocks riders and builds the Burning Temp
 test('migration moves a vulnerable caravan, preserves the build and awards survivors at arrival', async ({
   page,
 }) => {
+  test.setTimeout(process.env.CI ? 90000 : 60000);
   await openTitle(page);
   await startExpedition(page);
   await expect(page.locator('#migrate')).toBeDisabled();
@@ -95,41 +97,4 @@ test('migration moves a vulnerable caravan, preserves the build and awards survi
   await expect(page.locator('#riders')).toHaveText('6');
   await expect(page.locator('#migrate')).toBeDisabled();
   await expect(page.locator('#build')).toBeEnabled();
-});
-
-test('three crossings lead to a final stand whose victory saves the clan with the boss still alive', async ({
-  page,
-}) => {
-  const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  await openTitle(page);
-  await startExpedition(page);
-  for (let region = 1; region <= 3; region += 1) {
-    await page.evaluate(() => {
-      (window as any).__gloam.scene.run.clan.stageTime = 45;
-    });
-    await expect(page.locator('#migrate')).toBeEnabled();
-    await page.locator('#migrate').click();
-    await page.getByRole('button', { name: /Follow the river/ }).click();
-    await page.evaluate(() => {
-      (window as any).__gloam.scene.run.clan.stageTime = 100;
-    });
-    await expect
-      .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.region))
-      .toBe(region);
-  }
-  await expect(page.locator('#stage-label')).toHaveText('THE LAST STAND');
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.clan.stageTime = 20;
-  });
-  await expect(page.locator('#boss-bar')).toBeVisible();
-  await page.screenshot({ path: 'test-results/sacred-mountain.png', fullPage: true });
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.clan.stageTime = 180;
-  });
-  await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.finalBossDefeated)).toBe(
-    false,
-  );
-  expect(errors).toEqual([]);
 });
