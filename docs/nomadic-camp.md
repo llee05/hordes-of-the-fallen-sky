@@ -31,13 +31,13 @@ All five cores start at level 1. They cannot be removed or exchanged, reserve no
 | Sacred Ovoo               | Spiritual & cultural | Existing sanctuary lightning, Spirit gain and protection                            |                                                                           |
 | Shaman's Ger              | Spiritual & cultural | Burn damage and the story world's fictional wind-magic unlock                       | Spiritual abilities, rituals and corruption cleansing                     |
 | Ancestral Standard        | Spiritual & cultural | Existing escort damage and resolve recovery                                         | Companion morale                                                          |
-| Storyteller's Hearth      | Spiritual & cultural | Experience gain, banked technology progression and Spirit gain                      | Lore discoveries                                                          |
+| Storyteller's Hearth      | Spiritual & cultural | Experience and Spirit gain                                                          | Lore discoveries                                                          |
 
 These spiritual benefits describe the fictional Sundering and the game's supernatural calamity; they are not claims about historical Tengri practices. Unsupported mechanics are stored as typed `future` effect data and explicitly labelled **Planned** in the inspector. They do not create pretend merchants, inventories, companion actors, corruption systems or mount simulation.
 
 All five optional locations begin empty and are immediately selectable. Inspecting a choice never reserves a location or charges supplies. One validated construction action occupies the selected location; a type already owned cannot be constructed again or moved into another location. There is no demolition or replacement action yet. The slot instances and IDs allow those actions to be introduced later without redesigning ownership.
 
-Default construction costs are 24 materials; levels 2 and 3 cost 40 and 70 materials. Spiritual buildings additionally cost 8, 12 and 20 Spirit respectively. Core level 1 is provided. Guardian material discounts apply with rounding up; workers are reserved rather than consumed. Level 2/3 requires the Khan's Ger at level 2/3. All balance values live in `GAME.camp.nomadic`.
+Default construction costs are 24 materials; levels 2 and 3 cost 40 and 70 materials. Spiritual buildings additionally cost 8, 12 and 20 Spirit respectively. Core level 1 is provided. Workers are reserved rather than consumed. Level 2/3 requires the Khan's Ger at level 2/3. All balance values live in `GAME.camp.nomadic`.
 
 The Khan's Ger capacity governs new rescued or arriving households. Migration never deletes people already above their newly mapped capacity; they remain with the clan, and further arrivals wait until capacity is sufficient. A building purchase never heals or resurrects a fallen Khan, changes succession time or opens another progression menu. Experience bonuses use the existing XP level rules.
 

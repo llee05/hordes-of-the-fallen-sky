@@ -158,23 +158,22 @@ For resources, combat, enemies, levels, and camp development, see [the game mech
 
 ## Controls
 
-| Action                          | Keyboard / mouse                     | Standard controller           |
-| ------------------------------- | ------------------------------------ | ----------------------------- |
-| Ride                            | WASD / arrows                        | Left stick / D-pad            |
-| Attack                          | Automatic                            | Automatic                     |
-| Gallop                          | Space / Gallop button                | A                             |
-| Develop camp                    | B / Develop camp                     | X                             |
-| Pack and choose route           | M / Pack & migrate                   | Y                             |
-| Cycle unlocked formations       | F / Formation button                 | Right bumper                  |
-| Clan chronicle                  | Tab / J / chronicle button           | View                          |
-| Pause / resume / close planning | Escape / P                           | Start / B                     |
-| Navigate menus                  | Tab / Shift+Tab                      | Stick / D-pad                 |
-| Confirm                         | Enter / Space / click                | A                             |
-| Learn a rank                    | Navigate, then Enter / Space / click | Navigate, then A              |
-| Zoom in / out                   | + / − / mouse wheel                  | RT / LT                       |
-| Reset zoom                      | 0 / percentage button                | Right stick click             |
-| Fullscreen                      | F11 / Alt+Enter / fullscreen button  | —                             |
-| Quit                            | Quit game / window close             | Navigate to Quit game, then A |
+| Action                          | Keyboard / mouse                    | Standard controller           |
+| ------------------------------- | ----------------------------------- | ----------------------------- |
+| Ride                            | WASD / arrows                       | Left stick / D-pad            |
+| Attack                          | Automatic                           | Automatic                     |
+| Gallop                          | Space / Gallop button               | A                             |
+| Develop camp                    | B / Develop camp                    | X                             |
+| Pack and choose route           | M / Pack & migrate                  | Y                             |
+| Cycle unlocked formations       | F / Formation button                | Right bumper                  |
+| Clan chronicle                  | Tab / J / chronicle button          | View                          |
+| Pause / resume / close planning | Escape / P                          | Start / B                     |
+| Navigate menus                  | Tab / Shift+Tab                     | Stick / D-pad                 |
+| Confirm                         | Enter / Space / click               | A                             |
+| Zoom in / out                   | + / − / mouse wheel                 | RT / LT                       |
+| Reset zoom                      | 0 / percentage button               | Right stick click             |
+| Fullscreen                      | F11 / Alt+Enter / fullscreen button | —                             |
+| Quit                            | Quit game / window close            | Navigate to Quit game, then A |
 
 Caravan guard keeps riders near the clan and reduces clan damage. Encirclement circles nearby enemies and rewards moving fire. Charging wedge follows your Khan and turns gallop into an attack. Feigned retreat spreads riders, accelerates moving volleys, and gathers shards from farther away. Touch preview supports dragging to ride and tapping command buttons.
 
@@ -210,7 +209,7 @@ Profile preferences remain in `profile.json`; full saves use `expedition-auto.js
 ```text
 src/game/config.ts             Balance, world, and journey timings (seconds)
 src/game/types.ts              Run, clan, and snapshot contracts
-src/game/state/run.ts          Experience, traditions, run lifecycle
+src/game/state/run.ts          Experience and run lifecycle
 src/game/state/khan.ts         Khan presence, lethal hits, and active-time succession
 src/game/state/clan.ts         Economy, construction, migration, victory
 src/game/state/camp.ts         Typed camp effects, neutral defaults, and once-only grants
@@ -219,7 +218,6 @@ src/game/data/nomadicCamp.ts   Current camp building registry and level effects
 src/game/state/nomadicCamp.ts  Validated building purchases and compatibility projections
 src/game/data/landscapes.ts    Twelve location palettes, landmarks, vegetation, water, weather
 src/game/data/enemies.ts       Five enemies, two elites, and the Skybreaker
-src/game/systems/PatronSupport.ts Ancestral riders, slowing fields, pulse, and camp ward
 src/game/assets/painterlyArt.ts Shared painted atlases, sizing, collision alignment, effects
 src/game/assets/SteppeLandscape.ts Painterly ground, riverbanks, weather, regional scenery
 src/game/assets/landscapeLayout.ts Seeded scenery placement and clear caravan corridor

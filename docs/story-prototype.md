@@ -29,7 +29,7 @@ becomes costly, through Erden's confession and the final passage.
 | `opening`   | The narrow opening                                         | Arrive at Heart of the Steppe            | Recalls the first camp's chosen lesson and who keeps the tally                           |
 | `road`      | Hold the road                                              | Final defense reaches 90 active seconds  | Nara takes the embers; recalls the second camp's chosen lesson                           |
 
-Each scene occurs once. Triggers follow active gameplay time and arrival, so reading a scene cannot consume pasture or advance the final defense. Construction, formations, route rewards, and earned traditions remain available between scenes. Opening a route cannot bypass an outstanding departure conversation.
+Each scene occurs once. Triggers follow active gameplay time and arrival, so reading a scene cannot consume pasture or advance the final defense. Construction, formations, and route rewards remain available between scenes. Opening a route cannot bypass an outstanding departure conversation.
 
 The first crossing can reach Silent River or any of the eight named destinations in
 [the destination guide](migration-locations.md); the second can reach Broken Pass or
