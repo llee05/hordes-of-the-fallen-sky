@@ -97,6 +97,15 @@ are authored in `data/researchCatalogue.ts`; these gates never override runtime
 unavailability. Hybrid and general spending do not fund patron gates. Stored Spirit
 and camp construction remain separate from knowledge.
 
+Register a named runtime handler only when gameplay consumes it: add its ID to the
+appropriate group in [data/researchHandlers/](../src/game/data/researchHandlers/index.ts)
+and remove its blocker from [researchIntegration.ts](../src/game/data/researchIntegration.ts).
+New groups are composed in the handler index. The runtime handler type derives from
+that table; the purchasable-count check derives from legacy upgrades plus the table.
+`tests/unit/researchHandlers.test.ts` checks registry coverage, blocker exclusivity,
+and an executable effect scenario with an independently specified outcome for each handler.
+Effects without gameplay support retain an explicit unavailable reason.
+
 New purchases retain `{ id, rank, cost, at }` receipts. Spend gates use costs actually
 paid; ranks from older saves fall back to their unchanged authored prices. See the
 [full expedition save contract](expedition-saves.md#snapshot-and-hydration-contract) for
