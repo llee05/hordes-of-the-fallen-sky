@@ -26,7 +26,9 @@ use the npm commands for local tests.
 
 The commands and timings below document historical exclusive-lock experiments.
 For current focused reviews use `npm run test:e2e:changed -- ...` directly,
-without the historical outer `flock` wrapper.
+without the historical outer `flock` wrapper. The historical `patron-effects`
+spec named below was later removed with the patron tree; these commands describe
+the measured baseline and do not apply to the current suite.
 
 Measured on 2026-10-26 against application commit `297a02b`, with the review runner
 added in `0a205a4`. This is a shared 12-core Linux host with Intel Iris Xe graphics,
@@ -38,7 +40,7 @@ software-rendering, focus, or background-throttling policy changed in this work.
 ## Review fast path
 
 The full GPU baseline took **1,096.34 seconds (18m16s)**: **151 passed, 6 failed**,
-157 total. A focused review of `mounted-tactics` and `camp-combat`, including
+157 total. A focused review of `mounted-tactics` and `patron-effects`, including
 both smoke tests, took **56.41 seconds**: **9 passed**. That is 19.4 times less wall
 time for explicitly narrower review coverage. It does not establish a full-suite
 pass or replace a full local regression run.
@@ -47,7 +49,7 @@ pass or replace a full local regression run.
 flock /tmp/bh-playwright.lock env E2E_PORT=5268 \
   PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium \
   npm run test:e2e:changed -- origin/main \
-  --spec=mounted-tactics --spec=camp-combat
+  --spec=mounted-tactics --spec=patron-effects
 ```
 
 `test:e2e:changed` automatically includes keyboard/lifecycle and default 3D smoke
@@ -89,11 +91,11 @@ A temporary comment edit to `mounted-tactics.spec.ts` also verified the actual
 review runner's changed-spec branch: two affected tests plus both smoke tests were
 listed (four total, 1.53 seconds, no Chromium). The edit was restored immediately.
 
-| Review mode                                        | Tests |       Wall | Chromium CPU | Failures |
-| -------------------------------------------------- | ----: | ---------: | -----------: | -------: |
-| Full GPU baseline                                  |   157 | 1,096.34 s |       215.4% |        6 |
-| Explicit `mounted-tactics` + `camp-combat` + smoke |     9 |    56.41 s |       213.8% |        0 |
-| Automatic smoke-only selection                     |     2 |    18.79 s |       161.3% |        0 |
+| Review mode                                           | Tests |       Wall | Chromium CPU | Failures |
+| ----------------------------------------------------- | ----: | ---------: | -----------: | -------: |
+| Full GPU baseline                                     |   157 | 1,096.34 s |       215.4% |        6 |
+| Explicit `mounted-tactics` + `patron-effects` + smoke |     9 |    56.41 s |       213.8% |        0 |
+| Automatic smoke-only selection                        |     2 |    18.79 s |       161.3% |        0 |
 
 ## Measurement method
 
@@ -105,8 +107,8 @@ command's Chromium descendant processes, divided by wall time. **100% means one
 logical core**; very short processes between samples may be missed. This measures
 Chromium, not Vite or total host CPU.
 
-The fixed subset now contains **13 tests**, rather than the planning snapshot's
-11: `mounted-tactics`, `camp-combat`, `field-gameplay`, and
+The measured fixed subset contained **13 tests**, rather than the planning snapshot's
+11: `mounted-tactics`, `patron-effects`, `field-gameplay`, and
 `crossing-encounters`. It includes the actual 3D river crossing, menus, animation,
 and screenshot work. Baseline settings are one worker and 1440×1000. Experimental
 settings were supplied through an external Playwright config; the 30 FPS experiment
@@ -142,12 +144,12 @@ stability, especially with existing baseline failures. Retaining one worker avoi
 claiming safety from a small subset and avoids three unnecessary full runs for a
 default change that is not being proposed.
 
-To reproduce the baseline subset, use the normal config and the same four specs:
+At the measured revision, the baseline subset used the normal config and these four specs:
 
 ```sh
 flock /tmp/bh-playwright.lock env E2E_PORT=5268 \
   PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium \
-  npx playwright test mounted-tactics camp-combat field-gameplay crossing-encounters
+  npx playwright test mounted-tactics patron-effects field-gameplay crossing-encounters
 ```
 
 `--workers=2` and `--workers=3` reproduce the parallel variants. For the viewport
