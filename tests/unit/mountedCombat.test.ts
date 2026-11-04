@@ -23,7 +23,9 @@ describe('rider cooldowns', () => {
       const run = createRun();
       const cooldowns = riderCooldowns(run.combat, count);
       cooldowns[count - 1] = 10;
-      const expected = Array(count - 1).fill(0).concat(10);
+      const expected = Array(count - 1)
+        .fill(0)
+        .concat(10);
       expect(run.combat.riderFireAt).toEqual(expected);
       const restored = decodeExpedition(captureExpedition(run, world())).run;
       expect(restored.combat.riderFireAt).toEqual(expected);
