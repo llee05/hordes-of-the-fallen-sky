@@ -20,6 +20,7 @@ in the scene.
 | `arena/ArenaInput.ts`       | key, wheel, touch and controller bindings, the movement intent, and the touch joystick                                                                   | scene, bound in `create` |
 | `arena/ArenaPersistence.ts` | the save queue and generation guard, checkpoints, camp saves, autosave, and load/delete status                                                           | scene, reset in `create` |
 | `arena/EnemyDirector.ts`    | spawning and initialising pooled enemies, their ground shadows, the Skybreaker reference, the spawn and final-boss ticks, and enemy-pool capture/restore | scene, reset in `create` |
+| `arena/ClanDamage.ts`       | the single path for battlefield damage to the clan and the development clan-invincible cheat; callers pass the impact point, which no rule reads yet     | scene                    |
 
 "Scene" lifetime means one instance for the scene object. Field initialisers run once, but
 `create` runs on every `scene.restart`, so per-run state is reset there. `ArenaInput` must

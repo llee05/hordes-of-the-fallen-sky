@@ -56,10 +56,8 @@ import {
   beginMigration,
   buildStructure,
   canMigrate,
-  damageClan,
   hasDevelopment,
   riderCount,
-  type ClanProtection,
 } from '../state/clan';
 import type { ClanDamageCause } from '../state/clanSafety';
 import { advanceCrossingEncounter } from '../state/crossingEncounters';
@@ -126,6 +124,7 @@ import { ArenaPersistence } from './arena/ArenaPersistence';
 import { createArenaTimers, type ArenaTimers } from './arena/ArenaTimers';
 import { captureBody } from './arena/bodyArchive';
 import { CampPresenter } from './arena/CampPresenter';
+import { ClanDamage } from './arena/ClanDamage';
 import { EnemyDirector, type SpawnDirective } from './arena/EnemyDirector';
 import { HudPresenter } from './arena/HudPresenter';
 
@@ -183,6 +182,7 @@ export class ArenaScene extends Phaser.Scene {
   private readonly effects = new ArenaEffects(this.arena);
   private readonly hudPresenter = new HudPresenter(this.arena);
   private readonly enemyDirector = this.createEnemyDirector();
+  private readonly clanDamage = new ClanDamage(this.arena);
   /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
   private readonly controls = new ArenaInput(this.arena, this.controller, this.actionKeys);
   private hudTimer = 0;
@@ -1131,7 +1131,7 @@ export class ArenaScene extends Phaser.Scene {
     this.timers.dashTimer = Math.max(0, this.timers.dashTimer - dt);
     this.timers.invulnerable = Math.max(0, this.timers.invulnerable - dt);
     this.timers.dashRemaining = Math.max(0, this.timers.dashRemaining - dt);
-    const outcome = advanceClan(this.run, dt, this.clanProtection);
+    const outcome = advanceClan(this.run, dt, this.clanDamage.protection);
     if (outcome === 'lost') {
       this.finish('dead');
       return;
@@ -1650,10 +1650,11 @@ export class ArenaScene extends Phaser.Scene {
           distance < GAME.areaCombat.abilityRange);
       if (attackingCamp && !finale && enemy.clanAttackTimer <= 0) {
         enemy.motion.attack();
-        this.damageClan(
+        this.clanDamage.damage(
           enemy.definition.damage * GAME.camp.enemyAttack.damageMultiplier,
           'attack',
           enemy.definition.title ?? enemy.definition.id,
+          enemy,
         );
         enemy.clanAttackTimer = GAME.camp.enemyAttack.interval;
         const impact = this.campBarrier.hit(this.camp, enemy);
@@ -1978,7 +1979,7 @@ export class ArenaScene extends Phaser.Scene {
         Phaser.Math.Distance.Between(shot.x, shot.y, this.camp.x, this.camp.y) <= boundary.radius
       ) {
         if (acceptCampBarrage(this.run, shot.barrage))
-          this.damageClan(shot.damage * 0.5, 'attack', shot.source);
+          this.clanDamage.damage(shot.damage * 0.5, 'attack', shot.source, shot);
         const impact = this.campBarrier.hit(this.camp, shot);
         this.audio.play('barrier', impact);
         this.effects.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
@@ -2121,16 +2122,6 @@ export class ArenaScene extends Phaser.Scene {
     this.audio.play(outcome === 'fallen' ? 'fall' : 'hit');
     this.effects.burst(this.player.x, this.player.y, 0xdd967c, 8);
     if (outcome === 'fallen') this.hideFallenKhan();
-  }
-
-  private get clanProtection(): ClanProtection | undefined {
-    return import.meta.env.DEV && this.developerTools?.clanInvincible
-      ? { invincible: true }
-      : undefined;
-  }
-
-  private damageClan(amount: number, cause: ClanDamageCause = 'attack', source?: string): void {
-    damageClan(this.run, amount, this.clanProtection, cause, source);
   }
 
   selectSuccessor(trait: SuccessorTrait): void {
@@ -2438,7 +2429,7 @@ export class ArenaScene extends Phaser.Scene {
         )
           this.takeDamage(damage);
         if (Math.hypot(threat.x - this.camp.x, threat.y - this.camp.y) < radius + 25)
-          this.damageClan(damage * GAME.areaCombat.campDamage, 'area');
+          this.clanDamage.damage(damage * GAME.areaCombat.campDamage, 'area', undefined, threat);
         this.audio.play('spell', threat);
       },
     });
@@ -2518,9 +2509,11 @@ export class ArenaScene extends Phaser.Scene {
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.player.x, this.player.y) < radius)
         this.takeDamage(hazard.damage ?? 20);
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.camp.x, this.camp.y) < radius + 25)
-        this.damageClan(
+        this.clanDamage.damage(
           hazard.source === 'seer' ? 5 : 8,
           hazard.source === 'seer' ? 'seer' : 'eruption',
+          undefined,
+          hazard,
         );
       hazard.warning.destroy();
       this.hazards.splice(i, 1);
@@ -2649,6 +2642,9 @@ export class ArenaScene extends Phaser.Scene {
   }
   burst(x: number, y: number, color: number, count: number): void {
     this.effects.burst(x, y, color, count);
+  }
+  damageClan(amount: number, cause: ClanDamageCause = 'attack', source?: string): void {
+    this.clanDamage.damage(amount, cause, source);
   }
   get boss(): Enemy | undefined {
     return this.enemyDirector.boss;
