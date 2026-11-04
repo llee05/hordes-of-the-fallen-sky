@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { expectFrozen, openTitle, startExpedition } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await openTitle(page);
@@ -84,9 +84,7 @@ test('ancestor riders attack, animate, and freeze their poses and positions in t
         frame: spirit.image.frame.name,
       })),
     );
-  const before = await snapshot();
-  await page.waitForTimeout(250);
-  expect(await snapshot()).toEqual(before);
+  const before = await expectFrozen(page, snapshot, 16);
   await page.keyboard.press('Escape');
   await expect.poll(async () => JSON.stringify(await snapshot())).not.toBe(JSON.stringify(before));
   await page.screenshot({ path: 'test-results/ancestor-riders.png' });

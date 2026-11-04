@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import {
   closeOverlayOrPause,
   buyNode,
+  expectFrozen,
   inspectNode,
   openTitle,
   startExpedition,
@@ -23,8 +24,13 @@ test('inspection never spends points; explicit purchases use exact ranks and cur
   await inspectNode(page, 'power');
   await expect(page.locator('.node-preview')).toContainText('Shared attack damage');
   await expect(page.locator('.node-preview')).toContainText('20');
-  await page.waitForTimeout(200);
-  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
+  expect(
+    await expectFrozen(
+      page,
+      () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+      13,
+    ),
+  ).toBe(before);
   await buyNode(page, 'power');
   await expect(page.locator('.node-rank-summary')).toHaveText('Rank 1 / 2');
   await expect(page.locator('[data-node="haste"]')).toHaveAttribute('data-status', 'available');
@@ -151,8 +157,13 @@ test('controller confirms inspection, then purchases explicitly and retains unsp
     (window as any).testController.buttons[0].pressed = true;
   });
   await expect(page.locator('.node-rank-summary')).toHaveText('Rank 1 / 2');
-  await page.waitForTimeout(200);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades)).toBe(1);
+  expect(
+    await expectFrozen(
+      page,
+      () => page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades),
+      13,
+    ),
+  ).toBe(1);
   await page.evaluate(() => {
     (window as any).testController.buttons[0].pressed = false;
   });

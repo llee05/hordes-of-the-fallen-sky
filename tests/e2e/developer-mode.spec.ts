@@ -1,4 +1,4 @@
-import { closeOverlayOrPause } from './helpers';
+import { closeOverlayOrPause, expectFrozen } from './helpers';
 import { buyNode } from '../e2e/helpers';
 import { expect, test } from '@playwright/test';
 import { DEVELOPER_LEVELS } from '../../src/game/dev/levels';
@@ -13,9 +13,11 @@ test('developer mode freezes the expedition and returns to the exact title, intr
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await expect(page.locator('[data-developer-level]')).toHaveCount(DEVELOPER_LEVELS.length);
   await expect(page.getByRole('button', { name: 'Back ESC / F8' })).toBeFocused();
-  const frozen = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await page.waitForTimeout(200);
-  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(frozen);
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+    13,
+  );
   await closeOverlayOrPause(page);
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await page.getByRole('button', { name: /NEW GAME/ }).click();
@@ -79,17 +81,19 @@ test('switching checkpoints clears old actors, hazards, boss state, succession, 
   });
   await expect(page.locator('#khan-succession')).toBeVisible();
   await page.keyboard.press('F8');
-  const before = await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    return { run: JSON.stringify(scene.run), frames: scene.playerMotion.frame, x: scene.camp.x };
-  });
-  await page.waitForTimeout(200);
-  expect(
-    await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      return { run: JSON.stringify(scene.run), frames: scene.playerMotion.frame, x: scene.camp.x };
-    }),
-  ).toEqual(before);
+  await expectFrozen(
+    page,
+    () =>
+      page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        return {
+          run: JSON.stringify(scene.run),
+          frames: scene.playerMotion.frame,
+          x: scene.camp.x,
+        };
+      }),
+    13,
+  );
   await page.locator('[data-developer-level="chapter:golden-pasture"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   expect(

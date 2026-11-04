@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { closeOverlayOrPause, openTitle, startExpedition, tapController } from './helpers';
+import {
+  closeOverlayOrPause,
+  expectFrozen,
+  openTitle,
+  startExpedition,
+  tapController,
+} from './helpers';
 
 // Each test owns its browser context and game; CI shards may schedule them independently.
 test.describe.configure({ mode: 'parallel' });
@@ -77,9 +83,11 @@ test('starts, moves, dashes, pauses, resumes, and resets a run', async ({ page }
   await expect(page.locator('#dash-label')).toContainText('RECHARGING');
   await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
-  const pausedTime = await page.evaluate(() => (window as any).__gloam.scene.run.elapsed);
-  await page.waitForTimeout(400);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.elapsed)).toBe(pausedTime);
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => (window as any).__gloam.scene.run.elapsed),
+    25,
+  );
   await page.getByRole('button', { name: /RETURN TO THE STEPPE/ }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await closeOverlayOrPause(page);
