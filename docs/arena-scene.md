@@ -9,18 +9,20 @@ in the scene.
 
 ## Modules
 
-| Module                      | Owns                                                                                                                                                     | Lifetime                 |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `ArenaScene.ts`             | lifecycle, `update` order, public API, menus and phases, capture/restore composition, test-hook forwarders                                               | scene                    |
-| `arena/ArenaContext.ts`     | the shared world: live getters over the scene's run, timers and world objects                                                                            | scene                    |
-| `arena/ArenaTimers.ts`      | the nine saved timers as one record (`WorldArchive['timers']`)                                                                                           | scene, reset in `create` |
-| `arena/ArenaEffects.ts`     | spark bursts and dust puffs                                                                                                                              | scene                    |
-| `arena/HudPresenter.ts`     | the HUD snapshot, combat-readability markers, camp pressure, and the shared `bearingArrow` helper                                                        | scene                    |
-| `arena/CampPresenter.ts`    | camp drawing, the barrier, clan life, banner sway, the camp label, and the gers that fade on departure                                                   | each `create`            |
-| `arena/ArenaInput.ts`       | key, wheel, touch and controller bindings, the movement intent, and the touch joystick                                                                   | scene, bound in `create` |
-| `arena/ArenaPersistence.ts` | the save queue and generation guard, checkpoints, camp saves, autosave, and load/delete status                                                           | scene, reset in `create` |
-| `arena/EnemyDirector.ts`    | spawning and initialising pooled enemies, their ground shadows, the Skybreaker reference, the spawn and final-boss ticks, and enemy-pool capture/restore | scene, reset in `create` |
-| `arena/ClanDamage.ts`       | the single path for battlefield damage to the clan and the development clan-invincible cheat; callers pass the impact point, which no rule reads yet     | scene                    |
+| Module                      | Owns                                                                                                                                                                    | Lifetime                 |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `ArenaScene.ts`             | lifecycle, `update` order, public API, menus and phases, capture/restore composition, test-hook forwarders                                                              | scene                    |
+| `arena/ArenaContext.ts`     | the shared world: live getters over the scene's run, timers and world objects                                                                                           | scene                    |
+| `arena/ArenaTimers.ts`      | the nine saved timers as one record (`WorldArchive['timers']`)                                                                                                          | scene, reset in `create` |
+| `arena/ArenaEffects.ts`     | spark bursts and dust puffs                                                                                                                                             | scene                    |
+| `arena/HudPresenter.ts`     | the HUD snapshot, combat-readability markers, camp pressure, and the shared `bearingArrow` helper                                                                       | scene                    |
+| `arena/CampPresenter.ts`    | camp drawing, the barrier, clan life, banner sway, the camp label, and the gers that fade on departure                                                                  | each `create`            |
+| `arena/ArenaInput.ts`       | key, wheel, touch and controller bindings, the movement intent, and the touch joystick                                                                                  | scene, bound in `create` |
+| `arena/ArenaPersistence.ts` | the save queue and generation guard, checkpoints, camp saves, autosave, and load/delete status                                                                          | scene, reset in `create` |
+| `arena/EnemyDirector.ts`    | spawning and initialising pooled enemies, their ground shadows, the Skybreaker reference, the spawn and final-boss ticks, and enemy-pool capture/restore                | scene, reset in `create` |
+| `arena/ClanDamage.ts`       | the single path for battlefield damage to the clan and the development clan-invincible cheat; callers pass the impact point, which no rule reads yet                    | scene                    |
+| `arena/CombatSystem.ts`     | Khan volleys and the attack timer, friendly and hostile projectiles, hits, enemy damage and defeat rewards, gem collection, the physics overlaps, and saved projectiles | scene                    |
+| `arena/ArenaSystem.ts`      | base class whose getters read the shared context live, so moved code keeps its `this.run`/`this.player` shape                                                           | —                        |
 
 "Scene" lifetime means one instance for the scene object. Field initialisers run once, but
 `create` runs on every `scene.restart`, so per-run state is reset there. `ArenaInput` must

@@ -62,25 +62,15 @@ import {
 import type { ClanDamageCause } from '../state/clanSafety';
 import { advanceCrossingEncounter } from '../state/crossingEncounters';
 import { advanceEncounters, supportingAreaEnemy } from '../state/encounters';
-import {
-  decodeExpedition,
-  type ProjectileArchive,
-  type WorldArchive,
-} from '../state/expeditionArchive';
-import { markExpedition, metricStage, observeExpedition } from '../state/expeditionMetrics';
+import { decodeExpedition, type WorldArchive } from '../state/expeditionArchive';
+import { metricStage, observeExpedition } from '../state/expeditionMetrics';
 import {
   advanceFieldObjective,
   fieldObjectiveDue,
   startFieldObjective,
   syncFieldState,
 } from '../state/fieldObjectives';
-import {
-  acceptCampBarrage,
-  advanceFinalStand,
-  defeatSkybreaker,
-  finalChapter,
-  syncFinalStand,
-} from '../state/finalStand';
+import { advanceFinalStand, finalChapter, syncFinalStand } from '../state/finalStand';
 import { completeGuidance } from '../state/guidance';
 import { currentLocation } from '../state/journey';
 import {
@@ -91,16 +81,10 @@ import {
   isKhanActive,
   khanSpeedMultiplier,
 } from '../state/khan';
-import {
-  advanceMountedCombat,
-  retreatShot,
-  riderCooldowns,
-  spendMountedVolley,
-} from '../state/mountedCombat';
+import { advanceMountedCombat, riderCooldowns } from '../state/mountedCombat';
 import { purchaseNomadicBuilding } from '../state/nomadicCamp';
-import { createRun, gainExperience } from '../state/run';
+import { createRun } from '../state/run';
 import { openNextStory, resolveStory } from '../state/story';
-import { volleyFactors } from '../state/volley';
 import { ActionKeys } from '../systems/ActionKeys';
 import { areaSurface, habitatPreference } from '../systems/AreaHabitat';
 import { GameAudio } from '../systems/Audio';
@@ -116,7 +100,6 @@ import { GamepadInput } from '../systems/GamepadInput';
 import { SpatialHash } from '../systems/SpatialHash';
 import { TerrainCollision } from '../terrain/TerrainCollision';
 import type { BuildingId, EnemyDefinition, HudSnapshot, RunState } from '../types';
-import { projectileTerrainClear } from '../world3d/projectileTerrain';
 import type { ArenaContext } from './arena/ArenaContext';
 import { ArenaEffects } from './arena/ArenaEffects';
 import { ArenaInput } from './arena/ArenaInput';
@@ -125,6 +108,7 @@ import { createArenaTimers, type ArenaTimers } from './arena/ArenaTimers';
 import { captureBody } from './arena/bodyArchive';
 import { CampPresenter } from './arena/CampPresenter';
 import { ClanDamage } from './arena/ClanDamage';
+import { CombatSystem, type HostileShooter } from './arena/CombatSystem';
 import { EnemyDirector, type SpawnDirective } from './arena/EnemyDirector';
 import { HudPresenter } from './arena/HudPresenter';
 
@@ -183,6 +167,7 @@ export class ArenaScene extends Phaser.Scene {
   private readonly hudPresenter = new HudPresenter(this.arena);
   private readonly enemyDirector = this.createEnemyDirector();
   private readonly clanDamage = new ClanDamage(this.arena);
+  private readonly combat = this.createCombat();
   /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
   private readonly controls = new ArenaInput(this.arena, this.controller, this.actionKeys);
   private hudTimer = 0;
@@ -289,6 +274,28 @@ export class ArenaScene extends Phaser.Scene {
     });
   }
 
+  private createCombat(): CombatSystem {
+    const scene = this;
+    return new CombatSystem(
+      this.arena,
+      {
+        get playerMotion() {
+          return scene.playerMotion;
+        },
+        get defeats() {
+          return scene.defeats;
+        },
+        get campBarrier() {
+          return scene.campBarrier;
+        },
+        takeDamage: (amount) => scene.takeDamage(amount),
+        hurtPlayer: (enemy) => scene.hurtPlayer(enemy),
+      },
+      this.enemyDirector,
+      this.clanDamage,
+    );
+  }
+
   connect(callbacks: ArenaCallbacks): void {
     this.callbacks = callbacks;
     if (this.player) this.publishPhase();
@@ -386,26 +393,7 @@ export class ArenaScene extends Phaser.Scene {
     });
     this.gems = this.physics.add.group({ classType: Gem, maxSize: GAME.maxGems });
     this.hostileShots = this.physics.add.group({ classType: Projectile, maxSize: 180 });
-    // Phaser reports the individual sprite first when overlapping it with a group.
-    this.physics.add.overlap(this.player, this.hostileShots, (_player, shot) => {
-      if (
-        this.run.phase !== 'playing' ||
-        !(shot as Projectile).active ||
-        !this.projectileReaches(shot as Projectile)
-      )
-        return;
-      const damage = (shot as Projectile).damage;
-      (shot as Projectile).disableBody(true, true);
-      this.takeDamage(damage);
-    });
-    // Collision callbacks only deactivate bodies; Phaser retains pooled objects.
-    this.physics.add.overlap(this.projectiles, this.enemies, (bolt, enemy) =>
-      this.hitEnemy(bolt as Projectile, enemy as Enemy),
-    );
-    this.physics.add.overlap(this.player, this.enemies, (_player, enemy) =>
-      this.hurtPlayer(enemy as Enemy),
-    );
-
+    this.combat.registerOverlaps();
     this.cameras.main.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09);
     this.cameras.main.roundPixels = false;
@@ -518,33 +506,6 @@ export class ArenaScene extends Phaser.Scene {
   private captureWorld(): WorldArchive {
     const body = captureBody;
     const pool = this.enemies.getChildren() as Enemy[];
-    const shots = (group: Phaser.Physics.Arcade.Group): ProjectileArchive[] =>
-      (group.getChildren() as Projectile[])
-        .filter((p) => p.active)
-        .map((p) => ({
-          ...body(p),
-          damage: p.damage,
-          remaining: p.remaining,
-          fire: p.fire,
-          tempest: p.tempest,
-          turn: p.turn,
-          pierces: p.pierces,
-          pins: p.pins,
-          echoIndex: p.echoIndex,
-          precision: p.getData('precision') as boolean | undefined,
-          ghost: p.getData('ghost') as boolean | undefined,
-          baseDamage: p.getData('base-damage') as number | undefined,
-          dealtDamage: p.getData('dealt-damage') as number | undefined,
-          rotation: p.rotation,
-          tint: p.tintTopLeft,
-          previous: p.getData('terrain-previous') as { x: number; y: number } | undefined,
-          barrage: p.barrage,
-          source: p.source,
-          hits: [...p.hitTargets].map(([enemy, spawnId]) => ({
-            slot: pool.indexOf(enemy),
-            spawnId,
-          })),
-        }));
     return {
       player: { ...body(this.player), motion: this.playerMotion.capture() },
       camp: { x: this.camp.x, y: this.camp.y },
@@ -552,8 +513,7 @@ export class ArenaScene extends Phaser.Scene {
       zoom: this.cameraZoom,
       timers: { ...this.timers },
       ...this.enemyDirector.capturePool(),
-      projectiles: shots(this.projectiles),
-      hostileShots: shots(this.hostileShots),
+      ...this.combat.captureShots(pool),
       gems: (this.gems.getChildren() as Gem[])
         .filter((g) => g.active)
         .map((g) => ({
@@ -600,38 +560,7 @@ export class ArenaScene extends Phaser.Scene {
     this.aura.setPosition(this.player.x, this.player.y);
     if (!isKhanActive(run)) this.hideFallenKhan();
     const pool = this.enemyDirector.restorePool(world);
-    const restoreShots = (
-      group: Phaser.Physics.Arcade.Group,
-      shots: ProjectileArchive[],
-      hostile: boolean,
-    ): void => {
-      for (const saved of shots) {
-        const p = group.get(saved.x, saved.y, hostile ? 'gem' : 'bolt') as Projectile;
-        p.enableBody(true, saved.x, saved.y, true, true);
-        const { x: _x, y: _y, vx, vy, flip, rotation, tint, previous, hits, ...state } = saved;
-        p.echoIndex = undefined;
-        Object.assign(p, state);
-        p.setData('precision', saved.precision);
-        p.setData('ghost', saved.ghost);
-        p.setData('base-damage', saved.baseDamage);
-        p.setData('dealt-damage', saved.dealtDamage);
-        p.setScale(hostile ? 1.1 : 1)
-          .setDepth(9200)
-          .setRotation(rotation)
-          .setTint(tint)
-          .setAlpha(1)
-          .setFlipX(flip)
-          .setVelocity(vx, vy);
-        const radius = hostile ? 5.4 / p.scaleX : 4.5;
-        p.setCircle(radius, p.width / 2 - radius, p.height / 2 - radius);
-        p.setData('terrain-previous', previous ?? { x: saved.x, y: saved.y });
-        if (hostile) this.styleHostileProjectile(p);
-        p.hitTargets.clear();
-        for (const hit of hits) p.hitTargets.set(pool[hit.slot]!, hit.spawnId);
-      }
-    };
-    restoreShots(this.projectiles, world.projectiles, false);
-    restoreShots(this.hostileShots, world.hostileShots, true);
+    this.combat.restoreShots(world, pool);
     for (const saved of world.gems) {
       const gem = this.gems.get(saved.x, saved.y, 'gem') as Gem;
       gem.enableBody(true, saved.x, saved.y, true, true);
@@ -1024,8 +953,7 @@ export class ArenaScene extends Phaser.Scene {
           : this.visualSettings.effectDensity === 'reduced'
             ? 'minimal'
             : 'full';
-    for (const shot of this.hostileShots.getChildren() as Projectile[])
-      if (shot.active) this.styleHostileProjectile(shot);
+    this.combat.restyleHostileShots();
     this.updateAreaCombat(0);
     void this.platform
       .saveVisualSettings(this.visualSettings)
@@ -1063,16 +991,6 @@ export class ArenaScene extends Phaser.Scene {
       this.riderShadows[index]!.setPosition(safe.x + 7, safe.y + 4).setDepth(99 + safe.y);
     });
     this.spatial.rebuild(this.enemies.getChildren() as Enemy[]);
-  }
-
-  private styleHostileProjectile(shot: Projectile): void {
-    const high = this.visualSettings.projectileContrast === 'high';
-    shot
-      .setScale(high ? 1.45 : 1.1)
-      .setTint(high ? 0xffc36b : 0xb94948)
-      .setDepth(9200);
-    const radius = 5.4 / shot.scaleX;
-    shot.setCircle(radius, shot.width / 2 - radius, shot.height / 2 - radius);
   }
 
   toggleAudio(): boolean {
@@ -1189,12 +1107,11 @@ export class ArenaScene extends Phaser.Scene {
     }
     this.spatial.rebuild(this.enemies.getChildren() as Enemy[]);
     this.updateSupport(dt);
-    this.timers.attackTimer -= dt;
-    if (this.timers.attackTimer <= 0) this.fire();
+    this.combat.tickFire(dt);
     this.fireRiders();
     this.enemyDirector.tickSpawns(dt);
-    this.updateProjectiles(dt);
-    this.collectGems(dt);
+    this.combat.updateProjectiles(dt);
+    this.combat.collectGems(dt);
     if (this.run.phase !== 'playing') return;
     this.updateAreaCombat(dt);
     this.persistence.tick(dt);
@@ -1310,7 +1227,7 @@ export class ArenaScene extends Phaser.Scene {
       const direction = Math.atan2(state.aim.y - boss.y, state.aim.x - boss.x);
       const count = GAME.finalStand.barrageShots[chapter];
       for (let index = 0; index < count; index++) {
-        const shot = this.fireHostile(
+        const shot = this.combat.fireHostile(
           boss,
           direction + (index / (count - 1) - 0.5) * GAME.finalStand.barrageSpread,
         );
@@ -1672,7 +1589,7 @@ export class ArenaScene extends Phaser.Scene {
         const count = behavior === 'boss' ? 12 : (enemy.definition.volley?.shots ?? 1);
         enemy.motion.attack();
         for (let i = 0; i < count; i += 1)
-          this.fireHostile(
+          this.combat.fireHostile(
             enemy,
             angle +
               (behavior === 'boss'
@@ -1747,7 +1664,7 @@ export class ArenaScene extends Phaser.Scene {
       }
       if (enemy.burning > 0) {
         enemy.burning -= dt;
-        this.damageEnemy(
+        this.combat.damageEnemy(
           enemy,
           dt * this.run.stats.damage * 0.45 * this.run.clan.campEffects.multipliers.burnDamage,
         );
@@ -1758,49 +1675,8 @@ export class ArenaScene extends Phaser.Scene {
         clan.formation === 'wedge' &&
         playerDistance < 64
       )
-        this.damageEnemy(enemy, dt * this.run.stats.damage * 18);
+        this.combat.damageEnemy(enemy, dt * this.run.stats.damage * 18);
     }
-  }
-
-  private fire(): void {
-    let hostFired = false;
-    const momentum = this.run.clan.momentum;
-    const target = this.spatial.nearest(
-      this.player.x,
-      this.player.y,
-      GAME.projectile.range + this.run.clan.campEffects.bonuses.range + momentum * 120,
-      (e) => !this.landscape.navigation || this.landscape.navigation.lineClear(this.player, e, 0),
-    );
-    if (isKhanActive(this.run) && target) {
-      this.playerMotion.attack();
-      if (this.player.body!.velocity.lengthSq() < 4)
-        this.player.setFlipX(
-          (this.landscape.world3d?.screenX(target.x - this.player.x, target.y - this.player.y) ??
-            target.x - this.player.x) < 0,
-        );
-      const charged = this.run.combat.ready;
-      const retreat = retreatShot(this.run, this.player, this.camp, target, this.facing);
-      const released = this.shootVolley(
-        this.player.x,
-        this.player.y,
-        target,
-        this.run.stats.projectiles,
-        (1 + momentum * 0.3) * (retreat ? GAME.mounted.retreatDamage : 1),
-        false,
-        charged,
-        'khan',
-      );
-      hostFired ||= released;
-      if (released && charged) {
-        spendMountedVolley(this.run);
-        this.effects.burst(this.player.x, this.player.y, 0xe3c78c, 5);
-      }
-    }
-    if (hostFired) this.run.combat.volleys++;
-    this.timers.attackTimer =
-      this.run.stats.attackInterval *
-      this.run.clan.campEffects.multipliers.hostInterval *
-      (this.run.clan.formation === 'retreat' && momentum > 0.4 ? 0.7 : 1);
   }
 
   private fireRiders(): void {
@@ -1815,7 +1691,7 @@ export class ArenaScene extends Phaser.Scene {
       if (
         riderTarget &&
         cooldowns[i]! <= this.run.elapsed &&
-        this.shootVolley(
+        this.combat.shootVolley(
           rider.x,
           rider.y,
           riderTarget,
@@ -1835,266 +1711,6 @@ export class ArenaScene extends Phaser.Scene {
             (this.landscape.world3d?.screenX(riderTarget.x - rider.x, riderTarget.y - rider.y) ??
               riderTarget.x - rider.x) < 0,
           );
-      }
-    }
-  }
-
-  private shootVolley(
-    x: number,
-    y: number,
-    target: Enemy,
-    count: number,
-    damageOrMultiplier: number,
-    ancestral = false,
-    charged = false,
-    owner: 'khan' | 'rider' | 'wagon' | 'wagon-ricochet' = 'rider',
-    echoIndex?: number,
-    ghost = false,
-    origin?: Enemy,
-  ): boolean {
-    const volley =
-      owner === 'wagon-ricochet'
-        ? { tempest: false, count: 1, spacing: 0, damage: 1, speed: 1 }
-        : volleyFactors(this.run, count);
-    const direction = Math.atan2(target.y - y, target.x - x);
-    const tempest = volley.tempest;
-    const first = this.projectiles.get(x, y, 'bolt') as Projectile | null;
-    if (!first) return false;
-    const arrowCount = volley.count;
-    const basePierces = this.run.stats.pierce + (charged ? 1 : 0);
-    for (let i = 0; i < arrowCount; i += 1) {
-      const bolt = i === 0 ? first : (this.projectiles.get(x, y, 'bolt') as Projectile | null);
-      if (!bolt) break;
-      const angle = direction + (i - (arrowCount - 1) / 2) * volley.spacing;
-      bolt.enableBody(true, x, y, true, true);
-      bolt.barrage = undefined;
-      bolt.echoIndex = ancestral ? echoIndex : undefined;
-      bolt.source =
-        owner === 'khan' || owner === 'wagon' || owner === 'wagon-ricochet' ? owner : undefined;
-      bolt.setData('terrain-previous', { x, y });
-      bolt
-        .setTexture('bolt')
-        .setScale(1)
-        .setDepth(9200)
-        .setRotation(angle + Math.PI / 4)
-        .setAlpha(1)
-        .clearTint();
-      // Preserve the original 4.5-world-unit arrow radius at the new texture scale.
-      bolt.setCircle(4.5, bolt.width / 2 - 4.5, bolt.height / 2 - 4.5);
-      bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
-      bolt.tempest = tempest;
-      bolt.pierces = basePierces;
-      bolt.pins = false;
-      if (charged) bolt.setTint(0xe2c586);
-      bolt.hitTargets.clear();
-      if (origin) bolt.hitTargets.set(origin, origin.spawnId);
-      bolt.turn = tempest ? (i % 2 ? 1 : -1) * 0.65 : 0;
-      if (bolt.fire) bolt.setTint(0xffa04e);
-      if (ancestral) bolt.setTint(0x91ded6);
-      bolt.damage =
-        owner === 'wagon-ricochet'
-          ? damageOrMultiplier
-          : this.run.stats.damage *
-            (charged ? GAME.mounted.chargedDamage : 1) *
-            damageOrMultiplier *
-            volley.damage;
-      bolt.setData('base-damage', bolt.damage);
-      bolt.setData('dealt-damage', 0);
-      bolt.setData('precision', false);
-      bolt.setData('ghost', ghost);
-      bolt.remaining = GAME.projectile.lifetime;
-      bolt.setVelocity(
-        Math.cos(angle) * GAME.projectile.speed * volley.speed,
-        Math.sin(angle) * GAME.projectile.speed * volley.speed,
-      );
-    }
-    markExpedition(this.run, 'fight');
-    this.audio.play('shoot', { x, y });
-    return true;
-  }
-
-  private fireHostile(enemy: Enemy, angle: number): Projectile | undefined {
-    const shot = this.hostileShots.get(enemy.x, enemy.y, 'gem') as Projectile | null;
-    if (!shot) return;
-    shot.enableBody(true, enemy.x, enemy.y, true, true);
-    if (this.run.phase === 'playing') markExpedition(this.run, 'fight');
-    shot.barrage = undefined;
-    shot.source = enemy.definition.title ?? enemy.definition.id;
-    shot.setData('terrain-previous', { x: enemy.x, y: enemy.y });
-    shot
-      .setTexture('gem')
-      .setScale(1.1)
-      .setDepth(9200)
-      .setTint(0xb94948)
-      .setAlpha(1)
-      .setRotation(0);
-    const radius = 5.4 / shot.scaleX;
-    shot.setCircle(radius, shot.width / 2 - radius, shot.height / 2 - radius);
-    shot.remaining = 5;
-    shot.damage = enemy.definition.damage;
-    shot.fire = false;
-    shot.tempest = false;
-    shot.turn = 0;
-    shot.pierces = 0;
-    shot.pins = false;
-    shot.hitTargets.clear();
-    shot.setVelocity(Math.cos(angle) * 125, Math.sin(angle) * 125);
-    this.styleHostileProjectile(shot);
-    this.audio.play('spell', enemy);
-    return shot;
-  }
-
-  private updateProjectiles(dt: number): void {
-    const terrain = this.landscape.world3d?.terrain;
-    if (terrain)
-      for (const projectile of [
-        ...this.projectiles.getChildren(),
-        ...this.hostileShots.getChildren(),
-      ] as Projectile[]) {
-        if (!projectile.active) continue;
-        const previous = projectile.getData('terrain-previous') as
-          { x: number; y: number } | undefined;
-        if (previous && !projectileTerrainClear(terrain, previous, projectile))
-          projectile.disableBody(true, true);
-        projectile.setData('terrain-previous', { x: projectile.x, y: projectile.y });
-      }
-    const boundary = campBoundary(this.run);
-    for (const bolt of this.projectiles.getChildren() as Projectile[]) {
-      if (!bolt.active) continue;
-      bolt.remaining -= dt;
-      if (bolt.turn) {
-        const body = bolt.body as Phaser.Physics.Arcade.Body;
-        const angle = Math.atan2(body.velocity.y, body.velocity.x) + bolt.turn * dt;
-        const speed = body.velocity.length();
-        bolt.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
-        bolt.setRotation(angle + Math.PI / 4);
-      }
-      if (bolt.remaining <= 0) bolt.disableBody(true, true);
-    }
-    for (const shot of this.hostileShots.getChildren() as Projectile[]) {
-      if (!shot.active) continue;
-      shot.remaining -= dt;
-      if (shot.remaining <= 0) shot.disableBody(true, true);
-      else if (
-        Phaser.Math.Distance.Between(shot.x, shot.y, this.camp.x, this.camp.y) <= boundary.radius
-      ) {
-        if (acceptCampBarrage(this.run, shot.barrage))
-          this.clanDamage.damage(shot.damage * 0.5, 'attack', shot.source, shot);
-        const impact = this.campBarrier.hit(this.camp, shot);
-        this.audio.play('barrier', impact);
-        this.effects.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
-        shot.disableBody(true, true);
-      }
-    }
-  }
-
-  private hitEnemy(bolt: Projectile, enemy: Enemy): void {
-    if (
-      this.run.phase !== 'playing' ||
-      !bolt.active ||
-      !enemy.active ||
-      !this.projectileReaches(bolt)
-    )
-      return;
-    if (bolt.hitTargets.get(enemy) === enemy.spawnId) return;
-    bolt.hitTargets.set(enemy, enemy.spawnId);
-    const hitDamage = bolt.damage;
-
-    if (bolt.pierces > 0) {
-      bolt.pierces -= 1;
-    } else bolt.disableBody(true, true);
-    if (bolt.fire) enemy.burning = 2;
-    this.damageEnemy(enemy, hitDamage);
-  }
-
-  private projectileReaches(projectile: Projectile): boolean {
-    const terrain = this.landscape.world3d?.terrain;
-    const previous = projectile.getData('terrain-previous') as { x: number; y: number } | undefined;
-    if (terrain && previous && !projectileTerrainClear(terrain, previous, projectile)) {
-      projectile.disableBody(true, true);
-      return false;
-    }
-    return true;
-  }
-
-  private damageEnemy(enemy: Enemy, amount: number): number {
-    if (!enemy.active) return 0;
-    if (enemy === this.enemyDirector.boss && this.run.finalStand?.phase === 'recovery')
-      amount *= GAME.finalStand.vulnerableDamage;
-    const hasArmor =
-      (enemy.definition.armor !== undefined || enemy.definition.id === 'brute') &&
-      enemy.pinned <= 0;
-    const baseArmor = hasArmor ? (enemy.definition.armor ?? GAME.tactics.heavyArmor) : 1;
-    amount *= baseArmor;
-    const actual = Math.min(Math.max(0, enemy.health), Math.max(0, amount));
-    if (amount >= 1) enemy.motion.hit();
-    enemy.health -= amount;
-    if (enemy.health > 0) {
-      if (amount >= 1)
-        this.audio.play(enemy.definition.texture === 'earth' ? 'stoneImpact' : 'impact', enemy);
-      return actual;
-    }
-    const { x, y } = enemy;
-    const value = enemy.definition.xp;
-    if (effectAmount(this.visualSettings) > 0) this.defeats.show(enemy);
-    enemy.disableBody(true, true);
-    this.audio.play('defeat', { x, y });
-    this.enemyDirector.shadows.get(enemy)?.setVisible(false);
-    this.run.kills += 1;
-    if (this.run.crossing && enemy.crossingId === this.run.crossing.key)
-      this.run.crossing.defeated++;
-    const objective = this.run.field.objective;
-    if (
-      objective?.status === 'available' &&
-      objective.kind === 'gathering' &&
-      enemy.objectiveId === objective.id
-    )
-      objective.defeated++;
-    this.run.clan.spirit += value * 0.4 * this.run.clan.campEffects.multipliers.spiritGain;
-    if (enemy === this.enemyDirector.boss) defeatSkybreaker(this.run);
-    this.effects.burst(x, y, 0xa58aad, 5);
-    const gem = this.gems.get(x, y, 'gem') as Gem | null;
-    if (gem) {
-      gem.enableBody(true, x, y, true, true);
-      gem.setTexture('gem').setScale(0.85).setDepth(3).setVelocity(0, 0);
-      gem.value = value;
-      gem.secondary = false;
-      gem.attracted = false;
-    } else {
-      // Preserve experience even if the gem pool is full.
-      const active = this.gems.getFirstAlive() as Gem | null;
-      if (active) active.value += value;
-    }
-    return actual;
-  }
-
-  private collectGems(dt: number): void {
-    if (!isKhanActive(this.run)) return;
-    let experience = 0;
-    for (const gem of this.gems.getChildren() as Gem[]) {
-      if (!gem.active) continue;
-      const distance = Phaser.Math.Distance.Between(gem.x, gem.y, this.player.x, this.player.y);
-      const retreat = this.run.clan.formation === 'retreat' && this.run.clan.momentum > 0.4;
-      if (distance < Math.max(this.run.stats.pickupRadius * (retreat ? 1.7 : 1), 0))
-        gem.attracted = true;
-      if (!gem.attracted) continue;
-      if (distance < 18) {
-        experience += gem.value;
-        gem.disableBody(true, true);
-      } else {
-        const step = Math.min(1, dt * (6 + 140 / distance));
-        gem.setPosition(
-          Phaser.Math.Linear(gem.x, this.player.x, step),
-          Phaser.Math.Linear(gem.y, this.player.y, step),
-        );
-      }
-    }
-    if (experience > 0) {
-      this.audio.play('gem');
-      if (gainExperience(this.run, experience)) {
-        this.audio.play('level');
-        this.run.clan.message = `Level ${this.run.level} reached.`;
-        this.callbacks?.onHud(this.snapshot());
       }
     }
   }
@@ -2550,7 +2166,7 @@ export class ArenaScene extends Phaser.Scene {
           onComplete: () => lightning.destroy(),
         });
         this.spatial.forEachNearby(x, y, 70, (enemy) =>
-          this.damageEnemy(enemy, this.run.stats.damage * 3),
+          this.combat.damageEnemy(enemy, this.run.stats.damage * 3),
         );
       }
       this.timers.supportTimer =
@@ -2562,7 +2178,7 @@ export class ArenaScene extends Phaser.Scene {
     if (wagonResearch.active && this.timers.wagonTimer <= 0) {
       const target = this.spatial.nearest(this.camp.x, this.camp.y, wagonResearch.range);
       if (target)
-        this.shootVolley(
+        this.combat.shootVolley(
           this.camp.x,
           this.camp.y,
           target,
@@ -2579,7 +2195,7 @@ export class ArenaScene extends Phaser.Scene {
         this.camp.x,
         this.camp.y,
         campBoundary(this.run).wardRadius,
-        (enemy) => this.damageEnemy(enemy, this.run.stats.damage * 1.5),
+        (enemy) => this.combat.damageEnemy(enemy, this.run.stats.damage * 1.5),
       );
       this.effects.burst(this.camp.x, this.camp.y, 0x8acfe2, 8);
       this.timers.wardTimer = 1.2;
@@ -2645,6 +2261,27 @@ export class ArenaScene extends Phaser.Scene {
   }
   damageClan(amount: number, cause: ClanDamageCause = 'attack', source?: string): void {
     this.clanDamage.damage(amount, cause, source);
+  }
+  shootVolley(...args: Parameters<CombatSystem['shootVolley']>): boolean {
+    return this.combat.shootVolley(...args);
+  }
+  fire(): void {
+    this.combat.fire();
+  }
+  fireHostile(enemy: HostileShooter, angle: number): Projectile | undefined {
+    return this.combat.fireHostile(enemy, angle);
+  }
+  updateProjectiles(dt: number): void {
+    this.combat.updateProjectiles(dt);
+  }
+  hitEnemy(bolt: Projectile, enemy: Enemy): void {
+    this.combat.hitEnemy(bolt, enemy);
+  }
+  damageEnemy(enemy: Enemy, amount: number): number {
+    return this.combat.damageEnemy(enemy, amount);
+  }
+  collectGems(dt: number): void {
+    this.combat.collectGems(dt);
   }
   get boss(): Enemy | undefined {
     return this.enemyDirector.boss;
