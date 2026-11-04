@@ -261,7 +261,7 @@ export class ArenaScene extends Phaser.Scene {
   private readonly actionKeys = new ActionKeys();
   private callbacks?: ArenaCallbacks;
   private readonly timers: ArenaTimers = createArenaTimers();
-  /** The shared world handed to scene systems; every member reads the scene live. */
+  /** Shared world access; see ArenaContext for the live-state contract. */
   private readonly arena: ArenaContext = this.createArenaContext();
   private readonly effects = new ArenaEffects(this.arena);
   private readonly hudPresenter = new HudPresenter(this.arena);

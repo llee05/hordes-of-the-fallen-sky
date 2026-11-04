@@ -27,19 +27,21 @@ controller would forget held buttons, so a held confirm or back would fire again
 load, and a new `ActionKeys` would lose the dedupe for key events Phaser replays. The scene
 removes all keyboard listeners on shutdown and `bind` adds them again.
 `ArenaPersistence` also survives a restart: it keeps the pending write and the save generation.
-`reset` increments the generation, so a write queued before a restart finishes without
-touching the new scene.
+`reset` increments the generation, dropping saves that have not started and preventing
+completion handlers for in-flight saves from updating the new session. A platform write
+already in flight can still finish.
 
 ## Shared context
 
-Systems receive one `ArenaContext`. Every member is a getter over the scene, so a system
-always sees the current `run` and the world objects the latest `create` built. Never store
-`run` in a system: New Game, Load, Continue Camp and a tradition change all replace it.
+Systems receive one `ArenaContext`. Replaceable state is exposed through getters over the
+scene, so a system always sees the current `run` and the world objects the latest `create`
+built. Never store `run` in a system: New Game, Load, Continue Camp and a tradition change
+all replace it.
 
 ## Saved timers
 
-`spawnTimer`, `attackTimer`, `dashTimer`, `dashRemaining`, `invulnerable`, `supportTimer`,
-`wagonTimer`, `wardTimer` and `hazardTimer` live in one `ArenaTimers` record. Capture copies it
+[`ArenaTimers`](../src/game/scenes/arena/ArenaTimers.ts) aliases the saved timer schema in
+[`WorldArchive`](../src/game/state/expeditionArchive.ts). Capture copies the record
 (`{ ...timers }`) and restore assigns into it (`Object.assign(timers, saved)`). A timer moved
 onto a separate field would load into a field nobody reads, and the save would still look valid.
 
@@ -49,7 +51,7 @@ onto a separate field would load into a field nobody reads, and the save would s
 steps below in this order. The order is behaviour: moving a step changes play.
 
 1. Controller polling and menu dispatch (`ArenaInput.pollController`); stop unless the phase is still `playing`.
-2. Present a queued story; observe expedition and research metrics; begin succession if the Khan fell.
+2. Present a queued story; observe expedition metrics; begin succession if the Khan fell; observe research frame metrics.
 3. Advance elapsed time, campfire vigil and patrons; decay dash, invulnerability and gallop.
 4. Advance the clan: finish on loss or victory, or arrive at the next camp.
 5. Select the nearest companion; `updateCamp` (camp drawing, then riders, terrain and hazards).

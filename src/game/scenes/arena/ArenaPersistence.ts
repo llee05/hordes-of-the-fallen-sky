@@ -16,8 +16,8 @@ export interface PersistenceHost {
 
 /**
  * Expedition and camp saving: one queued write at a time, a generation guard
- * that drops writes from before a restart, coalesced checkpoints and the
- * autosave clock. The scene creates this once, so the queue and generation
+ * that drops unstarted saves and ignores stale save completions, coalesced
+ * checkpoints and the autosave clock. The scene creates this once, so the queue and generation
  * survive `scene.restart`; `reset` runs at the start of every `create`.
  */
 export class ArenaPersistence {
@@ -38,7 +38,7 @@ export class ArenaPersistence {
     private readonly host: PersistenceHost,
   ) {}
 
-  /** Starts a new scene generation; writes queued before it finish without effect. */
+  /** Invalidates unstarted saves and session updates from in-flight save completions. */
   reset(): void {
     this.generation++;
     this.started = false;

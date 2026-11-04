@@ -12,8 +12,8 @@ import type { ArenaTimers } from './ArenaTimers';
 export type { ArenaTimers } from './ArenaTimers';
 
 /**
- * The world that ArenaScene's systems share. Every member is a live getter over
- * the scene, so a system always sees the current run and the objects that
+ * The world that ArenaScene's systems share. Replaceable state uses live getters
+ * over the scene, so a system always sees the current run and the objects that
  * `create` rebuilt on the latest restart. Systems must never store `run`: New
  * Game, Load, Continue Camp and a tradition change all replace it.
  */

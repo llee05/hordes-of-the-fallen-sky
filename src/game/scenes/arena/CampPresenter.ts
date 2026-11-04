@@ -18,7 +18,7 @@ const PACKING_SECONDS = 2.4;
 export class CampPresenter {
   readonly campBarrier: CampBarrier;
   readonly clanLife: ClanLife;
-  /** Copies of the camp's gers that fade where the camp stood as the caravan leaves. */
+  /** Copies of the camp's gers that fade alongside the departing caravan. */
   packedGers: { image: Phaser.GameObjects.Image; x: number; y: number }[] = [];
   packingRemaining = 0;
   private readonly label: Phaser.GameObjects.Text;
