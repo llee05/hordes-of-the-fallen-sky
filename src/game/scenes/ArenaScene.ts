@@ -18,7 +18,6 @@ import {
   CAMP_VISUAL_SCALE,
   artTexture,
   createPainterlyEffects,
-  paintedImage,
   preloadPainterlyArt,
   styleActor,
 } from '../assets/painterlyArt';
@@ -57,7 +56,6 @@ import {
   buildStructure,
   canMigrate,
   hasDevelopment,
-  riderCount,
 } from '../state/clan';
 import type { ClanDamageCause } from '../state/clanSafety';
 import { advanceCrossingEncounter } from '../state/crossingEncounters';
@@ -81,7 +79,7 @@ import {
   isKhanActive,
   khanSpeedMultiplier,
 } from '../state/khan';
-import { advanceMountedCombat, riderCooldowns } from '../state/mountedCombat';
+import { advanceMountedCombat } from '../state/mountedCombat';
 import { purchaseNomadicBuilding } from '../state/nomadicCamp';
 import { createRun } from '../state/run';
 import { openNextStory, resolveStory } from '../state/story';
@@ -111,6 +109,7 @@ import { ClanDamage } from './arena/ClanDamage';
 import { CombatSystem, type HostileShooter } from './arena/CombatSystem';
 import { EnemyDirector, type SpawnDirective } from './arena/EnemyDirector';
 import { HudPresenter } from './arena/HudPresenter';
+import { RiderHost } from './arena/RiderHost';
 
 export interface ArenaCallbacks {
   onHud: (snapshot: HudSnapshot) => void;
@@ -128,7 +127,6 @@ export class ArenaScene extends Phaser.Scene {
   private enemies!: Phaser.Physics.Arcade.Group;
   private projectiles!: Phaser.Physics.Arcade.Group;
   private camp!: Phaser.GameObjects.Container;
-  private riders: Phaser.GameObjects.Image[] = [];
   private hostileShots!: Phaser.Physics.Arcade.Group;
   private landscape!: SteppeLandscape;
   private campPresenter!: CampPresenter;
@@ -139,10 +137,7 @@ export class ArenaScene extends Phaser.Scene {
   private areaThreats = createAreaThreats();
   private fieldMarkers!: FieldMarkers;
   private passageMarkers: FieldMarkers[] = [];
-  private riderShadows: Phaser.GameObjects.Image[] = [];
   private readonly playerMotion = new CharacterMotion('player');
-  private riderMotions: CharacterMotion[] = [];
-  private riderSpeeds: number[] = [];
   private defeats!: DefeatSprites;
   private dustTimer = 0;
   private hazards: {
@@ -168,6 +163,7 @@ export class ArenaScene extends Phaser.Scene {
   private readonly enemyDirector = this.createEnemyDirector();
   private readonly clanDamage = new ClanDamage(this.arena);
   private readonly combat = this.createCombat();
+  private readonly riderHost = new RiderHost(this.arena, this.combat);
   /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
   private readonly controls = new ArenaInput(this.arena, this.controller, this.actionKeys);
   private hudTimer = 0;
@@ -329,10 +325,7 @@ export class ArenaScene extends Phaser.Scene {
     Object.assign(this.timers, createArenaTimers());
     this.hudTimer = 0;
     this.utilityReturnPhase = 'ready';
-    this.riders = [];
-    this.riderShadows = [];
-    this.riderMotions = [];
-    this.riderSpeeds = [];
+    this.riderHost.reset();
     this.playerMotion.reset('player');
     this.enemyDirector.reset();
     this.dustTimer = 0;
@@ -359,14 +352,7 @@ export class ArenaScene extends Phaser.Scene {
       .setScale(CAMP_VISUAL_SCALE)
       .setDepth(100 + center);
     this.campPresenter = new CampPresenter(this.arena);
-    for (let i = 0; i < 16; i += 1) {
-      this.riders.push(paintedImage(this, center, center, 'rider').setVisible(false));
-      this.riderMotions.push(new CharacterMotion('rider', i * 0.137));
-      this.riderSpeeds.push(0);
-      this.riderShadows.push(
-        this.add.image(center, center, 'shadow').setDisplaySize(48, 18).setVisible(false),
-      );
-    }
+    this.riderHost.createSlots();
     this.shadow = this.add.image(center, center, 'shadow').setDisplaySize(64, 24).setAlpha(0.85);
     this.aura = this.add
       .circle(center, center, 24, 0x9bc9c3, 0.02)
@@ -522,12 +508,7 @@ export class ArenaScene extends Phaser.Scene {
           attracted: g.attracted,
           secondary: g.secondary,
         })),
-      riders: this.riders.map((r, i) => ({
-        x: r.x,
-        y: r.y,
-        flip: r.flipX,
-        motion: this.riderMotions[i]!.capture(),
-      })),
+      riders: this.riderHost.capture(),
       hazards: this.hazards.map(({ warning: _warning, ...hazard }) => hazard),
       areaEncounter: this.areaEncounter,
       areaThreats: this.areaThreats,
@@ -569,17 +550,7 @@ export class ArenaScene extends Phaser.Scene {
       gem.attracted = saved.attracted;
       gem.secondary = saved.secondary ?? false;
     }
-    world.riders.forEach((r, i) => {
-      this.riders[i]!.setPosition(r.x, r.y)
-        .setFlipX(r.flip)
-        .setVisible(i < riderCount(run))
-        .setDepth(100 + r.y);
-      this.riderShadows[i]!.setPosition(r.x + 7, r.y + 4)
-        .setVisible(i < riderCount(run))
-        .setDepth(99 + r.y);
-      this.riderMotions[i]!.restore(r.motion);
-      renderCharacter(this.riders[i]!, this.riderMotions[i]!);
-    });
+    this.riderHost.restore(world.riders);
     this.hazards = world.hazards.map((h) => ({
       ...h,
       warning: this.add
@@ -983,13 +954,7 @@ export class ArenaScene extends Phaser.Scene {
     this.aura.setPosition(this.player.x, this.player.y);
     for (const [enemy, shadow] of this.enemyDirector.shadows)
       if (enemy.active) shadow.setPosition(enemy.x + 6, enemy.y + 4).setDepth(99 + enemy.y);
-    this.riders.forEach((rider, index) => {
-      if (!rider.visible) return;
-      const safe = navigation.nearestWalkable(rider);
-      if (!safe) return;
-      rider.setPosition(safe.x, safe.y).setDepth(100 + safe.y);
-      this.riderShadows[index]!.setPosition(safe.x + 7, safe.y + 4).setDepth(99 + safe.y);
-    });
+    this.riderHost.reconcile(navigation);
     this.spatial.rebuild(this.enemies.getChildren() as Enemy[]);
   }
 
@@ -1108,7 +1073,7 @@ export class ArenaScene extends Phaser.Scene {
     this.spatial.rebuild(this.enemies.getChildren() as Enemy[]);
     this.updateSupport(dt);
     this.combat.tickFire(dt);
-    this.fireRiders();
+    this.riderHost.fire();
     this.enemyDirector.tickSpawns(dt);
     this.combat.updateProjectiles(dt);
     this.combat.collectGems(dt);
@@ -1679,42 +1644,6 @@ export class ArenaScene extends Phaser.Scene {
     }
   }
 
-  private fireRiders(): void {
-    const count = riderCount(this.run);
-    const cooldowns = riderCooldowns(this.run.combat, count);
-    for (let i = 0; i < count; i += 1) {
-      const rider = this.riders[i]!;
-      const range = GAME.projectile.range + this.run.clan.campEffects.bonuses.range;
-      const clear = (e: Enemy) =>
-        !this.landscape.navigation || this.landscape.navigation.lineClear(rider, e, 0);
-      const riderTarget = this.spatial.nearest(rider.x, rider.y, range, clear);
-      if (
-        riderTarget &&
-        cooldowns[i]! <= this.run.elapsed &&
-        this.combat.shootVolley(
-          rider.x,
-          rider.y,
-          riderTarget,
-          1,
-          (0.6 + (hasDevelopment(this.run, 'archery', 'veteran-riders') ? 0.3 : 0)) *
-            this.run.clan.campEffects.multipliers.riderDamage,
-        )
-      ) {
-        cooldowns[i] =
-          this.run.elapsed +
-          this.run.stats.attackInterval *
-            this.run.clan.campEffects.multipliers.hostInterval *
-            (this.run.clan.formation === 'retreat' && this.run.clan.momentum > 0.4 ? 0.7 : 1);
-        this.riderMotions[i]!.attack();
-        if (this.riderSpeeds[i]! < 2)
-          rider.setFlipX(
-            (this.landscape.world3d?.screenX(riderTarget.x - rider.x, riderTarget.y - rider.y) ??
-              riderTarget.x - rider.x) < 0,
-          );
-      }
-    }
-  }
-
   private hurtPlayer(enemy: Enemy): void {
     if (
       this.run.phase !== 'playing' ||
@@ -1854,56 +1783,8 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private updateCamp(dt: number): void {
-    const clan = this.run.clan;
     this.campPresenter.update(dt);
-    const count = riderCount(this.run);
-    for (let i = 0; i < this.riders.length; i += 1) {
-      const rider = this.riders[i]!;
-      if (!rider.visible && i < count) this.riderMotions[i]!.reset('rider', i * 0.137);
-      rider.setVisible(i < count);
-      this.riderShadows[i]!.setVisible(i < count);
-      if (i >= count) continue;
-      const formation = isKhanActive(this.run) ? clan.formation : 'guard';
-      const angle =
-        (i / count) * Math.PI * 2 + (formation === 'encircle' ? this.run.elapsed * 0.65 : 0);
-      const enemyGroup =
-        formation === 'encircle'
-          ? this.spatial.nearest(this.player.x, this.player.y, 280)
-          : undefined;
-      const anchor = formation === 'guard' ? this.camp : (enemyGroup ?? this.player);
-      let x = anchor.x + Math.cos(angle) * (formation === 'retreat' ? 145 : 95);
-      let y = anchor.y + Math.sin(angle) * 65;
-      if (formation === 'wedge') {
-        x =
-          this.player.x -
-          this.facing.x * (45 + Math.floor(i / 2) * 28) +
-          this.facing.y * (i % 2 ? 26 : -26);
-        y =
-          this.player.y -
-          this.facing.y * (45 + Math.floor(i / 2) * 28) -
-          this.facing.x * (i % 2 ? 26 : -26);
-      }
-      const previousX = rider.x;
-      const previousY = rider.y;
-      const navigation = this.landscape.navigation;
-      const desired =
-        navigation && !navigation.lineClear(rider, { x, y }, 18)
-          ? navigation.waypoint(rider, anchor)
-          : { x, y };
-      const next = {
-        x: Phaser.Math.Linear(rider.x, desired.x, Math.min(1, dt * 5)),
-        y: Phaser.Math.Linear(rider.y, desired.y, Math.min(1, dt * 5)),
-      };
-      const position = navigation?.slide(rider, next) ?? next;
-      rider.setPosition(position.x, position.y);
-      const dx = rider.x - previousX;
-      const dy = rider.y - previousY;
-      this.riderSpeeds[i] = dt > 0 ? Math.hypot(dx, dy) / dt : 0;
-      const screenDx = this.landscape.world3d?.screenX(dx, dy) ?? dx;
-      if (Math.abs(screenDx) > 0.1) rider.setFlipX(screenDx < 0);
-      rider.setDepth(100 + rider.y);
-      this.riderShadows[i]!.setPosition(rider.x + 7, rider.y + 4).setDepth(99 + rider.y);
-    }
+    this.riderHost.update(dt);
     this.landscape.update(this.run.elapsed);
     this.updateHazards(dt);
   }
@@ -1926,24 +1807,7 @@ export class ArenaScene extends Phaser.Scene {
       renderCharacter(this.player, this.playerMotion);
       this.player.setTint(this.playerMotion.hurt ? 0xffd3b2 : 0xffffff);
     }
-    for (let i = 0; i < this.riders.length; i++) {
-      const rider = this.riders[i]!;
-      if (!rider.visible) continue;
-      const motion = this.riderMotions[i]!;
-      motion.advance(
-        dt,
-        this.riderSpeeds[i]!,
-        preparingVolley &&
-          Boolean(
-            this.spatial.nearest(
-              rider.x,
-              rider.y,
-              GAME.projectile.range + this.run.clan.campEffects.bonuses.range,
-            ),
-          ),
-      );
-      renderCharacter(rider, motion);
-    }
+    this.riderHost.animate(dt, preparingVolley);
     for (const enemy of this.enemies.getChildren() as Enemy[]) {
       if (!enemy.active) continue;
       enemy.motion.advance(dt, enemy.body!.velocity.length(), enemy.preparingAttack);
@@ -2282,6 +2146,12 @@ export class ArenaScene extends Phaser.Scene {
   }
   collectGems(dt: number): void {
     this.combat.collectGems(dt);
+  }
+  get riders(): Phaser.GameObjects.Image[] {
+    return this.riderHost.riders;
+  }
+  fireRiders(): void {
+    this.riderHost.fire();
   }
   get boss(): Enemy | undefined {
     return this.enemyDirector.boss;

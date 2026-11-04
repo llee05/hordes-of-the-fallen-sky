@@ -22,6 +22,7 @@ in the scene.
 | `arena/EnemyDirector.ts`    | spawning and initialising pooled enemies, their ground shadows, the Skybreaker reference, the spawn and final-boss ticks, and enemy-pool capture/restore                | scene, reset in `create` |
 | `arena/ClanDamage.ts`       | the single path for battlefield damage to the clan and the development clan-invincible cheat; callers pass the impact point, which no rule reads yet                    | scene                    |
 | `arena/CombatSystem.ts`     | Khan volleys and the attack timer, friendly and hostile projectiles, hits, enemy damage and defeat rewards, gem collection, the physics overlaps, and saved projectiles | scene                    |
+| `arena/RiderHost.ts`        | the 16 rider slots, formation movement, rider volleys, rider animation, terrain reconciliation, and saved rider positions                                               | scene, reset in `create` |
 | `arena/ArenaSystem.ts`      | base class whose getters read the shared context live, so moved code keeps its `this.run`/`this.player` shape                                                           | —                        |
 
 "Scene" lifetime means one instance for the scene object. Field initialisers run once, but
@@ -65,7 +66,7 @@ steps below in this order. The order is behaviour: moving a step changes play.
 2. Present a queued story; observe expedition metrics; begin succession if the Khan fell.
 3. Advance elapsed time, camp recovery; decay dash, invulnerability and gallop.
 4. Advance the clan: finish on loss or victory, or arrive at the next camp.
-5. Select the nearest companion; `updateCamp` (camp drawing, then riders, terrain and hazards).
+5. Select the nearest companion; `updateCamp` (camp drawing, then rider formation, terrain and hazards).
 6. Clan integrity check; advance succession and mounted combat; move the Khan or pin him to camp.
 7. Audio; field state and area encounter sync; encounter pacing.
 8. Field objectives, crossing, final stand, enemies; clan integrity check.
