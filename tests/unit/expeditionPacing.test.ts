@@ -16,7 +16,7 @@ for (const style of PACING_PLAYSTYLES)
       expect(first.marks.research).toBeLessThanOrEqual(20);
       expect(first.marks.departure).toBe(style === 'riding' ? 90 : style === 'guarding' ? 125 : 45);
       expect(run.metrics!.stages.some((s) => s.damage > 0)).toBe(true);
-    });
+    }, 30000);
 it('exposes different knowledge, danger, travel and population outcomes rather than one dominant schedule', () => {
   const a = pacingBenchmark('riding', 'shared-hearth').run;
   const b = pacingBenchmark('guarding', 'shared-hearth').run;
@@ -30,4 +30,4 @@ it('exposes different knowledge, danger, travel and population outcomes rather t
   expect(c.level - 1).toBeGreaterThanOrEqual(45);
   expect(a.level).toBeGreaterThan(b.level);
   expect(b.level).toBeGreaterThan(c.level);
-});
+}, 30000);

@@ -36,8 +36,8 @@ export async function main(args = process.argv.slice(2)) {
   const locked = args[0] === '--locked';
   if (locked) args.shift();
   const mode = args.shift();
-  if (!['local', 'e2e', 'desktop', 'perf', 'review'].includes(mode))
-    throw new Error('Expected local, e2e, desktop, perf, or review');
+  if (!['local', 'e2e', 'desktop', 'perf', 'review', 'core'].includes(mode))
+    throw new Error('Expected local, e2e, desktop, perf, review, or core');
   if (!locked) {
     console.log(
       `Waiting for ${mode === 'perf' ? 'exclusive' : 'shared'} browser lock: /tmp/bh-playwright.lock`,
@@ -80,6 +80,7 @@ export async function main(args = process.argv.slice(2)) {
   if (['local', 'desktop', 'perf'].includes(mode))
     run(process.execPath, [process.env.npm_execpath, 'run', 'build'], env);
   if (['local', 'e2e', 'perf'].includes(mode)) playwright();
+  if (mode === 'core') playwright('--grep', '@core');
   if (['local', 'desktop', 'perf'].includes(mode))
     playwright('--config', 'playwright.desktop.config.ts');
 }
