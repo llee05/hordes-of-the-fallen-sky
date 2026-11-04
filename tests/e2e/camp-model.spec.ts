@@ -10,48 +10,54 @@ import {
 
 test.describe.configure({ mode: 'parallel' });
 
-test('the manuscript camp reflects real developments, freezes the world, and respects reduced motion', async ({
-  page,
-}) => {
-  test.setTimeout(process.env.CI ? 90000 : 60000);
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await openTitle(page);
-  await startExpedition(page);
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.clan.materials = 200;
-  });
-  await page.keyboard.press('b');
-  const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await selectCampBuilding(page, 'archery-range');
-  await expect(page.locator('.camp-popup')).toBeVisible();
-  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
-  expect(
-    await page.locator('.camp-model').evaluate((e) => e.getAnimations({ subtree: true }).length),
-  ).toBe(0);
-  await buyNomadicLevel(page, 'archery-range');
-  await buyNomadicLevel(page, 'archery-range', 2);
-  await expect(page.locator('[data-camp-site="archery-range"]')).toHaveAttribute(
-    'data-established',
-    'true',
-  );
-  await expect(page.locator('.camp-facility[data-camp-site="archery-range"]')).toContainText(
-    'Level 2',
-  );
-  await expect(page.locator('.camp-facility[data-camp-site="archery-range"]')).toContainText(
-    'Military',
-  );
-  const after = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await selectCampBuilding(page, 'archery-range');
-  await page.locator('[data-disclosure-key="nomadic-levels"] summary').click();
-  await expect(page.locator('.tree-purchase')).toBeDisabled();
-  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(after);
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  expect(
-    await page.locator('.camp-estate').evaluate((e) => e.getAnimations({ subtree: true }).length),
-  ).toBe(0);
-  await closeOverlayOrPause(page);
-  await expect(page.getByRole('dialog')).toBeHidden();
-});
+test(
+  'the manuscript camp reflects real developments, freezes the world, and respects reduced motion',
+  { tag: '@core' },
+  async ({ page }) => {
+    test.setTimeout(process.env.CI ? 90000 : 60000);
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await openTitle(page);
+    await startExpedition(page);
+    await page.evaluate(() => {
+      (window as any).__gloam.scene.run.clan.materials = 200;
+    });
+    await page.keyboard.press('b');
+    const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
+    await selectCampBuilding(page, 'archery-range');
+    await expect(page.locator('.camp-popup')).toBeVisible();
+    expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(
+      before,
+    );
+    expect(
+      await page.locator('.camp-model').evaluate((e) => e.getAnimations({ subtree: true }).length),
+    ).toBe(0);
+    await buyNomadicLevel(page, 'archery-range');
+    await buyNomadicLevel(page, 'archery-range', 2);
+    await expect(page.locator('[data-camp-site="archery-range"]')).toHaveAttribute(
+      'data-established',
+      'true',
+    );
+    await expect(page.locator('.camp-facility[data-camp-site="archery-range"]')).toContainText(
+      'Level 2',
+    );
+    await expect(page.locator('.camp-facility[data-camp-site="archery-range"]')).toContainText(
+      'Military',
+    );
+    const after = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
+    await selectCampBuilding(page, 'archery-range');
+    await page.locator('[data-disclosure-key="nomadic-levels"] summary').click();
+    await expect(page.locator('.tree-purchase')).toBeDisabled();
+    expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(
+      after,
+    );
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    expect(
+      await page.locator('.camp-estate').evaluate((e) => e.getAnimations({ subtree: true }).length),
+    ).toBe(0);
+    await closeOverlayOrPause(page);
+    await expect(page.getByRole('dialog')).toBeHidden();
+  },
+);
 
 test('all facilities remain inspectable from the estate or search at supported viewport sizes', async ({
   page,

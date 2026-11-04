@@ -1,58 +1,60 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openTitle } from './helpers';
-test('Skybreaker warnings lead to one volley and a vulnerable paused-safe recovery window', async ({
-  page,
-}) => {
-  await openTitle(page);
-  await page.keyboard.press('F8');
-  await page.locator('[data-developer-level="chapter:heart-of-the-steppe"]').click();
-  await expect(page.getByRole('dialog')).toBeHidden();
-  await page.evaluate(() => {
-    const s = (window as any).__gloam.scene;
-    s.run.clan.stageTime = 21;
-  });
-  await expect
-    .poll(() => page.evaluate(() => !!(window as any).__gloam.scene.boss?.active))
-    .toBe(true);
-  const state = await page.evaluate(() => {
-    const s = (window as any).__gloam.scene;
-    s.run.clan.stageTime = 130;
-    s.run.finalStand.phase = 'advance';
-    s.run.finalStand.remaining = 0.01;
-    s.updateFinalStand(0.02);
-    const warning = s.run.finalStand.phase,
-      before = s.hostileShots.countActive(true);
-    s.updateFinalStand(2.4);
-    const fired = s.hostileShots.countActive(true) - before;
-    const health = s.boss.health;
-    s.damageEnemy(s.boss, 10);
-    s.setPhase('paused');
-    const remaining = s.run.finalStand.remaining;
-    s.updateFinalStand(100);
-    return {
-      warning,
-      fired,
-      phase: s.run.finalStand.phase,
-      damage: health - s.boss.health,
-      remaining,
-      after: s.run.finalStand.remaining,
-    };
-  });
-  expect(state).toMatchObject({ warning: 'warning', phase: 'recovery', fired: 11, damage: 15 });
-  expect(state.after).toBe(state.remaining);
-  await expect(page.locator('#boss-stage')).toContainText('VULNERABLE');
-  const advancing = await page.evaluate(() => {
-    const s = (window as any).__gloam.scene;
-    for (const e of s.enemies.getChildren()) if (e !== s.boss) e.disableBody(true, true);
-    s.run.finalStand.phase = 'advance';
-    s.run.finalStand.approach = 2;
-    s.boss.setPosition(s.camp.x + 330, s.camp.y);
-    s.player.setPosition(s.camp.x + 320, s.camp.y);
-    s.updateEnemies(0.01);
-    return s.boss.body.velocity.length();
-  });
-  expect(advancing).toBeGreaterThan(0);
-});
+test(
+  'Skybreaker warnings lead to one volley and a vulnerable paused-safe recovery window',
+  { tag: '@core' },
+  async ({ page }) => {
+    await openTitle(page);
+    await page.keyboard.press('F8');
+    await page.locator('[data-developer-level="chapter:heart-of-the-steppe"]').click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await page.evaluate(() => {
+      const s = (window as any).__gloam.scene;
+      s.run.clan.stageTime = 21;
+    });
+    await expect
+      .poll(() => page.evaluate(() => !!(window as any).__gloam.scene.boss?.active))
+      .toBe(true);
+    const state = await page.evaluate(() => {
+      const s = (window as any).__gloam.scene;
+      s.run.clan.stageTime = 130;
+      s.run.finalStand.phase = 'advance';
+      s.run.finalStand.remaining = 0.01;
+      s.updateFinalStand(0.02);
+      const warning = s.run.finalStand.phase,
+        before = s.hostileShots.countActive(true);
+      s.updateFinalStand(2.4);
+      const fired = s.hostileShots.countActive(true) - before;
+      const health = s.boss.health;
+      s.damageEnemy(s.boss, 10);
+      s.setPhase('paused');
+      const remaining = s.run.finalStand.remaining;
+      s.updateFinalStand(100);
+      return {
+        warning,
+        fired,
+        phase: s.run.finalStand.phase,
+        damage: health - s.boss.health,
+        remaining,
+        after: s.run.finalStand.remaining,
+      };
+    });
+    expect(state).toMatchObject({ warning: 'warning', phase: 'recovery', fired: 11, damage: 15 });
+    expect(state.after).toBe(state.remaining);
+    await expect(page.locator('#boss-stage')).toContainText('VULNERABLE');
+    const advancing = await page.evaluate(() => {
+      const s = (window as any).__gloam.scene;
+      for (const e of s.enemies.getChildren()) if (e !== s.boss) e.disableBody(true, true);
+      s.run.finalStand.phase = 'advance';
+      s.run.finalStand.approach = 2;
+      s.boss.setPosition(s.camp.x + 330, s.camp.y);
+      s.player.setPosition(s.camp.x + 320, s.camp.y);
+      s.updateEnemies(0.01);
+      return s.boss.body.velocity.length();
+    });
+    expect(advancing).toBeGreaterThan(0);
+  },
+);
 
 /** Use a disposable checkpoint; the scene still fires and collides its own arrows. */
 async function faceSkybreaker(page: Page): Promise<void> {

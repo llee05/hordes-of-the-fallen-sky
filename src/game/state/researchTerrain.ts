@@ -1,6 +1,44 @@
 import { GAME } from '../config';
 import type { RunState } from '../types';
 import { ownsResearch, researchWaterRadius } from './researchRuntime';
+import { dictionary, list, number, object, type Rule } from './archiveRules';
+
+/**
+ * Lus per-spawn slow/root history, terrain clocks and ridge patches.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface TerrainRuntime {
+  slowSince?: Record<string, number>;
+  slowSeenAt?: Record<string, number>;
+  slowUntil?: Record<string, number>;
+  slowStrength?: Record<string, number>;
+  rootUntil?: Record<string, number>;
+  rootCooldown?: Record<string, number>;
+  terrainPulseAt?: number;
+  undertowAt?: number;
+  floodgateAt?: number;
+  dodgeUntil?: number;
+  dodgeCooldown?: number;
+  rockArcCooldown?: number;
+  stoneTickAt?: number;
+  ridgePatches?: { x: number; y: number; until: number }[];
+}
+export const TERRAIN_RUNTIME_RULES = {
+  slowSince: dictionary(number),
+  slowSeenAt: dictionary(number),
+  slowUntil: dictionary(number),
+  slowStrength: dictionary(number),
+  rootUntil: dictionary(number),
+  rootCooldown: dictionary(number),
+  terrainPulseAt: number,
+  undertowAt: number,
+  floodgateAt: number,
+  dodgeUntil: number,
+  dodgeCooldown: number,
+  rockArcCooldown: number,
+  stoneTickAt: number,
+  ridgePatches: list(object({ x: number, y: number, until: number }), 16),
+} satisfies Record<keyof TerrainRuntime, Rule>;
 
 /** Per-spawn field history. Reused pool slots cannot inherit control effects. */
 export function researchEnemySlow(

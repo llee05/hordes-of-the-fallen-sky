@@ -7,48 +7,50 @@ import {
   startExpedition,
 } from './helpers';
 
-test('guidance follows riding, camp purchases, knowledge, formations, and the first crossing', async ({
-  page,
-}) => {
-  await openTitle(page);
-  await startExpedition(page);
-  const guide = page.getByRole('complementary', { name: 'Expedition guidance' });
-  await expect(guide).toContainText('Ride out, keep watch');
-  await page.keyboard.down('d');
-  await expect(guide).toContainText('Your camp is your strength');
-  await page.keyboard.up('d');
-  await guide.getByRole('button', { name: /Develop camp/ }).click();
-  const frozen = await page.evaluate(() => (window as any).__gloam.scene.run.elapsed);
-  await selectCampBuilding(page, 'archery');
-  await buyNode(page, 'archery-base');
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.elapsed)).toBe(frozen);
-  await closeOverlayOrPause(page);
-  await expect(guide).toContainText('Gather what the fallen leave');
-  await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    const gem = scene.gems.get(scene.player.x, scene.player.y, 'gem');
-    gem.enableBody(true, scene.player.x, scene.player.y, true, true);
-    gem.value = scene.run.nextLevelXp;
-    gem.attracted = false;
-  });
-  await expect(guide).toContainText('Put knowledge to work');
-  await guide.getByRole('button', { name: /Patron tree/ }).click();
-  await buyNode(page, 'power');
-  await closeOverlayOrPause(page);
-  await expect(guide).toContainText('Give the riders a purpose');
-  await guide.getByRole('button', { name: /Change formation/ }).click();
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.clan.stageTime = 45;
-  });
-  await expect(guide).toContainText('Choose when to leave');
-  await guide.getByRole('button', { name: /Inspect routes/ }).click();
-  await page.locator('[data-route="river"]').click();
-  await expect(guide).toContainText('Bring everyone across');
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.clan.stageTime = 100;
-  });
-  await expect(guide).toBeHidden();
-});
+test(
+  'guidance follows riding, camp purchases, knowledge, formations, and the first crossing',
+  { tag: '@core' },
+  async ({ page }) => {
+    await openTitle(page);
+    await startExpedition(page);
+    const guide = page.getByRole('complementary', { name: 'Expedition guidance' });
+    await expect(guide).toContainText('Ride out, keep watch');
+    await page.keyboard.down('d');
+    await expect(guide).toContainText('Your camp is your strength');
+    await page.keyboard.up('d');
+    await guide.getByRole('button', { name: /Develop camp/ }).click();
+    const frozen = await page.evaluate(() => (window as any).__gloam.scene.run.elapsed);
+    await selectCampBuilding(page, 'archery');
+    await buyNode(page, 'archery-base');
+    expect(await page.evaluate(() => (window as any).__gloam.scene.run.elapsed)).toBe(frozen);
+    await closeOverlayOrPause(page);
+    await expect(guide).toContainText('Gather what the fallen leave');
+    await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      const gem = scene.gems.get(scene.player.x, scene.player.y, 'gem');
+      gem.enableBody(true, scene.player.x, scene.player.y, true, true);
+      gem.value = scene.run.nextLevelXp;
+      gem.attracted = false;
+    });
+    await expect(guide).toContainText('Put knowledge to work');
+    await guide.getByRole('button', { name: /Patron tree/ }).click();
+    await buyNode(page, 'power');
+    await closeOverlayOrPause(page);
+    await expect(guide).toContainText('Give the riders a purpose');
+    await guide.getByRole('button', { name: /Change formation/ }).click();
+    await page.evaluate(() => {
+      (window as any).__gloam.scene.run.clan.stageTime = 45;
+    });
+    await expect(guide).toContainText('Choose when to leave');
+    await guide.getByRole('button', { name: /Inspect routes/ }).click();
+    await page.locator('[data-route="river"]').click();
+    await expect(guide).toContainText('Bring everyone across');
+    await page.evaluate(() => {
+      (window as any).__gloam.scene.run.clan.stageTime = 100;
+    });
+    await expect(guide).toBeHidden();
+  },
+);
 
 test('tips can be hidden and restored while danger warnings remain visible', async ({ page }) => {
   await openTitle(page);

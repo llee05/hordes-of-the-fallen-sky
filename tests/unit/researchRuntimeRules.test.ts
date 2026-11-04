@@ -1,0 +1,236 @@
+import { describe, expect, it } from 'vitest';
+import { createRun } from '../../src/game/state/run';
+import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
+import type { ResearchRuntime } from '../../src/game/state/researchRuntime';
+import {
+  RESEARCH_RUNTIME_RULES,
+  RESEARCH_RUNTIME_SLICES,
+} from '../../src/game/state/researchRuntimeRules';
+import { world } from './fixtures/expedition';
+
+/**
+ * Saved `researchRuntime` keys before the runtime was split into per-system slices. A job that
+ * adds or removes runtime state updates this list on purpose.
+ */
+const SAVED_KEYS = [
+  'arrowPlatformAt',
+  'arrowRainAt',
+  'arrowRainDamage',
+  'arrowRainX',
+  'arrowRainY',
+  'ashBornInvulnerableUntil',
+  'ashBornPulsePending',
+  'bleedStacks',
+  'bleedUntil',
+  'bloodEmberCooldown',
+  'craftspeopleRefundedCrossing',
+  'crossingMaterialsSpent',
+  'crossingSpentIndex',
+  'dashHitEnemies',
+  'dashHitSerial',
+  'dodgeCooldown',
+  'dodgeUntil',
+  'echoAttacks',
+  'echoFireAt',
+  'echoHits',
+  'echoNearCamp',
+  'echoReleases',
+  'embersReturnUntil',
+  'endlessBurstUntil',
+  'firebreakUntil',
+  'firstConstructionCrossing',
+  'flameHealUntil',
+  'flameNextPulseAt',
+  'flamePulsesRemaining',
+  'floodgateAt',
+  'ghostAttacks',
+  'hearthCampInRange',
+  'hoofTrailHits',
+  'hoofTrails',
+  'hornCooldown',
+  'hornUntil',
+  'householdOathUntil',
+  'khanStationaryNearCamp',
+  'khanVolleyCount',
+  'lastGallopAt',
+  'lastHitAt',
+  'lastHitGeneration',
+  'lastStandCooldown',
+  'lastStandLow',
+  'lastStandUntil',
+  'livingWatersCooldown',
+  'livingWaveKey',
+  'livingWaveKills',
+  'markedNearKhan',
+  'markedUntil',
+  'memoryStacks',
+  'memoryUntil',
+  'momentumHoldUntil',
+  'nearestCompanion',
+  'precisionMarkedUntil',
+  'precisionVolleyCount',
+  'rallyCrossing',
+  'rallyUntil',
+  'riderFireAt',
+  'riderVolleyCounts',
+  'ridgePatches',
+  'riverStacks',
+  'riverUntil',
+  'rockArcCooldown',
+  'rootCooldown',
+  'rootUntil',
+  'shardStreak',
+  'shardStreakUntil',
+  'shardsGathered',
+  'slowSeenAt',
+  'slowSince',
+  'slowStrength',
+  'slowUntil',
+  'spiritBurstUntil',
+  'staggerCooldownUntil',
+  'staggerUntil',
+  'stoneTickAt',
+  'stormChaserUntil',
+  'sunderStacks',
+  'sunderUntil',
+  'targetSlot',
+  'targetSpawn',
+  'targetUntil',
+  'terrainPulseAt',
+  'thousandArrowsCooldown',
+  'throatSlot',
+  'throatSpawn',
+  'throatStacks',
+  'undertowAt',
+  'vigilantHerdersUntil',
+  'vulnerabilityUntil',
+  'wardInside',
+  'warmAshesPending',
+  'wideVolleyCount',
+];
+
+/** One valid, distinct value for every runtime key. */
+const FULL: Required<ResearchRuntime> = {
+  arrowPlatformAt: 1.5,
+  arrowRainAt: 2.5,
+  arrowRainDamage: 3.25,
+  arrowRainX: 4.5,
+  arrowRainY: 5.5,
+  ashBornInvulnerableUntil: 6.5,
+  ashBornPulsePending: true,
+  bleedStacks: { '3:8': 8 },
+  bleedUntil: { '3:9': 9.5 },
+  bloodEmberCooldown: 10.5,
+  craftspeopleRefundedCrossing: 11,
+  crossingMaterialsSpent: 12.25,
+  crossingSpentIndex: 13,
+  dashHitEnemies: ['3:14'],
+  dashHitSerial: 15,
+  dodgeCooldown: 16.5,
+  dodgeUntil: 17.5,
+  echoAttacks: [18, 19],
+  echoFireAt: [19.5, 20.5],
+  echoHits: { '3:20': 20.5 },
+  echoNearCamp: true,
+  echoReleases: 22,
+  embersReturnUntil: 23.5,
+  endlessBurstUntil: 24.5,
+  firebreakUntil: 25.5,
+  firstConstructionCrossing: 26,
+  flameHealUntil: 27.5,
+  flameNextPulseAt: 28.5,
+  flamePulsesRemaining: 29,
+  floodgateAt: 30.5,
+  ghostAttacks: [31, 32],
+  hearthCampInRange: true,
+  hoofTrailHits: { '3:33': 33 },
+  hoofTrails: [{ x: 1, y: 2, until: 34.5, gallopSerial: 2 }],
+  hornCooldown: 35.5,
+  hornUntil: 36.5,
+  householdOathUntil: 37.5,
+  khanStationaryNearCamp: true,
+  khanVolleyCount: 39,
+  lastGallopAt: 40.5,
+  lastHitAt: 41.5,
+  lastHitGeneration: 42,
+  lastStandCooldown: 43.5,
+  lastStandLow: true,
+  lastStandUntil: 45.5,
+  livingWatersCooldown: 46.5,
+  livingWaveKey: 'livingWaveKey',
+  livingWaveKills: 48.5,
+  markedNearKhan: true,
+  markedUntil: { '3:50': 50.5 },
+  memoryStacks: 51,
+  memoryUntil: 52.5,
+  momentumHoldUntil: 53.5,
+  nearestCompanion: 'nearestCompanion',
+  precisionMarkedUntil: { '3:55': 55.5 },
+  precisionVolleyCount: 56,
+  rallyCrossing: 57.5,
+  rallyUntil: 58.5,
+  riderFireAt: [59.5, 60.5],
+  riderVolleyCounts: [60, 61],
+  ridgePatches: [{ x: 1, y: 2, until: 61.5 }],
+  riverStacks: 62,
+  riverUntil: 63.5,
+  rockArcCooldown: 64.5,
+  rootCooldown: { '3:65': 65.5 },
+  rootUntil: { '3:66': 66.5 },
+  shardStreak: 67.5,
+  shardStreakUntil: 68.5,
+  shardsGathered: 69.5,
+  slowSeenAt: { '3:70': 70.5 },
+  slowSince: { '3:71': 71.5 },
+  slowStrength: { '3:72': 72.5 },
+  slowUntil: { '3:73': 73.5 },
+  spiritBurstUntil: 74.5,
+  staggerCooldownUntil: { '3:75': 75.5 },
+  staggerUntil: { '3:76': 76.5 },
+  stoneTickAt: 77.5,
+  stormChaserUntil: 78.5,
+  sunderStacks: { '3:79': 79 },
+  sunderUntil: { '3:80': 80.5 },
+  targetSlot: 81,
+  targetSpawn: 82,
+  targetUntil: 83.5,
+  terrainPulseAt: 84.5,
+  thousandArrowsCooldown: 85.5,
+  throatSlot: 86,
+  throatSpawn: 87,
+  throatStacks: 88,
+  undertowAt: 89.5,
+  vigilantHerdersUntil: 90.5,
+  vulnerabilityUntil: { '3:91': 91.5 },
+  wardInside: ['3:92'],
+  warmAshesPending: true,
+  wideVolleyCount: 94,
+};
+
+describe('research runtime save rules', () => {
+  it('covers exactly the snapshotted runtime keys', () => {
+    expect(Object.keys(FULL).sort()).toEqual(SAVED_KEYS);
+  });
+
+  it('accepts the snapshotted keys from slices that share none', () => {
+    expect(Object.keys(RESEARCH_RUNTIME_RULES).sort()).toEqual(SAVED_KEYS);
+    const owners = new Map<string, string>();
+    for (const [slice, rules] of Object.entries(RESEARCH_RUNTIME_SLICES))
+      for (const key of Object.keys(rules)) {
+        expect(owners.get(key), `${key} in ${slice}`).toBeUndefined();
+        owners.set(key, slice);
+      }
+  });
+
+  it('round-trips a fully populated research runtime', () => {
+    const run = createRun();
+    run.researchRuntime = structuredClone(FULL);
+    expect(decodeExpedition(captureExpedition(run, world())).run.researchRuntime).toEqual(FULL);
+  });
+
+  it('rejects an unknown runtime key', () => {
+    const run = createRun();
+    run.researchRuntime = { ...FULL, unknownClock: 1 } as ResearchRuntime;
+    expect(() => decodeExpedition(captureExpedition(run, world()))).toThrow();
+  });
+});

@@ -2,6 +2,34 @@ import { GAME } from '../config';
 import type { RunState } from '../types';
 import { healKhan, ownsResearch } from './researchRuntime';
 import { hasDevelopment } from './camp';
+import { boolean, integer, list, number, string, type Rule } from './archiveRules';
+
+/**
+ * Hybrid ghost arrows, Living Waters, cooldowns and Last Stand state.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface HybridRuntime {
+  ghostAttacks?: number[];
+  livingWaveKey?: string;
+  livingWaveKills?: number;
+  livingWatersCooldown?: number;
+  thousandArrowsCooldown?: number;
+  bloodEmberCooldown?: number;
+  lastStandUntil?: number;
+  lastStandCooldown?: number;
+  lastStandLow?: boolean;
+}
+export const HYBRID_RUNTIME_RULES = {
+  ghostAttacks: list(integer, GAME.patrons.ancestors.maximum),
+  livingWaveKey: string,
+  livingWaveKills: number,
+  livingWatersCooldown: number,
+  thousandArrowsCooldown: number,
+  bloodEmberCooldown: number,
+  lastStandUntil: number,
+  lastStandCooldown: number,
+  lastStandLow: boolean,
+} satisfies Record<keyof HybridRuntime, Rule>;
 export function claimGhostArrow(run: RunState, index: number): boolean {
   if (
     run.phase !== 'playing' ||

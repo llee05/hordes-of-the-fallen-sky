@@ -4,7 +4,7 @@ import { closeOverlayOrPause, expectFrozen, openTitle, startExpedition } from '.
 // Each test owns its browser context and game; CI shards may schedule them independently.
 test.describe.configure({ mode: 'parallel' });
 
-test('mobile layout fits and touch movement works', async ({ browser }) => {
+test('mobile layout fits and touch movement works', { tag: '@core' }, async ({ browser }) => {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
     hasTouch: true,
@@ -122,45 +122,47 @@ test('painted atlases keep world-space collision sizes and sort miniatures by th
   expect(external).toEqual([]);
 });
 
-test('desktop menus keep the battlefield edge to edge and return settings and help to their parent menu', async ({
-  page,
-}) => {
-  await openTitle(page);
-  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
-  await expect(page.locator('#game-hud')).toBeHidden();
-  const frame = (await page.locator('#game-canvas > canvas:first-child').boundingBox())!;
-  const viewport = page.viewportSize()!;
-  expect(frame.x).toBe(0);
-  expect(frame.y).toBe(0);
-  expect(Math.abs(frame.width - viewport.width)).toBeLessThan(2);
-  expect(Math.abs(frame.height - viewport.height)).toBeLessThan(2);
-  expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(
-    true,
-  );
-  await page.getByRole('button', { name: 'How to play', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'How to play', exact: true })).toBeVisible();
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('help');
-  await closeOverlayOrPause(page);
-  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
-  await expect(page.locator('#timer')).toHaveText('00:00');
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
-  await closeOverlayOrPause(page);
-  await startExpedition(page);
-  await closeOverlayOrPause(page);
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await expectFrozen(
-    page,
-    () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
-    13,
-  );
-  await closeOverlayOrPause(page);
-  await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('paused');
-  await page.getByRole('button', { name: /RETURN TO THE STEPPE/ }).click();
-  await expect(page.getByRole('dialog')).toBeHidden();
-});
+test(
+  'desktop menus keep the battlefield edge to edge and return settings and help to their parent menu',
+  { tag: '@core' },
+  async ({ page }) => {
+    await openTitle(page);
+    await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
+    await expect(page.locator('#game-hud')).toBeHidden();
+    const frame = (await page.locator('#game-canvas > canvas:first-child').boundingBox())!;
+    const viewport = page.viewportSize()!;
+    expect(frame.x).toBe(0);
+    expect(frame.y).toBe(0);
+    expect(Math.abs(frame.width - viewport.width)).toBeLessThan(2);
+    expect(Math.abs(frame.height - viewport.height)).toBeLessThan(2);
+    expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(
+      true,
+    );
+    await page.getByRole('button', { name: 'How to play', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'How to play', exact: true })).toBeVisible();
+    expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('help');
+    await closeOverlayOrPause(page);
+    await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
+    await expect(page.locator('#timer')).toHaveText('00:00');
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
+    await closeOverlayOrPause(page);
+    await startExpedition(page);
+    await closeOverlayOrPause(page);
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await expectFrozen(
+      page,
+      () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+      13,
+    );
+    await closeOverlayOrPause(page);
+    await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
+    expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('paused');
+    await page.getByRole('button', { name: /RETURN TO THE STEPPE/ }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+  },
+);
 
 test('the clan chronicle pauses the expedition, supports keyboard tabs, and opens camp management', async ({
   page,

@@ -1,87 +1,89 @@
 import { expect, test } from '@playwright/test';
 import { openTitle, startExpedition } from './helpers';
 
-test('manual saves survive reload and restore the exact paused battle, XP, research and succession', async ({
-  page,
-}) => {
-  const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  await openTitle(page);
-  await startExpedition(page, { legacyCamp: false });
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
-  await expect
-    .poll(() => page.evaluate(() => !!localStorage.getItem('gloam-expedition-auto')))
-    .toBe(true);
-  await page.evaluate(() => {
-    const s = (window as any).__gloam.scene;
-    s.run.elapsed = 123.75;
-    s.run.pendingUpgrades = 4;
-    s.run.xp = 7;
-    s.run.health = 0;
-    s.run.khan.successionRemaining = 4.2;
-    s.run.khan.candidate = 'hearthguard';
-    s.run.patrons.hearth.revives = 0;
-    s.hideFallenKhan();
-    s.spawnEnemy();
-    const enemy = s.enemies.getFirstAlive();
-    if (!enemy) throw new Error('Expected a live enemy');
-    enemy.health = 3;
-    enemy.burning = 1.5;
-    enemy.tactics = {
-      phase: 'windup',
-      remaining: 0.4,
-      aim: { x: s.camp.x, y: s.camp.y },
-      direction: { x: 1, y: 0 },
-    };
-    s.shootVolley(s.camp.x, s.camp.y, enemy, 1, 1);
-    const bolt = s.projectiles.getFirstAlive();
-    bolt.hitTargets.set(enemy, enemy.spawnId);
-    const gem = s.gems.get(s.camp.x + 30, s.camp.y + 30, 'gem');
-    gem.enableBody(true, gem.x, gem.y, true, true);
-    gem.value = 37;
-    gem.attracted = true;
-    s.dashTimer = 2.8;
-    s.invulnerable = 0.4;
-    s.patronSupport.restore({ ...s.patronSupport.capture(), waterTimer: 2.2 });
-  });
-  await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
-  await page.getByRole('button', { name: 'Save to Slot 1', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Expedition saved.' })).toBeVisible();
-  const saved = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem('gloam-expedition-slot-1')!),
-  );
-  expect(saved.run.pendingUpgrades).toBe(4);
-  expect(saved.world.support.waterTimer).toBe(2.2);
-  await page.setViewportSize({ width: 960, height: 600 });
-  expect(await page.locator('.save-menu').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
-    true,
-  );
-  await page.screenshot({ path: 'test-results/save-menu.png' });
-  await page.reload();
-  await page.getByRole('button', { name: /CONTINUE EXPEDITION/ }).click();
-  await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
-  const restored = await page.evaluate(() => {
-    const s = (window as any).__gloam.scene;
-    return JSON.parse(
-      JSON.stringify({
-        run: s.run,
-        world: s.captureWorld(),
-        bodyEnabled: s.player.body.enable,
-        canSave: s.canSaveExpedition,
-      }),
+test(
+  'manual saves survive reload and restore the exact paused battle, XP, research and succession',
+  { tag: '@core' },
+  async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await openTitle(page);
+    await startExpedition(page, { legacyCamp: false });
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
+    await expect
+      .poll(() => page.evaluate(() => !!localStorage.getItem('gloam-expedition-auto')))
+      .toBe(true);
+    await page.evaluate(() => {
+      const s = (window as any).__gloam.scene;
+      s.run.elapsed = 123.75;
+      s.run.pendingUpgrades = 4;
+      s.run.xp = 7;
+      s.run.health = 0;
+      s.run.khan.successionRemaining = 4.2;
+      s.run.khan.candidate = 'hearthguard';
+      s.run.patrons.hearth.revives = 0;
+      s.hideFallenKhan();
+      s.spawnEnemy();
+      const enemy = s.enemies.getFirstAlive();
+      if (!enemy) throw new Error('Expected a live enemy');
+      enemy.health = 3;
+      enemy.burning = 1.5;
+      enemy.tactics = {
+        phase: 'windup',
+        remaining: 0.4,
+        aim: { x: s.camp.x, y: s.camp.y },
+        direction: { x: 1, y: 0 },
+      };
+      s.shootVolley(s.camp.x, s.camp.y, enemy, 1, 1);
+      const bolt = s.projectiles.getFirstAlive();
+      bolt.hitTargets.set(enemy, enemy.spawnId);
+      const gem = s.gems.get(s.camp.x + 30, s.camp.y + 30, 'gem');
+      gem.enableBody(true, gem.x, gem.y, true, true);
+      gem.value = 37;
+      gem.attracted = true;
+      s.dashTimer = 2.8;
+      s.invulnerable = 0.4;
+      s.patronSupport.restore({ ...s.patronSupport.capture(), waterTimer: 2.2 });
+    });
+    await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
+    await page.getByRole('button', { name: 'Save to Slot 1', exact: true }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Expedition saved.' })).toBeVisible();
+    const saved = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('gloam-expedition-slot-1')!),
     );
-  });
-  expect(restored.run).toEqual(saved.run);
-  expect(restored.world).toEqual(saved.world);
-  expect(restored.bodyEnabled).toBe(false);
-  expect(restored.canSave).toBe(true);
-  await page.getByRole('button', { name: /RETURN TO THE STEPPE/ }).click();
-  await expect
-    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.khan.successionRemaining))
-    .toBeLessThan(4.1);
-  expect(errors).toEqual([]);
-});
+    expect(saved.run.pendingUpgrades).toBe(4);
+    expect(saved.world.support.waterTimer).toBe(2.2);
+    await page.setViewportSize({ width: 960, height: 600 });
+    expect(
+      await page.locator('.save-menu').evaluate((el) => el.scrollWidth <= el.clientWidth),
+    ).toBe(true);
+    await page.screenshot({ path: 'test-results/save-menu.png' });
+    await page.reload();
+    await page.getByRole('button', { name: /CONTINUE EXPEDITION/ }).click();
+    await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
+    const restored = await page.evaluate(() => {
+      const s = (window as any).__gloam.scene;
+      return JSON.parse(
+        JSON.stringify({
+          run: s.run,
+          world: s.captureWorld(),
+          bodyEnabled: s.player.body.enable,
+          canSave: s.canSaveExpedition,
+        }),
+      );
+    });
+    expect(restored.run).toEqual(saved.run);
+    expect(restored.world).toEqual(saved.world);
+    expect(restored.bodyEnabled).toBe(false);
+    expect(restored.canSave).toBe(true);
+    await page.getByRole('button', { name: /RETURN TO THE STEPPE/ }).click();
+    await expect
+      .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.khan.successionRemaining))
+      .toBeLessThan(4.1);
+    expect(errors).toEqual([]);
+  },
+);
 
 test('overwrite and deletion require explicit confirmation and malformed saves leave the current game intact', async ({
   page,

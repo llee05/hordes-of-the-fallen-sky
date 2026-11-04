@@ -2,6 +2,28 @@ import { GAME } from '../config';
 import type { RunState } from '../types';
 import { ownsResearch, riderFiringInterval } from './researchRuntime';
 import { restoreResolve } from './clan';
+import { integer, list, number, type Rule } from './archiveRules';
+
+/**
+ * Sülde rider release clocks, horn and rally state.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface LeadershipRuntime {
+  riderFireAt?: number[];
+  riderVolleyCounts?: number[];
+  hornUntil?: number;
+  hornCooldown?: number;
+  rallyUntil?: number;
+  rallyCrossing?: number;
+}
+export const LEADERSHIP_RUNTIME_RULES = {
+  riderFireAt: list(number, 16),
+  riderVolleyCounts: list(integer, 16),
+  hornUntil: number,
+  hornCooldown: number,
+  rallyUntil: number,
+  rallyCrossing: number,
+} satisfies Record<keyof LeadershipRuntime, Rule>;
 
 export function recordEliteAppearance(run: RunState): void {
   if (run.phase !== 'playing' || !ownsResearch(run, 'su-horn-of-the-host')) return;

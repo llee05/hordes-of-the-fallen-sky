@@ -154,41 +154,43 @@ test('keyboard and controller select a destination before confirming the journey
   );
 });
 
-test('two named camps still lead to the fictional final refuge and clan-survival victory', async ({
-  page,
-}) => {
-  test.setTimeout(process.env.CI ? 90000 : 60000);
-  await openTitle(page);
-  await startExpedition(page);
-  for (const destination of ['orkhon-valley', 'altai-tavan-bogd', 'heart-of-the-steppe']) {
+test(
+  'two named camps still lead to the fictional final refuge and clan-survival victory',
+  { tag: '@core' },
+  async ({ page }) => {
+    test.setTimeout(process.env.CI ? 90000 : 60000);
+    await openTitle(page);
+    await startExpedition(page);
+    for (const destination of ['orkhon-valley', 'altai-tavan-bogd', 'heart-of-the-steppe']) {
+      await page.evaluate(() => {
+        const scene = (window as any).__gloam.scene;
+        scene.run.clan.food = 500;
+        scene.run.clan.stageTime = 45;
+        scene.openRoutes();
+      });
+      if (destination === 'heart-of-the-steppe')
+        await expect(page.locator('[data-destination]')).toHaveCount(1);
+      await page.locator(`[data-destination="${destination}"]`).click();
+      await page.locator('[data-route="river"]').click();
+      await page.evaluate(() => {
+        (window as any).__gloam.scene.run.clan.stageTime = 200;
+      });
+      await expect
+        .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.locationId))
+        .toBe(destination);
+    }
+    await expect(page.locator('#location')).toHaveText('SACRED MOUNTAIN');
+    await expect(page.locator('#stage-label')).toHaveText('THE LAST STAND');
     await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      scene.run.clan.food = 500;
-      scene.run.clan.stageTime = 45;
-      scene.openRoutes();
+      (window as any).__gloam.scene.run.clan.stageTime = 20;
     });
-    if (destination === 'heart-of-the-steppe')
-      await expect(page.locator('[data-destination]')).toHaveCount(1);
-    await page.locator(`[data-destination="${destination}"]`).click();
-    await page.locator('[data-route="river"]').click();
+    await expect(page.locator('#boss-bar')).toBeVisible();
     await page.evaluate(() => {
-      (window as any).__gloam.scene.run.clan.stageTime = 200;
+      (window as any).__gloam.scene.run.clan.stageTime = 180;
     });
-    await expect
-      .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.locationId))
-      .toBe(destination);
-  }
-  await expect(page.locator('#location')).toHaveText('SACRED MOUNTAIN');
-  await expect(page.locator('#stage-label')).toHaveText('THE LAST STAND');
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.clan.stageTime = 20;
-  });
-  await expect(page.locator('#boss-bar')).toBeVisible();
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.clan.stageTime = 180;
-  });
-  await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.finalBossDefeated)).toBe(
-    false,
-  );
-});
+    await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
+    expect(
+      await page.evaluate(() => (window as any).__gloam.scene.run.clan.finalBossDefeated),
+    ).toBe(false);
+  },
+);

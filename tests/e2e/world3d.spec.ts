@@ -36,79 +36,83 @@ async function command(page: Page, line: string): Promise<void> {
   await expect(input).toHaveValue('');
 }
 
-test('3D terrain streams real walls, anchors painted sprites, and exposes paused debug views', async ({
-  page,
-}) => {
-  test.setTimeout(120000);
-  const errors: string[] = [];
-  page.on('pageerror', (e) => errors.push(e.message));
-  await open(page);
-  const scene = () =>
-    page.evaluate(() => {
-      const s = (window as any).__gloam.scene;
-      const w = s.landscape.world3d;
-      return {
-        chunks: w.chunks.size,
-        draws: w.renderer.info.render.calls,
-        positions: w.sprites.positions.size,
-        walls: [...w.chunks.values()].reduce(
-          (n: number, c: any) => n + c.group.children[1].geometry.getAttribute('position').count,
-          0,
-        ),
-        hurdles: w.effects.hurdleCount,
-        player: w.sprites.positions.get(s.player),
-        fence: w.actors.getObjectByName('camp-timber-hurdles')?.count,
-        silhouette: w.actors.getObjectByName('occluded-khan-silhouette')?.visible,
-        h: w.terrain.height(s.player.x, s.player.y) * w.terrain.region.biome.heightScale,
-      };
-    });
-  const start = await scene();
-  expect(start.chunks).toBeGreaterThan(10);
-  expect(start.walls).toBeGreaterThan(0);
-  expect(start.positions).toBeGreaterThan(30);
-  expect(start.hurdles).toBeGreaterThan(20);
-  expect(start.fence).toBeGreaterThan(100);
-  expect(start.silhouette).toBe(true);
-  expect(start.player.y).toBeCloseTo(start.h, 5);
-  await page.keyboard.press('Backquote');
-  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'console');
-  const frozen = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  for (const mode of [
-    'wireframe',
-    'elevation',
-    'normals',
-    'slope',
-    'traversal',
-    'chunks',
-    'collision',
-  ]) {
-    await command(page, `terrain-debug ${mode}`);
-    await expect(page.locator('[data-world-debug]')).toContainText(mode.toUpperCase());
-  }
-  await command(page, 'camera-angle 55');
-  await command(page, 'terrain-only on');
-  await expect(page.locator('#game-hud')).toBeHidden();
-  await expect(page.getByRole('textbox', { name: 'Command', exact: true })).toBeVisible();
-  expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(frozen);
-  await command(page, 'terrain-debug off');
-  await page.keyboard.press('Backquote');
-  await page.screenshot({ path: 'test-results/world3d/terrain-only.png' });
-  await page.keyboard.press('F7');
-  await expect(page.locator('#game-hud')).toBeVisible();
-  await page.keyboard.press('F6');
-  await expect
-    .poll(() => page.evaluate(() => (window as any).__gloam.scene.landscape.world3d.angle))
-    .toBe(60);
-  await page.keyboard.press('F8');
-  await page.locator('[data-developer-level="destination:2:orkhon-valley"]').click();
-  await expect(page.getByRole('dialog')).toBeHidden();
-  await expect(page.locator('#location')).toHaveText('ORKHON VALLEY');
-  await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1);
-  await settled(page);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.cameras.main.alpha)).toBe(0);
-  await expect(page.locator('#app')).not.toHaveClass(/terrain-only/);
-  expect(errors).toEqual([]);
-});
+test(
+  '3D terrain streams real walls, anchors painted sprites, and exposes paused debug views',
+  { tag: '@core' },
+  async ({ page }) => {
+    test.setTimeout(120000);
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await open(page);
+    const scene = () =>
+      page.evaluate(() => {
+        const s = (window as any).__gloam.scene;
+        const w = s.landscape.world3d;
+        return {
+          chunks: w.chunks.size,
+          draws: w.renderer.info.render.calls,
+          positions: w.sprites.positions.size,
+          walls: [...w.chunks.values()].reduce(
+            (n: number, c: any) => n + c.group.children[1].geometry.getAttribute('position').count,
+            0,
+          ),
+          hurdles: w.effects.hurdleCount,
+          player: w.sprites.positions.get(s.player),
+          fence: w.actors.getObjectByName('camp-timber-hurdles')?.count,
+          silhouette: w.actors.getObjectByName('occluded-khan-silhouette')?.visible,
+          h: w.terrain.height(s.player.x, s.player.y) * w.terrain.region.biome.heightScale,
+        };
+      });
+    const start = await scene();
+    expect(start.chunks).toBeGreaterThan(10);
+    expect(start.walls).toBeGreaterThan(0);
+    expect(start.positions).toBeGreaterThan(30);
+    expect(start.hurdles).toBeGreaterThan(20);
+    expect(start.fence).toBeGreaterThan(100);
+    expect(start.silhouette).toBe(true);
+    expect(start.player.y).toBeCloseTo(start.h, 5);
+    await page.keyboard.press('Backquote');
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'console');
+    const frozen = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
+    for (const mode of [
+      'wireframe',
+      'elevation',
+      'normals',
+      'slope',
+      'traversal',
+      'chunks',
+      'collision',
+    ]) {
+      await command(page, `terrain-debug ${mode}`);
+      await expect(page.locator('[data-world-debug]')).toContainText(mode.toUpperCase());
+    }
+    await command(page, 'camera-angle 55');
+    await command(page, 'terrain-only on');
+    await expect(page.locator('#game-hud')).toBeHidden();
+    await expect(page.getByRole('textbox', { name: 'Command', exact: true })).toBeVisible();
+    expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(
+      frozen,
+    );
+    await command(page, 'terrain-debug off');
+    await page.keyboard.press('Backquote');
+    await page.screenshot({ path: 'test-results/world3d/terrain-only.png' });
+    await page.keyboard.press('F7');
+    await expect(page.locator('#game-hud')).toBeVisible();
+    await page.keyboard.press('F6');
+    await expect
+      .poll(() => page.evaluate(() => (window as any).__gloam.scene.landscape.world3d.angle))
+      .toBe(60);
+    await page.keyboard.press('F8');
+    await page.locator('[data-developer-level="destination:2:orkhon-valley"]').click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(page.locator('#location')).toHaveText('ORKHON VALLEY');
+    await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1);
+    await settled(page);
+    expect(await page.evaluate(() => (window as any).__gloam.scene.cameras.main.alpha)).toBe(0);
+    await expect(page.locator('#app')).not.toHaveClass(/terrain-only/);
+    expect(errors).toEqual([]);
+  },
+);
 
 test('Khan movement follows the ramp, terrain occludes sprites, and elevated combat still hits', async ({
   page,

@@ -4,6 +4,19 @@ import { createCampEstate } from './campEstate';
 import { migrateLegacyNomadicCamp } from './nomadicCampMigration';
 import { isExpeditionSave, isRecord, type ExpeditionSave } from '../../shared/expeditionSave';
 import { createRun } from './run';
+import {
+  boolean,
+  dictionary,
+  integer,
+  list,
+  number,
+  object,
+  oneOf,
+  positive,
+  string,
+  type Rule,
+} from './archiveRules';
+import { RESEARCH_RUNTIME_RULES } from './researchRuntimeRules';
 import { ALL_ENEMIES, SKYBREAKER } from '../data/enemies';
 import { RESEARCH_BY_ID } from '../data/research';
 import { BUILDINGS, ROUTES, LOCATIONS, STARTING_TRADITIONS } from '../data/clan';
@@ -113,30 +126,6 @@ export interface WorldArchive {
   areaThreats: AreaThreatState;
 }
 
-type Rule = (value: unknown) => boolean;
-const number: Rule = (v) => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) <= 1e9;
-const positive: Rule = (v) => number(v) && (v as number) >= 0;
-const integer: Rule = (v) => positive(v) && Number.isInteger(v);
-const string: Rule = (v) => typeof v === 'string';
-const boolean: Rule = (v) => typeof v === 'boolean';
-const oneOf =
-  (values: readonly unknown[]): Rule =>
-  (v) =>
-    values.includes(v);
-const list =
-  (rule: Rule, maximum = 2000): Rule =>
-  (v) =>
-    Array.isArray(v) && v.length <= maximum && v.every(rule);
-const dictionary =
-  (rule: Rule): Rule =>
-  (v) =>
-    isRecord(v) && Object.values(v).every(rule);
-function object(required: Record<string, Rule>, optional: Record<string, Rule> = {}): Rule {
-  return (v) =>
-    isRecord(v) &&
-    Object.entries(required).every(([key, rule]) => rule(v[key])) &&
-    Object.keys(v).every((key) => key in required || (key in optional && optional[key]!(v[key])));
-}
 const point = object({ x: number, y: number });
 const bodyFields = { x: number, y: number, vx: number, vy: number, flip: boolean };
 const motion = object({
@@ -276,108 +265,7 @@ const optional: Record<string, Record<string, Rule>> = {
       frameMilliseconds: positive,
       worstFrameMilliseconds: positive,
     }),
-    researchRuntime: object(
-      {},
-      {
-        slowSince: dictionary(number),
-        slowSeenAt: dictionary(number),
-        slowUntil: dictionary(number),
-        slowStrength: dictionary(number),
-        rootUntil: dictionary(number),
-        rootCooldown: dictionary(number),
-        terrainPulseAt: number,
-        undertowAt: number,
-        floodgateAt: number,
-        dodgeUntil: number,
-        dodgeCooldown: number,
-        rockArcCooldown: number,
-        stoneTickAt: number,
-        ridgePatches: list(object({ x: number, y: number, until: number }), 16),
-        shardsGathered: number,
-        shardStreak: number,
-        shardStreakUntil: number,
-        spiritBurstUntil: number,
-        vulnerabilityUntil: dictionary(number),
-        echoHits: dictionary(number),
-        riderFireAt: list(number, 16),
-        riderVolleyCounts: list(integer, 16),
-        hornUntil: number,
-        hornCooldown: number,
-        rallyUntil: number,
-        rallyCrossing: number,
-        firstConstructionCrossing: integer,
-        arrowPlatformAt: number,
-        wardInside: list(string, GAME.maxEnemies),
-        ghostAttacks: list(integer, GAME.patrons.ancestors.maximum),
-        livingWaveKey: string,
-        livingWaveKills: number,
-        livingWatersCooldown: number,
-        thousandArrowsCooldown: number,
-        bloodEmberCooldown: number,
-        lastStandUntil: number,
-        lastStandCooldown: number,
-        lastStandLow: boolean,
-        nearestCompanion: string,
-        echoFireAt: list(number, GAME.patrons.ancestors.maximum),
-        lastGallopAt: number,
-        riverStacks: integer,
-        riverUntil: number,
-        lastHitAt: number,
-        lastHitGeneration: integer,
-        targetSlot: integer,
-        targetSpawn: integer,
-        targetUntil: number,
-        memoryStacks: integer,
-        memoryUntil: number,
-        echoReleases: integer,
-        echoAttacks: list(integer, GAME.patrons.ancestors.maximum),
-        echoNearCamp: boolean,
-        markedUntil: dictionary(number),
-        staggerUntil: dictionary(number),
-        staggerCooldownUntil: dictionary(number),
-        hoofTrails: list(
-          object({ x: number, y: number, until: number, gallopSerial: integer }),
-          GAME.mounted.maxTrails,
-        ),
-        hoofTrailHits: dictionary(integer),
-        throatSlot: integer,
-        throatSpawn: integer,
-        throatStacks: integer,
-        dashHitSerial: integer,
-        dashHitEnemies: list(string, GAME.maxEnemies),
-        stormChaserUntil: number,
-        momentumHoldUntil: number,
-        markedNearKhan: boolean,
-        endlessBurstUntil: number,
-        vigilantHerdersUntil: number,
-        craftspeopleRefundedCrossing: integer,
-        crossingMaterialsSpent: positive,
-        crossingSpentIndex: integer,
-        khanVolleyCount: integer,
-        precisionVolleyCount: integer,
-        wideVolleyCount: integer,
-        precisionMarkedUntil: dictionary(number),
-        bleedStacks: dictionary(integer),
-        bleedUntil: dictionary(number),
-        sunderStacks: dictionary(integer),
-        sunderUntil: dictionary(number),
-        arrowRainAt: number,
-        arrowRainX: number,
-        arrowRainY: number,
-        arrowRainDamage: positive,
-        warmAshesPending: boolean,
-        embersReturnUntil: number,
-        khanStationaryNearCamp: boolean,
-        hearthCampInRange: boolean,
-        ashBornInvulnerableUntil: number,
-        ashBornPulsePending: boolean,
-        firebreakUntil: number,
-        householdOathUntil: number,
-        flameHealUntil: number,
-        flamePulsesRemaining: integer,
-        flameNextPulseAt: number,
-      },
-    ),
+    researchRuntime: object({}, RESEARCH_RUNTIME_RULES),
     finalStand: object(
       {
         phase: oneOf(['advance', 'warning', 'recovery']),

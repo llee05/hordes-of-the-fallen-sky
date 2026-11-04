@@ -9,54 +9,56 @@ import {
   tapController,
 } from './helpers';
 
-test('inspection never spends points; explicit purchases use exact ranks and current-build previews', async ({
-  page,
-}) => {
-  await openTitle(page);
-  await startExpedition(page);
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.pendingUpgrades = 3;
-  });
-  await page.keyboard.press('t');
-  await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
-  await expect(page.locator('[data-tree-branch-select]')).toHaveCount(10);
-  const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-  await inspectNode(page, 'power');
-  await expect(page.locator('.node-preview')).toContainText('Shared attack damage');
-  await expect(page.locator('.node-preview')).toContainText('20');
-  expect(
-    await expectFrozen(
-      page,
-      () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
-      13,
-    ),
-  ).toBe(before);
-  await buyNode(page, 'power');
-  await expect(page.locator('.node-rank-summary')).toHaveText('Rank 1 / 2');
-  await expect(page.locator('[data-node="haste"]')).toHaveAttribute('data-status', 'available');
-  await expect(page.locator('.tree-purchase')).toBeFocused();
-  await expect(page.locator('.node-preview')).toContainText('25');
-  await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.research('power', 1);
-    scene.research('power', 8);
-    scene.research('missing', 1);
-  });
-  expect(
-    await page.evaluate(() => ({
-      points: (window as any).__gloam.scene.run.pendingUpgrades,
-      damage: (window as any).__gloam.scene.run.stats.damage,
-    })),
-  ).toEqual({ points: 2, damage: 20 });
-  await page.screenshot({ path: 'test-results/tradition-tech-tree.png' });
-  await closeOverlayOrPause(page);
-  await expect(page.locator('#research-points')).toHaveText('2');
-  await page.getByRole('button', { name: /Open patron tech tree/ }).click();
-  await expect(page.locator('.node-rank-summary')).toHaveText('Rank 1 / 2');
-  await closeOverlayOrPause(page);
-  await page.evaluate(() => (window as any).__gloam.scene.research('power', 2));
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.upgrades.power)).toBe(1);
-});
+test(
+  'inspection never spends points; explicit purchases use exact ranks and current-build previews',
+  { tag: '@core' },
+  async ({ page }) => {
+    await openTitle(page);
+    await startExpedition(page);
+    await page.evaluate(() => {
+      (window as any).__gloam.scene.run.pendingUpgrades = 3;
+    });
+    await page.keyboard.press('t');
+    await expect(page.locator('[data-tree-branch]')).toHaveCount(1);
+    await expect(page.locator('[data-tree-branch-select]')).toHaveCount(10);
+    const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
+    await inspectNode(page, 'power');
+    await expect(page.locator('.node-preview')).toContainText('Shared attack damage');
+    await expect(page.locator('.node-preview')).toContainText('20');
+    expect(
+      await expectFrozen(
+        page,
+        () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+        13,
+      ),
+    ).toBe(before);
+    await buyNode(page, 'power');
+    await expect(page.locator('.node-rank-summary')).toHaveText('Rank 1 / 2');
+    await expect(page.locator('[data-node="haste"]')).toHaveAttribute('data-status', 'available');
+    await expect(page.locator('.tree-purchase')).toBeFocused();
+    await expect(page.locator('.node-preview')).toContainText('25');
+    await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      scene.research('power', 1);
+      scene.research('power', 8);
+      scene.research('missing', 1);
+    });
+    expect(
+      await page.evaluate(() => ({
+        points: (window as any).__gloam.scene.run.pendingUpgrades,
+        damage: (window as any).__gloam.scene.run.stats.damage,
+      })),
+    ).toEqual({ points: 2, damage: 20 });
+    await page.screenshot({ path: 'test-results/tradition-tech-tree.png' });
+    await closeOverlayOrPause(page);
+    await expect(page.locator('#research-points')).toHaveText('2');
+    await page.getByRole('button', { name: /Open patron tech tree/ }).click();
+    await expect(page.locator('.node-rank-summary')).toHaveText('Rank 1 / 2');
+    await closeOverlayOrPause(page);
+    await page.evaluate(() => (window as any).__gloam.scene.research('power', 2));
+    expect(await page.evaluate(() => (window as any).__gloam.scene.run.upgrades.power)).toBe(1);
+  },
+);
 
 test('overview, accent-insensitive search and graph navigation work without points and preserve paused parents', async ({
   page,

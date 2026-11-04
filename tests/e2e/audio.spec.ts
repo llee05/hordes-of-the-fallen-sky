@@ -54,65 +54,70 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test('riding and combat use decoded recordings, and an empty volley stays silent', async ({
-  page,
-}) => {
-  await page.evaluate(() => (window as any).__gloam.scene.fire());
-  expect(await heard(page)).not.toContain('shoot');
-  await page.keyboard.down('d');
-  await expect.poll(async () => (await heard(page)).includes('hoof')).toBe(true);
-  await page.keyboard.press('Space');
-  await page.keyboard.up('d');
-  expect(await heard(page)).toContain('dash');
-  const combat = await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.player.setPosition(scene.camp.x + 280, scene.camp.y);
-    scene.audio.update(0.01, {
-      speed: 0,
-      galloping: false,
-      caravan: false,
-      region: 0,
-      listener: scene.player,
-      camp: scene.camp,
+test(
+  'riding and combat use decoded recordings, and an empty volley stays silent',
+  { tag: '@core' },
+  async ({ page }) => {
+    await page.evaluate(() => (window as any).__gloam.scene.fire());
+    expect(await heard(page)).not.toContain('shoot');
+    await page.keyboard.down('d');
+    await expect.poll(async () => (await heard(page)).includes('hoof')).toBe(true);
+    await page.keyboard.press('Space');
+    await page.keyboard.up('d');
+    expect(await heard(page)).toContain('dash');
+    const combat = await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      scene.player.setPosition(scene.camp.x + 280, scene.camp.y);
+      scene.audio.update(0.01, {
+        speed: 0,
+        galloping: false,
+        caravan: false,
+        region: 0,
+        listener: scene.player,
+        camp: scene.camp,
+      });
+      for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
+      const enemy = scene.enemies.getFirstAlive();
+      enemy.setPosition(scene.camp.x + 119, scene.camp.y);
+      enemy.health = enemy.maxHealth = 10000;
+      enemy.definition = { ...enemy.definition, speed: 0 };
+      scene.updateEnemies(0.01);
+      scene.damageEnemy(enemy, 5);
+      scene.shootVolley(scene.player.x, scene.player.y, enemy, 1, 1);
+      scene.fireHostile(enemy, 0);
+      scene.damageEnemy(enemy, 10000);
+      const voices = [...scene.audio.voices] as any[];
+      return voices.map((voice) => {
+        const samples = voice.source.buffer.getChannelData(0);
+        return {
+          kind: voice.kind,
+          rate: voice.source.buffer.sampleRate,
+          contextRate: scene.audio.context.sampleRate,
+          layers: voice.layers.length,
+          seconds: voice.source.buffer.duration,
+          peak: samples.reduce(
+            (peak: number, sample: number) => Math.max(peak, Math.abs(sample)),
+            0,
+          ),
+        };
+      });
     });
-    for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
-    const enemy = scene.enemies.getFirstAlive();
-    enemy.setPosition(scene.camp.x + 119, scene.camp.y);
-    enemy.health = enemy.maxHealth = 10000;
-    enemy.definition = { ...enemy.definition, speed: 0 };
-    scene.updateEnemies(0.01);
-    scene.damageEnemy(enemy, 5);
-    scene.shootVolley(scene.player.x, scene.player.y, enemy, 1, 1);
-    scene.fireHostile(enemy, 0);
-    scene.damageEnemy(enemy, 10000);
-    const voices = [...scene.audio.voices] as any[];
-    return voices.map((voice) => {
-      const samples = voice.source.buffer.getChannelData(0);
-      return {
-        kind: voice.kind,
-        rate: voice.source.buffer.sampleRate,
-        contextRate: scene.audio.context.sampleRate,
-        layers: voice.layers.length,
-        seconds: voice.source.buffer.duration,
-        peak: samples.reduce((peak: number, sample: number) => Math.max(peak, Math.abs(sample)), 0),
-      };
-    });
-  });
-  for (const kind of ['barrier', 'impact', 'shoot', 'spell', 'defeat'])
-    expect(await heard(page)).toContain(kind);
-  expect(combat.length).toBeGreaterThan(0);
-  expect(combat.length).toBeLessThanOrEqual(12);
-  const bow = combat.find((voice) => voice.kind === 'shoot');
-  expect(bow).toBeDefined();
-  expect(bow!.seconds).toBeLessThan(0.4);
-  expect(bow!.layers).toBe(2);
-  for (const voice of combat) {
-    expect(voice.rate).toBe(voice.contextRate);
-    expect(voice.seconds).toBeGreaterThan(0.06);
-    expect(voice.peak).toBeGreaterThan(0.05);
-    expect(voice.peak).toBeLessThanOrEqual(0.801);
-  }
-});
+    for (const kind of ['barrier', 'impact', 'shoot', 'spell', 'defeat'])
+      expect(await heard(page)).toContain(kind);
+    expect(combat.length).toBeGreaterThan(0);
+    expect(combat.length).toBeLessThanOrEqual(12);
+    const bow = combat.find((voice) => voice.kind === 'shoot');
+    expect(bow).toBeDefined();
+    expect(bow!.seconds).toBeLessThan(0.4);
+    expect(bow!.layers).toBe(2);
+    for (const voice of combat) {
+      expect(voice.rate).toBe(voice.contextRate);
+      expect(voice.seconds).toBeGreaterThan(0.06);
+      expect(voice.peak).toBeGreaterThan(0.05);
+      expect(voice.peak).toBeLessThanOrEqual(0.801);
+    }
+  },
+);
 
 test('camp work and research sound in menus while world cues and cadence are stopped', async ({
   page,
