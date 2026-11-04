@@ -4,11 +4,7 @@ import type { AudioChannel } from '../../shared/audioSettings';
 import { normalizeAudioMix } from '../../shared/audioSettings';
 import type { ExpeditionSave, SaveSlot } from '../../shared/expeditionSave';
 import type { NomadicBuildingId } from '../../shared/nomadicCamp.js';
-import {
-  effectAmount,
-  normalizeVisualSettings,
-  type VisualSettings,
-} from '../../shared/visualSettings';
+import { normalizeVisualSettings, type VisualSettings } from '../../shared/visualSettings';
 import { CharacterMotion } from '../animation/CharacterMotion';
 import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
 import type { CampBarrier } from '../assets/CampBarrier';
@@ -41,7 +37,6 @@ import {
 import {
   addAreaThreat,
   advanceAreaThreats,
-  areaMovementMultiplier,
   createAreaThreats,
   type AreaThreat,
 } from '../state/areaThreats';
@@ -71,14 +66,7 @@ import {
 import { advanceFinalStand, finalChapter, syncFinalStand } from '../state/finalStand';
 import { completeGuidance } from '../state/guidance';
 import { currentLocation } from '../state/journey';
-import {
-  advanceSuccession,
-  beginSuccession,
-  chooseSuccessor,
-  damageKhan,
-  isKhanActive,
-  khanSpeedMultiplier,
-} from '../state/khan';
+import { advanceSuccession, beginSuccession, chooseSuccessor, isKhanActive } from '../state/khan';
 import { advanceMountedCombat } from '../state/mountedCombat';
 import { purchaseNomadicBuilding } from '../state/nomadicCamp';
 import { createRun } from '../state/run';
@@ -109,6 +97,7 @@ import { ClanDamage } from './arena/ClanDamage';
 import { CombatSystem, type HostileShooter } from './arena/CombatSystem';
 import { EnemyDirector, type SpawnDirective } from './arena/EnemyDirector';
 import { HudPresenter } from './arena/HudPresenter';
+import { KhanController } from './arena/KhanController';
 import { RiderHost } from './arena/RiderHost';
 
 export interface ArenaCallbacks {
@@ -122,8 +111,6 @@ export interface ArenaCallbacks {
 export class ArenaScene extends Phaser.Scene {
   run: RunState = createRun();
   private player!: Phaser.Physics.Arcade.Sprite;
-  private shadow!: Phaser.GameObjects.Image;
-  private aura!: Phaser.GameObjects.Arc;
   private enemies!: Phaser.Physics.Arcade.Group;
   private projectiles!: Phaser.Physics.Arcade.Group;
   private camp!: Phaser.GameObjects.Container;
@@ -137,9 +124,7 @@ export class ArenaScene extends Phaser.Scene {
   private areaThreats = createAreaThreats();
   private fieldMarkers!: FieldMarkers;
   private passageMarkers: FieldMarkers[] = [];
-  private readonly playerMotion = new CharacterMotion('player');
   private defeats!: DefeatSprites;
-  private dustTimer = 0;
   private hazards: {
     x: number;
     y: number;
@@ -162,6 +147,7 @@ export class ArenaScene extends Phaser.Scene {
   private readonly hudPresenter = new HudPresenter(this.arena);
   private readonly enemyDirector = this.createEnemyDirector();
   private readonly clanDamage = new ClanDamage(this.arena);
+  private readonly khan = this.createKhan();
   private readonly combat = this.createCombat();
   private readonly riderHost = new RiderHost(this.arena, this.combat);
   /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
@@ -270,13 +256,23 @@ export class ArenaScene extends Phaser.Scene {
     });
   }
 
+  private createKhan(): KhanController {
+    const scene = this;
+    return new KhanController(this.arena, {
+      get areaThreats() {
+        return scene.areaThreats;
+      },
+      clearTouch: () => scene.controls.clearTouch(),
+    });
+  }
+
   private createCombat(): CombatSystem {
     const scene = this;
     return new CombatSystem(
       this.arena,
       {
         get playerMotion() {
-          return scene.playerMotion;
+          return scene.khan.playerMotion;
         },
         get defeats() {
           return scene.defeats;
@@ -284,8 +280,8 @@ export class ArenaScene extends Phaser.Scene {
         get campBarrier() {
           return scene.campBarrier;
         },
-        takeDamage: (amount) => scene.takeDamage(amount),
-        hurtPlayer: (enemy) => scene.hurtPlayer(enemy),
+        takeDamage: (amount) => scene.khan.takeDamage(amount),
+        hurtPlayer: (enemy) => scene.khan.hurtPlayer(enemy),
       },
       this.enemyDirector,
       this.clanDamage,
@@ -326,9 +322,8 @@ export class ArenaScene extends Phaser.Scene {
     this.hudTimer = 0;
     this.utilityReturnPhase = 'ready';
     this.riderHost.reset();
-    this.playerMotion.reset('player');
+    this.khan.reset();
     this.enemyDirector.reset();
-    this.dustTimer = 0;
     this.hazards = [];
     this.facing.set(0, 1);
     this.best = this.platform.profile.bestSeconds;
@@ -353,12 +348,7 @@ export class ArenaScene extends Phaser.Scene {
       .setDepth(100 + center);
     this.campPresenter = new CampPresenter(this.arena);
     this.riderHost.createSlots();
-    this.shadow = this.add.image(center, center, 'shadow').setDisplaySize(64, 24).setAlpha(0.85);
-    this.aura = this.add
-      .circle(center, center, 24, 0x9bc9c3, 0.02)
-      .setStrokeStyle(1, 0xe9dfaf, 0.45)
-      .setScale(1, 0.5)
-      .setDepth(2);
+    this.khan.createAttachments();
     this.player = this.physics.add
       .sprite(center, center + 100, ...artTexture('player'))
       .setName('khan')
@@ -493,7 +483,7 @@ export class ArenaScene extends Phaser.Scene {
     const body = captureBody;
     const pool = this.enemies.getChildren() as Enemy[];
     return {
-      player: { ...body(this.player), motion: this.playerMotion.capture() },
+      player: this.khan.capture(),
       camp: { x: this.camp.x, y: this.camp.y },
       facing: { x: this.facing.x, y: this.facing.y },
       zoom: this.cameraZoom,
@@ -531,15 +521,8 @@ export class ArenaScene extends Phaser.Scene {
       run.clan.stage === 'migration' ? run.clan.routeId : undefined,
     );
     this.campPresenter.restore(world.camp);
-    this.player.enableBody(true, world.player.x, world.player.y, true, true);
-    this.player.setVelocity(world.player.vx, world.player.vy).setFlipX(world.player.flip);
-    this.facing.set(world.facing.x, world.facing.y);
-    this.playerMotion.restore(world.player.motion);
-    renderCharacter(this.player, this.playerMotion);
-    this.player.setDepth(100 + this.player.y);
-    this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
-    this.aura.setPosition(this.player.x, this.player.y);
-    if (!isKhanActive(run)) this.hideFallenKhan();
+    this.khan.restore(world);
+    if (!isKhanActive(run)) this.khan.hideFallenKhan();
     const pool = this.enemyDirector.restorePool(world);
     this.combat.restoreShots(world, pool);
     for (const saved of world.gems) {
@@ -950,8 +933,7 @@ export class ArenaScene extends Phaser.Scene {
       actor.body?.updateFromGameObject();
       if (!(actor instanceof Gem)) actor.setDepth(100 + actor.y);
     }
-    this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
-    this.aura.setPosition(this.player.x, this.player.y);
+    this.khan.syncAttachments();
     for (const [enemy, shadow] of this.enemyDirector.shadows)
       if (enemy.active) shadow.setPosition(enemy.x + 6, enemy.y + 4).setDepth(99 + enemy.y);
     this.riderHost.reconcile(navigation);
@@ -980,15 +962,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   dash(): void {
-    if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.timers.dashTimer > 0)
-      return;
-    this.run.combat.gallopSerial++;
-
-    this.timers.dashRemaining = GAME.dash.duration;
-    this.timers.dashTimer = gallopCooldown(this.run);
-    this.timers.invulnerable = Math.max(this.timers.invulnerable, GAME.dash.duration);
-    this.audio.play('dash');
-    this.effects.burst(this.player.x, this.player.y, 0xc8df9b, 7);
+    this.khan.dash();
   }
 
   update(_time: number, delta: number): void {
@@ -1005,7 +979,7 @@ export class ArenaScene extends Phaser.Scene {
     );
     if (!isKhanActive(this.run) && this.player.active) {
       beginSuccession(this.run);
-      this.hideFallenKhan();
+      this.khan.hideFallenKhan();
     }
 
     this.run.elapsed += dt;
@@ -1031,10 +1005,12 @@ export class ArenaScene extends Phaser.Scene {
       this.finish('dead');
       return;
     }
-    if (advanceSuccession(this.run, dt)) this.returnKhan();
+    if (advanceSuccession(this.run, dt)) this.khan.returnKhan();
     advanceMountedCombat(this.run, dt, this.player, this.timers.dashRemaining > 0);
-    if (isKhanActive(this.run)) this.movePlayer(dt);
-    else this.player.setPosition(this.camp.x, this.camp.y + GAME.khan.campOffset);
+    if (isKhanActive(this.run)) {
+      this.khan.move(dt, this.controls.movement());
+      this.controls.drawJoystick();
+    } else this.player.setPosition(this.camp.x, this.camp.y + GAME.khan.campOffset);
     this.audio.update(dt, {
       speed: isKhanActive(this.run) ? this.player.body!.velocity.length() : 0,
       galloping: this.timers.dashRemaining > 0,
@@ -1092,41 +1068,6 @@ export class ArenaScene extends Phaser.Scene {
     }
     this.enemyDirector.tickFinalBoss();
     this.presentStory();
-  }
-
-  private movePlayer(dt: number): void {
-    const movement = this.controls.movement();
-    if (this.landscape.world3d) {
-      const rotated = this.landscape.world3d.movement(movement.x, movement.y);
-      movement.set(rotated.x, rotated.y);
-    }
-    const moving = movement.lengthSq() > 0.01;
-    if (moving) {
-      completeGuidance(this.run, 'ride');
-      this.facing.copy(movement).normalize();
-    }
-    if (this.timers.dashRemaining > 0) movement.copy(this.facing).scale(GAME.dash.speed);
-    else
-      movement.scale(
-        this.run.stats.speed *
-          khanSpeedMultiplier(this.run) *
-          areaMovementMultiplier(this.areaThreats, this.player),
-      );
-    this.player.setVelocity(movement.x, movement.y);
-    const faceX = this.landscape.world3d?.screenX(this.facing.x, this.facing.y) ?? this.facing.x;
-    if (Math.abs(faceX) > 0.01) this.player.setFlipX(faceX < 0);
-    this.player.setAlpha(
-      this.timers.invulnerable > 0 ? (Math.floor(this.run.elapsed * 20) % 2 ? 0.5 : 0.85) : 1,
-    );
-    this.player.setDepth(100 + this.player.y);
-    this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
-    this.dustTimer -= dt;
-    if (moving && effectAmount(this.visualSettings) > 0 && this.dustTimer <= 0) {
-      this.effects.dust(this.player.x, this.player.y, this.facing.x, this.timers.dashRemaining > 0);
-      this.dustTimer = 0.12 / Math.max(0.1, effectAmount(this.visualSettings));
-    }
-    this.aura.setPosition(this.player.x, this.player.y);
-    this.controls.drawJoystick();
   }
 
   private updateFinalStand(dt: number): void {
@@ -1644,78 +1585,9 @@ export class ArenaScene extends Phaser.Scene {
     }
   }
 
-  private hurtPlayer(enemy: Enemy): void {
-    if (
-      this.run.phase !== 'playing' ||
-      !isKhanActive(this.run) ||
-      !enemy.active ||
-      this.timers.invulnerable > 0
-    )
-      return;
-    enemy.motion.attack();
-    this.takeDamage(enemy.definition.damage);
-  }
-
-  private takeDamage(amount: number): void {
-    if (this.run.phase !== 'playing' || this.timers.invulnerable > 0) return;
-    if (import.meta.env.DEV && this.developerTools?.invincible) return;
-    const outcome = damageKhan(this.run, amount);
-    if (!outcome) return;
-    this.playerMotion.hit();
-    this.timers.invulnerable = GAME.invulnerability;
-    if (effectAmount(this.visualSettings) > 0) this.cameras.main.shake(90, 0.003);
-    this.audio.play(outcome === 'fallen' ? 'fall' : 'hit');
-    this.effects.burst(this.player.x, this.player.y, 0xdd967c, 8);
-    if (outcome === 'fallen') this.hideFallenKhan();
-  }
-
   selectSuccessor(trait: SuccessorTrait): void {
     if (!chooseSuccessor(this.run, trait)) return;
     this.audio.play('ui');
-    this.callbacks?.onHud(this.snapshot());
-  }
-
-  private hideFallenKhan(): void {
-    this.player.setVelocity(0, 0).disableBody(true, true);
-    this.shadow.setVisible(false);
-    this.aura.setVisible(false);
-    this.timers.dashRemaining = 0;
-    this.run.clan.momentum = 0;
-    this.controls.clearTouch();
-    this.cameras.main.startFollow(this.camp, true, 0.09, 0.09).setFollowOffset(0, 0);
-    this.callbacks?.onHud(this.snapshot());
-  }
-
-  private returnKhan(): void {
-    if (!isKhanActive(this.run)) return;
-    const x = this.camp.x;
-    const y = Phaser.Math.Clamp(this.camp.y + GAME.khan.campOffset, 24, GAME.worldSize - 24);
-    this.player.enableBody(true, x, y, true, true);
-    this.player
-      .setVelocity(0, 0)
-      .setAlpha(1)
-      .clearTint()
-      .setFlipX(false)
-      .setDepth(100 + y);
-    this.playerMotion.reset('player', 0);
-    this.run.combat.previous = undefined;
-    this.run.combat.heading = undefined;
-    this.run.combat.rideSeconds = 0;
-    this.run.combat.ready = false;
-    renderCharacter(this.player, this.playerMotion);
-    this.shadow
-      .setPosition(x + 9, y + 5)
-      .setDepth(99 + y)
-      .setVisible(true);
-    this.aura.setPosition(x, y).setVisible(true);
-    this.facing.set(1, 0);
-    this.timers.dashRemaining = this.timers.dashTimer = 0;
-    this.timers.attackTimer = this.dustTimer = 0;
-    this.timers.invulnerable = GAME.khan.returnProtection;
-    this.controls.clearTouch();
-    this.cameras.main.startFollow(this.player, true, 0.09, 0.09).setFollowOffset(0, 0);
-    this.effects.burst(x, y, 0xf1c27b, 12);
-    this.audio.play('succession');
     this.callbacks?.onHud(this.snapshot());
   }
 
@@ -1791,22 +1663,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private updateCharacterAnimations(dt: number): void {
     const preparingVolley = this.timers.attackTimer > 0 && this.timers.attackTimer < 0.12;
-    if (isKhanActive(this.run)) {
-      this.playerMotion.advance(
-        dt,
-        this.player.body!.velocity.length(),
-        preparingVolley &&
-          Boolean(
-            this.spatial.nearest(
-              this.player.x,
-              this.player.y,
-              GAME.projectile.range + this.run.clan.campEffects.bonuses.range,
-            ),
-          ),
-      );
-      renderCharacter(this.player, this.playerMotion);
-      this.player.setTint(this.playerMotion.hurt ? 0xffd3b2 : 0xffffff);
-    }
+    this.khan.animate(dt, preparingVolley);
     this.riderHost.animate(dt, preparingVolley);
     for (const enemy of this.enemies.getChildren() as Enemy[]) {
       if (!enemy.active) continue;
@@ -1907,7 +1764,7 @@ export class ArenaScene extends Phaser.Scene {
           isKhanActive(this.run) &&
           Math.hypot(threat.x - this.player.x, threat.y - this.player.y) < radius
         )
-          this.takeDamage(damage);
+          this.khan.takeDamage(damage);
         if (Math.hypot(threat.x - this.camp.x, threat.y - this.camp.y) < radius + 25)
           this.clanDamage.damage(damage * GAME.areaCombat.campDamage, 'area', undefined, threat);
         this.audio.play('spell', threat);
@@ -1987,7 +1844,7 @@ export class ArenaScene extends Phaser.Scene {
       this.effects.burst(hazard.x, hazard.y, clan.region === 3 ? 0xbf6558 : 0x796d4d, 12);
       this.audio.play('thunder', hazard);
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.player.x, this.player.y) < radius)
-        this.takeDamage(hazard.damage ?? 20);
+        this.khan.takeDamage(hazard.damage ?? 20);
       if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.camp.x, this.camp.y) < radius + 25)
         this.clanDamage.damage(
           hazard.source === 'seer' ? 5 : 8,
@@ -2146,6 +2003,21 @@ export class ArenaScene extends Phaser.Scene {
   }
   collectGems(dt: number): void {
     this.combat.collectGems(dt);
+  }
+  get playerMotion(): CharacterMotion {
+    return this.khan.playerMotion;
+  }
+  get shadow(): Phaser.GameObjects.Image {
+    return this.khan.shadow;
+  }
+  takeDamage(amount: number): void {
+    this.khan.takeDamage(amount);
+  }
+  hurtPlayer(enemy: Enemy): void {
+    this.khan.hurtPlayer(enemy);
+  }
+  hideFallenKhan(): void {
+    this.khan.hideFallenKhan();
   }
   get riders(): Phaser.GameObjects.Image[] {
     return this.riderHost.riders;

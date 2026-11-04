@@ -23,6 +23,7 @@ in the scene.
 | `arena/ClanDamage.ts`       | the single path for battlefield damage to the clan and the development clan-invincible cheat; callers pass the impact point, which no rule reads yet                    | scene                    |
 | `arena/CombatSystem.ts`     | Khan volleys and the attack timer, friendly and hostile projectiles, hits, enemy damage and defeat rewards, gem collection, the physics overlaps, and saved projectiles | scene                    |
 | `arena/RiderHost.ts`        | the 16 rider slots, formation movement, rider volleys, rider animation, terrain reconciliation, and saved rider positions                                               | scene, reset in `create` |
+| `arena/KhanController.ts`   | Khan riding, the gallop, taking damage, falling and a successor's return, the ground shadow and aura, Khan animation, and the saved Khan body                           | scene, reset in `create` |
 | `arena/ArenaSystem.ts`      | base class whose getters read the shared context live, so moved code keeps its `this.run`/`this.player` shape                                                           | —                        |
 
 "Scene" lifetime means one instance for the scene object. Field initialisers run once, but
