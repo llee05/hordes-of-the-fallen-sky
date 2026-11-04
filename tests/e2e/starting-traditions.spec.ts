@@ -56,7 +56,7 @@ test('Back keeps the chosen arrangement ready for New Game without starting time
   await expect(
     page.getByRole('button', { name: 'Starting tradition: Hearthkeepers' }),
   ).toBeVisible();
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades)).toBe(0);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.xp)).toBe(0);
   await page.getByRole('button', { name: /NEW GAME/ }).click();
   await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
 });

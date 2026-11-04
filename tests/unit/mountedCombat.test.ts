@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { createRun } from '../../src/game/state/run';
+import { GAME } from '../../src/game/config';
+import { ENEMIES } from '../../src/game/data/enemies';
 import {
   advanceMountedCombat,
-  spendMountedVolley,
   retreatShot,
+  spendMountedVolley,
 } from '../../src/game/state/mountedCombat';
+import { createRun } from '../../src/game/state/run';
 import {
-  createEnemyTactics,
   advanceCharge,
+  createEnemyTactics,
   tacticalGoal,
 } from '../../src/game/systems/enemyTactics';
-import { ENEMIES } from '../../src/game/data/enemies';
-import { GAME } from '../../src/game/config';
 
 describe('mounted positioning', () => {
   it('charges from real sustained riding, rejects wall pushing/teleports, and spends a volley once', () => {
@@ -41,12 +41,11 @@ describe('mounted positioning', () => {
   it('bounds upgraded slowing wakes, expires them on active time, and rewards an outward retreat shot', () => {
     const r = createRun();
     r.phase = 'playing';
-    r.upgrades['turned-earth'] = 1;
     r.clan.formation = 'retreat';
     r.clan.momentum = 1;
     for (let i = 0; i < 100; i++)
       advanceMountedCombat(r, 0.05, { x: 1000 + i * 25, y: 2600 }, true);
-    expect(r.combat.trails.length).toBeGreaterThan(0);
+    expect(r.combat.trails).toHaveLength(0);
     expect(r.combat.trails.length).toBeLessThanOrEqual(GAME.mounted.maxTrails);
     expect(
       retreatShot(

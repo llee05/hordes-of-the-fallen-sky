@@ -30,7 +30,7 @@ export function developerMenu(tools?: DeveloperConsoleSnapshot): string {
     <header class="panel-heading"><div><p class="eyebrow">LEVEL SELECTOR · F8</p><h2 id="overlay-title">Developer mode</h2></div><button class="panel-close" data-action="back" aria-label="Close developer mode">×</button></header>
     <div class="panel-body">
       <p class="panel-intro">Jump straight into any chapter, crossing or named camp. Each choice replaces the current expedition with a fresh developer run.</p>
-      <p class="developer-kit">${GAME.developer.population} people · ${GAME.developer.knowledgePoints} knowledge points · stocked supplies · camp scenes off.<br>Developer runs do not change your longest journey.</p>
+      <p class="developer-kit">${GAME.developer.population} people · stocked supplies · camp scenes off.<br>Developer runs do not change your longest journey.</p>
       <h3>Command console <kbd>&#96;</kbd></h3>
       ${commandContent(tools)}
       ${(

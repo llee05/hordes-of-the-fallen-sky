@@ -1,20 +1,11 @@
-import { volleyFactors } from './volley';
 import { GAME } from '../config';
-import type { BuildingId, RunState, UpgradeDefinition } from '../types';
-import { applyResearch } from './run';
-import { RESEARCH_BY_ID } from '../data/research';
-import { clanDamageMultiplier, hasDevelopment, riderCount } from './clan';
-import { economyForecast, migrationMobility, pastureDepletion } from './economy';
-import { gallopCooldown } from './patrons';
 import { SUCCESSORS } from '../data/successors';
+import type { BuildingId, RunState } from '../types';
+import { gallopCooldown, wagonDefence } from './campCombat';
+import { clanDamageMultiplier, hasDevelopment, riderCount } from './clan';
 import { developmentPreview } from './developmentPreview';
-import {
-  echoInterval,
-  stillwaterRefuge,
-  researchWaterRadius,
-  researchLayeredProtection,
-  wagonResearchDefence,
-} from './researchRuntime';
+import { economyForecast, migrationMobility, pastureDepletion } from './economy';
+import { volleyFactors } from './volley';
 
 export interface StatChange {
   label: string;
@@ -34,7 +25,7 @@ const n = (value: number) => Number(value.toFixed(3)).toString();
 function metrics(r: RunState): Metric[] {
   const rates = economyForecast(r),
     c = r.clan.campEffects;
-  const volley = volleyFactors(r, r.stats.projectiles, true);
+  const volley = volleyFactors(r, r.stats.projectiles);
   return [
     { label: 'Clan population', value: r.clan.population },
     { label: 'Herd', value: r.clan.herd },
@@ -42,18 +33,8 @@ function metrics(r: RunState): Metric[] {
     { label: 'Clan resolve now', value: r.clan.integrity },
     { label: 'Shared attack damage', value: r.stats.damage },
     {
-      label: 'Damage above half momentum',
-      value: r.stats.damage * r.patrons.hunt.movingDamage,
-      context: 'Before enemy-specific or formation bonuses',
-    },
-    {
-      label: 'Damage vs wounded enemies',
-      value: r.stats.damage * r.patrons.hunt.executeDamage,
-      context: 'Enemy below half health; before momentum and formation bonuses',
-    },
-    {
       label: 'Khan targeting range',
-      value: GAME.projectile.range + r.patrons.bow.range + c.bonuses.range + r.clan.momentum * 120,
+      value: GAME.projectile.range + c.bonuses.range + r.clan.momentum * 120,
       unit: ' paces',
       context: 'Includes the current momentum targeting bonus',
     },
@@ -69,43 +50,28 @@ function metrics(r: RunState): Metric[] {
       label: 'Khan wide-volley damage',
       value: r.stats.damage * volley.damage,
       context:
-        'Includes Feathered Fan, Barrage and formation; before momentum, retreat, charged-shot and enemy-specific bonuses',
+        'Includes formation; before momentum, retreat, charged-shot and enemy-specific bonuses',
     },
     {
       label: 'Khan wide-volley spacing',
       value: (volley.spacing * 180) / Math.PI,
       unit: '°',
     },
-    { label: 'Additional arrow pierces', value: r.patrons.bow.pierce },
+    { label: 'Additional arrow pierces', value: r.stats.pierce },
     { label: 'Riding speed', value: r.stats.speed, unit: ' paces/s' },
     { label: 'Gallop cooldown', value: gallopCooldown(r), unit: 's', lower: true },
     { label: 'Maximum Khan health', value: r.stats.maxHealth },
     { label: 'Khan health now', value: r.health },
     {
       label: 'Khan damage reduction',
-      value:
-        (1 -
-          r.patrons.hearth.damageTaken *
-            (r.khan.trait ? SUCCESSORS[r.khan.trait].protection : 1) *
-            (stillwaterRefuge(r) ? GAME.research.refugeProtection : 1) *
-            researchLayeredProtection(r)) *
-        100,
+      value: (1 - (r.khan.trait ? SUCCESSORS[r.khan.trait].protection : 1)) * 100,
       unit: '%',
     },
     {
       label: 'Khan recovery',
-      value:
-        r.patrons.hearth.regeneration +
-        c.bonuses.commanderRecovery +
-        (stillwaterRefuge(r) ? GAME.research.refugeRecovery : 0),
+      value: c.bonuses.commanderRecovery,
       unit: '/s',
       context: 'Only while the Khan is alive',
-    },
-    { label: 'Last Ember charges', value: r.patrons.hearth.revives },
-    {
-      label: 'Health per moving kill',
-      value: r.patrons.hunt.killHeal,
-      context: 'Above half momentum',
     },
     {
       label: 'Clan damage reduction',
@@ -119,7 +85,6 @@ function metrics(r: RunState): Metric[] {
       value:
         r.stats.damage *
         (0.6 + (hasDevelopment(r, 'archery', 'veteran-riders') ? 0.3 : 0)) *
-        r.patrons.banner.damage *
         c.multipliers.riderDamage,
     },
     {
@@ -133,50 +98,21 @@ function metrics(r: RunState): Metric[] {
     { label: 'Pasture depletion', value: pastureDepletion(r), unit: ' pp/s', lower: true },
     {
       label: 'Spirit gained from kills',
-      value: r.patrons.ancestors.spiritGain * c.multipliers.spiritGain * 100,
+      value: c.multipliers.spiritGain * 100,
       unit: '%',
     },
     { label: 'Shard attraction', value: r.stats.pickupRadius, unit: ' paces' },
     {
-      label: 'Ancestral echoes',
-      value: Math.min(GAME.patrons.ancestors.maximum, r.patrons.ancestors.count),
-    },
-    {
-      label: 'Echo arrow damage',
-      value: r.patrons.ancestors.count ? r.stats.damage * r.patrons.ancestors.damage : 0,
-      context: 'Before momentum, execution, and formation bonuses',
-    },
-    { label: 'Echo firing interval', value: echoInterval(r), unit: 's', lower: true },
-    { label: 'Enemy slow in fields', value: Math.min(0.8, r.patrons.water.slow) * 100, unit: '%' },
-    { label: 'Slowing field radius', value: researchWaterRadius(r), unit: ' paces' },
-    { label: 'Extra eruption warning', value: r.patrons.water.warning, unit: 's' },
-    {
-      label: 'Eruption damage reduction',
-      value: (1 - r.patrons.water.hazardDamage) * 100,
-      unit: '%',
-    },
-    { label: 'Water pulse damage', value: r.patrons.water.pulseDamage * r.stats.damage },
-    { label: 'Camp ward damage', value: r.patrons.guardian.wardDamage * r.stats.damage },
-    {
       label: 'Wagon defence arrow damage',
-      value: wagonResearchDefence(r).active ? r.stats.damage * wagonResearchDefence(r).damage : 0,
-      context: wagonResearchDefence(r).fallback
-        ? 'Baseline short-range guard shot without Wagon circle'
-        : 'Includes current camp and technology modifiers',
+      value: wagonDefence(r).active ? r.stats.damage * wagonDefence(r).damage : 0,
+      context: 'Includes current camp modifiers',
     },
     { label: 'Wagon damage multiplier', value: c.multipliers.wagonDamage, unit: '×' },
     {
       label: 'Wagon firing interval',
-      value: 0.9 * r.patrons.guardian.wagonInterval,
+      value: 0.9,
       unit: 's',
       lower: true,
-    },
-    {
-      label: 'Camp material price multiplier',
-      value: r.patrons.guardian.cost * 100,
-      unit: '%',
-      lower: true,
-      context: 'Each actual price is rounded up',
     },
     { label: 'Food on arrival', value: c.bonuses.arrivalFood },
     { label: 'Materials on arrival', value: c.bonuses.arrivalMaterials },
@@ -186,7 +122,7 @@ function metrics(r: RunState): Metric[] {
       value: c.bonuses.arrivalHealth,
       context: 'Only while the Khan is alive',
     },
-    { label: 'Resolve per kill', value: r.patrons.banner.resolveOnKill },
+    { label: 'Resolve per kill', value: 0 },
   ];
 }
 export function progressionChanges(before: RunState, after: RunState): StatChange[] {
@@ -204,22 +140,6 @@ export function progressionChanges(before: RunState, after: RunState): StatChang
       },
     ];
   });
-}
-/** Run the same validated purchase on a disposable copy; no mutation or timer advancement. */
-export function researchPreview(run: RunState, upgrade: UpgradeDefinition): StatChange[] {
-  return researchPreviewById(run, upgrade.id);
-}
-export function researchPreviewById(run: RunState, id: string): StatChange[] {
-  const definition = RESEARCH_BY_ID.get(id);
-  if (!definition) return [];
-  const copy = structuredClone(run);
-  // This is a clearly hypothetical stat comparison, not purchase permission.
-  // Only the knowledge shortage is waived; every other gate remains authoritative.
-  copy.pendingUpgrades = Math.max(
-    definition.pointCostPerRank[run.upgrades[id] ?? 0] ?? 0,
-    copy.pendingUpgrades,
-  );
-  return applyResearch(copy, id) ? progressionChanges(run, copy) : [];
 }
 export function campStatPreview(run: RunState, id: BuildingId, path?: string): StatChange[] {
   const preview = developmentPreview(run, id, path);

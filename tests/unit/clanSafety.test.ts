@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { createRun } from '../../src/game/state/run';
+import type { SuccessorTrait } from '../../src/game/data/successors';
 import { advanceClan, beginMigration, damageClan } from '../../src/game/state/clan';
 import {
+  advanceSuccession,
   chooseSuccessor,
   damageKhan,
-  advanceSuccession,
   khanSpeedMultiplier,
 } from '../../src/game/state/khan';
-import type { SuccessorTrait } from '../../src/game/data/successors';
+import { createRun } from '../../src/game/state/run';
 
 describe('readable clan survival', () => {
   it('distinguishes combat, eruptions and starvation without changing protection or counting invincible losses', () => {
@@ -74,7 +74,6 @@ describe('optional successor choices', () => {
     damageKhan(r, 10);
     expect(r.health).toBeCloseTo(90.8);
     expect(r.stats).toEqual(stats);
-    expect(r.patrons.hearth.revives).toBe(0);
   });
   it('returns an unmodified successor if no preference was made', () => {
     const r = createRun();

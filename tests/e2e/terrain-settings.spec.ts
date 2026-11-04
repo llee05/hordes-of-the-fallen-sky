@@ -105,7 +105,7 @@ for (const scenario of [
       gem.attracted = true;
       s.riders[0].setVisible(true).setPosition(point.x, point.y);
       s.testTerrainSave = captureExpedition(s.run, s.captureWorld());
-      return { xp: s.run.xp, points: s.run.pendingUpgrades, spawnId: enemy.spawnId };
+      return { xp: s.run.xp, points: s.run.xp, spawnId: enemy.spawnId };
     }, blocked);
     const inspect = () =>
       page.evaluate(() => {
@@ -133,7 +133,7 @@ for (const scenario of [
           value: gem?.value,
           attracted: gem?.attracted,
           xp: s.run.xp,
-          points: s.run.pendingUpgrades,
+          points: s.run.xp,
         };
       });
     const expected = {

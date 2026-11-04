@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { buyNode, closeOverlayOrPause, openTitle, startExpedition } from './helpers';
+import { openTitle, startExpedition } from './helpers';
 
 // Each test owns its browser context and game; CI shards may schedule them independently.
 test.describe.configure({ mode: 'parallel' });
 
 test(
-  'automatic attacks defeat enemies and collected XP banks research without interrupting combat',
+  'automatic attacks defeat enemies and collected XP raises levels without interrupting combat',
   { tag: '@core' },
   async ({ page }) => {
     await openTitle(page);
@@ -30,16 +30,7 @@ test(
     });
     await expect(page.locator('#level')).toHaveText('02');
     await expect(page.getByRole('dialog')).toBeHidden();
-    await expect(page.locator('#research-points')).toHaveText('1');
-    await page.keyboard.press('t');
-    await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
-    await expect(page.locator('[data-tree-branch-select]')).toHaveCount(10);
-    await page.screenshot({ path: 'test-results/desktop-upgrade.png', fullPage: true });
-    await buyNode(page, 'power');
-    await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
-    await closeOverlayOrPause(page);
-    await expect(page.getByRole('dialog')).toBeHidden();
-    await expect(page.locator('#blessing-count')).toHaveText('1');
+    await expect(page.locator('#research')).toHaveCount(0);
     await expect(page.locator('#level')).toHaveText('02');
   },
 );

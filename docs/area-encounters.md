@@ -81,4 +81,4 @@ arrival-time unlock and counter, plus the shared roster. Portraits crop the exis
 locally bundled actor atlas through `ui/artwork.ts`; no extra raster asset is made.
 The battlefield teaches the rule once on entering the active area. The location
 and encounter HUD labels also expose the local rule as a tooltip. Normal warnings,
-projectile contrast, terrain collision and knowledge-point banking remain intact.
+projectile contrast, terrain collision and XP levels remain intact.

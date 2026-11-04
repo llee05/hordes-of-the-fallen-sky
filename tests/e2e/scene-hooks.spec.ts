@@ -21,7 +21,6 @@ const LIVE = [
   'audio',
   'controller',
   'callbacks',
-  'patronSupport',
   'playerMotion',
   'campBarrier',
   'clanLife',
@@ -108,7 +107,6 @@ const METHODS = [
   'chooseRoute',
   'chooseStory',
   'cycleFormation',
-  'research',
   'dash',
   'changeZoom',
 ] as const;

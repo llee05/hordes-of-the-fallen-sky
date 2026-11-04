@@ -1,10 +1,3 @@
-import {
-  researchFoodProductionMultiplier,
-  researchGrazing,
-  researchMaterialGrazing,
-  researchPastureRecoveryBonus,
-} from './researchRuntime';
-import { leadershipMobility } from './researchLeadership';
 import { GAME } from '../config';
 import { ROUTES, startingTradition, type MigrationLocation } from '../data/clan';
 import type { RunState } from '../types';
@@ -24,13 +17,7 @@ export interface EconomyForecast extends EconomyRates {
 }
 
 export function pastureDepletion(run: RunState): number {
-  return (
-    (100 / GAME.clan.pastureLifetime) *
-      run.patrons.land.pastureUse *
-      run.clan.campEffects.multipliers.pastureUse -
-    run.patrons.land.pastureRecovery -
-    researchPastureRecoveryBonus(run)
-  );
+  return (100 / GAME.clan.pastureLifetime) * run.clan.campEffects.multipliers.pastureUse;
 }
 
 export function migrationMobility(run: RunState): number {
@@ -38,8 +25,6 @@ export function migrationMobility(run: RunState): number {
     (1 + run.clan.herd * 0.012) *
     (hasDevelopment(run, 'herd', 'remount-herds') ? 1.2 : 1) *
     (run.clan.region === 1 ? 0.8 : 1) *
-    run.patrons.banner.mobility *
-    leadershipMobility(run) *
     run.clan.campEffects.multipliers.mobility *
     currentLocation(run).balance.mobility *
     startingTradition(run.startingTradition).balance.mobility
@@ -48,22 +33,19 @@ export function migrationMobility(run: RunState): number {
 
 /** Shared by simulation and forecasts, including when menus freeze the actual economy. */
 export function economyRates(run: RunState, pasture = run.clan.pasture): EconomyRates {
-  const { clan, patrons } = run;
+  const { clan } = run;
   const { multipliers } = clan.campEffects;
   const location = currentLocation(run).balance;
   const foodConsumption =
     clan.population *
     GAME.clan.foodPerPerson *
     (hasDevelopment(run, 'herd', 'winter-stores') ? 0.5 : 1) *
-    patrons.land.consumption *
     multipliers.consumption;
   const grazing = clan.stage === 'migration' ? 0 : Math.max(0, Math.min(pasture, 100)) / 100;
   const foodProduction =
     (0.65 + (clan.buildings.herd ? 0.65 : 0)) *
-    researchGrazing(run, grazing, pasture) *
-    researchFoodProductionMultiplier(run) *
+    grazing *
     (clan.region === 1 ? 0.7 : 1) *
-    patrons.land.food *
     multipliers.foodProduction *
     location.food;
   return {
@@ -72,8 +54,7 @@ export function economyRates(run: RunState, pasture = run.clan.pasture): Economy
     foodNet: foodProduction - foodConsumption,
     materials:
       (0.28 + clan.population * 0.018) *
-      researchMaterialGrazing(run, grazing, pasture) *
-      patrons.land.materials *
+      grazing *
       multipliers.materialProduction *
       location.materials,
   };
@@ -132,13 +113,7 @@ function projectFood(run: RunState, duration = Infinity) {
     if ((slope < 0 && pasture === 0) || (slope > 0 && pasture === 100)) slope = 0;
     const pastureBoundary =
       slope < 0 ? pasture / -slope : slope > 0 ? (100 - pasture) / slope : Infinity;
-    const buffRemaining =
-      (projected.researchRuntime?.vigilantHerdersUntil ?? 0) - projected.elapsed;
-    const segment = Math.min(
-      duration - elapsed,
-      pastureBoundary,
-      buffRemaining > 0 ? buffRemaining : Infinity,
-    );
+    const segment = Math.min(duration - elapsed, pastureBoundary);
     const net = economyRates(projected, pasture).foodNet;
     const acceleration =
       ((economyRates(projected, 100).foodProduction - economyRates(projected, 0).foodProduction) *

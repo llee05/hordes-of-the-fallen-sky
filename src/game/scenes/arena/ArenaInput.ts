@@ -12,10 +12,8 @@ export interface ArenaActions {
   openBuildings(): void;
   openRoutes(): void;
   cycleFormation(): void;
-  rallyHost(): void;
   selectSuccessor(trait: SuccessorTrait): void;
   toggleJournal(): void;
-  openResearch(): void;
   toggleDeveloperMenu(): void;
   toggleDeveloperConsole(): void;
   changeZoom(steps: number): void;
@@ -29,7 +27,6 @@ const BACK_PHASES = [
   'playing',
   'paused',
   'building',
-  'upgrade',
   'route',
   'journal',
   'settings',
@@ -108,11 +105,9 @@ export class ArenaInput {
     bindAction('B', () => actions.openBuildings());
     bindAction('M', () => actions.openRoutes());
     bindAction('F', () => actions.cycleFormation());
-    bindAction('R', () => actions.rallyHost());
     bindAction('ONE', () => actions.selectSuccessor('outrider'));
     bindAction('TWO', () => actions.selectSuccessor('hearthguard'));
     bindAction('J', () => actions.toggleJournal());
-    bindAction('T', () => actions.openResearch());
     if (import.meta.env.DEV) {
       bindAction('F8', () => actions.toggleDeveloperMenu());
       bindAction('F9', () => this.arena.landscape.cycleTerrainDebug());
@@ -211,7 +206,6 @@ export class ArenaInput {
     const phaseBeforeInput = this.arena.run.phase;
     if (controller.pause || (controller.back && BACK_PHASES.includes(this.arena.run.phase)))
       actions.togglePause();
-    else if (controller.research) actions.openResearch();
     else if (this.arena.run.phase === 'playing') {
       if (controller.zoomReset) actions.changeZoom(0);
       else if (controller.zoomIn) actions.changeZoom(1);

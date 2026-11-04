@@ -1,13 +1,11 @@
-import { nomadicBuildingLevel, purchaseNomadicBuilding } from '../state/nomadicCamp';
 import type { NomadicBuildingId } from '../../shared/nomadicCamp.js';
 import { GAME } from '../config';
 import { STARTING_TRADITIONS, type StartingTraditionId } from '../data/clan';
-import { UPGRADES } from '../data/upgrades';
-import { advanceClan, beginMigration } from '../state/clan';
-import { createRun, gainExperience, applyUpgrade, upgradeBlocker } from '../state/run';
-import { damageClan } from '../state/clan';
-import { observeExpedition, markExpedition, metricStage } from '../state/expeditionMetrics';
+import { advanceClan, beginMigration, damageClan } from '../state/clan';
 import { encounterEnemy } from '../state/encounters';
+import { markExpedition, metricStage, observeExpedition } from '../state/expeditionMetrics';
+import { nomadicBuildingLevel, purchaseNomadicBuilding } from '../state/nomadicCamp';
+import { createRun, gainExperience } from '../state/run';
 
 function createPacingRng(seed = 0x42): () => number {
   let a = seed >>> 0;
@@ -64,8 +62,6 @@ export function pacingBenchmark(
       const enemy = encounterEnemy(run, random);
       gainExperience(run, enemy.definition.xp);
       nextKill += plan.killEvery;
-      const choice = UPGRADES.find((u) => !upgradeBlocker(run, u));
-      if (choice) applyUpgrade(run, choice);
     }
     if (run.elapsed >= nextContact) {
       const exposure =
@@ -89,7 +85,7 @@ export function pacingBenchmarkLines(): string[] {
   return PACING_PLAYSTYLES.flatMap((style) =>
     STARTING_TRADITIONS.map(({ id }) => {
       const { run, outcome } = pacingBenchmark(style, id);
-      return `${style}/${id}: ${outcome ?? 'timeout'}, ${run.elapsed.toFixed(0)}s, ${run.clan.population} people, ${run.clan.integrity.toFixed(0)} resolve, ${run.clan.food.toFixed(0)} food, ${run.level - 1} knowledge earned.`;
+      return `${style}/${id}: ${outcome ?? 'timeout'}, ${run.elapsed.toFixed(0)}s, ${run.clan.population} people, ${run.clan.integrity.toFixed(0)} resolve, ${run.clan.food.toFixed(0)} food, ${run.level - 1} levels earned.`;
     }),
   );
 }

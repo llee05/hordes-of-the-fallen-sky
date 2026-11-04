@@ -1,9 +1,18 @@
-import { syncNomadicBuildings } from './nomadicCamp';
-import { isNomadicCamp } from '../../shared/nomadicCamp.js';
-import { createCampEstate } from './campEstate';
-import { migrateLegacyNomadicCamp } from './nomadicCampMigration';
+import { storyConsequence } from '../data/storyConsequences';
+import { applyCampEffects } from './camp';
 import { isExpeditionSave, isRecord, type ExpeditionSave } from '../../shared/expeditionSave';
-import { createRun } from './run';
+import { isNomadicCamp } from '../../shared/nomadicCamp.js';
+import type { MotionArchive } from '../animation/CharacterMotion';
+import { GAME } from '../config';
+import { BUILDINGS, LOCATIONS, ROUTES, STARTING_TRADITIONS } from '../data/clan';
+import { ALL_ENEMIES, SKYBREAKER } from '../data/enemies';
+import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
+import { NOMADIC_BUILDINGS } from '../data/nomadicCamp';
+import { STORY_ORDER, storyEncounter } from '../data/story';
+import { FIRST_STOPS, SECOND_STOPS, firstStop, secondStop } from '../data/storyDestinations';
+import { SUCCESSORS } from '../data/successors';
+import type { Enemy } from '../entities/actors';
+import type { RunState } from '../types';
 import {
   boolean,
   dictionary,
@@ -16,22 +25,18 @@ import {
   string,
   type Rule,
 } from './archiveRules';
-import { RESEARCH_RUNTIME_RULES } from './researchRuntimeRules';
-import { ALL_ENEMIES, SKYBREAKER } from '../data/enemies';
-import { RESEARCH_BY_ID } from '../data/research';
-import { BUILDINGS, ROUTES, LOCATIONS, STARTING_TRADITIONS } from '../data/clan';
-import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
-import { STORY_ORDER, storyEncounter } from '../data/story';
-import { FIRST_STOPS, SECOND_STOPS, firstStop, secondStop } from '../data/storyDestinations';
-import { SUCCESSORS } from '../data/successors';
-import { GAME } from '../config';
-import { currentLocation } from './journey';
-import { EXPEDITION_MILESTONES } from './expeditionMetrics';
-import type { RunState } from '../types';
-import type { Enemy } from '../entities/actors';
-import type { MotionArchive } from '../animation/CharacterMotion';
 import type { AreaEncounterState } from './areaEncounters';
 import type { AreaThreatState } from './areaThreats';
+import { createCampEstate } from './campEstate';
+import { EXPEDITION_MILESTONES } from './expeditionMetrics';
+import { currentLocation } from './journey';
+import {
+  applyNomadicBuildingEffects,
+  nomadicBuildingLevel,
+  syncNomadicBuildings,
+} from './nomadicCamp';
+import { migrateLegacyNomadicCamp } from './nomadicCampMigration';
+import { createRun } from './run';
 
 interface Point {
   x: number;
@@ -85,12 +90,6 @@ export interface ProjectileArchive extends BodyArchive {
   previous?: Point;
   hits: { slot: number; spawnId: number }[];
 }
-export interface SupportArchive {
-  ancestorTimer: number;
-  waterTimer: number;
-  guardianTimer: number;
-  spirits: (Point & { active: boolean; motion: MotionArchive })[];
-}
 export interface WorldArchive {
   player: BodyArchive & { motion: MotionArchive };
   camp: Point;
@@ -113,7 +112,6 @@ export interface WorldArchive {
   hostileShots: ProjectileArchive[];
   gems: (BodyArchive & { value: number; attracted: boolean; secondary?: boolean })[];
   riders: (Point & { flip: boolean; motion: MotionArchive })[];
-  support: SupportArchive;
   hazards: (Point & {
     remaining: number;
     radius?: number;
@@ -187,7 +185,6 @@ const khanRecord = object(
 );
 const overrides: Record<string, Rule> = {
   phase: oneOf(['playing', 'paused', 'story']),
-  upgrades: dictionary(integer),
   'clan.stage': oneOf(['camp', 'migration', 'final']),
   'clan.region': oneOf([0, 1, 2, 3]),
   'clan.routeId': oneOf(['', ...ROUTES.map((r) => r.id)]),
@@ -250,22 +247,6 @@ const overrides: Record<string, Rule> = {
 };
 const optional: Record<string, Record<string, Rule>> = {
   '': {
-    researchPurchases: list(
-      object({
-        id: oneOf([...RESEARCH_BY_ID.keys()]),
-        rank: oneOf([1, 2]),
-        cost: oneOf([1, 2, 3]),
-        at: positive,
-      }),
-      174,
-    ),
-    researchObservations: object({
-      damage: object({ khan: positive, 'allied-arrows': positive, 'support-and-other': positive }),
-      frames: integer,
-      frameMilliseconds: positive,
-      worstFrameMilliseconds: positive,
-    }),
-    researchRuntime: object({}, RESEARCH_RUNTIME_RULES),
     finalStand: object(
       {
         phase: oneOf(['advance', 'warning', 'recovery']),
@@ -321,7 +302,7 @@ const optional: Record<string, Record<string, Rule>> = {
   clan: { locationId: location, destinationId: location },
   khan: { candidate: trait, trait },
   encounters: { phase: oneOf(['probing', 'warning', 'assault', 'elite', 'recovery']) },
-  combat: { previous: point, heading: point },
+  combat: { previous: point, heading: point, riderFireAt: list(number, 16) },
   safety: {
     lastDamage: object(
       {
@@ -469,15 +450,6 @@ const worldShape = object({
     GAME.maxGems,
   ),
   riders: list(object({ x: number, y: number, flip: boolean, motion }), 16),
-  support: object({
-    ancestorTimer: number,
-    waterTimer: number,
-    guardianTimer: number,
-    spirits: list(
-      object({ x: number, y: number, active: boolean, motion }),
-      GAME.patrons.ancestors.maximum,
-    ),
-  }),
   hazards: list(
     object(
       { x: number, y: number, remaining: number },
@@ -528,20 +500,35 @@ export function captureExpedition(
 
 /** No purchase, arrival, story resolution, healing, or active-time simulation runs during loading. */
 export function decodeExpedition(value: unknown): { run: RunState; world: WorldArchive } {
+  // Retired research is deliberately ignored, including IDs and runtime fields
+  // no longer known to this build. Validate the retained expedition below.
+  value = structuredClone(value);
+  let retiredProgression = false;
+  if (isRecord(value) && isRecord(value.run)) {
+    const legacy = value.run;
+    retiredProgression = [
+      'upgrades',
+      'patrons',
+      'pendingUpgrades',
+      'researchPurchases',
+      'researchRuntime',
+    ].some((key) => key in legacy);
+    for (const key of [
+      'upgrades',
+      'patrons',
+      'pendingUpgrades',
+      'researchPurchases',
+      'researchObservations',
+      'researchRuntime',
+    ])
+      delete legacy[key];
+    if (isRecord(legacy.stats) && legacy.stats.pierce === undefined) legacy.stats.pierce = 0;
+    if (isRecord(value.world)) delete value.world.support;
+  }
   if (!isExpeditionSave(value) || !runShape(value.run) || !worldShape(value.world))
     throw new Error('This expedition is damaged or incompatible with the current game.');
   const run = value.run as unknown as RunState;
   const world = value.world as unknown as WorldArchive;
-  const ranksValid = Object.entries(run.upgrades).every(([id, rank]) => {
-    const definition = RESEARCH_BY_ID.get(id);
-    return definition && !definition.unavailableReason && rank <= definition.maxRank;
-  });
-  const purchases = run.researchPurchases ?? [];
-  const receiptsValid =
-    new Set(purchases.map((p) => `${p.id}:${p.rank}`)).size === purchases.length &&
-    purchases.every(
-      (p) => p.rank > 0 && p.rank <= (run.upgrades[p.id] ?? 0) && p.cost > 0 && p.at <= run.elapsed,
-    );
   const slots = new Set(world.enemies.map((e) => e.slot));
   const referencesValid =
     slots.size === world.enemies.length &&
@@ -557,8 +544,6 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
       ),
     );
   if (
-    !ranksValid ||
-    !receiptsValid ||
     !referencesValid ||
     run.elapsed < 0 ||
     run.elapsed > 86400 ||
@@ -573,8 +558,6 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
     run.clan.integrity > GAME.clan.maxResolve ||
     !Number.isInteger(run.level) ||
     run.level < 1 ||
-    !Number.isInteger(run.pendingUpgrades) ||
-    run.pendingUpgrades < 0 ||
     run.xp < 0 ||
     run.nextLevelXp <= 0 ||
     !!run.story.active !== (run.phase === 'story')
@@ -583,5 +566,26 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
   const restored = structuredClone({ run, world });
   migrateLegacyNomadicCamp(restored.run);
   syncNomadicBuildings(restored.run);
+  if (retiredProgression) {
+    // Rebuild persistent bonuses from buildings; old stat totals included research.
+    const retained = restored.run;
+    const baseline = createRun(retained.startingTradition);
+    retained.stats = baseline.stats;
+    retained.clan.campEffects = baseline.clan.campEffects;
+    for (const definition of NOMADIC_BUILDINGS)
+      for (const level of definition.levels.slice(
+        definition.category === 'Core' ? 1 : 0,
+        nomadicBuildingLevel(retained.clan.nomadicCamp!, definition.id),
+      ))
+        applyNomadicBuildingEffects(retained, level.effects);
+    for (const record of retained.story.records)
+      if (record.status === 'chosen' && record.choice)
+        applyCampEffects(
+          retained.clan.campEffects,
+          storyConsequence(record.choice.id)?.lasting?.effects,
+        );
+    retained.health = Math.min(retained.health, retained.stats.maxHealth);
+    retained.combat.trails = [];
+  }
   return restored;
 }

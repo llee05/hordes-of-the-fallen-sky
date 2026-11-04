@@ -1,13 +1,12 @@
 import { expect, it } from 'vitest';
-import { gainExperience, applyUpgrade } from '../../src/game/state/run';
-import { createLegacyCampRun as createRun } from '../support/legacyCamp';
+import { advanceClan, beginMigration, buildStructure, damageClan } from '../../src/game/state/clan';
 import {
   markExpedition,
-  observeExpedition,
   metricStage,
+  observeExpedition,
 } from '../../src/game/state/expeditionMetrics';
-import { damageClan, advanceClan, beginMigration, buildStructure } from '../../src/game/state/clan';
-import { UPGRADES } from '../../src/game/data/upgrades';
+import { gainExperience } from '../../src/game/state/run';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 it('records first active-time milestones once, casualties by cause, and valid purchases only', () => {
   const run = createRun();
@@ -18,10 +17,6 @@ it('records first active-time milestones once, casualties by cause, and valid pu
   markExpedition(run, 'fight');
   run.elapsed = 20;
   gainExperience(run, 8);
-  applyUpgrade(
-    run,
-    UPGRADES.find((u) => !u.requires?.length && !u.exclusiveGroup)!,
-  );
   run.phase = 'building';
   expect(buildStructure(run, 'archery')).toBe(true);
   run.elapsed = 25;
@@ -29,8 +24,6 @@ it('records first active-time milestones once, casualties by cause, and valid pu
   const s = metricStage(run);
   expect(s.marks).toMatchObject({
     fight: 8,
-    knowledge: 20,
-    research: 20,
     construction: 20,
     'camp-damage': 25,
     casualty: 25,

@@ -1,7 +1,7 @@
-import { GAME } from '../../src/game/config';
 import { expect, test, type Page } from '@playwright/test';
+import { GAME } from '../../src/game/config';
+import { checkpoint, command } from './developerConsole';
 import { expectFrozen } from './helpers';
-import { command, checkpoint } from './developerConsole';
 
 test.beforeEach(() => test.setTimeout(90000));
 // No state is shared between tests, including saved commands.
@@ -62,7 +62,7 @@ async function stopPassiveRecovery(page: Page): Promise<void> {
     const run = (window as any).__gloam.scene.run;
     run.clan.campEffects.bonuses.commanderRecovery = 0;
     run.clan.campEffects.bonuses.resolveRecovery = 0;
-    run.patrons.hearth.regeneration = 0;
+    run.clan.campEffects.bonuses.commanderRecovery = 0;
   });
 }
 
@@ -81,7 +81,6 @@ test('console invincibility protects the Khan from every damage path and restore
     const scene = (window as any).__gloam.scene;
     scene.player.body.reset(scene.camp.x + 450, scene.camp.y);
     scene.invulnerable = 0;
-    scene.run.patrons.hearth.revives = 1;
     scene.takeDamage(100000);
     scene.spawnEnemy();
     const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);
@@ -106,13 +105,12 @@ test('console invincibility protects the Khan from every damage path and restore
       const scene = (window as any).__gloam.scene;
       return {
         health: scene.run.health,
-        revives: scene.run.patrons.hearth.revives,
         succession: scene.run.khan.successionRemaining,
         body: scene.player.body.enable,
         alpha: scene.player.alpha,
       };
     }),
-  ).toEqual({ health, revives: 1, succession: 0, body: true, alpha: 1 });
+  ).toEqual({ health, succession: 0, body: true, alpha: 1 });
   // Clan attacks retain their normal effect while only the Khan is protected.
   expect(
     await page.evaluate(() => {

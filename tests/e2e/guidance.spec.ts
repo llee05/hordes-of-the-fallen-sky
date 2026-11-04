@@ -1,14 +1,14 @@
 import { expect, test } from '@playwright/test';
 import {
-  selectCampBuilding,
-  closeOverlayOrPause,
   buyNode,
+  closeOverlayOrPause,
   openTitle,
+  selectCampBuilding,
   startExpedition,
 } from './helpers';
 
 test(
-  'guidance follows riding, camp purchases, knowledge, formations, and the first crossing',
+  'guidance follows riding, camp purchases, shards, formations, and the first crossing',
   { tag: '@core' },
   async ({ page }) => {
     await openTitle(page);
@@ -32,10 +32,6 @@ test(
       gem.value = scene.run.nextLevelXp;
       gem.attracted = false;
     });
-    await expect(guide).toContainText('Put knowledge to work');
-    await guide.getByRole('button', { name: /Patron tree/ }).click();
-    await buyNode(page, 'power');
-    await closeOverlayOrPause(page);
     await expect(guide).toContainText('Give the riders a purpose');
     await guide.getByRole('button', { name: /Change formation/ }).click();
     await page.evaluate(() => {
@@ -103,7 +99,7 @@ test('guidance leaves danger warnings and controls readable at supported preview
     const guide = (await page.locator('#field-guide').boundingBox())!;
     expect(guide.x).toBeGreaterThanOrEqual(0);
     expect(guide.x + guide.width).toBeLessThanOrEqual(viewport.width);
-    for (const id of ['clan-warning', 'research', 'build', 'migrate', 'dash']) {
+    for (const id of ['clan-warning', 'build', 'migrate', 'dash']) {
       const box = (await page.locator(`#${id}`).boundingBox())!;
       const overlaps =
         guide.x < box.x + box.width &&
@@ -124,8 +120,8 @@ test('guidance leaves danger warnings and controls readable at supported preview
   });
   await expect(page.locator('#field-guide')).toContainText('The people carry on');
   const guide = (await page.locator('#field-guide').boundingBox())!;
-  const research = (await page.locator('#research').boundingBox())!;
-  expect(guide.y + guide.height).toBeLessThanOrEqual(research.y);
+  const dash = (await page.locator('#dash').boundingBox())!;
+  expect(guide.y + guide.height).toBeLessThanOrEqual(dash.y);
   const traditions = (await page.locator('.tradition-hud').boundingBox())!;
   expect(guide.y + guide.height).toBeLessThanOrEqual(traditions.y);
   await page.screenshot({ path: 'test-results/economy-succession-layout.png' });

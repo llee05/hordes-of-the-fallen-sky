@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
 import { createRun } from '../../src/game/state/run';
 import { buildingMenu } from '../../src/ui/campModel';
-import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
 const view = { category: 'all', query: '' };
 describe('nomadic manuscript camp and shared purchase inspector', () => {
   it('renders five permanent households and five empty places without changing the snapshot', () => {
@@ -118,16 +118,12 @@ describe('nomadic manuscript camp and shared purchase inspector', () => {
     expect(missing).not.toContain('<img src=x>');
     expect(missing).toContain('No matching buildings');
   });
-  it('keeps economy and combination content selectable without changing the paused run', () => {
+  it('keeps economy content selectable without changing the paused run', () => {
     const run = createRun(),
       before = structuredClone(run);
     expect(buildingMenu(run, { ...view, campPopup: true, campTarget: 'economy' })).toContain(
       'aria-label="Camp economy"',
     );
-    const combinations = buildingMenu(run, { ...view, campPopup: true, recipes: true });
-    expect(combinations).toContain('Burning Tempest');
-    expect(combinations).toContain('fletchers-workshop');
-    expect(combinations).not.toContain('Established Encampment');
     expect(run).toEqual(before);
   });
 });

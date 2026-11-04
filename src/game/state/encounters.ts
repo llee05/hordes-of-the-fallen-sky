@@ -1,17 +1,15 @@
 import { GAME } from '../config';
+import { AREA_ENCOUNTERS } from '../data/areaEncounters';
 import {
   ENCOUNTER_ELITES,
   ENCOUNTER_PHASES,
   unlockedEnemy,
   type EncounterPhase,
 } from '../data/encounters';
-import { AREA_ENCOUNTERS } from '../data/areaEncounters';
-import { areaRoster } from '../data/enemies';
-import { chooseEnemy } from '../data/enemies';
+import { areaRoster, chooseEnemy } from '../data/enemies';
+import { terrainSeed } from '../terrain/noise';
 import type { RunState } from '../types';
 import { currentLocation } from './journey';
-import { recordWaveEnded, settleWarmAshes } from './researchRuntime';
-import { terrainSeed } from '../terrain/noise';
 
 export interface EncounterState {
   key: string;
@@ -47,7 +45,7 @@ export function encounterPlan(run: RunState) {
   };
 }
 /** Returns a transition once, on active simulation time; opening menus cannot consume warnings. */
-export function advanceEncounters(run: RunState, combatActive: boolean): boolean {
+export function advanceEncounters(run: RunState, _combatActive: boolean): boolean {
   if (run.phase !== 'playing') return false;
   const plan = encounterPlan(run),
     state = run.encounters;
@@ -58,8 +56,6 @@ export function advanceEncounters(run: RunState, combatActive: boolean): boolean
   }
   const changed = state.phase !== plan.phase;
   state.phase = plan.phase;
-  if (changed && plan.phase === 'recovery') recordWaveEnded(run, combatActive);
-  else settleWarmAshes(run, combatActive);
   return changed && (plan.phase === 'warning' || plan.phase === 'elite');
 }
 export function encounterEnemy(run: RunState, random = Math.random) {

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { openTitle, startExpedition } from './helpers';
 
 test(
-  'manual saves survive reload and restore the exact paused battle, XP, research and succession',
+  'manual saves survive reload and restore the exact paused battle, XP and succession',
   { tag: '@core' },
   async ({ page }) => {
     const errors: string[] = [];
@@ -17,12 +17,11 @@ test(
     await page.evaluate(() => {
       const s = (window as any).__gloam.scene;
       s.run.elapsed = 123.75;
-      s.run.pendingUpgrades = 4;
+      s.run.xp = 4;
       s.run.xp = 7;
       s.run.health = 0;
       s.run.khan.successionRemaining = 4.2;
       s.run.khan.candidate = 'hearthguard';
-      s.run.patrons.hearth.revives = 0;
       s.hideFallenKhan();
       s.spawnEnemy();
       const enemy = s.enemies.getFirstAlive();
@@ -44,7 +43,6 @@ test(
       gem.attracted = true;
       s.dashTimer = 2.8;
       s.invulnerable = 0.4;
-      s.patronSupport.restore({ ...s.patronSupport.capture(), waterTimer: 2.2 });
     });
     await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
     await page.getByRole('button', { name: 'Save to Slot 1', exact: true }).click();
@@ -52,7 +50,7 @@ test(
     const saved = await page.evaluate(() =>
       JSON.parse(localStorage.getItem('gloam-expedition-slot-1')!),
     );
-    expect(saved.run.pendingUpgrades).toBe(4);
+    expect(saved.run.xp).toBe(4);
     expect(saved.world.support.waterTimer).toBe(2.2);
     await page.setViewportSize({ width: 960, height: 600 });
     expect(
@@ -239,7 +237,7 @@ test('closing waits for pending and coalesced checkpoints before saving the late
   await expect.poll(() => page.evaluate(() => !!(window as any).releaseSave)).toBe(true);
   await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.run.pendingUpgrades = 9;
+    s.run.xp = 9;
     s.requestCheckpoint();
     void s.prepareToClose().then((ready: boolean) => {
       (window as any).closeReady = ready;
@@ -248,8 +246,6 @@ test('closing waits for pending and coalesced checkpoints before saving the late
   });
   await expect.poll(() => page.evaluate(() => (window as any).closeReady)).toBe(true);
   expect(
-    await page.evaluate(
-      () => JSON.parse(localStorage.getItem('gloam-expedition-auto')!).run.pendingUpgrades,
-    ),
+    await page.evaluate(() => JSON.parse(localStorage.getItem('gloam-expedition-auto')!).run.xp),
   ).toBe(9);
 });

@@ -1,6 +1,5 @@
-import { restoreResolve } from '../state/clan';
-import { extendCampBuilding } from './campEstate';
 import { GAME } from '../config';
+import { restoreResolve } from '../state/clan';
 import type {
   BuildingId,
   CampEffectDefinition,
@@ -9,6 +8,7 @@ import type {
   LocationId,
   RunState,
 } from '../types';
+import { extendCampBuilding } from './campEstate';
 
 export type StartingTraditionId = keyof typeof GAME.clan.starts;
 export const STARTING_TRADITIONS = [
@@ -391,8 +391,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         title: 'Layered felt screens',
         requires: ['felt-armor'],
         materials: C.wagon.felt.materials,
-        description:
-          'The clan takes a further 10% less damage. This multiplies with Felt armor and patron protection.',
+        description: 'The clan takes a further 10% less damage. This multiplies with Felt armor.',
         effects: { multipliers: { clanProtection: C.wagon.felt.protection } },
       },
     ],

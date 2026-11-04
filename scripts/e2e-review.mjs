@@ -105,15 +105,8 @@ export const AREA_SPEC_MAPPINGS = [
     ],
   },
   {
-    pattern: /(research|patron|upgrade|specialization)/i,
-    specs: [
-      'tests/e2e/research.spec.ts',
-      'tests/e2e/research-v2.spec.ts',
-      'tests/e2e/research-runtime.spec.ts',
-      'tests/e2e/research-artwork.spec.ts',
-      'tests/e2e/patron-tree.spec.ts',
-      'tests/e2e/patron-effects.spec.ts',
-    ],
+    pattern: /(progression|patron|upgrade)/i,
+    specs: ['tests/e2e/patron-removal.spec.ts', 'tests/e2e/nomadic-camp.spec.ts'],
   },
   {
     pattern: /(crossing|destination|journey|migration|fieldObjectives|FieldMarkers|worldRegions)/i,

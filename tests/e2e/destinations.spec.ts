@@ -21,7 +21,7 @@ test('arrives at Altai Tavan Bogd and records its real destination', async ({ pa
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.run.clan.stageTime = 45;
-    scene.run.pendingUpgrades = 2;
+    scene.run.xp = 2;
     (window as any).departureGround = scene.landscape.world3d;
     scene.openRoutes();
   });
@@ -64,7 +64,7 @@ test('arrives at Altai Tavan Bogd and records its real destination', async ({ pa
   expect(
     await page.evaluate(() => (window as any).__gloam.scene.run.story.crossings[0].locationId),
   ).toBe('altai-tavan-bogd');
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.pendingUpgrades)).toBe(2);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.xp)).toBe(2);
   await page.keyboard.press('j');
   await expect(page.locator('.journal-chapter')).toContainText('Altai Tavan Bogd');
   await page.keyboard.press('Escape');

@@ -51,14 +51,14 @@ onto a separate field would load into a field nobody reads, and the save would s
 steps below in this order. The order is behaviour: moving a step changes play.
 
 1. Controller polling and menu dispatch (`ArenaInput.pollController`); stop unless the phase is still `playing`.
-2. Present a queued story; observe expedition metrics; begin succession if the Khan fell; observe research frame metrics.
-3. Advance elapsed time, campfire vigil and patrons; decay dash, invulnerability and gallop.
+2. Present a queued story; observe expedition metrics; begin succession if the Khan fell.
+3. Advance elapsed time, camp recovery; decay dash, invulnerability and gallop.
 4. Advance the clan: finish on loss or victory, or arrive at the next camp.
 5. Select the nearest companion; `updateCamp` (camp drawing, then riders, terrain and hazards).
 6. Clan integrity check; advance succession and mounted combat; move the Khan or pin him to camp.
 7. Audio; field state and area encounter sync; encounter pacing.
 8. Field objectives, crossing, final stand, enemies; clan integrity check.
-9. Spatial index rebuild; camp defences; patron support; Khan and rider fire; spawning.
+9. Spatial index rebuild; camp defences; Khan and rider fire; spawning.
 10. Projectiles; gem collection; area combat; autosave; clan integrity check.
 11. Character animation; HUD refresh; final boss spawn; present a queued story.
 

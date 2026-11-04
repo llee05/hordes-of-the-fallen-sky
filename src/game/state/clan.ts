@@ -1,17 +1,10 @@
-import { nomadicAssignedWorkers, nomadicPopulationCapacity } from './nomadicCamp';
-import {
-  createCampEstate,
-  estateAssignedWorkers,
-  estateBuildingBlocker,
-  reserveBuildingSlot,
-} from './campEstate';
-import { recordClanDamage, type ClanDamageCause } from './clanSafety';
-import { rememberClan } from './legacy';
+import { GAME } from '../config';
+import { BUILDINGS, ROUTES, startingTradition } from '../data/clan';
 import {
   ARRIVAL_REMNANT,
   BUILDING_REMNANT,
-  ROUTE_ACCOUNTS,
   DEPARTURE_REMNANT,
+  ROUTE_ACCOUNTS,
   STARVATION_REMNANT,
   arrivalReaction,
   buildingReaction,
@@ -19,26 +12,25 @@ import {
   lossReaction,
   starvationReaction,
 } from '../data/storyReactions';
-import { beginCrossingEncounter, settleCrossingEncounter } from './crossingEncounters';
-import { constructionMaterials, recordConstruction } from './researchGuardian';
-import { leadershipProtection } from './researchLeadership';
-import { GAME } from '../config';
-import { BUILDINGS, ROUTES, startingTradition } from '../data/clan';
 import type { BuildingId, ClanState, Formation, RunState } from '../types';
 import { applyCampEffects, createCampEffects, hasDevelopment } from './camp';
-import { economyRates, crossingDuration, pastureDepletion } from './economy';
-import { arrivalLocation, availableDestinations } from './journey';
-import { completeGuidance } from './guidance';
-import { isKhanActive } from './khan';
+import { healKhan } from './campCombat';
+import {
+  createCampEstate,
+  estateAssignedWorkers,
+  estateBuildingBlocker,
+  reserveBuildingSlot,
+} from './campEstate';
+import { recordClanDamage, type ClanDamageCause } from './clanSafety';
+import { beginCrossingEncounter, settleCrossingEncounter } from './crossingEncounters';
+import { crossingDuration, economyRates, pastureDepletion } from './economy';
 import { markExpedition, metricCasualties, metricStage } from './expeditionMetrics';
 import { passageProgress } from './finalStand';
-import {
-  healKhan,
-  recordMaterialSpend,
-  researchCommonProtection,
-  researchResolveProtection,
-  researchStarvationMultiplier,
-} from './researchRuntime';
+import { completeGuidance } from './guidance';
+import { arrivalLocation, availableDestinations } from './journey';
+import { isKhanActive } from './khan';
+import { rememberClan } from './legacy';
+import { nomadicAssignedWorkers, nomadicPopulationCapacity } from './nomadicCamp';
 
 export function createClan(): ClanState {
   return {
@@ -112,7 +104,6 @@ export function riderCount(run: RunState): number {
       startingTradition(run.startingTradition).balance.riders +
       (clan.buildings.archery ? 3 : 0) +
       (hasDevelopment(run, 'archery', 'veteran-riders') ? 3 : 0) +
-      run.patrons.banner.riders +
       clan.rescuedRiders,
   );
 }
@@ -125,7 +116,6 @@ export function burningTempest(run: RunState): boolean {
 }
 
 export function availableFormations(run: RunState): Formation[] {
-  if ((run.upgrades['su-banner-formation'] ?? 0) > 0) return ['guard', 'wedge', 'retreat'];
   return [
     'guard',
     ...(run.clan.buildings.archery ? (['encircle', 'wedge'] as const) : []),
@@ -134,22 +124,17 @@ export function availableFormations(run: RunState): Formation[] {
 }
 
 export function buildingCost(
-  run: RunState,
+  _run: RunState,
   id: BuildingId,
   path?: string,
 ): { materials: number; spirit: number } {
   const definition = BUILDINGS.find((building) => building.id === id)!;
   const development = definition.paths.find((entry) => entry.id === path);
   return {
-    materials: constructionMaterials(
-      run,
-      path === undefined,
-      Math.ceil(
-        (path === undefined
-          ? definition.materials
-          : (development?.materials ?? Math.ceil(definition.materials * 1.5))) *
-          run.patrons.guardian.cost,
-      ),
+    materials: Math.ceil(
+      path === undefined
+        ? definition.materials
+        : (development?.materials ?? Math.ceil(definition.materials * 1.5)),
     ),
     spirit:
       path === undefined
@@ -209,8 +194,7 @@ export function buildStructure(
   completeGuidance(run, 'build');
   clan.materials -= cost.materials;
   clan.spirit -= cost.spirit;
-  recordMaterialSpend(run, cost.materials);
-  if (path === undefined) recordConstruction(run);
+
   if (path === undefined) reserveBuildingSlot(run, id, slot);
   clan.buildings[id] += 1;
   clan.identity[definition.doctrine] += 2;
@@ -283,10 +267,6 @@ export function clanDamageMultiplier(run: RunState): number {
     (run.clan.formation === 'guard' ? GAME.clan.protection.guard : 1) *
     (hasDevelopment(run, 'wagon', 'felt-armor') ? GAME.clan.protection.feltArmor : 1) *
     (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? GAME.clan.protection.ancestralWard : 1) *
-    run.patrons.guardian.protection *
-    researchResolveProtection(run) *
-    researchCommonProtection(run) *
-    leadershipProtection(run) *
     run.clan.campEffects.multipliers.clanProtection *
     startingTradition(run.startingTradition).balance.protection
   );
@@ -301,8 +281,7 @@ export function damageClan(
 ): void {
   if (protectionOptions?.invincible || !Number.isFinite(amount) || amount <= 0) return;
   const clan = run.clan;
-  const protection =
-    clanDamageMultiplier(run) * (cause === 'starvation' ? researchStarvationMultiplier(run) : 1);
+  const protection = clanDamageMultiplier(run) * (cause === 'starvation' ? 1 : 1);
   const previousPopulation = clan.population;
   const previous = clan.integrity;
   clan.integrity = Math.max(0, previous - amount * protection);

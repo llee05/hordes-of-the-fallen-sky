@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
-import { createLegacyCampRun as createRun } from '../support/legacyCamp';
-import { advanceSuccession, beginSuccession, damageKhan } from '../../src/game/state/khan';
 import { advanceClan, beginMigration, buildStructure, damageClan } from '../../src/game/state/clan';
+import { advanceSuccession, beginSuccession, damageKhan } from '../../src/game/state/khan';
 import { currentReaction, rememberClan } from '../../src/game/state/legacy';
 import { clanMemories, khanRecords } from '../../src/ui/legacyContent';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 describe('the clan’s lived history', () => {
   it('does not invent another casualty when damage reaches an already empty clan', () => {
@@ -24,9 +24,6 @@ describe('the clan’s lived history', () => {
     run.phase = 'playing';
     run.elapsed = 42;
     run.kills = 12;
-    run.patrons.hearth.revives = 1;
-    damageKhan(run, 1000);
-    expect(run.legacy.khans[0]!.fallenAt).toBeUndefined();
     damageKhan(run, 1000);
     expect(beginSuccession(run)).toBe(false);
     expect(run.legacy.khans[0]).toMatchObject({ chosenAt: 0, fallenAt: 42, killsAtFall: 12 });

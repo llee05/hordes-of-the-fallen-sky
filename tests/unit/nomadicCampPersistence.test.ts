@@ -1,28 +1,26 @@
-import { resolveStory } from '../../src/game/state/story';
+import { describe, expect, it } from 'vitest';
+import { nomadicBuilding } from '../../src/game/data/nomadicCamp';
 import { storyEncounter } from '../../src/game/data/story';
 import { storyConsequence } from '../../src/game/data/storyConsequences';
-import { describe, expect, it } from 'vitest';
-import { createRun, gainExperience } from '../../src/game/state/run';
-import { createLegacyCampRun } from '../support/legacyCamp';
-import { buildStructure, advanceClan, clanDoctrine } from '../../src/game/state/clan';
 import { captureCampArchive, runFromCampArchive } from '../../src/game/state/campArchive';
-import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
-import { world } from './fixtures/expedition';
-import type { NomadicBuildingId } from '../../src/shared/nomadicCamp';
-import { isCampArchive, normalizeCampArchive } from '../../src/shared/campArchive';
-import { migrateLegacyNomadicCamp } from '../../src/game/state/nomadicCampMigration';
 import { purchaseEstate } from '../../src/game/state/campEstate';
+import { advanceClan, buildStructure, clanDoctrine } from '../../src/game/state/clan';
+import { economyRates } from '../../src/game/state/economy';
+import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
 import {
+  nomadicAssignedWorkers,
   nomadicBuildingLevel,
   nomadicPopulationCapacity,
   purchaseNomadicBuilding,
-  nomadicAssignedWorkers,
 } from '../../src/game/state/nomadicCamp';
-import { economyRates } from '../../src/game/state/economy';
-import { applyUpgrade } from '../../src/game/state/run';
-import { UPGRADES } from '../../src/game/data/upgrades';
+import { migrateLegacyNomadicCamp } from '../../src/game/state/nomadicCampMigration';
+import { createRun, gainExperience } from '../../src/game/state/run';
+import { resolveStory } from '../../src/game/state/story';
+import { isCampArchive, normalizeCampArchive } from '../../src/shared/campArchive';
+import type { NomadicBuildingId } from '../../src/shared/nomadicCamp';
 import { nomadicEffectDescriptions } from '../../src/ui/nomadicCampModel';
-import { nomadicBuilding } from '../../src/game/data/nomadicCamp';
+import { createLegacyCampRun } from '../support/legacyCamp';
+import { world } from './fixtures/expedition';
 function funded() {
   const run = createRun();
   run.phase = 'building';
@@ -50,27 +48,15 @@ describe('nomadic foundations, effects and persistence', () => {
     expect(advanceClan(run, 1)).toBe('lost');
     expect(run).toEqual(before);
   });
-  it('preserves every existing patron modifier when a building adds its independent effect', () => {
-    const run = funded();
-    run.pendingUpgrades = 20;
-    const upgrade = UPGRADES.find((u) => u.id === 'power')!;
-    expect(applyUpgrade(run, upgrade)).toBe(true);
-    const damage = run.stats.damage,
-      bow = structuredClone(run.patrons.bow);
-    expect(purchaseNomadicBuilding(run, 'archery-range')).toBe(true);
-    expect(run.stats.damage).toBe(damage + 1);
-    expect(run.patrons.bow).toEqual(bow);
-  });
-  it('raises headquarters capacity to the existing world limit and banks every earned knowledge point', () => {
+
+  it('raises headquarters capacity to the existing world limit and preserves every earned XP level', () => {
     const run = funded();
     expect(purchaseNomadicBuilding(run, 'khans-ger')).toBe(true);
     expect(nomadicPopulationCapacity(run)).toBe(80);
     expect(purchaseNomadicBuilding(run, 'khans-ger')).toBe(true);
     expect(nomadicPopulationCapacity(run)).toBe(120);
     expect(purchaseNomadicBuilding(run, 'storytellers-hearth')).toBe(true);
-    run.pendingUpgrades = 7;
     expect(gainExperience(run, 10)).toBe(true);
-    expect(run.pendingUpgrades).toBe(8);
     expect(run.xp).toBeCloseTo(3);
     expect(run.phase).toBe('building');
   });
@@ -78,13 +64,11 @@ describe('nomadic foundations, effects and persistence', () => {
     const run = funded();
     run.health = 0;
     run.khan.successionRemaining = 6;
-    run.patrons.hearth.revives = 0;
     const maximum = run.stats.maxHealth;
     expect(purchaseNomadicBuilding(run, 'healers-ger')).toBe(true);
     expect(run.stats.maxHealth).toBe(maximum + 5);
     expect(run.health).toBe(0);
     expect(run.khan.successionRemaining).toBe(6);
-    expect(run.patrons.hearth.revives).toBe(0);
   });
   it('saves choices and all ranks, reconstructs effects once and never replays arrival gifts', () => {
     const source = funded();
@@ -260,19 +244,15 @@ describe('legacy camp migration', () => {
   });
   it('keeps banked progression, health, succession and over-cap households during a full-run migration', () => {
     const old = createLegacyCampRun();
-    old.pendingUpgrades = 9;
     old.xp = 3;
     old.health = 0;
     old.khan.successionRemaining = 7;
-    old.patrons.hearth.revives = 0;
     old.clan.population = 100;
     const legacy = structuredClone(old.legacy);
     migrateLegacyNomadicCamp(old);
-    expect(old.pendingUpgrades).toBe(9);
     expect(old.xp).toBe(3);
     expect(old.health).toBe(0);
     expect(old.khan.successionRemaining).toBe(7);
-    expect(old.patrons.hearth.revives).toBe(0);
     expect(old.clan.population).toBe(100);
     expect(old.legacy).toEqual(legacy);
   });

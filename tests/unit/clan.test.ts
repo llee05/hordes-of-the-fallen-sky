@@ -1,23 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
 import { BUILDINGS, type BuildingDefinition } from '../../src/game/data/clan';
-import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import {
   advanceClan,
+  assignedWorkers,
   availableFormations,
   beginMigration,
+  buildingBlocker,
+  buildingCost,
   buildStructure,
   burningTempest,
   canMigrate,
   clanDoctrine,
   damageClan,
-  riderCount,
   restoreResolve,
-  assignedWorkers,
-  buildingBlocker,
-  buildingCost,
+  riderCount,
 } from '../../src/game/state/clan';
 import type { RunState } from '../../src/game/types';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 function builder(): RunState {
   const run = createRun();
@@ -61,7 +61,7 @@ describe('a civilization that moves', () => {
       'epilogue',
       'story-log',
       'paused',
-      'upgrade',
+
       'building',
       'route',
       'journal',

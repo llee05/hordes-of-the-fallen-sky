@@ -196,11 +196,8 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.getByRole('button', { name: 'Hide guidance', exact: true }).click();
     await expect(page.locator('#field-guide')).toBeHidden();
     await page.keyboard.press('t');
-    await expect(page.getByRole('heading', { name: 'Patron tech tree' })).toBeVisible();
-    await expect(page.locator('[data-tree-branch-select]')).toHaveCount(10);
-    await expect(page.locator('#game-hud')).toHaveAttribute('inert', '');
-    await page.screenshot({ path: 'test-results/native-tech-tree.png' });
-    await closeOverlayOrPause(page);
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(page.locator('#research')).toHaveCount(0);
     await page.keyboard.press('b');
     await expect(page.getByRole('heading', { name: "The Khan's camp" })).toBeVisible();
     await expect(page.locator('.camp-map-cores [data-camp-site]')).toHaveCount(5);

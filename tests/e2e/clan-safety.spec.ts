@@ -34,7 +34,7 @@ test('successor preferences respect menus and take effect only after the existin
       .poll(() =>
         page.evaluate(() => {
           const choice = document.querySelector('#successor-choice')!.getBoundingClientRect();
-          return ['#research', '.vitals-hud', '.objective-hud', '#field-guide'].every((id) => {
+          return ['.vitals-hud', '.objective-hud', '#field-guide'].every((id) => {
             const element = document.querySelector<HTMLElement>(id)!;
             if (element.hidden) return true;
             const r = element.getBoundingClientRect();
@@ -80,14 +80,12 @@ test('successor preferences respect menus and take effect only after the existin
       health: s.run.health,
       trait: s.run.khan.trait,
       record: s.run.legacy.khans.at(-1).trait,
-      revives: s.run.patrons.hearth.revives,
     };
   });
   expect(returned).toEqual({
     health: 90.8,
     trait: 'hearthguard',
     record: 'hearthguard',
-    revives: 0,
   });
 });
 test('camp threats show a screen direction and losses distinguish attacks from hunger', async ({

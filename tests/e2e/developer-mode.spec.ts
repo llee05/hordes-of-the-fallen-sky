@@ -1,7 +1,6 @@
-import { closeOverlayOrPause, expectFrozen } from './helpers';
-import { buyNode } from '../e2e/helpers';
 import { expect, test } from '@playwright/test';
 import { DEVELOPER_LEVELS } from '../../src/game/dev/levels';
+import { closeOverlayOrPause, expectFrozen } from './helpers';
 
 // Tests use isolated browser contexts; parallel mode also balances CI shards.
 test.describe.configure({ mode: 'parallel' });
@@ -78,7 +77,7 @@ test('switching checkpoints clears old actors, hazards, boss state, succession, 
     const gem = scene.gems.get(scene.player.x + 500, scene.player.y, 'gem');
     gem.enableBody(true, scene.player.x + 500, scene.player.y, true, true);
     gem.value = 100;
-    scene.run.pendingUpgrades = 3;
+    scene.run.xp = 3;
     scene.invulnerable = 0;
     scene.takeDamage(1000);
     (window as any).oldDeveloperWorld = { boss: scene.boss, gem, warning, enemies: scene.enemies };
@@ -111,7 +110,6 @@ test('switching checkpoints clears old actors, hazards, boss state, succession, 
         boss: !!scene.boss,
         succession: scene.run.khan.successionRemaining,
         bodyEnabled: scene.player.body.enable,
-        knowledge: scene.run.pendingUpgrades,
         generation: scene.run.khan.generation,
       };
     }),
@@ -122,13 +120,9 @@ test('switching checkpoints clears old actors, hazards, boss state, succession, 
     boss: false,
     succession: 0,
     bodyEnabled: true,
-    knowledge: 40,
     generation: 1,
   });
   await expect(page.locator('#boss-bar')).toBeHidden();
-  await page.keyboard.press('t');
-  await buyNode(page, 'power');
-  await expect(page.locator('#research-points')).toHaveText('39');
 });
 
 test('developer outcomes leave saved records intact and a normal new game clears developer mode', async ({
@@ -174,11 +168,10 @@ test('developer outcomes leave saved records intact and a normal new game clears
       return {
         developer: scene.developerRun,
         population: scene.run.clan.population,
-        knowledge: scene.run.pendingUpgrades,
         region: scene.run.clan.region,
       };
     }),
-  ).toEqual({ developer: false, population: 8, knowledge: 0, region: 0 });
+  ).toEqual({ developer: false, population: 8, region: 0 });
 });
 
 test('developer choices and Back stay usable in a narrow viewport', async ({ page }) => {

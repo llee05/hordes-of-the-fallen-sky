@@ -1,11 +1,10 @@
-import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
 import { expect, it } from 'vitest';
 import { STARTING_TRADITIONS } from '../../src/game/data/clan';
-import { UPGRADES } from '../../src/game/data/upgrades';
-import { createRun, applyUpgrade } from '../../src/game/state/run';
-import { riderCount, clanDamageMultiplier } from '../../src/game/state/clan';
-import { migrationMobility } from '../../src/game/state/economy';
 import { captureCampArchive, runFromCampArchive } from '../../src/game/state/campArchive';
+import { clanDamageMultiplier, riderCount } from '../../src/game/state/clan';
+import { migrationMobility } from '../../src/game/state/economy';
+import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
+import { createRun } from '../../src/game/state/run';
 
 it('keeps the original opening and gives every alternative a real provision or construction cost', () => {
   const baseline = createRun();
@@ -17,7 +16,6 @@ it('keeps the original opening and gives every alternative a real provision or c
     expect(run.clan.herd).toBe(3);
     expect(run.clan.food + run.clan.materials).toBeLessThan(120);
     expect(run.clan.nomadicCamp).toEqual(baseline.clan.nomadicCamp);
-    expect(run.upgrades).toEqual({});
   }
   expect(riderCount(createRun('outriders'))).toBe(2);
   expect(
@@ -29,12 +27,10 @@ it('keeps the original opening and gives every alternative a real provision or c
   expect(migrationMobility(scouts) / migrationMobility(baseline)).toBeCloseTo(1.1);
 });
 
-it('keeps every patron foundation open, stacks camp improvements, and does not grant extra building plots', () => {
+it('stacks camp improvements, and does not grant extra building plots', () => {
   for (const entry of STARTING_TRADITIONS) {
     const run = createRun(entry.id);
-    run.pendingUpgrades = 1000;
-    for (const upgrade of UPGRADES.filter((u) => !u.requires?.length && !u.exclusiveGroup))
-      expect(applyUpgrade(run, upgrade)).toBe(true);
+
     const initial = riderCount(run);
     run.phase = 'building';
     run.clan.materials = 100;

@@ -1063,34 +1063,3 @@
     height: auto;
   }
 }
-
-.research-bridges {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-}
-.research-bridges h3 {
-  grid-column: 1 / -1;
-}
-.research-bridges button {
-  display: grid;
-  gap: 0.5rem;
-  padding: 0.8rem;
-  text-align: left;
-  border: 1px solid #7d9a92;
-}
-.research-bridges button[data-near='true'] {
-  outline: 2px solid #a88b44;
-  outline-offset: 2px;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .research-bridges button[data-near='true'] {
-    animation: research-discovery-glow 2.5s ease-in-out infinite alternate;
-  }
-}
-@keyframes research-discovery-glow {
-  to {
-    box-shadow: 0 0 8px #b49b5c80;
-  }
-}

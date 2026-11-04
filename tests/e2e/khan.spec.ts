@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { closeOverlayOrPause, buyNode, expectFrozen, openTitle, startExpedition } from './helpers';
+import { closeOverlayOrPause, expectFrozen, openTitle, startExpedition } from './helpers';
 
 // Tests use isolated browser contexts; parallel mode also balances CI shards.
 test.describe.configure({ mode: 'parallel' });
@@ -41,9 +41,8 @@ test(
     await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       scene.player.setPosition(scene.camp.x + 600, scene.camp.y);
-      scene.run.upgrades.power = 1;
       scene.run.stats.damage = 20;
-      scene.run.pendingUpgrades = 3;
+      scene.run.xp = 3;
       for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
       const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);
       enemy.setPosition(scene.camp.x + 60, scene.camp.y);
@@ -107,9 +106,8 @@ test(
         x: scene.player.x - scene.camp.x,
         y: scene.player.y - scene.camp.y,
         protection: scene.invulnerable,
-        points: scene.run.pendingUpgrades,
+        points: scene.run.xp,
         damage: scene.run.stats.damage,
-        learned: scene.run.upgrades.power,
       };
     });
     expect(chosen).toMatchObject({
@@ -118,7 +116,6 @@ test(
       health: 100,
       points: 3,
       damage: 20,
-      learned: 1,
     });
     expect(Math.abs(chosen.x)).toBeLessThan(3);
     expect(chosen.y).toBeCloseTo(90, 0);
@@ -128,31 +125,26 @@ test(
   },
 );
 
-test('pause and research freeze succession, and healing research cannot bypass the delay', async ({
+test('pause and camp development freeze succession without bypassing the delay', async ({
   page,
 }) => {
-  await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.run.pendingUpgrades = 2;
-    scene.run.patrons.hearth.regeneration = 100;
-  });
   await fall(page);
   await closeOverlayOrPause(page);
-  const before = await expectFrozen(
+  await expectFrozen(
     page,
     () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
     13,
   );
-  await page.getByRole('button', { name: 'Patron tech tree', exact: true }).click();
-  await buyNode(page, 'vitality');
-  const state = await page.evaluate(() => (window as any).__gloam.scene.run);
-  expect(state.health).toBe(0);
-  expect(state.stats.maxHealth).toBe(120);
-  expect(state.khan.successionRemaining).toBe(JSON.parse(before).khan.successionRemaining);
   await closeOverlayOrPause(page);
+  await page.keyboard.press('b');
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+    13,
+  );
   await closeOverlayOrPause(page);
   await chooseSoon(page, 2);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.health)).toBe(120);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.health)).toBe(100);
 });
 
 test('successors return to the moving caravan and an arrival cannot end succession early', async ({
@@ -196,7 +188,6 @@ test('ancestral echoes defend camp during succession and uncollected XP waits fo
   test.setTimeout(120000);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.run.patrons.ancestors.count = 2;
     scene.player.setPosition(scene.camp.x + 600, scene.camp.y);
     for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
     const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);
@@ -220,17 +211,10 @@ test('ancestral echoes defend camp during succession and uncollected XP waits fo
     return {
       level: scene.run.level,
       active: gem.active,
-      echoes: scene.patronSupport.spirits
-        .filter((spirit: any) => spirit.image.visible)
-        .map((spirit: any) =>
-          Math.hypot(spirit.image.x - scene.camp.x, spirit.image.y - scene.camp.y),
-        ),
     };
   });
   expect(collection.level).toBe(1);
   expect(collection.active).toBe(true);
-  expect(collection.echoes).toHaveLength(2);
-  expect(collection.echoes.every((distance: number) => distance < 100)).toBe(true);
   await chooseSoon(page, 2);
   await expect.poll(() => page.evaluate(() => (window as any).__gloam.scene.run.level)).toBe(2);
   await expect(page.getByRole('dialog')).toBeHidden();

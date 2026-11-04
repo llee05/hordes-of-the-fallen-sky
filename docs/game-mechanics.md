@@ -13,7 +13,7 @@ visit any unvisited named destination from the eight-location catalog. Choose th
 destination before a river, ridge, or rescue approach. Chapter events and the eight
 story beats retain their timing; actual camp names, terrain details, gathering, and
 travel modifiers follow the selected location. Food/material multipliers stack with
-camp and patron effects, the current camp modifies onward mobility, and the target
+camp effects, the current camp modifies onward mobility, and the target
 modifies incoming crossing duration. All forecasts use those same rules. The third
 crossing and final stand remain at the fictional Heart of the Steppe. See
 [migration locations](migration-locations.md) for the catalog and cultural sources.
@@ -32,21 +32,21 @@ crossing and final stand remain at the fictional Heart of the Steppe. See
 
 ## 2. Starting state and resources
 
-| Resource / measure | Start                   | Sources                                                                                                                   | Uses and consequences                                                                                                                                                                                                      |
-| ------------------ | ----------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Food               | 70                      | Grazing, camp production, river crossings, story choices, rewards after mastering every tradition                         | Consumed by people, including during migration. Blue-banner rescue costs 18 food on arrival. Zero food triggers starvation checks.                                                                                         |
-| Materials          | 50                      | Passive camp gathering, more population, ridge crossings, story choices, rewards after mastering every tradition          | Construct and upgrade camp buildings. No ongoing building maintenance cost.                                                                                                                                                |
-| Spirit             | 0                       | Kills grant `enemy XP ×0.4` (×0.5 with Spirit thread); ridge arrival grants 10; some story choices grant 4                | Construct and upgrade spiritual and cultural buildings. Stored Spirit does not buy tradition ranks. It is not consumed by lightning, wards, arrows, or migration.                                                          |
-| Spirit shards / XP | Level 1, 0 XP           | Collect drops from defeated enemies                                                                                       | Fill the current level's XP threshold and bank knowledge points for the tech tree. Collection does not deduct stored Spirit.                                                                                               |
-| People             | 8                       | Blue-banner arrivals, field rescues, story choices                                                                        | Produce materials, consume food, provide worker capacity. Losses come from starvation and resolve damage. Population gains obey the camp capacity described in [the camp guide](nomadic-camp.md).                          |
-| Workers            | 0 assigned of 8         | Existing population                                                                                                       | Construction requires sufficient total population for assigned jobs. Workers are reserved by established buildings, not spent. No manual job reassignment or worker production penalty is simulated.                       |
-| Herd / horses      | 3                       | Field rescues (+3); river arrival (+2)                                                                                    | Each horse increases migration mobility by 1.2% of the base. Starvation and clan losses remove livestock. Route rewards cap herd at 40. Herd size does not independently change grazing income or limit rider recruitment. |
-| Clan resolve       | 100 / 100               | Communal Hearth, Ancestral Standard, Sülde kills, arrivals (+12), [Skybreaker defeat](final-stand.md), story choices (+5) | Clan-wide survival meter, internally called integrity. Attacks and starvation reduce it; crossing damage thresholds can also cost people and livestock.                                                                    |
-| Khan health        | 100 / 100               | Golomt, Börte Chino, arrivals (+25), full recovery after mastering all patrons                                            | Personal health; at zero, choose a new Khan after 10 active seconds while the clan fights on. Enemy contact, hostile shots, and eruptions damage it.                                                                       |
-| Pasture            | 100%                    | Refreshed on arrival; Etügen reduces depletion and adds recovery                                                          | Scales food and material production. Without patron bonuses, depletes to zero over 210 stationary seconds, including the final stand. Does not deplete during crossings.                                                   |
-| Momentum           | 0–100%                  | Riding builds it; stopping drains it                                                                                      | Improves Khan arrow damage and targeting range; activates moving formation bonuses.                                                                                                                                        |
-| Threat             | 0–100%                  | Region and time in the current stage                                                                                      | A pressure indicator. Spawn intervals use their own stage/region formula; the displayed threat value is not an additional damage multiplier.                                                                               |
-| Identity           | Iron 0, Sky 0, Wander 0 | Construction, upgrades, route choices, story choices                                                                      | Determines the clan's descriptive identity and epilogue. Grants no additional stat modifiers or technology locks.                                                                                                          |
+| Resource / measure | Start                   | Sources                                                                                                          | Uses and consequences                                                                                                                                                                                                      |
+| ------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Food               | 70                      | Grazing, camp production, river crossings, story choices, rewards after mastering every tradition                | Consumed by people, including during migration. Blue-banner rescue costs 18 food on arrival. Zero food triggers starvation checks.                                                                                         |
+| Materials          | 50                      | Passive camp gathering, more population, ridge crossings, story choices, rewards after mastering every tradition | Construct and upgrade camp buildings. No ongoing building maintenance cost.                                                                                                                                                |
+| Spirit             | 0                       | Kills grant `enemy XP ×0.4` (×0.5 with Spirit thread); ridge arrival grants 10; some story choices grant 4       | Construct and upgrade spiritual and cultural buildings. Stored Spirit does not buy tradition ranks. It is not consumed by lightning, wards, arrows, or migration.                                                          |
+| Spirit shards / XP | Level 1, 0 XP           | Collect drops from defeated enemies                                                                              | Fill the current level's XP threshold and gain a level. Collection does not deduct stored Spirit.                                                                                                                          |
+| People             | 8                       | Blue-banner arrivals, field rescues, story choices                                                               | Produce materials, consume food, provide worker capacity. Losses come from starvation and resolve damage. Population gains obey the camp capacity described in [the camp guide](nomadic-camp.md).                          |
+| Workers            | 0 assigned of 8         | Existing population                                                                                              | Construction requires sufficient total population for assigned jobs. Workers are reserved by established buildings, not spent. No manual job reassignment or worker production penalty is simulated.                       |
+| Herd / horses      | 3                       | Field rescues (+3); river arrival (+2)                                                                           | Each horse increases migration mobility by 1.2% of the base. Starvation and clan losses remove livestock. Route rewards cap herd at 40. Herd size does not independently change grazing income or limit rider recruitment. |
+| Clan resolve       | 100 / 100               | Communal Hearth, Ancestral Standard, arrivals (+12), [Skybreaker defeat](final-stand.md), story choices (+5)     | Clan-wide survival meter, internally called integrity. Attacks and starvation reduce it; crossing damage thresholds can also cost people and livestock.                                                                    |
+| Khan health        | 100 / 100               | Camp recovery and arrivals (+25)                                                                                 | Personal health; at zero, choose a new Khan after 10 active seconds while the clan fights on. Enemy contact, hostile shots, and eruptions damage it.                                                                       |
+| Pasture            | 100%                    | Refreshed on arrival; camp developments reduce depletion                                                         | Scales food and material production. depletes to zero over 210 stationary seconds, including the final stand. Does not deplete during crossings.                                                                           |
+| Momentum           | 0–100%                  | Riding builds it; stopping drains it                                                                             | Improves Khan arrow damage and targeting range; activates moving formation bonuses.                                                                                                                                        |
+| Threat             | 0–100%                  | Region and time in the current stage                                                                             | A pressure indicator. Spawn intervals use their own stage/region formula; the displayed threat value is not an additional damage multiplier.                                                                               |
+| Identity           | Iron 0, Sky 0, Wander 0 | Construction, upgrades, route choices, story choices                                                             | Determines the clan's descriptive identity and epilogue. Grants no additional stat modifiers or technology locks.                                                                                                          |
 
 The opening camp foundations are described in [the nomadic camp guide](nomadic-camp.md). The Khan begins with one accompanying rider, one arrow per personal volley, and no learned traditions.
 
@@ -73,75 +73,34 @@ never spends resources, grants rewards or guidance, or writes to the actual chro
 Route estimates show travel time, food consumed before arrival, food after the arrival
 transaction, and any en-route shortfall; they never disable a route.
 
-Before conditional research effects, let `P = pasture / 100`, `N = population`,
+Let `P = pasture / 100`, `N = population`,
 and `W = 0.7` at Silent River or `1` elsewhere:
 
 ```text
-Food consumed / second = N × 0.025 × Etügen consumption modifier × camp consumption modifier
-Food produced / second while stationary = (0.65 + 0.65 if Herding grounds exist) × P × W × Etügen food modifier × camp food production modifier
-Materials produced / second while stationary = (0.28 + N × 0.018) × P × Etügen material modifier × camp material production modifier
-Pasture lost / second while stationary = (100 / 210) × Etügen depletion modifier × camp depletion modifier − Etügen recovery
+Food consumed / second = N × 0.025 × camp consumption modifier
+Food produced / second while stationary = (0.65 + 0.65 if Herding grounds exist) × P × W × camp food production modifier
+Materials produced / second while stationary = (0.28 + N × 0.018) × P × camp material production modifier
+Pasture lost / second while stationary = (100 / 210) × camp depletion modifier
 ```
 
 Starting production includes the free core buildings’ continuing effects. Production declines with pasture; consumption does not. There is no passive Spirit income, trading, crafting inventory, or individually simulated gathering unit. Population capacity follows the Khan’s Ger level; see [the camp guide](nomadic-camp.md).
 
 During migration, food is consumed and baseline food/material production stops.
-Conditional research can change grazing, production, pasture recovery and starvation
-protection; see the [effect inventory](patron-research-v2-status.md) for delivery
-status and the authoritative [economy selectors](../src/game/state/economy.ts) for
-the combined rates. When food is zero at a 12-second stage-time boundary, starvation removes one person and one horse, records a casualty, and deals 8 raw resolve damage. This can cause an additional resolve-threshold casualty. Checks follow the stage clock rather than a fresh 12-second grace period after food runs out.
 
-Before conditional research protection, resolve damage multiplies these baseline factors:
+Resolve damage multiplies these baseline factors:
 
 ```text
 Final resolve damage = raw damage
                      × 0.7 with Caravan guard
-                     × Guardian patron protection (1 before research)
                      × camp protection modifier
                      × starting-tradition protection modifier
 ```
 
 Each downward 20-point resolve band crossed by a hit removes one person, capped at the remaining population: a hit from 100 to 80 loses one, to 60 loses two, and to 40 loses three. Count bands after all protection, using resolve clamped at zero; partial damage within a band causes no casualty. A hit crossing any number of bands still removes at most one horse, with herd size floored at zero. Chronicle entries and companion reactions reflect the actual casualties from the hit. Repairs can restore resolve, but do not resurrect casualties.
 
-## 3. Spirit-stone / patron tech tree
+## 3. Spirit shards and levels
 
-Collectible **spirit shards** carry XP; **Spirit** is a separate camp currency earned automatically on kills. Research is expedition progression, and patrons can be mixed freely. Their combat abilities are original game mechanics. See the [Research V2 implementation record](patron-research-v2.md) for the current registry and purchase contract, the [effect inventory](patron-research-v2-status.md) for availability, and the [V1 reference](patron-tech-tree.md) for original numerical effects.
-
-```mermaid
-flowchart TD
-    Enemy[Defeat an enemy] --> Shard[Spirit shard carrying enemy XP]
-    Enemy --> Spirit[Stored Spirit: enemy XP x 0.4]
-    Shard --> Collect[Ride close enough to collect]
-    Collect --> Level[Fill XP threshold and gain a level]
-    Level --> Points[Bank 1 knowledge point without pausing combat]
-    Points --> Foundation[Choose any patron: foundation rank 1]
-    Foundation --> A[Practice A: 1 point]
-    Foundation --> B[Practice B: 1 point]
-    A --> CapstoneA[Legacy Doctrine A: 2 points, foundation rank 2]
-    B --> CapstoneB[Legacy Doctrine B: 2 points, foundation rank 2]
-    Spirit --> Camp[Spiritual and cultural camp buildings]
-```
-
-The XP threshold from level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26, 32, and so on. Excess XP carries over; a pickup can earn several levels and every earned point remains banked. Level-ups never open a popup or pause combat. Open the **Patron tech tree** with **T**, controller **LB**, the HUD, Pause, or the chronicle’s Traditions tab. Research prices, prerequisites and exclusive choices are defined by the [current research contract](patron-research-v2.md#purchase-and-observation-interfaces); the [legacy path rules](patron-tech-tree.md#purchase-rules) remain compatible. There are no random offers or rerolls. Repeated legacy percentage modifiers multiply except Lus's two additive slow ranks.
-
-The table below outlines one legacy Doctrine route per patron; the V1 reference includes the original alternatives.
-
-| Patron                          | Playstyle                | Foundation → practices → capstone                                                                                    |
-| ------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| **Börte Chino**                 | Aggressive hunting       | Moving damage and speed → wounded-target damage + shorter gallop cooldown → moving kills heal the Khan.              |
-| **Etügen Eke**                  | Sustainable civilisation | Food production and pasture preservation → material gathering + lower food use → pasture recovery offsets depletion. |
-| **Khükhedei Mergen**            | Ranged combat            | Shared damage and targeting range → host firing rate + piercing → two additional Khan arrows.                        |
-| **Golomt**                      | Survival                 | Maximum health and immediate healing → regeneration + Khan protection → one lethal-hit revival.                      |
-| **Lus**                         | Terrain manipulation     | Slowing fields around Khan and camp → larger fields + eruption warning/mitigation → damaging push pulse.             |
-| **Ongod**                       | Spiritual summoning      | Two ancestral echoes → stronger echoes + shard attraction/Spirit income → third echo and faster ancestral volleys.   |
-| **Sülde**                       | Army leadership          | Two accompanying riders → rider damage + caravan mobility → two more riders and resolve on kills.                    |
-| **Guardian of Burkhan Khaldun** | Defensive construction   | Material discounts and clan protection → faster Wagon circle + independent camp ward → further clan protection.      |
-
-The tree opens one connected patron graph with compact navigation, a comparison overview, and an inspector. Search ignores diacritics. Click a node to inspect before/after values, prerequisite routes, costs, and exclusive alternatives; use the explicit Learn button to purchase. Text distinguishes learned, available, prerequisites missing, resources missing, and excluded states. Purchases keep the tree open and preserve focus and scroll. Combinations show existing interactions and link between patron and camp requirements while keeping the world paused. Escape, T, controller B/LB, or the return button closes it with points unspent. Opening from Pause or the chronicle returns to that parent screen. Stored Spirit remains a separate camp currency.
-
-Once all implemented, nonexcluded research ranks are mastered, subsequent points grant **20 food and 15 materials each**, and a living Khan is fully healed when those points are converted. Conversion cannot revive a fallen Khan during succession. Temporarily blocked but implemented, nonexcluded technologies still prevent mastery; unavailable proposals do not.
-
-Each enemy drops its defined base XP independent of scaled health; experience-gain effects from [camp buildings](nomadic-camp.md#buildings-and-progression) apply when XP is collected. Shards begin following inside the attraction radius and collect within 18 world units. Once attracted, they keep following. At the 500-shard pool limit, new XP merges into an existing active shard. Uncollected XP travels to the next camp on arrival.
+Spirit shards dropped by enemies carry XP. The threshold at level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26 and so on. Excess XP carries across multiple levels without pausing combat. Levels no longer bank knowledge points. The patron tech tree, its purchases, research effects and Combinations catalogue are removed for now. **Spirit** is a separate currency automatically earned from kills and spent on camp development.
 
 ## 4. Camp development and upgrade tree
 
@@ -153,54 +112,41 @@ See [the nomadic camp guide](nomadic-camp.md) for the current building catalog, 
 
 The Khan starts with 100 health, 190 movement speed, 16 damage, a 0.6-second firing interval, 85 shard attraction radius, and one arrow per volley. Attacks automatically choose the nearest available enemy within targeting range; there is no manual aim or attack input.
 
-Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Before research or building upgrades, Khan targeting range is `440 + 120 × momentum`; personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum gives 560 targeting range and +30% personal damage.
+Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Before building upgrades, Khan targeting range is `440 + 120 × momentum`; personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum gives 560 targeting range and +30% personal damage.
 
 Accompanying riders use per-rider active-time release clocks and each fire one
-arrow per successful release, at 60% of the shared damage stat before patron and
-camp modifiers. Research attack-speed bonuses change their cadence rather than
-the damage of each shot. Their targeting range starts at 440; Khükhedei Mergen adds up to 60 to Khan and rider targeting range. Sülde multiplies rider damage by 1.25; camp escort benefits stack through the ongoing rider-damage modifier. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
+arrow per successful release, at 60% of the shared damage stat before camp modifiers. Each rider has an active-time release clock using the shared attack interval and camp host-interval modifier. Their targeting range starts at 440. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
 
 ```text
 min(16, 1 starting rider
         + starting-tradition riders
         + 3 with Archery Range
-        + Sülde rider recruitment (up to 4)
         + 2 per completed blue-banner crossing)
 ```
 
-Arrows travel at 440 world units/second for 1.6 seconds and normally disappear on their first hit. Khükhedei Mergen unlocks one additional pierced enemy. Each arrow hits a pooled enemy incarnation at most once; its hit history resets on reuse. Still Hand enables conditional precision critical hits; research can also add
-bleed, armour reduction, extra piercing and projectile damage caps. See the
-[effect inventory](patron-research-v2-status.md) for current availability. Targeting range determines when a volley is fired, rather than its entire travel distance. The shared projectile pool holds 250 friendly arrows, which can limit very large simultaneous volleys.
+Arrows travel at 440 world units/second for 1.6 seconds and normally disappear on their first hit. Building upgrades can add piercing. Each arrow hits a pooled enemy incarnation at most once; its hit history resets on reuse. Targeting range determines when a volley is fired, rather than its entire travel distance. The shared projectile pool holds 250 friendly arrows, which can limit very large simultaneous volleys.
 
 ### Camp attacks and Burning Tempest
 
 Sacred Ovoo lightning searches within 520 units of the living Khan, then the camp, and deals three times shared damage in a 70-unit radius. Its base interval is 3.5 seconds, or 1.8 with Shaman’s Ger, multiplied by the camp’s sanctuary-interval modifier and by 1.5 during Red Eclipse. The Wagon Yard fires within 520 units every 0.9 seconds, at shared damage ×1.5 while stationary or ×0.7 during migration. These support clocks continue during migration and succession and remain independent of host firing haste.
 
-The building requirements for **Burning Tempest** are listed in [the camp overview](../README.md#build-defend-migrate). Ordinary friendly volleys gain two additional arrows, a wider fan and alternating curvature ±0.65 radians/second. Khan, companion, ancestral and wagon arrows participate; Ghost-Fletched arrows inherit only their selected modifier, and wagon ricochets emit a single arrow without reapplying volley bonuses. Fire-arrow hits apply a two-second burn at shared damage ×0.45 per second, multiplied by the camp burn-damage modifier; hits refresh the timer rather than stacking separate burns.
-
-### Patron support and terrain
-
-Ongod summons up to three visible ancestral riders, separate from the 16 living-rider limit. They follow the Khan, target enemies within 360, and fire every 1.1 seconds (0.77 with their capstone), at 55% shared damage (90% after their practice). They have no individual health or worker cost and freeze with the world in menus.
-
-Lus creates slowing fields around Khan and camp, reaching 24% slow within 230 units at full investment. Its capstone pulses around the Khan every 4 seconds for 75% shared damage and an 80-unit outward push. Its other practice adds one second to eruption warnings and halves eruption damage to Khan and clan.
-
-The Guardian's independent camp ward deals 65% shared damage every 2 seconds, including migration. Its radius starts at 125 and expands with the barricade to keep perimeter attackers in reach. It needs no Sacred Ovoo. Its Watchfires practice accelerates Wagon Yard defence; the [Guardian reference](patron-tech-tree.md#guardian-of-burkhan-khaldun--construction) describes its zero-building fallback. Full Sülde research restores 0.15 resolve per enemy kill. Support attacks use the same active-time simulation, damage/kill pipeline, and bounded projectile pools as other combat.
+The building requirements for **Burning Tempest** are listed in [the camp overview](../README.md#build-defend-migrate). Ordinary friendly volleys gain two additional arrows, a wider fan and alternating curvature ±0.65 radians/second. Khan, rider and wagon arrows participate. Fire-arrow hits apply a two-second burn at shared damage ×0.45 per second, multiplied by the camp burn-damage modifier; hits refresh the timer rather than stacking separate burns.
 
 ### Choosing a new Khan
 
 The player character is **the Khan**. A lethal hit normally starts **10 active gameplay seconds of succession**, marked by **Choosing a new Khan** and a live countdown in the health HUD. This does not change the run to its ended `dead` phase. The fallen Khan is hidden and his collision body is disabled immediately. Riding, galloping, his personal arrows, and shard collection stop; already-fired arrows and burns can finish normally.
 
-The world keeps advancing: enemies attack the camp, food is consumed, the caravan moves, and camp weapons, accompanying riders, and ancestral echoes defend it. Riders and echoes position around camp during succession. The camp's Lus slowing field remains; the Khan's field and damaging pulse are absent. Menus pause the countdown and all other simulation. Camp encounters wait until the new Khan is present.
+The world keeps advancing: enemies attack the camp, food is consumed, the caravan moves, and camp weapons and accompanying riders defend it. Riders position around camp during succession. Menus pause the countdown and all other simulation. Camp encounters wait until the new Khan is present.
 
-When the countdown finishes with the clan alive, a successor appears **90 world units below the current camp/caravan center**, at full maximum health with a ready gallop and **3 seconds of invulnerability**. His movement, hit feedback, and attack pose reset. The HUD advances its Khan number. Research, upgrades, max health, resources, workers, buildings, companions, story decisions, and route progress all carry over. The successor follows the current moving caravan or the new regional camp if an arrival happened during succession.
+When the countdown finishes with the clan alive, a successor appears **90 world units below the current camp/caravan center**, at full maximum health with a ready gallop and **3 seconds of invulnerability**. His movement, hit feedback, and attack pose reset. The HUD advances its Khan number. Camp upgrades, max health, resources, workers, buildings, companions, story decisions, and route progress all carry over. The successor follows the current moving caravan or the new regional camp if an arrival happened during succession.
 
-Regeneration, kill healing, immediate healing research, mastery conversion, and arrival healing cannot end succession early. Health upgrades still increase the successor's maximum; food/material rewards still apply. **Last Ember** instead prevents the current Khan's fall immediately, recovering 40% maximum health and consuming its single expedition charge. A successor does not refresh that charge.
+Camp recovery and arrival healing cannot end succession early. Building upgrades still increase the successor's maximum health.
 
 Clan population or resolve reaching zero ends the expedition during the countdown. Conversely, completing the final stand saves the clan even while it is choosing a Khan. End screens freeze the remaining timer. A new expedition resets the lineage to Khan 1 with no pending succession. Balance lives in `GAME.khan`, with the pure lifecycle in [state/khan.ts](../src/game/state/khan.ts).
 
 ### Gallop
 
-**Space / controller A** gallops in the current or last facing direction at speed 570 for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop. Börte Chino can reduce the cooldown to 2.25 seconds. Golomt reduces Khan damage, provides active-time regeneration, and can prevent one lethal hit per expedition; clan loss still ends the expedition.
+**Space / controller A** gallops in the current or last facing direction at speed 570 for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop.
 
 ### Formation tree
 
@@ -228,7 +174,6 @@ Actual crossing progress is:
 ```text
 Mobility = (1 + herd × 0.012)
          × (0.8 when leaving Silent River, otherwise 1)
-         × Sülde mobility modifier (1.15 with No wagon left behind)
          × camp mobility modifier
          × current-location mobility modifier
          × starting-tradition mobility modifier
@@ -239,7 +184,7 @@ Starting crossing forecasts include the three horses, free core benefits, curren
 
 The caravan moves east automatically across 1,150 world units as progress reaches 100%. It does not wait for the Khan or depend on remaining within an escort radius. Defend it because nearby enemies and hostile shots damage the clan. You can fight, gallop, change formations, collect shards, and use the tech tree during travel; construction waits for unpacking.
 
-Rewards are not paid when choosing the route. On successful arrival, route rewards apply, the next region begins, pasture resets to 100%, resolve recovers by 12, and Khan health receives 25 base healing, subject to research healing modifiers and excess-healing effects; resolve and health remain capped at their maxima. Buildings, resources, traditions, and riders carry over. Enemies, projectiles, and eruption warnings are cleared; uncollected shards move to the new camp. Arrivals reset the stage clock, not total active journey time.
+Rewards are not paid when choosing the route. On successful arrival, route rewards apply, the next region begins, pasture resets to 100%, resolve recovers by 12, and Khan health receives 25 base healing plus camp arrival bonuses; resolve and health remain capped at their maxima. Buildings, resources, traditions, and riders carry over. Enemies, projectiles, and eruption warnings are cleared; uncollected shards move to the new camp. Arrivals reset the stage clock, not total active journey time.
 
 ## 7. Enemies, pressure, and hazards
 
@@ -306,7 +251,7 @@ The strongest identity becomes the clan's name once any score reaches 4:
 
 Ties favor Iron, then Sky, then Wander. Identities do not make other buildings or routes unavailable.
 
-**Tab / J** opens the paused clan chronicle: journey, clan/workforce/buildings, traditions, and recorded story. The story tab retains the actual resolved dialogue, selected choice or skip, outcome, time, and population. Pause and result menus also offer **Our remembered road**. Reading records never grants rewards again and returns to the previous paused or ended screen. Story completion preserves banked knowledge points; it does not force a research menu.
+**Tab / J** opens the paused clan chronicle: journey, clan/workforce/buildings, and recorded story. The story tab retains the actual resolved dialogue, selected choice or skip, outcome, time, and population. Pause and result menus also offer **Our remembered road**. Reading records never grants rewards again and returns to the previous paused or ended screen. Story completion preserves XP and levels.
 
 With camp scenes enabled, victory first opens a skippable epilogue reflecting survivors, recorded casualties, identity, the shared tally decision, and the Skybreaker's fate, followed by journey results. The epilogue can be read again. The Last Court, Iron Vow, Sundering, creatures, and refuge are original fantasy; spirit shards represent scattered vitality, not purchased ancestral souls. See [the lore](../lore.md) for writing boundaries.
 
@@ -323,7 +268,6 @@ With camp scenes enabled, victory first opens a skippable epilogue reflecting su
 | Chronicle                                  | Tab / J / HUD button                           | View                              |
 | Pause, resume, close a panel, skip a scene | Escape / P                                     | Start / B                         |
 | Menu navigation / confirmation             | Tab, Shift+Tab / Enter, Space, click           | Stick or D-pad / A                |
-| Patron tech tree                           | T / HUD button                                 | Left bumper                       |
 | Learn a rank                               | Navigate, then Enter / Space / click           | Navigate, then A                  |
 | Prologue pages                             | Continue, Back / Enter / left and right arrows | Navigate, then A; B / Start skips |
 | Fullscreen                                 | F11 / Alt+Enter / Settings                     | Navigate Settings                 |
@@ -344,13 +288,10 @@ The desktop game runs offline with local assets and native, validated, atomic sa
 | Starting stats and balance constants                           | [config.ts](../src/game/config.ts)                                                                               |
 | Khan damage, presence, succession timing                       | [state/khan.ts](../src/game/state/khan.ts)                                                                       |
 | Starting run, XP thresholds, upgrade application               | [state/run.ts](../src/game/state/run.ts)                                                                         |
-| Research registry, prerequisites and runtime availability      | [data/research.ts](../src/game/data/research.ts)                                                                 |
 | Camp building definitions and purchase rules                   | [data/nomadicCamp.ts](../src/game/data/nomadicCamp.ts), [state/nomadicCamp.ts](../src/game/state/nomadicCamp.ts) |
 | Legacy crafts, formations, routes, regions                     | [data/clan.ts](../src/game/data/clan.ts)                                                                         |
 | Typed camp effects and once-only purchase grants               | [state/camp.ts](../src/game/state/camp.ts)                                                                       |
 | Economy, staffing, purchases, protection, migration, identity  | [state/clan.ts](../src/game/state/clan.ts)                                                                       |
-| Patron metadata and playstyles                                 | [data/patrons.ts](../src/game/data/patrons.ts)                                                                   |
-| Neutral patron state, conditional damage, recovery, revival    | [state/patrons.ts](../src/game/state/patrons.ts)                                                                 |
 | Ancestral riders, terrain pulse, and mountain ward             | [PatronSupport.ts](../src/game/systems/PatronSupport.ts)                                                         |
 | Enemy definitions and spawn interval                           | [data/enemies.ts](../src/game/data/enemies.ts)                                                                   |
 | Combat, targeting, support attacks, hazards, phase transitions | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                                                |
@@ -368,7 +309,7 @@ During active play, use + / −, number-pad + / −, the mouse wheel, or control
 
 Portable camp checkpoints save after successful purchases and completed migrations through the native profile store. **Continue clan camp** restores camp organisation and supplies into a fresh expedition, reconstructing continuing benefits once. **New Game** starts a fresh clan. This portable camp action starts fresh; see [the checkpoint contract](camp-checkpoints.md).
 
-Full expedition saves are separate: **Continue expedition** restores the latest full snapshot, while **Saved expeditions** offers three manual slots and an autosave on title, pause, and results screens. Battles, research and unspent knowledge, camp effects, story transcripts, journey/crossing objectives, dropped XP, and succession/cooldowns resume without replaying rewards or healing. Loads open paused or at their unresolved story. Autosaves run every 30 active seconds, on pause, after progression/travel checkpoints, and before desktop close. Manual slots remain independent; developer/cheated runs cannot overwrite them. See [the full save contract](expedition-saves.md).
+Full expedition saves are separate: **Continue expedition** restores the latest full snapshot, while **Saved expeditions** offers three manual slots and an autosave on title, pause, and results screens. Battles, XP levels, camp effects, story transcripts, journey/crossing objectives, dropped XP, and succession/cooldowns resume without replaying rewards or healing. Loads open paused or at their unresolved story. Autosaves run every 30 active seconds, on pause, after progression/travel checkpoints, and before desktop close. Manual slots remain independent; developer/cheated runs cannot overwrite them. See [the full save contract](expedition-saves.md).
 
 ### Encounter rhythm and field opportunities
 
@@ -402,12 +343,6 @@ has 35% extra damage and one extra pierced target; a full projectile pool does n
 consume it. The HUD shows its charge. Feigned retreat adds 15% Khan volley damage
 when shooting behind while riding away from camp. Gallops push nearby enemies once
 per charge, sweeping against terrain rather than displacing them through walls.
-
-An unbroken volley additionally gives living riders paired arrows every fourth
-host volley. One shaft, two shadows makes charged Khan arrows pin ordinary enemies
-for 0.65 seconds and interrupt charges. Read the shifting ground leaves bounded,
-2.5-second slowing wakes during gallops. All use existing research IDs, costs,
-pools, and active gameplay time; no new research layer is required.
 
 Wolves take alternating flanking approaches before committing at close range.
 Hulks absorb 20% damage while unpinned. Ghost riders mark a fixed charge direction
@@ -453,8 +388,7 @@ HUD choices, press 1 / 2, or use controller left / right. A preference is accept
 once and takes effect only when the countdown finishes. Choosing is optional; an
 unmodified successor returns automatically if no choice was made. These traits
 belong to that generation, appear in its chronicle record, and replace rather than
-stack across successors. Inherited research and camp progression stay intact, and
-Last Ember never refreshes. Menus freeze the countdown and reject choice inputs.
+stack across successors. Inherited camp progression stays intact. Menus freeze the countdown and reject choice inputs.
 
 ### Local terrain and enemy identity
 
@@ -480,7 +414,7 @@ a preview never changes the simulation's current roster.
 
 ### Starting traditions, pacing and final combat feedback
 
-The title's Starting tradition picker offers four preparations with different starting stores, riders, defence or scouting/mobility. Every research branch remains available. Full saves retain the choice; old saves and portable camp continuations use neutral ongoing modifiers. See [the preparation catalog](starting-traditions.md).
+The title's Starting tradition picker offers four preparations with different starting stores, riders, defence or scouting/mobility. Every camp building remains available. Full saves retain the choice; old saves and portable camp continuations use neutral ongoing modifiers. See [the preparation catalog](starting-traditions.md).
 
 The chronicle's Your clan tab and the result screen retain per-stage active-time milestones, resolve damage, casualties and riding/guard/travel observations. Developer `metrics` is read-only; `benchmark` compares twelve complete journey pressure models. See [the pacing contract](expedition-pacing.md) for assumptions and test scope.
 

@@ -1,6 +1,6 @@
-import { SAVE_SLOTS, type SaveSlot } from '../shared/expeditionSave';
-import type { HudSnapshot } from '../game/types';
 import { formatTime } from '../game/state/run';
+import type { HudSnapshot } from '../game/types';
+import { SAVE_SLOTS, type SaveSlot } from '../shared/expeditionSave';
 import { escapeHtml as h } from './progressionTree';
 
 export interface SaveConfirmation {
@@ -17,7 +17,7 @@ export function saveMenu(snapshot: HudSnapshot, confirmation?: SaveConfirmation)
         delete: 'Delete this save and its backup? This can’t be undone.',
       }[confirmation.action]
     : '';
-  return `<section class="save-menu"><header><p class="eyebrow">THE REMEMBERED ROAD</p><h2 id="overlay-title">Saved expeditions</h2><p>A save keeps the whole journey: Khan, people, research, camp and battlefield. A loaded game waits, paused, for you.</p></header>
+  return `<section class="save-menu"><header><p class="eyebrow">THE REMEMBERED ROAD</p><h2 id="overlay-title">Saved expeditions</h2><p>A save keeps the whole journey: Khan, people, camp and battlefield. A loaded game waits, paused, for you.</p></header>
     <p class="save-message" role="status">${h(state.message)}</p>
     ${confirmation ? `<div class="save-confirmation" role="group" aria-label="Confirm ${confirmation.action}"><p>${confirmationText}</p><button class="primary-button" data-save-confirm data-primary ${disabled}>Confirm ${confirmation.action === 'save' ? 'overwrite' : confirmation.action}</button><button class="secondary-button" data-save-cancel ${disabled}>Cancel</button></div>` : ''}
     <div class="save-slots">${SAVE_SLOTS.map((slot) => {

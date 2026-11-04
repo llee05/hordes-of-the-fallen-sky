@@ -197,18 +197,17 @@ test('every enemy can hold and animate a camp attack, including a charging rider
   }
   const wardHealth = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.run.patrons.guardian.wardDamage = 0.65;
+    scene.run.clan.paths.sanctuary = ['ancestral-ward'];
     scene.spatial.rebuild(scene.enemies.getChildren());
-    scene.patronSupport.update(scene.run, 0.01, scene.player, scene.camp, scene.spatial, {
-      damage: (enemy: any, amount: number) => scene.damageEnemy(enemy, amount),
-      volley: () => {},
-    });
+    scene.supportTimer = 999;
+    scene.wardTimer = 0;
+    scene.updateSupport(0.01);
     return scene.enemies
       .getChildren()
       .map((enemy: any) => ({ health: enemy.health, id: enemy.definition.id }));
   });
   for (const enemy of wardHealth)
-    expect(enemy.health).toBeCloseTo(10000 - 16 * 0.65 * (enemy.id === 'brute' ? 0.8 : 1));
+    expect(enemy.health).toBeCloseTo(10000 - 16 * 1.5 * (enemy.id === 'brute' ? 0.8 : 1));
   await page.screenshot({ path: 'test-results/camp-under-attack.png' });
 });
 

@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { buyNode, closeOverlayOrPause } from './helpers';
+import { closeOverlayOrPause } from './helpers';
 import { beginStory } from './storyHelpers';
 
 test.describe.configure({ mode: 'parallel' });
 
 test(
-  'story cannot grant twice, and banked knowledge points survive a camp conversation',
+  'story cannot grant twice, and XP survive a camp conversation',
   { tag: '@core' },
   async ({ page }) => {
     // Two research purchases and both memory menus exhaust 30s on CI's software renderer.
@@ -14,23 +14,17 @@ test(
     const outcome = await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       const before = scene.run.clan.materials;
-      scene.run.pendingUpgrades = 2;
+      scene.run.xp = 2;
       document.querySelector<HTMLButtonElement>('[data-story-choice="share-work"]')!.click();
       scene.chooseStory('share-work');
       return {
         difference: scene.run.clan.materials - before,
         phase: scene.run.phase,
-        pending: scene.run.pendingUpgrades,
+        pending: scene.run.xp,
         records: scene.run.story.records.length,
       };
     });
     expect(outcome).toEqual({ difference: 6, phase: 'playing', pending: 2, records: 1 });
-    await page.keyboard.press('t');
-    await buyNode(page, 'power');
-    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'upgrade');
-    await buyNode(page, 'power');
-    await closeOverlayOrPause(page);
-    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
     await page.keyboard.press('j');
     await page.getByRole('tab', { name: 'Our story' }).click();
     await expect(page.locator('.story-memory')).toHaveCount(1);

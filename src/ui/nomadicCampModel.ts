@@ -1,24 +1,25 @@
-import { createNomadicCamp } from '../shared/nomadicCamp.js';
 import {
-  NOMADIC_BUILDINGS,
   CORE_NOMADIC_BUILDINGS,
+  NOMADIC_BUILDINGS,
   OPTIONAL_NOMADIC_BUILDINGS,
   nomadicBuilding,
-  type NomadicBuildingEffects,
   type NomadicBuildingDefinition,
+  type NomadicBuildingEffects,
 } from '../game/data/nomadicCamp';
-import {
-  nomadicBuildingLevel,
-  nomadicBuildingCost,
-  nomadicBuildingBlocker,
-  purchaseNomadicBuilding,
-  nomadicPopulationCapacity,
-} from '../game/state/nomadicCamp';
 import { assignedWorkers } from '../game/state/clan';
 import { currentLocation } from '../game/state/journey';
+import {
+  nomadicBuildingBlocker,
+  nomadicBuildingCost,
+  nomadicBuildingLevel,
+  nomadicPopulationCapacity,
+  purchaseNomadicBuilding,
+} from '../game/state/nomadicCamp';
 import { progressionChanges } from '../game/state/progressionPreview';
 import type { RunState } from '../game/types';
+import { createNomadicCamp } from '../shared/nomadicCamp.js';
 import { clanMark } from './artwork';
+import { campNodeDetails, effectDescriptions } from './campPopups';
 import {
   CAMP_SCENE_BACKGROUND,
   OPTIONAL_CAMP_SITES,
@@ -27,9 +28,7 @@ import {
   campSceneSite,
   type CampSceneSite,
 } from './campScene';
-import { campNodeDetails, effectDescriptions } from './campPopups';
 import { economySummary } from './economyContent';
-import { synergyContent } from './synergyContent';
 import {
   escapeHtml as h,
   priceText,
@@ -132,10 +131,6 @@ export function nomadicBuildingMenu(
           : OPTIONAL_NOMADIC_BUILDINGS.filter((b) => !nomadicBuildingLevel(camp, b.id))
       ).filter(matches);
       content = `<p>${slot === undefined ? 'Inspect a household or an optional workplace.' : 'Choose one of fourteen workplaces. Each type can occupy only one of the five optional locations; supplies are committed only when you construct it.'}</p>${found.length ? choices(slot) : '<p role="status">No matching buildings. Clear the search to see the camp.</p>'}`;
-    } else if (view.recipes) {
-      title = 'Traditions that work together';
-      mark = 'spirit';
-      content = synergyContent(run);
     } else if (view.campTarget === 'economy') {
       title = 'Provisions & gathering';
       mark = 'grain';
@@ -211,7 +206,7 @@ export function nomadicBuildingMenu(
     )
     .join(
       '',
-    )}</div><button class="panel-close" data-action="exit-camp" aria-label="Leave camp management">×</button></header><div class="camp-model camp-manuscript"><div class="camp-map-tools"><label class="tree-search-label">Find in camp<input type="search" data-tree-search data-focus-key="tree-search" value="${h(view.query)}" placeholder="Find a building or benefit"/></label><button data-camp-economy data-focus-key="camp-economy">Provisions</button><button data-tree-recipes data-focus-key="tree-recipes">Combinations</button></div><div class="camp-map-scroll" data-scroll-key="camp-map"><div class="camp-map" role="group" aria-label="Painted manuscript map of the camp">${art.landscape()}<div class="camp-map-cores" role="group" aria-label="Permanent core buildings">${CORE_NOMADIC_BUILDINGS.map((b) => place(b)).join('')}</div><div class="camp-map-facilities" role="group" aria-label="Optional building slots">${slots}</div></div></div>${popup}</div><footer class="panel-footer"><span class="paused-note">Ⅱ &nbsp; THE WORLD IS PAUSED</span><button class="secondary-button" data-action="exit-camp">Return to the steppe <kbd>ESC</kbd></button></footer></section>`;
+    )}</div><button class="panel-close" data-action="exit-camp" aria-label="Leave camp management">×</button></header><div class="camp-model camp-manuscript"><div class="camp-map-tools"><label class="tree-search-label">Find in camp<input type="search" data-tree-search data-focus-key="tree-search" value="${h(view.query)}" placeholder="Find a building or benefit"/></label><button data-camp-economy data-focus-key="camp-economy">Provisions</button></div><div class="camp-map-scroll" data-scroll-key="camp-map"><div class="camp-map" role="group" aria-label="Painted manuscript map of the camp">${art.landscape()}<div class="camp-map-cores" role="group" aria-label="Permanent core buildings">${CORE_NOMADIC_BUILDINGS.map((b) => place(b)).join('')}</div><div class="camp-map-facilities" role="group" aria-label="Optional building slots">${slots}</div></div></div>${popup}</div><footer class="panel-footer"><span class="paused-note">Ⅱ &nbsp; THE WORLD IS PAUSED</span><button class="secondary-button" data-action="exit-camp">Return to the steppe <kbd>ESC</kbd></button></footer></section>`;
 }
 
 export function nomadicJournalBuildings(run: RunState): string {

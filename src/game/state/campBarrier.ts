@@ -24,7 +24,7 @@ export function campBoundary(run: RunState): {
   return {
     radius,
     attackRange,
-    wardRadius: Math.max(GAME.patrons.guardian.wardRadius, attackRange + 5),
+    wardRadius: Math.max(125, attackRange + 5),
   };
 }
 

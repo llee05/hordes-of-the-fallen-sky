@@ -1,9 +1,3 @@
-import { RESEARCH_ICONS } from './researchIcons';
-import propsSource from '/art/steppe-props.json?raw';
-import actorsSource from '/art/steppe-actors.json?raw';
-import scenerySource from '/art/steppe-scenery.json?raw';
-import type { BuildingDefinition } from '../game/data/clan';
-import { LANDSCAPES } from '../game/data/landscapes';
 import { landscapeLandmarks } from '../game/assets/landscapeLayout';
 import {
   riverChannels,
@@ -11,7 +5,12 @@ import {
   riverPoint,
   type RiverPoint,
 } from '../game/assets/riverGeometry';
+import type { BuildingDefinition } from '../game/data/clan';
+import { LANDSCAPES } from '../game/data/landscapes';
 import type { LocationId } from '../game/types';
+import actorsSource from '/art/steppe-actors.json?raw';
+import propsSource from '/art/steppe-props.json?raw';
+import scenerySource from '/art/steppe-scenery.json?raw';
 
 // Public assets use root URLs in Vite. Bundle the metadata as text so both the
 // browser preview and file-based desktop build share the same atlas definitions.
@@ -91,10 +90,7 @@ const marks = {
 export type ClanMark = keyof typeof marks;
 
 export function clanMark(name: string): string {
-  const icon = name.startsWith('research:') ? RESEARCH_ICONS[name.slice(9)] : undefined;
-  const body = icon
-    ? `<g transform="translate(1 1) scale(.75)">${marks[icon[0]]}</g><g transform="translate(25 25) scale(.46)">${marks[icon[1]]}</g>`
-    : (marks[name as ClanMark] ?? marks.spirit);
+  const body = marks[name as ClanMark] ?? marks.spirit;
   return `<svg class="clan-mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${body}</svg>`;
 }
 
