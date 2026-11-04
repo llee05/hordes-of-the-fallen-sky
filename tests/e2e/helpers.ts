@@ -18,6 +18,19 @@ export async function sceneFrames(page: Page, count = 2): Promise<void> {
   );
 }
 
+/** Wait for rendered frames to prove the game or a given reader remains unchanged. */
+export async function expectFrozen<T>(
+  page: Page,
+  read: () => Promise<T> | T,
+  frames = 3,
+): Promise<T> {
+  const before = await read();
+  await sceneFrames(page, frames);
+  const after = await read();
+  expect(after as unknown).toEqual(before);
+  return after;
+}
+
 export async function openTitle(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: 'Camp scenes: On' }).click();

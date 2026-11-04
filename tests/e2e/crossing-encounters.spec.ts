@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { expectFrozen, openTitle, startExpedition } from './helpers';
 test('crossing routes have warned encounters with once-only arrival benefits', async ({ page }) => {
   test.setTimeout(120000);
   for (const route of ['river', 'ridge', 'refuge']) {
@@ -23,12 +23,10 @@ test('crossing routes have warned encounters with once-only arrival benefits', a
         s.updateCrossing(0.01);
       });
       await page.locator('#pause').click();
-      const frozen = await page.evaluate(
-        () => (window as any).__gloam.scene.run.crossing.remaining,
-      );
-      await page.waitForTimeout(250);
-      expect(await page.evaluate(() => (window as any).__gloam.scene.run.crossing.remaining)).toBe(
-        frozen,
+      await expectFrozen(
+        page,
+        () => page.evaluate(() => (window as any).__gloam.scene.run.crossing.remaining),
+        16,
       );
       await page.keyboard.press('Escape');
       const result = await page.evaluate(() => {

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openTitle, startExpedition } from './helpers';
+import { expectFrozen, openTitle, startExpedition } from './helpers';
 test.beforeEach(async ({ page }) => {
   await openTitle(page);
   await startExpedition(page);
@@ -67,14 +67,11 @@ test('seer danger zones warn and strike in the opening area, while menus freeze 
     s.updateHazards(0.01);
   });
   await page.locator('#build').click();
-  const before = await page.evaluate(() => {
-    const s = (window as any).__gloam.scene;
-    return s.hazards.map((h: any) => h.remaining);
-  });
-  await page.waitForTimeout(250);
-  expect(
-    await page.evaluate(() => (window as any).__gloam.scene.hazards.map((h: any) => h.remaining)),
-  ).toEqual(before);
+  await expectFrozen(
+    page,
+    () => page.evaluate(() => (window as any).__gloam.scene.hazards.map((h: any) => h.remaining)),
+    16,
+  );
   await page.locator('[data-action="exit-camp"]').first().click();
   const hit = await page.evaluate(() => {
     const s = (window as any).__gloam.scene,

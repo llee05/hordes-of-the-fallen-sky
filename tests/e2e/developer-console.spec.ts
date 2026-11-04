@@ -1,5 +1,6 @@
 import { GAME } from '../../src/game/config';
 import { expect, test, type Page } from '@playwright/test';
+import { expectFrozen } from './helpers';
 import { command, checkpoint } from './developerConsole';
 
 test.beforeEach(() => test.setTimeout(90000));
@@ -38,12 +39,16 @@ test('console pauses gameplay and accepts real keyboard input', async ({ page })
     'aria-pressed',
     'true',
   );
-  await page.waitForTimeout(150);
   expect(
-    await page.evaluate(() => ({
-      run: JSON.stringify((window as any).__gloam.scene.run),
-      x: (window as any).__gloam.scene.player.x,
-    })),
+    await expectFrozen(
+      page,
+      () =>
+        page.evaluate(() => ({
+          run: JSON.stringify((window as any).__gloam.scene.run),
+          x: (window as any).__gloam.scene.player.x,
+        })),
+      10,
+    ),
   ).toEqual(frozen);
   await page.keyboard.press('Escape');
   await expect(page.locator('#developer-run')).toContainText('INVINCIBLE');
