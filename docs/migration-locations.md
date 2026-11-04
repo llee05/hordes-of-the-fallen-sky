@@ -35,7 +35,7 @@ lists the encounters and their consequences.
 context, visual terrain, and gameplay modifiers from `GAME.locations`. Food and
 materials modifiers affect production at the current camp. Mobility affects departures
 from that camp; the chosen destination's crossing modifier affects the incoming trip.
-All modifiers stack with seasonal conditions, camp developments, and patrons.
+All modifiers stack with seasonal conditions, camp developments.
 
 `state/journey.ts` resolves the current camp, pending arrival, and available
 destinations. The numeric `clan.region` remains the story/difficulty chapter;
@@ -43,7 +43,7 @@ destinations. The numeric `clan.region` remains the story/difficulty chapter;
 while travelling. Legacy chapter camps are used when no explicit location is set.
 `beginMigration` validates the route and destination before changing anything. Arrival
 changes the location and records it in the crossing and clan memories exactly once;
-it preserves the existing buildings, research, supplies, succession, and XP rules.
+it preserves the existing buildings, supplies, succession, and XP rules.
 Khan records retain both their chosen and fallen locations.
 
 The simulation and `crossingForecast` share `crossingDuration`; forecasts never

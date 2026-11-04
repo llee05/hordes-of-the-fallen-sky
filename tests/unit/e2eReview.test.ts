@@ -45,7 +45,7 @@ describe('browser review selection', () => {
 
   it('maps touched application areas to targeted e2e specs', () => {
     expect(areaSpecs(['src/game/state/clan.ts'])).toContain('tests/e2e/clan-safety.spec.ts');
-    expect(areaSpecs(['src/game/state/research.ts'])).toContain('tests/e2e/research.spec.ts');
+    expect(areaSpecs(['src/ui/progressionTree.ts'])).toContain('tests/e2e/patron-removal.spec.ts');
     expect(areaSpecs(['src/game/audio/assets.ts'])).toEqual(['tests/e2e/audio.spec.ts']);
     expect(areaSpecs(['tests/e2e/zoom.spec.ts'])).toEqual(['tests/e2e/zoom.spec.ts']);
   });

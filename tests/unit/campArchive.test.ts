@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { defaultProfile, isProfile, normalizeProfile } from '../../src/shared/profile';
-import { isCampArchive } from '../../src/shared/campArchive';
-import { createRun } from '../../src/game/state/run';
 import { captureCampArchive, runFromCampArchive } from '../../src/game/state/campArchive';
 import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
+import { createRun } from '../../src/game/state/run';
+import { isCampArchive } from '../../src/shared/campArchive';
+import { defaultProfile, isProfile, normalizeProfile } from '../../src/shared/profile';
 import { createLegacyCampRun } from '../support/legacyCamp';
 
 describe('durable portable camp records', () => {
@@ -22,7 +22,6 @@ describe('durable portable camp records', () => {
     expect(fresh.stats).toEqual(run.stats);
     expect(fresh.clan.food).toBe(run.clan.food);
     expect(fresh.clan.population).toBe(run.clan.population);
-    expect(fresh.patrons.ancestors.spiritGain).toBe(1);
     expect(fresh.elapsed).toBe(0);
     expect(runFromCampArchive(saved)).toEqual(fresh);
     saved.nomadicCamp!.core['khans-ger'] = 3;

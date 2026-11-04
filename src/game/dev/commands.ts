@@ -1,25 +1,18 @@
-import { researchSummary } from '../state/researchMetrics';
-import { isKhanActive } from '../state/khan';
-import { expeditionMetricLines } from '../state/expeditionMetrics';
-import { pacingBenchmarkLines } from './pacingBenchmark';
-import type { RunState } from '../types';
-import { WORLD_3D, WORLD_DEBUG_MODES, type WorldDebugMode } from '../world3d/worldProjection';
 import {
   DEVELOPER_COMMAND_MAX_LENGTH,
   DEVELOPER_HISTORY_LIMIT,
   normalizeDeveloperHistory,
 } from '../../shared/developerHistory';
+import { expeditionMetricLines } from '../state/expeditionMetrics';
+import { isKhanActive } from '../state/khan';
+import type { RunState } from '../types';
+import { WORLD_3D, WORLD_DEBUG_MODES, type WorldDebugMode } from '../world3d/worldProjection';
+import { pacingBenchmarkLines } from './pacingBenchmark';
 export { DEVELOPER_COMMAND_MAX_LENGTH } from '../../shared/developerHistory';
 
 const LOG_LIMIT = 80;
 
 export const DEVELOPER_COMMANDS = [
-  {
-    name: 'research-metrics',
-    usage: 'research-metrics',
-    description:
-      'Read knowledge accounting, paid costs, tiers, choices, damage groups and active-frame observations.',
-  },
   {
     name: 'benchmark',
     usage: 'benchmark',
@@ -165,8 +158,6 @@ export function executeDeveloperCommand(
     write(
       `Khan invincibility: ${state.invincible ? 'ON' : 'OFF'}. Health: ${Math.ceil(run.health)} / ${run.stats.maxHealth}. Clan invincibility: ${state.clanInvincible ? 'ON' : 'OFF'}. Clan resolve: ${Math.ceil(run.clan.integrity)}%.`,
     );
-  } else if (name === 'research-metrics') {
-    write(JSON.stringify(researchSummary(run)));
   } else if (name === 'metrics') {
     const lines = expeditionMetricLines(run);
     for (const line of lines.length ? lines : ['No expedition observations yet.']) write(line);

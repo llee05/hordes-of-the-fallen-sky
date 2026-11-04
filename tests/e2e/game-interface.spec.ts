@@ -187,7 +187,7 @@ test('the clan chronicle pauses the expedition, supports keyboard tabs, and open
     'true',
   );
   await page.keyboard.press('ArrowRight');
-  await expect(page.getByRole('tab', { name: 'Traditions', exact: true })).toHaveAttribute(
+  await expect(page.getByRole('tab', { name: 'Our story', exact: true })).toHaveAttribute(
     'aria-selected',
     'true',
   );
@@ -196,7 +196,7 @@ test('the clan chronicle pauses the expedition, supports keyboard tabs, and open
   await page.getByRole('tab', { name: 'Your clan' }).click();
   await page.screenshot({ path: 'test-results/clan-chronicle.png' });
   await page.getByRole('button', { name: /Develop the camp/ }).click();
-  await expect(page.getByRole('heading', { name: 'Build a people.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: "The Khan's camp" })).toBeVisible();
   await closeOverlayOrPause(page);
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.keyboard.press('j');

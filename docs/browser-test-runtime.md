@@ -26,7 +26,9 @@ use the npm commands for local tests.
 
 The commands and timings below document historical exclusive-lock experiments.
 For current focused reviews use `npm run test:e2e:changed -- ...` directly,
-without the historical outer `flock` wrapper.
+without the historical outer `flock` wrapper. The historical `patron-effects`
+spec named below was later removed with the patron tree; these commands describe
+the measured baseline and do not apply to the current suite.
 
 Measured on 2026-10-26 against application commit `297a02b`, with the review runner
 added in `0a205a4`. This is a shared 12-core Linux host with Intel Iris Xe graphics,
@@ -105,7 +107,7 @@ command's Chromium descendant processes, divided by wall time. **100% means one
 logical core**; very short processes between samples may be missed. This measures
 Chromium, not Vite or total host CPU.
 
-The fixed subset now contains **13 tests**, rather than the planning snapshot's
+The measured fixed subset contained **13 tests**, rather than the planning snapshot's
 11: `mounted-tactics`, `patron-effects`, `field-gameplay`, and
 `crossing-encounters`. It includes the actual 3D river crossing, menus, animation,
 and screenshot work. Baseline settings are one worker and 1440×1000. Experimental
@@ -142,7 +144,7 @@ stability, especially with existing baseline failures. Retaining one worker avoi
 claiming safety from a small subset and avoids three unnecessary full runs for a
 default change that is not being proposed.
 
-To reproduce the baseline subset, use the normal config and the same four specs:
+At the measured revision, the baseline subset used the normal config and these four specs:
 
 ```sh
 flock /tmp/bh-playwright.lock env E2E_PORT=5268 \

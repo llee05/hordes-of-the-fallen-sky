@@ -1,18 +1,19 @@
-import { createLegacyCampRun } from '../support/legacyCamp';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
-import { createRun } from '../../src/game/state/run';
-import { beginMigration } from '../../src/game/state/clan';
-import { openNextStory, resolveStory } from '../../src/game/state/story';
-import { syncAreaEncounter } from '../../src/game/state/areaEncounters';
-import { STORY_ORDER, storyEncounter } from '../../src/game/data/story';
-import { LOCATIONS, ROUTES, STARTING_TRADITIONS } from '../../src/game/data/clan';
-import { syncFinalStand } from '../../src/game/state/finalStand';
-import { GamePlatform } from '../../src/platform/GamePlatform';
 import { ProfileStore } from '../../desktop/profile';
+import { LOCATIONS, ROUTES, STARTING_TRADITIONS } from '../../src/game/data/clan';
+import { STORY_ORDER, storyEncounter } from '../../src/game/data/story';
+import { syncAreaEncounter } from '../../src/game/state/areaEncounters';
+import { beginMigration } from '../../src/game/state/clan';
+import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
+import { syncFinalStand } from '../../src/game/state/finalStand';
+import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
+import { createRun } from '../../src/game/state/run';
+import { openNextStory, resolveStory } from '../../src/game/state/story';
 import type { RunState } from '../../src/game/types';
+import { GamePlatform } from '../../src/platform/GamePlatform';
+import { createLegacyCampRun } from '../support/legacyCamp';
 import { world } from './fixtures/expedition';
 
 const directories: string[] = [];
@@ -24,9 +25,53 @@ afterEach(async () => {
 });
 
 describe('full expedition snapshots', () => {
-  it('migrates old full-run camps without resetting banked knowledge, health or chronology', () => {
+  it('loads old knowledge and research without restoring purchases or their gameplay bonuses', () => {
+    const run = createRun('pathfinders');
+    run.phase = 'playing';
+    run.clan.materials = 1000;
+    run.clan.spirit = 1000;
+    run.phase = 'building';
+    expect(purchaseNomadicBuilding(run, 'khans-ger')).toBe(true);
+    expect(purchaseNomadicBuilding(run, 'khans-ger')).toBe(true);
+    for (let level = 0; level < 3; level++)
+      expect(purchaseNomadicBuilding(run, 'fletchers-workshop')).toBe(true);
+    run.phase = 'playing';
+    expect(openNextStory(run)).toBe(true);
+    expect(resolveStory(run, 'share-work')).toBe(true);
+    run.xp = 3;
+    const save = captureExpedition(run, world());
+    const legacy = save.run as Record<string, any>;
+    legacy.pendingUpgrades = 99;
+    legacy.clan.formation = 'wedge';
+    (save.world as Record<string, unknown>).support = { retired: true };
+    legacy.upgrades = { power: 2, 'retired-future-research': 50 };
+    legacy.patrons = { anything: 'ignored' };
+    legacy.researchPurchases = [{ id: 'unknown', rank: 50 }];
+    legacy.researchObservations = { removed: true };
+    legacy.researchRuntime = { unknown: 'ignored' };
+    legacy.stats.damage += 100;
+    legacy.stats.maxHealth += 60;
+    delete legacy.stats.pierce;
+    legacy.clan.campEffects.multipliers.wagonDamage = 20;
+    const restored = decodeExpedition(save).run;
+    expect(restored.stats).toEqual(run.stats);
+    expect(restored.clan.formation).toBe('guard');
+    expect(restored.clan.campEffects).toEqual(run.clan.campEffects);
+    expect(restored.clan.nomadicCamp).toEqual(run.clan.nomadicCamp);
+    expect(restored.clan.spirit).toBe(run.clan.spirit);
+    expect(restored.xp).toBe(3);
+    for (const key of [
+      'pendingUpgrades',
+      'upgrades',
+      'patrons',
+      'researchPurchases',
+      'researchObservations',
+      'researchRuntime',
+    ])
+      expect(restored).not.toHaveProperty(key);
+  });
+  it('migrates old full-run camps without resetting XP, health or chronology', () => {
     const run = createLegacyCampRun();
-    run.pendingUpgrades = 9;
     run.xp = 3;
     run.health = 40;
     const snapshot = captureExpedition(run, world());
@@ -34,7 +79,6 @@ describe('full expedition snapshots', () => {
     expect(restored.clan.nomadicCamp!.slots).toHaveLength(5);
     expect(Object.values(restored.clan.nomadicCamp!.core)).toEqual([1, 1, 1, 1, 1]);
     expect(restored.clan.estate).toBeUndefined();
-    expect(restored.pendingUpgrades).toBe(9);
     expect(restored.xp).toBe(3);
     expect(restored.health).toBe(40);
     expect(restored.story).toEqual(run.story);
@@ -282,11 +326,9 @@ describe('full expedition snapshots', () => {
     const run = createRun();
     run.phase = 'playing';
     run.elapsed = 137.25;
-    run.pendingUpgrades = 3;
     run.xp = 7;
     run.khan.generation = 2;
     run.khan.trait = 'outrider';
-    run.patrons.hearth.revives = 0;
     run.combat.previous = { x: 2600, y: 2700 };
     const runtime = world();
     syncAreaEncounter(runtime.areaEncounter, run);
@@ -355,7 +397,7 @@ describe('full expedition snapshots', () => {
     const snapshot = captureExpedition(createRun(), world());
     const corruptions = [
       (s: any) => {
-        delete s.run.patrons.water;
+        delete s.run.clan.campEffects;
       },
       (s: any) => {
         s.run.clan.locationId = 'unknown';
@@ -365,9 +407,6 @@ describe('full expedition snapshots', () => {
       },
       (s: any) => {
         s.run.story.active = {};
-      },
-      (s: any) => {
-        s.run.upgrades = { missing: 1 };
       },
       (s: any) => {
         s.world.enemies[0].slot = 5;

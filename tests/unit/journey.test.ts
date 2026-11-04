@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
 import { LOCATIONS, ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration } from '../../src/game/state/clan';
-import { currentLocation, availableDestinations, locationById } from '../../src/game/state/journey';
 import { crossingForecast, economyRates } from '../../src/game/state/economy';
-import { createLegacyCampRun as createRun } from '../support/legacyCamp';
-import { damageKhan, advanceSuccession } from '../../src/game/state/khan';
+import { availableDestinations, currentLocation, locationById } from '../../src/game/state/journey';
+import { advanceSuccession, damageKhan } from '../../src/game/state/khan';
 import { openNextStory, resolveStory } from '../../src/game/state/story';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 const places = LOCATIONS.filter((location) => location.context);
 
@@ -96,11 +96,8 @@ describe('named migration destinations', () => {
     const run = createRun();
     const neutral = economyRates(run);
     run.clan.locationId = 'orkhon-valley';
-    run.patrons.land.food = 1.15;
     run.clan.campEffects.multipliers.foodProduction = 1.2;
-    expect(economyRates(run).foodProduction).toBeCloseTo(
-      neutral.foodProduction * 1.25 * 1.15 * 1.2,
-    );
+    expect(economyRates(run).foodProduction).toBeCloseTo(neutral.foodProduction * 1.25 * 1.2);
     expect(economyRates(run).materials).toBeCloseTo(neutral.materials * 1.05);
     const destination = locationById('khan-tengri')!;
     expect(crossingForecast(run, ROUTES[0], destination).duration).toBeCloseTo(

@@ -1,18 +1,18 @@
-import { markExpedition } from './expeditionMetrics';
-import { BUILDINGS } from '../data/clan';
 import {
   ENCAMPMENT_TIERS,
   INTERNAL_DEVELOPMENTS,
   type EstateImprovement,
 } from '../data/campEstate';
-import type { BuildingId, CampEstate, RunState } from '../types';
-import { applyCampEffects, hasDevelopment } from './camp';
-import { rememberClan } from './legacy';
+import { BUILDINGS } from '../data/clan';
 import {
   ENCAMPMENT_REMNANT,
   INTERNAL_DEVELOPMENT_REMNANT,
   estateReaction,
 } from '../data/storyReactions';
+import type { BuildingId, CampEstate, RunState } from '../types';
+import { applyCampEffects, hasDevelopment } from './camp';
+import { markExpedition } from './expeditionMetrics';
+import { rememberClan } from './legacy';
 
 export function createCampEstate(): CampEstate {
   return { tier: 1, slots: ['ger', null, null, null, null, null], internals: {} };
@@ -118,9 +118,9 @@ export function estateImprovement(
     ? ENCAMPMENT_TIERS.find((t) => t.id === id && t.tier === rank)
     : INTERNAL_DEVELOPMENTS.find((d) => d.id === id)?.ranks[rank - 1];
 }
-export function estateCost(run: RunState, node: EstateImprovement) {
+export function estateCost(_run: RunState, node: EstateImprovement) {
   return {
-    materials: Math.ceil(node.materials * run.patrons.guardian.cost),
+    materials: Math.ceil(node.materials),
     spirit: node.spirit,
     workers: node.workers,
   };

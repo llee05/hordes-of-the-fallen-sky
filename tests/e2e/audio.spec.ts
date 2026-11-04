@@ -1,9 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
-  selectCampBuilding,
-  closeOverlayOrPause,
   buyNode,
+  closeOverlayOrPause,
   expectFrozen,
+  selectCampBuilding,
   startExpedition,
 } from './helpers';
 
@@ -119,9 +119,7 @@ test(
   },
 );
 
-test('camp work and research sound in menus while world cues and cadence are stopped', async ({
-  page,
-}) => {
+test('camp work sounds in menus while world cues and cadence are stopped', async ({ page }) => {
   await page.keyboard.down('d');
   await expect.poll(async () => (await heard(page)).includes('hoof')).toBe(true);
   await page.keyboard.up('d');
@@ -157,12 +155,6 @@ test('camp work and research sound in menus while world cues and cadence are sto
     ),
   ).toEqual(frozen);
   await closeOverlayOrPause(page);
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.pendingUpgrades = 1;
-  });
-  await page.keyboard.press('t');
-  await buyNode(page, 'wolf-trail');
-  expect(await heard(page)).toContain('research');
 });
 
 test('the journey and successive Khans have distinct cues, with one audio context across restarts', async ({

@@ -45,7 +45,7 @@ The survivors call the advancing hordes **the unreturned**. The name describes t
 
 The largest creature is **the Skybreaker**, an antlered shape with a horse-skull face and cold light behind its ribs. It gathers loose fragments of the calamity into a body. It is an original monster, not Tengri, Etügen, an ancestral protector, or a figure taken from a traditional pantheon.
 
-Defeated creatures leave **spirit shards**: remnants of the world's scattered vitality that the clan can gather. They are not a count of ancestors killed or souls purchased. Learning a tradition turns those remnants toward the living: steadier hands, stronger horses, a remembered song, a fire that holds through the night.
+Defeated creatures leave **spirit shards**: remnants of the world's scattered vitality that the clan can gather. They are not a count of ancestors killed or souls purchased. Gathering them marks the Khan’s growing experience on the road.
 
 ## The people beneath the blue banner
 
@@ -109,13 +109,13 @@ The camp's eight branches combine Mongolian cultural motifs across periods in th
 
 ## Patron traditions
 
-The Blue Banner clan remembers eight patron traditions: **Börte Chino**, **Etügen Eke**, **Khükhedei Mergen**, **Golomt**, **Lus**, **Ongod**, **Sülde**, and the **Guardian of Burkhan Khaldun**. “Patron” is the game's progression term, gathering ancestral figures, the hearth, spirits, standards, and a landscape guardian under one interface. These are not eight interchangeable gods or a claim about a single historical pantheon.
+The Blue Banner clan remembers eight patron traditions: **Börte Chino**, **Etügen Eke**, **Khükhedei Mergen**, **Golomt**, **Lus**, **Ongod**, **Sülde**, and the **Guardian of Burkhan Khaldun**. “Patron” gathers ancestral figures, the hearth, spirits, standards, and a landscape guardian within the game's fiction. These are not eight interchangeable gods or a claim about a single historical pantheon.
 
-Each tradition expresses a practical duty. Börte Chino inspires the moving hunt; Etügen Eke the care of earth, herds, and households; Khükhedei Mergen the skill of the bow. Golomt keeps the carried hearth alive. Lus makes the clan attentive to water and unstable ground. Ongod brings remembered riders beside the living, while Sülde joins the living host beneath its standard. The Guardian inspires portable shelter and the defense of the passage. Families may carry several traditions together; research does not replace their shared obligation to keep people alive.
+Each tradition expresses a practical duty. Börte Chino inspires the moving hunt; Etügen Eke the care of earth, herds, and households; Khükhedei Mergen the skill of the bow. Golomt keeps the carried hearth alive. Lus makes the clan attentive to water and unstable ground. Ongod brings remembered riders beside the living, while Sülde joins the living host beneath its standard. The Guardian inspires portable shelter and the defense of the passage. Families may carry several traditions together while sharing the obligation to keep people alive.
 
 The summoned echoes are remembered protectors within the game's fiction, distinct from the unreturned who wear stolen names. The Guardian of Burkhan Khaldun is an imagined guardian used by this game, not a documented individual deity with this prescribed name and abilities. The real sacred landscape remains an inspiration remembered by the clan; the fictional Heart of the Steppe and its refuge are still separate places.
 
-All technology names, stat bonuses, moving fields, resurrection charges, and combat summons are invented design. They do not reproduce ritual instruction or promise the effects of religious practice. [The patron tech tree](docs/patron-tech-tree.md) records those mechanics separately from these narrative boundaries.
+Any supernatural abilities associated with these figures are invented design. They do not reproduce ritual instruction or promise the effects of religious practice. See [the progression guide](docs/progression-ui.md) for the current gameplay interface.
 
 ## Opening slideshow
 
@@ -163,7 +163,7 @@ Tengri traditions vary across communities, places, and periods. The game draws p
 - **Khükhedei Mergen.** Lee An-na discusses varied archery narratives associated with Huhdai Mergen. This supports an archer motif without making this figure interchangeable with every mythic archer or deriving the game's attacks from a rite. See [“A Study on the Forms and Character of Huhdai Mergen in Mongolian Mythology through the Archery” (2014)](https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART001889933).
 - **Golomt.** Hearth and household observances provide the narrative connection; Golomt is not presented as one universally defined fire deity. See the University of Colorado field account [“Gal Golomt and Modern Mongolia” (2011)](https://ciresblogs.colorado.edu/mongolia/2011/10/14/mmss-5/).
 - **Lus.** Fieldwork describes local beings associated with places and waters amid differing herder and Buddhist interpretations. The slowing fields and eruption mitigation are fictional mechanics. See [“On ‘Wise Cunning’ and ‘Clever Methods’: Framings of Environmental Protection in Rural Mongolia” (2025)](https://www.tandfonline.com/doi/full/10.1080/00141844.2025.2452516).
-- **Ongod.** Ancestral and protective spirit contexts inform this collective tradition; the three mounted echoes are an invented visual form. See [“Talking to the Ongons,” _Shaman_, volume 12 (2004)](https://www.isars.org/wp-content/uploads/2021/01/ShamanVol12_2004_dld.pdf).
+- **Ongod.** Ancestral and protective spirit contexts inform this collective tradition; remembered mounted riders are an invented visual form. See [“Talking to the Ongons,” _Shaman_, volume 12 (2004)](https://www.isars.org/wp-content/uploads/2021/01/ShamanVol12_2004_dld.pdf).
 - **Sülde.** Spirit-banner material informs the leadership motif without reducing every use of the term to a military object. See the National University of Mongolia study [“Emphasizing two duplicates of abandoned eulogy of the white spirit banner”](https://journal.num.edu.mn/ms/article/view/4294).
 
 Future writing should keep the Last Court's crime distinct from ordinary worship, leave room for different clan beliefs, and connect spiritual life to care for people, herds, and places. New supernatural claims belong to this fictional setting unless supported and identified as historical material. Tengri and Etügen are not combat bosses. The game's cairns, blue banner, embers, and spirit shards do not prescribe real rites or promise the effects of real religious practice.

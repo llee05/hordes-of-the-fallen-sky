@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDINGS, type BuildingDefinition } from '../../src/game/data/clan';
 import { applyCampEffects } from '../../src/game/state/camp';
-import { createLegacyCampRun as createRun } from '../support/legacyCamp';
+import { advanceCampRecovery, gallopCooldown } from '../../src/game/state/campCombat';
 import {
   advanceClan,
   beginMigration,
@@ -9,7 +9,7 @@ import {
   damageClan,
   developmentExcluded,
 } from '../../src/game/state/clan';
-import { advancePatrons, gallopCooldown } from '../../src/game/state/patrons';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 describe('legacy checkpoint compatibility: portable camp development effects', () => {
   it('keeps new expeditions independent with neutral economy, combat, and arrival effects', () => {
@@ -71,11 +71,10 @@ describe('legacy checkpoint compatibility: portable camp development effects', (
     }
   });
 
-  it('stacks craft and patron bonuses across gathering, food use, and pasture care', () => {
+  it('stacks craft bonuses across gathering, food use, and pasture care', () => {
     const baseline = createRun();
     const improved = createRun();
     baseline.phase = improved.phase = 'playing';
-    improved.patrons.land.food = 1.3225;
     applyCampEffects(improved.clan.campEffects, {
       multipliers: {
         foodProduction: 1.15,
@@ -134,10 +133,8 @@ describe('legacy checkpoint compatibility: portable camp development effects', (
     expect(run.clan.materials).toBeLessThan(61);
   });
 
-  it('combines transport, protection, and gallop benefits with patrons', () => {
+  it('combines transport, protection, and gallop benefits from camp development', () => {
     const run = createRun();
-    run.patrons.guardian.protection = 0.648;
-    run.patrons.hunt.gallopCooldown = 0.75;
     applyCampEffects(run.clan.campEffects, {
       multipliers: {
         clanProtection: 0.9,
@@ -146,8 +143,8 @@ describe('legacy checkpoint compatibility: portable camp development effects', (
       },
     });
     damageClan(run, 20);
-    expect(run.clan.integrity).toBeCloseTo(100 - 20 * 0.7 * 0.648 * 0.9);
-    expect(gallopCooldown(run)).toBeCloseTo(2.025);
+    expect(run.clan.integrity).toBeCloseTo(100 - 20 * 0.7 * 0.9);
+    expect(gallopCooldown(run)).toBeCloseTo(2.7);
     run.phase = 'route';
     run.clan.stageTime = 45;
     beginMigration(run, 'river');
@@ -165,7 +162,7 @@ describe('legacy checkpoint compatibility: portable camp development effects', (
       bonuses: { commanderRecovery: 0.15, resolveRecovery: 0.2 },
     });
     advanceClan(run, 10);
-    advancePatrons(run, 10);
+    advanceCampRecovery(run, 10);
     expect(run.clan.integrity).toBe(52);
     expect(run.health).toBe(51.5);
     run.clan.stage = 'migration';
@@ -174,7 +171,7 @@ describe('legacy checkpoint compatibility: portable camp development effects', (
     expect(run.clan.integrity).toBe(52);
     run.phase = 'building';
     const before = structuredClone(run);
-    advancePatrons(run, 10);
+    advanceCampRecovery(run, 10);
     advanceClan(run, 10);
     expect(run).toEqual(before);
   });

@@ -1,12 +1,12 @@
 import { GAME } from '../config';
 import type { RunState } from '../types';
 import { isKhanActive } from './khan';
-import { advanceHoofTrails, researchMomentumFloor } from './researchRuntime';
 export interface GroundPoint {
   x: number;
   y: number;
 }
 export interface MountedCombatState {
+  riderFireAt?: number[];
   previous?: GroundPoint;
   heading?: GroundPoint;
   rideSeconds: number;
@@ -18,12 +18,17 @@ export interface MountedCombatState {
 export function createMountedCombat(): MountedCombatState {
   return { rideSeconds: 0, ready: false, gallopSerial: 0, volleys: 0, trails: [] };
 }
+export function riderCooldowns(combat: MountedCombatState, count: number): number[] {
+  const cooldowns = (combat.riderFireAt ??= []);
+  while (cooldowns.length < count) cooldowns.push(0);
+  return cooldowns;
+}
 /** Measures real travelled ground, so pressing into a wall cannot build momentum or charged volleys. */
 export function advanceMountedCombat(
   run: RunState,
   dt: number,
   position: GroundPoint,
-  galloping: boolean,
+  _galloping: boolean,
 ): void {
   if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
   const c = run.combat;
@@ -58,19 +63,9 @@ export function advanceMountedCombat(
     ? Math.min(GAME.mounted.chargeSeconds, c.rideSeconds + dt)
     : Math.max(0, c.rideSeconds - dt * 2);
   if (turn < 0.2) run.clan.momentum *= 0.8;
-  run.clan.momentum = Math.max(researchMomentumFloor(run), run.clan.momentum);
+  run.clan.momentum = Math.max(0, run.clan.momentum);
   c.ready = c.rideSeconds >= GAME.mounted.chargeSeconds;
-  advanceHoofTrails(run, position, galloping);
-  if (
-    galloping &&
-    (run.upgrades['turned-earth'] ?? 0) > 0 &&
-    (!c.trails.length ||
-      Math.hypot(position.x - c.trails.at(-1)!.x, position.y - c.trails.at(-1)!.y) >
-        GAME.mounted.trailSpacing)
-  ) {
-    c.trails.push({ x: position.x, y: position.y, remaining: GAME.mounted.trailSeconds });
-    if (c.trails.length > GAME.mounted.maxTrails) c.trails.shift();
-  }
+
   c.previous = { x: position.x, y: position.y };
   c.heading = heading;
 }

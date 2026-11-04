@@ -1,6 +1,6 @@
-import type { WorldArchive } from '../../../src/game/state/expeditionArchive';
 import { CharacterMotion } from '../../../src/game/animation/CharacterMotion';
 import { createAreaEncounter } from '../../../src/game/state/areaEncounters';
+import type { WorldArchive } from '../../../src/game/state/expeditionArchive';
 
 export function world(): WorldArchive {
   const motion = new CharacterMotion('player').capture();
@@ -68,7 +68,6 @@ export function world(): WorldArchive {
     hostileShots: [],
     gems: [{ ...body, value: 23, attracted: true }],
     riders: [],
-    support: { ancestorTimer: 0.8, waterTimer: 1.8, guardianTimer: 0.4, spirits: [] },
     hazards: [{ x: 2700, y: 2700, remaining: 0.4, radius: 90, damage: 8, source: 'seer' }],
     areaEncounter: createAreaEncounter(),
     areaThreats: {

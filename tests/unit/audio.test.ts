@@ -166,11 +166,11 @@ describe('recorded, layered and bounded steppe audio', () => {
     audio.muted = true;
     context.advance(0.08);
     expect(context.active()).toHaveLength(0);
-    expect(audio.play('research')).toBe(false);
+    expect(audio.play('ui')).toBe(false);
     audio.muted = false;
     audio.unlock();
     expect(Context.latest).toBe(context);
-    expect(audio.play('research')).toBe(true);
+    expect(audio.play('ui')).toBe(true);
     audio.reset();
     expect(context.active()).toHaveLength(0);
     expect(context.sources.every((s) => s.disconnect.mock.calls.length > 0)).toBe(true);

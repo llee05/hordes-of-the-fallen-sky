@@ -1,3 +1,4 @@
+import { GAME } from '../../src/game/config';
 import { expect, test, type Page } from '@playwright/test';
 import { closeOverlayOrPause, expectFrozen, openTitle, startExpedition } from './helpers';
 
@@ -38,6 +39,7 @@ async function siegeState(page: Page) {
       x: enemy.x,
       y: enemy.y,
       distance: Math.hypot(enemy.x - scene.camp.x, enemy.y - scene.camp.y),
+      radius: scene.campBarrier.radius,
       speed: enemy.body.velocity.length(),
       cooldown: enemy.clanAttackTimer,
       frame: enemy.frame.name,
@@ -67,11 +69,17 @@ test(
   'camp attackers stop outside the tents, repeat protected damage, freeze in menus, and only reward a defeat',
   { tag: '@core' },
   async ({ page }) => {
+    await page.evaluate(() => {
+      const run = (window as any).__gloam.scene.run;
+      // Isolate attack damage from passive camp resolve recovery so resolve changes only on hits.
+      run.clan.campEffects.bonuses.resolveRecovery = 0;
+    });
     await placeAttacker(page, 0, -190, 90);
     // Observe the first tick promptly so the interval assertion measures the full attack cadence.
     await activeExpect
       .poll(async () => (await siegeState(page)).resolve, { intervals: [50] })
       .toBeCloseTo(96.85);
+    await activeExpect.poll(async () => (await siegeState(page)).speed).toBe(0);
     const first = await siegeState(page);
     expect(first).toMatchObject({
       active: true,
@@ -82,8 +90,8 @@ test(
       spirit: 0,
       gems: 0,
     });
-    expect(first.distance).toBeGreaterThan(110);
-    expect(first.distance).toBeLessThanOrEqual(120);
+    expect(first.distance).toBeGreaterThan(first.radius - 1);
+    expect(first.distance).toBeLessThanOrEqual(first.radius + GAME.camp.barrier.attackReach);
     await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       const enemy = (window as any).campAttacker;
@@ -197,18 +205,17 @@ test('every enemy can hold and animate a camp attack, including a charging rider
   }
   const wardHealth = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.run.patrons.guardian.wardDamage = 0.65;
+    scene.run.clan.paths.sanctuary = ['ancestral-ward'];
     scene.spatial.rebuild(scene.enemies.getChildren());
-    scene.patronSupport.update(scene.run, 0.01, scene.player, scene.camp, scene.spatial, {
-      damage: (enemy: any, amount: number) => scene.damageEnemy(enemy, amount),
-      volley: () => {},
-    });
+    scene.supportTimer = 999;
+    scene.wardTimer = 0;
+    scene.updateSupport(0.01);
     return scene.enemies
       .getChildren()
       .map((enemy: any) => ({ health: enemy.health, id: enemy.definition.id }));
   });
   for (const enemy of wardHealth)
-    expect(enemy.health).toBeCloseTo(10000 - 16 * 0.65 * (enemy.id === 'brute' ? 0.8 : 1));
+    expect(enemy.health).toBeCloseTo(10000 - 16 * 1.5 * (enemy.id === 'brute' ? 0.8 : 1));
   await page.screenshot({ path: 'test-results/camp-under-attack.png' });
 });
 

@@ -350,12 +350,8 @@
 .camp-popup button:focus-visible {
   outline-color: #4c8270;
 }
-.camp-popup .economy-summary,
-.camp-popup .synergy-catalog {
+.camp-popup .economy-summary {
   padding: 14px 16px;
-}
-.camp-popup .synergy-grid {
-  grid-template-columns: 1fr;
 }
 
 /* A flat manuscript landscape, with places identified by pinned parchment plaques. */

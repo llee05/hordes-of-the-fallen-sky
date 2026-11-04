@@ -93,7 +93,7 @@ export function createDeveloperRun(id: string): RunState | undefined {
     if (!beginMigration(run, level.routeId)) return undefined;
     run.phase = 'playing';
   }
-  for (let point = 0; point < GAME.developer.knowledgePoints; point += 1)
+  for (let point = 0; point < GAME.developer.experienceLevels; point += 1)
     gainExperience(run, run.nextLevelXp);
   run.clan.message = `Developer run · ${level.title}. F8 opens the level selector.`;
   return run;

@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { currentGuidance, completeGuidance, clanWarning } from '../../src/game/state/guidance';
-import { gainExperience, applyUpgrade } from '../../src/game/state/run';
+import { advanceClan, beginMigration, buildStructure } from '../../src/game/state/clan';
+import { clanWarning, completeGuidance, currentGuidance } from '../../src/game/state/guidance';
+import { gainExperience } from '../../src/game/state/run';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
-import { buildStructure, beginMigration, advanceClan } from '../../src/game/state/clan';
-import { UPGRADES } from '../../src/game/data/upgrades';
 
 describe('first-crossing guidance', () => {
-  it('follows actual purchases, collection, and research without consuming points on inspection', () => {
+  it('follows actual purchases, and collection', () => {
     const run = createRun();
     expect(currentGuidance(run)?.id).toBe('ride');
     completeGuidance(run, 'ride');
@@ -19,14 +18,6 @@ describe('first-crossing guidance', () => {
     expect(buildStructure(run, 'archery')).toBe(true);
     expect(currentGuidance(run)?.id).toBe('shards');
     gainExperience(run, run.nextLevelXp);
-    expect(currentGuidance(run)?.id).toBe('research');
-    expect(run.pendingUpgrades).toBe(1);
-    expect(
-      applyUpgrade(
-        run,
-        UPGRADES.find((u) => u.id === 'power')!,
-      ),
-    ).toBe(true);
     expect(currentGuidance(run)?.id).toBe('formation');
     completeGuidance(run, 'formation');
     expect(currentGuidance(run)?.id).toBe('prepare');

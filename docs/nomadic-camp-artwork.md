@@ -15,7 +15,7 @@ More distinct portable-forge, healer, hunting, storyteller and training-equipmen
 
 ## Estate polish artwork
 
-`public/art/nomadic-camp-life.png` is a 1774 × 887 indexed PNG made with the built-in `image_gen` tool, compressed to 192 colors with ImageMagick (1,125,334 bytes; no resize). The ornamental frame and centred parchment title use existing local cloth texture and CSS; plaques retain their diamond symbols, display the current level on the right, and expose level limits and categories to assistive technology. Search, provisions, combinations, inspection, purchases and keyboard actions retain their existing scene-owned state and focus keys. The centred footer returns to the steppe. Narrow screens retain horizontal map panning.
+`public/art/nomadic-camp-life.png` is a 1774 × 887 indexed PNG made with the built-in `image_gen` tool, compressed to 192 colors with ImageMagick (1,125,334 bytes; no resize). The ornamental frame and centred parchment title use existing local cloth texture and CSS; plaques retain their diamond symbols, display the current level on the right, and expose level limits and categories to assistive technology. Search, provisions, inspection, purchases and keyboard actions retain their existing scene-owned state and focus keys. The centred footer returns to the steppe. Narrow screens retain horizontal map panning.
 
 Generation prompt:
 

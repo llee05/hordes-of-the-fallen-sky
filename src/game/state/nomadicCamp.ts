@@ -1,25 +1,22 @@
-import { constructionMaterials, recordConstruction } from './researchGuardian';
-import { recordMaterialSpend } from './researchRuntime';
-import { markExpedition } from './expeditionMetrics';
-import { completeGuidance } from './guidance';
-import { rememberClan } from './legacy';
-import { BUILDING_REMNANT, buildingReaction } from '../data/storyReactions';
 import {
   CORE_CAMP_BUILDINGS,
+  createNomadicCamp,
   OPTIONAL_CAMP_SLOTS,
   type NomadicBuildingId,
   type NomadicCamp,
 } from '../../shared/nomadicCamp.js';
+import { GAME } from '../config';
 import {
   NOMADIC_BUILDINGS,
   nomadicBuilding,
   type NomadicBuildingEffects,
 } from '../data/nomadicCamp';
-import type { RunState } from '../types';
+import { BUILDING_REMNANT, buildingReaction } from '../data/storyReactions';
+import type { BuildingId, RunState } from '../types';
 import { applyCampEffects, createCampEffects } from './camp';
-import { createNomadicCamp } from '../../shared/nomadicCamp.js';
-import { GAME } from '../config';
-import type { BuildingId } from '../types';
+import { markExpedition } from './expeditionMetrics';
+import { completeGuidance } from './guidance';
+import { rememberClan } from './legacy';
 
 export function nomadicBuildingLevel(camp: NomadicCamp, id: NomadicBuildingId): number {
   return (
@@ -33,11 +30,7 @@ export function nomadicBuildingCost(run: RunState, id: NomadicBuildingId) {
   const next = nomadicBuilding(id).levels[camp ? nomadicBuildingLevel(camp, id) : 0];
   return next
     ? {
-        materials: constructionMaterials(
-          run,
-          !camp || nomadicBuildingLevel(camp, id) === 0,
-          Math.ceil(next.cost.materials * run.patrons.guardian.cost),
-        ),
+        materials: Math.ceil(next.cost.materials),
         spirit: next.cost.spirit,
         workers: camp && nomadicBuildingLevel(camp, id) ? 0 : nomadicBuilding(id).workers,
       }
@@ -84,7 +77,7 @@ export function applyNomadicBuildingEffects(run: RunState, effects: NomadicBuild
   for (const [key, value] of Object.entries(effects.player ?? {}))
     run.stats[key as keyof NonNullable<NomadicBuildingEffects['player']>] += value;
   run.stats.attackInterval *= effects.attackInterval ?? 1;
-  run.patrons.bow.pierce += effects.pierce ?? 0;
+  run.stats.pierce += effects.pierce ?? 0;
 }
 /** One validated transaction owns placement, deduction, rank and effects. Inspecting never calls it. */
 export function purchaseNomadicBuilding(
@@ -100,8 +93,7 @@ export function purchaseNomadicBuilding(
   const cost = nomadicBuildingCost(run, id)!;
   run.clan.materials -= cost.materials;
   run.clan.spirit -= cost.spirit;
-  recordMaterialSpend(run, cost.materials);
-  if (level === 0) recordConstruction(run);
+
   if ((CORE_CAMP_BUILDINGS as readonly string[]).includes(id)) {
     (camp.core as Record<string, number>)[id] = level + 1;
   } else if (level) {

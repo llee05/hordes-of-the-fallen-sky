@@ -23,7 +23,7 @@ npm start           # Play the offline desktop build
 Development builds include **Developer mode** in the title and pause menus. Press
 **F8** from any screen to open the level selector: jump to any of the four chapters,
 any crossing approach, or any named destination in chapters 2 and 3. Each choice
-starts a fresh test expedition with supplies and 40 unspent knowledge points.
+starts a fresh test expedition with supplies.
 Escape / F8 closes the selector and returns to the previous screen. Developer runs
 skip the prologue and camp scenes and do not change your saved longest journey.
 Start a new run to return to normal play. The selector is absent from production
@@ -54,11 +54,11 @@ The game opens at the title menu. **New Game** opens a skippable, five-chapter p
 
 The title is embroidered across an indigo felt banner over the painted steppe. Woven rust-red trim, brass clan symbols, and warm manuscript pages carry the world's art into the interface. Camp cards reuse the painted gers, riders, and wagons from the battlefield; migration choices have illustrated landscape vignettes. All UI materials and artwork ship locally.
 
-The battlefield fills the entire game window. Zoom with the mouse wheel, + / − (including the number pad), or controller RT / LT. The on-screen − / percentage / + controls offer the same actions; click the percentage, press 0, or click the right stick to reset to 100%. Zoom ranges from 60% to 160% and keeps the interface readable at its original size. It is available during active play, follows the Khan or caravan during succession, and carries across new expeditions for the app session. Compact resources and objectives sit at the top, with Khan health, clan resolve, gallop, and a keyboard command dock near the bottom. Brief clan messages appear as notifications. Dismissible contextual guidance teaches riding, camp development, knowledge, formations, and the first crossing through actual actions. Hide tips in the field or restore them from How to play; the preference lasts for the app session. Persistent food, resolve, population, and pasture warnings remain visible when tips are hidden.
+The battlefield fills the entire game window. Zoom with the mouse wheel, + / − (including the number pad), or controller RT / LT. The on-screen − / percentage / + controls offer the same actions; click the percentage, press 0, or click the right stick to reset to 100%. Zoom ranges from 60% to 160% and keeps the interface readable at its original size. It is available during active play, follows the Khan or caravan during succession, and carries across new expeditions for the app session. Compact resources and objectives sit at the top, with Khan health, clan resolve, gallop, and a keyboard command dock near the bottom. Brief clan messages appear as notifications. Dismissible contextual guidance teaches riding, camp development, shards, formations, and the first crossing through actual actions. Hide tips in the field or restore them from How to play; the preference lasts for the app session. Persistent food, resolve, population, and pasture warnings remain visible when tips are hidden.
 
 The title cloth breathes gently, parchment menus settle into place, and illustrations respond to mouse or keyboard focus. Resource changes, damage, gallop readiness, and newly available migration routes have brief visual feedback. Controls respond immediately throughout. The operating system's reduced-motion preference disables interface animations and transitions, including when changed while the game is open.
 
-Press **Tab** or **J** (controller **View**) to open the clan chronicle. It pauses combat, physics, economy, and migration while you inspect the journey, buildings, workforce, formations, and learned traditions. Arrow keys switch its tabs; Escape or J returns to the battlefield. You can open camp development or choose an available migration route directly from the chronicle.
+Press **Tab** or **J** (controller **View**) to open the clan chronicle. It pauses combat, physics, economy, and migration while you inspect the journey, buildings, workforce, and formations. Arrow keys switch its tabs; Escape or J returns to the battlefield. You can open camp development or choose an available migration route directly from the chronicle.
 
 The title and pause menus contain **Settings** and **How to play**. Mute and separate music, ambience, combat, and interface levels save automatically. Settings also offers five recorded reference auditions. Fullscreen is available in Settings or with F11 / Alt+Enter. Escape backs out to the menu you came from; closing Settings during a paused expedition keeps that expedition paused. Native Quit game is available in the main and pause menus. Keyboard, mouse, controller, and touch-preview actions use the same scene-owned run state.
 
@@ -91,7 +91,7 @@ weathered cliffs, shared riverbeds and shores, clustered vegetation, and render 
 
 The Khan, allied archers, and all six creature designs have painted sprite animation: four gait or hovering frames and two attack poses each. Riding speed drives the gait, galloping quickens it, and actual volleys, charges, and strikes trigger release poses. Hits briefly tint the character; defeated enemies fade through a small visual pool after their collision bodies leave immediately. Character animation and these effects freeze in every paused run phase. See [the sprite sheets, registration, and generation prompts](docs/character-animation.md).
 
-Choose **Starting tradition** at the title to compare Shared hearth, Outrider circle, Hearthkeepers, and Pathfinders. Their riders, protection, movement, and starting-store tradeoffs change the opening while every patron and facility remains available. The chosen preparation persists through the expedition and full saves. See [starting clan traditions](docs/starting-traditions.md).
+Choose **Starting tradition** at the title to compare Shared hearth, Outrider circle, Hearthkeepers, and Pathfinders. Their riders, protection, movement, and starting-store tradeoffs change the opening while every facility remains available. The chosen preparation persists through the expedition and full saves. See [starting clan traditions](docs/starting-traditions.md).
 
 The final stand has three dramatic chapters, rotating Skybreaker approaches, marked windups, and four-second recovery windows. Optional work parties can open the passage up to 24 seconds sooner; survival still wins with the boss alive. See [the final-stand rules](docs/final-stand.md).
 
@@ -117,28 +117,19 @@ fictional Heart of the Steppe. These are stylized camps in the surrounding lands
 with compressed travel geography; real sacred places remain distinct from the
 invented calamity. See [destinations, rules, and cultural sources](docs/migration-locations.md).
 
-Start with eight people, three horses, two gers, supplies, and a mounted Khan with one accompanying rider. Attacks are automatic. Ride to collect spirit shards. Each level banks a knowledge point without interrupting combat. Press **T** (controller **LB**) or use the HUD to open the paused **Patron tech tree**, inspect every branch, and spend points on the ranks you choose. Eight patrons support hunting, civilisation, archery, survival, terrain control, ancestral summons, army leadership, and defensive construction. Each begins with a two-rank foundation, early practices, and a choice of Doctrine; mix patrons freely. Foundations and practices cost one point, and Doctrines cost two. Archery offers precision, piercing, and wide-volley specializations. You can leave with unspent points and return later. Browse one connected patron graph at a time, compare patrons in the overview, and search names or effects. Select a node to inspect exact before/after values, prerequisites, and exclusive alternatives; use its Learn button to purchase. The Combinations catalogue reveals interactions such as Burning Tempest and links to their camp and patron requirements. The tree is also accessible from Pause and the chronicle’s Traditions tab. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through.
+Start with eight people, three horses, two gers, supplies, and a mounted Khan with one accompanying rider. Attacks are automatic. Ride to collect spirit shards and gain XP levels without interrupting combat. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through. Camp development is the sole progression interface; patron research and knowledge points have been removed for now. Spirit remains the camp currency earned from kills.
 
-The Research V2 catalogue adds tiered patron paths, general research and 16 hybrid
-bridges. Implemented effects are purchasable; proposed effects remain visible with explicit
-unavailable reasons. Pin a legal goal to see prerequisites
-and spend-gate side picks, switch to Compact list on narrow screens, or zoom the map.
-Doctrine and Mythic choices require confirmation. General research remains unavailable
-until its discovery, provisions and encounter systems exist. See the
-[implementation record](docs/patron-research-v2.md) and
-[complete effect status inventory](docs/patron-research-v2-status.md).
-
-Press **B** to visit the illustrated **nomadic camp**. Five permanent core households begin at level 1: **Khan's Ger, Horse Lines, Herding Grounds, Communal Hearth and Wagon Yard**. Choose five different workplaces from fourteen military, economy, survival, spiritual and cultural buildings for the five optional locations. Every building has three levels, a visible upgraded appearance, authored costs and effects, and a compact parchment inspector. The Khan's Ger governs population capacity and higher building levels. Search, Provisions and Combinations stay within the same painted map; Escape/controller Back closes a popover before leaving. Planning freezes the world. Unsupported mount, equipment, companion, trading and corruption benefits are recorded as **Planned** data rather than simulated systems.
+Press **B** to visit the illustrated **nomadic camp**. Five permanent core households begin at level 1: **Khan's Ger, Horse Lines, Herding Grounds, Communal Hearth and Wagon Yard**. Choose five different workplaces from fourteen military, economy, survival, spiritual and cultural buildings for the five optional locations. Every building has three levels, a visible upgraded appearance, authored costs and effects, and a compact parchment inspector. The Khan's Ger governs population capacity and higher building levels. Search and Provisions stay within the same painted map; Escape/controller Back closes a popover before leaving. Planning freezes the world. Unsupported mount, equipment, companion, trading and corruption benefits are recorded as **Planned** data rather than simulated systems.
 
 Purchases and completed crossings save the portable camp checkpoint. **Continue clan camp** restores its choices, levels and actual supplies into a fresh expedition; **Continue expedition** restores the whole battle and journey. Old facilities map to their corresponding new buildings, while retired tiers, internal ranks and craft branches are refunded once. See [the nomadic camp guide](docs/nomadic-camp.md) for the complete catalog, effects, prices and migration mapping.
 
-**Advanced Fletcher's Workshop + Shaman's Ger = the Burning Tempest:** curving, flaming arrow fans with lingering burn damage. Other combinations retain their existing patron and combat interactions.
+**Advanced Fletcher's Workshop + Shaman's Ger = the Burning Tempest:** curving, flaming arrow fans with lingering burn damage.
 
-**The Khan is a title carried by successive leaders.** If he falls, the clan spends **10 active seconds choosing a new Khan** while riders, ancestral echoes, and camp defenses keep fighting. A visible countdown marks succession. The successor returns at the current camp or moving caravan with full maximum health, a ready gallop, and 3 seconds of protection. During the countdown, optionally choose an outrider (+5% riding speed) or hearthguard (8% less Khan damage) using 1 / 2, controller left / right, or the HUD. Their trait lasts for that generation; leaving the choice alone returns an unmodified successor. All research, resources, buildings, and journey progress carry on. Menus pause the countdown. Golomt’s Last Ember saves the current Khan immediately once per expedition; its charge does not refresh for successors. Losing the clan’s people or resolve still ends the expedition.
+**The Khan is a title carried by successive leaders.** If he falls, the clan spends **10 active seconds choosing a new Khan** while riders and camp defenses keep fighting. A visible countdown marks succession. The successor returns at the current camp or moving caravan with full maximum health, a ready gallop, and 3 seconds of protection. During the countdown, optionally choose an outrider (+5% riding speed) or hearthguard (8% less Khan damage) using 1 / 2, controller left / right, or the HUD. Their trait lasts for that generation; leaving the choice alone returns an unmodified successor. All resources and buildings, and journey progress carry on. Menus pause the countdown. Losing the clan’s people or resolve still ends the expedition.
 
 A portable barricade of lashed wooden hurdles and indigo and rust felt bands surrounds the camp. It expands around growing households and workplaces, then travels as low wheeled screens around the caravan. Enemies stop at its edge and repeatedly attack clan resolve until defeated; hostile shots strike the barrier itself. Struck panels briefly jolt and brighten, and worn wood and frayed cloth reflect low resolve. Your Khan, riders, and camp defenses can still defeat the attackers. Packing up makes attackers pursue the moving caravan again when it leaves their reach. The barricade uses the clan's existing resolve and protection rather than a separate health pool.
 
-Battles alternate warned assaults, featured enemies, and recovery windows. Optional supply carts, loose herds, stranded households, and enemy gatherings invite short rides away from camp. Terrain-aware enemies use the current area’s passes, ramps, dry ground, and river crossings. Sustained riding charges a stronger volley; key technologies add paired rider shots, pinning arrows, and a slowing gallop wake.
+Battles alternate warned assaults, featured enemies, and recovery windows. Optional supply carts, loose herds, stranded households, and enemy gatherings invite short rides away from camp. Terrain-aware enemies use the current area’s passes, ramps, dry ground, and river crossings. Sustained riding charges a stronger volley.
 
 Pastures deplete and spawn pressure increases while you stay. After 45 active seconds at a camp, press **M** to inspect routes. You choose when to leave. Stay to gather materials and grow, or pack up before grazing and provisions run out. Refugees strengthen your host but consume food. Starvation and attacks can cost families and livestock; losing all people or clan resolve ends the run.
 
@@ -163,28 +154,26 @@ time, food needed en route, food after arrival rewards or rescue costs, and shor
 before arrival. Estimates assume current households and improvements without future
 battle losses or purchases; risky routes remain your choice.
 
-For a detailed reference to resources, combat, enemies, progression, and both upgrade trees, see [the game mechanics brief](docs/game-mechanics.md). For current camp rules and effects, see [the nomadic camp guide](docs/nomadic-camp.md); historical craft details and cultural sources remain in [the legacy camp catalog](docs/camp-upgrade-tree.md). For original technology balance and specialization routes, see [the V1 reference](docs/patron-tech-tree.md); the [V2 record](docs/patron-research-v2.md) covers the expanded registry and gated integrations. For adding progression content and extending the UI, see [the progression UI guide](docs/progression-ui.md).
+For resources, combat, enemies, levels, and camp development, see [the game mechanics brief](docs/game-mechanics.md). Current camp rules and effects are in [the nomadic camp guide](docs/nomadic-camp.md); historical craft details and cultural sources remain in [the legacy camp catalog](docs/camp-upgrade-tree.md). See [the progression UI guide](docs/progression-ui.md) for extending camp management.
 
 ## Controls
 
-| Action                          | Keyboard / mouse                     | Standard controller           |
-| ------------------------------- | ------------------------------------ | ----------------------------- |
-| Ride                            | WASD / arrows                        | Left stick / D-pad            |
-| Attack                          | Automatic                            | Automatic                     |
-| Gallop                          | Space / Gallop button                | A                             |
-| Develop camp                    | B / Develop camp                     | X                             |
-| Pack and choose route           | M / Pack & migrate                   | Y                             |
-| Cycle unlocked formations       | F / Formation button                 | Right bumper                  |
-| Clan chronicle                  | Tab / J / chronicle button           | View                          |
-| Pause / resume / close planning | Escape / P                           | Start / B                     |
-| Navigate menus                  | Tab / Shift+Tab                      | Stick / D-pad                 |
-| Confirm                         | Enter / Space / click                | A                             |
-| Patron tech tree                | T / Tech tree button                 | Left bumper                   |
-| Learn a rank                    | Navigate, then Enter / Space / click | Navigate, then A              |
-| Zoom in / out                   | + / − / mouse wheel                  | RT / LT                       |
-| Reset zoom                      | 0 / percentage button                | Right stick click             |
-| Fullscreen                      | F11 / Alt+Enter / fullscreen button  | —                             |
-| Quit                            | Quit game / window close             | Navigate to Quit game, then A |
+| Action                          | Keyboard / mouse                    | Standard controller           |
+| ------------------------------- | ----------------------------------- | ----------------------------- |
+| Ride                            | WASD / arrows                       | Left stick / D-pad            |
+| Attack                          | Automatic                           | Automatic                     |
+| Gallop                          | Space / Gallop button               | A                             |
+| Develop camp                    | B / Develop camp                    | X                             |
+| Pack and choose route           | M / Pack & migrate                  | Y                             |
+| Cycle unlocked formations       | F / Formation button                | Right bumper                  |
+| Clan chronicle                  | Tab / J / chronicle button          | View                          |
+| Pause / resume / close planning | Escape / P                          | Start / B                     |
+| Navigate menus                  | Tab / Shift+Tab                     | Stick / D-pad                 |
+| Confirm                         | Enter / Space / click               | A                             |
+| Zoom in / out                   | + / − / mouse wheel                 | RT / LT                       |
+| Reset zoom                      | 0 / percentage button               | Right stick click             |
+| Fullscreen                      | F11 / Alt+Enter / fullscreen button | —                             |
+| Quit                            | Quit game / window close            | Navigate to Quit game, then A |
 
 Caravan guard keeps riders near the clan and reduces clan damage. Encirclement circles nearby enemies and rewards moving fire. Charging wedge follows your Khan and turns gallop into an attack. Feigned retreat spreads riders, accelerates moving volleys, and gathers shards from farther away. Touch preview supports dragging to ride and tapping command buttons.
 
@@ -211,7 +200,7 @@ To preserve existing profiles, native saves retain the original internal **Gloam
 
 **Continue expedition** resumes the latest full save. **Saved expeditions**, on the title, pause, and results screens, offers three manual slots plus an autosave, with location, journey time, population, level, and save date. Overwriting, deleting, and loading over a live expedition require confirmation. Loaded expeditions open paused (or at their unresolved camp story); no simulation runs while the game is closed. **Save and return to title** keeps the current journey. **New Game** starts fresh; the existing **Continue clan camp** still carries only the portable camp into a fresh journey.
 
-Autosaves run every 30 active seconds, on pausing, after progression/story/travel checkpoints, and before a normal desktop close or Quit. Normal saves preserve the Khan and succession timer, research and unspent knowledge, resources and facilities, migration and objectives, story transcripts, enemies, projectiles, dropped XP, and ability/encounter cooldowns. Developer and cheated runs cannot overwrite normal saves. Manual slots remain available after defeat or victory.
+Autosaves run every 30 active seconds, on pausing, after progression/story/travel checkpoints, and before a normal desktop close or Quit. Normal saves preserve the Khan and succession timer, resources and facilities, migration and objectives, story transcripts, enemies, projectiles, dropped XP, and ability/encounter cooldowns. Developer and cheated runs cannot overwrite normal saves. Manual slots remain available after defeat or victory.
 
 Profile preferences remain in `profile.json`; full saves use `expedition-auto.json` and `expedition-slot-1.json` through `expedition-slot-3.json` beside it. Writes are validated, queued, flushed, and atomically renamed, with a previous-save `.bak` recovery copy. Damaged or incompatible slots show their status; failed saves never report success. A failed close-time save lets you keep playing and retry or explicitly quit without saving. Native saves never use the install directory or localStorage. Browser preview saves remain separate. See [the save-system contract](docs/expedition-saves.md).
 
@@ -220,7 +209,7 @@ Profile preferences remain in `profile.json`; full saves use `expedition-auto.js
 ```text
 src/game/config.ts             Balance, world, and journey timings (seconds)
 src/game/types.ts              Run, clan, and snapshot contracts
-src/game/state/run.ts          Experience, traditions, run lifecycle
+src/game/state/run.ts          Experience and run lifecycle
 src/game/state/khan.ts         Khan presence, lethal hits, and active-time succession
 src/game/state/clan.ts         Economy, construction, migration, victory
 src/game/state/camp.ts         Typed camp effects, neutral defaults, and once-only grants
@@ -229,10 +218,6 @@ src/game/data/nomadicCamp.ts   Current camp building registry and level effects
 src/game/state/nomadicCamp.ts  Validated building purchases and compatibility projections
 src/game/data/landscapes.ts    Twelve location palettes, landmarks, vegetation, water, weather
 src/game/data/enemies.ts       Five enemies, two elites, and the Skybreaker
-src/game/data/patrons.ts       Eight patrons, playstyles, symbols, and descriptions
-src/game/data/upgrades.ts      Patron technologies, ranks, and prerequisites
-src/game/state/patrons.ts      Neutral patron effects, damage, recovery, and revival
-src/game/systems/PatronSupport.ts Ancestral riders, slowing fields, pulse, and camp ward
 src/game/assets/painterlyArt.ts Shared painted atlases, sizing, collision alignment, effects
 src/game/assets/SteppeLandscape.ts Painterly ground, riverbanks, weather, regional scenery
 src/game/assets/landscapeLayout.ts Seeded scenery placement and clear caravan corridor
@@ -243,7 +228,6 @@ src/game/scenes/ArenaScene.ts  Arena coordinator
 src/ui/GameUI.ts               Full-window HUD, title/pause menus, focus and input
 src/ui/menuContent.ts          Camp, route, chronicle, settings, and help panels
 src/ui/progressionTree.ts      Shared data-driven progression tree renderer
-src/ui/researchContent.ts      Patron branches, ranks, and research state
 src/ui/campContent.ts          Legacy camp branch and node rendering
 src/ui/campModel.ts            Camp panorama and nameplate composition
 src/ui/nomadicCampModel.ts     Building locations, chooser, previews, and upgrade popovers
@@ -255,7 +239,7 @@ scripts/                      Build staging, packaging, icon, SteamPipe preparat
 
 See [the arena module map and simulation order](docs/arena-scene.md) for scene responsibilities.
 
-Actors use bounded pools and a spatial grid. Combat, economy, and physics stop in menus and on focus loss. Construction, route rewards, and banked knowledge points live in renderer-independent state modules. The renderer keeps sandboxing, context isolation, and disabled Node integration. `window.__gloam` remains a development-only test/inspection hook, absent from production.
+Actors use bounded pools and a spatial grid. Combat, economy, and physics stop in menus and on focus loss. Construction, route rewards, and XP levels live in renderer-independent state modules. The renderer keeps sandboxing, context isolation, and disabled Node integration. `window.__gloam` remains a development-only test/inspection hook, absent from production.
 
 ## Checks
 
@@ -367,7 +351,7 @@ For a focused application review, explicitly name the relevant specs; both smoke
 tests are still included:
 
 ```sh
-PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e:changed -- origin/main --spec=mounted-tactics --spec=patron-effects
+PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e:changed -- origin/main --spec=mounted-tactics --spec=camp-combat
 ```
 
 Repeat `--spec=pattern` for each affected area. This is partial review coverage;

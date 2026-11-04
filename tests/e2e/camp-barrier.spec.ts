@@ -1,11 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 import { GAME } from '../../src/game/config';
 import {
-  selectCampBuilding,
-  closeOverlayOrPause,
   buyNode,
+  closeOverlayOrPause,
   expectFrozen,
   openTitle,
+  selectCampBuilding,
   startExpedition,
 } from './helpers';
 
@@ -150,12 +150,11 @@ test('the barricade encloses new crafts and households while both attack and war
     enemy.health = enemy.maxHealth = 1000;
     enemy.definition = { ...enemy.definition, speed: 0 };
     scene.updateEnemies(0.01);
-    scene.run.patrons.guardian.wardDamage = 0.65;
+    scene.run.clan.paths.sanctuary = ['ancestral-ward'];
     scene.spatial.rebuild(scene.enemies.getChildren());
-    scene.patronSupport.update(scene.run, 0.01, scene.player, scene.camp, scene.spatial, {
-      damage: (target: any, amount: number) => scene.damageEnemy(target, amount),
-      volley: () => {},
-    });
+    scene.supportTimer = 999;
+    scene.wardTimer = 0;
+    scene.updateSupport(0.01);
     return {
       resolve: scene.run.clan.integrity,
       health: enemy.health,
@@ -163,7 +162,7 @@ test('the barricade encloses new crafts and households while both attack and war
     };
   });
   expect(attack.resolve).toBeCloseTo(96.85);
-  expect(attack.health).toBeCloseTo(1000 - 16 * 0.65);
+  expect(attack.health).toBeCloseTo(1000 - 16 * 1.5);
   expect(attack.speed).toBe(0);
   await page.evaluate(() => {
     (window as any).__gloam.scene.run.clan.integrity = 25;

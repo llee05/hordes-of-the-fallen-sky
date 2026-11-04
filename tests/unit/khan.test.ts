@@ -1,7 +1,5 @@
-import { RESEARCH } from '../../src/game/data/research';
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
-import { UPGRADES } from '../../src/game/data/upgrades';
 import { advanceClan, beginMigration } from '../../src/game/state/clan';
 import {
   advanceSuccession,
@@ -9,10 +7,8 @@ import {
   damageKhan,
   isKhanActive,
 } from '../../src/game/state/khan';
-import { advancePatrons, rewardPatronKill } from '../../src/game/state/patrons';
-import { applyUpgrade, redeemMasteredResearch } from '../../src/game/state/run';
-import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import type { RunPhase } from '../../src/game/types';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 function expedition() {
   const run = createRun();
@@ -41,12 +37,8 @@ describe('choosing a new Khan', () => {
     const run = expedition();
     run.stats.maxHealth = 140;
     run.stats.damage = 25;
-    run.pendingUpgrades = 3;
-    run.upgrades.power = 2;
     run.clan.paths.ger = ['hearthkeepers'];
-    run.patrons.banner.riders = 4;
     const clan = structuredClone(run.clan);
-    const learned = structuredClone(run.upgrades);
     damageKhan(run, 1000);
     expect(advanceSuccession(run, 9.5)).toBe(false);
     expect(run.health).toBe(0);
@@ -54,11 +46,8 @@ describe('choosing a new Khan', () => {
     expect(run.khan).toEqual({ generation: 2, successionRemaining: 0 });
     expect(run.health).toBe(140);
     expect(run.stats.damage).toBe(25);
-    expect(run.upgrades).toEqual(learned);
-    expect(run.pendingUpgrades).toBe(3);
     expect(run.clan.paths).toEqual(clan.paths);
     expect(run.clan.population).toBe(clan.population);
-    expect(run.patrons.banner.riders).toBe(4);
     expect(advanceSuccession(run, 100)).toBe(false);
     expect(run.khan.generation).toBe(2);
   });
@@ -71,7 +60,7 @@ describe('choosing a new Khan', () => {
       'epilogue',
       'story-log',
       'paused',
-      'upgrade',
+
       'building',
       'route',
       'journal',
@@ -92,51 +81,6 @@ describe('choosing a new Khan', () => {
     damageKhan(run, 1000);
     for (const dt of [0, -1, Infinity, NaN]) expect(advanceSuccession(run, dt)).toBe(false);
     expect(run.khan.successionRemaining).toBe(10);
-  });
-
-  it('keeps Last Ember with the same Khan and does not refresh its charge for successors', () => {
-    const run = expedition();
-    run.patrons.hearth.revives = 1;
-    expect(damageKhan(run, 1000)).toBe('revived');
-    expect(run.health).toBe(40);
-    expect(run.khan).toEqual({ generation: 1, successionRemaining: 0 });
-    expect(damageKhan(run, 1000)).toBe('fallen');
-    advanceSuccession(run, 10);
-    expect(run.patrons.hearth.revives).toBe(0);
-    expect(run.khan.generation).toBe(2);
-    expect(damageKhan(run, 1000)).toBe('fallen');
-    expect(run.khan.successionRemaining).toBe(10);
-  });
-
-  it('does not resurrect a fallen Khan through regeneration, hunt rewards, or healing research', () => {
-    const run = expedition();
-    run.patrons.hearth.regeneration = 100;
-    run.patrons.hunt.killHeal = 100;
-    run.patrons.banner.resolveOnKill = 0.15;
-    damageKhan(run, 1000);
-    run.clan.momentum = 1;
-    run.clan.integrity = 50;
-    advancePatrons(run, 100);
-    rewardPatronKill(run);
-    expect(run.health).toBe(0);
-    expect(run.clan.integrity).toBe(50.15);
-    run.phase = 'upgrade';
-    run.pendingUpgrades = 2;
-    expect(
-      applyUpgrade(
-        run,
-        UPGRADES.find((upgrade) => upgrade.id === 'vitality')!,
-      ),
-    ).toBe(true);
-    expect(run.stats.maxHealth).toBe(120);
-    expect(run.health).toBe(0);
-    for (const upgrade of RESEARCH.filter((t) => !t.unavailableReason))
-      run.upgrades[upgrade.id] = upgrade.maxRank;
-    expect(redeemMasteredResearch(run)).toBe(true);
-    expect(run.health).toBe(0);
-    run.phase = 'playing';
-    advanceSuccession(run, 10);
-    expect(run.health).toBe(120);
   });
 
   it('keeps the countdown and zero health through a crossing arrival despite recovery bonuses', () => {

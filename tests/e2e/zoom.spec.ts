@@ -104,7 +104,7 @@ test('menus ignore zoom input and search remains editable; the chosen view survi
     const zoom = (await page.getByRole('group', { name: 'Battlefield zoom' }).boundingBox())!;
     expect(zoom.x).toBeGreaterThanOrEqual(0);
     expect(zoom.x + zoom.width).toBeLessThanOrEqual(viewport.width);
-    for (const id of ['dash', 'research', 'build', 'field-guide']) {
+    for (const id of ['dash', 'build', 'field-guide']) {
       const control = (await page.locator(`#${id}`).boundingBox())!;
       expect(
         zoom.x < control.x + control.width &&

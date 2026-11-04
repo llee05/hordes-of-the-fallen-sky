@@ -53,9 +53,7 @@ test(
     await press(9);
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
     await press(13);
-    await expect(page.getByRole('button', { name: 'Patron tech tree', exact: true })).toBeFocused();
-    await press(13);
-    await expect(page.getByRole('button', { name: 'Start a new run' })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Start a new run', exact: true })).toBeFocused();
     await press(0);
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   },
@@ -101,7 +99,7 @@ test(
     await page.getByRole('button', { name: 'Start a new run' }).click();
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
     await expect(page.locator('#timer')).toHaveText('00:00');
-    await expect(page.locator('#blessing-count')).toHaveText('0');
+    await expect(page.locator('#level')).toHaveText('01');
     expect(errors).toEqual([]);
   },
 );

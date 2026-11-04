@@ -1,31 +1,14 @@
-import { NOMADIC_BUILDINGS } from '../game/data/nomadicCamp';
-import type { NomadicBuildingId } from '../shared/nomadicCamp.js';
-import { normalizeVisualSettings } from '../shared/visualSettings';
-import {
-  dangerWarningsContent,
-  eliteMarkersContent,
-  majorLossMessage,
-} from './combatReadabilityContent';
-import { finalChapter, passageBonus, passageProgress } from '../game/state/finalStand';
-import { expeditionMetricsContent } from './expeditionMetricsContent';
-import { SUCCESSORS } from '../game/data/successors';
-import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
-import { AREA_ENEMIES } from '../game/data/enemies';
-import { CROSSING_ENCOUNTERS } from '../game/data/crossings';
-import { encounterPlan } from '../game/state/encounters';
-import { FIELD_OBJECTIVES } from '../game/data/fieldObjectives';
-import { kurultaiAvailable, bannerFormation } from '../game/state/researchLeadership';
+import { AUDIO_REFERENCE_CUES, type SoundKind } from '../game/audio/soundPalette';
 import { GAME } from '../game/config';
-import { saveMenu, type SaveConfirmation } from './saveContent';
-import { isSaveSlot } from '../shared/expeditionSave';
-import { clanMark } from './artwork';
-import { UIMotion } from './Motion';
+import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
 import { FORMATIONS, startingTradition } from '../game/data/clan';
-import { arrivalLocation, availableDestinations, currentLocation } from '../game/state/journey';
+import { CROSSING_ENCOUNTERS } from '../game/data/crossings';
+import { AREA_ENEMIES } from '../game/data/enemies';
+import { FIELD_OBJECTIVES } from '../game/data/fieldObjectives';
 import { INTRO_SLIDES, introImageUrl } from '../game/data/intro';
-import { introMenu } from './introContent';
-import { storyAct } from '../game/data/story';
-import { storyMenu, epilogueMenu, storyLogMenu, defeatAccountContent } from './storyContent';
+import { NOMADIC_BUILDINGS } from '../game/data/nomadicCamp';
+import { COMPANIONS, storyAct } from '../game/data/story';
+import { SUCCESSORS } from '../game/data/successors';
 import type { ArenaScene } from '../game/scenes/ArenaScene';
 import {
   assignedWorkers,
@@ -35,16 +18,32 @@ import {
   clanDoctrine,
   riderCount,
 } from '../game/state/clan';
-import { currentReaction } from '../game/state/legacy';
-import { COMPANIONS } from '../game/data/story';
-import { currentGuidance, clanWarning } from '../game/state/guidance';
-import { guidanceContent } from './guidanceContent';
 import { economyForecast } from '../game/state/economy';
-import { foodOutlook, FORECAST_NOTE, signedRate } from './economyContent';
-import { formatTime } from '../game/state/run';
+import { encounterPlan } from '../game/state/encounters';
+import { finalChapter, passageBonus, passageProgress } from '../game/state/finalStand';
+import { clanWarning, currentGuidance } from '../game/state/guidance';
+import { arrivalLocation, availableDestinations, currentLocation } from '../game/state/journey';
 import { isKhanActive } from '../game/state/khan';
+import { currentReaction } from '../game/state/legacy';
+import { formatTime } from '../game/state/run';
 import type { BuildingId, HudSnapshot, RunPhase } from '../game/types';
 import type { GamePlatform } from '../platform/GamePlatform';
+import { AUDIO_CHANNELS, normalizeAudioMix, type AudioChannel } from '../shared/audioSettings';
+import { isSaveSlot } from '../shared/expeditionSave';
+import type { NomadicBuildingId } from '../shared/nomadicCamp.js';
+import { normalizeVisualSettings } from '../shared/visualSettings';
+import { clanMark } from './artwork';
+import {
+  dangerWarningsContent,
+  eliteMarkersContent,
+  majorLossMessage,
+} from './combatReadabilityContent';
+import { developerConsole, developerMenu } from './developerContent';
+import { foodOutlook, FORECAST_NOTE, signedRate } from './economyContent';
+import { expeditionMetricsContent } from './expeditionMetricsContent';
+import { guidanceContent } from './guidanceContent';
+import { introMenu } from './introContent';
+import type { JournalTab } from './menuContent';
 import {
   buildingMenu,
   helpMenu,
@@ -53,12 +52,10 @@ import {
   settingsMenu,
   startingTraditionMenu,
 } from './menuContent';
-import type { JournalTab } from './menuContent';
-import { researchMenu, selectResearch } from './researchContent';
-import { developerConsole, developerMenu } from './developerContent';
+import { UIMotion } from './Motion';
 import type { TreeViewState } from './progressionTree';
-import { AUDIO_CHANNELS, normalizeAudioMix, type AudioChannel } from '../shared/audioSettings';
-import { AUDIO_REFERENCE_CUES, type SoundKind } from '../game/audio/soundPalette';
+import { saveMenu, type SaveConfirmation } from './saveContent';
+import { defeatAccountContent, epilogueMenu, storyLogMenu, storyMenu } from './storyContent';
 
 const emblem = `<span class="clan-seal">${clanMark('spirit')}</span>`;
 
@@ -105,7 +102,7 @@ export class GameUI {
     }
     root.dataset.phase = 'ready';
     root.innerHTML = `<main class="game-shell" aria-label="Hordes of the Fallen Sky game">
-      <div class="arena-wrap" id="arena-wrap" tabindex="0" aria-label="Game arena. WASD to ride. Space to gallop. T for the tech tree. B to build. M to migrate. F for formation. Tab or J for the clan chronicle. Escape to pause. Plus and minus to zoom, zero to reset.">
+      <div class="arena-wrap" id="arena-wrap" tabindex="0" aria-label="Game arena. WASD to ride. Space to gallop. B to build. M to migrate. F for formation. Tab or J for the clan chronicle. Escape to pause. Plus and minus to zoom, zero to reset.">
         <div id="game-canvas"></div>
         <div class="screen-shade" aria-hidden="true"></div>
         <div class="game-hud" id="game-hud" inert>
@@ -143,9 +140,9 @@ export class GameUI {
               '',
             )}</div><small id="successor-selection">1 / 2 · controller left / right</small></aside>
           <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span>BOW <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
-          <section class="tradition-hud" aria-label="Run progression"><span>TRADITION <b id="level">01</b> <small>· <span id="blessing-count">0</span> LEARNED</small></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small><button id="research" class="research-button" aria-label="Open patron tech tree" aria-keyshortcuts="T">Tech tree <kbd>T</kbd><span id="research-points">0</span></button></section>
+          <section class="tradition-hud" aria-label="Run progression"><span>LEVEL <b id="level">01</b></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small></section>
           <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
-          <nav class="command-dock" aria-label="Clan commands"><button id="rally-host" class="command-button" hidden title="Rally the host (R)">Rally host <kbd>R</kbd></button><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">${clanMark('bow')}</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
+          <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">${clanMark('bow')}</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
           <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><div><p id="clan-message"></p><p id="companion-reaction" class="companion-reaction" hidden></p></div></div>
         </div>
         <div id="overlay" class="overlay ready-screen" role="dialog" aria-modal="true" aria-labelledby="overlay-title" tabindex="-1"></div>
@@ -160,7 +157,6 @@ export class GameUI {
     this.get('pause').addEventListener('click', () => scene.togglePause());
     this.get('journal').addEventListener('click', () => scene.toggleJournal());
     this.get('dash').addEventListener('click', () => scene.dash());
-    this.get('research').addEventListener('click', () => scene.openResearch());
     this.get('build').addEventListener('click', () => scene.openBuildings());
     this.get('migrate').addEventListener('click', () => scene.openRoutes());
     this.get('successor-choice').addEventListener('click', (event) => {
@@ -168,7 +164,6 @@ export class GameUI {
         .successor;
       if (trait === 'outrider' || trait === 'hearthguard') scene.selectSuccessor(trait);
     });
-    this.get('rally-host').addEventListener('click', () => scene.rallyHost());
     this.get('formation').addEventListener('click', () => scene.cycleFormation());
     this.get('zoom-out').addEventListener('click', () => scene.changeZoom(-1));
     this.get('zoom-in').addEventListener('click', () => scene.changeZoom(1));
@@ -180,7 +175,6 @@ export class GameUI {
         scene.toggleGuidance();
         this.get('arena-wrap').focus();
       } else if (action === 'build') scene.openBuildings();
-      else if (action === 'research') scene.openResearch();
       else if (action === 'formation') scene.cycleFormation();
       else if (action === 'migrate') scene.openRoutes();
     });
@@ -209,7 +203,6 @@ export class GameUI {
         Object.assign(this.treeView(), {
           campPopup: !!input.value.trim(),
           campTarget: 'search',
-          recipes: false,
           expanded: false,
         });
       this.renderPhase(this.lastSnapshot);
@@ -457,12 +450,6 @@ export class GameUI {
           ? 'SPACE / READY'
           : `RECHARGING ${((1 - dashReady) * dashCooldown).toFixed(1)}s`,
     );
-    this.text('research-points', run.pendingUpgrades);
-    this.get('research').classList.toggle('has-points', run.pendingUpgrades > 0);
-    this.get('research').setAttribute(
-      'aria-label',
-      `Open patron tech tree, ${run.pendingUpgrades} knowledge points`,
-    );
     this.text(
       'momentum',
       run.combat.ready
@@ -525,17 +512,13 @@ export class GameUI {
             ? 'The roads are open. Pack up with M.'
             : `Routes open in ${Math.ceil(GAME.clan.minimumCamp - clan.stageTime)}s. Build up the camp with B.`,
     );
-    const formationTitle = run.upgrades['su-banner-formation']
-      ? `Banner: ${bannerFormation(run)}`
-      : FORMATIONS[clan.formation].title;
+    const formationTitle = FORMATIONS[clan.formation].title;
     if (this.get('formation-name').textContent !== formationTitle) {
       this.text('formation-name', formationTitle);
       this.motion.notice(this.get('formation').querySelector<HTMLElement>('.command-icon')!);
     }
     (this.get('build') as HTMLButtonElement).disabled =
       run.phase !== 'playing' || clan.stage === 'migration';
-    this.get('rally-host').hidden = !(run.upgrades['su-great-kurultai'] ?? 0);
-    (this.get('rally-host') as HTMLButtonElement).disabled = !kurultaiAvailable(run);
     const migrate = this.get('migrate') as HTMLButtonElement;
     const routeAvailable = canMigrate(run);
     if (routeAvailable && migrate.dataset.available === 'false')
@@ -547,10 +530,6 @@ export class GameUI {
     this.get('synergy').hidden = !burningTempest(run);
     this.get('boss-bar').hidden = bossHealth === undefined;
     if (bossHealth !== undefined) this.meter('boss-fill', bossHealth * 100);
-    this.text(
-      'blessing-count',
-      Object.values(run.upgrades).reduce((sum, stacks) => sum + stacks, 0),
-    );
     this.text('best', best > 0 ? formatTime(best) : '— — : — —');
     this.text('clan-message', clan.message);
     this.layoutGuidance();
@@ -592,11 +571,7 @@ export class GameUI {
     if (guide.hidden) return;
     const objective = this.get('objective').closest<HTMLElement>('.objective-hud')!;
     const top = Math.max(332, objective.getBoundingClientRect().bottom + 12);
-    const bottom =
-      Math.min(
-        this.get('research').getBoundingClientRect().top,
-        this.get('dash').getBoundingClientRect().top,
-      ) - 12;
+    const bottom = this.get('dash').getBoundingClientRect().top - 12;
     guide.style.top = `${top}px`;
     guide.style.maxHeight = `${Math.max(48, bottom - top)}px`;
     guide.style.overflowY = 'auto';
@@ -654,8 +629,7 @@ export class GameUI {
   private renderPhase(snapshot: HudSnapshot): void {
     const { run } = snapshot;
     const preserveTree =
-      run.phase === this.phase &&
-      ['upgrade', 'building', 'route', 'saves', 'traditions'].includes(run.phase);
+      run.phase === this.phase && ['building', 'route', 'saves', 'traditions'].includes(run.phase);
     const scroll = preserveTree
       ? this.overlay.querySelector(
           '.tree-scroll, .migration-scroll, .starting-traditions .panel-body',
@@ -707,7 +681,7 @@ export class GameUI {
     // Transfer focus before hiding or removing the focused menu control.
     if (run.phase === 'playing') this.get('arena-wrap').focus({ preventScroll: true });
     this.overlay.hidden = run.phase === 'playing';
-    this.overlay.className = `overlay ${run.phase === 'console' ? 'console-screen' : run.phase === 'building' ? 'planning camp-planning' : run.phase === 'intro' ? 'intro-screen' : run.phase === 'ready' ? 'ready-screen' : ['route', 'journal', 'upgrade', 'settings', 'help', 'story', 'epilogue', 'story-log', 'developer', 'saves', 'traditions'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
+    this.overlay.className = `overlay ${run.phase === 'console' ? 'console-screen' : run.phase === 'building' ? 'planning camp-planning' : run.phase === 'intro' ? 'intro-screen' : run.phase === 'ready' ? 'ready-screen' : ['route', 'journal', 'settings', 'help', 'story', 'epilogue', 'story-log', 'developer', 'saves', 'traditions'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
     if (run.phase === 'intro') this.overlay.setAttribute('aria-describedby', 'intro-caption');
     else this.overlay.removeAttribute('aria-describedby');
     const labels: Record<RunPhase, string> = {
@@ -720,7 +694,6 @@ export class GameUI {
       playing: 'THE CLAN ENDURES',
       paused: 'EXPEDITION PAUSED',
       saves: 'SAVED EXPEDITIONS',
-      upgrade: 'PATRON TECH TREE',
       building: 'DEVELOPING THE CAMP',
       route: 'CHOOSING A ROUTE',
       journal: 'READING THE CLAN CHRONICLE',
@@ -754,17 +727,16 @@ export class GameUI {
     else if (run.phase === 'epilogue') this.overlay.innerHTML = epilogueMenu(run);
     else if (run.phase === 'story-log') this.overlay.innerHTML = storyLogMenu(run);
     else if (run.phase === 'ready') {
-      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu">${latestSave ? `<button class="menu-button featured" data-action="continue-expedition" data-slot="${latestSave.slot}" data-primary>CONTINUE EXPEDITION <span>→</span></button>` : ''}<button class="menu-button featured" data-action="begin" data-primary>NEW GAME <span>→</span></button>${this.platform.profile.camp ? '<button class="menu-button" data-action="continue-camp" title="Take your saved camp and stores into a new expedition. Patron research and battle start over.">Continue clan camp</button>' : ''}${savedMenu}<button class="menu-button" data-action="starting-traditions">Starting tradition: ${startingTradition(run.startingTradition).title}</button><button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${developer}${quit}</nav><button class="story-preference" data-action="story-mode" aria-pressed="${run.story.enabled}">Camp scenes: ${run.story.enabled ? 'On' : 'Off'}</button><p class="title-caption">Two acts. Four pastures. One people to carry through.</p></section>`;
+      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu">${latestSave ? `<button class="menu-button featured" data-action="continue-expedition" data-slot="${latestSave.slot}" data-primary>CONTINUE EXPEDITION <span>→</span></button>` : ''}<button class="menu-button featured" data-action="begin" data-primary>NEW GAME <span>→</span></button>${this.platform.profile.camp ? '<button class="menu-button" data-action="continue-camp" title="Take your saved camp and stores into a new expedition. Battle starts over.">Continue clan camp</button>' : ''}${savedMenu}<button class="menu-button" data-action="starting-traditions">Starting tradition: ${startingTradition(run.startingTradition).title}</button><button class="menu-button" data-action="intro">Replay introduction</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${developer}${quit}</nav><button class="story-preference" data-action="story-mode" aria-pressed="${run.story.enabled}">Camp scenes: ${run.story.enabled ? 'On' : 'Off'}</button><p class="title-caption">Two acts. Four pastures. One people to carry through.</p></section>`;
     } else if (run.phase === 'paused') {
-      this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">The steppe holds still until you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="research">Patron tech tree</button><button class="menu-button" data-action="restart">Start a new run</button>${savedMenu}<button class="menu-button" data-action="save-title">${snapshot.developerRun ? 'Return to title' : 'Save and return to title'}</button><button class="menu-button" data-action="story-log">Our remembered road</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${developer}${quit}</nav></section>`;
+      this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">The steppe holds still until you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="restart">Start a new run</button>${savedMenu}<button class="menu-button" data-action="save-title">${snapshot.developerRun ? 'Return to title' : 'Save and return to title'}</button><button class="menu-button" data-action="story-log">Our remembered road</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${developer}${quit}</nav></section>`;
     } else if (run.phase === 'building')
       this.overlay.innerHTML = buildingMenu(run, this.treeView(), this.campSelection);
     else if (run.phase === 'route') {
       if (!availableDestinations(run).some((location) => location.id === this.destinationSelection))
         this.destinationSelection = arrivalLocation(run).id;
       this.overlay.innerHTML = routeMenu(run, this.destinationSelection);
-    } else if (run.phase === 'upgrade') this.overlay.innerHTML = researchMenu(run, this.treeView());
-    else if (run.phase === 'journal') this.overlay.innerHTML = journalMenu(run, this.journalTab);
+    } else if (run.phase === 'journal') this.overlay.innerHTML = journalMenu(run, this.journalTab);
     else if (run.phase === 'settings')
       this.overlay.innerHTML = settingsMenu(
         this.platform.profile.muted,
@@ -860,7 +832,6 @@ export class GameUI {
     Object.assign(this.treeView(), {
       campPopup: false,
       expanded: false,
-      recipes: false,
       query: '',
     });
     this.renderPhase(this.lastSnapshot);
@@ -886,12 +857,7 @@ export class GameUI {
       this.scene.auditionAudio(button.dataset.audioReference as SoundKind);
       return;
     }
-    if (
-      action !== 'sound' &&
-      !button.dataset.building &&
-      !button.dataset.research &&
-      !button.dataset.estateKind
-    )
+    if (action !== 'sound' && !button.dataset.building && !button.dataset.estateKind)
       this.scene.playInterfaceSound();
     if (
       button.dataset.nomadicPurchase &&
@@ -914,7 +880,6 @@ export class GameUI {
         campSlot:
           button.dataset.nomadicSlot === undefined ? undefined : Number(button.dataset.nomadicSlot),
         query: '',
-        recipes: false,
         campFocus:
           this.lastSnapshot.run.clan.nomadicCamp &&
           (this.lastSnapshot.run.clan.nomadicCamp.slots.some(
@@ -936,7 +901,6 @@ export class GameUI {
         campPopup: true,
         campTarget: 'encampment',
         node: undefined,
-        recipes: false,
         expanded: false,
         campFocus: 'camp-encampment',
       });
@@ -947,7 +911,6 @@ export class GameUI {
         campTarget: 'internal',
         campInternal: button.dataset.campInternal,
         node: undefined,
-        recipes: false,
         expanded: false,
         campFocus: button.dataset.focusKey,
       });
@@ -958,7 +921,6 @@ export class GameUI {
         campTarget: 'slot',
         campSlot: Number(button.dataset.campSlot),
         node: undefined,
-        recipes: false,
         expanded: false,
         campFocus: button.dataset.focusKey,
       });
@@ -968,7 +930,6 @@ export class GameUI {
         campPopup: true,
         campTarget: 'economy',
         expanded: false,
-        recipes: false,
         campFocus: button.dataset.focusKey,
       });
       this.renderPhase(this.lastSnapshot);
@@ -985,39 +946,6 @@ export class GameUI {
         button.dataset.estateId!,
         Number(button.dataset.estateRank),
       );
-    } else if (button.dataset.progressionJump && this.lastSnapshot) {
-      const phase = button.dataset.progressionJump === 'camp' ? 'building' : 'upgrade';
-      const view = this.treeView(phase);
-      if (
-        phase === 'building' &&
-        this.lastSnapshot.run.clan.nomadicCamp &&
-        NOMADIC_BUILDINGS.some((b) => b.id === button.dataset.branch)
-      ) {
-        view.nomadicSelection = button.dataset.branch;
-        view.campFocus = `nomadic-site-${button.dataset.branch}`;
-      }
-      Object.assign(view, {
-        branch: button.dataset.branch,
-        node: button.dataset.targetNode,
-        category: 'all',
-        query: '',
-        overview: false,
-        recipes: false,
-      });
-      if (phase === 'building') {
-        this.campSelection = button.dataset.branch as BuildingId;
-        view.campSlot = undefined;
-        view.expanded = true;
-        view.campPopup = true;
-        view.campTarget = 'building';
-      }
-      if (this.phase === phase) this.renderPhase(this.lastSnapshot);
-      else this.scene.switchProgression(phase);
-      this.overlay
-        .querySelector<HTMLButtonElement>(
-          '.tree-node[aria-pressed="true"], .camp-path-node[aria-pressed="true"]',
-        )
-        ?.focus();
     } else if (button.dataset.treeZoom && this.lastSnapshot) {
       this.treeView().zoom =
         button.dataset.treeZoom === 'reset'
@@ -1034,35 +962,17 @@ export class GameUI {
       this.treeView().pinned = button.dataset.treePin;
       this.renderPhase(this.lastSnapshot);
     } else if (button.dataset.treeSelect && this.lastSnapshot) {
-      if (this.phase === 'upgrade') selectResearch(this.treeView(), button.dataset.treeSelect);
-      else this.treeView().node = button.dataset.treeSelect;
+      this.treeView().node = button.dataset.treeSelect;
       this.renderPhase(this.lastSnapshot);
       this.overlay.querySelector('[data-scroll-key="node-details"]')?.scrollTo({ top: 0 });
     } else if (button.dataset.treeBranchSelect && this.lastSnapshot) {
       Object.assign(this.treeView(), {
         branch: button.dataset.treeBranchSelect,
         node: undefined,
-        confirmResearch: undefined,
         overview: false,
-        recipes: false,
       });
       this.renderPhase(this.lastSnapshot);
     } else if (button.hasAttribute('data-tree-overview') && this.lastSnapshot) {
-      Object.assign(this.treeView(), { overview: true, recipes: false });
-      this.renderPhase(this.lastSnapshot);
-    } else if (button.hasAttribute('data-tree-recipes') && this.lastSnapshot) {
-      Object.assign(this.treeView(), {
-        recipes: !this.treeView().recipes,
-        overview: false,
-        ...(this.phase === 'building'
-          ? {
-              campPopup: true,
-              campTarget: 'building',
-              expanded: true,
-              campFocus: button.dataset.focusKey,
-            }
-          : {}),
-      });
       this.renderPhase(this.lastSnapshot);
     } else if (button.hasAttribute('data-camp-expand') && this.lastSnapshot) {
       this.treeView().expanded = !this.treeView().expanded;
@@ -1075,7 +985,6 @@ export class GameUI {
         campPopup: true,
         campTarget: 'building',
         expanded: false,
-        recipes: false,
         campSlot:
           button.dataset.campPlot === undefined ? undefined : Number(button.dataset.campPlot),
         campFocus: button.dataset.focusKey,
@@ -1144,7 +1053,6 @@ export class GameUI {
     else if (action === 'settings' || action === 'help') this.scene.openUtilityMenu(action);
     else if (action === 'back') this.scene.closePlanning();
     else if (action === 'quit') void this.platform.desktop?.quit();
-    else if (action === 'research') this.scene.openResearch();
     else if (action === 'build') this.scene.openBuildings();
     else if (action === 'routes') this.scene.openRoutes();
     else if (action === 'sound') {
@@ -1163,19 +1071,6 @@ export class GameUI {
         void this.get('arena-wrap')
           .parentElement!.requestFullscreen()
           .catch(() => undefined);
-    } else if (button.dataset.research) {
-      if (
-        button.dataset.choice &&
-        this.treeView().confirmResearch !== button.dataset.research &&
-        this.lastSnapshot
-      ) {
-        this.treeView().confirmResearch = button.dataset.research;
-        this.renderPhase(this.lastSnapshot);
-        this.overlay.querySelector<HTMLButtonElement>('.tree-purchase')?.focus();
-      } else {
-        this.treeView().confirmResearch = undefined;
-        this.scene.research(button.dataset.research, Number(button.dataset.rank));
-      }
     } else if (button.dataset.building) {
       this.treeView().node = undefined;
       this.scene.construct(
@@ -1294,7 +1189,7 @@ export class GameUI {
       return;
     }
     if (
-      ['upgrade', 'building', 'route', 'developer'].includes(this.phase) &&
+      ['building', 'route', 'developer'].includes(this.phase) &&
       ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) &&
       !(event.target instanceof HTMLInputElement)
     ) {
@@ -1308,7 +1203,7 @@ export class GameUI {
     if (button && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
       event.preventDefault();
       event.stopPropagation();
-      const tabs: JournalTab[] = ['journey', 'clan', 'traditions', 'story'];
+      const tabs: JournalTab[] = ['journey', 'clan', 'story'];
       this.selectJournalTab(
         tabs[
           (tabs.indexOf(this.journalTab) + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) %

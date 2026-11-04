@@ -101,7 +101,6 @@ export const SOUND_CUES = {
     layer(WOOD, 0.24, { delay: 0.13, jitter: 0.025 }),
     layer(LEATHER, 0.12, { delay: 0.2 }),
   ]),
-  research: signal(0.23, [layer(PAPER, 0.65), layer(['woodChime'], 0.15, { delay: 0.09 })]),
   level: signal(0.25, [layer(['woodChime'], 0.62), layer(DRUM, 0.22, { delay: 0.08 })]),
   spell: world(
     0.28,

@@ -4,7 +4,7 @@ import {
   type NomadicBuildingId,
 } from '../../shared/nomadicCamp.js';
 import { GAME } from '../config';
-import type { CampEffectDefinition, PlayerStats, Doctrine } from '../types';
+import type { CampEffectDefinition, Doctrine, PlayerStats } from '../types';
 
 export interface NomadicBuildingEffects {
   ongoing?: CampEffectDefinition;
@@ -42,12 +42,10 @@ export interface NomadicBuildingEffects {
       | 'merchantInventory'
       | 'rareTradeResources'
       | 'healingEffectiveness'
-      | 'patronBlessings'
       | 'spiritualAbilities'
       | 'rituals'
       | 'corruptionCleansing'
       | 'companionMorale'
-      | 'patronBonuses'
       | 'experienceGain'
       | 'technologyProgression'
       | 'loreDiscoveries',
@@ -311,7 +309,6 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
           clanProtection: C.protection,
         },
       },
-      future: { patronBlessings: C.futureEfficiency },
     }),
   ),
   define(
@@ -341,14 +338,14 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
         multipliers: { riderDamage: C.production },
         bonuses: { resolveRecovery: C.recovery },
       },
-      future: { companionMorale: C.futureEfficiency, patronBonuses: C.futureEfficiency },
+      future: { companionMorale: C.futureEfficiency },
     }),
   ),
   define(
     'storytellers-hearth',
     "Storyteller's Hearth",
     'Spiritual & cultural',
-    'Oral histories preserve knowledge, improving experience and technology progression while lore discoveries await future integration.',
+    'Oral histories preserve knowledge, improving experience and Spirit gain while lore discoveries await future integration.',
     'journal',
     repeat({
       ongoing: { multipliers: { spiritGain: C.production } },

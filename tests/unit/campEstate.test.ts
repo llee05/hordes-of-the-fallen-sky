@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { createLegacyCampRun as createRun } from '../support/legacyCamp';
+import { GAME } from '../../src/game/config';
+import { ENCAMPMENT_TIERS, INTERNAL_DEVELOPMENTS } from '../../src/game/data/campEstate';
+import { BUILDINGS } from '../../src/game/data/clan';
 import {
-  buildStructure,
-  buildingBlocker,
-  assignedWorkers,
-  beginMigration,
-  advanceClan,
-} from '../../src/game/state/clan';
+  ENCAMPMENT_REMNANT,
+  INTERNAL_DEVELOPMENT_REMNANT,
+  estateReaction,
+} from '../../src/game/data/storyReactions';
 import {
   buildingLevel,
   campSlots,
@@ -14,15 +14,15 @@ import {
   estateBlocker,
   purchaseEstate,
 } from '../../src/game/state/campEstate';
-import { BUILDINGS } from '../../src/game/data/clan';
-import { ENCAMPMENT_TIERS, INTERNAL_DEVELOPMENTS } from '../../src/game/data/campEstate';
 import {
-  ENCAMPMENT_REMNANT,
-  INTERNAL_DEVELOPMENT_REMNANT,
-  estateReaction,
-} from '../../src/game/data/storyReactions';
-import { GAME } from '../../src/game/config';
+  advanceClan,
+  assignedWorkers,
+  beginMigration,
+  buildStructure,
+  buildingBlocker,
+} from '../../src/game/state/clan';
 import { rememberClan } from '../../src/game/state/legacy';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 function richCamp() {
   const run = createRun();
   run.phase = 'building';
@@ -88,10 +88,9 @@ describe('legacy checkpoint compatibility: portable clan estate progression', ()
     run.clan.materials = 0;
     expect(purchaseEstate(run, 'internal', 'ancestral-hearth', 1)).toBe(false);
     run.clan.materials = 10000;
-    run.patrons.guardian.cost = 0.9;
     const materials = run.clan.materials;
     expect(purchaseEstate(run, 'encampment', 'encampment-2', 2)).toBe(true);
-    expect(run.clan.materials).toBe(materials - Math.ceil(45 * 0.9));
+    expect(run.clan.materials).toBe(materials - 45);
     expect(estateBlocker(run, 'encampment', 'encampment-3', 3)).toContain('Family gers level 2');
   });
   it('keeps slots, levels, effects, and internal improvements across migration and blocks packed purchases', () => {

@@ -6,8 +6,8 @@ import { advanceClan, beginMigration, canMigrate } from '../../src/game/state/cl
 import { crossingDuration } from '../../src/game/state/economy';
 import {
   arrivalLocation,
-  currentLocation,
   availableDestinations,
+  currentLocation,
 } from '../../src/game/state/journey';
 import { createRun } from '../../src/game/state/run';
 import { openNextStory } from '../../src/game/state/story';
@@ -44,9 +44,7 @@ describe('developer level checkpoints', () => {
       expect(run.clan.integrity).toBe(100);
       expect(run.clan.food).toBeGreaterThan(0);
       expect(run.clan.materials).toBeGreaterThanOrEqual(GAME.developer.materials);
-      expect(run.pendingUpgrades).toBe(GAME.developer.knowledgePoints);
-      expect(run.level).toBe(GAME.developer.knowledgePoints + 1);
-      expect(run.upgrades).toEqual({});
+      expect(run.level).toBe(GAME.developer.experienceLevels + 1);
       expect(run.story.crossings).toHaveLength(level.region);
       expect(openNextStory(run)).toBe(false);
       expect(run.story.records.every((record) => record.status === 'passed')).toBe(true);
@@ -85,7 +83,6 @@ describe('developer level checkpoints', () => {
     createDeveloperRun('chapter:heart-of-the-steppe');
     expect(createRun()).toEqual(normal);
     expect(normal.phase).toBe('ready');
-    expect(normal.pendingUpgrades).toBe(0);
     expect(normal.story.enabled).toBe(true);
     expect(normal.guidance.enabled).toBe(true);
   });

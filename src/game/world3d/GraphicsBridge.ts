@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 import * as THREE from 'three';
-import type { MountainHeightfield } from './MountainHeightfield';
 import { Fence3D } from './Fence3D';
 import { drawsNothing } from './graphicsCommands';
+import type { MountainHeightfield } from './MountainHeightfield';
 
 interface GraphicsCopy {
   canvas: HTMLCanvasElement;
@@ -114,7 +114,7 @@ export class GraphicsBridge {
         continue;
       }
       const hurdle = object.name.startsWith('camp-barrier-');
-      // Hurdles are small local drawings. Warnings and patron circles use global coordinates.
+      // Hurdles are small local drawings. Warnings and support effects use global coordinates.
       const bounds = hurdle
         ? { x: -64, y: -96, width: 128, height: 128 }
         : {

@@ -3,11 +3,11 @@ import { BUILDINGS } from '../../src/game/data/clan';
 import { buildingBlocker, buildStructure } from '../../src/game/state/clan';
 import { developmentPreview } from '../../src/game/state/developmentPreview';
 import { economyForecast } from '../../src/game/state/economy';
-import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { clanWarning } from '../../src/game/state/guidance';
 import { buildingMenu } from '../../src/ui/campModel';
 import { developmentOutlook, foodOutlook, signedRate } from '../../src/ui/economyContent';
 import { routeMenu } from '../../src/ui/menuContent';
+import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 describe('economy planning interfaces', () => {
   it('previews actual data-defined purchases without granting resources, guidance, or memories', () => {
@@ -109,7 +109,7 @@ describe('economy planning interfaces', () => {
     expect(foodOutlook(run)).toBe('Stores empty');
     run.clan.food = 70;
     run.clan.stage = 'camp';
-    run.patrons.land.pastureUse = 0;
+    run.clan.campEffects.multipliers.pastureUse = 0;
     expect(foodOutlook(run)).toBe('Stores sustained');
     expect(signedRate(-0.001)).toBe('0.00/s');
   });

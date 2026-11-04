@@ -1,10 +1,9 @@
-import { availableFormations, canMigrate } from './clan';
-import type { RunState } from '../types';
-import { economyForecast, type EconomyForecast } from './economy';
 import { GAME } from '../config';
+import type { RunState } from '../types';
+import { availableFormations, canMigrate } from './clan';
+import { economyForecast, type EconomyForecast } from './economy';
 
-export type GuidanceStep =
-  'ride' | 'build' | 'shards' | 'research' | 'formation' | 'depart' | 'crossing';
+export type GuidanceStep = 'ride' | 'build' | 'shards' | 'formation' | 'depart' | 'crossing';
 export interface GuidanceState {
   enabled: boolean;
   completed: GuidanceStep[];
@@ -13,7 +12,7 @@ export interface Guidance {
   id: GuidanceStep | 'prepare' | 'succession';
   title: string;
   text: string;
-  action?: 'build' | 'research' | 'formation' | 'migrate';
+  action?: 'build' | 'formation' | 'migrate';
   label?: string;
 }
 
@@ -52,14 +51,6 @@ export function currentGuidance(run: RunState): Guidance | undefined {
       title: 'Ride out, keep watch',
       text: 'Ride with WASD, arrows, the left stick or a touch drag; your bow fires on its own. Space / controller A breaks into a short, protected gallop.',
     };
-  if (run.pendingUpgrades > 0 && !done('research'))
-    return {
-      id: 'research',
-      title: 'Put knowledge to work',
-      text: 'Your shards have earned a knowledge point. T / LB opens the patron tree and pauses the world. You can also keep the point for later.',
-      action: 'research',
-      label: 'Patron tree · T / LB',
-    };
   if (!done('build'))
     return {
       id: 'build',
@@ -72,7 +63,7 @@ export function currentGuidance(run: RunState): Guidance | undefined {
     return {
       id: 'shards',
       title: 'Gather what the fallen leave',
-      text: 'Ride close to the turquoise spirit shards to gather them. A full tradition bar earns a knowledge point, and the fight never stops.',
+      text: 'Ride close to the turquoise spirit shards to gather them. A full experience bar raises your level, and the fight never stops.',
     };
   if (availableFormations(run).length > 1 && !done('formation'))
     return {
@@ -86,7 +77,7 @@ export function currentGuidance(run: RunState): Guidance | undefined {
   return {
     id: 'prepare',
     title: 'Keep the people ready',
-    text: 'Keep an eye on resolve and food as you gather. Routes open after 45 active seconds and you choose when to pack; buildings and traditions go with the clan.',
+    text: 'Keep an eye on resolve and food as you gather. Routes open after 45 active seconds and you choose when to pack; buildings go with the clan.',
   };
 }
 

@@ -10,7 +10,6 @@ export interface ControllerFrame {
   migrate: boolean;
   formation: boolean;
   journal: boolean;
-  research: boolean;
   zoomIn: boolean;
   zoomOut: boolean;
   zoomReset: boolean;
@@ -41,7 +40,6 @@ export class GamepadInput {
       migrate: false,
       formation: false,
       journal: false,
-      research: false,
       zoomIn: false,
       zoomOut: false,
       zoomReset: false,
@@ -64,7 +62,6 @@ export class GamepadInput {
     frame.build = (tapped & (1 << 2)) !== 0;
     frame.migrate = (tapped & (1 << 3)) !== 0;
     frame.formation = (tapped & (1 << 5)) !== 0;
-    frame.research = (tapped & (1 << 4)) !== 0;
     frame.journal = (tapped & (1 << 8)) !== 0;
     frame.zoomIn = (tapped & (1 << 7)) !== 0;
     frame.zoomOut = (tapped & (1 << 6)) !== 0;

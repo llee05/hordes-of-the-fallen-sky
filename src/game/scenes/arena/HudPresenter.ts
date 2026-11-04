@@ -2,8 +2,8 @@ import { SKYBREAKER } from '../../data/enemies';
 import type { DeveloperConsoleSnapshot } from '../../dev/commands';
 import type { Enemy, Projectile } from '../../entities/actors';
 import { campBoundary } from '../../state/campBarrier';
+import { gallopCooldown } from '../../state/campCombat';
 import { isKhanActive } from '../../state/khan';
-import { gallopCooldown } from '../../state/patrons';
 import { cameraZoomLimits } from '../../systems/CameraView';
 import {
   edgeWarnings,

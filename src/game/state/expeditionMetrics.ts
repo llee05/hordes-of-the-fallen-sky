@@ -75,6 +75,6 @@ export function expeditionMetricLines(run: RunState): string[] {
   return (run.metrics?.stages ?? []).map((s) => {
     const time = (event: ExpeditionMilestone) =>
       s.marks[event] === undefined ? '—' : `${(s.marks[event]! - s.startedAt).toFixed(1)}s`;
-    return `${s.location} / ${s.stage}: fight ${time('fight')}, knowledge ${time('knowledge')}, research ${time('research')}, build ${time('construction')}, first damage ${time('camp-damage')}, first casualty ${time('casualty')}, departure ${time('departure')}; ${s.damage.toFixed(1)} resolve lost, ${s.casualties} people; riding ${s.riding.toFixed(0)}s, guarding ${s.guarding.toFixed(0)}s, travelling ${s.travelling.toFixed(0)}s.`;
+    return `${s.location} / ${s.stage}: fight ${time('fight')}, build ${time('construction')}, first damage ${time('camp-damage')}, first casualty ${time('casualty')}, departure ${time('departure')}; ${s.damage.toFixed(1)} resolve lost, ${s.casualties} people; riding ${s.riding.toFixed(0)}s, guarding ${s.guarding.toFixed(0)}s, travelling ${s.travelling.toFixed(0)}s.`;
   });
 }

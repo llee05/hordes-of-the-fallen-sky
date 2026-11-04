@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
     for (const e of s.enemies.getChildren()) e.disableBody(true, true);
   });
 });
-test('charged arrows pin a charger and pooled arrows clear their special effect', async ({
+test('charged arrows hit a charger and pooled arrows clear their special effect', async ({
   page,
 }) => {
   const result = await page.evaluate(async () => {
@@ -26,7 +26,6 @@ test('charged arrows pin a charger and pooled arrows clear their special effect'
     e.tactics.remaining = 0.5;
     e.tactics.direction = { x: -1, y: 0 };
     e.tactics.aim = { x: s.player.x, y: s.player.y };
-    s.run.upgrades['piercing-shaft'] = 1;
     s.shootVolley(s.player.x, s.player.y, e, 1, 1, false, true);
     const arrow = s.projectiles.getFirstAlive();
     s.hitEnemy(arrow, e);
@@ -44,8 +43,8 @@ test('charged arrows pin a charger and pooled arrows clear their special effect'
       clone: !!copy.combat,
     };
   });
-  expect(result.pin.remaining).toBe(0.65);
-  expect(result.pin.phase).toBe('recover');
+  expect(result.pin.remaining).toBe(0);
+  expect(result.pin.phase).toBe('charge');
   expect(result.pin.health).toBeCloseTo(10000 - 16 * 1.35);
   expect(result).toMatchObject({ reused: true, pins: false, plainDamage: 16, clone: true });
 });

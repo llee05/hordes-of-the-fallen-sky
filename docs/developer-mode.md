@@ -41,21 +41,20 @@ history is saved independently and remains available for recall.
 The console, input bindings, and cheat effects are guarded by `import.meta.env.DEV`
 and are absent from production and packaged play.
 
-| Command                                 | Behaviour                                                                                                                          |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `help`                                  | Lists commands and their usage.                                                                                                    |
-| `invincible [on\|off]`, `god [on\|off]` | Protects the Khan; no argument toggles.                                                                                            |
-| `heal`                                  | Restores the living Khan to full health.                                                                                           |
-| `clan-invincible [on\|off]`             | Protects clan resolve, people, and livestock.                                                                                      |
-| `status`                                | Displays invincibility, Khan health, and clan resolve.                                                                             |
-| `research-metrics`                      | Read-only research accounting; see the [research observation contract](patron-research-v2.md#purchase-and-observation-interfaces). |
-| `clear`                                 | Clears output while keeping command history.                                                                                       |
+| Command                                 | Behaviour                                              |
+| --------------------------------------- | ------------------------------------------------------ |
+| `help`                                  | Lists commands and their usage.                        |
+| `invincible [on\|off]`, `god [on\|off]` | Protects the Khan; no argument toggles.                |
+| `heal`                                  | Restores the living Khan to full health.               |
+| `clan-invincible [on\|off]`             | Protects clan resolve, people, and livestock.          |
+| `status`                                | Displays invincibility, Khan health, and clan resolve. |
+| `clear`                                 | Clears output while keeping command history.           |
 
 Developer console rules live in the renderer-independent `src/game/dev/commands.ts`.
 Use `help` for the complete command catalog. Omitting either
 invincibility argument toggles that protection. Food and journey rules continue;
 clan losses require the separate clan toggle to be protected.
-Healing applies only to a living Khan and never refreshes Last Ember or skips
+Healing applies only to a living Khan and never skips
 succession. Commands validate their arguments, cap output at 80 entries and history
 at 40 commands, and retain history when output is cleared.
 The scene owns a separate `console` phase and its return phase, independently of
@@ -70,7 +69,7 @@ absent from production and packaged play.
 Run `npm run dev` for Electron or `npm run dev:web` for the browser. Choose
 **Developer mode** at the title or pause menu, or press **F8** from any screen.
 The selector pauses the entire expedition. Escape, F8, and Back return to the
-original screen, retaining its story, research, or ended-run state.
+original screen, retaining its story or ended-run state.
 
 Selecting a checkpoint replaces the current expedition immediately, bypasses the
 introduction, and rebuilds the scene. Enemies, projectiles, shards, hazards, defeat
@@ -89,8 +88,7 @@ begins at zero progress; its rewards still require arrival. Camp checkpoints hav
 routes available immediately, and the final stand starts with its full timer and
 the Skybreaker still to come.
 
-Test expeditions have a healthy Khan, 24 people, generous supplies, and 40 unspent
-knowledge points. No technologies or camp developments are selected automatically.
+Test expeditions have a healthy Khan, 24 people and generous supplies. No camp developments are selected automatically.
 Camp scenes and guidance are off for the test expedition; earlier encounters are
 recorded as passed without granting story gifts. Normal new games retain their
 usual state and preferences. Test provisions are configured in `GAME.developer`.

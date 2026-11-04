@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { GAME } from '../../src/game/config';
-import { closeOverlayOrPause, buyNomadicLevel, openTitle, startExpedition } from './helpers';
+import { buyNomadicLevel, closeOverlayOrPause, openTitle, startExpedition } from './helpers';
 test.describe.configure({ mode: 'parallel' });
 test.beforeEach(async ({ page }) => {
   await openTitle(page);
@@ -56,15 +56,14 @@ test('healer recovery respects paused gameplay and never advances a fallen Khan 
     const r = (window as any).__gloam.scene.run;
     r.health = 0;
     r.khan.successionRemaining = 7;
-    r.patrons.hearth.revives = 0;
   });
   await buyNomadicLevel(page, 'communal-hearth', 3);
   expect(
     await page.evaluate(() => {
       const r = (window as any).__gloam.scene.run;
-      return [r.health, r.khan.successionRemaining, r.patrons.hearth.revives];
+      return [r.health, r.khan.successionRemaining];
     }),
-  ).toEqual([0, 7, 0]);
+  ).toEqual([0, 7]);
 });
 
 test('hunting and trading arrival benefits travel with the camp and pay only at crossing completion', async ({
@@ -170,6 +169,8 @@ test('archery, training, fletching and sacred upgrades alter real volleys and su
     for (const shot of s.projectiles.getChildren()) shot.disableBody(true, true);
     s.spatial.rebuild(s.enemies.getChildren());
     s.fire();
+    s.run.combat.riderFireAt = [];
+    s.fireRiders();
     const shots = s.projectiles.getChildren().filter((p: any) => p.active);
     const interval = s.attackTimer;
     const player = shots.filter((p: any) => p.x === s.player.x && p.y === s.player.y);
@@ -186,7 +187,7 @@ test('archery, training, fletching and sacred upgrades alter real volleys and su
         .getChildren()
         .filter((p: any) => p.active && p.x === s.camp.x && p.y === s.camp.y)
         .map((p: any) => p.damage),
-      pierce: s.run.patrons.bow.pierce,
+      pierce: s.run.stats.pierce,
     };
   });
   expect(result.player).toBeGreaterThanOrEqual(2);

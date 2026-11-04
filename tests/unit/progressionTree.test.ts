@@ -1,21 +1,17 @@
-import { RESEARCH } from '../../src/game/data/research';
 import { describe, expect, it } from 'vitest';
+import { BUILDINGS, type BuildingDefinition } from '../../src/game/data/clan';
+import { buildStructure } from '../../src/game/state/clan';
+import { campBranches } from '../../src/ui/campContent';
 import {
-  progressionMenu,
-  treeLevels,
   treeRoute,
   branchMarkup,
   nodeInspector,
-  type TreeNode,
+  progressionMenu,
+  treeLevels,
   type TreeBranch,
+  type TreeNode,
 } from '../../src/ui/progressionTree';
-import { researchBranches } from '../../src/ui/researchContent';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
-import { PATRONS } from '../../src/game/data/patrons';
-import { UPGRADES } from '../../src/game/data/upgrades';
-import { BUILDINGS, type BuildingDefinition } from '../../src/game/data/clan';
-import { campBranches } from '../../src/ui/campContent';
-import { buildStructure } from '../../src/game/state/clan';
 
 function node(id: string, requires: string[] = []): TreeNode {
   return {
@@ -133,45 +129,14 @@ describe('expandable progression views', () => {
     });
     expect(escaped).not.toContain('<img src=x>');
   });
-
-  it('shows all patrons with connected foundations, practices, and capstones', () => {
-    const run = createRun();
-    run.pendingUpgrades = 2;
-    run.upgrades.power = 1;
-    const branches = researchBranches(run);
-    expect(branches).toHaveLength(PATRONS.length + 2);
-    expect(branches.flatMap((entry) => entry.nodes)).toHaveLength(RESEARCH.length);
-    for (const branch of branches.filter((b) => PATRONS.some((p) => p.id === b.id)))
-      expect(
-        treeLevels(branch.nodes.filter((n) => UPGRADES.some((u) => u.id === n.id))).map(
-          (level) => level.length,
-        ),
-      ).toEqual(branch.id === 'khukhedei-mergen' ? [1, 3, 3] : [1, 2, 2]);
-    const archer = branches.find((entry) => entry.id === 'khukhedei-mergen')!;
-    expect(archer.nodes.find((n) => n.id === 'haste')?.status).toBe('available');
-    expect(archer.nodes.find((n) => n.id === 'sky-volley')?.status).toBe('locked');
-    expect(archer.nodes[0]?.progress).toBe('1 / 2 ranks learned');
-    run.upgrades.power = 2;
-    expect(
-      researchBranches(run)
-        .find((b) => b.id === archer.id)!
-        .nodes.find((n) => n.id === 'piercing-shaft')?.status,
-    ).toBe('available');
-    run.pendingUpgrades = 0;
-    expect(
-      researchBranches(run)
-        .flatMap((entry) => entry.nodes)
-        .some((entry) => entry.status === 'available'),
-    ).toBe(false);
-  });
   it('deduplicates multi-parent route costs, includes required ranks, and renders actual edges', () => {
-    const root = { ...node('root'), ranks: { current: 1, max: 2 }, price: { knowledge: 1 } };
-    const left = { ...node('left', ['root']), price: { knowledge: 1 } };
-    const right = { ...node('right', ['root']), price: { knowledge: 1 } };
+    const root = { ...node('root'), ranks: { current: 1, max: 2 }, price: { materials: 1 } };
+    const left = { ...node('left', ['root']), price: { materials: 1 } };
+    const right = { ...node('right', ['root']), price: { materials: 1 } };
     const final = {
       ...node('final', ['root', 'left', 'right']),
       ranks: { current: 0, max: 1 },
-      price: { knowledge: 2 },
+      price: { materials: 2 },
       prerequisites: [{ id: 'root', title: 'Root', current: 1, rank: 2 }],
     };
     const branch: TreeBranch = {
@@ -184,7 +149,7 @@ describe('expandable progression views', () => {
       layout: 'tiers',
       nodes: [root, left, right, final],
     };
-    expect(treeRoute(branch, final).price.knowledge).toBe(5);
+    expect(treeRoute(branch, final).price.materials).toBe(5);
     expect(treeRoute(branch, final).nodes.map((n) => n.id)).toEqual([
       'root',
       'left',
@@ -196,19 +161,6 @@ describe('expandable progression views', () => {
     expect(html).toContain('data-edge-from="right" data-edge-to="final"');
     expect(html).not.toContain('data-edge-from="root" data-edge-to="final"');
     expect(html).not.toContain('data-research=');
-    expect(nodeInspector(branch, final)).toContain('5 knowledge points');
-  });
-
-  it('distinguishes missing prerequisites, insufficient points, mastery, and excluded choices', () => {
-    const run = createRun();
-    run.phase = 'upgrade';
-    run.pendingUpgrades = 0;
-    let nodes = researchBranches(run).flatMap((b) => b.nodes);
-    expect(nodes.find((n) => n.id === 'power')?.status).toBe('unaffordable');
-    expect(nodes.find((n) => n.id === 'sky-volley')?.status).toBe('locked');
-    run.upgrades = { power: 2, haste: 1, 'one-perfect-shot': 1 };
-    nodes = researchBranches(run).flatMap((b) => b.nodes);
-    expect(nodes.find((n) => n.id === 'power')?.status).toBe('learned');
-    expect(nodes.find((n) => n.id === 'sky-volley')?.status).toBe('excluded');
+    expect(nodeInspector(branch, final)).toContain('5 materials');
   });
 });

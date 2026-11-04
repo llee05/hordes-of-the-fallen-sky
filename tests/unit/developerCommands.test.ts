@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createDeveloperTools, executeDeveloperCommand } from '../../src/game/dev/commands';
-import { createRun } from '../../src/game/state/run';
-import { damageKhan } from '../../src/game/state/khan';
 import type { DeveloperTerrainControls } from '../../src/game/dev/commands';
+import { createDeveloperTools, executeDeveloperCommand } from '../../src/game/dev/commands';
+import { damageKhan } from '../../src/game/state/khan';
+import { createRun } from '../../src/game/state/run';
 
 describe('developer console commands', () => {
   it('restores only bounded history, with fresh cheat flags and output', () => {
@@ -129,11 +129,8 @@ describe('developer console commands', () => {
     const run = createRun();
     run.phase = 'playing';
     run.health = 20;
-    const revives = run.patrons.hearth.revives;
     expect(executeDeveloperCommand(tools, run, 'heal', true).cheated).toBe(true);
     expect(run.health).toBe(run.stats.maxHealth);
-    expect(run.patrons.hearth.revives).toBe(revives);
-    run.patrons.hearth.revives = 0;
     damageKhan(run, 100000);
     const fallen = structuredClone(run);
     expect(executeDeveloperCommand(tools, run, 'heal', true).cheated).toBe(false);

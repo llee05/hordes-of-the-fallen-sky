@@ -1,8 +1,8 @@
 import type { NomadicCamp } from '../shared/nomadicCamp.js';
-import type { ClanLegacy } from './state/legacy';
-import type { GuidanceState } from './state/guidance';
-import type { StoryState } from './story/types';
 import type { DeveloperConsoleSnapshot } from './dev/commands';
+import type { GuidanceState } from './state/guidance';
+import type { ClanLegacy } from './state/legacy';
+import type { StoryState } from './story/types';
 
 export type RunPhase =
   | 'intro'
@@ -14,7 +14,6 @@ export type RunPhase =
   | 'playing'
   | 'paused'
   | 'saves'
-  | 'upgrade'
   | 'building'
   | 'route'
   | 'journal'
@@ -28,15 +27,6 @@ export type JourneyStage = 'camp' | 'migration' | 'final';
 export type BuildingId =
   'ger' | 'archery' | 'herd' | 'sanctuary' | 'wagon' | 'felt' | 'provisions' | 'relay';
 export type Formation = 'guard' | 'encircle' | 'wedge' | 'retreat';
-export type PatronId =
-  | 'borte-chino'
-  | 'etugen-eke'
-  | 'khukhedei-mergen'
-  | 'golomt'
-  | 'lus'
-  | 'ongod'
-  | 'sulde'
-  | 'burkhan-guardian';
 export type Doctrine = 'iron' | 'sky' | 'wander';
 export type LocationId =
   | 'golden-pasture'
@@ -132,36 +122,10 @@ export interface PlayerStats {
   attackInterval: number;
   pickupRadius: number;
   projectiles: number;
-}
-
-/** Neutral defaults keep every patron modifier opt-in and isolated to its expedition. */
-export interface PatronEffects {
-  hunt: { movingDamage: number; executeDamage: number; gallopCooldown: number; killHeal: number };
-  land: {
-    food: number;
-    materials: number;
-    consumption: number;
-    pastureUse: number;
-    pastureRecovery: number;
-  };
-  bow: { range: number; pierce: number; spread: number };
-  hearth: { regeneration: number; damageTaken: number; revives: number };
-  water: {
-    slow: number;
-    radius: number;
-    hazardDamage: number;
-    warning: number;
-    pulseDamage: number;
-  };
-  ancestors: { count: number; damage: number; interval: number; spiritGain: number };
-  banner: { riders: number; damage: number; mobility: number; resolveOnKill: number };
-  guardian: { cost: number; protection: number; wagonInterval: number; wardDamage: number };
+  pierce: number;
 }
 
 export interface RunState {
-  researchPurchases?: import('./state/researchMetrics').ResearchPurchase[];
-  researchObservations?: import('./state/researchMetrics').ResearchObservations;
-  researchRuntime?: import('./state/researchRuntime').ResearchRuntime;
   finalStand?: import('./state/finalStand').FinalStandState;
   metrics?: import('./state/expeditionMetrics').ExpeditionMetrics;
   /** Missing only in expeditions saved before starting arrangements were introduced. */
@@ -186,28 +150,9 @@ export interface RunState {
   level: number;
   xp: number;
   nextLevelXp: number;
-  pendingUpgrades: number;
-  upgrades: Record<string, number>;
   stats: PlayerStats;
-  patrons: PatronEffects;
   clan: ClanState;
   story: StoryState;
-}
-
-export interface UpgradeDefinition {
-  id: string;
-  patron: PatronId;
-  title: string;
-  subtitle: string;
-  description: string;
-  icon: string;
-  maxStacks: number;
-  knowledgeCost?: number;
-  exclusiveGroup?: string;
-  kind?: 'foundation' | 'practice' | 'capstone';
-  category: string;
-  requires?: readonly { id: string; rank: number }[];
-  apply: (run: RunState) => void;
 }
 
 export interface EnemyDefinition {

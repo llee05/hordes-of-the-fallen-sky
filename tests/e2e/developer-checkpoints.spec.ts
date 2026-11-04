@@ -96,7 +96,6 @@ for (const group of groups)
                 stage: scene.run.clan.stage,
                 landscape: `landscape-${scene.landscape.world3d.terrain.region.scene.id}`,
                 paused: scene.physics.world.isPaused,
-                knowledge: scene.run.pendingUpgrades,
               };
             }),
           )
@@ -107,7 +106,6 @@ for (const group of groups)
             stage: level.routeId ? 'migration' : level.region === 3 ? 'final' : 'camp',
             landscape: `landscape-${level.locationId}`,
             paused: false,
-            knowledge: 40,
           });
         if (level.routeId) await expect(page.locator('#build')).toBeDisabled();
         else if (level.region < 3) await expect(page.locator('#migrate')).toBeEnabled();
