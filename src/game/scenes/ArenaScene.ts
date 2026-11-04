@@ -101,7 +101,12 @@ import {
   isKhanActive,
   khanSpeedMultiplier,
 } from '../state/khan';
-import { advanceMountedCombat, retreatShot, spendMountedVolley } from '../state/mountedCombat';
+import {
+  advanceMountedCombat,
+  retreatShot,
+  riderCooldowns,
+  spendMountedVolley,
+} from '../state/mountedCombat';
 import { purchaseNomadicBuilding } from '../state/nomadicCamp';
 import { createRun, gainExperience } from '../state/run';
 import { openNextStory, resolveStory } from '../state/story';
@@ -2015,6 +2020,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private fireRiders(): void {
     const count = riderCount(this.run);
+    const cooldowns = riderCooldowns(this.run.combat, count);
     for (let i = 0; i < count; i += 1) {
       const rider = this.riders[i]!;
       const range = GAME.projectile.range + this.run.clan.campEffects.bonuses.range;
@@ -2023,7 +2029,7 @@ export class ArenaScene extends Phaser.Scene {
       const riderTarget = this.spatial.nearest(rider.x, rider.y, range, clear);
       if (
         riderTarget &&
-        ((this.run.combat.riderFireAt ??= [])[i] ?? 0) <= this.run.elapsed &&
+        cooldowns[i]! <= this.run.elapsed &&
         this.shootVolley(
           rider.x,
           rider.y,
@@ -2033,7 +2039,7 @@ export class ArenaScene extends Phaser.Scene {
             this.run.clan.campEffects.multipliers.riderDamage,
         )
       ) {
-        (this.run.combat.riderFireAt ??= [])[i] =
+        cooldowns[i] =
           this.run.elapsed +
           this.run.stats.attackInterval *
             this.run.clan.campEffects.multipliers.hostInterval *

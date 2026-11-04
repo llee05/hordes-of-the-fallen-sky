@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
 import { ENEMIES } from '../../src/game/data/enemies';
+import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
 import {
   advanceMountedCombat,
   retreatShot,
+  riderCooldowns,
   spendMountedVolley,
 } from '../../src/game/state/mountedCombat';
 import { createRun } from '../../src/game/state/run';
@@ -12,6 +14,32 @@ import {
   createEnemyTactics,
   tacticalGoal,
 } from '../../src/game/systems/enemyTactics';
+import { world } from './fixtures/expedition';
+
+describe('rider cooldowns', () => {
+  it.each([2, 4, 16])(
+    'keeps %i rider cooldowns saveable when the last rider fires first',
+    (count) => {
+      const run = createRun();
+      const cooldowns = riderCooldowns(run.combat, count);
+      cooldowns[count - 1] = 10;
+      const expected = Array(count - 1).fill(0).concat(10);
+      expect(run.combat.riderFireAt).toEqual(expected);
+      const restored = decodeExpedition(captureExpedition(run, world())).run;
+      expect(restored.combat.riderFireAt).toEqual(expected);
+      const resumed = riderCooldowns(restored.combat, count);
+      expect(resumed[count - 1]).toBe(10);
+      resumed[0] = 12;
+      expect(riderCooldowns(restored.combat, count)[0]).toBe(12);
+      expect(resumed[count - 1]).toBe(10);
+    },
+  );
+  it('initializes new riders without resetting existing cooldowns', () => {
+    const run = createRun();
+    riderCooldowns(run.combat, 1)[0] = 12;
+    expect(riderCooldowns(run.combat, 3)).toEqual([12, 0, 0]);
+  });
+});
 
 describe('mounted positioning', () => {
   it('charges from real sustained riding, rejects wall pushing/teleports, and spends a volley once', () => {

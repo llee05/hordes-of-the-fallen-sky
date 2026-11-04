@@ -18,6 +18,11 @@ export interface MountedCombatState {
 export function createMountedCombat(): MountedCombatState {
   return { rideSeconds: 0, ready: false, gallopSerial: 0, volleys: 0, trails: [] };
 }
+export function riderCooldowns(combat: MountedCombatState, count: number): number[] {
+  const cooldowns = (combat.riderFireAt ??= []);
+  while (cooldowns.length < count) cooldowns.push(0);
+  return cooldowns;
+}
 /** Measures real travelled ground, so pressing into a wall cannot build momentum or charged volleys. */
 export function advanceMountedCombat(
   run: RunState,
