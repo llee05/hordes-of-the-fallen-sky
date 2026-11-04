@@ -119,9 +119,7 @@ test(
   },
 );
 
-test('camp work and research sound in menus while world cues and cadence are stopped', async ({
-  page,
-}) => {
+test('camp work sounds in menus while world cues and cadence are stopped', async ({ page }) => {
   await page.keyboard.down('d');
   await expect.poll(async () => (await heard(page)).includes('hoof')).toBe(true);
   await page.keyboard.up('d');

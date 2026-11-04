@@ -40,7 +40,7 @@ test(
   },
 );
 
-test('Back keeps the chosen arrangement ready for New Game without starting time or research', async ({
+test('Back keeps the chosen arrangement ready for New Game without starting time', async ({
   page,
 }) => {
   await openTitle(page);

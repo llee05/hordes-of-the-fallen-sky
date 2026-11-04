@@ -182,7 +182,7 @@ test('successors return to the moving caravan and an arrival cannot end successi
   expect(await page.evaluate(() => (window as any).__gloam.scene.player.x)).toBeCloseTo(2600, 0);
 });
 
-test('ancestral echoes defend camp during succession and uncollected XP waits for the new Khan', async ({
+test('camp defenses continue during succession and uncollected XP waits for the new Khan', async ({
   page,
 }) => {
   test.setTimeout(120000);

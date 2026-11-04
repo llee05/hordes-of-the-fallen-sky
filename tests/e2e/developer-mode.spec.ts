@@ -45,21 +45,21 @@ test(
     await page.getByRole('button', { name: 'Developer mode F8' }).click();
     await closeOverlayOrPause(page);
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
-    await page.getByRole('button', { name: 'Patron tech tree', exact: true }).click();
+    await closeOverlayOrPause(page);
+    await page.keyboard.press('b');
     await page.locator('[data-tree-search]').fill('bow');
     await page.keyboard.press('F8');
     await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
     await closeOverlayOrPause(page);
-    await expect(
-      page.getByRole('heading', { name: 'Patron tech tree', exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: "The Khan's camp", exact: true })).toBeVisible();
     await expect(page.locator('[data-tree-search]')).toHaveValue('bow');
+    await page.locator('[data-action="exit-camp"]').first().click();
     await closeOverlayOrPause(page);
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
   },
 );
 
-test('switching checkpoints clears old actors, hazards, boss state, succession, and research', async ({
+test('switching checkpoints clears old actors, hazards, boss state, and succession', async ({
   page,
 }) => {
   await page.goto('/');

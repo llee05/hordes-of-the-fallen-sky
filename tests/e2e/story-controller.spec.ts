@@ -31,7 +31,7 @@ test('controller chooses, skips, reads memories, and returns to the paused exped
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await press(9);
   await press(13);
-  await expect(page.getByRole('button', { name: 'Patron tech tree', exact: true })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Start a new run', exact: true })).toBeFocused();
   // f780c79 added save actions to Pause; follow focus to the target instead of counting presses.
   const memories = page.getByRole('button', { name: 'Our remembered road', exact: true });
   const buttons = await page.locator('.pause-menu button').count();

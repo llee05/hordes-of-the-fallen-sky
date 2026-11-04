@@ -1,3 +1,4 @@
+import { availableFormations } from './clan';
 import { storyConsequence } from '../data/storyConsequences';
 import { applyCampEffects } from './camp';
 import { isExpeditionSave, isRecord, type ExpeditionSave } from '../../shared/expeditionSave';
@@ -584,6 +585,8 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
           retained.clan.campEffects,
           storyConsequence(record.choice.id)?.lasting?.effects,
         );
+    if (!availableFormations(retained).includes(retained.clan.formation))
+      retained.clan.formation = 'guard';
     retained.health = Math.min(retained.health, retained.stats.maxHealth);
     retained.combat.trails = [];
   }

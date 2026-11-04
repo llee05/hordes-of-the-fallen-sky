@@ -2117,6 +2117,8 @@ export class ArenaScene extends Phaser.Scene {
         Math.sin(angle) * GAME.projectile.speed * volley.speed,
       );
     }
+    markExpedition(this.run, 'fight');
+    this.audio.play('shoot', { x, y });
     return true;
   }
 

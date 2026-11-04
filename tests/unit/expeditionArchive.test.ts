@@ -31,7 +31,10 @@ describe('full expedition snapshots', () => {
     run.clan.materials = 1000;
     run.clan.spirit = 1000;
     run.phase = 'building';
-    expect(purchaseNomadicBuilding(run, 'fletchers-workshop')).toBe(true);
+    expect(purchaseNomadicBuilding(run, 'khans-ger')).toBe(true);
+    expect(purchaseNomadicBuilding(run, 'khans-ger')).toBe(true);
+    for (let level = 0; level < 3; level++)
+      expect(purchaseNomadicBuilding(run, 'fletchers-workshop')).toBe(true);
     run.phase = 'playing';
     expect(openNextStory(run)).toBe(true);
     expect(resolveStory(run, 'share-work')).toBe(true);
@@ -39,6 +42,8 @@ describe('full expedition snapshots', () => {
     const save = captureExpedition(run, world());
     const legacy = save.run as Record<string, any>;
     legacy.pendingUpgrades = 99;
+    legacy.clan.formation = 'wedge';
+    (save.world as Record<string, unknown>).support = { retired: true };
     legacy.upgrades = { power: 2, 'retired-future-research': 50 };
     legacy.patrons = { anything: 'ignored' };
     legacy.researchPurchases = [{ id: 'unknown', rank: 50 }];
@@ -50,6 +55,7 @@ describe('full expedition snapshots', () => {
     legacy.clan.campEffects.multipliers.wagonDamage = 20;
     const restored = decodeExpedition(save).run;
     expect(restored.stats).toEqual(run.stats);
+    expect(restored.clan.formation).toBe('guard');
     expect(restored.clan.campEffects).toEqual(run.clan.campEffects);
     expect(restored.clan.nomadicCamp).toEqual(run.clan.nomadicCamp);
     expect(restored.clan.spirit).toBe(run.clan.spirit);

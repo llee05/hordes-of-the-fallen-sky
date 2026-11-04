@@ -72,6 +72,7 @@ test(
     await activeExpect
       .poll(async () => (await siegeState(page)).resolve, { intervals: [50] })
       .toBeCloseTo(96.85);
+    await activeExpect.poll(async () => (await siegeState(page)).speed).toBe(0);
     const first = await siegeState(page);
     expect(first).toMatchObject({
       active: true,

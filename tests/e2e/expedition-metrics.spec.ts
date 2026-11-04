@@ -36,7 +36,7 @@ test('a real opening fight records active time and the chronicle exposes its mil
   await page.getByRole('tab', { name: 'Your clan' }).click();
   await page.getByText('Expedition milestones', { exact: true }).click();
   await expect(page.locator('.expedition-metrics')).toContainText('First fight');
-  await expect(page.locator('.expedition-metrics')).toContainText('First fight');
+  await expect(page.locator('.expedition-metrics')).not.toContainText('First knowledge');
   await page.keyboard.press('F10');
   await page.locator('[data-developer-command-input]').fill('metrics');
   await page.locator('[data-developer-command-input]').press('Enter');

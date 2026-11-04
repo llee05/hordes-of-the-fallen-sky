@@ -17,7 +17,6 @@ test(
     await page.evaluate(() => {
       const s = (window as any).__gloam.scene;
       s.run.elapsed = 123.75;
-      s.run.xp = 4;
       s.run.xp = 7;
       s.run.health = 0;
       s.run.khan.successionRemaining = 4.2;
@@ -50,8 +49,8 @@ test(
     const saved = await page.evaluate(() =>
       JSON.parse(localStorage.getItem('gloam-expedition-slot-1')!),
     );
-    expect(saved.run.xp).toBe(4);
-    expect(saved.world.support.waterTimer).toBe(2.2);
+    expect(saved.run.xp).toBe(7);
+    expect(saved.world).not.toHaveProperty('support');
     await page.setViewportSize({ width: 960, height: 600 });
     expect(
       await page.locator('.save-menu').evaluate((el) => el.scrollWidth <= el.clientWidth),

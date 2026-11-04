@@ -287,12 +287,11 @@ The desktop game runs offline with local assets and native, validated, atomic sa
 | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Starting stats and balance constants                           | [config.ts](../src/game/config.ts)                                                                               |
 | Khan damage, presence, succession timing                       | [state/khan.ts](../src/game/state/khan.ts)                                                                       |
-| Starting run, XP thresholds, upgrade application               | [state/run.ts](../src/game/state/run.ts)                                                                         |
+| Starting run and XP thresholds                                 | [state/run.ts](../src/game/state/run.ts)                                                                         |
 | Camp building definitions and purchase rules                   | [data/nomadicCamp.ts](../src/game/data/nomadicCamp.ts), [state/nomadicCamp.ts](../src/game/state/nomadicCamp.ts) |
 | Legacy crafts, formations, routes, regions                     | [data/clan.ts](../src/game/data/clan.ts)                                                                         |
 | Typed camp effects and once-only purchase grants               | [state/camp.ts](../src/game/state/camp.ts)                                                                       |
 | Economy, staffing, purchases, protection, migration, identity  | [state/clan.ts](../src/game/state/clan.ts)                                                                       |
-| Ancestral riders, terrain pulse, and mountain ward             | [PatronSupport.ts](../src/game/systems/PatronSupport.ts)                                                         |
 | Enemy definitions and spawn interval                           | [data/enemies.ts](../src/game/data/enemies.ts)                                                                   |
 | Combat, targeting, support attacks, hazards, phase transitions | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                                                |
 | Encounter content, choices, epilogue                           | [data/story.ts](../src/game/data/story.ts)                                                                       |
