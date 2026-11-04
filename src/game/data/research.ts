@@ -1,4 +1,5 @@
 import { RESEARCH_BLOCKERS } from './researchIntegration';
+import { RESEARCH_HANDLERS } from './researchHandlers';
 import { UPGRADES } from './upgrades';
 import { RESEARCH_EXPANSIONS } from './researchCatalogue';
 import type { ResearchDefinition } from './researchTypes';
@@ -13,89 +14,6 @@ const TAGS: Readonly<Record<string, readonly string[]>> = {
   sulde: ['companion', 'migration'],
   'burkhan-guardian': ['camp', 'projectile'],
 };
-const IMPLEMENTED_HANDLERS = [
-  'hy-ghost-fletched-arrows',
-  'hy-living-waters',
-  'hy-thousand-arrows',
-  'hy-last-stand-of-hearth',
-  'hy-blood-and-ember',
-
-  'gu-arrow-platforms',
-  'gu-circling-volley',
-  'gu-defended-passage',
-  'gu-fast-unpacking',
-  'gu-iron-rimmed-wagons',
-  'gu-city-of-felt-and-wood',
-
-  'su-horn-of-the-host',
-  'su-banner-formation',
-  'su-last-wagon',
-  'su-great-kurultai',
-
-  'on-reverent-gathering',
-  'on-line-of-forebears',
-  'on-names-in-stone',
-  'on-infinite-remembrance',
-
-  'lu-floodplain',
-  'lu-geomancers-eye',
-  'lu-stone-and-stream',
-  'lu-undertow',
-  'lu-warning-signs',
-  'lu-frozen-bank',
-  'lu-floodgate',
-  'lu-shifting-ridge',
-  'lu-deep-current',
-  'lu-river-that-remembers',
-  'lu-eye-of-the-mountain',
-  'lu-land-in-motion',
-
-  'hy-galloping-barrage',
-  'hy-stillwater-refuge',
-  'hy-river-of-spirits',
-  'ee-deep-roots',
-  'go-layered-felt',
-  'go-common-fire',
-  'km-feathered-fan',
-  'on-spirit-signal',
-  'on-memory-vessels',
-  'on-quiet-council',
-  'on-ancestral-archers',
-  'bc-scent-of-fear',
-  'bc-bounding-charge',
-  'bc-pack-instinct',
-  'bc-hounds-of-the-horizon',
-  'bc-wind-cutting-hooves',
-  'bc-throat-of-the-prey',
-  'bc-storm-chaser',
-  'bc-call-of-the-pack',
-  'bc-endless-pursuit',
-  'ee-vigilant-herders',
-  'ee-camp-of-craftspeople',
-  'ee-wandering-city',
-  'ee-unbroken-seasons',
-  'km-draw-to-breath',
-  'km-barbed-flight',
-  'km-eagle-eye',
-  'km-drilling-shafts',
-  'km-arrow-rain',
-  'km-still-hand',
-  'km-sunder-the-ranks',
-  'km-circle-of-shafts',
-  'km-one-arrow-one-fate',
-  'km-world-piercer',
-  'km-sky-darkener',
-  'go-warm-ashes',
-  'go-embers-return',
-  'go-shelter-the-wounded',
-  'go-campfire-vigil',
-  'go-ash-born',
-  'go-firebreak',
-  'go-household-oath',
-  'go-flame-that-refuses',
-  'go-fortress-of-felt',
-  'go-eternal-hearth',
-] as const;
 
 export const RESEARCH: readonly ResearchDefinition[] = [
   ...UPGRADES.map((u): ResearchDefinition => ({
@@ -115,7 +33,7 @@ export const RESEARCH: readonly ResearchDefinition[] = [
     effects: [{ kind: 'legacy', upgradeId: u.id }],
   })),
   ...RESEARCH_EXPANSIONS.map((t): ResearchDefinition => {
-    const handler = IMPLEMENTED_HANDLERS.find((id) => id === t.id);
+    const handler = RESEARCH_HANDLERS.find((id) => id === t.id);
     const tags = [
       ...new Set(
         t.patronIds.length ? t.patronIds.flatMap((p) => TAGS[p] ?? []) : ['camp', 'migration'],

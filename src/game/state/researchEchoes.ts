@@ -1,6 +1,28 @@
 import { GAME } from '../config';
 import type { RunState } from '../types';
 import { ownsResearch } from './researchRuntime';
+import { dictionary, number, type Rule } from './archiveRules';
+
+/**
+ * Ongod shard gathering, spirit bursts and echo hit state.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface EchoRuntime {
+  shardsGathered?: number;
+  shardStreak?: number;
+  shardStreakUntil?: number;
+  spiritBurstUntil?: number;
+  vulnerabilityUntil?: Record<string, number>;
+  echoHits?: Record<string, number>;
+}
+export const ECHO_RUNTIME_RULES = {
+  shardsGathered: number,
+  shardStreak: number,
+  shardStreakUntil: number,
+  spiritBurstUntil: number,
+  vulnerabilityUntil: dictionary(number),
+  echoHits: dictionary(number),
+} satisfies Record<keyof EchoRuntime, Rule>;
 
 /** A duplicate shard is collected through the same XP path but never duplicates again. */
 export function recordShardGathering(

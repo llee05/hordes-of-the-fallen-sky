@@ -1,6 +1,22 @@
 import { GAME } from '../config';
 import type { RunState } from '../types';
 import { ownsResearch } from './researchRuntime';
+import { integer, list, number, string, type Rule } from './archiveRules';
+
+/**
+ * Guardian construction, arrow platform and ward state.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface GuardianRuntime {
+  firstConstructionCrossing?: number;
+  arrowPlatformAt?: number;
+  wardInside?: string[];
+}
+export const GUARDIAN_RUNTIME_RULES = {
+  firstConstructionCrossing: integer,
+  arrowPlatformAt: number,
+  wardInside: list(string, GAME.maxEnemies),
+} satisfies Record<keyof GuardianRuntime, Rule>;
 
 export function constructionMaterials(
   run: RunState,

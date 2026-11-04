@@ -3,66 +3,44 @@ import { leadershipAttackSpeed } from './researchLeadership';
 import { hasDevelopment } from './camp';
 import { GAME } from '../config';
 import type { RunState } from '../types';
+import {
+  boolean,
+  dictionary,
+  integer,
+  list,
+  number,
+  object,
+  positive,
+  string,
+  type Rule,
+} from './archiveRules';
+import type { CompanionRuntime } from './researchCompanions';
+import type { EchoRuntime } from './researchEchoes';
+import type { GuardianRuntime } from './researchGuardian';
+import type { HybridRuntime } from './researchHybrids';
+import type { LeadershipRuntime } from './researchLeadership';
+import type { TerrainRuntime } from './researchTerrain';
 
-/** Optional for compatibility with older expedition saves. All timestamps use active seconds. */
-export interface ResearchRuntime {
-  nearestCompanion?: string;
-  echoFireAt?: number[];
-  ghostAttacks?: number[];
-  livingWaveKey?: string;
-  livingWaveKills?: number;
-  livingWatersCooldown?: number;
-  thousandArrowsCooldown?: number;
-  bloodEmberCooldown?: number;
-  lastStandUntil?: number;
-  lastStandCooldown?: number;
-  lastStandLow?: boolean;
-
-  firstConstructionCrossing?: number;
-  arrowPlatformAt?: number;
-  wardInside?: string[];
-  riderFireAt?: number[];
-  riderVolleyCounts?: number[];
-  hornUntil?: number;
-  hornCooldown?: number;
-  rallyUntil?: number;
-  rallyCrossing?: number;
-
-  shardsGathered?: number;
-  shardStreak?: number;
-  shardStreakUntil?: number;
-  spiritBurstUntil?: number;
-  vulnerabilityUntil?: Record<string, number>;
-  echoHits?: Record<string, number>;
-
-  slowSince?: Record<string, number>;
-  slowSeenAt?: Record<string, number>;
-  slowUntil?: Record<string, number>;
-  slowStrength?: Record<string, number>;
-  rootUntil?: Record<string, number>;
-  rootCooldown?: Record<string, number>;
-  terrainPulseAt?: number;
-  undertowAt?: number;
-  floodgateAt?: number;
-  dodgeUntil?: number;
-  dodgeCooldown?: number;
-  rockArcCooldown?: number;
-  stoneTickAt?: number;
-  ridgePatches?: { x: number; y: number; until: number }[];
-  lastGallopAt?: number;
-  riverStacks?: number;
-  riverUntil?: number;
-  lastHitAt?: number;
-  lastHitGeneration?: number;
-  targetSlot?: number;
-  targetSpawn?: number;
-  targetUntil?: number;
-  memoryStacks?: number;
-  memoryUntil?: number;
-  echoReleases?: number;
-  echoAttacks?: number[];
-  echoNearCamp?: boolean;
+/**
+ * Shared research hooks: Marked status and the crossing material-spend ledger.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface CoreResearchRuntime {
   markedUntil?: Record<string, number>;
+  crossingMaterialsSpent?: number;
+  crossingSpentIndex?: number;
+}
+export const CORE_RESEARCH_RUNTIME_RULES = {
+  markedUntil: dictionary(number),
+  crossingMaterialsSpent: positive,
+  crossingSpentIndex: integer,
+} satisfies Record<keyof CoreResearchRuntime, Rule>;
+
+/**
+ * Börte Chino stagger, hoof trails, Throat of the Prey and pursuit state.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface BorteChinoRuntime {
   staggerUntil?: Record<string, number>;
   staggerCooldownUntil?: Record<string, number>;
   hoofTrails?: { x: number; y: number; until: number; gallopSerial: number }[];
@@ -76,10 +54,44 @@ export interface ResearchRuntime {
   momentumHoldUntil?: number;
   markedNearKhan?: boolean;
   endlessBurstUntil?: number;
+}
+export const BORTE_CHINO_RUNTIME_RULES = {
+  staggerUntil: dictionary(number),
+  staggerCooldownUntil: dictionary(number),
+  hoofTrails: list(
+    object({ x: number, y: number, until: number, gallopSerial: integer }),
+    GAME.mounted.maxTrails,
+  ),
+  hoofTrailHits: dictionary(integer),
+  throatSlot: integer,
+  throatSpawn: integer,
+  throatStacks: integer,
+  dashHitSerial: integer,
+  dashHitEnemies: list(string, GAME.maxEnemies),
+  stormChaserUntil: number,
+  momentumHoldUntil: number,
+  markedNearKhan: boolean,
+  endlessBurstUntil: number,
+} satisfies Record<keyof BorteChinoRuntime, Rule>;
+
+/**
+ * Etügen Eke herding and craftspeople state.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface EtugenEkeRuntime {
   vigilantHerdersUntil?: number;
   craftspeopleRefundedCrossing?: number;
-  crossingMaterialsSpent?: number;
-  crossingSpentIndex?: number;
+}
+export const ETUGEN_EKE_RUNTIME_RULES = {
+  vigilantHerdersUntil: number,
+  craftspeopleRefundedCrossing: integer,
+} satisfies Record<keyof EtugenEkeRuntime, Rule>;
+
+/**
+ * Khükhedei Mergen volley counters, bleed, sunder and arrow rain state.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface KhukhedeiMergenRuntime {
   khanVolleyCount?: number;
   precisionVolleyCount?: number;
   wideVolleyCount?: number;
@@ -92,6 +104,29 @@ export interface ResearchRuntime {
   arrowRainX?: number;
   arrowRainY?: number;
   arrowRainDamage?: number;
+}
+export const KHUKHEDEI_MERGEN_RUNTIME_RULES = {
+  khanVolleyCount: integer,
+  precisionVolleyCount: integer,
+  wideVolleyCount: integer,
+  precisionMarkedUntil: dictionary(number),
+  bleedStacks: dictionary(integer),
+  bleedUntil: dictionary(number),
+  sunderStacks: dictionary(integer),
+  sunderUntil: dictionary(number),
+  arrowRainAt: number,
+  arrowRainX: number,
+  arrowRainY: number,
+  arrowRainDamage: positive,
+} satisfies Record<keyof KhukhedeiMergenRuntime, Rule>;
+
+/**
+ * Golomt protection, recovery, revival and hearth state.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface GolomtRuntime {
+  lastHitAt?: number;
+  lastHitGeneration?: number;
   warmAshesPending?: boolean;
   embersReturnUntil?: number;
   khanStationaryNearCamp?: boolean;
@@ -104,6 +139,80 @@ export interface ResearchRuntime {
   flamePulsesRemaining?: number;
   flameNextPulseAt?: number;
 }
+export const GOLOMT_RUNTIME_RULES = {
+  lastHitAt: number,
+  lastHitGeneration: integer,
+  warmAshesPending: boolean,
+  embersReturnUntil: number,
+  khanStationaryNearCamp: boolean,
+  hearthCampInRange: boolean,
+  ashBornInvulnerableUntil: number,
+  ashBornPulsePending: boolean,
+  firebreakUntil: number,
+  householdOathUntil: number,
+  flameHealUntil: number,
+  flamePulsesRemaining: integer,
+  flameNextPulseAt: number,
+} satisfies Record<keyof GolomtRuntime, Rule>;
+
+/**
+ * Ongod echo targeting, memory and release state.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface OngodRuntime {
+  targetSlot?: number;
+  targetSpawn?: number;
+  targetUntil?: number;
+  memoryStacks?: number;
+  memoryUntil?: number;
+  echoReleases?: number;
+  echoAttacks?: number[];
+  echoNearCamp?: boolean;
+}
+export const ONGOD_RUNTIME_RULES = {
+  targetSlot: integer,
+  targetSpawn: integer,
+  targetUntil: number,
+  memoryStacks: integer,
+  memoryUntil: number,
+  echoReleases: integer,
+  echoAttacks: list(integer, GAME.patrons.ancestors.maximum),
+  echoNearCamp: boolean,
+} satisfies Record<keyof OngodRuntime, Rule>;
+
+/**
+ * Galloping Barrage and River of Spirits state.
+ * Saved in `researchRuntime`; timestamps use active seconds.
+ */
+export interface HybridFieldRuntime {
+  lastGallopAt?: number;
+  riverStacks?: number;
+  riverUntil?: number;
+}
+export const HYBRID_FIELD_RUNTIME_RULES = {
+  lastGallopAt: number,
+  riverStacks: integer,
+  riverUntil: number,
+} satisfies Record<keyof HybridFieldRuntime, Rule>;
+/**
+ * Optional for compatibility with older expedition saves. All timestamps use active seconds.
+ * Each research system owns one slice and its save rules; `researchRuntimeRules.ts` combines them.
+ */
+export interface ResearchRuntime
+  extends
+    CoreResearchRuntime,
+    BorteChinoRuntime,
+    EtugenEkeRuntime,
+    KhukhedeiMergenRuntime,
+    GolomtRuntime,
+    OngodRuntime,
+    HybridFieldRuntime,
+    CompanionRuntime,
+    EchoRuntime,
+    GuardianRuntime,
+    HybridRuntime,
+    LeadershipRuntime,
+    TerrainRuntime {}
 function enemyKey(slot: number, spawn: number): string {
   return `${slot}:${spawn}`;
 }
