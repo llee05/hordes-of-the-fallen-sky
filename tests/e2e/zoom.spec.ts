@@ -11,52 +11,54 @@ import {
 // Keep the full input/layout checks within budget on software-rendered Chromium.
 test.beforeEach(() => test.setTimeout(process.env.CI ? 90000 : 60000));
 
-test('buttons, keyboard, and wheel zoom the battlefield with bounds and a reset, keeping HUD and bodies stable', async ({
-  page,
-}) => {
-  await openTitle(page);
-  await startExpedition(page);
-  const hud = (await page.locator('.resource-hud').boundingBox())!;
-  await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
-  await expect(page.locator('#zoom-level')).toHaveText('110%');
-  await page.keyboard.press('=');
-  await expect(page.locator('#zoom-level')).toHaveText('120%');
-  await page.keyboard.press('-');
-  await expect(page.locator('#zoom-level')).toHaveText('110%');
-  await page.keyboard.press('0');
-  await expect(page.locator('#zoom-level')).toHaveText('100%');
-  await page.mouse.move(720, 500);
-  await page.mouse.wheel(0, 1000);
-  await expect(page.locator('#zoom-level')).toHaveText('60%');
-  await expect(page.getByRole('button', { name: 'Zoom out', exact: true })).toBeDisabled();
-  await expect
-    .poll(() => page.evaluate(() => (window as any).__gloam.scene.cameras.main.worldView.width))
-    .toBeCloseTo(1440 / 0.6);
-  const zoomed = await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    return {
-      body: scene.player.body.width,
-      sprite: scene.player.displayWidth,
-      zoom: scene.cameras.main.zoom,
-      worldWidth: scene.cameras.main.worldView.width,
-    };
-  });
-  expect(zoomed).toMatchObject({ body: 20, sprite: 62, zoom: 0.6 });
-  expect(zoomed.worldWidth).toBeCloseTo(1440 / 0.6);
-  expect((await page.locator('.resource-hud').boundingBox())!.width).toBe(hud.width);
-  await page.screenshot({ path: 'test-results/battlefield-zoom-out.png' });
-  await page.mouse.wheel(0, -2000);
-  await expect(page.locator('#zoom-level')).toHaveText('160%');
-  await expect(page.getByRole('button', { name: 'Zoom in', exact: true })).toBeDisabled();
-  await page.getByRole('button', { name: 'Reset battlefield zoom to 100%' }).click();
-  await expect(page.locator('#zoom-level')).toHaveText('100%');
-  // One native event must not be processed again when Phaser replays its key queue.
-  await page.keyboard.down('=');
-  await expect(page.locator('#zoom-level')).toHaveText('110%');
-  await expectFrozen(page, () => page.locator('#zoom-level').textContent(), 10);
-  await page.keyboard.up('=');
-  await expect(page.locator('#zoom-level')).toHaveText('110%');
-});
+test(
+  'buttons, keyboard, and wheel zoom the battlefield with bounds and a reset, keeping HUD and bodies stable',
+  { tag: '@core' },
+  async ({ page }) => {
+    await openTitle(page);
+    await startExpedition(page);
+    const hud = (await page.locator('.resource-hud').boundingBox())!;
+    await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
+    await expect(page.locator('#zoom-level')).toHaveText('110%');
+    await page.keyboard.press('=');
+    await expect(page.locator('#zoom-level')).toHaveText('120%');
+    await page.keyboard.press('-');
+    await expect(page.locator('#zoom-level')).toHaveText('110%');
+    await page.keyboard.press('0');
+    await expect(page.locator('#zoom-level')).toHaveText('100%');
+    await page.mouse.move(720, 500);
+    await page.mouse.wheel(0, 1000);
+    await expect(page.locator('#zoom-level')).toHaveText('60%');
+    await expect(page.getByRole('button', { name: 'Zoom out', exact: true })).toBeDisabled();
+    await expect
+      .poll(() => page.evaluate(() => (window as any).__gloam.scene.cameras.main.worldView.width))
+      .toBeCloseTo(1440 / 0.6);
+    const zoomed = await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      return {
+        body: scene.player.body.width,
+        sprite: scene.player.displayWidth,
+        zoom: scene.cameras.main.zoom,
+        worldWidth: scene.cameras.main.worldView.width,
+      };
+    });
+    expect(zoomed).toMatchObject({ body: 20, sprite: 62, zoom: 0.6 });
+    expect(zoomed.worldWidth).toBeCloseTo(1440 / 0.6);
+    expect((await page.locator('.resource-hud').boundingBox())!.width).toBe(hud.width);
+    await page.screenshot({ path: 'test-results/battlefield-zoom-out.png' });
+    await page.mouse.wheel(0, -2000);
+    await expect(page.locator('#zoom-level')).toHaveText('160%');
+    await expect(page.getByRole('button', { name: 'Zoom in', exact: true })).toBeDisabled();
+    await page.getByRole('button', { name: 'Reset battlefield zoom to 100%' }).click();
+    await expect(page.locator('#zoom-level')).toHaveText('100%');
+    // One native event must not be processed again when Phaser replays its key queue.
+    await page.keyboard.down('=');
+    await expect(page.locator('#zoom-level')).toHaveText('110%');
+    await expectFrozen(page, () => page.locator('#zoom-level').textContent(), 10);
+    await page.keyboard.up('=');
+    await expect(page.locator('#zoom-level')).toHaveText('110%');
+  },
+);
 
 test('menus ignore zoom input and search remains editable; the chosen view survives a new expedition', async ({
   page,

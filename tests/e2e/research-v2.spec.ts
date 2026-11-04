@@ -87,91 +87,93 @@ test('research links open destinations hidden by search filters', async ({ page 
   await expect(search).toHaveValue('');
 });
 
-test('V2 target, shard and volley effects are consumed by actual scene gameplay hooks', async ({
-  page,
-}) => {
-  await openTitle(page);
-  await startExpedition(page);
-  const result = await page.evaluate(async () => {
-    const rules =
-      // @ts-expect-error Vite serves renderer modules by source URL.
-      (await import('/src/game/state/run.ts')) as typeof import('../../src/game/state/run');
-    const { applyResearch } = rules;
-    const scene = (window as any).__gloam.scene;
-    scene.spawnTimer = scene.attackTimer = 999;
-    scene.run.pendingUpgrades = 40;
-    for (const e of scene.enemies.getChildren()) e.disableBody(true, true);
-    for (const p of scene.projectiles.getChildren()) p.disableBody(true, true);
-    for (const id of [
-      'ancestral-companion',
-      'ancestral-companion',
-      'remembered-aim',
-      'on-spirit-signal',
-      'spirit-thread',
-      'on-memory-vessels',
-      'on-quiet-council',
-      'council-of-ancestors',
-      'on-ancestral-archers',
-      'power',
-      'wide-quiver',
-      'power',
-      'km-feathered-fan',
-    ]) {
-      if (!applyResearch(scene.run, id)) throw Error(`Cannot purchase ${id}`);
-    }
-    for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
-    const enemy = scene.enemies.getFirstAlive();
-    enemy.setPosition(scene.player.x + 120, scene.player.y);
-    enemy.health = enemy.maxHealth = 10000;
-    scene.spatial.rebuild([]);
-    scene.patronSupport.clock.restore({ ancestorTimer: 0, waterTimer: 999, guardianTimer: 999 });
-    scene.patronSupport.update(scene.run, 0.016, scene.player, scene.camp, scene.spatial, {
-      damage: () => {},
-      volley: () => {},
+test(
+  'V2 target, shard and volley effects are consumed by actual scene gameplay hooks',
+  { tag: '@core' },
+  async ({ page }) => {
+    await openTitle(page);
+    await startExpedition(page);
+    const result = await page.evaluate(async () => {
+      const rules =
+        // @ts-expect-error Vite serves renderer modules by source URL.
+        (await import('/src/game/state/run.ts')) as typeof import('../../src/game/state/run');
+      const { applyResearch } = rules;
+      const scene = (window as any).__gloam.scene;
+      scene.spawnTimer = scene.attackTimer = 999;
+      scene.run.pendingUpgrades = 40;
+      for (const e of scene.enemies.getChildren()) e.disableBody(true, true);
+      for (const p of scene.projectiles.getChildren()) p.disableBody(true, true);
+      for (const id of [
+        'ancestral-companion',
+        'ancestral-companion',
+        'remembered-aim',
+        'on-spirit-signal',
+        'spirit-thread',
+        'on-memory-vessels',
+        'on-quiet-council',
+        'council-of-ancestors',
+        'on-ancestral-archers',
+        'power',
+        'wide-quiver',
+        'power',
+        'km-feathered-fan',
+      ]) {
+        if (!applyResearch(scene.run, id)) throw Error(`Cannot purchase ${id}`);
+      }
+      for (let i = 0; i < 10 && !scene.enemies.countActive(true); i++) scene.spawnEnemy();
+      const enemy = scene.enemies.getFirstAlive();
+      enemy.setPosition(scene.player.x + 120, scene.player.y);
+      enemy.health = enemy.maxHealth = 10000;
+      scene.spatial.rebuild([]);
+      scene.patronSupport.clock.restore({ ancestorTimer: 0, waterTimer: 999, guardianTimer: 999 });
+      scene.patronSupport.update(scene.run, 0.016, scene.player, scene.camp, scene.spatial, {
+        damage: () => {},
+        volley: () => {},
+      });
+      const emptyCounted =
+        scene.run.researchRuntime?.echoAttacks?.some((n: number) => n > 0) ?? false;
+      scene.spatial.rebuild([enemy]);
+      scene.shootVolley(scene.player.x, scene.player.y, enemy, 2, 1, false, false, 'khan');
+      const bolt = scene.projectiles.getFirstAlive();
+      const damage = bolt.damage;
+      scene.hitEnemy(bolt, enemy);
+      const target = scene.run.researchRuntime.targetSpawn === enemy.spawnId;
+      const gem = scene.gems.get(scene.player.x, scene.player.y, 'gem');
+      gem.enableBody(true, scene.player.x, scene.player.y, true, true);
+      gem.value = 1;
+      gem.attracted = false;
+      scene.collectGems(0.016);
+      const stacks = scene.run.researchRuntime.memoryStacks;
+      let shots = 0;
+      scene.patronSupport.clock.restore({ ancestorTimer: 0, waterTimer: 999, guardianTimer: 999 });
+      scene.run.researchRuntime.echoAttacks = [3, 3, 3];
+      scene.patronSupport.update(scene.run, 0.016, scene.player, scene.camp, scene.spatial, {
+        damage: () => {},
+        volley: () => {
+          shots++;
+          return true;
+        },
+      });
+      return {
+        target,
+        stacks,
+        shots,
+        damage,
+        expectedDamage: scene.run.stats.damage * 0.95,
+        emptyCounted,
+        paidPurchases: scene.run.researchPurchases.length,
+        recordedKhanDamage: scene.run.researchObservations?.damage.khan ?? 0,
+      };
     });
-    const emptyCounted =
-      scene.run.researchRuntime?.echoAttacks?.some((n: number) => n > 0) ?? false;
-    scene.spatial.rebuild([enemy]);
-    scene.shootVolley(scene.player.x, scene.player.y, enemy, 2, 1, false, false, 'khan');
-    const bolt = scene.projectiles.getFirstAlive();
-    const damage = bolt.damage;
-    scene.hitEnemy(bolt, enemy);
-    const target = scene.run.researchRuntime.targetSpawn === enemy.spawnId;
-    const gem = scene.gems.get(scene.player.x, scene.player.y, 'gem');
-    gem.enableBody(true, scene.player.x, scene.player.y, true, true);
-    gem.value = 1;
-    gem.attracted = false;
-    scene.collectGems(0.016);
-    const stacks = scene.run.researchRuntime.memoryStacks;
-    let shots = 0;
-    scene.patronSupport.clock.restore({ ancestorTimer: 0, waterTimer: 999, guardianTimer: 999 });
-    scene.run.researchRuntime.echoAttacks = [3, 3, 3];
-    scene.patronSupport.update(scene.run, 0.016, scene.player, scene.camp, scene.spatial, {
-      damage: () => {},
-      volley: () => {
-        shots++;
-        return true;
-      },
-    });
-    return {
-      target,
-      stacks,
-      shots,
-      damage,
-      expectedDamage: scene.run.stats.damage * 0.95,
-      emptyCounted,
-      paidPurchases: scene.run.researchPurchases.length,
-      recordedKhanDamage: scene.run.researchObservations?.damage.khan ?? 0,
-    };
-  });
-  expect(result.emptyCounted).toBe(false);
-  expect(result.paidPurchases).toBe(13);
-  expect(result.recordedKhanDamage).toBeGreaterThan(0);
-  expect(result.target).toBe(true);
-  expect(result.stacks).toBe(1);
-  expect(result.shots).toBe(6);
-  expect(result.damage).toBeCloseTo(result.expectedDamage);
-});
+    expect(result.emptyCounted).toBe(false);
+    expect(result.paidPurchases).toBe(13);
+    expect(result.recordedKhanDamage).toBeGreaterThan(0);
+    expect(result.target).toBe(true);
+    expect(result.stacks).toBe(1);
+    expect(result.shots).toBe(6);
+    expect(result.damage).toBeCloseTo(result.expectedDamage);
+  },
+);
 
 test('Barrage speed survives Tempest steering throughout projectile flight', async ({ page }) => {
   await openTitle(page);

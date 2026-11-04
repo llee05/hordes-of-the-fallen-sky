@@ -4,44 +4,46 @@ import { beginStory } from './storyHelpers';
 
 test.describe.configure({ mode: 'parallel' });
 
-test('story cannot grant twice, and banked knowledge points survive a camp conversation', async ({
-  page,
-}) => {
-  // Two research purchases and both memory menus exhaust 30s on CI's software renderer.
-  test.setTimeout(process.env.CI ? 90000 : 60000);
-  await beginStory(page);
-  const outcome = await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    const before = scene.run.clan.materials;
-    scene.run.pendingUpgrades = 2;
-    document.querySelector<HTMLButtonElement>('[data-story-choice="share-work"]')!.click();
-    scene.chooseStory('share-work');
-    return {
-      difference: scene.run.clan.materials - before,
-      phase: scene.run.phase,
-      pending: scene.run.pendingUpgrades,
-      records: scene.run.story.records.length,
-    };
-  });
-  expect(outcome).toEqual({ difference: 6, phase: 'playing', pending: 2, records: 1 });
-  await page.keyboard.press('t');
-  await buyNode(page, 'power');
-  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'upgrade');
-  await buyNode(page, 'power');
-  await closeOverlayOrPause(page);
-  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
-  await page.keyboard.press('j');
-  await page.getByRole('tab', { name: 'Our story' }).click();
-  await expect(page.locator('.story-memory')).toHaveCount(1);
-  await closeOverlayOrPause(page);
-  await page.evaluate(() => (window as any).__gloam.scene.finish('dead'));
-  await page.getByRole('button', { name: 'Our remembered road' }).click();
-  await closeOverlayOrPause(page);
-  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'dead');
-  expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
-    true,
-  );
-});
+test(
+  'story cannot grant twice, and banked knowledge points survive a camp conversation',
+  { tag: '@core' },
+  async ({ page }) => {
+    // Two research purchases and both memory menus exhaust 30s on CI's software renderer.
+    test.setTimeout(process.env.CI ? 90000 : 60000);
+    await beginStory(page);
+    const outcome = await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      const before = scene.run.clan.materials;
+      scene.run.pendingUpgrades = 2;
+      document.querySelector<HTMLButtonElement>('[data-story-choice="share-work"]')!.click();
+      scene.chooseStory('share-work');
+      return {
+        difference: scene.run.clan.materials - before,
+        phase: scene.run.phase,
+        pending: scene.run.pendingUpgrades,
+        records: scene.run.story.records.length,
+      };
+    });
+    expect(outcome).toEqual({ difference: 6, phase: 'playing', pending: 2, records: 1 });
+    await page.keyboard.press('t');
+    await buyNode(page, 'power');
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'upgrade');
+    await buyNode(page, 'power');
+    await closeOverlayOrPause(page);
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
+    await page.keyboard.press('j');
+    await page.getByRole('tab', { name: 'Our story' }).click();
+    await expect(page.locator('.story-memory')).toHaveCount(1);
+    await closeOverlayOrPause(page);
+    await page.evaluate(() => (window as any).__gloam.scene.finish('dead'));
+    await page.getByRole('button', { name: 'Our remembered road' }).click();
+    await closeOverlayOrPause(page);
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'dead');
+    expect(await page.evaluate(() => (window as any).__gloam.scene.physics.world.isPaused)).toBe(
+      true,
+    );
+  },
+);
 
 test('camp panels fit desktop and narrow previews, skip neutrally, and freeze all story phases', async ({
   page,

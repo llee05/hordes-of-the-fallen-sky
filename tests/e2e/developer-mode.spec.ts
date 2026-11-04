@@ -6,55 +6,59 @@ import { DEVELOPER_LEVELS } from '../../src/game/dev/levels';
 // Tests use isolated browser contexts; parallel mode also balances CI shards.
 test.describe.configure({ mode: 'parallel' });
 
-test('developer mode freezes the expedition and returns to the exact title, intro, story, or menu', async ({
-  page,
-}) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Developer mode F8' }).click();
-  await expect(page.locator('[data-developer-level]')).toHaveCount(DEVELOPER_LEVELS.length);
-  await expect(page.getByRole('button', { name: 'Back ESC / F8' })).toBeFocused();
-  await expectFrozen(
-    page,
-    () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
-    13,
-  );
-  await closeOverlayOrPause(page);
-  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
-  await page.getByRole('button', { name: /NEW GAME/ }).click();
-  await page.keyboard.press('ArrowRight');
-  await page.keyboard.press('F8');
-  await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
-  // Native auto-repeat and Phaser replay must not toggle the menu a second time.
-  await page.evaluate(() =>
-    window.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'F8', keyCode: 119, repeat: true, bubbles: true }),
-    ),
-  );
-  await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
-  await page.keyboard.press('F8');
-  await expect(page.getByRole('heading', { name: 'A vow that broke the world.' })).toBeVisible();
-  await page.getByRole('button', { name: /Skip intro/ }).click();
-  await expect(page.locator('.story-panel')).toBeVisible();
-  const encounter = await page.locator('#overlay-title').textContent();
-  await page.keyboard.press('F8');
-  await closeOverlayOrPause(page);
-  await expect(page.locator('#overlay-title')).toHaveText(encounter!);
-  await closeOverlayOrPause(page);
-  await expect(page.getByRole('dialog')).toBeHidden();
-  await closeOverlayOrPause(page);
-  await page.getByRole('button', { name: 'Developer mode F8' }).click();
-  await closeOverlayOrPause(page);
-  await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
-  await page.getByRole('button', { name: 'Patron tech tree', exact: true }).click();
-  await page.locator('[data-tree-search]').fill('bow');
-  await page.keyboard.press('F8');
-  await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
-  await closeOverlayOrPause(page);
-  await expect(page.getByRole('heading', { name: 'Patron tech tree', exact: true })).toBeVisible();
-  await expect(page.locator('[data-tree-search]')).toHaveValue('bow');
-  await closeOverlayOrPause(page);
-  await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
-});
+test(
+  'developer mode freezes the expedition and returns to the exact title, intro, story, or menu',
+  { tag: '@core' },
+  async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Developer mode F8' }).click();
+    await expect(page.locator('[data-developer-level]')).toHaveCount(DEVELOPER_LEVELS.length);
+    await expect(page.getByRole('button', { name: 'Back ESC / F8' })).toBeFocused();
+    await expectFrozen(
+      page,
+      () => page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run)),
+      13,
+    );
+    await closeOverlayOrPause(page);
+    await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
+    await page.getByRole('button', { name: /NEW GAME/ }).click();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('F8');
+    await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
+    // Native auto-repeat and Phaser replay must not toggle the menu a second time.
+    await page.evaluate(() =>
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'F8', keyCode: 119, repeat: true, bubbles: true }),
+      ),
+    );
+    await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
+    await page.keyboard.press('F8');
+    await expect(page.getByRole('heading', { name: 'A vow that broke the world.' })).toBeVisible();
+    await page.getByRole('button', { name: /Skip intro/ }).click();
+    await expect(page.locator('.story-panel')).toBeVisible();
+    const encounter = await page.locator('#overlay-title').textContent();
+    await page.keyboard.press('F8');
+    await closeOverlayOrPause(page);
+    await expect(page.locator('#overlay-title')).toHaveText(encounter!);
+    await closeOverlayOrPause(page);
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await closeOverlayOrPause(page);
+    await page.getByRole('button', { name: 'Developer mode F8' }).click();
+    await closeOverlayOrPause(page);
+    await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
+    await page.getByRole('button', { name: 'Patron tech tree', exact: true }).click();
+    await page.locator('[data-tree-search]').fill('bow');
+    await page.keyboard.press('F8');
+    await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
+    await closeOverlayOrPause(page);
+    await expect(
+      page.getByRole('heading', { name: 'Patron tech tree', exact: true }),
+    ).toBeVisible();
+    await expect(page.locator('[data-tree-search]')).toHaveValue('bow');
+    await closeOverlayOrPause(page);
+    await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
+  },
+);
 
 test('switching checkpoints clears old actors, hazards, boss state, succession, and research', async ({
   page,

@@ -1,73 +1,75 @@
 import { expect, test } from '@playwright/test';
 import { openTitle, sceneFrames, startExpedition } from './helpers';
 
-test('native spell warnings cancel on pinning, pause in menus, and leave bounded non-stacking ground effects', async ({
-  page,
-}) => {
-  await openTitle(page);
-  await startExpedition(page);
-  const warned = await page.evaluate(async () => {
-    const { AREA_ENEMIES } = (await import(
-      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
-      '/src/game/data/enemies.ts'
-    )) as typeof import('../../src/game/data/enemies');
-    const s = (window as any).__gloam.scene;
-    s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
-    for (const e of s.enemies.getChildren()) e.disableBody(true, true);
-    s.run.clan.region = 1;
-    s.run.clan.locationId = 'bogd-khan-uul';
-    s.run.clan.stageTime = 40;
-    s.player.body.reset(s.camp.x + 600, s.camp.y + 100);
-    s.updateAreaCombat(0.01);
-    s.spawnEnemy(
-      { ...AREA_ENEMIES.find((e) => e.id === 'canopy-whisperer')!, health: 10000, speed: 0 },
-      { point: { x: s.player.x + 250, y: s.player.y } },
+test(
+  'native spell warnings cancel on pinning, pause in menus, and leave bounded non-stacking ground effects',
+  { tag: '@core' },
+  async ({ page }) => {
+    await openTitle(page);
+    await startExpedition(page);
+    const warned = await page.evaluate(async () => {
+      const { AREA_ENEMIES } = (await import(
+        // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+        '/src/game/data/enemies.ts'
+      )) as typeof import('../../src/game/data/enemies');
+      const s = (window as any).__gloam.scene;
+      s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
+      for (const e of s.enemies.getChildren()) e.disableBody(true, true);
+      s.run.clan.region = 1;
+      s.run.clan.locationId = 'bogd-khan-uul';
+      s.run.clan.stageTime = 40;
+      s.player.body.reset(s.camp.x + 600, s.camp.y + 100);
+      s.updateAreaCombat(0.01);
+      s.spawnEnemy(
+        { ...AREA_ENEMIES.find((e) => e.id === 'canopy-whisperer')!, health: 10000, speed: 0 },
+        { point: { x: s.player.x + 250, y: s.player.y } },
+      );
+      const e = s.enemies.getFirstAlive();
+      s.testCaster = e;
+      e.dangerTimer = 0;
+      e.attackTimer = 999;
+      s.updateEnemies(0.01);
+      return {
+        count: s.areaThreats.threats.length,
+        released: s.areaThreats.threats.some((t: any) => t.impacted),
+      };
+    });
+    expect(warned).toEqual({ count: 2, released: false });
+    await page.locator('#build').click();
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'building');
+    const frozen = await page.evaluate(() =>
+      structuredClone((window as any).__gloam.scene.areaThreats),
     );
-    const e = s.enemies.getFirstAlive();
-    s.testCaster = e;
-    e.dangerTimer = 0;
-    e.attackTimer = 999;
-    s.updateEnemies(0.01);
-    return {
-      count: s.areaThreats.threats.length,
-      released: s.areaThreats.threats.some((t: any) => t.impacted),
-    };
-  });
-  expect(warned).toEqual({ count: 2, released: false });
-  await page.locator('#build').click();
-  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'building');
-  const frozen = await page.evaluate(() =>
-    structuredClone((window as any).__gloam.scene.areaThreats),
-  );
-  await sceneFrames(page);
-  expect(await page.evaluate(() => (window as any).__gloam.scene.areaThreats)).toEqual(frozen);
-  await page.locator('[data-action="exit-camp"]').first().click();
-  const effects = await page.evaluate(async () => {
-    const { areaMovementMultiplier } = (await import(
-      // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
-      '/src/game/state/areaThreats.ts'
-    )) as typeof import('../../src/game/state/areaThreats');
-    const s = (window as any).__gloam.scene,
-      e = s.testCaster;
-    e.pinned = 1;
-    s.updateAreaCombat(0.05);
-    const cancelled = s.areaThreats.threats.length;
-    e.pinned = 0;
-    e.dangerTimer = 0;
-    s.updateEnemies(0.01);
-    s.updateAreaCombat(2);
-    return {
-      cancelled,
-      slow: areaMovementMultiplier(s.areaThreats, s.player),
-      count: s.areaThreats.threats.length,
-      graphics: s.areaEffects.commandBuffer.length,
-    };
-  });
-  expect(effects.cancelled).toBe(0);
-  expect(effects.slow).toBe(0.7);
-  expect(effects.count).toBe(2);
-  expect(effects.graphics).toBeGreaterThan(0);
-});
+    await sceneFrames(page);
+    expect(await page.evaluate(() => (window as any).__gloam.scene.areaThreats)).toEqual(frozen);
+    await page.locator('[data-action="exit-camp"]').first().click();
+    const effects = await page.evaluate(async () => {
+      const { areaMovementMultiplier } = (await import(
+        // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
+        '/src/game/state/areaThreats.ts'
+      )) as typeof import('../../src/game/state/areaThreats');
+      const s = (window as any).__gloam.scene,
+        e = s.testCaster;
+      e.pinned = 1;
+      s.updateAreaCombat(0.05);
+      const cancelled = s.areaThreats.threats.length;
+      e.pinned = 0;
+      e.dangerTimer = 0;
+      s.updateEnemies(0.01);
+      s.updateAreaCombat(2);
+      return {
+        cancelled,
+        slow: areaMovementMultiplier(s.areaThreats, s.player),
+        count: s.areaThreats.threats.length,
+        graphics: s.areaEffects.commandBuffer.length,
+      };
+    });
+    expect(effects.cancelled).toBe(0);
+    expect(effects.slow).toBe(0.7);
+    expect(effects.count).toBe(2);
+    expect(effects.graphics).toBeGreaterThan(0);
+  },
+);
 
 for (const location of ['bogd-khan-uul', 'otgontenger', 'orkhon-valley', 'eej-khairkhan'])
   test(`native ${location} encounters use the real terrain and retain shared enemies`, async ({

@@ -63,90 +63,92 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test('camp attackers stop outside the tents, repeat protected damage, freeze in menus, and only reward a defeat', async ({
-  page,
-}) => {
-  await placeAttacker(page, 0, -190, 90);
-  // Observe the first tick promptly so the interval assertion measures the full attack cadence.
-  await activeExpect
-    .poll(async () => (await siegeState(page)).resolve, { intervals: [50] })
-    .toBeCloseTo(96.85);
-  const first = await siegeState(page);
-  expect(first).toMatchObject({
-    active: true,
-    visible: true,
-    body: true,
-    speed: 0,
-    kills: 0,
-    spirit: 0,
-    gems: 0,
-  });
-  expect(first.distance).toBeGreaterThan(110);
-  expect(first.distance).toBeLessThanOrEqual(120);
-  await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    const enemy = (window as any).campAttacker;
-    // Reaching the camp commits to attacking it even when the Khan rides closer.
-    scene.player.setPosition(enemy.x + 28, enemy.y);
-  });
-  const holding = await expectFrozen(
-    page,
-    async () => {
-      const s = await siegeState(page);
-      return { x: s.x, y: s.y, speed: s.speed, resolve: s.resolve };
-    },
-    13,
-  );
-  expect(holding.x).toBe(first.x);
-  expect(holding.y).toBe(first.y);
-  expect(holding.speed).toBe(0);
-  expect(holding.resolve).toBe(first.resolve);
-  await page.keyboard.press('b');
-  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'building');
-  await expectFrozen(page, () => siegeState(page), 13);
-  await closeOverlayOrPause(page);
-  await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
-  await activeExpect
-    .poll(async () => (await siegeState(page)).resolve)
-    .toBeCloseTo(first.resolve - 3.15);
-  expect((await siegeState(page)).elapsed - first.elapsed).toBeGreaterThan(1.3);
-  const defeated = await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    const enemy = (window as any).campAttacker;
-    scene.damageEnemy(enemy, enemy.health);
-    return {
-      active: enemy.active,
-      body: enemy.body.enable,
-      kills: scene.run.kills,
-      spirit: scene.run.clan.spirit,
-      xp: scene.gems.getFirstAlive().value,
-    };
-  });
-  expect(defeated).toMatchObject({ active: false, body: false, kills: 1, xp: 3 });
-  expect(defeated.spirit).toBeCloseTo(1.2);
-  const reused = await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    const enemy = (window as any).campAttacker;
-    const previousSpawn = enemy.spawnId;
-    scene.spawnEnemy();
-    return {
-      same: scene.enemies.getFirstAlive() === enemy,
-      spawn: enemy.spawnId - previousSpawn,
-      body: enemy.body.enable,
-      cooldown: enemy.clanAttackTimer,
-      charging: enemy.chargeTimer,
-      preparing: enemy.preparingAttack,
-    };
-  });
-  expect(reused).toEqual({
-    same: true,
-    spawn: 1,
-    body: true,
-    cooldown: 0,
-    charging: 0,
-    preparing: false,
-  });
-});
+test(
+  'camp attackers stop outside the tents, repeat protected damage, freeze in menus, and only reward a defeat',
+  { tag: '@core' },
+  async ({ page }) => {
+    await placeAttacker(page, 0, -190, 90);
+    // Observe the first tick promptly so the interval assertion measures the full attack cadence.
+    await activeExpect
+      .poll(async () => (await siegeState(page)).resolve, { intervals: [50] })
+      .toBeCloseTo(96.85);
+    const first = await siegeState(page);
+    expect(first).toMatchObject({
+      active: true,
+      visible: true,
+      body: true,
+      speed: 0,
+      kills: 0,
+      spirit: 0,
+      gems: 0,
+    });
+    expect(first.distance).toBeGreaterThan(110);
+    expect(first.distance).toBeLessThanOrEqual(120);
+    await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      const enemy = (window as any).campAttacker;
+      // Reaching the camp commits to attacking it even when the Khan rides closer.
+      scene.player.setPosition(enemy.x + 28, enemy.y);
+    });
+    const holding = await expectFrozen(
+      page,
+      async () => {
+        const s = await siegeState(page);
+        return { x: s.x, y: s.y, speed: s.speed, resolve: s.resolve };
+      },
+      13,
+    );
+    expect(holding.x).toBe(first.x);
+    expect(holding.y).toBe(first.y);
+    expect(holding.speed).toBe(0);
+    expect(holding.resolve).toBe(first.resolve);
+    await page.keyboard.press('b');
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'building');
+    await expectFrozen(page, () => siegeState(page), 13);
+    await closeOverlayOrPause(page);
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
+    await activeExpect
+      .poll(async () => (await siegeState(page)).resolve)
+      .toBeCloseTo(first.resolve - 3.15);
+    expect((await siegeState(page)).elapsed - first.elapsed).toBeGreaterThan(1.3);
+    const defeated = await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      const enemy = (window as any).campAttacker;
+      scene.damageEnemy(enemy, enemy.health);
+      return {
+        active: enemy.active,
+        body: enemy.body.enable,
+        kills: scene.run.kills,
+        spirit: scene.run.clan.spirit,
+        xp: scene.gems.getFirstAlive().value,
+      };
+    });
+    expect(defeated).toMatchObject({ active: false, body: false, kills: 1, xp: 3 });
+    expect(defeated.spirit).toBeCloseTo(1.2);
+    const reused = await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      const enemy = (window as any).campAttacker;
+      const previousSpawn = enemy.spawnId;
+      scene.spawnEnemy();
+      return {
+        same: scene.enemies.getFirstAlive() === enemy,
+        spawn: enemy.spawnId - previousSpawn,
+        body: enemy.body.enable,
+        cooldown: enemy.clanAttackTimer,
+        charging: enemy.chargeTimer,
+        preparing: enemy.preparingAttack,
+      };
+    });
+    expect(reused).toEqual({
+      same: true,
+      spawn: 1,
+      body: true,
+      cooldown: 0,
+      charging: 0,
+      preparing: false,
+    });
+  },
+);
 
 test('every enemy can hold and animate a camp attack, including a charging rider and ranged creatures', async ({
   page,
