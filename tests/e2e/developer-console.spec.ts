@@ -1,4 +1,5 @@
-import { expect, test } from '@playwright/test';
+import { GAME } from '../../src/game/config';
+import { expect, test, type Page } from '@playwright/test';
 import { expectFrozen } from './helpers';
 import { command, checkpoint } from './developerConsole';
 
@@ -54,12 +55,24 @@ test('console pauses gameplay and accepts real keyboard input', async ({ page })
   expect(errors).toEqual([]);
 });
 
+// The base camp heals the Khan and restores clan resolve every second. Turning that off keeps
+// the health and integrity checks exact, so any damage that gets through still fails them.
+async function stopPassiveRecovery(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const run = (window as any).__gloam.scene.run;
+    run.clan.campEffects.bonuses.commanderRecovery = 0;
+    run.clan.campEffects.bonuses.resolveRecovery = 0;
+    run.patrons.hearth.regeneration = 0;
+  });
+}
+
 test('console invincibility protects the Khan from every damage path and restores damage when disabled', async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await checkpoint(page);
+  await stopPassiveRecovery(page);
   await page.keyboard.press('F10');
   await command(page, 'invincible on');
   await page.keyboard.press('Escape');
@@ -137,5 +150,97 @@ test('console invincibility protects the Khan from every damage path and restore
   await command(page, 'heal');
   await expect(page.getByRole('log')).toContainText(`Khan health restored to ${health}`);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.health)).toBe(health);
+  expect(errors).toEqual([]);
+});
+
+test('clan invincibility prevents melee, projectile, hazard and starvation losses, independently of the Khan', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await checkpoint(page);
+  await stopPassiveRecovery(page);
+  await page.keyboard.press('Backquote');
+  await command(page, 'clan-invincible on');
+  await expect(page.getByRole('button', { name: 'Clan invincibility: On' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByRole('button', { name: 'Khan invincibility: Off' })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
+  await page.keyboard.press('Backquote');
+  await expect(page.getByRole('dialog')).toBeHidden();
+  const before = await page.evaluate((interval) => {
+    const scene = (window as any).__gloam.scene;
+    scene.run.clan.integrity = 47;
+    scene.run.clan.food = 0;
+    scene.run.clan.pasture = 0;
+    scene.run.clan.stageTime = interval - 0.01;
+    scene.player.body.reset(scene.camp.x, scene.camp.y);
+    scene.invulnerable = 0;
+    const before = {
+      population: scene.run.clan.population,
+      herd: scene.run.clan.herd,
+      integrity: 47,
+      lost: scene.run.story.peopleLost,
+      health: scene.run.health,
+    };
+    scene.spawnEnemy();
+    const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);
+    enemy.body.reset(scene.camp.x + 10, scene.camp.y);
+    enemy.clanAttackTimer = 0;
+    scene.updateEnemies(0.01);
+    enemy.disableBody(true, true);
+    scene.fireHostile({ x: scene.camp.x + 10, y: scene.camp.y, definition: { damage: 100000 } }, 0);
+    scene.updateProjectiles(0.01);
+    scene.hazards.push({
+      x: scene.camp.x,
+      y: scene.camp.y,
+      remaining: 0.01,
+      warning: scene.add.graphics(),
+    });
+    return before;
+  }, GAME.clan.starvationInterval);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.stageTime))
+    .toBeGreaterThan(GAME.clan.starvationInterval + 0.05);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.hazards.length))
+    .toBe(0);
+  expect(
+    await page.evaluate(() => {
+      const run = (window as any).__gloam.scene.run;
+      return {
+        population: run.clan.population,
+        herd: run.clan.herd,
+        integrity: run.clan.integrity,
+        lost: run.story.peopleLost,
+      };
+    }),
+  ).toEqual({
+    population: before.population,
+    herd: before.herd,
+    integrity: before.integrity,
+    lost: before.lost,
+  });
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.health)).toBeLessThan(
+    before.health,
+  );
+  await expect(page.locator('#integrity')).toContainText('INVINCIBLE');
+  await page.keyboard.press('Backquote');
+  await command(page, 'clan-invincible off');
+  await page.keyboard.press('Backquote');
+  await page.evaluate((interval) => {
+    const scene = (window as any).__gloam.scene;
+    scene.run.clan.stageTime = interval * 2 - 0.01;
+  }, GAME.clan.starvationInterval);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.population))
+    .toBeLessThan(before.population);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.integrity)).toBeLessThan(
+    before.integrity,
+  );
   expect(errors).toEqual([]);
 });

@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { openTitle, startExpedition, tapController } from './helpers';
 
-// Tests use isolated browser contexts; parallel mode also balances CI shards.
 test.describe.configure({ mode: 'parallel' });
 
 const places = [
@@ -83,43 +82,47 @@ for (const [id, name, short] of places)
     await expect(page.locator(`[data-destination="${id}"]`)).toHaveCount(0);
   });
 
-for (const viewport of [
-  { width: 1280, height: 800 },
-  { width: 960, height: 600 },
-  { width: 390, height: 844 },
-])
-  test(`destination inspection preserves focus and paused state across responsive layouts at ${viewport.width}×${viewport.height}`, async ({
-    page,
-  }) => {
-    test.setTimeout(process.env.CI ? 90000 : 60000);
-    await openTitle(page);
-    await startExpedition(page);
-    await page.evaluate(() => {
-      const scene = (window as any).__gloam.scene;
-      scene.run.clan.stageTime = 45;
-      scene.openRoutes();
-    });
-    const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
-    await page.setViewportSize(viewport);
-    for (const [id, name] of places) {
-      const button = page.locator(`[data-destination="${id}"]`);
-      await button.click();
-      await expect(button).toHaveAttribute('aria-pressed', 'true');
-      await expect(button).toBeFocused();
-      await expect(page.locator('#destination-detail')).toContainText(name);
-    }
-    expect(
-      await page
-        .locator('.route-dialog')
-        .evaluate((panel) => panel.scrollWidth <= panel.clientWidth),
-    ).toBe(true);
-    expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(
-      before,
-    );
-    await page.screenshot({ path: `test-results/destinations-${viewport.width}.png` });
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('dialog')).toBeHidden();
+test('destination inspection preserves focus and paused state across responsive layouts', async ({
+  page,
+}) => {
+  test.setTimeout(120000);
+  await openTitle(page);
+  await startExpedition(page);
+  await page.evaluate(() => {
+    (window as any).__gloam.scene.run.clan.stageTime = 45;
   });
+  for (const viewport of [
+    { width: 1280, height: 800 },
+    { width: 960, height: 600 },
+    { width: 390, height: 844 },
+  ]) {
+    await test.step(`${viewport.width}×${viewport.height}`, async () => {
+      // Reopen at each width so Escape dismissal is checked for every layout.
+      await page.evaluate(() => (window as any).__gloam.scene.openRoutes());
+      await expect(page.getByRole('dialog')).toBeVisible();
+      const before = await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run));
+      await page.setViewportSize(viewport);
+      for (const [id, name] of places) {
+        const button = page.locator(`[data-destination="${id}"]`);
+        await button.click();
+        await expect(button).toHaveAttribute('aria-pressed', 'true');
+        await expect(button).toBeFocused();
+        await expect(page.locator('#destination-detail')).toContainText(name);
+      }
+      expect(
+        await page
+          .locator('.route-dialog')
+          .evaluate((panel) => panel.scrollWidth <= panel.clientWidth),
+      ).toBe(true);
+      expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(
+        before,
+      );
+      await page.screenshot({ path: `test-results/destinations-${viewport.width}.png` });
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog')).toBeHidden();
+    });
+  }
+});
 
 test('keyboard and controller select a destination before confirming the journey', async ({
   page,
