@@ -282,22 +282,23 @@ The desktop game runs offline with local assets and native, validated, atomic sa
 
 ## 10. Source map for maintaining this brief
 
-| Area                                                           | Implementation                                                                                                   |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Starting stats and balance constants                           | [config.ts](../src/game/config.ts)                                                                               |
-| Khan damage, presence, succession timing                       | [state/khan.ts](../src/game/state/khan.ts)                                                                       |
-| Starting run and XP thresholds                                 | [state/run.ts](../src/game/state/run.ts)                                                                         |
-| Camp building definitions and purchase rules                   | [data/nomadicCamp.ts](../src/game/data/nomadicCamp.ts), [state/nomadicCamp.ts](../src/game/state/nomadicCamp.ts) |
-| Legacy crafts, formations, routes, regions                     | [data/clan.ts](../src/game/data/clan.ts)                                                                         |
-| Typed camp effects and once-only purchase grants               | [state/camp.ts](../src/game/state/camp.ts)                                                                       |
-| Economy, staffing, purchases, protection, migration, identity  | [state/clan.ts](../src/game/state/clan.ts)                                                                       |
-| Enemy definitions and spawn interval                           | [data/enemies.ts](../src/game/data/enemies.ts)                                                                   |
-| Combat, targeting, support attacks, hazards, phase transitions | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                                                |
-| Encounter content, choices, epilogue                           | [data/story.ts](../src/game/data/story.ts)                                                                       |
-| Encounter triggers and once-only rewards                       | [state/story.ts](../src/game/state/story.ts)                                                                     |
-| Prologue chapters                                              | [data/intro.ts](../src/game/data/intro.ts)                                                                       |
-| Menus, chronicle, help, input                                  | [GameUI.ts](../src/ui/GameUI.ts), [menuContent.ts](../src/ui/menuContent.ts)                                     |
-| Save and packaging details                                     | [README](../README.md#packaging-and-saves), [Steam preparation](../steam/README.md)                              |
+| Area                                                          | Implementation                                                                                                                                                               |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Starting stats and balance constants                          | [config.ts](../src/game/config.ts)                                                                                                                                           |
+| Khan damage, presence, succession timing                      | [state/khan.ts](../src/game/state/khan.ts)                                                                                                                                   |
+| Starting run and XP thresholds                                | [state/run.ts](../src/game/state/run.ts)                                                                                                                                     |
+| Camp building definitions and purchase rules                  | [data/nomadicCamp.ts](../src/game/data/nomadicCamp.ts), [state/nomadicCamp.ts](../src/game/state/nomadicCamp.ts)                                                             |
+| Legacy crafts, formations, routes, regions                    | [data/clan.ts](../src/game/data/clan.ts)                                                                                                                                     |
+| Typed camp effects and once-only purchase grants              | [state/camp.ts](../src/game/state/camp.ts)                                                                                                                                   |
+| Economy, staffing, purchases, protection, migration, identity | [state/clan.ts](../src/game/state/clan.ts)                                                                                                                                   |
+| Enemy definitions and spawn interval                          | [data/enemies.ts](../src/game/data/enemies.ts)                                                                                                                               |
+| Combat, enemy targeting and behaviour                         | [CombatSystem.ts](../src/game/scenes/arena/CombatSystem.ts), [EnemyBehaviour.ts](../src/game/scenes/arena/EnemyBehaviour.ts); module map in [arena-scene.md](arena-scene.md) |
+| Support attacks, hazards, phase transitions                   | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                                                                                                            |
+| Encounter content, choices, epilogue                          | [data/story.ts](../src/game/data/story.ts)                                                                                                                                   |
+| Encounter triggers and once-only rewards                      | [state/story.ts](../src/game/state/story.ts)                                                                                                                                 |
+| Prologue chapters                                             | [data/intro.ts](../src/game/data/intro.ts)                                                                                                                                   |
+| Menus, chronicle, help, input                                 | [GameUI.ts](../src/ui/GameUI.ts), [menuContent.ts](../src/ui/menuContent.ts)                                                                                                 |
+| Save and packaging details                                    | [README](../README.md#packaging-and-saves), [Steam preparation](../steam/README.md)                                                                                          |
 
 See [the progression UI guide](progression-ui.md) for adding technologies, buildings, and development nodes without rewriting the shared layout. Update this reference with balance or progression changes. A longer historical campaign, permanent civilization unlocks, and thousands of individually simulated people remain future work rather than hidden mechanics.
 

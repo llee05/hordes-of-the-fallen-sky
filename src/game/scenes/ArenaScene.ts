@@ -41,7 +41,7 @@ import {
   type AreaThreat,
 } from '../state/areaThreats';
 import { runFromCampArchive } from '../state/campArchive';
-import { barrierContact, campBoundary } from '../state/campBarrier';
+import { campBoundary } from '../state/campBarrier';
 import { advanceCampRecovery, gallopCooldown, wagonDefence } from '../state/campCombat';
 import { purchaseEstate, type EstatePurchaseKind } from '../state/campEstate';
 import {
@@ -75,12 +75,6 @@ import { ActionKeys } from '../systems/ActionKeys';
 import { areaSurface, habitatPreference } from '../systems/AreaHabitat';
 import { GameAudio } from '../systems/Audio';
 import { clampCameraZoom } from '../systems/CameraView';
-import {
-  advanceCharge,
-  createEnemyTactics,
-  seerDangerRadius,
-  tacticalGoal,
-} from '../systems/enemyTactics';
 import { FieldMarkers } from '../systems/FieldMarkers';
 import { GamepadInput } from '../systems/GamepadInput';
 import { SpatialHash } from '../systems/SpatialHash';
@@ -95,6 +89,7 @@ import { captureBody } from './arena/bodyArchive';
 import { CampPresenter } from './arena/CampPresenter';
 import { ClanDamage } from './arena/ClanDamage';
 import { CombatSystem, type HostileShooter } from './arena/CombatSystem';
+import { EnemyBehaviour } from './arena/EnemyBehaviour';
 import { EnemyDirector, type SpawnDirective } from './arena/EnemyDirector';
 import { HudPresenter } from './arena/HudPresenter';
 import { KhanController } from './arena/KhanController';
@@ -150,6 +145,7 @@ export class ArenaScene extends Phaser.Scene {
   private readonly khan = this.createKhan();
   private readonly combat = this.createCombat();
   private readonly riderHost = new RiderHost(this.arena, this.combat);
+  private readonly enemyBehaviour = this.createEnemyBehaviour();
   /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
   private readonly controls = new ArenaInput(this.arena, this.controller, this.actionKeys);
   private hudTimer = 0;
@@ -264,6 +260,28 @@ export class ArenaScene extends Phaser.Scene {
       },
       clearTouch: () => scene.controls.clearTouch(),
     });
+  }
+
+  private createEnemyBehaviour(): EnemyBehaviour {
+    const scene = this;
+    return new EnemyBehaviour(
+      this.arena,
+      {
+        get campBarrier() {
+          return scene.campBarrier;
+        },
+        get fieldMarkers() {
+          return scene.fieldMarkers;
+        },
+        get hazards() {
+          return scene.hazards;
+        },
+        queueAreaThreat: (kind, point, owner) => scene.queueAreaThreat(kind, point, owner),
+      },
+      this.combat,
+      this.enemyDirector,
+      this.clanDamage,
+    );
   }
 
   private createCombat(): CombatSystem {
@@ -1041,7 +1059,7 @@ export class ArenaScene extends Phaser.Scene {
     this.updateFieldObjectives(dt);
     this.updateCrossing(dt);
     this.updateFinalStand(dt);
-    this.updateEnemies(dt);
+    this.enemyBehaviour.update(dt);
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
       this.finish('dead');
       return;
@@ -1270,319 +1288,6 @@ export class ArenaScene extends Phaser.Scene {
       Object.assign(o, nav?.slide(o, desired, 18) ?? desired);
     }
     this.fieldMarkers.update(o, dt);
-  }
-
-  private updateEnemies(dt: number): void {
-    const clan = this.run.clan;
-    const boundary = campBoundary(this.run);
-    const khanActive = isKhanActive(this.run);
-    const warnings = this.fieldMarkers.warnings.clear();
-    for (const trail of this.run.combat.trails)
-      warnings
-        .lineStyle(1, 0x78b6ae, (0.3 * trail.remaining) / GAME.mounted.trailSeconds)
-        .strokeCircle(trail.x, trail.y, GAME.mounted.trailRadius);
-    for (const enemy of this.enemies.getChildren() as Enemy[]) {
-      const shadow = this.enemyDirector.shadows.get(enemy);
-      shadow?.setVisible(enemy.active);
-      if (!enemy.active) continue;
-      const objective = this.run.field.objective;
-      if (
-        (objective?.kind === 'gathering' &&
-          objective.status === 'available' &&
-          enemy.objectiveId === objective.id) ||
-        (this.run.clan.stage === 'migration' &&
-          this.run.crossing &&
-          enemy.crossingId === this.run.crossing.key)
-      )
-        warnings.lineStyle(2, 0xdfbc74, 0.8).strokeCircle(enemy.x, enemy.y, 22);
-      let campDistance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.camp.x, this.camp.y);
-      const finaleWarning = enemy === this.enemyDirector.boss ? this.run.finalStand : undefined;
-      if (finaleWarning?.phase === 'warning' && finaleWarning.aim)
-        warnings
-          .lineStyle(4, 0xdc976a, 0.85)
-          .lineBetween(enemy.x, enemy.y, finaleWarning.aim.x, finaleWarning.aim.y)
-          .strokeCircle(finaleWarning.aim.x, finaleWarning.aim.y, 70);
-      if (finaleWarning?.phase === 'recovery')
-        warnings.lineStyle(3, 0xf0d194, 0.8).strokeCircle(enemy.x, enemy.y, 52);
-      const clearance = boundary.attackRange - 1;
-      if (campDistance < clearance) {
-        // Moving or expanding hurdles push attackers out instead of covering them.
-        const contact = barrierContact(this.camp, enemy, clearance);
-        enemy.setPosition(contact.x, contact.y);
-        enemy.body!.updateFromGameObject();
-        campDistance = clearance;
-      }
-      enemy.setDepth(100 + enemy.y);
-      shadow?.setPosition(enemy.x + 8, enemy.y + 5).setDepth(99 + enemy.y);
-      enemy.attackTimer -= dt;
-      enemy.clanAttackTimer -= dt;
-      enemy.chargeTimer -= dt;
-      enemy.pinned = Math.max(0, enemy.pinned - dt);
-      enemy.dangerTimer -= dt;
-      const playerDistance = khanActive
-        ? Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y)
-        : Infinity;
-      if (
-        playerDistance > GAME.spawning.despawnDistance &&
-        campDistance > GAME.spawning.despawnDistance &&
-        enemy !== this.enemyDirector.boss &&
-        !this.landscape.world3d?.nearView(enemy, GAME.spawning.viewRetentionMargin)
-      ) {
-        enemy.disableBody(true, true);
-        continue;
-      }
-      const attackingCamp = campDistance <= boundary.attackRange;
-      let target: { x: number; y: number } =
-        attackingCamp || campDistance < playerDistance * 1.25 ? this.camp : this.player;
-      const finale = enemy.definition.behavior === 'boss' ? this.run.finalStand : undefined;
-      if (finale) {
-        const angle = (finale.approach * Math.PI) / 2;
-        const desired = {
-          x: this.camp.x + Math.cos(angle) * (boundary.attackRange + 180),
-          y: this.camp.y + Math.sin(angle) * (boundary.attackRange + 180),
-        };
-        target = this.landscape.navigation?.nearestWalkable(desired) ?? desired;
-      }
-      const distance = Phaser.Math.Distance.Between(enemy.x, enemy.y, target.x, target.y);
-      const behavior = enemy.definition.behavior;
-      const ranged = behavior === 'ranged' || behavior === 'boss';
-      const clearShot =
-        !this.landscape.world3d ||
-        !ranged ||
-        distance >= 650 ||
-        this.landscape.navigation!.lineClear(enemy, target, 0);
-      let speed =
-        enemy.definition.speed *
-        (1 + clan.region * 0.1) *
-        Math.max(
-          0.65,
-          1 /
-            Math.sqrt(
-              this.landscape.navigation?.travelCost(enemy, enemy.definition.navigation) ?? 1,
-            ),
-        );
-      if (enemy.definition.home && enemy.definition.habitat) {
-        const surface = areaSurface(
-          this.landscape.navigation?.terrain,
-          currentLocation(this.run).id,
-          enemy.x,
-          enemy.y,
-        );
-        const suited = habitatPreference(surface, enemy.definition.habitat) > 0.5;
-        if (suited) speed *= GAME.areaEnemies.habitatSpeed;
-        enemy.setAlpha(
-          enemy.definition.concealed &&
-            suited &&
-            Math.min(playerDistance, campDistance) > GAME.areaEnemies.revealRange
-            ? GAME.areaEnemies.concealedAlpha
-            : 1,
-        );
-      }
-      if (enemy.elite) warnings.lineStyle(3, 0xe0bc76, 0.85).strokeCircle(enemy.x, enemy.y, 30);
-
-      speed *= 1;
-      if (enemy.pinned > 0 || (finale && finale.phase !== 'advance')) speed = 0;
-      if (
-        this.run.combat.trails.some(
-          (t) => Math.hypot(enemy.x - t.x, enemy.y - t.y) < GAME.mounted.trailRadius,
-        )
-      )
-        speed *= 1 - GAME.mounted.trailSlow;
-      if (ranged && !finale && distance < 260 && clearShot) speed = 0;
-      if (finale && finale.phase !== 'advance') {
-        enemy.setVelocity(0, 0);
-      } else if (attackingCamp) {
-        // Hold outside the tents instead of walking (or charging) into their centre.
-        enemy.setVelocity(0, 0);
-        enemy.chargeTimer = 0;
-        enemy.tactics = createEnemyTactics();
-      } else {
-        const tactical = tacticalGoal(
-          enemy.definition,
-          enemy,
-          target,
-          enemy.tacticalSlot,
-          this.run.elapsed,
-        );
-        if (behavior === 'charger') {
-          const state = enemy.tactics;
-          const aim = state.aim ?? target;
-          const angle = state.direction
-            ? Math.atan2(state.direction.y, state.direction.x)
-            : Math.atan2(aim.y - enemy.y, aim.x - enemy.x);
-          const ahead = { x: enemy.x + Math.cos(angle) * 90, y: enemy.y + Math.sin(angle) * 90 };
-          const blocked =
-            !!this.landscape.navigation && !this.landscape.navigation.lineClear(enemy, ahead);
-          advanceCharge(state, dt, enemy, target, blocked, enemy.pinned > 0);
-          enemy.chargeTimer =
-            state.phase === 'charge'
-              ? state.remaining + 2.3
-              : state.phase === 'windup'
-                ? state.remaining
-                : 0;
-          if (state.phase === 'windup') {
-            enemy.setVelocity(0, 0);
-            enemy.preparingAttack = true;
-            warnings
-              .lineStyle(3, 0xc97b62, 0.65)
-              .lineBetween(enemy.x, enemy.y, state.aim!.x, state.aim!.y);
-          } else if (state.phase === 'charge') {
-            const chargeAngle = Math.atan2(state.direction!.y, state.direction!.x);
-            enemy.setVelocity(
-              Math.cos(chargeAngle) * speed * 2.2,
-              Math.sin(chargeAngle) * speed * 2.2,
-            );
-          } else {
-            const waypoint =
-              this.landscape.navigation?.waypoint(enemy, target, enemy.definition.navigation) ??
-              target;
-            this.physics.moveTo(
-              enemy,
-              waypoint.x,
-              waypoint.y,
-              speed * (state.phase === 'recover' ? 0.45 : 1),
-            );
-          }
-        } else {
-          const navigation = this.landscape.navigation;
-          const waypoint =
-            tactical !== target && (!navigation || navigation.lineClear(enemy, tactical))
-              ? tactical
-              : (navigation?.waypoint(enemy, target, enemy.definition.navigation) ?? target);
-          const hold =
-            !finale && ranged && clearShot && Math.abs(distance - GAME.tactics.seerRange) < 55;
-          if (hold || speed === 0) enemy.setVelocity(0, 0);
-          else this.physics.moveTo(enemy, waypoint.x, waypoint.y, speed);
-        }
-      }
-      enemy.setFlipX(
-        (this.landscape.world3d?.screenX(enemy.x - target.x, enemy.y - target.y) ??
-          enemy.x - target.x) > 0,
-      );
-      enemy.preparingAttack =
-        finale?.phase === 'warning' ||
-        ((behavior === 'ranged' || behavior === 'boss') &&
-          distance < 650 &&
-          enemy.attackTimer > 0 &&
-          enemy.attackTimer < 0.25) ||
-        (attackingCamp && enemy.clanAttackTimer > 0 && enemy.clanAttackTimer < 0.2) ||
-        (behavior === 'charger' && enemy.tactics.phase === 'windup') ||
-        (!!enemy.definition.ability &&
-          enemy.dangerTimer > 0 &&
-          enemy.dangerTimer < 0.4 &&
-          distance < GAME.areaCombat.abilityRange);
-      if (attackingCamp && !finale && enemy.clanAttackTimer <= 0) {
-        enemy.motion.attack();
-        this.clanDamage.damage(
-          enemy.definition.damage * GAME.camp.enemyAttack.damageMultiplier,
-          'attack',
-          enemy.definition.title ?? enemy.definition.id,
-          enemy,
-        );
-        enemy.clanAttackTimer = GAME.camp.enemyAttack.interval;
-        const impact = this.campBarrier.hit(this.camp, enemy);
-        this.audio.play('barrier', impact);
-        this.effects.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
-      }
-      if (
-        (behavior === 'ranged' || (behavior === 'boss' && !finale)) &&
-        clearShot &&
-        enemy.pinned <= 0 &&
-        enemy.attackTimer <= 0 &&
-        distance < 650
-      ) {
-        const angle = Math.atan2(target.y - enemy.y, target.x - enemy.x);
-        const count = behavior === 'boss' ? 12 : (enemy.definition.volley?.shots ?? 1);
-        enemy.motion.attack();
-        for (let i = 0; i < count; i += 1)
-          this.combat.fireHostile(
-            enemy,
-            angle +
-              (behavior === 'boss'
-                ? (i * Math.PI * 2) / count
-                : (i - (count - 1) / 2) * (enemy.definition.volley?.spread ?? 0)),
-          );
-        enemy.attackTimer = behavior === 'boss' ? 2.5 : (enemy.definition.volley?.interval ?? 3.5);
-      }
-      if (
-        enemy.definition.ability &&
-        distance < GAME.areaCombat.abilityRange &&
-        enemy.dangerTimer <= 0 &&
-        enemy.pinned <= 0 &&
-        (!this.landscape.navigation || this.landscape.navigation.lineClear(enemy, target, 0))
-      ) {
-        const ability = enemy.definition.ability,
-          owner = `${enemy.tacticalSlot}:${enemy.spawnId}`;
-        let placed = 0;
-        for (let i = 0; i < ability.count; i++) {
-          const offset = (i - (ability.count - 1) / 2) * GAME.areaCombat.spread;
-          const angle = Math.atan2(target.y - enemy.y, target.x - enemy.x);
-          const point = {
-            x: target.x - Math.sin(angle) * offset,
-            y: target.y + Math.cos(angle) * offset,
-          };
-          if (this.queueAreaThreat(ability.kind, point, owner)) placed++;
-        }
-        enemy.dangerTimer = placed ? GAME.areaCombat.abilityEvery : GAME.areaCombat.abilityRetry;
-        if (placed) {
-          enemy.motion.attack();
-          this.audio.play('spell', enemy);
-        }
-      }
-      if (
-        enemy.definition.id === 'hollow-seer' &&
-        distance < 650 &&
-        clearShot &&
-        enemy.dangerTimer <= 0 &&
-        enemy.pinned <= 0
-      ) {
-        this.hazards.push({
-          x: target.x,
-          y: target.y,
-          remaining: GAME.tactics.seerDangerWarning,
-          warning: this.add.graphics().setDepth(5),
-          radius: seerDangerRadius(enemy.definition),
-          damage: GAME.tactics.seerDangerDamage,
-          source: 'seer',
-        });
-        enemy.dangerTimer = GAME.tactics.seerEvery;
-      }
-      if (
-        enemy.active &&
-        khanActive &&
-        this.timers.dashRemaining > 0 &&
-        playerDistance < 68 &&
-        enemy.lastGallop !== this.run.combat.gallopSerial
-      ) {
-        enemy.lastGallop = this.run.combat.gallopSerial;
-        const d = Math.max(1, playerDistance),
-          push = GAME.mounted.breakthroughPush;
-        if (push > 0) {
-          const desired = {
-            x: enemy.x + ((enemy.x - this.player.x) / d) * push,
-            y: enemy.y + ((enemy.y - this.player.y) / d) * push,
-          };
-          const point =
-            this.landscape.navigation?.slide(enemy, desired, GAME.terrain.actorClearance) ??
-            desired;
-          enemy.setPosition(point.x, point.y);
-        }
-      }
-      if (enemy.burning > 0) {
-        enemy.burning -= dt;
-        this.combat.damageEnemy(
-          enemy,
-          dt * this.run.stats.damage * 0.45 * this.run.clan.campEffects.multipliers.burnDamage,
-        );
-      }
-      if (
-        enemy.active &&
-        this.timers.dashRemaining > 0 &&
-        clan.formation === 'wedge' &&
-        playerDistance < 64
-      )
-        this.combat.damageEnemy(enemy, dt * this.run.stats.damage * 18);
-    }
   }
 
   selectSuccessor(trait: SuccessorTrait): void {
@@ -2018,6 +1723,9 @@ export class ArenaScene extends Phaser.Scene {
   }
   hideFallenKhan(): void {
     this.khan.hideFallenKhan();
+  }
+  updateEnemies(dt: number): void {
+    this.enemyBehaviour.update(dt);
   }
   get riders(): Phaser.GameObjects.Image[] {
     return this.riderHost.riders;
