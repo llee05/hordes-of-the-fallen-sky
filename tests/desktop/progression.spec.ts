@@ -60,8 +60,8 @@ test('connected progression maps, camp comparisons, and recipe links fit native 
         await page.locator('.camp-estate').evaluate((el) => el.scrollWidth <= el.clientWidth),
       ).toBe(true);
       await page.screenshot({ path: `test-results/native-camp-map-${size.width}.png` });
+      // Leaving the immersive camp returns straight to the battlefield.
       await closeOverlayOrPause(page);
-      await page.keyboard.press('Escape');
       await expect(page.getByRole('dialog')).toBeHidden();
     }
     await page.keyboard.press('b');
