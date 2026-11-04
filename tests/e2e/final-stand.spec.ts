@@ -82,6 +82,8 @@ async function defeatInCombat(
     s.invulnerable = 999;
     s.run.clan.population = options.population;
     s.run.clan.integrity = options.resolve;
+    // Isolate the defeat reward from passive recovery while the arrow travels.
+    s.run.clan.campEffects.bonuses.resolveRecovery = 0;
     s.run.story.enabled = options.speech;
     s.run.legacy.reactionUntil = 0;
     if (options.coolingDown) {

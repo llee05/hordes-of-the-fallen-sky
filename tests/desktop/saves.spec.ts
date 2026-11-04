@@ -33,7 +33,13 @@ test('native expeditions survive a real window close, relaunch paused, and keep 
     await expect(page.locator('.save-message')).toHaveText('Expedition saved.');
     const manualFile = join(directory, 'saves/expedition-slot-1.json');
     const manual = JSON.parse(await readFile(manualFile, 'utf8'));
-    expect(manual.run.clan.estate.tier).toBe(1);
+    expect(manual.run.clan.nomadicCamp.core).toEqual({
+      'khans-ger': 1,
+      'horse-lines': 1,
+      'herding-grounds': 1,
+      'communal-hearth': 1,
+      'wagon-yard': 1,
+    });
     expect(
       await page.evaluate(async () => {
         try {
