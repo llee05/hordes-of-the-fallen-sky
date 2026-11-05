@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test.use({ viewport: { width: 1280, height: 800 }, trace: 'off' });
 
-test('Golden Pasture arrivals use the visible camera edge and survive the next update', async ({
+test('Golden Pasture arrivals survive at the camera edge and retire without kills when distant', async ({
   page,
 }) => {
   await page.goto('/');
@@ -39,10 +39,17 @@ test('Golden Pasture arrivals use the visible camera edge and survive the next u
     });
     const before = enemies.length;
     s.updateEnemies(0.001);
+    const culled = before - s.enemies.countActive(true);
+    const kills = s.run.kills;
+    const distant = s.enemies.getFirstAlive();
+    distant.setPosition(24, 24);
+    s.updateEnemies(0.001);
     return {
       spawned,
       count: before,
-      culled: before - s.enemies.countActive(true),
+      culled,
+      retired: !distant.active && !distant.body.enable,
+      killsChanged: s.run.kills !== kills,
       outside,
       valid,
     };
@@ -50,6 +57,8 @@ test('Golden Pasture arrivals use the visible camera edge and survive the next u
   expect(result.spawned).toBe(true);
   expect(result.count).toBe(1);
   expect(result.culled).toBe(0);
+  expect(result.retired).toBe(true);
+  expect(result.killsChanged).toBe(false);
   expect(result.outside).toBe(true);
   expect(result.valid).toBe(true);
 });

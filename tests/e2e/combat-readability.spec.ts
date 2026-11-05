@@ -17,7 +17,7 @@ test('combat visual preferences persist and keep projectile collision size and d
       }),
     )
     .toBe(true);
-  await page.evaluate(() => {
+  const before = await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
     const enemy = s.enemies.getFirstAlive();
     enemy.setPosition(s.player.x + 330, s.player.y);
@@ -25,7 +25,13 @@ test('combat visual preferences persist and keep projectile collision size and d
     // Keep the real elite on screen and alive while the test inspects its marker.
     enemy.definition = { ...enemy.definition, speed: 0 };
     enemy.health = enemy.maxHealth = 10000;
-    s.fireHostile(enemy, Math.PI);
+    const shot = s.fireHostile(enemy, Math.PI);
+    return {
+      index: s.hostileShots.getChildren().indexOf(shot),
+      radius: shot.body.radius * shot.scaleX,
+      damage: shot.damage,
+      scale: shot.scaleX,
+    };
   });
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Projectile contrast', exact: true }).click();
@@ -34,14 +40,24 @@ test('combat visual preferences persist and keep projectile collision size and d
   await expect(page.getByRole('button', { name: 'Effect density', exact: true })).toHaveText(
     'minimal',
   );
-  const after = await page.evaluate(() => {
+  const after = await page.evaluate((index) => {
     const s = (window as any).__gloam.scene;
+    const shot = s.hostileShots.getChildren()[index];
     const count = s.children.list.length;
     s.burst(s.player.x, s.player.y, 0xffffff, 20);
     return {
+      active: shot.active,
+      radius: shot.body.radius * shot.scaleX,
+      damage: shot.damage,
+      scale: shot.scaleX,
       added: s.children.list.length - count,
     };
-  });
+  }, before.index);
+  expect(after.active).toBe(true);
+  expect(after.radius).toBeCloseTo(before.radius);
+  expect(after.damage).toBe(before.damage);
+  expect(after.scale).toBeGreaterThan(before.scale);
+  expect(after.scale).toBe(1.45);
   expect(after.added).toBe(0);
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: /RETURN TO THE STEPPE/ }).click();

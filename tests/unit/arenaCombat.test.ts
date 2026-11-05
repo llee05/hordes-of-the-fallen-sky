@@ -84,7 +84,7 @@ describe('Arena CombatSystem with fake ArenaContext', () => {
     expect(contrastShot).toBeDefined();
     const contrastRadius = contrastShot.body!.radius * contrastShot.scaleX;
     expect(contrastRadius).toBeCloseTo(defaultRadius);
-    expect(contrastShot.damage).toBe(defaultShot.damage);
+    expect(contrastShot.damage).toBe(seerDef.damage);
     expect(contrastShot.scaleX).toBe(1.45);
 
     // Effect density setting
