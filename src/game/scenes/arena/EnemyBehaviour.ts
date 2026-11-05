@@ -8,12 +8,7 @@ import type { FinalStandState } from '../../state/finalStand';
 import { currentLocation } from '../../state/journey';
 import { isKhanActive } from '../../state/khan';
 import { areaSurface, habitatPreference } from '../../systems/AreaHabitat';
-import {
-  advanceCharge,
-  createEnemyTactics,
-  seerDangerRadius,
-  tacticalGoal,
-} from '../../systems/enemyTactics';
+import { advanceCharge, createEnemyTactics, tacticalGoal } from '../../systems/enemyTactics';
 import type { FieldMarkers } from '../../systems/FieldMarkers';
 import type { EnemyDefinition } from '../../types';
 import type { ArenaContext } from './ArenaContext';
@@ -24,23 +19,12 @@ import type { EnemyDirector } from './EnemyDirector';
 
 type CampBoundary = ReturnType<typeof campBoundary>;
 
-/** A seer's delayed danger circle, drawn and resolved by the scene's hazard step. */
-export interface SeerHazard {
-  x: number;
-  y: number;
-  remaining: number;
-  warning: Phaser.GameObjects.Graphics;
-  radius?: number;
-  damage?: number;
-  source?: 'seer';
-}
-
 /** Scene parts enemy behaviour uses that other systems own. */
 export interface EnemyBehaviourHost {
   readonly campBarrier: CampBarrier;
   readonly fieldMarkers: FieldMarkers;
-  /** Replaced on arrival and load; read it live. */
-  readonly hazards: SeerHazard[];
+  /** Marks a seer's delayed danger circle, which the hazard step draws and resolves. */
+  addSeerHazard(target: { x: number; y: number }, definition: EnemyDefinition): void;
   queueAreaThreat(kind: AreaThreatKind, point: { x: number; y: number }, owner?: string): boolean;
 }
 
@@ -453,15 +437,7 @@ export class EnemyBehaviour extends ArenaSystem {
       enemy.dangerTimer <= 0 &&
       enemy.pinned <= 0
     ) {
-      this.host.hazards.push({
-        x: target.x,
-        y: target.y,
-        remaining: GAME.tactics.seerDangerWarning,
-        warning: this.add.graphics().setDepth(5),
-        radius: seerDangerRadius(enemy.definition),
-        damage: GAME.tactics.seerDangerDamage,
-        source: 'seer',
-      });
+      this.host.addSeerHazard(target, enemy.definition);
       enemy.dangerTimer = GAME.tactics.seerEvery;
     }
   }

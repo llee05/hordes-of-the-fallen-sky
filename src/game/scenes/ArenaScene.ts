@@ -79,6 +79,7 @@ import { ClanDamage } from './arena/ClanDamage';
 import { CombatSystem, type HostileShooter } from './arena/CombatSystem';
 import { EnemyBehaviour } from './arena/EnemyBehaviour';
 import { EnemyDirector, type SpawnDirective } from './arena/EnemyDirector';
+import { Hazards, type Hazard } from './arena/Hazards';
 import { HudPresenter } from './arena/HudPresenter';
 import { KhanController } from './arena/KhanController';
 import { RiderHost } from './arena/RiderHost';
@@ -105,15 +106,6 @@ export class ArenaScene extends Phaser.Scene {
   private fieldMarkers!: FieldMarkers;
   private passageMarkers: FieldMarkers[] = [];
   private defeats!: DefeatSprites;
-  private hazards: {
-    x: number;
-    y: number;
-    remaining: number;
-    warning: Phaser.GameObjects.Graphics;
-    radius?: number;
-    damage?: number;
-    source?: 'seer';
-  }[] = [];
   private gems!: Phaser.Physics.Arcade.Group;
   private readonly spatial = new SpatialHash<Enemy>();
   private readonly audio = new GameAudio();
@@ -129,6 +121,11 @@ export class ArenaScene extends Phaser.Scene {
   private readonly clanDamage = new ClanDamage(this.arena);
   private readonly khan = this.createKhan();
   private readonly areaCombat = new AreaCombat(
+    this.arena,
+    { takeDamage: (amount) => this.khan.takeDamage(amount) },
+    this.clanDamage,
+  );
+  private readonly hazardSystem = new Hazards(
     this.arena,
     { takeDamage: (amount) => this.khan.takeDamage(amount) },
     this.clanDamage,
@@ -263,9 +260,7 @@ export class ArenaScene extends Phaser.Scene {
         get fieldMarkers() {
           return scene.fieldMarkers;
         },
-        get hazards() {
-          return scene.hazards;
-        },
+        addSeerHazard: (target, definition) => scene.hazardSystem.addSeer(target, definition),
         queueAreaThreat: (kind, point, owner) => scene.areaCombat.queueThreat(kind, point, owner),
       },
       this.combat,
@@ -332,7 +327,7 @@ export class ArenaScene extends Phaser.Scene {
     this.riderHost.reset();
     this.khan.reset();
     this.enemyDirector.reset();
-    this.hazards = [];
+    this.hazardSystem.reset();
     this.facing.set(0, 1);
     this.best = this.platform.profile.bestSeconds;
 
@@ -504,7 +499,7 @@ export class ArenaScene extends Phaser.Scene {
           secondary: g.secondary,
         })),
       riders: this.riderHost.capture(),
-      hazards: this.hazards.map(({ warning: _warning, ...hazard }) => hazard),
+      hazards: this.hazardSystem.capture(),
       ...this.areaCombat.capture(),
     };
   }
@@ -537,14 +532,7 @@ export class ArenaScene extends Phaser.Scene {
       gem.secondary = saved.secondary ?? false;
     }
     this.riderHost.restore(world.riders);
-    this.hazards = world.hazards.map((h) => ({
-      ...h,
-      warning: this.add
-        .graphics()
-        .setDepth(5)
-        .lineStyle(2, 0xd49b79, 0.8)
-        .strokeCircle(h.x, h.y, h.radius ?? 90),
-    }));
+    this.hazardSystem.restore(world.hazards);
     this.reconcileTerrain();
     this.applyCameraZoom(world.zoom);
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09).setFollowOffset(0, 0);
@@ -1345,7 +1333,7 @@ export class ArenaScene extends Phaser.Scene {
     this.campPresenter.update(dt);
     this.riderHost.update(dt);
     this.landscape.update(this.run.elapsed);
-    this.updateHazards(dt);
+    this.hazardSystem.update(dt);
   }
 
   private updateCharacterAnimations(dt: number): void {
@@ -1367,54 +1355,6 @@ export class ArenaScene extends Phaser.Scene {
       );
     }
     this.defeats.update(dt);
-  }
-
-  private updateHazards(dt: number): void {
-    const clan = this.run.clan;
-    if (clan.region >= 2) this.timers.hazardTimer -= dt;
-    if (clan.region >= 2 && this.timers.hazardTimer <= 0 && isKhanActive(this.run)) {
-      const x = this.player.x;
-      const y = this.player.y;
-      const warning = this.add.graphics().setDepth(3);
-      warning
-        .fillStyle(0xa14839, 0.18)
-        .fillCircle(x, y, 70)
-        .lineStyle(2, 0xe6bd7b, 0.8)
-        .strokeCircle(x, y, 70);
-      this.hazards.push({
-        x,
-        y,
-        remaining: 2,
-        warning,
-      });
-      this.timers.hazardTimer = clan.region === 3 ? 6 : 10;
-    }
-    for (let i = this.hazards.length - 1; i >= 0; i -= 1) {
-      const hazard = this.hazards[i]!;
-      hazard.remaining -= dt;
-      const radius = hazard.radius ?? 70;
-      if (hazard.source === 'seer')
-        hazard.warning
-          .clear()
-          .fillStyle(0x976aa9, 0.13)
-          .fillCircle(hazard.x, hazard.y, radius)
-          .lineStyle(2, 0xcba0c6, 0.8)
-          .strokeCircle(hazard.x, hazard.y, radius);
-      if (hazard.remaining > 0) continue;
-      this.effects.burst(hazard.x, hazard.y, clan.region === 3 ? 0xbf6558 : 0x796d4d, 12);
-      this.audio.play('thunder', hazard);
-      if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.player.x, this.player.y) < radius)
-        this.khan.takeDamage(hazard.damage ?? 20);
-      if (Phaser.Math.Distance.Between(hazard.x, hazard.y, this.camp.x, this.camp.y) < radius + 25)
-        this.clanDamage.damage(
-          hazard.source === 'seer' ? 5 : 8,
-          hazard.source === 'seer' ? 'seer' : 'eruption',
-          undefined,
-          hazard,
-        );
-      hazard.warning.destroy();
-      this.hazards.splice(i, 1);
-    }
   }
 
   private updateSupport(dt: number): void {
@@ -1495,9 +1435,7 @@ export class ArenaScene extends Phaser.Scene {
     // Carry all uncollected experience to the next camp rather than discarding it.
     for (const gem of this.gems.getChildren() as Gem[])
       if (gem.active) gem.setPosition(center, center + 100);
-    for (const hazard of this.hazards) hazard.warning.destroy();
-    this.hazards = [];
-    this.timers.hazardTimer = GAME.hazards.initialDelay;
+    this.hazardSystem.clear();
     this.areaCombat.reset();
     this.landscape.setRegion(this.run.clan.region, currentLocation(this.run));
     this.reconcileTerrain();
@@ -1545,6 +1483,15 @@ export class ArenaScene extends Phaser.Scene {
   }
   updateAreaCombat(dt: number): void {
     this.areaCombat.update(dt);
+  }
+  get hazards(): Hazard[] {
+    return this.hazardSystem.hazards;
+  }
+  set hazards(value: Hazard[]) {
+    this.hazardSystem.hazards = value;
+  }
+  updateHazards(dt: number): void {
+    this.hazardSystem.update(dt);
   }
   burst(x: number, y: number, color: number, count: number): void {
     this.effects.burst(x, y, color, count);
