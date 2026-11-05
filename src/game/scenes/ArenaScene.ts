@@ -43,12 +43,7 @@ import { advanceCrossingEncounter } from '../state/crossingEncounters';
 import { advanceEncounters, supportingAreaEnemy } from '../state/encounters';
 import { decodeExpedition, type WorldArchive } from '../state/expeditionArchive';
 import { metricStage, observeExpedition } from '../state/expeditionMetrics';
-import {
-  advanceFieldObjective,
-  fieldObjectiveDue,
-  startFieldObjective,
-  syncFieldState,
-} from '../state/fieldObjectives';
+import { syncFieldState } from '../state/fieldObjectives';
 import { advanceFinalStand, finalChapter, syncFinalStand } from '../state/finalStand';
 import { completeGuidance } from '../state/guidance';
 import { currentLocation } from '../state/journey';
@@ -78,6 +73,7 @@ import { ClanDamage } from './arena/ClanDamage';
 import { CombatSystem, type HostileShooter } from './arena/CombatSystem';
 import { EnemyBehaviour } from './arena/EnemyBehaviour';
 import { EnemyDirector, type SpawnDirective } from './arena/EnemyDirector';
+import { FieldObjectiveDirector } from './arena/FieldObjectiveDirector';
 import { Hazards, type Hazard } from './arena/Hazards';
 import { HudPresenter } from './arena/HudPresenter';
 import { KhanController } from './arena/KhanController';
@@ -102,7 +98,6 @@ export class ArenaScene extends Phaser.Scene {
   private campPresenter!: CampPresenter;
   private terrainCollision!: TerrainCollision;
   private crossingMarkers!: FieldMarkers;
-  private fieldMarkers!: FieldMarkers;
   private passageMarkers: FieldMarkers[] = [];
   private defeats!: DefeatSprites;
   private gems!: Phaser.Physics.Arcade.Group;
@@ -132,6 +127,7 @@ export class ArenaScene extends Phaser.Scene {
   private readonly combat = this.createCombat();
   private readonly riderHost = new RiderHost(this.arena, this.combat);
   private readonly campDefences = new CampDefences(this.arena, this.combat);
+  private readonly fieldObjectives = new FieldObjectiveDirector(this.arena, this.enemyDirector);
   private readonly enemyBehaviour = this.createEnemyBehaviour();
   /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
   private readonly controls = new ArenaInput(this.arena, this.controller, this.actionKeys);
@@ -258,7 +254,7 @@ export class ArenaScene extends Phaser.Scene {
           return scene.campBarrier;
         },
         get fieldMarkers() {
-          return scene.fieldMarkers;
+          return scene.fieldObjectives.fieldMarkers;
         },
         addSeerHazard: (target, definition) => scene.hazardSystem.addSeer(target, definition),
         queueAreaThreat: (kind, point, owner) => scene.areaCombat.queueThreat(kind, point, owner),
@@ -334,7 +330,7 @@ export class ArenaScene extends Phaser.Scene {
     createPainterlyEffects(this);
     this.areaCombat.create();
     this.defeats = new DefeatSprites(this);
-    this.fieldMarkers = new FieldMarkers(this);
+    this.fieldObjectives.create();
     this.passageMarkers = [];
     // Crossing and passage markers share the field warning surface so their
     // drawings reuse one GraphicsBridge canvas texture.
@@ -539,7 +535,7 @@ export class ArenaScene extends Phaser.Scene {
     this.cameras.main.centerOn(this.player.x, this.player.y);
     this.areaCombat.update(0);
     this.updateFinalStand(0);
-    this.fieldMarkers.update(run.field.objective);
+    this.fieldObjectives.refreshMarkers();
     if (run.crossing?.escort && !run.crossing.escort.lost && !run.crossing.escort.joined)
       this.crossingMarkers.update({
         ...run.crossing.escort,
@@ -1026,7 +1022,7 @@ export class ArenaScene extends Phaser.Scene {
       )
     )
       this.audio.play('encounter');
-    this.updateFieldObjectives(dt);
+    this.fieldObjectives.update(dt);
     this.updateCrossing(dt);
     this.updateFinalStand(dt);
     this.enemyBehaviour.update(dt);
@@ -1207,59 +1203,6 @@ export class ArenaScene extends Phaser.Scene {
     );
   }
 
-  private updateFieldObjectives(dt: number): void {
-    const run = this.run,
-      nav = this.landscape.navigation;
-    if (fieldObjectiveDue(run)) {
-      for (let i = 0; i < 12; i++) {
-        const angle = run.field.issued * 1.7 + (i * Math.PI) / 6;
-        const desired = {
-          x: this.camp.x + Math.cos(angle) * GAME.field.radius,
-          y: this.camp.y + Math.sin(angle) * GAME.field.radius,
-        };
-        const point = nav ? nav.nearestWalkable(desired) : desired;
-        if (
-          point &&
-          Math.hypot(point.x - desired.x, point.y - desired.y) < 160 &&
-          startFieldObjective(run, point)
-        )
-          break;
-      }
-    }
-    const o = run.field.objective;
-    if (o && o.status === 'available' && o.kind === 'gathering' && o.guards < GAME.field.guards) {
-      const angle = (o.guards * Math.PI * 2) / GAME.field.guards;
-      const desired = { x: o.x + Math.cos(angle) * 85, y: o.y + Math.sin(angle) * 85 };
-      const point = nav ? nav.nearestWalkable(desired) : desired;
-      if (
-        point &&
-        this.enemyDirector.spawn(supportingAreaEnemy(this.run, o.guards, ['wisp']), {
-          point,
-          objectiveId: o.id,
-        })
-      )
-        o.guards++;
-    }
-    let threats = 0;
-    if (o)
-      for (const e of this.enemies.getChildren() as Enemy[])
-        if (e.active && Math.hypot(e.x - o.x, e.y - o.y) < 180) threats++;
-    advanceFieldObjective(run, dt, this.player, this.camp, threats);
-    if (
-      o?.status === 'returning' &&
-      isKhanActive(run) &&
-      Math.hypot(o.x - this.player.x, o.y - this.player.y) < GAME.field.escortLeash &&
-      threats === 0
-    ) {
-      const to = nav?.waypoint(o, this.camp) ?? this.camp;
-      const distance = Math.hypot(to.x - o.x, to.y - o.y);
-      const step = Math.min(1, (GAME.field.escortSpeed * dt) / Math.max(1, distance));
-      const desired = { x: o.x + (to.x - o.x) * step, y: o.y + (to.y - o.y) * step };
-      Object.assign(o, nav?.slide(o, desired, 18) ?? desired);
-    }
-    this.fieldMarkers.update(o, dt);
-  }
-
   selectSuccessor(trait: SuccessorTrait): void {
     if (!chooseSuccessor(this.run, trait)) return;
     this.audio.play('ui');
@@ -1429,6 +1372,12 @@ export class ArenaScene extends Phaser.Scene {
   }
   updateSupport(dt: number): void {
     this.campDefences.update(dt);
+  }
+  get fieldMarkers(): FieldMarkers {
+    return this.fieldObjectives.fieldMarkers;
+  }
+  updateFieldObjectives(dt: number): void {
+    this.fieldObjectives.update(dt);
   }
   burst(x: number, y: number, color: number, count: number): void {
     this.effects.burst(x, y, color, count);
