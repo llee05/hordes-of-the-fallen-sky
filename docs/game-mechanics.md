@@ -292,7 +292,7 @@ The desktop game runs offline with local assets and native, validated, atomic sa
 | Typed camp effects and once-only purchase grants               | [state/camp.ts](../src/game/state/camp.ts)                                                                       |
 | Economy, staffing, purchases, protection, migration, identity  | [state/clan.ts](../src/game/state/clan.ts)                                                                       |
 | Enemy definitions and spawn interval                           | [data/enemies.ts](../src/game/data/enemies.ts)                                                                   |
-| Combat, targeting, support attacks, hazards, phase transitions | [ArenaScene.ts](../src/game/scenes/ArenaScene.ts)                                                                |
+| Combat, targeting, support attacks, hazards, phase transitions | [Arena module map](arena-scene.md)                                                                               |
 | Encounter content, choices, epilogue                           | [data/story.ts](../src/game/data/story.ts)                                                                       |
 | Encounter triggers and once-only rewards                       | [state/story.ts](../src/game/state/story.ts)                                                                     |
 | Prologue chapters                                              | [data/intro.ts](../src/game/data/intro.ts)                                                                       |
