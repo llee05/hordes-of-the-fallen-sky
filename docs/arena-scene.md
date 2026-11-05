@@ -5,7 +5,7 @@ the order of each simulation step, the public API that `GameUI` calls, and every
 phase transition. Focused scene systems in `src/game/scenes/arena/` hold the rest. Rules
 stay in renderer-independent `state/` modules; scene systems only drive Phaser objects and
 call those rules. The split is in progress: the combat core, area combat, hazards and camp
-defences have moved, while the crossing and final-stand directors and enemy animation still live in the scene.
+defences have moved, while the final-stand director and enemy animation still live in the scene.
 
 ## Modules
 
@@ -29,6 +29,7 @@ defences have moved, while the crossing and final-stand directors and enemy anim
 | `arena/Hazards.ts`                | delayed danger circles (late-region eruptions under the Khan and hollow seers' marks), their strikes on the Khan and camp, and saved hazards                                                                                 | scene, reset in `create`           |
 | `arena/CampDefences.ts`           | the camp's own defences on their saved timers: sanctuary lightning, wagon volleys and the ancestral ward                                                                                                                     | scene                              |
 | `arena/FieldObjectiveDirector.ts` | placing field objectives around camp, raising a gathering's guards, escorting returning objectives, and the field marker, whose warning surface the other markers and enemy warnings share                                   | scene, markers rebuilt in `create` |
+| `arena/CrossingDirector.ts`       | crossing encounters during migration: placing the refugee escort, spawning route guards, escorting refugees to the caravan, and the crossing marker                                                                          | scene, marker rebuilt in `create`  |
 | `arena/ArenaSystem.ts`            | base class whose getters read the shared context live, so moved code keeps its `this.run`/`this.player` shape                                                                                                                | —                                  |
 
 "Scene" lifetime means one instance for the scene object. Field initialisers run once, but

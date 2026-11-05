@@ -22,7 +22,6 @@ import { environmentForLocation } from '../audio/mixing';
 import type { SoundKind } from '../audio/soundPalette';
 import { GAME } from '../config';
 import { FORMATIONS, STARTING_TRADITIONS, type StartingTraditionId } from '../data/clan';
-import { CROSSING_ENCOUNTERS } from '../data/crossings';
 import { INTRO_SLIDES } from '../data/intro';
 import type { SuccessorTrait } from '../data/successors';
 import { createDeveloperTools, executeDeveloperCommand } from '../dev/commands';
@@ -39,7 +38,6 @@ import {
   canMigrate,
 } from '../state/clan';
 import type { ClanDamageCause } from '../state/clanSafety';
-import { advanceCrossingEncounter } from '../state/crossingEncounters';
 import { advanceEncounters, supportingAreaEnemy } from '../state/encounters';
 import { decodeExpedition, type WorldArchive } from '../state/expeditionArchive';
 import { metricStage, observeExpedition } from '../state/expeditionMetrics';
@@ -71,6 +69,7 @@ import { CampDefences } from './arena/CampDefences';
 import { CampPresenter } from './arena/CampPresenter';
 import { ClanDamage } from './arena/ClanDamage';
 import { CombatSystem, type HostileShooter } from './arena/CombatSystem';
+import { CrossingDirector } from './arena/CrossingDirector';
 import { EnemyBehaviour } from './arena/EnemyBehaviour';
 import { EnemyDirector, type SpawnDirective } from './arena/EnemyDirector';
 import { FieldObjectiveDirector } from './arena/FieldObjectiveDirector';
@@ -97,7 +96,6 @@ export class ArenaScene extends Phaser.Scene {
   private landscape!: SteppeLandscape;
   private campPresenter!: CampPresenter;
   private terrainCollision!: TerrainCollision;
-  private crossingMarkers!: FieldMarkers;
   private passageMarkers: FieldMarkers[] = [];
   private defeats!: DefeatSprites;
   private gems!: Phaser.Physics.Arcade.Group;
@@ -128,6 +126,7 @@ export class ArenaScene extends Phaser.Scene {
   private readonly riderHost = new RiderHost(this.arena, this.combat);
   private readonly campDefences = new CampDefences(this.arena, this.combat);
   private readonly fieldObjectives = new FieldObjectiveDirector(this.arena, this.enemyDirector);
+  private readonly crossing = new CrossingDirector(this.arena, this.enemyDirector);
   private readonly enemyBehaviour = this.createEnemyBehaviour();
   /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
   private readonly controls = new ArenaInput(this.arena, this.controller, this.actionKeys);
@@ -332,9 +331,7 @@ export class ArenaScene extends Phaser.Scene {
     this.defeats = new DefeatSprites(this);
     this.fieldObjectives.create();
     this.passageMarkers = [];
-    // Crossing and passage markers share the field warning surface so their
-    // drawings reuse one GraphicsBridge canvas texture.
-    this.crossingMarkers = new FieldMarkers(this, this.fieldMarkers.warnings);
+    this.crossing.create(this.fieldMarkers.warnings);
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.landscape = new SteppeLandscape(this);
     const center = GAME.worldSize / 2;
@@ -536,12 +533,7 @@ export class ArenaScene extends Phaser.Scene {
     this.areaCombat.update(0);
     this.updateFinalStand(0);
     this.fieldObjectives.refreshMarkers();
-    if (run.crossing?.escort && !run.crossing.escort.lost && !run.crossing.escort.joined)
-      this.crossingMarkers.update({
-        ...run.crossing.escort,
-        kind: 'refugees',
-        status: 'returning',
-      });
+    this.crossing.refreshMarkers();
     this.setPhase(run.story.active ? 'story' : 'paused');
   }
 
@@ -1023,7 +1015,7 @@ export class ArenaScene extends Phaser.Scene {
     )
       this.audio.play('encounter');
     this.fieldObjectives.update(dt);
-    this.updateCrossing(dt);
+    this.crossing.update(dt);
     this.updateFinalStand(dt);
     this.enemyBehaviour.update(dt);
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
@@ -1135,72 +1127,6 @@ export class ArenaScene extends Phaser.Scene {
             { angle: (state.approach * Math.PI) / 2 + (i ? 0.3 : -0.3), campOnly: true },
           );
     }
-  }
-
-  private updateCrossing(dt: number): void {
-    const c = this.run.crossing,
-      nav = this.landscape.navigation;
-    if (this.run.clan.stage !== 'migration' || !c) {
-      this.crossingMarkers.update();
-      return;
-    }
-    let threats = 0;
-    if (c.escort)
-      for (const e of this.enemies.getChildren() as Enemy[])
-        if (e.active && Math.hypot(e.x - c.escort.x, e.y - c.escort.y) < 160) threats++;
-    if (advanceCrossingEncounter(this.run, dt, this.player, this.camp, threats))
-      this.audio.play('encounter');
-    if (c.phase === 'warning' && c.route === 'refuge' && !c.escort) {
-      const desired = { x: this.camp.x + 380, y: this.camp.y + 200 };
-      const point = nav?.nearestWalkable(desired) ?? desired;
-      c.escort = { x: point.x, y: point.y, progress: 0, exposure: 0, joined: false, lost: false };
-    }
-    const definition = CROSSING_ENCOUNTERS[c.route];
-    c.spawnDelay = Math.max(0, c.spawnDelay - dt);
-    if (c.phase === 'assault' && c.spawned < definition.guards && c.spawnDelay <= 0) {
-      const id =
-        c.route === 'ridge'
-          ? c.spawned % 2
-            ? 'hollow-seer'
-            : 'brute'
-          : c.spawned % 2
-            ? 'ghost-rider'
-            : 'bat';
-      const enemy = supportingAreaEnemy(this.run, c.spawned, [id]);
-      const angle =
-        c.route === 'river'
-          ? c.spawned % 2
-            ? Math.PI / 2
-            : -Math.PI / 2
-          : c.route === 'ridge'
-            ? 0
-            : Math.PI;
-      if (this.enemyDirector.spawn(enemy, { angle, crossingId: c.key, campOnly: true })) {
-        c.spawned++;
-        c.spawnDelay = GAME.crossings.spawnInterval;
-      } else c.spawnDelay = GAME.spawning.retryInterval;
-    }
-    const e = c.escort;
-    if (
-      e &&
-      !e.joined &&
-      !e.lost &&
-      isKhanActive(this.run) &&
-      threats === 0 &&
-      Math.hypot(e.x - this.player.x, e.y - this.player.y) < GAME.field.escortLeash
-    ) {
-      const to = nav?.waypoint(e, this.camp) ?? this.camp,
-        distance = Math.max(1, Math.hypot(to.x - e.x, to.y - e.y));
-      const step = Math.min(1, (GAME.field.escortSpeed * dt) / distance),
-        desired = { x: e.x + (to.x - e.x) * step, y: e.y + (to.y - e.y) * step };
-      Object.assign(e, nav?.slide(e, desired, 18) ?? desired);
-    }
-    this.crossingMarkers.update(
-      e && !e.joined && !e.lost
-        ? { kind: 'refugees', status: 'returning', x: e.x, y: e.y }
-        : undefined,
-      dt,
-    );
   }
 
   selectSuccessor(trait: SuccessorTrait): void {
@@ -1378,6 +1304,9 @@ export class ArenaScene extends Phaser.Scene {
   }
   updateFieldObjectives(dt: number): void {
     this.fieldObjectives.update(dt);
+  }
+  updateCrossing(dt: number): void {
+    this.crossing.update(dt);
   }
   burst(x: number, y: number, color: number, count: number): void {
     this.effects.burst(x, y, color, count);
