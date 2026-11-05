@@ -52,6 +52,24 @@ owners (`slot:spawnId`) and tactical slots all name enemies by pool slot, and ea
 generation (`spawnId`) that grows on every spawn. `EnemyDirector.restorePool` recreates every
 saved slot in order, active or not, so restore must rebuild the pool before projectiles.
 
+`captureWorld` and `restoreExpedition` remain scene compositions over the existing
+`WorldArchive` shape. `AreaCombat` captures the area encounter and threats; `Hazards`
+captures delayed circles without their graphics. Field objectives, crossings and the
+final stand remain in `run`. Restore rebuilds enemies before projectiles, then riders
+and hazards, reconciles terrain, and redraws area, final-stand and objective markers
+before returning to a paused or story phase. Defeat copies are transient and unsaved.
+
+## Battlefield coordination
+
+The scene calls `FieldObjectiveDirector`, `CrossingDirector` and `FinalStandDirector`
+before `EnemyBehaviour`. Their markers share the field marker's warning surface.
+`EnemyBehaviour` decides when a seer casts and asks `Hazards.addSeer` to mark the
+circle; `Hazards.update` still runs inside `updateCamp`, after riders and terrain.
+`CampDefences` uses the rebuilt spatial index and shared saved timers for lightning,
+wagon fire and wards. `CharacterAnimator` runs after combat and the final clan
+integrity check, dispatches Khan and rider poses, then updates enemies and defeat
+copies with the same active-time delta.
+
 ## Shared context
 
 Systems receive one `ArenaContext`. Replaceable state is exposed through getters over the
