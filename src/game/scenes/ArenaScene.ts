@@ -38,11 +38,10 @@ import {
   canMigrate,
 } from '../state/clan';
 import type { ClanDamageCause } from '../state/clanSafety';
-import { advanceEncounters, supportingAreaEnemy } from '../state/encounters';
+import { advanceEncounters } from '../state/encounters';
 import { decodeExpedition, type WorldArchive } from '../state/expeditionArchive';
 import { metricStage, observeExpedition } from '../state/expeditionMetrics';
 import { syncFieldState } from '../state/fieldObjectives';
-import { advanceFinalStand, finalChapter, syncFinalStand } from '../state/finalStand';
 import { completeGuidance } from '../state/guidance';
 import { currentLocation } from '../state/journey';
 import { advanceSuccession, beginSuccession, chooseSuccessor, isKhanActive } from '../state/khan';
@@ -53,7 +52,7 @@ import { openNextStory, resolveStory } from '../state/story';
 import { ActionKeys } from '../systems/ActionKeys';
 import { GameAudio } from '../systems/Audio';
 import { clampCameraZoom } from '../systems/CameraView';
-import { FieldMarkers } from '../systems/FieldMarkers';
+import type { FieldMarkers } from '../systems/FieldMarkers';
 import { GamepadInput } from '../systems/GamepadInput';
 import { SpatialHash } from '../systems/SpatialHash';
 import { TerrainCollision } from '../terrain/TerrainCollision';
@@ -73,6 +72,7 @@ import { CrossingDirector } from './arena/CrossingDirector';
 import { EnemyBehaviour } from './arena/EnemyBehaviour';
 import { EnemyDirector, type SpawnDirective } from './arena/EnemyDirector';
 import { FieldObjectiveDirector } from './arena/FieldObjectiveDirector';
+import { FinalStandDirector } from './arena/FinalStandDirector';
 import { Hazards, type Hazard } from './arena/Hazards';
 import { HudPresenter } from './arena/HudPresenter';
 import { KhanController } from './arena/KhanController';
@@ -96,7 +96,6 @@ export class ArenaScene extends Phaser.Scene {
   private landscape!: SteppeLandscape;
   private campPresenter!: CampPresenter;
   private terrainCollision!: TerrainCollision;
-  private passageMarkers: FieldMarkers[] = [];
   private defeats!: DefeatSprites;
   private gems!: Phaser.Physics.Arcade.Group;
   private readonly spatial = new SpatialHash<Enemy>();
@@ -127,6 +126,7 @@ export class ArenaScene extends Phaser.Scene {
   private readonly campDefences = new CampDefences(this.arena, this.combat);
   private readonly fieldObjectives = new FieldObjectiveDirector(this.arena, this.enemyDirector);
   private readonly crossing = new CrossingDirector(this.arena, this.enemyDirector);
+  private readonly finalStand = this.createFinalStand();
   private readonly enemyBehaviour = this.createEnemyBehaviour();
   /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
   private readonly controls = new ArenaInput(this.arena, this.controller, this.actionKeys);
@@ -264,6 +264,20 @@ export class ArenaScene extends Phaser.Scene {
     );
   }
 
+  private createFinalStand(): FinalStandDirector {
+    const scene = this;
+    return new FinalStandDirector(
+      this.arena,
+      {
+        get fieldWarnings() {
+          return scene.fieldMarkers.warnings;
+        },
+      },
+      this.combat,
+      this.enemyDirector,
+    );
+  }
+
   private createCombat(): CombatSystem {
     const scene = this;
     return new CombatSystem(
@@ -330,7 +344,7 @@ export class ArenaScene extends Phaser.Scene {
     this.areaCombat.create();
     this.defeats = new DefeatSprites(this);
     this.fieldObjectives.create();
-    this.passageMarkers = [];
+    this.finalStand.reset();
     this.crossing.create(this.fieldMarkers.warnings);
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.landscape = new SteppeLandscape(this);
@@ -531,7 +545,7 @@ export class ArenaScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09).setFollowOffset(0, 0);
     this.cameras.main.centerOn(this.player.x, this.player.y);
     this.areaCombat.update(0);
-    this.updateFinalStand(0);
+    this.finalStand.update(0);
     this.fieldObjectives.refreshMarkers();
     this.crossing.refreshMarkers();
     this.setPhase(run.story.active ? 'story' : 'paused');
@@ -1016,7 +1030,7 @@ export class ArenaScene extends Phaser.Scene {
       this.audio.play('encounter');
     this.fieldObjectives.update(dt);
     this.crossing.update(dt);
-    this.updateFinalStand(dt);
+    this.finalStand.update(dt);
     this.enemyBehaviour.update(dt);
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
       this.finish('dead');
@@ -1044,89 +1058,6 @@ export class ArenaScene extends Phaser.Scene {
     }
     this.enemyDirector.tickFinalBoss();
     this.presentStory();
-  }
-
-  private updateFinalStand(dt: number): void {
-    const state = syncFinalStand(this.run);
-    if (!state) {
-      this.passageMarkers.forEach((marker) => marker.update());
-      return;
-    }
-    if (!this.passageMarkers.length)
-      this.passageMarkers = [
-        new FieldMarkers(this, this.fieldMarkers.warnings),
-        new FieldMarkers(this, this.fieldMarkers.warnings),
-      ];
-    state.works.forEach((work, index) => {
-      if (work.x === undefined || work.y === undefined) {
-        const desired = {
-          x: this.camp.x + (index ? 1 : -1) * GAME.finalStand.workOffset,
-          y: this.camp.y + 180,
-        };
-        const point = this.landscape.navigation?.nearestWalkable(desired) ?? desired;
-        work.x = point.x;
-        work.y = point.y;
-      }
-      const unlocked = this.run.clan.stageTime >= GAME.finalStand.workUnlockAt[index]!;
-      this.passageMarkers[index]!.update(
-        {
-          kind: 'refugees',
-          x: work.x,
-          y: work.y,
-          status: work.done ? 'complete' : unlocked ? 'available' : 'abandoned',
-        },
-        dt,
-      );
-    });
-    const contested = state.works.map((work) =>
-      (this.enemies.getChildren() as Enemy[]).some(
-        (e) => e.active && Math.hypot(e.x - work.x!, e.y - work.y!) < GAME.finalStand.contestRadius,
-      ),
-    );
-    const event = advanceFinalStand(
-      this.run,
-      dt,
-      !!this.enemyDirector.boss?.active,
-      this.player,
-      contested,
-    );
-    const boss = this.enemyDirector.boss;
-    if (!boss?.active) return;
-    const chapter = finalChapter(this.run);
-    if (event === 'warning') {
-      const angle = (state.approach * Math.PI) / 2;
-      state.aim =
-        chapter === 0 && isKhanActive(this.run)
-          ? { x: this.player.x, y: this.player.y }
-          : { x: this.camp.x + Math.cos(angle) * 80, y: this.camp.y + Math.sin(angle) * 80 };
-      this.run.clan.message =
-        chapter === 0
-          ? 'The Skybreaker draws breath. Move away from the marked line.'
-          : 'The Skybreaker turns toward another approach. Guard the warned side.';
-      this.audio.play('encounter', boss);
-    }
-    if (event === 'release' && state.aim) {
-      const direction = Math.atan2(state.aim.y - boss.y, state.aim.x - boss.x);
-      const count = GAME.finalStand.barrageShots[chapter];
-      for (let index = 0; index < count; index++) {
-        const shot = this.combat.fireHostile(
-          boss,
-          direction + (index / (count - 1) - 0.5) * GAME.finalStand.barrageSpread,
-        );
-        if (shot) {
-          shot.barrage = state.cycle;
-          shot.damage *= GAME.finalStand.barrageDamage;
-        }
-      }
-      boss.motion.attack();
-      this.run.clan.message = 'The Skybreaker falters. Its exposed form takes 50% more damage.';
-      if (chapter > 0)
-        for (let i = 0; i < GAME.finalStand.assaultCount; i++)
-          this.enemyDirector.spawn(
-            supportingAreaEnemy(this.run, state.cycle + i, [i ? 'hollow-seer' : 'ghost-rider']),
-            { angle: (state.approach * Math.PI) / 2 + (i ? 0.3 : -0.3), campOnly: true },
-          );
-    }
   }
 
   selectSuccessor(trait: SuccessorTrait): void {
@@ -1307,6 +1238,9 @@ export class ArenaScene extends Phaser.Scene {
   }
   updateCrossing(dt: number): void {
     this.crossing.update(dt);
+  }
+  updateFinalStand(dt: number): void {
+    this.finalStand.update(dt);
   }
   burst(x: number, y: number, color: number, count: number): void {
     this.effects.burst(x, y, color, count);
