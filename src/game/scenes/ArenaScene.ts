@@ -5,8 +5,8 @@ import { normalizeAudioMix } from '../../shared/audioSettings';
 import type { ExpeditionSave, SaveSlot } from '../../shared/expeditionSave';
 import type { NomadicBuildingId } from '../../shared/nomadicCamp.js';
 import { normalizeVisualSettings, type VisualSettings } from '../../shared/visualSettings';
-import { CharacterMotion } from '../animation/CharacterMotion';
-import { DefeatSprites, renderCharacter } from '../animation/CharacterVisuals';
+import type { CharacterMotion } from '../animation/CharacterMotion';
+import type { DefeatSprites } from '../animation/CharacterVisuals';
 import type { CampBarrier } from '../assets/CampBarrier';
 import type { ClanLife } from '../assets/ClanLife';
 import {
@@ -66,6 +66,7 @@ import { createArenaTimers, type ArenaTimers } from './arena/ArenaTimers';
 import { captureBody } from './arena/bodyArchive';
 import { CampDefences } from './arena/CampDefences';
 import { CampPresenter } from './arena/CampPresenter';
+import { CharacterAnimator } from './arena/CharacterAnimator';
 import { ClanDamage } from './arena/ClanDamage';
 import { CombatSystem, type HostileShooter } from './arena/CombatSystem';
 import { CrossingDirector } from './arena/CrossingDirector';
@@ -96,7 +97,6 @@ export class ArenaScene extends Phaser.Scene {
   private landscape!: SteppeLandscape;
   private campPresenter!: CampPresenter;
   private terrainCollision!: TerrainCollision;
-  private defeats!: DefeatSprites;
   private gems!: Phaser.Physics.Arcade.Group;
   private readonly spatial = new SpatialHash<Enemy>();
   private readonly audio = new GameAudio();
@@ -123,6 +123,7 @@ export class ArenaScene extends Phaser.Scene {
   );
   private readonly combat = this.createCombat();
   private readonly riderHost = new RiderHost(this.arena, this.combat);
+  private readonly animator = new CharacterAnimator(this.arena, this.khan, this.riderHost);
   private readonly campDefences = new CampDefences(this.arena, this.combat);
   private readonly fieldObjectives = new FieldObjectiveDirector(this.arena, this.enemyDirector);
   private readonly crossing = new CrossingDirector(this.arena, this.enemyDirector);
@@ -287,7 +288,7 @@ export class ArenaScene extends Phaser.Scene {
           return scene.khan.playerMotion;
         },
         get defeats() {
-          return scene.defeats;
+          return scene.animator.defeats;
         },
         get campBarrier() {
           return scene.campBarrier;
@@ -342,7 +343,7 @@ export class ArenaScene extends Phaser.Scene {
 
     createPainterlyEffects(this);
     this.areaCombat.create();
-    this.defeats = new DefeatSprites(this);
+    this.animator.create();
     this.fieldObjectives.create();
     this.finalStand.reset();
     this.crossing.create(this.fieldMarkers.warnings);
@@ -1050,7 +1051,7 @@ export class ArenaScene extends Phaser.Scene {
       this.finish('dead');
       return;
     }
-    this.updateCharacterAnimations(dt);
+    this.animator.update(dt);
     this.hudTimer -= dt;
     if (this.hudTimer <= 0) {
       this.hudTimer = GAME.hud.updateInterval;
@@ -1134,27 +1135,6 @@ export class ArenaScene extends Phaser.Scene {
     this.riderHost.update(dt);
     this.landscape.update(this.run.elapsed);
     this.hazardSystem.update(dt);
-  }
-
-  private updateCharacterAnimations(dt: number): void {
-    const preparingVolley = this.timers.attackTimer > 0 && this.timers.attackTimer < 0.12;
-    this.khan.animate(dt, preparingVolley);
-    this.riderHost.animate(dt, preparingVolley);
-    for (const enemy of this.enemies.getChildren() as Enemy[]) {
-      if (!enemy.active) continue;
-      enemy.motion.advance(dt, enemy.body!.velocity.length(), enemy.preparingAttack);
-      renderCharacter(enemy, enemy.motion);
-      enemy.setTint(
-        enemy.motion.hurt
-          ? 0xffd3b2
-          : enemy.burning > 0
-            ? 0xffad67
-            : enemy.definition.id === 'frost-mare'
-              ? 0xb1efff
-              : (enemy.definition.tint ?? 0xffffff),
-      );
-    }
-    this.defeats.update(dt);
   }
 
   private arrive(): void {
@@ -1241,6 +1221,12 @@ export class ArenaScene extends Phaser.Scene {
   }
   updateFinalStand(dt: number): void {
     this.finalStand.update(dt);
+  }
+  get defeats(): DefeatSprites {
+    return this.animator.defeats;
+  }
+  updateCharacterAnimations(dt: number): void {
+    this.animator.update(dt);
   }
   burst(x: number, y: number, color: number, count: number): void {
     this.effects.burst(x, y, color, count);
