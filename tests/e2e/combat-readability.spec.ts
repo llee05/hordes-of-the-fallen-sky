@@ -26,7 +26,12 @@ test('combat visual preferences persist and keep projectile collision size and d
     enemy.definition = { ...enemy.definition, speed: 0 };
     enemy.health = enemy.maxHealth = 10000;
     const shot = s.fireHostile(enemy, Math.PI);
-    return { radius: shot.body.radius * shot.scaleX, damage: shot.damage };
+    return {
+      index: s.hostileShots.getChildren().indexOf(shot),
+      radius: shot.body.radius * shot.scaleX,
+      damage: shot.damage,
+      scale: shot.scaleX,
+    };
   });
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Projectile contrast', exact: true }).click();
@@ -35,22 +40,25 @@ test('combat visual preferences persist and keep projectile collision size and d
   await expect(page.getByRole('button', { name: 'Effect density', exact: true })).toHaveText(
     'minimal',
   );
-  const after = await page.evaluate(() => {
-    const s = (window as any).__gloam.scene,
-      shot = s.hostileShots.getFirstAlive();
+  const after = await page.evaluate((index) => {
+    const s = (window as any).__gloam.scene;
+    const shot = s.hostileShots.getChildren()[index];
     const count = s.children.list.length;
     s.burst(s.player.x, s.player.y, 0xffffff, 20);
     return {
+      active: shot.active,
       radius: shot.body.radius * shot.scaleX,
       damage: shot.damage,
-      added: s.children.list.length - count,
       scale: shot.scaleX,
+      added: s.children.list.length - count,
     };
-  });
+  }, before.index);
+  expect(after.active).toBe(true);
   expect(after.radius).toBeCloseTo(before.radius);
   expect(after.damage).toBe(before.damage);
-  expect(after.added).toBe(0);
+  expect(after.scale).toBeGreaterThan(before.scale);
   expect(after.scale).toBe(1.45);
+  expect(after.added).toBe(0);
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: /RETURN TO THE STEPPE/ }).click();
   await page.evaluate(() => {
