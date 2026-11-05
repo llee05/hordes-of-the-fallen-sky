@@ -4,8 +4,8 @@
 the order of each simulation step, the public API that `GameUI` calls, and every menu and
 phase transition. Focused scene systems in `src/game/scenes/arena/` hold the rest. Rules
 stay in renderer-independent `state/` modules; scene systems only drive Phaser objects and
-call those rules. The split is in progress: the combat core, area combat and hazards have moved,
-while camp defences, the encounter directors and enemy animation still live in the scene.
+call those rules. The split is in progress: the combat core, area combat, hazards and camp
+defences have moved, while the encounter directors and enemy animation still live in the scene.
 
 ## Modules
 
@@ -27,6 +27,7 @@ while camp defences, the encounter directors and enemy animation still live in t
 | `arena/EnemyBehaviour.ts`   | each enemy's per-frame steps: warnings, barrier contact, timers, despawning, targeting, movement and charges, camp attacks, ranged volleys, abilities, seer marks (drawn and resolved by `Hazards`), gallop and fire effects | scene                      |
 | `arena/AreaCombat.ts`       | the current area's encounter pacing and threats: placing terrain threats, resolving threat hits on the Khan and camp, and drawing threats and high-contrast hostile-shot rings; saved area encounter and threats             | scene, rebuilt in `create` |
 | `arena/Hazards.ts`          | delayed danger circles (late-region eruptions under the Khan and hollow seers' marks), their strikes on the Khan and camp, and saved hazards                                                                                 | scene, reset in `create`   |
+| `arena/CampDefences.ts`     | the camp's own defences on their saved timers: sanctuary lightning, wagon volleys and the ancestral ward                                                                                                                     | scene                      |
 | `arena/ArenaSystem.ts`      | base class whose getters read the shared context live, so moved code keeps its `this.run`/`this.player` shape                                                                                                                | —                          |
 
 "Scene" lifetime means one instance for the scene object. Field initialisers run once, but
