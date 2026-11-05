@@ -32,7 +32,7 @@ export interface AreaCombatHost {
  * threat plus the high-contrast rings around hostile shots.
  */
 export class AreaCombat extends ArenaSystem {
-  /** Replaced on area change, departure, arrival and load; read it live. */
+  /** Replaced on create, departure, arrival and load; read it live. */
   areaEncounter = createAreaEncounter();
   /** Replaced on area change, departure, arrival and load; read it live. */
   areaThreats = createAreaThreats();

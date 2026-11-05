@@ -55,9 +55,10 @@ saved slot in order, active or not, so restore must rebuild the pool before proj
 `captureWorld` and `restoreExpedition` remain scene compositions over the existing
 `WorldArchive` shape. `AreaCombat` captures the area encounter and threats; `Hazards`
 captures delayed circles without their graphics. Field objectives, crossings and the
-final stand remain in `run`. Restore rebuilds enemies before projectiles, then riders
-and hazards, reconciles terrain, and redraws area, final-stand and objective markers
-before returning to a paused or story phase. Defeat copies are transient and unsaved.
+final stand remain in `run`. Restore rebuilds enemies before projectiles, then gems,
+riders and hazards, reconciles terrain, and redraws area, final-stand, field-objective
+and crossing markers before returning to a paused or story phase. Defeat copies are
+transient and unsaved.
 
 ## Battlefield coordination
 
@@ -92,13 +93,13 @@ steps below in this order. The order is behaviour: moving a step changes play.
 1. Controller polling and menu dispatch (`ArenaInput.pollController`); stop unless the phase is still `playing`.
 2. Present a queued story; observe expedition metrics; begin succession if the Khan fell.
 3. Advance elapsed time, camp recovery; decay dash, invulnerability and gallop.
-4. Advance the clan: finish on loss or victory, or arrive at the next camp.
-5. Select the nearest companion; `updateCamp` (camp drawing, then rider formation, terrain and hazards).
+4. Advance the clan: finish on loss or victory, or arrive at the next camp; stop if the phase changed.
+5. `updateCamp` (camp drawing, then rider formation, terrain and hazards); stop if the phase changed.
 6. Clan integrity check; advance succession and mounted combat; move the Khan or pin him to camp.
 7. Audio; field state and area encounter sync; encounter pacing.
 8. Field objectives, crossing, final stand, enemy behaviour (each enemy's steps in a fixed order); clan integrity check.
 9. Spatial index rebuild; camp defences; Khan and rider fire; spawning.
-10. Projectiles; gem collection; area combat; autosave; clan integrity check.
+10. Projectiles; gem collection; stop if the phase changed; area combat; autosave; clan integrity check.
 11. Character animation; HUD refresh; final boss spawn; present a queued story.
 
 Every phase other than `playing` stops simulation and physics.
