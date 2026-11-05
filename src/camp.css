@@ -649,6 +649,9 @@
   width: min(610px, calc(100% - 32px));
 }
 @media (max-height: 650px) {
+  .overlay.camp-planning .game-panel {
+    max-height: calc(100dvh - 24px);
+  }
   .camp-estate-heading {
     padding: 8px 14px;
   }
