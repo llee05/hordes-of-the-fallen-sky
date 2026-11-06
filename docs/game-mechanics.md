@@ -228,9 +228,9 @@ The strongest identity becomes the clan's name once any score reaches 4:
 
 Ties favor Iron, then Sky, then Wander. Identities do not make other buildings or routes unavailable.
 
-**Tab / J** opens the paused clan chronicle: **Journey** and **Your clan** (clan/workforce/buildings, Khans who carried the banner, and factual clan memories).
+See [the player guide](../README.md#desktop-presentation) for chronicle contents, controls, and access from journey results.
 
-Victory and defeat open the journey results screen reporting the outcome, location, stage, journey time, survivors, herd, pastures reached, fallen Khans, and the Skybreaker's fate. The Last Court, Iron Vow, Sundering, creatures, and refuge are original fantasy; spirit shards represent scattered vitality, not purchased ancestral souls. See [the archived lore](archive/story/lore.md) for writing boundaries.
+The Last Court, Iron Vow, Sundering, creatures, and refuge are original fantasy; spirit shards represent scattered vitality, not purchased ancestral souls. See [the archived lore](archive/story/lore.md) for writing boundaries.
 
 ## 9. Controls, pauses, and persistence
 
