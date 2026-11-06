@@ -156,11 +156,7 @@ export class ArenaInput {
       },
     );
     keyboard.on('keydown-TAB', (event: KeyboardEvent) => {
-      if (
-        !['playing', 'journal', 'won', 'dead'].includes(this.arena.run.phase) ||
-        !this.actionKeys.consume(event)
-      )
-        return;
+      if (this.arena.run.phase !== 'playing' || !this.actionKeys.consume(event)) return;
       event.preventDefault();
       actions.toggleJournal();
     });
