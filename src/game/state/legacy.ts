@@ -2,6 +2,7 @@ import { GAME } from '../config';
 import { REGIONS } from '../data/clan';
 import type { CrossingRoute } from '../data/crossings';
 import type { FieldObjectiveKind } from '../data/fieldObjectives';
+import { NOMADIC_BUILDINGS } from '../data/nomadicCamp';
 import { currentLocation } from './journey';
 import type { CrossingRecord, LocationId, RunState } from '../types';
 
@@ -93,18 +94,118 @@ export function createLegacy(): ClanLegacy {
   };
 }
 
+function normalizeMemoryText(value: string): string {
+  return value
+    .replace(/[\u2018\u2019`]/g, "'")
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+function parseBuildingMemory(
+  title: string,
+  detail: string,
+): { id: string; title: string; detail: string; level: number } | undefined {
+  const normalizedTitle = normalizeMemoryText(title);
+  const normalizedDetail = normalizeMemoryText(detail);
+  const householdMatch =
+    /^The clan (?:established|improved) this household to level (\d+)\.$/i.exec(normalizedDetail);
+  const titleLevelMatch = /^(.*?)\s*[·-]\s*Lv\.?\s*(\d+)$/i.exec(normalizedTitle);
+  const reachedMatch = /^(.*?)\s+reach(?:ed|es) level (\d+)\.$/i.exec(normalizedDetail);
+  const rawBuilding = householdMatch
+    ? normalizedTitle
+    : titleLevelMatch
+      ? normalizeMemoryText(titleLevelMatch[1]!)
+      : reachedMatch
+        ? normalizeMemoryText(reachedMatch[1]!)
+        : undefined;
+  const level = Number(householdMatch?.[1] ?? titleLevelMatch?.[2] ?? reachedMatch?.[2]);
+  if (!rawBuilding || !Number.isInteger(level) || level < 1) return undefined;
+  const definition = NOMADIC_BUILDINGS.find(
+    (entry) => normalizeMemoryText(entry.title).toLowerCase() === rawBuilding.toLowerCase(),
+  );
+  const canonicalTitle = definition?.title ?? rawBuilding;
+  return {
+    id: definition?.id ?? canonicalTitle.toLowerCase(),
+    title: canonicalTitle,
+    detail: `The clan ${level > 1 ? 'improved' : 'established'} this household to level ${level}.`,
+    level,
+  };
+}
+
+export function memoryEventKey(
+  memory: Pick<ClanMemory, 'title' | 'detail' | 'region' | 'elapsed' | 'population'>,
+): string {
+  const building = parseBuildingMemory(memory.title, memory.detail);
+  if (building) return `building:${building.id}:${building.level}`;
+  const title = normalizeMemoryText(memory.title);
+  const detail = normalizeMemoryText(memory.detail);
+  const khanMatch = /^Khan (\d+) (fell|took the banner)$/i.exec(title);
+  if (khanMatch) return `khan:${khanMatch[1]}:${khanMatch[2]!.toLowerCase()}`;
+  if (title.toLowerCase() === 'the skybreaker fell') return 'skybreaker';
+  if (
+    detail === 'The households raised it in the travelling camp.' ||
+    detail === 'The households learned a new craft for the travelling camp.' ||
+    detail === 'Organised within the travelling camp.' ||
+    detail === 'Deepened within the travelling camp.' ||
+    detail.startsWith('The camp grew to ')
+  ) {
+    return `development:${title.toLowerCase()}:${detail.toLowerCase()}`;
+  }
+  if (
+    title === 'The camp packed for the road' ||
+    title === 'New households at the fire' ||
+    title === 'The caravan arrived' ||
+    title === 'Every household arrived'
+  ) {
+    return `crossing:${memory.region}:${title.toLowerCase()}`;
+  }
+  return `moment:${memory.region}:${memory.elapsed}:${memory.population}:${title.toLowerCase()}:${detail.toLowerCase()}`;
+}
+
+export function normalizeLegacyMemories(legacy: ClanLegacy): void {
+  const originalCount = legacy.memories.length;
+  const seen = new Set<string>();
+  const deduplicated: ClanMemory[] = [];
+  for (const memory of legacy.memories) {
+    const building = parseBuildingMemory(memory.title, memory.detail);
+    const normalized: ClanMemory = building
+      ? { ...memory, title: building.title, detail: building.detail }
+      : memory;
+    const key = memoryEventKey(normalized);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduplicated.push(normalized);
+  }
+  const kept = deduplicated.slice(-GAME.legacy.memoryLimit);
+  const evicted =
+    kept.length >= GAME.legacy.memoryLimit ? Math.max(0, legacy.totalMemories - originalCount) : 0;
+  legacy.totalMemories = kept.length + evicted;
+  legacy.memories = kept.map((memory, index) => ({
+    ...memory,
+    sequence: evicted + index + 1,
+  }));
+}
+
 /** Records a factual clan moment in the chronicle. */
 export function rememberClan(run: RunState, title: string, detail: string): void {
   const legacy = run.legacy;
-  legacy.totalMemories += 1;
-  legacy.memories.push({
-    sequence: legacy.totalMemories,
+  const building = parseBuildingMemory(title, detail);
+  const candidate = {
     elapsed: run.elapsed,
     region: run.clan.region,
     locationId: currentLocation(run).id,
     population: run.clan.population,
-    title,
-    detail,
+    title: building ? building.title : title,
+    detail: building ? building.detail : detail,
+  };
+  const key = memoryEventKey(candidate);
+  if (legacy.memories.some((existing) => memoryEventKey(existing) === key)) return;
+  legacy.totalMemories =
+    Math.max(legacy.totalMemories, legacy.memories.length, legacy.memories.at(-1)?.sequence ?? 0) +
+    1;
+  legacy.memories.push({
+    sequence: legacy.totalMemories,
+    ...candidate,
   });
   if (legacy.memories.length > GAME.legacy.memoryLimit) legacy.memories.shift();
 }

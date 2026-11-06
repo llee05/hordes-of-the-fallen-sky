@@ -7,9 +7,11 @@ import { syncAreaEncounter } from '../../src/game/state/areaEncounters';
 import { beginMigration } from '../../src/game/state/clan';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
 import { syncFinalStand } from '../../src/game/state/finalStand';
+import { rememberClan } from '../../src/game/state/legacy';
 import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
 import { createRun } from '../../src/game/state/run';
 import { GamePlatform } from '../../src/platform/GamePlatform';
+import { clanMemories } from '../../src/ui/legacyContent';
 import { createLegacyCampRun } from '../support/legacyCamp';
 import { world } from './fixtures/expedition';
 
@@ -192,6 +194,74 @@ describe('full expedition snapshots', () => {
     ]);
     expect(restored.legacy).not.toHaveProperty('reactionUntil');
     expect(restored.legacy.memories[0]).not.toHaveProperty('line');
+    expect(restored.legacy.totalMemories).toBe(2);
+    expect(restored.legacy.memories).toEqual([
+      expect.objectContaining({
+        sequence: 1,
+        title: "Khan's Ger",
+        detail: 'The clan improved this household to level 2.',
+      }),
+      expect.objectContaining({
+        sequence: 2,
+        title: "Fletcher's Workshop",
+        detail: 'The clan established this household to level 1.',
+      }),
+    ]);
+  });
+
+  it('deduplicates migrated memories, assigns increasing sequences, and prevents duplicate memories on continued play', () => {
+    const run = createRun('pathfinders');
+    run.phase = 'building';
+    run.clan.materials = 1000;
+    run.clan.spirit = 1000;
+    expect(purchaseNomadicBuilding(run, 'khans-ger')).toBe(true);
+    expect(purchaseNomadicBuilding(run, 'fletchers-workshop')).toBe(true);
+    run.legacy.memories.push({
+      sequence: 1,
+      elapsed: 12,
+      region: 0,
+      locationId: 'golden-pasture',
+      population: 8,
+      title: 'Fletcher’s Workshop · Lv 1',
+      detail: 'Fletcher’s Workshop reached level 1.',
+    });
+    const preChangeSave = captureExpedition(run, world()) as Record<string, any>;
+    preChangeSave.run.legacy.totalMemories = 2;
+    preChangeSave.run.story = {
+      enabled: true,
+      seen: ['fire'],
+      peopleLost: 0,
+      crossings: [],
+      records: [],
+    };
+
+    const restored = decodeExpedition(preChangeSave).run;
+    expect(restored.legacy.totalMemories).toBe(2);
+    expect(restored.legacy.memories.map((memory) => memory.sequence)).toEqual([1, 2]);
+    expect(restored.legacy.memories.map((memory) => memory.title)).toEqual([
+      "Khan's Ger",
+      "Fletcher's Workshop",
+    ]);
+    expect(clanMemories(restored)).toContain('The latest 2 of 2 moments from this expedition.');
+
+    rememberClan(
+      restored,
+      "Fletcher's Workshop",
+      'The clan established this household to level 1.',
+    );
+    rememberClan(restored, 'Fletcher’s Workshop · Lv 1', 'Fletcher’s Workshop reached level 1.');
+    expect(restored.legacy.totalMemories).toBe(2);
+    expect(restored.legacy.memories).toHaveLength(2);
+
+    restored.phase = 'building';
+    expect(purchaseNomadicBuilding(restored, 'fletchers-workshop')).toBe(true);
+    expect(restored.legacy.totalMemories).toBe(3);
+    expect(restored.legacy.memories.map((memory) => memory.sequence)).toEqual([1, 2, 3]);
+    expect(restored.legacy.memories.at(-1)).toMatchObject({
+      sequence: 3,
+      title: "Fletcher's Workshop",
+      detail: 'The clan improved this household to level 2.',
+    });
   });
 
   it.each([

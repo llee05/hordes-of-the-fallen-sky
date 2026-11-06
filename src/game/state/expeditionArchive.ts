@@ -28,6 +28,7 @@ import type { AreaThreatState } from './areaThreats';
 import { createCampEstate } from './campEstate';
 import { EXPEDITION_MILESTONES } from './expeditionMetrics';
 import { currentLocation } from './journey';
+import { normalizeLegacyMemories } from './legacy';
 import {
   applyNomadicBuildingEffects,
   nomadicBuildingLevel,
@@ -561,6 +562,7 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
   const restored = structuredClone({ run, world });
   migrateLegacyNomadicCamp(restored.run);
   syncNomadicBuildings(restored.run);
+  normalizeLegacyMemories(restored.run.legacy);
   if (retiredProgression || retiredStory) {
     // Rebuild persistent bonuses from buildings; old stat/effect totals included retired research or story choices.
     const retained = restored.run;
