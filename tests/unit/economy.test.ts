@@ -129,7 +129,7 @@ describe('economy forecasts', () => {
     const forecast = economyForecast(run);
     crossingForecast(run, ROUTES[0]);
     expect(run).toEqual(before);
-    for (const phase of ['playing', 'paused', 'route', 'journal', 'story'] as const) {
+    for (const phase of ['playing', 'paused', 'route', 'journal'] as const) {
       run.phase = phase;
       expect(economyForecast(run)).toEqual(forecast);
     }

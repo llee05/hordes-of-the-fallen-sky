@@ -9,9 +9,7 @@ test('using cheats marks a normal run, preserves records, carries between checkp
   page,
 }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await page.getByRole('button', { name: /NEW GAME/ }).click();
-  await page.getByRole('button', { name: /Skip intro/ }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   const saved = await page.evaluate(
     () => JSON.parse(localStorage.getItem('gloam-profile') ?? '{}').bestSeconds ?? 0,

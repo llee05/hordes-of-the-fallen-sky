@@ -2,7 +2,7 @@
 
 Every camp has its own composition in `src/game/data/landscapes.ts`. Location IDs
 select terrain, vegetation, landforms, water, and ambient particles independently
-of the story chapter. These are stylized surroundings, not accurate geographical
+of the journey chapter. These are stylized surroundings, not accurate geographical
 models. Existing cultural context remains in `data/clan.ts` and
 [migration destinations](migration-locations.md).
 

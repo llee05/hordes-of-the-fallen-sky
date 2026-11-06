@@ -5,7 +5,6 @@ import { advanceClan, beginMigration } from '../state/clan';
 import { crossingDuration } from '../state/economy';
 import { chapterLocation } from '../state/journey';
 import { createRun, gainExperience } from '../state/run';
-import { openNextStory } from '../state/story';
 
 export interface DeveloperLevel {
   id: string;
@@ -60,7 +59,6 @@ export function createDeveloperRun(id: string): RunState | undefined {
   if (!level) return undefined;
   const run = createRun();
   run.phase = 'playing';
-  run.story.enabled = false;
   run.guidance.enabled = false;
   Object.assign(run.clan, {
     food: GAME.developer.food,
@@ -73,7 +71,6 @@ export function createDeveloperRun(id: string): RunState | undefined {
   for (let region = 0; region < level.region; region += 1) {
     run.elapsed += GAME.developer.campDuration;
     advanceClan(run, GAME.developer.campDuration);
-    openNextStory(run);
     run.phase = 'route';
     const destination =
       region + 1 === level.region ? level.locationId : chapterLocation(region + 1).id;
@@ -87,7 +84,6 @@ export function createDeveloperRun(id: string): RunState | undefined {
     run.elapsed += GAME.clan.minimumCamp;
     advanceClan(run, GAME.clan.minimumCamp);
   }
-  openNextStory(run);
   if (level.routeId) {
     run.phase = 'route';
     if (!beginMigration(run, level.routeId)) return undefined;

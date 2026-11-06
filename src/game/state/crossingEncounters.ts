@@ -2,14 +2,7 @@ import { nomadicPopulationCapacity } from './nomadicCamp';
 import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import { CROSSING_ENCOUNTERS, type CrossingRoute } from '../data/crossings';
-import {
-  CROSSING_OBJECTIVE_ACCOUNTS,
-  CROSSING_OBJECTIVE_REMNANT,
-  SAFE_CROSSING_REMNANT,
-  crossingObjectiveReaction,
-  safeCrossingReaction,
-} from '../data/storyReactions';
-import { rememberClan } from './legacy';
+import { CROSSING_OBJECTIVE_ACCOUNTS, rememberClan } from './legacy';
 import type { RunState } from '../types';
 import { isKhanActive } from './khan';
 export interface CrossingEncounter {
@@ -45,7 +38,7 @@ export function beginCrossingEncounter(run: RunState): void {
     spawned: 0,
     defeated: 0,
     paid: false,
-    lossesAtDeparture: run.story.peopleLost,
+    lossesAtDeparture: run.legacy.peopleLost,
     spawnDelay: 0,
   };
 }
@@ -117,15 +110,13 @@ export function settleCrossingEncounter(run: RunState): boolean {
     return false;
   c.paid = true;
   c.phase = 'ended';
-  if (run.story.peopleLost === c.lossesAtDeparture) {
+  if (run.legacy.peopleLost === c.lossesAtDeparture) {
     run.safety.protectedCrossings++;
     restoreResolve(run, GAME.crossings.safeResolve);
     rememberClan(
       run,
       'Every household arrived',
       `No one was lost on the crossing, and the clan’s resolve rose by ${GAME.crossings.safeResolve}.`,
-      safeCrossingReaction(run, c.route),
-      SAFE_CROSSING_REMNANT,
     );
   }
   const success =
@@ -149,8 +140,6 @@ export function settleCrossingEncounter(run: RunState): boolean {
     run,
     CROSSING_ENCOUNTERS[c.route].title,
     `${CROSSING_OBJECTIVE_ACCOUNTS[c.route]} ${CROSSING_ENCOUNTERS[c.route].reward}.`,
-    crossingObjectiveReaction(run, c.route),
-    CROSSING_OBJECTIVE_REMNANT,
   );
   return true;
 }

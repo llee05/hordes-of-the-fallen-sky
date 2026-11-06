@@ -18,7 +18,6 @@ export interface ArenaActions {
   toggleDeveloperConsole(): void;
   changeZoom(steps: number): void;
   dash(): void;
-  skipIntro(): void;
   menuInput(action: 'next' | 'previous' | 'confirm'): void;
 }
 
@@ -31,9 +30,6 @@ const BACK_PHASES = [
   'journal',
   'settings',
   'help',
-  'story',
-  'epilogue',
-  'story-log',
   'traditions',
   'developer',
   'console',
@@ -187,22 +183,12 @@ export class ArenaInput {
 
   /**
    * Polls the controller once per frame and dispatches its menu and gameplay
-   * presses. Returns false when the frame must not simulate: during the intro,
-   * or when a press changed the phase.
+   * presses. Returns false when a press changed the phase.
    */
   pollController(): boolean {
     const actions = this.actions;
     const controller = this.controller.poll();
     this.controllerMove.set(controller.x, controller.y);
-    if (this.arena.run.phase === 'intro') {
-      if (controller.back || controller.pause) actions.skipIntro();
-      else {
-        if (controller.next) actions.menuInput('next');
-        if (controller.previous) actions.menuInput('previous');
-        if (controller.confirm) actions.menuInput('confirm');
-      }
-      return false;
-    }
     const phaseBeforeInput = this.arena.run.phase;
     if (controller.pause || (controller.back && BACK_PHASES.includes(this.arena.run.phase)))
       actions.togglePause();

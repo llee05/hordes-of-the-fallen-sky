@@ -207,7 +207,7 @@ All four developments can be learned together. This is the fictional clan's cour
 | Messengers to scattered families · `family-messengers` | 30   | Established                     | Blue-banner rescue arrivals welcome 3 additional people, capped at 120.   |
 | Fresh horses on the road · `horse-relays`              | 44   | Pasture scouts **and** Supplies | Each completed crossing grants +1 horse, capped at forty, and +4 resolve. |
 
-With Borts stores, crossing supply rewards add **23 food and 10 materials** before route rewards. These supplies are paid only when a crossing completes, including the third crossing; opening menus, setting off, or replaying story records never pays them again. Failed crossings grant no arrival reward. Family messengers adds people only on the blue-banner route, without adding extra rescued riders. Arrival bonuses do not repeat during the final stand.
+With Borts stores, crossing supply rewards add **23 food and 10 materials** before route rewards. These supplies are paid only when a crossing completes, including the third crossing; opening menus or setting off never pays them again. Failed crossings grant no arrival reward. Family messengers adds people only on the blue-banner route, without adding extra rescued riders. Arrival bonuses do not repeat during the final stand.
 
 ## Legacy implementation
 

@@ -116,7 +116,7 @@ test('camp threats show a screen direction and losses distinguish attacks from h
     return {
       combat: r.safety.combatLosses,
       hunger: r.safety.starvationLosses,
-      total: r.story.peopleLost,
+      total: r.legacy.peopleLost,
     };
   });
   expect(losses.combat).toBeGreaterThan(0);
@@ -136,14 +136,14 @@ test('multi-band hits report every person lost in the HUD and survival tallies',
     const results = [1, 2, 3].map((bands) => {
       r.clan.integrity = 100;
       r.clan.population = population;
-      const previousLosses = r.story.peopleLost;
+      const previousLosses = r.legacy.peopleLost;
       const previousCombat = r.safety.combatLosses;
       s.damageClan(bands * bandSize);
       return {
         bands,
         population: r.clan.population,
         expectedPopulation: population - bands,
-        losses: r.story.peopleLost - previousLosses,
+        losses: r.legacy.peopleLost - previousLosses,
         combat: r.safety.combatLosses - previousCombat,
         observed: r.safety.lastDamage.people,
       };

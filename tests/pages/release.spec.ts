@@ -27,29 +27,6 @@ test('production loads all local artwork under the Pages subpath without desktop
       node: typeof (window as any).require,
     })),
   ).toEqual({ inspection: 'undefined', desktop: 'undefined', node: 'undefined' });
-  await page.getByRole('button', { name: 'Replay introduction' }).click();
-  for (const heading of [
-    'Beneath Eternal Heaven.',
-    'A vow that broke the world.',
-    'The unreturned ride.',
-    'Keep the hearth alive.',
-    'A road beneath the sky.',
-  ]) {
-    await expect(page.getByRole('heading', { name: heading })).toBeVisible();
-    await expect
-      .poll(() =>
-        page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth),
-      )
-      .toBe(1536);
-    await expect
-      .poll(() =>
-        page.locator('.intro-background').evaluate((image: HTMLImageElement) => image.naturalWidth),
-      )
-      .toBe(1536);
-    if (heading !== 'A road beneath the sky.') await page.keyboard.press('ArrowRight');
-  }
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused();
   await page.evaluate(() => document.fonts.ready);
   expect(await page.evaluate(() => document.fonts.check('400 16px "DM Sans"'))).toBe(true);
   const root = new URL('./', page.url());
@@ -99,14 +76,12 @@ test('@gameplay browser expedition builds, pauses, resumes, and retains its prof
   await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: /NEW GAME/ }).click();
-  await page.getByRole('button', { name: /Skip intro/ }).click();
-  await expect(page.getByRole('heading', { name: 'A place beside the fire.' })).toBeVisible();
-  await page.getByRole('button', { name: /Share the work/ }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.keyboard.press('b');
   await page.locator('[data-camp-slot="1"]').click();
-  await page.locator('[data-camp-site="archery"]').click();
+  await page.locator('[data-nomadic-site="archery-range"]').click();
   await page.locator('.tree-purchase').click();
+  await expect(page.locator('[data-camp-site="archery-range"]')).toHaveAttribute('data-level', '1');
   const timer = await page.locator('#timer').textContent();
   await page.waitForTimeout(1200);
   await expect(page.locator('#timer')).toHaveText(timer!);
@@ -144,11 +119,9 @@ test('@gameplay a compact browser can start and build when local storage is unav
     });
   });
   await page.goto('./');
-  await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await page.getByRole('button', { name: /NEW GAME/ }).click();
-  await page.getByRole('button', { name: /Skip intro/ }).click();
   await page.keyboard.press('b');
-  await expect(page.locator('[data-camp-site="ger"]')).toBeVisible();
+  await expect(page.locator('[data-camp-site="khans-ger"]')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: 'test-results/pages/compact-camp.png' });
   await page.keyboard.press('Escape');

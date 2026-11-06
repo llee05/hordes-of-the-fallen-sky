@@ -96,7 +96,6 @@ test('camp ownership and all ranks survive reload without replaying gifts or eff
   const effects = await page.evaluate(() => (window as any).__gloam.scene.run.clan.campEffects);
   const health = await page.evaluate(() => (window as any).__gloam.scene.run.stats.maxHealth);
   await page.reload();
-  await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await expect(page.getByRole('button', { name: 'Continue clan camp', exact: true })).toBeVisible();
   // Freeze through the normal public action before a gameplay frame can gather materials.
   await page.evaluate(() => {

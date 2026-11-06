@@ -6,7 +6,7 @@ import { closeOverlayOrPause, expectFrozen } from './helpers';
 test.describe.configure({ mode: 'parallel' });
 
 test(
-  'developer mode freezes the expedition and returns to the exact title, intro, story, or menu',
+  'developer mode freezes the expedition and returns to the exact title or menu',
   { tag: '@core' },
   async ({ page }) => {
     await page.goto('/');
@@ -21,7 +21,7 @@ test(
     await closeOverlayOrPause(page);
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
     await page.getByRole('button', { name: /NEW GAME/ }).click();
-    await page.keyboard.press('ArrowRight');
+    await expect(page.getByRole('dialog')).toBeHidden();
     await page.keyboard.press('F8');
     await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
     // Native auto-repeat and Phaser replay must not toggle the menu a second time.
@@ -32,14 +32,6 @@ test(
     );
     await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
     await page.keyboard.press('F8');
-    await expect(page.getByRole('heading', { name: 'A vow that broke the world.' })).toBeVisible();
-    await page.getByRole('button', { name: /Skip intro/ }).click();
-    await expect(page.locator('.story-panel')).toBeVisible();
-    const encounter = await page.locator('#overlay-title').textContent();
-    await page.keyboard.press('F8');
-    await closeOverlayOrPause(page);
-    await expect(page.locator('#overlay-title')).toHaveText(encounter!);
-    await closeOverlayOrPause(page);
     await expect(page.getByRole('dialog')).toBeHidden();
     await closeOverlayOrPause(page);
     await page.getByRole('button', { name: 'Developer mode F8' }).click();
@@ -159,9 +151,8 @@ test('developer outcomes leave saved records intact and a normal new game clears
   ).toEqual(saved);
   await page.getByRole('button', { name: /RAISE THE BANNERS AGAIN/ }).click();
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Camp scenes: On' })).toBeVisible();
   await page.getByRole('button', { name: /NEW GAME/ }).click();
-  await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
+  await expect(page.getByRole('dialog')).toBeHidden();
   expect(
     await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;

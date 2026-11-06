@@ -28,12 +28,9 @@ describe('transient clan protection', () => {
     expect(run.clan.food).toBe(0);
     expect(run.clan.stageTime).toBeGreaterThan(before.clan.stageTime);
     expect(run.clan.threat).toBeGreaterThan(before.clan.threat);
-    expect([run.clan.integrity, run.clan.population, run.clan.herd, run.story.peopleLost]).toEqual([
-      before.clan.integrity,
-      before.clan.population,
-      before.clan.herd,
-      before.story.peopleLost,
-    ]);
+    expect([run.clan.integrity, run.clan.population, run.clan.herd, run.legacy.peopleLost]).toEqual(
+      [before.clan.integrity, before.clan.population, before.clan.herd, before.legacy.peopleLost],
+    );
     advanceClan(run, GAME.clan.starvationInterval);
     expect(run.clan.population).toBeLessThan(before.clan.population);
     expect(run.clan.herd).toBeLessThan(before.clan.herd);

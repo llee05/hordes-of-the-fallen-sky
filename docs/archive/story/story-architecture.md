@@ -10,8 +10,8 @@ Each destination changes the work, disagreement, and memory of a scene; choosing
 its name should change more than the heading above the same conversation.
 
 [World lore](lore.md) supplies the setting and canonical prologue.
-[Migration destinations](docs/migration-locations.md) supplies the actual selection
-rules, cultural context, and sources. [The prototype guide](docs/story-prototype.md)
+[Migration destinations](../../migration-locations.md) supplies the actual selection
+rules, cultural context, and sources. [The prototype guide](story-prototype.md)
 records what is playable today. The destination scenes, callbacks, companion
 trust, and lasting consequences below are implemented; the delivery contract at
 the end of this document records how.
@@ -174,7 +174,7 @@ The images are writing motifs, not collectible items or new inventory state. The
 ending callbacks require the corresponding scene or decision to have occurred.
 
 The location names and cultural frames follow the sourced
-[destination guide](docs/migration-locations.md#cultural-context-and-sources).
+[destination guide](../../migration-locations.md#cultural-context-and-sources).
 Every incident below is original fiction about the Blue Banner clan.
 
 ### Mount Otgontenger — Below the snowline
@@ -464,7 +464,7 @@ button; no scene silently charges supplies.
 
 ## Writing and cultural boundaries
 
-- Ground real-place context in the [destination sources](docs/migration-locations.md#cultural-context-and-sources).
+- Ground real-place context in the [destination sources](../../migration-locations.md#cultural-context-and-sources).
   Keep Mongolian, Turkic, and Altaian contexts distinct. The clan's fictional
   conversations do not speak for every community connected with a landscape.
 - Camp around the named places. Do not require a summit ascent, reconstruct a
@@ -544,5 +544,5 @@ The playable build implements this architecture:
 - Starting traditions, rescues, unused wagon room, losses, succession, and camp work
   shape what the companions say.
 
-[The prototype guide](docs/story-prototype.md) documents the playable details.
+[The prototype guide](story-prototype.md) documents the playable details.
 Individual companion casualties, voice acting, and new artwork remain future work.

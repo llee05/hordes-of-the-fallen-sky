@@ -28,7 +28,6 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   expect(await page.evaluate(() => (window as any).audioContextsCreated ?? 0)).toBe(0);
   expect(await page.evaluate(() => (window as any).__gloam.scene.audio.context)).toBeUndefined();
-  await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await startExpedition(page);
   await page.evaluate(() => (window as any).__gloam.scene.audio.ready());
   await expect
@@ -219,7 +218,6 @@ test('muting cancels a playing cue, persists, and unmuting restores audio withou
   await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Unmute sound', exact: true }).click();
   await closeOverlayOrPause(page);
-  await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await startExpedition(page);
   await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();

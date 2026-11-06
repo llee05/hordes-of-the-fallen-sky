@@ -1,7 +1,7 @@
 import { GAME } from '../config';
 import type { MountainRegion } from '../terrain/types';
 
-/** A broad camp basin and two winding mountain passes, independent of story chapter. */
+/** A broad camp basin and two winding mountain passes, independent of journey chapter. */
 export const OTGONTENGER_MOUNTAINS: MountainRegion = {
   seed: 'otgontenger-white-crown-v1',
   geometry: {

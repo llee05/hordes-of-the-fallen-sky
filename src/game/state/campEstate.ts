@@ -4,11 +4,6 @@ import {
   type EstateImprovement,
 } from '../data/campEstate';
 import { BUILDINGS } from '../data/clan';
-import {
-  ENCAMPMENT_REMNANT,
-  INTERNAL_DEVELOPMENT_REMNANT,
-  estateReaction,
-} from '../data/storyReactions';
 import type { BuildingId, CampEstate, RunState } from '../types';
 import { applyCampEffects, hasDevelopment } from './camp';
 import { markExpedition } from './expeditionMetrics';
@@ -180,8 +175,6 @@ export function purchaseEstate(
     kind === 'encampment'
       ? `The camp grew to ${tier.slots} building plots and ${tier.internalSlots} internal development slots.`
       : `${rank === 1 ? 'Organised' : 'Deepened'} within the travelling camp.`,
-    estateReaction(kind, id, rank),
-    kind === 'encampment' ? ENCAMPMENT_REMNANT : INTERNAL_DEVELOPMENT_REMNANT,
   );
   return true;
 }

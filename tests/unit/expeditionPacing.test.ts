@@ -8,7 +8,7 @@ for (const style of PACING_PLAYSTYLES)
       expect(outcome).toBe('saved');
       expect(run.clan.population).toBeGreaterThan(0);
       expect(run.clan.integrity).toBeGreaterThan(0);
-      expect(run.story.crossings).toHaveLength(3);
+      expect(run.legacy.crossings).toHaveLength(3);
       expect(run.metrics?.stages).toHaveLength(7);
       const first = run.metrics!.stages[0]!;
       expect(first.marks.fight).toBe(6);

@@ -27,7 +27,7 @@ export function locationAtChapter(run: RunState, chapter: number): MigrationLoca
   if (chapter === run.clan.region) return currentLocation(run);
   if (run.clan.stage === 'migration' && chapter === run.clan.region + 1)
     return arrivalLocation(run);
-  const id = run.story.crossings.find((crossing) => crossing.region === chapter)?.locationId;
+  const id = run.legacy.crossings.find((crossing) => crossing.region === chapter)?.locationId;
   return (id && locationById(id)) || chapterLocation(chapter);
 }
 
@@ -36,7 +36,7 @@ export function availableDestinations(run: RunState): readonly MigrationLocation
   if (run.clan.stage !== 'camp' || run.clan.region >= REGIONS.length - 1) return [];
   const next = chapterLocation(run.clan.region + 1);
   if (run.clan.region === REGIONS.length - 2) return [next];
-  const visited = new Set(run.story.crossings.map((crossing) => crossing.locationId));
+  const visited = new Set(run.legacy.crossings.map((crossing) => crossing.locationId));
   return [
     next,
     ...LOCATIONS.filter(

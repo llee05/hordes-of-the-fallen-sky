@@ -5,7 +5,6 @@ import { advanceClan, beginMigration } from '../../src/game/state/clan';
 import { crossingForecast, economyRates } from '../../src/game/state/economy';
 import { availableDestinations, currentLocation, locationById } from '../../src/game/state/journey';
 import { advanceSuccession, damageKhan } from '../../src/game/state/khan';
-import { openNextStory, resolveStory } from '../../src/game/state/story';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 const places = LOCATIONS.filter((location) => location.context);
@@ -67,7 +66,7 @@ describe('named migration destinations', () => {
         expect(currentLocation(run).short).toBe('GOLDEN PASTURE');
         expect(run.clan.food).toBe(before.clan.food);
         expect(run.clan.population).toBe(before.clan.population);
-        expect(run.story.crossings).toHaveLength(0);
+        expect(run.legacy.crossings).toHaveLength(0);
         expect(beginMigration(run, route.id, place.id)).toBe(false);
         run.phase = 'playing';
         expect(advanceClan(run, forecast.duration / 2)).toBeUndefined();
@@ -83,7 +82,7 @@ describe('named migration destinations', () => {
         expect(run.clan.destinationId).toBeUndefined();
         expect(run.clan.food).toBeCloseTo(forecast.foodAfterArrival, 2);
         expect(run.clan.population).toBe(before.clan.population + route.population);
-        expect(run.story.crossings).toEqual([
+        expect(run.legacy.crossings).toEqual([
           { route: route.id, region: 1, population: run.clan.population, locationId: place.id },
         ]);
         expect(run.legacy.memories.at(-1)?.detail).toContain(place.name);
@@ -107,22 +106,14 @@ describe('named migration destinations', () => {
     expect(economyRates(run)).toMatchObject({ foodProduction: 0, materials: 0 });
   });
 
-  it('keeps story choices and succession in the actual places, then finishes at the fictional refuge', () => {
+  it('keeps succession in the actual places, then finishes at the fictional refuge', () => {
     const run = createRun();
-    run.story.enabled = false;
     for (const destination of ['orkhon-valley', 'otgontenger', 'heart-of-the-steppe']) {
       run.phase = 'route';
       run.clan.stageTime = 45;
       expect(beginMigration(run, 'river', destination)).toBe(true);
       run.phase = 'playing';
       expect(advanceClan(run, 150)).toBe('arrived');
-      if (run.clan.region < 3) {
-        openNextStory(run);
-        const beat = run.clan.region === 1 ? 'river' : 'promise';
-        expect(
-          run.story.records.find((record) => record.encounter.id === beat)?.encounter.setting,
-        ).toContain(currentLocation(run).name);
-      }
       if (run.clan.region === 1) {
         damageKhan(run, 1000);
         expect(run.legacy.khans[0]?.fallenLocationId).toBe('orkhon-valley');
@@ -138,6 +129,5 @@ describe('named migration destinations', () => {
     expect(run.clan.stage).toBe('final');
     expect(availableDestinations(run)).toEqual([]);
     expect(advanceClan(run, GAME.clan.finalDuration)).toBe('saved');
-    expect(resolveStory(run, 'repeat-choice')).toBe(false);
   });
 });

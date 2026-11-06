@@ -39,7 +39,7 @@ test('arrives at Altai Tavan Bogd and records its real destination', async ({ pa
       () => (window as any).__gloam.scene.landscape.world3d.terrain.region.scene.id,
     ),
   ).toBe('golden-pasture');
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.story.crossings)).toEqual([]);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.legacy.crossings)).toEqual([]);
   await page.evaluate(() => {
     (window as any).__gloam.scene.run.clan.stageTime = 200;
   });
@@ -62,7 +62,7 @@ test('arrives at Altai Tavan Bogd and records its real destination', async ({ pa
     }),
   ).toEqual({ chunks: 0, connected: false });
   expect(
-    await page.evaluate(() => (window as any).__gloam.scene.run.story.crossings[0].locationId),
+    await page.evaluate(() => (window as any).__gloam.scene.run.legacy.crossings[0].locationId),
   ).toBe('altai-tavan-bogd');
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.xp)).toBe(2);
   await page.keyboard.press('j');

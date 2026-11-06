@@ -55,12 +55,7 @@ describe('choosing a new Khan', () => {
   it('freezes succession in every menu and ending and rejects invalid time', () => {
     const phases: RunPhase[] = [
       'ready',
-      'intro',
-      'story',
-      'epilogue',
-      'story-log',
       'paused',
-
       'building',
       'route',
       'journal',

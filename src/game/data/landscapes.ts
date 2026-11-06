@@ -58,7 +58,7 @@ const landmark = (prop: SceneryProp, x: number, y: number, width: number): Lands
   width,
 });
 
-/** Location identity is independent of story chapter, economic balance, and cultural context. */
+/** Location identity is independent of journey chapter, economic balance, and cultural context. */
 export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
   'golden-pasture': {
     title: 'The wind-combed meadow',

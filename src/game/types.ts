@@ -2,13 +2,8 @@ import type { NomadicCamp } from '../shared/nomadicCamp.js';
 import type { DeveloperConsoleSnapshot } from './dev/commands';
 import type { GuidanceState } from './state/guidance';
 import type { ClanLegacy } from './state/legacy';
-import type { StoryState } from './story/types';
 
 export type RunPhase =
-  | 'intro'
-  | 'story'
-  | 'epilogue'
-  | 'story-log'
   | 'ready'
   | 'traditions'
   | 'playing'
@@ -125,6 +120,13 @@ export interface PlayerStats {
   pierce: number;
 }
 
+export interface CrossingRecord {
+  region: number;
+  route: string;
+  population: number;
+  locationId?: LocationId;
+}
+
 export interface RunState {
   finalStand?: import('./state/finalStand').FinalStandState;
   metrics?: import('./state/expeditionMetrics').ExpeditionMetrics;
@@ -152,7 +154,6 @@ export interface RunState {
   nextLevelXp: number;
   stats: PlayerStats;
   clan: ClanState;
-  story: StoryState;
 }
 
 export interface EnemyDefinition {
@@ -198,7 +199,6 @@ export interface HudSnapshot {
   minZoom: number;
   maxZoom: number;
   run: RunState;
-  introSlide: number;
   dashReady: number;
   dashCooldown: number;
   best: number;

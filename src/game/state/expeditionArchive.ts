@@ -1,5 +1,4 @@
 import { availableFormations } from './clan';
-import { storyConsequence } from '../data/storyConsequences';
 import { applyCampEffects } from './camp';
 import { isExpeditionSave, isRecord, type ExpeditionSave } from '../../shared/expeditionSave';
 import { isNomadicCamp } from '../../shared/nomadicCamp.js';
@@ -9,8 +8,6 @@ import { BUILDINGS, LOCATIONS, ROUTES, STARTING_TRADITIONS } from '../data/clan'
 import { ALL_ENEMIES, SKYBREAKER } from '../data/enemies';
 import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
 import { NOMADIC_BUILDINGS } from '../data/nomadicCamp';
-import { STORY_ORDER, storyEncounter } from '../data/story';
-import { FIRST_STOPS, SECOND_STOPS, firstStop, secondStop } from '../data/storyDestinations';
 import { SUCCESSORS } from '../data/successors';
 import type { Enemy } from '../entities/actors';
 import type { RunState } from '../types';
@@ -136,37 +133,7 @@ const motion = object({
 });
 const location = oneOf(LOCATIONS.map((l) => l.id));
 const region = oneOf([0, 1, 2, 3]);
-const storyScenes = STORY_ORDER.map((id) => storyEncounter(createRun(), id));
-// Include composed base scenes, all destination variants, and the fallback stops.
-const storyImages = new Set([
-  ...storyScenes.map((scene) => scene.image),
-  ...Object.values(FIRST_STOPS).map((stop) => stop.image),
-  ...Object.values(SECOND_STOPS).map((stop) => stop.image),
-  firstStop(undefined).image,
-  secondStop(undefined).image,
-]);
 const trait = oneOf(Object.keys(SUCCESSORS));
-const line = object({
-  speaker: oneOf(['saran', 'boro', 'erden', 'nara', 'newcomer', 'clan']),
-  text: string,
-});
-const choice = object({
-  id: oneOf(storyScenes.flatMap((scene) => scene.choices.map((option) => option.id))),
-  label: string,
-  description: string,
-  response: string,
-  benefit: oneOf(['food', 'materials', 'spirit', 'resolve']),
-  doctrine: oneOf(['iron', 'sky', 'wander']),
-});
-const encounter = object({
-  id: oneOf(['fire', 'departure', 'river', 'promise', 'earth', 'court', 'opening', 'road']),
-  act: oneOf([1, 2]),
-  title: string,
-  image: oneOf([...storyImages]),
-  setting: string,
-  lines: list(line, 100),
-  choices: list(choice, 20),
-});
 const khanRecord = object(
   {
     generation: integer,
@@ -185,7 +152,7 @@ const khanRecord = object(
   },
 );
 const overrides: Record<string, Rule> = {
-  phase: oneOf(['playing', 'paused', 'story']),
+  phase: oneOf(['playing', 'paused']),
   'clan.stage': oneOf(['camp', 'migration', 'final']),
   'clan.region': oneOf([0, 1, 2, 3]),
   'clan.routeId': oneOf(['', ...ROUTES.map((r) => r.id)]),
@@ -206,7 +173,7 @@ const overrides: Record<string, Rule> = {
       khanRecord(value) &&
       isRecord(value) &&
       (value.fallenAt === undefined || region(value.fallenRegion)),
-    GAME.story.khanRecordLimit,
+    GAME.legacy.khanRecordLimit,
   ),
   'legacy.memories': list(
     object(
@@ -218,23 +185,11 @@ const overrides: Record<string, Rule> = {
         title: string,
         detail: string,
       },
-      { locationId: location, line },
+      { locationId: location },
     ),
-    GAME.story.memoryLimit,
+    GAME.legacy.memoryLimit,
   ),
-  'story.records': list(
-    object(
-      {
-        encounter,
-        elapsed: number,
-        population: number,
-        status: oneOf(['chosen', 'skipped', 'passed']),
-      },
-      { choice },
-    ),
-    100,
-  ),
-  'story.crossings': list(
+  'legacy.crossings': list(
     object(
       {
         route: oneOf(ROUTES.map((route) => route.id)),
@@ -336,7 +291,6 @@ const optional: Record<string, Record<string, Rule>> = {
       defeated: integer,
     }),
   },
-  story: { active: encounter },
 };
 /** Required fields follow the live state defaults; optional and variable-sized content is explicit. */
 function shape(example: unknown, path = ''): Rule {
@@ -491,7 +445,7 @@ export function captureExpedition(
         level: run.level,
         stage: run.clan.stage,
       },
-      run: { ...run, phase: run.story.active ? 'story' : 'paused' },
+      run: { ...run, phase: 'paused' },
       world,
     }),
   ) as ExpeditionSave;
@@ -499,12 +453,13 @@ export function captureExpedition(
   return snapshot;
 }
 
-/** No purchase, arrival, story resolution, healing, or active-time simulation runs during loading. */
+/** No purchase, arrival, healing, or active-time simulation runs during loading. */
 export function decodeExpedition(value: unknown): { run: RunState; world: WorldArchive } {
-  // Retired research is deliberately ignored, including IDs and runtime fields
+  // Retired research and story fields are deliberately ignored, including IDs and runtime fields
   // no longer known to this build. Validate the retained expedition below.
   value = structuredClone(value);
   let retiredProgression = false;
+  let retiredStory = false;
   if (isRecord(value) && isRecord(value.run)) {
     const legacy = value.run;
     retiredProgression = [
@@ -514,6 +469,46 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
       'researchPurchases',
       'researchRuntime',
     ].some((key) => key in legacy);
+    retiredStory = 'story' in legacy;
+    if (isRecord(legacy.story)) {
+      if (isRecord(legacy.legacy)) {
+        if (legacy.legacy.crossings === undefined && 'crossings' in legacy.story)
+          legacy.legacy.crossings = legacy.story.crossings;
+        if (legacy.legacy.peopleLost === undefined && 'peopleLost' in legacy.story)
+          legacy.legacy.peopleLost = legacy.story.peopleLost;
+      }
+      if (
+        Array.isArray(legacy.story.records) &&
+        isRecord(legacy.clan) &&
+        isRecord(legacy.clan.identity)
+      ) {
+        for (const record of legacy.story.records) {
+          if (
+            isRecord(record) &&
+            record.status === 'chosen' &&
+            isRecord(record.choice) &&
+            typeof record.choice.doctrine === 'string' &&
+            record.choice.doctrine in legacy.clan.identity &&
+            typeof legacy.clan.identity[record.choice.doctrine] === 'number'
+          ) {
+            legacy.clan.identity[record.choice.doctrine] = Math.max(
+              0,
+              (legacy.clan.identity[record.choice.doctrine] as number) - 1,
+            );
+          }
+        }
+      }
+    }
+    delete legacy.story;
+    if (legacy.phase === 'story') legacy.phase = 'paused';
+    if (isRecord(legacy.legacy)) {
+      delete legacy.legacy.reactionUntil;
+      if (Array.isArray(legacy.legacy.memories)) {
+        for (const memory of legacy.legacy.memories) {
+          if (isRecord(memory)) delete memory.line;
+        }
+      }
+    }
     for (const key of [
       'upgrades',
       'patrons',
@@ -560,35 +555,40 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
     !Number.isInteger(run.level) ||
     run.level < 1 ||
     run.xp < 0 ||
-    run.nextLevelXp <= 0 ||
-    !!run.story.active !== (run.phase === 'story')
+    run.nextLevelXp <= 0
   )
     throw new Error('This expedition contains invalid progression or actor references.');
   const restored = structuredClone({ run, world });
   migrateLegacyNomadicCamp(restored.run);
   syncNomadicBuildings(restored.run);
-  if (retiredProgression) {
-    // Rebuild persistent bonuses from buildings; old stat totals included research.
+  if (retiredStory) {
+    restored.run.clan.message = '';
+    const legacy = restored.run.legacy;
+    legacy.totalMemories = Math.max(legacy.totalMemories, legacy.memories.length);
+    const firstSequence = legacy.totalMemories - legacy.memories.length + 1;
+    legacy.memories.forEach((memory, index) => {
+      memory.sequence = firstSequence + index;
+    });
+  }
+  if (retiredProgression || retiredStory) {
+    // Rebuild persistent bonuses from buildings; old stat/effect totals included retired research or story choices.
     const retained = restored.run;
     const baseline = createRun(retained.startingTradition);
-    retained.stats = baseline.stats;
     retained.clan.campEffects = baseline.clan.campEffects;
+    if (retiredProgression) retained.stats = baseline.stats;
     for (const definition of NOMADIC_BUILDINGS)
       for (const level of definition.levels.slice(
         definition.category === 'Core' ? 1 : 0,
         nomadicBuildingLevel(retained.clan.nomadicCamp!, definition.id),
       ))
-        applyNomadicBuildingEffects(retained, level.effects);
-    for (const record of retained.story.records)
-      if (record.status === 'chosen' && record.choice)
-        applyCampEffects(
-          retained.clan.campEffects,
-          storyConsequence(record.choice.id)?.lasting?.effects,
-        );
-    if (!availableFormations(retained).includes(retained.clan.formation))
-      retained.clan.formation = 'guard';
-    retained.health = Math.min(retained.health, retained.stats.maxHealth);
-    retained.combat.trails = [];
+        if (retiredProgression) applyNomadicBuildingEffects(retained, level.effects);
+        else applyCampEffects(retained.clan.campEffects, level.effects.ongoing);
+    if (retiredProgression) {
+      if (!availableFormations(retained).includes(retained.clan.formation))
+        retained.clan.formation = 'guard';
+      retained.health = Math.min(retained.health, retained.stats.maxHealth);
+      retained.combat.trails = [];
+    }
   }
   return restored;
 }

@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { nomadicBuilding } from '../../src/game/data/nomadicCamp';
-import { storyEncounter } from '../../src/game/data/story';
-import { storyConsequence } from '../../src/game/data/storyConsequences';
 import { captureCampArchive, runFromCampArchive } from '../../src/game/state/campArchive';
 import { purchaseEstate } from '../../src/game/state/campEstate';
 import { advanceClan, buildStructure, clanDoctrine } from '../../src/game/state/clan';
@@ -15,7 +13,6 @@ import {
 } from '../../src/game/state/nomadicCamp';
 import { migrateLegacyNomadicCamp } from '../../src/game/state/nomadicCampMigration';
 import { createRun, gainExperience } from '../../src/game/state/run';
-import { resolveStory } from '../../src/game/state/story';
 import { isCampArchive, normalizeCampArchive } from '../../src/shared/campArchive';
 import type { NomadicBuildingId } from '../../src/shared/nomadicCamp';
 import { nomadicEffectDescriptions } from '../../src/ui/nomadicCampModel';
@@ -227,20 +224,6 @@ describe('legacy camp migration', () => {
     expect(restored.clan.materials).toBe(materials + 36);
     expect(restored.clan.paths.archery ?? []).not.toContain('fire-arrows');
     expect(restored.clan.population).toBe(old.clan.population);
-  });
-  it('retains lasting story modifiers while retiring and replacing only the old camp contributions', () => {
-    const old = createLegacyCampRun();
-    old.phase = 'building';
-    old.clan.materials = 1000;
-    old.story.active = storyEncounter(old, 'fire');
-    expect(resolveStory(old, 'share-work')).toBe(true);
-    const storyMultiplier =
-      storyConsequence('share-work')!.lasting!.effects.multipliers!.materialProduction!;
-    expect(purchaseEstate(old, 'encampment', 'encampment-2', 2)).toBe(true);
-    const records = structuredClone(old.story.records);
-    migrateLegacyNomadicCamp(old);
-    expect(old.story.records).toEqual(records);
-    expect(old.clan.campEffects.multipliers.materialProduction).toBeCloseTo(storyMultiplier * 1.1);
   });
   it('keeps banked progression, health, succession and over-cap households during a full-run migration', () => {
     const old = createLegacyCampRun();

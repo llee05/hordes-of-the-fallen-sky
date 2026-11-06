@@ -22,9 +22,7 @@ test('desktop migration offers named destinations and frozen, responsive travel 
   });
   try {
     const page = await app.firstWindow();
-    await page.getByRole('button', { name: 'Camp scenes: On' }).click();
     await page.getByRole('button', { name: /NEW GAME/ }).click();
-    await page.getByRole('button', { name: /Skip intro/ }).click();
     await page.keyboard.press('b');
     await selectCampBuilding(page, 'archery');
     await buyNode(page, 'archery-base');
@@ -84,33 +82,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();
-    await expect(page.locator('.intro-story')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Replay introduction' }).click();
-    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
-    await expect
-      .poll(() =>
-        page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth),
-      )
-      .toBe(1536);
-    await page.screenshot({ path: 'test-results/native-intro.png' });
-    // Check every story painting through file://, including the two lore additions.
-    for (const heading of [
-      'A vow that broke the world.',
-      'The unreturned ride.',
-      'Keep the hearth alive.',
-      'A road beneath the sky.',
-    ]) {
-      await page.keyboard.press('ArrowRight');
-      await expect(page.getByRole('heading', { name: heading })).toBeVisible();
-      await expect
-        .poll(() =>
-          page.locator('.intro-painting').evaluate((image: HTMLImageElement) => image.naturalWidth),
-        )
-        .toBe(1536);
-    }
-    await closeOverlayOrPause(page);
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();
     await expect(page).toHaveTitle('Hordes of the Fallen Sky · A people, not a place.');
     expect(await app.evaluate(({ app: desktopApp }) => desktopApp.getName())).toBe(
       'Hordes of the Fallen Sky',
@@ -153,11 +125,6 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
     await closeOverlayOrPause(page);
     await page.getByRole('button', { name: /NEW GAME/ }).click();
-    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
-    await page.getByRole('button', { name: /Skip intro/ }).click();
-    await expect(page.getByRole('heading', { name: 'A place beside the fire.' })).toBeVisible();
-    await page.screenshot({ path: 'test-results/native-story.png' });
-    await page.getByRole('button', { name: /Share the work/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await expect(page.locator('#khan-title')).toHaveText('THE KHAN');
     await expect(page.locator('#food-rate')).toContainText('Food net +1.');
@@ -293,7 +260,6 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     app = await launch();
     page = await app.firstWindow();
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
-    await expect(page.locator('.intro-story')).toHaveCount(0);
     await expect(page.locator('#best')).toHaveText('01:28');
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();

@@ -182,7 +182,7 @@ test('clan invincibility prevents melee, projectile, hazard and starvation losse
       population: scene.run.clan.population,
       herd: scene.run.clan.herd,
       integrity: 47,
-      lost: scene.run.story.peopleLost,
+      lost: scene.run.legacy.peopleLost,
       health: scene.run.health,
     };
     scene.spawnEnemy();
@@ -214,7 +214,7 @@ test('clan invincibility prevents melee, projectile, hazard and starvation losse
         population: run.clan.population,
         herd: run.clan.herd,
         integrity: run.clan.integrity,
-        lost: run.story.peopleLost,
+        lost: run.legacy.peopleLost,
       };
     }),
   ).toEqual({

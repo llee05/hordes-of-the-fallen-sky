@@ -5,6 +5,8 @@ import {
   openTitle,
   startExpedition,
   tapController,
+  selectCampBuilding,
+  buyNode,
 } from './helpers';
 
 // Each test owns its browser context and game; CI shards may schedule them independently.
@@ -28,8 +30,6 @@ test(
     await openTitle(page);
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
     await press(0);
-    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
-    await press(1);
     await expect(page.getByRole('dialog')).toBeHidden();
     const initialX = await page.evaluate(() => (window as any).__gloam.scene.player.x);
     await page.evaluate(() => {
@@ -71,8 +71,6 @@ test(
     await page.screenshot({ path: 'test-results/desktop-ready.png', fullPage: true });
     await page.getByRole('button', { name: /NEW GAME/ }).focus();
     await page.keyboard.press('Space');
-    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
-    await closeOverlayOrPause(page);
     await expect(page.getByRole('dialog')).toBeHidden();
     const before = await page.evaluate(() => (window as any).__gloam.scene.player.x);
     await page.keyboard.down('d');
@@ -110,17 +108,33 @@ test(
   async ({ page }) => {
     await openTitle(page);
     await startExpedition(page);
+    await page.keyboard.press('b');
+    await selectCampBuilding(page, 'archery');
+    await buyNode(page, 'archery-base');
+    await closeOverlayOrPause(page);
     await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       scene.run.elapsed = 42;
       scene.run.clan.integrity = 0;
     });
     await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
-    // The defeat screen narrates the recorded journey instead of a fixed line.
-    await expect(page.locator('.end-menu .panel-intro')).toContainText(
-      'At the Golden Pasture, before the clan had ever broken camp, the clan’s resolve gave out',
+    await expect(page.locator('.end-menu .panel-intro')).toHaveText(
+      'Clan lost · The Golden Pasture · Encampment',
     );
+    await expect(page.locator('.end-stats')).toContainText('SURVIVORS');
+    await expect(page.locator('.end-stats')).toContainText('SKYBREAKER');
     await expect(page.locator('#best')).toHaveText('00:42');
+    await page.getByRole('button', { name: 'Clan chronicle', exact: true }).click();
+    await page.getByRole('tab', { name: 'Your clan' }).click();
+    await expect(page.locator('.clan-memories')).toContainText('Archery Range');
+    await page.keyboard.press('b');
+    await page.keyboard.press('m');
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'journal');
+    await page.getByRole('button', { name: 'Close panel' }).click();
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'dead');
+    await page.getByRole('button', { name: 'Clan chronicle', exact: true }).click();
+    await page.keyboard.press('j');
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'dead');
     await page.getByRole('button', { name: /RAISE THE BANNERS AGAIN/ }).click();
     await startExpedition(page);
     await page.evaluate(() => {
@@ -131,7 +145,16 @@ test(
       scene.run.clan.stageTime = 180;
     });
     await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
+    await expect(page.locator('.end-menu .panel-intro')).toHaveText(
+      'Refuge reached · The Heart of the Steppe · Final stand',
+    );
     await expect(page.locator('#best')).toHaveText('15:00');
+    await page.getByRole('button', { name: 'Clan chronicle', exact: true }).click();
+    await page.getByRole('tab', { name: 'Your clan' }).click();
+    await expect(page.locator('.khan-records')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'won');
+    await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
     await page.reload();
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
     await expect(page.locator('#best')).toHaveText('15:00');

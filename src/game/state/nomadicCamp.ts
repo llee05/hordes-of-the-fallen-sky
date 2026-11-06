@@ -11,7 +11,6 @@ import {
   nomadicBuilding,
   type NomadicBuildingEffects,
 } from '../data/nomadicCamp';
-import { BUILDING_REMNANT, buildingReaction } from '../data/storyReactions';
 import type { BuildingId, RunState } from '../types';
 import { applyCampEffects, createCampEffects } from './camp';
 import { markExpedition } from './expeditionMetrics';
@@ -113,8 +112,6 @@ export function purchaseNomadicBuilding(
     run,
     definition.title,
     `The clan ${level ? 'improved' : 'established'} this household to level ${level + 1}.`,
-    NOMADIC_LEGACY_BUILDINGS[id] ? buildingReaction(NOMADIC_LEGACY_BUILDINGS[id]!) : undefined,
-    BUILDING_REMNANT,
   );
   run.clan.message = `${definition.title} reaches level ${level + 1}.`;
   return true;

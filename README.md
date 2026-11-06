@@ -2,11 +2,9 @@
 
 A Mongolian-inspired nomadic civilization builder × mounted bullet heaven. **TypeScript + Phaser 3 + Electron + Vite.** The cities have fallen, the sky is going dark, and a small clan survives by moving. Build a people, defend their temporary home, and protect the caravan on its journey to the sacred heart of the steppe.
 
-This playable prototype includes a complete two-act expedition: eight illustrated camp encounters with choices, four companions, three defended crossings, a final mountain stand, and an epilogue reflecting the people who arrive. Its civilization systems include five permanent camp households and five optional workplaces chosen from fourteen building types, abstracted population and workers, three resources, four journey chapters with eight additional named camp destinations, five shared standard enemies, two shared elites, 24 local enemy variants, and one boss. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and broader campaign unlocks remain future work.
+This playable prototype includes a four-stage expedition: three defended crossings, a final mountain stand, and a journey results summary. Its civilization systems include five permanent camp households and five optional workplaces chosen from fourteen building types, abstracted population and workers, three resources, four journey chapters with eight additional named camp destinations, five shared standard enemies, two shared elites, 24 local enemy variants, and one boss. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and broader campaign unlocks remain future work.
 
-Read [the world lore](lore.md) for the Tengri-inspired setting: Eternal Heaven, Etügen and the living land, the Last Court's Iron Vow, the unreturned, and the Blue Banner clan's search for refuge. Research notes separate the religious and cultural inspiration from the game's invented mythology.
-
-See [the story architecture](story-architecture.md) for the revised two-act blueprint: Gather the Scattered, then Carry the Living, with a different remembered road through the chosen destinations. It proposes distinct first-stop scenes, second-stop variations, and ending callbacks for all eight named places. [The story prototype guide](docs/story-prototype.md) distinguishes this writing plan from the currently playable encounters, triggers, and choices.
+Archived narrative documentation from the earlier story prototype is kept in [`docs/archive/story/`](docs/archive/story/README.md) as reference for a future story rework, including [the world lore](docs/archive/story/lore.md).
 
 ## Play and develop
 
@@ -25,7 +23,7 @@ Development builds include **Developer mode** in the title and pause menus. Pres
 any crossing approach, or any named destination in chapters 2 and 3. Each choice
 starts a fresh test expedition with supplies.
 Escape / F8 closes the selector and returns to the previous screen. Developer runs
-skip the prologue and camp scenes and do not change your saved longest journey.
+do not change your saved longest journey.
 Start a new run to return to normal play. The selector is absent from production
 and packaged builds. See [developer mode](docs/developer-mode.md) for checkpoint rules.
 
@@ -50,7 +48,7 @@ builds once the repository's Pages source is set to **GitHub Actions**.
 
 ## Desktop presentation
 
-The game opens at the title menu. **New Game** opens a skippable, five-chapter painted prologue adapted from [the world lore](lore.md#opening-slideshow): Heaven and Earth, the Iron Vow, the unreturned, the living hearth, and the road to the Heart of the Steppe. Read at your own pace with Continue / Enter / controller A; use Back or the left/right arrow keys to turn pages. Completing the prologue, Skip intro, Escape, or controller B / Start begins the expedition, opening the first camp scene when camp scenes are enabled. Every New Game starts with the prologue. Replay introduction at the title lets you read it independently; completing or skipping that replay returns to the title. Gameplay remains frozen throughout; reduced-motion preferences disable the gentle painting movement. See [the bundled paintings and generation prompts](docs/intro-artwork.md).
+The game opens at the title menu. **New Game** begins the expedition at Golden Pasture.
 
 The title is embroidered across an indigo felt banner over the painted steppe. Woven rust-red trim, brass clan symbols, and warm manuscript pages carry the world's art into the interface. Camp cards reuse the painted gers, riders, and wagons from the battlefield; migration choices have illustrated landscape vignettes. All UI materials and artwork ship locally.
 
@@ -58,7 +56,7 @@ The battlefield fills the entire game window. Zoom with the mouse wheel, + / −
 
 The title cloth breathes gently, parchment menus settle into place, and illustrations respond to mouse or keyboard focus. Resource changes, damage, gallop readiness, and newly available migration routes have brief visual feedback. Controls respond immediately throughout. The operating system's reduced-motion preference disables interface animations and transitions, including when changed while the game is open.
 
-Press **Tab** or **J** (controller **View**) to open the clan chronicle. It pauses combat, physics, economy, and migration while you inspect the journey, buildings, workforce, and formations. Arrow keys switch its tabs; Escape or J returns to the battlefield. You can open camp development or choose an available migration route directly from the chronicle.
+During play, press **Tab** or **J** (controller **View**) to open the clan chronicle. Its **The journey** and **Your clan** tabs show locations, buildings, workforce, formations, Khans, and factual memories while simulation is paused. Arrow keys switch focused tabs; Escape or J closes the chronicle. You can open camp development or choose an available migration route directly from it during an ongoing expedition. After victory or defeat, use **Clan chronicle** on the results screen to inspect the records; closing it returns to those results. Tab and Shift+Tab navigate menu controls.
 
 The title and pause menus contain **Settings** and **How to play**. Mute and separate music, ambience, combat, and interface levels save automatically. Settings also offers five recorded reference auditions. Fullscreen is available in Settings or with F11 / Alt+Enter. Escape backs out to the menu you came from; closing Settings during a paused expedition keeps that expedition paused. Native Quit game is available in the main and pause menus. Keyboard, mouse, controller, and touch-preview actions use the same scene-owned run state.
 
@@ -101,18 +99,16 @@ Per-stage expedition milestones appear in the chronicle and results. In developm
 
 ## Build, defend, migrate
 
-Camp scenes are **On** by default. Saran the hearthkeeper, Boro the herder, Erden the tally keeper, and Nara the youngest survivor travel through the story with the Blue Banner clan. Conversations pause the world and offer two or three responses, each with a displayed resource benefit and often a small lasting camp effect. Choices shift companion trust; each destination has its own scenes; and later scenes and the epilogue recall what the clan actually chose. Escape / controller B continues without choosing. Turn **Camp scenes: Off** at the title for uninterrupted combat; this preference lasts through run restarts in the current app session.
-
-Act I begins at Golden Pasture and continues at the first chosen camp. Arrival at the second chosen camp begins Act II, followed by the fictional Heart of the Steppe. Silent River and Broken Pass remain the default intermediate stops. The chronicle's **Our story** tab keeps the actual conversations and decisions from the current expedition. It also keeps [lived-history memories and companion reactions](docs/story-prototype.md#lived-history). **Your clan** and **Our story** record each Khan’s time carrying the banner and the host’s victories during that tenure. The record retains the latest 96 clan moments and 64 Khans, with total counts visible. Pause, victory, and defeat menus also offer **Our remembered road**. Read-only memories never restart simulation or grant a choice again.
+The expedition begins at Golden Pasture, crosses through two chosen intermediate camps (with Silent River and Broken Pass as the defaults), and concludes at the fictional Heart of the Steppe. The chronicle's **Your clan** tab records each Khan’s time carrying the banner, the host’s victories during that tenure, and factual clan memories (camp work, departures, arrivals, crossings, losses, succession, and defeating the Skybreaker). The record retains the latest 96 clan moments and 64 Khans, with total counts visible.
 
 The first two departures also offer **Mount Otgontenger, Bogd Khan Uul, Altai Tavan
 Bogd, Khan Tengri Peak, Mount Belukha (Üch-Sümer), Altan Ovoo, Eej Khairkhan, and
 Orkhon Valley** as alternative destinations. Press M after routes open, choose a
 camp, then choose a river, ridge, or rescue approach. Each place has its own gathering
 and travel modifiers, shown alongside its cultural context and destination-specific
-food forecasts. Visited places are left behind. The HUD, camp, story settings,
-chronicle, and Khan records retain the actual location; chapter weather and story
-beats still follow the four-stage expedition. The third crossing leads to the
+food forecasts. Visited places are left behind. The HUD, camp,
+chronicle, and Khan records retain the actual location; chapter weather and pressures
+still follow the four-stage expedition. The third crossing leads to the
 fictional Heart of the Steppe. These are stylized camps in the surrounding landscapes,
 with compressed travel geography; real sacred places remain distinct from the
 invented calamity. See [destinations, rules, and cultural sources](docs/migration-locations.md).
@@ -137,7 +133,7 @@ Choose a river crossing for food and horses, an exposed ridge for materials and 
 
 The journey's chapter pressures follow the clan through whichever camps it chooses. After the first crossing, the White Silence reduces grazing and caravan speed. After the second, the Earth That Walks brings ground eruptions that warn before striking. At the fictional Heart of the Steppe, the Red Eclipse weakens rituals and brings the Skybreaker. Protect your people for three minutes until the passage opens. **Victory depends on saving the clan; killing the boss is optional.** Defeating it restores resolve.
 
-In a story expedition, victory opens **A place beside the fire**, a skippable epilogue reflecting survivors, recorded losses, clan identity, the clerk's shared tally, and the Skybreaker's fate. Journey results follow, with the epilogue available to read again. Story choices and memories reset with each new expedition and are preserved when resuming a saved expedition; they do not add permanent unlocks.
+Victory and defeat open the journey results screen, reporting the journey outcome, duration, survivors, herd, pastures reached, fallen Khans, and the Skybreaker's fate. Memories and crossings reset with each new expedition and are preserved when resuming a saved expedition; they do not add permanent unlocks.
 
 An expedition is intended to take about 15 minutes with roughly three minutes of growth per camp. Earlier departures shorten the journey; longer stays increase danger. This is a prototype balance, not a fixed time limit.
 
@@ -198,9 +194,9 @@ To preserve existing profiles, native saves retain the original internal **Gloam
 | Linux   | `${XDG_CONFIG_HOME:-~/.config}/Gloam/saves/profile.json` |
 | macOS   | `~/Library/Application Support/Gloam/saves/profile.json` |
 
-**Continue expedition** resumes the latest full save. **Saved expeditions**, on the title, pause, and results screens, offers three manual slots plus an autosave, with location, journey time, population, level, and save date. Overwriting, deleting, and loading over a live expedition require confirmation. Loaded expeditions open paused (or at their unresolved camp story); no simulation runs while the game is closed. **Save and return to title** keeps the current journey. **New Game** starts fresh; the existing **Continue clan camp** still carries only the portable camp into a fresh journey.
+**Continue expedition** resumes the latest full save. **Saved expeditions**, on the title, pause, and results screens, offers three manual slots plus an autosave, with location, journey time, population, level, and save date. Overwriting, deleting, and loading over a live expedition require confirmation. Loaded expeditions open paused; no simulation runs while the game is closed. **Save and return to title** keeps the current journey. **New Game** starts fresh; the existing **Continue clan camp** still carries only the portable camp into a fresh journey.
 
-Autosaves run every 30 active seconds, on pausing, after progression/story/travel checkpoints, and before a normal desktop close or Quit. Normal saves preserve the Khan and succession timer, resources and facilities, migration and objectives, story transcripts, enemies, projectiles, dropped XP, and ability/encounter cooldowns. Developer and cheated runs cannot overwrite normal saves. Manual slots remain available after defeat or victory.
+Autosaves run every 30 active seconds, on pausing, after progression/travel checkpoints, and before a normal desktop close or Quit. Normal saves preserve the Khan and succession timer, resources and facilities, migration and objectives, enemies, projectiles, dropped XP, and ability/encounter cooldowns. Developer and cheated runs cannot overwrite normal saves. Manual slots remain available after defeat or victory.
 
 Profile preferences remain in `profile.json`; full saves use `expedition-auto.json` and `expedition-slot-1.json` through `expedition-slot-3.json` beside it. Writes are validated, queued, flushed, and atomically renamed, with a previous-save `.bak` recovery copy. Damaged or incompatible slots show their status; failed saves never report success. A failed close-time save lets you keep playing and retry or explicitly quit without saving. Native saves never use the install directory or localStorage. Browser preview saves remain separate. See [the save-system contract](docs/expedition-saves.md).
 
@@ -298,14 +294,14 @@ locally, including Golden Pasture's texture/FPS budgets; there is no desktop nig
 job. Software-rendered hosted runners do not provide reliable real-time simulation
 or GPU performance results.
 
-| Suite / configuration                                                               | Classification and where it runs                                                                                                                                                                                                                                                                           |
-| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Format, renderer/desktop/Playwright typechecks, Vitest unit tests, production build | Fast correctness checks; GitHub Actions and local `npm run check`. Unit simulations advance explicit time without a live renderer or wall-clock gameplay.                                                                                                                                                  |
-| `tests/e2e` browser specs                                                           | Mixed UI/save correctness and live gameplay/graphics coverage; local `npm run test:e2e`. Fast 29-test `@core` subset runs via `test:e2e:core`. Performance tests tagged `@perf` run separately through `test:perf`.                                                                                        |
-| `tests/desktop` Playwright specs                                                    | Native correctness, layout, gameplay, and graphics/performance coverage; local `npm run test:desktop`; `@perf` runs through `test:perf`.                                                                                                                                                                   |
-| `tests/pages` artwork smoke                                                         | Release correctness at the Pages subpath without starting gameplay: bundled assets, fonts, introduction paintings, and the absence of development hooks and desktop capabilities; GitHub Actions and local `npm run test:pages` after a build. No combat, position, animation, or frame-budget assertions. |
-| `tests/pages` `@gameplay` smoke                                                     | Real camp purchases, pause/resume, sound preference persistence, and play with unavailable storage; local `npm run test:pages` after a build. Tagged `@gameplay` and never run by GitHub Actions.                                                                                                          |
-| `playwright.graphics.ts` and `tests/support/checkGraphics.ts`                       | Rendering configuration and local hardware-WebGL preflight, not a CI performance benchmark. The configuration's policy is unit-tested in `npm run check`; Pages keeps headless software rendering in CI.                                                                                                   |
+| Suite / configuration                                                               | Classification and where it runs                                                                                                                                                                                                                                                   |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Format, renderer/desktop/Playwright typechecks, Vitest unit tests, production build | Fast correctness checks; GitHub Actions and local `npm run check`. Unit simulations advance explicit time without a live renderer or wall-clock gameplay.                                                                                                                          |
+| `tests/e2e` browser specs                                                           | Mixed UI/save correctness and live gameplay/graphics coverage; local `npm run test:e2e`. Fast 29-test `@core` subset runs via `test:e2e:core`. Performance tests tagged `@perf` run separately through `test:perf`.                                                                |
+| `tests/desktop` Playwright specs                                                    | Native correctness, layout, gameplay, and graphics/performance coverage; local `npm run test:desktop`; `@perf` runs through `test:perf`.                                                                                                                                           |
+| `tests/pages` artwork smoke                                                         | Release correctness at the Pages subpath without starting gameplay: bundled assets, fonts, and the absence of development hooks and desktop capabilities; GitHub Actions and local `npm run test:pages` after a build. No combat, position, animation, or frame-budget assertions. |
+| `tests/pages` `@gameplay` smoke                                                     | Real camp purchases, pause/resume, sound preference persistence, and play with unavailable storage; local `npm run test:pages` after a build. Tagged `@gameplay` and never run by GitHub Actions.                                                                                  |
+| `playwright.graphics.ts` and `tests/support/checkGraphics.ts`                       | Rendering configuration and local hardware-WebGL preflight, not a CI performance benchmark. The configuration's policy is unit-tested in `npm run check`; Pages keeps headless software rendering in CI.                                                                           |
 
 Run `npm run test:local` before shipping gameplay or artwork changes. It runs the ordinary
 browser and Electron specs. Also run `npm run test:perf` for the tagged graphics

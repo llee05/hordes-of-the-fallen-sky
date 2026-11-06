@@ -187,7 +187,7 @@ test('the clan chronicle pauses the expedition, supports keyboard tabs, and open
     'true',
   );
   await page.keyboard.press('ArrowRight');
-  await expect(page.getByRole('tab', { name: 'Our story', exact: true })).toHaveAttribute(
+  await expect(page.getByRole('tab', { name: 'The journey', exact: true })).toHaveAttribute(
     'aria-selected',
     'true',
   );

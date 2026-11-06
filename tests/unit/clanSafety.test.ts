@@ -29,7 +29,7 @@ describe('readable clan survival', () => {
     advanceClan(r, 0.02);
     expect(r.safety.starvationLosses).toBeGreaterThanOrEqual(1);
     expect(r.safety.lastDamage?.cause).toBe('starvation');
-    expect(r.safety.combatLosses + r.safety.starvationLosses).toBe(r.story.peopleLost);
+    expect(r.safety.combatLosses + r.safety.starvationLosses).toBe(r.legacy.peopleLost);
   });
   it('remembers casualty-free crossings without mistaking refugee growth for protection', () => {
     for (const casualty of [false, true]) {
@@ -39,7 +39,7 @@ describe('readable clan survival', () => {
       beginMigration(r, 'refuge');
       r.phase = 'playing';
       if (casualty) {
-        r.story.peopleLost++;
+        r.legacy.peopleLost++;
         r.clan.population--;
       }
       advanceClan(r, 100);

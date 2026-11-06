@@ -5,7 +5,7 @@ Bogd Khan Uul, Altai Tavan Bogd, Khan Tengri Peak, Mount Belukha (Üch-Sümer), 
 Ovoo, Eej Khairkhan, and Orkhon Valley. The original Silent River and Broken Pass
 remain available. Visited named camps are excluded from later choices. The third
 crossing still leads to the fictional Heart of the Steppe and its 180-second final
-stand. An expedition still has three crossings, eight story encounters, and two acts.
+stand. An expedition still has three crossings and four chapters.
 
 Destinations are camps in the surrounding landscape, not summit ascents or depictions
 of ceremonies. The journey compresses geography and travel time for a fantasy game;
@@ -15,19 +15,9 @@ The calamity, hostile creatures, passage, and all resource modifiers are invente
 Real sacred sites are not the source of the calamity or rewards for religious acts.
 Mongolian, Turkic, and Altaian traditions retain their distinct contexts.
 
-## Narrative direction
+## Narrative reference
 
-[The revised story architecture](../story-architecture.md) gives each named place
-a distinct dramatic role and treatments for both eligible story positions. A first
-stop asks whose knowledge the clan will hear; a second tests its shared commitment
-through local work before Erden's confession. Destination and approach remain
-independent, and all roads converge on the fictional final passage.
-
-The current build plays these treatments from `data/storyDestinations.ts`: each
-eligible camp has its own first-stop or second-stop scene, and the final approach,
-last stand, and epilogue recall the responses chosen there. Only completed crossings
-can be named, and only resolved scenes can be recalled. [The story guide](story-prototype.md)
-lists the encounters and their consequences.
+Earlier narrative treatments for each named destination are archived in [`docs/archive/story/`](archive/story/README.md) as reference for a future story rework.
 
 ## Content and simulation
 
@@ -35,10 +25,10 @@ lists the encounters and their consequences.
 context, visual terrain, and gameplay modifiers from `GAME.locations`. Food and
 materials modifiers affect production at the current camp. Mobility affects departures
 from that camp; the chosen destination's crossing modifier affects the incoming trip.
-All modifiers stack with seasonal conditions, camp developments.
+All modifiers stack with seasonal conditions and camp developments.
 
 `state/journey.ts` resolves the current camp, pending arrival, and available
-destinations. The numeric `clan.region` remains the story/difficulty chapter;
+destinations. The numeric `clan.region` remains the journey/difficulty chapter;
 `clan.locationId` identifies the actual camp, and `clan.destinationId` exists only
 while travelling. Legacy chapter camps are used when no explicit location is set.
 `beginMigration` validates the route and destination before changing anything. Arrival

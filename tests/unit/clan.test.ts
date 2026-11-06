@@ -56,12 +56,7 @@ describe('a civilization that moves', () => {
   it('freezes every journey and economy clock in non-playing phases', () => {
     for (const phase of [
       'ready',
-      'intro',
-      'story',
-      'epilogue',
-      'story-log',
       'paused',
-
       'building',
       'route',
       'journal',
@@ -188,7 +183,7 @@ describe('a civilization that moves', () => {
     damageClan(run, bands * 20);
     expect(run.clan.integrity).toBe(100 - bands * 20);
     expect(run.clan.population).toBe(population - bands);
-    expect(run.story.peopleLost).toBe(bands);
+    expect(run.legacy.peopleLost).toBe(bands);
     expect(run.safety.combatLosses).toBe(bands);
     expect(run.safety.lastDamage?.people).toBe(bands);
     expect(run.clan.herd).toBe(2);
@@ -207,12 +202,12 @@ describe('a civilization that moves', () => {
     const losses = Math.min(population, 5);
     expect(run.clan.population).toBe(population - losses);
     expect(run.clan.herd).toBe(0);
-    expect(run.story.peopleLost).toBe(losses);
+    expect(run.legacy.peopleLost).toBe(losses);
     expect(run.safety.starvationLosses).toBe(losses);
     expect(run.safety.lastDamage?.people).toBe(losses);
     const memories = run.legacy.totalMemories;
     damageClan(run, 1000);
-    expect(run.story.peopleLost).toBe(losses);
+    expect(run.legacy.peopleLost).toBe(losses);
     expect(run.legacy.totalMemories).toBe(memories);
   });
 
@@ -227,7 +222,7 @@ describe('a civilization that moves', () => {
     expect(run.clan.population).toBe(7);
     damageClan(run, 40);
     expect(run.clan.population).toBe(5);
-    expect(run.story.peopleLost).toBe(3);
+    expect(run.legacy.peopleLost).toBe(3);
   });
 
   it('protects the clan through guard formation and caravan armor', () => {

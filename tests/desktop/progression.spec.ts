@@ -26,9 +26,7 @@ test('connected progression maps, camp comparisons, and recipe links fit native 
     const page = await app.firstWindow();
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.getByRole('button', { name: 'Camp scenes: On' }).click();
     await page.getByRole('button', { name: /NEW GAME/ }).click();
-    await page.getByRole('button', { name: /Skip intro/ }).click();
     await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       scene.spawnTimer = scene.attackTimer = 999;

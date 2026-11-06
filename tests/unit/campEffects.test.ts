@@ -126,7 +126,7 @@ describe('legacy checkpoint compatibility: portable camp development effects', (
       food: 77,
     });
     expect(run.health).toBe(55);
-    expect(run.story.crossings[0]?.population).toBe(19);
+    expect(run.legacy.crossings[0]?.population).toBe(19);
     advanceClan(run, 1);
     expect(run.clan.population).toBe(19);
     expect(run.clan.herd).toBe(4);
