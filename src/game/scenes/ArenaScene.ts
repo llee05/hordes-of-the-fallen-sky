@@ -674,12 +674,14 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   openBuildings(): void {
+    if (this.run.legacy.outcome) return;
     if (['playing', 'journal'].includes(this.run.phase) && this.run.clan.stage !== 'migration')
       this.setPhase('building');
     else if (this.run.phase === 'building') this.closePlanning();
   }
 
   openRoutes(): void {
+    if (this.run.legacy.outcome) return;
     if (['playing', 'journal'].includes(this.run.phase) && canMigrate(this.run))
       this.setPhase('route');
     else if (this.run.phase === 'route') this.closePlanning();
@@ -709,13 +711,14 @@ export class ArenaScene extends Phaser.Scene {
       this.setPhase(this.developerReturnPhase);
       return;
     }
-    if (['building', 'route', 'journal'].includes(this.run.phase)) this.setPhase('playing');
+    if (this.run.phase === 'journal') this.setPhase(this.run.legacy.outcome ?? 'playing');
+    else if (['building', 'route'].includes(this.run.phase)) this.setPhase('playing');
     else if (['settings', 'help'].includes(this.run.phase)) this.setPhase(this.utilityReturnPhase);
   }
 
   toggleJournal(): void {
-    if (this.run.phase === 'playing') this.setPhase('journal');
-    else if (this.run.phase === 'journal') this.setPhase('playing');
+    if (['playing', 'won', 'dead'].includes(this.run.phase)) this.setPhase('journal');
+    else if (this.run.phase === 'journal') this.closePlanning();
   }
 
   openUtilityMenu(menu: 'settings' | 'help'): void {

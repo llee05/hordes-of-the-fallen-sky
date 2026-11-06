@@ -702,7 +702,7 @@ export class GameUI {
     else {
       const won = run.phase === 'won';
       const results = journeyResults(run);
-      this.overlay.innerHTML = `<section class="end-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">${won ? 'A PEOPLE, STILL ALIVE' : 'THE STEPPE WILL REMEMBER'}</p><h2 id="overlay-title">${won ? 'A sky worth saving.' : 'The banners fall.'}</h2><p class="panel-intro">${escapeHtml(results.outcome)} · ${escapeHtml(results.location)} · ${escapeHtml(results.stage)}</p><div class="end-stats"><div><strong>${formatTime(results.elapsed)}</strong><span>JOURNEY</span></div><div><strong>${results.survivors}</strong><span>SURVIVORS</span></div><div><strong>${results.herd}</strong><span>HERD</span></div><div><strong>${results.pastures}</strong><span>PASTURES</span></div><div><strong>${results.fallenKhans}</strong><span>FALLEN KHANS</span></div><div><strong>${escapeHtml(results.skybreaker)}</strong><span>SKYBREAKER</span></div></div>${expeditionMetricsContent(run)}<nav class="main-menu"><button class="menu-button featured" data-action="restart" data-primary>RAISE THE BANNERS AGAIN <span>→</span></button>${savedMenu}${quit}</nav></section>`;
+      this.overlay.innerHTML = `<section class="end-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">${won ? 'A PEOPLE, STILL ALIVE' : 'THE STEPPE WILL REMEMBER'}</p><h2 id="overlay-title">${won ? 'A sky worth saving.' : 'The banners fall.'}</h2><p class="panel-intro">${escapeHtml(results.outcome)} · ${escapeHtml(results.location)} · ${escapeHtml(results.stage)}</p><div class="end-stats"><div><strong>${formatTime(results.elapsed)}</strong><span>JOURNEY</span></div><div><strong>${results.survivors}</strong><span>SURVIVORS</span></div><div><strong>${results.herd}</strong><span>HERD</span></div><div><strong>${results.pastures}</strong><span>PASTURES</span></div><div><strong>${results.fallenKhans}</strong><span>FALLEN KHANS</span></div><div><strong>${escapeHtml(results.skybreaker)}</strong><span>SKYBREAKER</span></div></div>${expeditionMetricsContent(run)}<nav class="main-menu"><button class="menu-button featured" data-action="restart" data-primary>RAISE THE BANNERS AGAIN <span>→</span></button><button class="menu-button" data-action="journal">Clan chronicle</button>${savedMenu}${quit}</nav></section>`;
     }
     if (import.meta.env.DEV && ['developer', 'console'].includes(run.phase)) {
       this.developerRevision = -1;
@@ -992,6 +992,7 @@ export class GameUI {
     else if (action === 'resume') this.scene.togglePause();
     else if (action === 'restart') this.scene.restart();
     else if (action === 'settings' || action === 'help') this.scene.openUtilityMenu(action);
+    else if (action === 'journal') this.scene.toggleJournal();
     else if (action === 'back') this.scene.closePlanning();
     else if (action === 'quit') void this.platform.desktop?.quit();
     else if (action === 'build') this.scene.openBuildings();
