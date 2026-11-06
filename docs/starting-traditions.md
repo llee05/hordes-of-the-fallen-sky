@@ -1,6 +1,6 @@
 # Starting clan traditions
 
-The title's **Starting tradition** button opens four preparations for the fictional Blue Banner clan. **New Game** still opens the prologue immediately using the selected arrangement. The picker pauses all simulation; Back retains the selection for the next new expedition in this app session.
+The title's **Starting tradition** button opens four preparations for the fictional Blue Banner clan. **New Game** begins the expedition immediately using the selected arrangement. The picker pauses all simulation; Back retains the selection for the next new expedition in this app session.
 
 | Arrangement     | Food | Materials | Ongoing benefit                                               |
 | --------------- | ---: | --------: | ------------------------------------------------------------- |
@@ -13,4 +13,4 @@ Every arrangement starts with eight people, three horses, the same [camp foundat
 
 Full expedition saves retain the stable arrangement ID and already-modified personal stats. Hydration never reapplies movement bonuses or starting supplies. Pre-feature saves omit the ID and use neutral ongoing modifiers. **Continue clan camp** retains its fresh-journey semantics and uses Shared hearth with the checkpoint's actual supplies, rather than granting another tradition's starting gift. Developer checkpoints remain neutral.
 
-Unit tests cover costs, neutral compatibility, stacking, and save round trips. Browser tests cover selection, paused time, the prologue, narrow layout, and persistence after reload.
+Unit tests cover costs, neutral compatibility, stacking, and save round trips. Browser tests cover selection, paused time, narrow layout, and persistence after reload.

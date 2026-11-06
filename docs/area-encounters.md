@@ -25,7 +25,7 @@ prowlers flank, local bulwarks retain armour, and skirmishers/callers fire space
 fans. `data/areaEncounters.ts` authors the local terrain-rule catalogue. Runtime modules
 consume its habitat, attack and warning metadata. These are invented
 unreturned, distinct from the traditions and honoured local powers described in
-`lore.md`. The extinct volcanic scenery at Altan Ovoo is not active lava.
+`archive/story/lore.md`. The extinct volcanic scenery at Altan Ovoo is not active lava.
 
 | Location            | Native enemies                        |
 | ------------------- | ------------------------------------- |

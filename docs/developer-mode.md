@@ -69,10 +69,10 @@ absent from production and packaged play.
 Run `npm run dev` for Electron or `npm run dev:web` for the browser. Choose
 **Developer mode** at the title or pause menu, or press **F8** from any screen.
 The selector pauses the entire expedition. Escape, F8, and Back return to the
-original screen, retaining its story or ended-run state.
+original screen, retaining its paused or ended-run state.
 
-Selecting a checkpoint replaces the current expedition immediately, bypasses the
-introduction, and rebuilds the scene. Enemies, projectiles, shards, hazards, defeat
+Selecting a checkpoint replaces the current expedition immediately
+and rebuilds the scene. Enemies, projectiles, shards, hazards, defeat
 effects, camp packing, succession, and boss state start fresh. The HUD identifies
 the expedition as **DEVELOPER RUN**. Start a new run from Pause or an outcome menu
 to return to the title and begin a normal expedition with the original preferences.
@@ -89,8 +89,7 @@ routes available immediately, and the final stand starts with its full timer and
 the Skybreaker still to come.
 
 Test expeditions have a healthy Khan, 24 people and generous supplies. No camp developments are selected automatically.
-Camp scenes and guidance are off for the test expedition; earlier encounters are
-recorded as passed without granting story gifts. Normal new games retain their
+Guidance is off for the test expedition. Normal new games retain their
 usual state and preferences. Test provisions are configured in `GAME.developer`.
 
 Both the menu and scene actions are guarded by `import.meta.env.DEV`; production

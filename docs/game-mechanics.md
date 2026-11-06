@@ -1,6 +1,6 @@
 # Hordes of the Fallen Sky — game mechanics brief
 
-This is a reference for the **implemented prototype**, checked against the game code on 25 October 2026. It covers the expedition, resources, combat, spirit progression, camp upgrade tree, migration, enemies, story, and persistence. Values are current balance, not promises for the final release. All times below are active gameplay seconds; menus freeze the world.
+This is a reference for the **implemented prototype**, checked against the game code on 25 October 2026. It covers the expedition, resources, combat, spirit progression, camp upgrade tree, migration, enemies, chronicle, and persistence. Values are current balance, not promises for the final release. All times below are active gameplay seconds; menus freeze the world.
 
 ## 1. The expedition
 
@@ -10,43 +10,43 @@ The intended rhythm is **build → defend → choose when to leave → escort �
 
 The four regions below are journey chapters. The first two crossings can instead
 visit any unvisited named destination from the eight-location catalog. Choose the
-destination before a river, ridge, or rescue approach. Chapter events and the eight
-story beats retain their timing; actual camp names, terrain details, gathering, and
+destination before a river, ridge, or rescue approach. Chapter events
+retain their timing; actual camp names, terrain details, gathering, and
 travel modifiers follow the selected location. Food/material multipliers stack with
 camp effects, the current camp modifies onward mobility, and the target
 modifies incoming crossing duration. All forecasts use those same rules. The third
 crossing and final stand remain at the fictional Heart of the Steppe. See
 [migration locations](migration-locations.md) for the catalog and cultural sources.
 
-| Stage               | Region / event                            | Rules                                                                                                                                                                   |
-| ------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Act I, camp 1       | The Golden Pasture / The Sundering        | Starting camp. Routes open after 45 seconds. Introductory spawn pacing for the first 18 seconds.                                                                        |
-| Crossing 1          | Choose river, ridge, or blue banners      | Automatically moving caravan; no gathering or construction.                                                                                                             |
-| Act I, camp 2       | The Silent River / The White Silence      | Food production ×0.7. Migration mobility ×0.8 when leaving this region. Routes open after 45 seconds.                                                                   |
-| Crossing 2          | Choose any of the same three routes       | Your camp development travels with you.                                                                                                                                 |
-| Act II, camp 3      | The Broken Pass / The Earth That Walks    | Ground eruptions. Routes open after 45 seconds.                                                                                                                         |
-| Crossing 3          | Choose any of the same three routes       | Eruptions continue while travelling through the pass.                                                                                                                   |
-| Act II, final stand | The Heart of the Steppe / The Red Eclipse | Hold for 180 seconds. More frequent eruptions; lightning cooldown ×1.5. Skybreaker appears after 20 seconds. No further migration. Camp construction remains available. |
+| Stage       | Region / event                            | Rules                                                                                                                                                                   |
+| ----------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Camp 1      | The Golden Pasture / The Sundering        | Starting camp. Routes open after 45 seconds. Introductory spawn pacing for the first 18 seconds.                                                                        |
+| Crossing 1  | Choose river, ridge, or blue banners      | Automatically moving caravan; no gathering or construction.                                                                                                             |
+| Camp 2      | The Silent River / The White Silence      | Food production ×0.7. Migration mobility ×0.8 when leaving this region. Routes open after 45 seconds.                                                                   |
+| Crossing 2  | Choose any of the same three routes       | Your camp development travels with you.                                                                                                                                 |
+| Camp 3      | The Broken Pass / The Earth That Walks    | Ground eruptions. Routes open after 45 seconds.                                                                                                                         |
+| Crossing 3  | Choose any of the same three routes       | Eruptions continue while travelling through the pass.                                                                                                                   |
+| Final stand | The Heart of the Steppe / The Red Eclipse | Hold for 180 seconds. More frequent eruptions; lightning cooldown ×1.5. Skybreaker appears after 20 seconds. No further migration. Camp construction remains available. |
 
-**Victory:** survive the final stand with clan population and resolve above zero, including during Khan succession. **Defeat:** population or clan resolve reaches zero. When the Khan falls, the expedition continues while the clan chooses a successor. No individual companion has a separate health meter.
+**Victory:** survive the final stand with clan population and resolve above zero, including during Khan succession. **Defeat:** population or clan resolve reaches zero. When the Khan falls, the expedition continues while the clan chooses a successor.
 
 ## 2. Starting state and resources
 
-| Resource / measure | Start                   | Sources                                                                                                                | Uses and consequences                                                                                                                                                                                                      |
-| ------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Food               | 70                      | Grazing, camp production, river crossings, story choices                                                               | Consumed by people, including during migration. Blue-banner rescue costs 18 food on arrival. Zero food triggers starvation checks.                                                                                         |
-| Materials          | 50                      | Passive camp gathering, more population, ridge crossings, story choices                                                | Construct and upgrade camp buildings. No ongoing building maintenance cost.                                                                                                                                                |
-| Spirit             | 0                       | Kills grant `enemy XP ×0.4` times the camp Spirit-gain multiplier; ridge arrival grants 10; some story choices grant 4 | Construct and upgrade spiritual and cultural buildings. It is not consumed by lightning, wards, arrows, or migration.                                                                                                      |
-| Spirit shards / XP | Level 1, 0 XP           | Collect drops from defeated enemies                                                                                    | Fill the current level's XP threshold and gain a level. Collection does not deduct stored Spirit.                                                                                                                          |
-| People             | 8                       | Blue-banner arrivals, field rescues, story choices                                                                     | Produce materials, consume food, provide worker capacity. Losses come from starvation and resolve damage. Population gains obey the camp capacity described in [the camp guide](nomadic-camp.md).                          |
-| Workers            | 0 assigned of 8         | Existing population                                                                                                    | Construction requires sufficient total population for assigned jobs. Workers are reserved by established buildings, not spent. No manual job reassignment or worker production penalty is simulated.                       |
-| Herd / horses      | 3                       | Field rescues (+3); river arrival (+2)                                                                                 | Each horse increases migration mobility by 1.2% of the base. Starvation and clan losses remove livestock. Route rewards cap herd at 40. Herd size does not independently change grazing income or limit rider recruitment. |
-| Clan resolve       | 100 / 100               | Communal Hearth, Ancestral Standard, arrivals (+12), [Skybreaker defeat](final-stand.md), story choices (+5)           | Clan-wide survival meter, internally called integrity. Attacks and starvation reduce it; crossing damage thresholds can also cost people and livestock.                                                                    |
-| Khan health        | 100 / 100               | Camp recovery and arrivals (+25)                                                                                       | Personal health; at zero, choose a new Khan after 10 active seconds while the clan fights on. Enemy contact, hostile shots, and eruptions damage it.                                                                       |
-| Pasture            | 100%                    | Refreshed on arrival; camp developments reduce depletion                                                               | Scales food and material production. depletes to zero over 210 stationary seconds, including the final stand. Does not deplete during crossings.                                                                           |
-| Momentum           | 0–100%                  | Riding builds it; stopping drains it                                                                                   | Improves Khan arrow damage and targeting range; activates moving formation bonuses.                                                                                                                                        |
-| Threat             | 0–100%                  | Region and time in the current stage                                                                                   | A pressure indicator. Spawn intervals use their own stage/region formula; the displayed threat value is not an additional damage multiplier.                                                                               |
-| Identity           | Iron 0, Sky 0, Wander 0 | Construction, upgrades, route choices, story choices                                                                   | Determines the clan's descriptive identity and epilogue. Grants no additional stat modifiers or technology locks.                                                                                                          |
+| Resource / measure | Start                   | Sources                                                                                    | Uses and consequences                                                                                                                                                                                                      |
+| ------------------ | ----------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Food               | 70                      | Grazing, camp production, river crossings                                                  | Consumed by people, including during migration. Blue-banner rescue costs 18 food on arrival. Zero food triggers starvation checks.                                                                                         |
+| Materials          | 50                      | Passive camp gathering, more population, ridge crossings                                   | Construct and upgrade camp buildings. No ongoing building maintenance cost.                                                                                                                                                |
+| Spirit             | 0                       | Kills grant `enemy XP ×0.4` times the camp Spirit-gain multiplier; ridge arrival grants 10 | Construct and upgrade spiritual and cultural buildings. It is not consumed by lightning, wards, arrows, or migration.                                                                                                      |
+| Spirit shards / XP | Level 1, 0 XP           | Collect drops from defeated enemies                                                        | Fill the current level's XP threshold and gain a level. Collection does not deduct stored Spirit.                                                                                                                          |
+| People             | 8                       | Blue-banner arrivals, field rescues                                                        | Produce materials, consume food, provide worker capacity. Losses come from starvation and resolve damage. Population gains obey the camp capacity described in [the camp guide](nomadic-camp.md).                          |
+| Workers            | 0 assigned of 8         | Existing population                                                                        | Construction requires sufficient total population for assigned jobs. Workers are reserved by established buildings, not spent. No manual job reassignment or worker production penalty is simulated.                       |
+| Herd / horses      | 3                       | Field rescues (+3); river arrival (+2)                                                     | Each horse increases migration mobility by 1.2% of the base. Starvation and clan losses remove livestock. Route rewards cap herd at 40. Herd size does not independently change grazing income or limit rider recruitment. |
+| Clan resolve       | 100 / 100               | Communal Hearth, Ancestral Standard, arrivals (+12), [Skybreaker defeat](final-stand.md)   | Clan-wide survival meter, internally called integrity. Attacks and starvation reduce it; crossing damage thresholds can also cost people and livestock.                                                                    |
+| Khan health        | 100 / 100               | Camp recovery and arrivals (+25)                                                           | Personal health; at zero, choose a new Khan after 10 active seconds while the clan fights on. Enemy contact, hostile shots, and eruptions damage it.                                                                       |
+| Pasture            | 100%                    | Refreshed on arrival; camp developments reduce depletion                                   | Scales food and material production. depletes to zero over 210 stationary seconds, including the final stand. Does not deplete during crossings.                                                                           |
+| Momentum           | 0–100%                  | Riding builds it; stopping drains it                                                       | Improves Khan arrow damage and targeting range; activates moving formation bonuses.                                                                                                                                        |
+| Threat             | 0–100%                  | Region and time in the current stage                                                       | A pressure indicator. Spawn intervals use their own stage/region formula; the displayed threat value is not an additional damage multiplier.                                                                               |
+| Identity           | Iron 0, Sky 0, Wander 0 | Construction, upgrades, route choices                                                      | Determines the clan's descriptive identity. Grants no additional stat modifiers or technology locks.                                                                                                                       |
 
 The opening camp foundations are described in [the nomadic camp guide](nomadic-camp.md). The Khan begins with one accompanying rider and one arrow per personal volley.
 
@@ -136,9 +136,9 @@ The building requirements for **Burning Tempest** are listed in [the camp overvi
 
 The player character is **the Khan**. A lethal hit normally starts **10 active gameplay seconds of succession**, marked by **Choosing a new Khan** and a live countdown in the health HUD. This does not change the run to its ended `dead` phase. The fallen Khan is hidden and his collision body is disabled immediately. Riding, galloping, his personal arrows, and shard collection stop; already-fired arrows and burns can finish normally.
 
-The world keeps advancing: enemies attack the camp, food is consumed, the caravan moves, and camp weapons and accompanying riders defend it. Riders position around camp during succession. Menus pause the countdown and all other simulation. Camp encounters wait until the new Khan is present.
+The world keeps advancing: enemies attack the camp, food is consumed, the caravan moves, and camp weapons and accompanying riders defend it. Riders position around camp during succession. Menus pause the countdown and all other simulation.
 
-When the countdown finishes with the clan alive, a successor appears **90 world units below the current camp/caravan center**, at full maximum health with a ready gallop and **3 seconds of invulnerability**. His movement, hit feedback, and attack pose reset. The HUD advances its Khan number. Camp upgrades, max health, resources, workers, buildings, companions, story decisions, and route progress all carry over. The successor follows the current moving caravan or the new regional camp if an arrival happened during succession.
+When the countdown finishes with the clan alive, a successor appears **90 world units below the current camp/caravan center**, at full maximum health with a ready gallop and **3 seconds of invulnerability**. His movement, hit feedback, and attack pose reset. The HUD advances its Khan number. Camp upgrades, max health, resources, workers, buildings, and route progress all carry over. The successor follows the current moving caravan or the new regional camp if an arrival happened during succession.
 
 Camp recovery and arrival healing cannot end succession early. Building upgrades still increase the successor's maximum health.
 
@@ -213,70 +213,46 @@ Chargers mark a committed direction for 0.8 seconds, move at 2.2× speed for 0.7
 
 See [the final-stand rules](final-stand.md) for the Skybreaker's attack cycle, defeat reward, and survival objective.
 
-## 8. Story, clan identity, and chronicle
-
-The five-chapter prologue presents the fictional Sundering and the clan's flight. It appears after **New Game**; completing or skipping it enters the expedition. Replaying the introduction from the title is read-only and returns to the title. With camp scenes enabled, the first encounter opens before combat begins.
-
-Camp scenes are enabled by default and can be toggled at the title. Each encounter pauses combat, physics, economy, and journey clocks, with two choices. Any chosen benefit is granted once: **food +8, materials +6, Spirit +4, or resolve +5**. Each choice also grants **+1** to its associated identity. Escape / controller B skips without a reward. Disabled encounters pass without rewards; disabling camp scenes does not skip the prologue.
-
-| Encounter                 | Trigger                                     | Choice A: gift / identity                            | Choice B: gift / identity                      |
-| ------------------------- | ------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------- |
-| A place beside the fire   | Expedition begins                           | Share the work: +6 materials / Wander                | Share the watch: +5 resolve / Iron             |
-| More mouths, more hands   | First camp reaches 45 seconds               | Prepare the provisions: +8 food / Wander             | Prepare the wagons: +6 materials / Iron        |
-| Voices across the ice     | Arrive at first chosen camp                 | Trust the ground: +8 food / Wander                   | Keep the names together: +4 Spirit / Sky       |
-| A promise chosen          | Arrive at second chosen camp; Act II begins | We will watch for one another: +5 resolve / Iron     | We will carry every name: +4 Spirit / Sky      |
-| When the earth moves      | Second chosen camp reaches 15 seconds       | Mend the wheels together: +6 materials / Iron        | Let the tired hands rest: +5 resolve / Wander  |
-| The court's empty promise | Second chosen camp reaches 45 seconds       | Put the tally in shared hands: +6 materials / Wander | Hear the whole account: +4 Spirit / Sky        |
-| The narrow opening        | Arrive at Heart of the Steppe               | Organize the last watch: +5 resolve / Iron           | Share a meal before the work: +8 food / Wander |
-| Hold the road             | Final stand reaches 90 seconds              | Hold together: +5 resolve / Iron                     | Carry the song forward: +4 Spirit / Sky        |
-
-Dialogue responds to earlier decisions, rescue routes, population, losses, and boss fate. Below five people, encounters use a remnant's collective remembrance instead of a conversation among four named survivors. These are changes to presentation; the same underlying resource and identity choices remain.
-
-The first and second camps above are story positions: Silent River and Broken Pass
-are their defaults, with named migration destinations available as alternatives.
-Current settings display the chosen place; destination-specific dialogue, revised
-display titles, and ending callbacks are proposed in
-[the story architecture](../story-architecture.md), rather than implemented here.
+## 8. Clan identity and chronicle
 
 Each purchased building level adds **+2 identity** according to its registry doctrine: Military → Iron, Spiritual & cultural → Sky, Core and Economy & survival → Wander. Free core level 1 grants no points. Selecting a route adds +2 of its identity at departure, independently of the delayed arrival rewards.
 
 The strongest identity becomes the clan's name once any score reaches 4:
 
-| Score               | Identity                    | Mechanical effect                      |
-| ------------------- | --------------------------- | -------------------------------------- |
-| Iron highest        | The Iron Horde              | Descriptive identity and epilogue text |
-| Sky highest         | Children of the Eternal Sky | Descriptive identity and epilogue text |
-| Wander highest      | The Wandering Nation        | Descriptive identity and epilogue text |
-| Every score below 4 | A people taking shape       | No identity declared yet               |
+| Score               | Identity                    | Mechanical effect        |
+| ------------------- | --------------------------- | ------------------------ |
+| Iron highest        | The Iron Horde              | Descriptive identity     |
+| Sky highest         | Children of the Eternal Sky | Descriptive identity     |
+| Wander highest      | The Wandering Nation        | Descriptive identity     |
+| Every score below 4 | A people taking shape       | No identity declared yet |
 
 Ties favor Iron, then Sky, then Wander. Identities do not make other buildings or routes unavailable.
 
-**Tab / J** opens the paused clan chronicle: journey, clan/workforce/buildings, and recorded story. The story tab retains the actual resolved dialogue, selected choice or skip, outcome, time, and population. Pause and result menus also offer **Our remembered road**. Reading records never grants rewards again and returns to the previous paused or ended screen. Story completion preserves XP and levels.
+**Tab / J** opens the paused clan chronicle: **Journey** and **Your clan** (clan/workforce/buildings, Khans who carried the banner, and factual clan memories).
 
-With camp scenes enabled, victory first opens a skippable epilogue reflecting survivors, recorded casualties, identity, the shared tally decision, and the Skybreaker's fate, followed by journey results. The epilogue can be read again. The Last Court, Iron Vow, Sundering, creatures, and refuge are original fantasy; spirit shards represent scattered vitality, not purchased ancestral souls. See [the lore](../lore.md) for writing boundaries.
+Victory and defeat open the journey results screen reporting the outcome, location, stage, journey time, survivors, herd, pastures reached, fallen Khans, and the Skybreaker's fate. The Last Court, Iron Vow, Sundering, creatures, and refuge are original fantasy; spirit shards represent scattered vitality, not purchased ancestral souls. See [the archived lore](archive/story/lore.md) for writing boundaries.
 
 ## 9. Controls, pauses, and persistence
 
-| Action                                     | Keyboard / mouse                               | Standard controller               |
-| ------------------------------------------ | ---------------------------------------------- | --------------------------------- |
-| Ride                                       | WASD / arrow keys                              | Left stick / D-pad                |
-| Attack                                     | Automatic                                      | Automatic                         |
-| Gallop                                     | Space / HUD button                             | A                                 |
-| Develop camp                               | B / HUD button                                 | X                                 |
-| Choose migration route                     | M / HUD button                                 | Y                                 |
-| Cycle formations                           | F / HUD button                                 | Right bumper                      |
-| Chronicle                                  | Tab / J / HUD button                           | View                              |
-| Pause, resume, close a panel, skip a scene | Escape / P                                     | Start / B                         |
-| Menu navigation / confirmation             | Tab, Shift+Tab / Enter, Space, click           | Stick or D-pad / A                |
-| Prologue pages                             | Continue, Back / Enter / left and right arrows | Navigate, then A; B / Start skips |
-| Fullscreen                                 | F11 / Alt+Enter / Settings                     | Navigate Settings                 |
-| Quit desktop game                          | Quit game / window close                       | Navigate Quit game                |
+| Action                         | Keyboard / mouse                     | Standard controller |
+| ------------------------------ | ------------------------------------ | ------------------- |
+| Ride                           | WASD / arrow keys                    | Left stick / D-pad  |
+| Attack                         | Automatic                            | Automatic           |
+| Gallop                         | Space / HUD button                   | A                   |
+| Develop camp                   | B / HUD button                       | X                   |
+| Choose migration route         | M / HUD button                       | Y                   |
+| Cycle formations               | F / HUD button                       | Right bumper        |
+| Chronicle                      | Tab / J / HUD button                 | View                |
+| Pause, resume, close a panel   | Escape / P                           | Start / B           |
+| Menu navigation / confirmation | Tab, Shift+Tab / Enter, Space, click | Stick or D-pad / A  |
+| Fullscreen                     | F11 / Alt+Enter / Settings           | Navigate Settings   |
+| Quit desktop game              | Quit game / window close             | Navigate Quit game  |
 
 Touch preview supports dragging the battlefield to ride and tapping command buttons. Keyboard, controller, mouse, and touch use the same scene-owned state.
 
-Simulation, physics, economy, migration, combat animations, cooldowns, and the run timer advance only during active play. Title, prologue, story, epilogue, records, pause, traditions, camp development, routes, chronicle, settings, help, defeat, and victory stop them. Losing window focus pauses active combat. UI motion respects the operating system's reduced-motion preference; menus and values respond without waiting for animation.
+Simulation, physics, economy, migration, combat animations, cooldowns, and the run timer advance only during active play. Title, pause, traditions, camp development, routes, chronicle, settings, help, defeat, and victory stop them. Losing window focus pauses active combat. UI motion respects the operating system's reduced-motion preference; menus and values respond without waiting for animation.
 
-The profile retains longest journey, audio settings, developer command history, and the portable camp checkpoint described below. Full battle resumption is documented in [the expedition save contract](expedition-saves.md). New expeditions reset resources, buildings, identity, story records, casualties, and crossings. The camp-scene preference survives run restarts within the app session. There is no permanent spirit-stone wallet, permanent meta-tech tree, achievement system, Steamworks progression, or campaign save in this prototype.
+The profile retains longest journey, audio settings, developer command history, and the portable camp checkpoint described below. Full battle resumption is documented in [the expedition save contract](expedition-saves.md). New expeditions reset resources, buildings, identity, memories, casualties, and crossings. There is no permanent spirit-stone wallet, permanent meta-tech tree, achievement system, Steamworks progression, or campaign save in this prototype.
 
 The desktop game runs offline with local assets and native, validated, atomic saves. Browser preview has separate saves. The technology stack is TypeScript, Phaser 3, Vite, and Electron; there is no runtime AI service or backend.
 
@@ -293,9 +269,7 @@ The desktop game runs offline with local assets and native, validated, atomic sa
 | Economy, staffing, purchases, protection, migration, identity  | [state/clan.ts](../src/game/state/clan.ts)                                                                       |
 | Enemy definitions and spawn interval                           | [data/enemies.ts](../src/game/data/enemies.ts)                                                                   |
 | Combat, targeting, support attacks, hazards, phase transitions | [Arena module map](arena-scene.md)                                                                               |
-| Encounter content, choices, epilogue                           | [data/story.ts](../src/game/data/story.ts)                                                                       |
-| Encounter triggers and once-only rewards                       | [state/story.ts](../src/game/state/story.ts)                                                                     |
-| Prologue chapters                                              | [data/intro.ts](../src/game/data/intro.ts)                                                                       |
+| Chronicle memories, crossings, and journey results             | [state/legacy.ts](../src/game/state/legacy.ts), [ui/legacyContent.ts](../src/ui/legacyContent.ts)                |
 | Menus, chronicle, help, input                                  | [GameUI.ts](../src/ui/GameUI.ts), [menuContent.ts](../src/ui/menuContent.ts)                                     |
 | Save and packaging details                                     | [README](../README.md#packaging-and-saves), [Steam preparation](../steam/README.md)                              |
 
@@ -307,7 +281,7 @@ During active play, use + / −, number-pad + / −, the mouse wheel, or control
 
 Portable camp checkpoints save after successful purchases and completed migrations through the native profile store. **Continue clan camp** restores camp organisation and supplies into a fresh expedition, reconstructing continuing benefits once. **New Game** starts a fresh clan. This portable camp action starts fresh; see [the checkpoint contract](camp-checkpoints.md).
 
-Full expedition saves are separate: **Continue expedition** restores the latest full snapshot, while **Saved expeditions** offers three manual slots and an autosave on title, pause, and results screens. Battles, XP levels, camp effects, story transcripts, journey/crossing objectives, dropped XP, and succession/cooldowns resume without replaying rewards or healing. Loads open paused or at their unresolved story. Autosaves run every 30 active seconds, on pause, after progression/travel checkpoints, and before desktop close. Manual slots remain independent; developer/cheated runs cannot overwrite them. See [the full save contract](expedition-saves.md).
+Full expedition saves are separate: **Continue expedition** restores the latest full snapshot, while **Saved expeditions** offers three manual slots and an autosave on title, pause, and results screens. Battles, XP levels, camp effects, journey/crossing objectives, dropped XP, and succession/cooldowns resume without replaying rewards or healing. Loads open paused. Autosaves run every 30 active seconds, on pause, after progression/travel checkpoints, and before desktop close. Manual slots remain independent; developer/cheated runs cannot overwrite them. See [the full save contract](expedition-saves.md).
 
 ### Encounter rhythm and field opportunities
 

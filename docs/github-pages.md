@@ -19,7 +19,7 @@ If Chromium is already installed, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to its
 executable instead. The smoke suite serves the production artifact at
 `http://127.0.0.1:4173/hordes-of-the-fallen-sky/`, matching a GitHub project site's
 subpath; set `PAGES_PORT` to serve on another port when 4173 is busy. It checks
-local assets and prologue paintings and the absence of development
+local assets and the absence of development
 hooks and native capabilities — that artwork smoke is the only Pages test GitHub
 Actions runs. The `@gameplay` smokes, which never run on GitHub, check real camp
 purchases, menu pausing, sound preference persistence, and play with unavailable
@@ -56,7 +56,7 @@ first successful deployment; preparing or building locally does not publish it.
    and smoke-test step succeeds. Its `github-pages` environment links to the live
    site. Any configured environment approval must be completed there.
 4. Open the live URL in a fresh browser profile. Start an expedition, build a camp
-   development, open the prologue, and check fullscreen and sound. Test any physical
+   development, and check fullscreen and sound. Test any physical
    controller and additional browsers you intend to recommend to playtesters.
 
 Pull requests to `main` run the same checks without uploading or deploying a site.
