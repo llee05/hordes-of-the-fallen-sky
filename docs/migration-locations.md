@@ -25,7 +25,7 @@ Earlier narrative treatments for each named destination are archived in [`docs/a
 context, visual terrain, and gameplay modifiers from `GAME.locations`. Food and
 materials modifiers affect production at the current camp. Mobility affects departures
 from that camp; the chosen destination's crossing modifier affects the incoming trip.
-All modifiers stack with seasonal conditions, camp developments.
+All modifiers stack with seasonal conditions and camp developments.
 
 `state/journey.ts` resolves the current camp, pending arrival, and available
 destinations. The numeric `clan.region` remains the journey/difficulty chapter;

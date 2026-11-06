@@ -96,7 +96,7 @@ Final resolve damage = raw damage
                      × starting-tradition protection modifier
 ```
 
-Each downward 20-point resolve band crossed by a hit removes one person, capped at the remaining population: a hit from 100 to 80 loses one, to 60 loses two, and to 40 loses three. Count bands after all protection, using resolve clamped at zero; partial damage within a band causes no casualty. A hit crossing any number of bands still removes at most one horse, with herd size floored at zero. Chronicle entries and companion reactions reflect the actual casualties from the hit. Repairs can restore resolve, but do not resurrect casualties.
+Each downward 20-point resolve band crossed by a hit removes one person, capped at the remaining population: a hit from 100 to 80 loses one, to 60 loses two, and to 40 loses three. Count bands after all protection, using resolve clamped at zero; partial damage within a band causes no casualty. A hit crossing any number of bands still removes at most one horse, with herd size floored at zero. Chronicle entries reflect the actual casualties from the hit. Repairs can restore resolve, but do not resurrect casualties.
 
 ## 3. Spirit shards and levels
 

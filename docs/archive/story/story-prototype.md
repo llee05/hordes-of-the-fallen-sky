@@ -1,7 +1,7 @@
 # Playable story
 
 Hordes of the Fallen Sky implements the two-act expedition in
-[the story architecture](../story-architecture.md). The five-chapter prologue
+[the story architecture](story-architecture.md). The five-chapter prologue
 leads into camp construction, automatic mounted combat, three caravan crossings,
 a timed final defense, an epilogue, journey results, and a fresh run. This guide
 describes what is playable now.
@@ -32,7 +32,7 @@ becomes costly, through Erden's confession and the final passage.
 Each scene occurs once. Triggers follow active gameplay time and arrival, so reading a scene cannot consume pasture or advance the final defense. Construction, formations, and route rewards remain available between scenes. Opening a route cannot bypass an outstanding departure conversation.
 
 The first crossing can reach Silent River or any of the eight named destinations in
-[the destination guide](migration-locations.md); the second can reach Broken Pass or
+[the destination guide](../../migration-locations.md); the second can reach Broken Pass or
 any named destination not yet visited. Every eligible camp has its own scene in each
 slot it can occupy: a first-stop title, setting, disagreement, and two responses, and
 a second-stop banner framing, work scene, and two responses. Treatments live in
@@ -94,7 +94,7 @@ brief reaction may accompany a moment, voiced by the companion it concerns
 - **Field objectives and hunger:** Boro takes in the scattered supplies and the loose herd, Saran welcomes stranded households without naming any of them, and Nara counts the defeated raiders from an enemy gathering. Each kind has its own remnant line. When the stores run out, Boro speaks unless the court scene gave Nara the tally, in which case she records it.
 - **Losses:** recorded by whoever keeps the tally after the court scene. From the third loss, Saran answers instead.
 - **Succession:** a first fall recalls a shared watch if the clan named one. A successor is greeted according to the chosen trait.
-- **[The Skybreaker](final-stand.md):** Boro turns the clan back to the wagons, echoing his line in the road scene.
+- **[The Skybreaker](../../final-stand.md):** Boro turns the clan back to the wagons, echoing his line in the road scene.
 
 Reactions are spaced by eight active seconds and freeze in menus. Only displayed reactions receive a retained transcript. Fewer than five survivors use the collective remembered-road voice. Camp scenes: Off keeps factual memories without companion speech. Records are bounded to the latest 96 moments and 64 Khans.
 
@@ -112,7 +112,7 @@ It ends with the spare bowl and the promise of room beside the fire.
 
 The named companions are voices within an abstract population. The game never assigns individual casualties. Below five people, scenes use a remnant account and the ending omits named companions. At the two chosen camps, that account is the destination’s own `remnant` line, written to hold for a single survivor. After any loss, the ending speaks of companions' practices (“as Erden promised”) rather than placing all four at the new fire. A one-person ending uses singular narration. No scene forces a death to serve the plot.
 
-Defeat shows the actual journey result and leaves the memories available. Above the results, `defeatAccount` in `src/game/data/story.ts` narrates a short account built only from recorded facts: where the clan was (in camp, on the road out of its last camp, or during the final defense), whether everyone was lost or the clan's resolve gave out with people still alive, the cause and recorded attacker of the last damage, the camps actually reached in order, rescues, losses, Khans who carried the banner, an unfinished succession, and the Skybreaker's fall. It never names a companion or the destination of an unfinished crossing, so it holds for any remnant. A restart clears the story, choices, crossings, losses, and build. Full expedition saves preserve active choices, resolved transcripts, applied lasting effects, crossings, losses, and clan memories. Loading does not resolve a choice or grant its benefit again. See [the expedition-save contract](expedition-saves.md).
+Defeat shows the actual journey result and leaves the memories available. Above the results, `defeatAccount` in `src/game/data/story.ts` narrates a short account built only from recorded facts: where the clan was (in camp, on the road out of its last camp, or during the final defense), whether everyone was lost or the clan's resolve gave out with people still alive, the cause and recorded attacker of the last damage, the camps actually reached in order, rescues, losses, Khans who carried the banner, an unfinished succession, and the Skybreaker's fall. It never names a companion or the destination of an unfinished crossing, so it holds for any remnant. A restart clears the story, choices, crossings, losses, and build. Full expedition saves preserve active choices, resolved transcripts, applied lasting effects, crossings, losses, and clan memories. Loading does not resolve a choice or grant its benefit again. See [the expedition-save contract](../../expedition-saves.md).
 
 ## Implementation
 

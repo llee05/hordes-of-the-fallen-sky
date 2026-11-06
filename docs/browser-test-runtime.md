@@ -211,22 +211,21 @@ for identifying long groups rather than measuring pure simulation cost.
 | `khan`              |           215.44 |
 | `camp-culture`      |           204.34 |
 
-Game contracts now have separate input/lifecycle, combat, camp/journey, and
-interface files. Console history and cheats have separate files; the complete
-story journey and controller walkthrough also have their own files. The named
-`game.spec.ts` smoke contract remains in place for the changed-only selector.
-Checkpoint coverage uses six chapter/topic groups with at most eight transitions
-per test, instead of one 29-transition test. Camp and destination inspection run
-independently at all three original viewport sizes. No checkpoint, facility,
-destination, story choice, or assertion was removed. Files marked parallel use
-isolated page contexts and have no shared `beforeAll`/`afterAll` state.
+At that revision, game contracts were split into input/lifecycle, combat, camp/journey, and
+interface files. Console history and cheats had separate files; the complete
+story journey and controller walkthrough also had their own files. The named
+`game.spec.ts` smoke contract was retained for the changed-only selector.
+Checkpoint coverage used six chapter/topic groups with at most eight transitions
+per test, instead of one 29-transition test. Camp and destination inspection ran
+independently at all three original viewport sizes. That split removed no checkpoint, facility, destination, story choice, or assertion. Files marked parallel used
+isolated page contexts and had no shared `beforeAll`/`afterAll` state.
 
 The audio regression records accepted reference auditions: a short recording can
 finish before a slow browser samples the live voice count. The opening-fight
 fixture places a real pooled enemy in firing range and leaves the normal scene
 update to fire and record the milestone. Siege checks wait for the real camp and
 playing phases before comparing frozen and active state. Active combat and the
-intentionally complete story/controller walkthroughs retain their assertions with
+then-complete story/controller walkthroughs retained their assertions with
 wall-time budgets appropriate to software rendering.
 
 ### Projection limits

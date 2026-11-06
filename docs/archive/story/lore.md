@@ -79,7 +79,7 @@ The playable expedition can now visit camps around Otgontenger, Bogd Khan Uul,
 Altai Tavan Bogd, Khan Tengri, Belukha / Üch-Sümer, Altan Ovoo, Eej Khairkhan,
 and Orkhon Valley before the final refuge. These real landscape names do not replace
 the fictional Heart of the Steppe. Their Mongolian, Turkic, and Altaian cultural
-contexts are recorded separately in [the destination guide](docs/migration-locations.md).
+contexts are recorded separately in [the destination guide](../../migration-locations.md).
 The roads compress real distances; camps are not summit ascents or reconstructions
 of worship. Gathering bonuses, travel modifiers, hostile creatures, and chapter
 calamities remain invented gameplay, with no claim that a site's traditions cause
@@ -105,7 +105,7 @@ The clan survives through work shared among households. Gers are dismantled and 
 
 A provisioning ger keeps aaruul, borts, dairy work, and hospitality within the same circle of care. The clan's Örtöö relay is a fictional network of couriers, contacts, and supplies ahead of the caravan, represented by a portable dispatch point. Historical relay stations are not being depicted as buildings that followed one travelling clan. Arban drills adapt a motif of coordinated mounted organisation to the game's small host rather than reconstructing an imperial military unit.
 
-The camp's eight branches combine Mongolian cultural motifs across periods in this fantasy setting. Numerical yields, armor protection against the unreturned, recurring arrival gifts, and storm attacks are invented mechanics. Remembering ovoos is written as care for shared memory and places, not a universal rite or a claim about ritual rewards. [The camp upgrade tree](docs/camp-upgrade-tree.md#cultural-context-and-sources) records the designs and their cultural sources.
+The camp's eight branches combine Mongolian cultural motifs across periods in this fantasy setting. Numerical yields, armor protection against the unreturned, recurring arrival gifts, and storm attacks are invented mechanics. Remembering ovoos is written as care for shared memory and places, not a universal rite or a claim about ritual rewards. [The camp upgrade tree](../../camp-upgrade-tree.md#cultural-context-and-sources) records the designs and their cultural sources.
 
 ## Patron traditions
 
@@ -115,7 +115,7 @@ Each tradition expresses a practical duty. Börte Chino inspires the moving hunt
 
 The summoned echoes are remembered protectors within the game's fiction, distinct from the unreturned who wear stolen names. The Guardian of Burkhan Khaldun is an imagined guardian used by this game, not a documented individual deity with this prescribed name and abilities. The real sacred landscape remains an inspiration remembered by the clan; the fictional Heart of the Steppe and its refuge are still separate places.
 
-Any supernatural abilities associated with these figures are invented design. They do not reproduce ritual instruction or promise the effects of religious practice. See [the progression guide](docs/progression-ui.md) for the current gameplay interface.
+Any supernatural abilities associated with these figures are invented design. They do not reproduce ritual instruction or promise the effects of religious practice. See [the progression guide](../../progression-ui.md) for the current gameplay interface.
 
 ## Opening slideshow
 
