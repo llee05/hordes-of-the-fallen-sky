@@ -1,6 +1,5 @@
 import { escapeHtml } from './progressionTree';
 import { SUCCESSORS } from '../game/data/successors';
-import { COMPANIONS } from '../game/data/story';
 import { REGIONS } from '../game/data/clan';
 import { locationById } from '../game/state/journey';
 import { formatTime } from '../game/state/run';
@@ -14,7 +13,7 @@ export function khanRecords(run: RunState): string {
       const state =
         khan.fallenAt !== undefined
           ? `Fell in ${(khan.fallenLocationId && locationById(khan.fallenLocationId)?.name) || REGIONS[khan.fallenRegion!]!.name}`
-          : run.legacy.outcome === 'won' || ['won', 'epilogue'].includes(run.phase)
+          : run.legacy.outcome === 'won' || run.phase === 'won'
             ? 'Carried the banner to refuge'
             : run.legacy.outcome === 'dead' || run.phase === 'dead'
               ? 'With the clan at the journey’s end'
@@ -26,5 +25,5 @@ export function khanRecords(run: RunState): string {
 
 export function clanMemories(run: RunState): string {
   if (!run.legacy.memories.length) return '';
-  return `<section class="clan-memories" aria-label="Life beneath the banner"><h3>Life beneath the banner</h3><p>The latest ${run.legacy.memories.length} of ${run.legacy.totalMemories} moments from this expedition.</p>${run.legacy.memories.map((memory) => `<details class="clan-memory"><summary><span>${escapeHtml(memory.title)}</span><small>${escapeHtml(formatTime(memory.elapsed))} · ${memory.population} ${memory.population === 1 ? 'person' : 'people'}</small></summary><div class="story-memory-body"><p>${escapeHtml((memory.locationId && locationById(memory.locationId)?.name) || REGIONS[memory.region]!.name)} · ${escapeHtml(memory.detail)}</p>${memory.line ? `<blockquote><strong>${escapeHtml(COMPANIONS[memory.line.speaker].name)}</strong><br>${escapeHtml(memory.line.text)}</blockquote>` : ''}</div></details>`).join('')}</section>`;
+  return `<section class="clan-memories" aria-label="Life beneath the banner"><h3>Life beneath the banner</h3><p>The latest ${run.legacy.memories.length} of ${run.legacy.totalMemories} moments from this expedition.</p>${run.legacy.memories.map((memory) => `<details class="clan-memory"><summary><span>${escapeHtml(memory.title)}</span><small>${escapeHtml(formatTime(memory.elapsed))} · ${memory.population} ${memory.population === 1 ? 'person' : 'people'}</small></summary><div class="clan-memory-body"><p>${escapeHtml((memory.locationId && locationById(memory.locationId)?.name) || REGIONS[memory.region]!.name)} · ${escapeHtml(memory.detail)}</p></div></details>`).join('')}</section>`;
 }

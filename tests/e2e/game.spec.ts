@@ -28,8 +28,6 @@ test(
     await openTitle(page);
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
     await press(0);
-    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
-    await press(1);
     await expect(page.getByRole('dialog')).toBeHidden();
     const initialX = await page.evaluate(() => (window as any).__gloam.scene.player.x);
     await page.evaluate(() => {
@@ -71,8 +69,6 @@ test(
     await page.screenshot({ path: 'test-results/desktop-ready.png', fullPage: true });
     await page.getByRole('button', { name: /NEW GAME/ }).focus();
     await page.keyboard.press('Space');
-    await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
-    await closeOverlayOrPause(page);
     await expect(page.getByRole('dialog')).toBeHidden();
     const before = await page.evaluate(() => (window as any).__gloam.scene.player.x);
     await page.keyboard.down('d');
@@ -116,10 +112,11 @@ test(
       scene.run.clan.integrity = 0;
     });
     await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
-    // The defeat screen narrates the recorded journey instead of a fixed line.
-    await expect(page.locator('.end-menu .panel-intro')).toContainText(
-      'At the Golden Pasture, before the clan had ever broken camp, the clan’s resolve gave out',
+    await expect(page.locator('.end-menu .panel-intro')).toHaveText(
+      'Clan lost · The Golden Pasture · Encampment',
     );
+    await expect(page.locator('.end-stats')).toContainText('SURVIVORS');
+    await expect(page.locator('.end-stats')).toContainText('SKYBREAKER');
     await expect(page.locator('#best')).toHaveText('00:42');
     await page.getByRole('button', { name: /RAISE THE BANNERS AGAIN/ }).click();
     await startExpedition(page);
@@ -131,6 +128,9 @@ test(
       scene.run.clan.stageTime = 180;
     });
     await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
+    await expect(page.locator('.end-menu .panel-intro')).toHaveText(
+      'Refuge reached · The Heart of the Steppe · Final stand',
+    );
     await expect(page.locator('#best')).toHaveText('15:00');
     await page.reload();
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();

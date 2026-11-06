@@ -30,7 +30,6 @@ export function bearingArrow(dx: number, dy: number): string {
 
 /** Scene-owned values the HUD shows alongside the shared world. */
 export interface HudSession {
-  introSlide: number;
   best: number;
   developerRun: boolean;
   developerConsole?: DeveloperConsoleSnapshot;
@@ -73,7 +72,6 @@ export class HudPresenter {
       minZoom: zoomLimits.min,
       maxZoom: zoomLimits.max,
       run,
-      introSlide: session.introSlide,
       dashReady: Math.max(0, 1 - this.arena.timers.dashTimer / gallopCooldown(run)),
       dashCooldown: gallopCooldown(run),
       best: session.best,

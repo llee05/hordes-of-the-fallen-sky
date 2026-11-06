@@ -5,7 +5,7 @@ test.beforeEach(() => test.setTimeout(90000));
 // No state is shared between tests, including saved commands.
 test.describe.configure({ mode: 'parallel' });
 
-test('console history, validation, focus, and narrow layouts work without changing title or intro state', async ({
+test('console history, validation, focus, and narrow layouts work without changing title or menu state', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -50,11 +50,12 @@ test('console history, validation, focus, and narrow layouts work without changi
   await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: /NEW GAME/ }).click();
-  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('j');
+  await expect(page.getByRole('heading', { name: 'A people on the move.' })).toBeVisible();
   await page.keyboard.press('F10');
   await command(page, 'status');
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('heading', { name: 'A vow that broke the world.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'A people on the move.' })).toBeVisible();
 });
 
 test('Up recalls saved commands after reload and checkpoints, while Down restores the draft', async ({

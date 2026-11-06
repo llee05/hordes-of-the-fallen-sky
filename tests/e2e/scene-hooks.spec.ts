@@ -105,7 +105,6 @@ const METHODS = [
   'closeCamp',
   'improveNomadicCamp',
   'chooseRoute',
-  'chooseStory',
   'cycleFormation',
   'dash',
   'changeZoom',

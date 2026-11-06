@@ -52,7 +52,6 @@ test('nomadic camp migrates a native checkpoint, persists new choices and levels
   try {
     let page = await app.firstWindow();
     await sizeWindow(1280, 800);
-    await page.getByRole('button', { name: 'Camp scenes: On' }).click();
     await page.getByRole('button', { name: 'Continue clan camp', exact: true }).click();
     await page.keyboard.press('b');
     await expect(page.locator('.camp-map-cores button')).toHaveCount(5);
@@ -81,7 +80,6 @@ test('nomadic camp migrates a native checkpoint, persists new choices and levels
     app = await launch();
     page = await app.firstWindow();
     expect(await page.evaluate(() => typeof (window as any).__gloam)).toBe('undefined');
-    await page.getByRole('button', { name: 'Camp scenes: On' }).click();
     await page.getByRole('button', { name: 'Continue clan camp', exact: true }).click();
     await page.keyboard.press('b');
     for (const size of [

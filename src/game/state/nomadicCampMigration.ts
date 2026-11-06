@@ -67,7 +67,7 @@ export function migrateLegacyNomadicCamp(run: RunState): { materials: number; sp
     }
   // The only legacy craft that directly scales player stats; other ongoing camp effects are rebuilt below.
   if (run.clan.paths.herd?.includes('remount-herds')) run.stats.speed /= 1.12;
-  // Keep every non-building contribution (including lasting story choices) rather than resetting them.
+  // Keep every non-building contribution rather than resetting them.
   for (const key of Object.keys(retired.multipliers) as (keyof typeof retired.multipliers)[])
     run.clan.campEffects.multipliers[key] /= retired.multipliers[key];
   for (const key of Object.keys(retired.bonuses) as (keyof typeof retired.bonuses)[])

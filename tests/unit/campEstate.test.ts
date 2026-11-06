@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { GAME } from '../../src/game/config';
 import { ENCAMPMENT_TIERS, INTERNAL_DEVELOPMENTS } from '../../src/game/data/campEstate';
 import { BUILDINGS } from '../../src/game/data/clan';
-import {
-  ENCAMPMENT_REMNANT,
-  INTERNAL_DEVELOPMENT_REMNANT,
-  estateReaction,
-} from '../../src/game/data/storyReactions';
 import {
   buildingLevel,
   campSlots,
@@ -21,7 +15,6 @@ import {
   buildStructure,
   buildingBlocker,
 } from '../../src/game/state/clan';
-import { rememberClan } from '../../src/game/state/legacy';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 function richCamp() {
   const run = createRun();
@@ -146,59 +139,19 @@ describe('legacy checkpoint compatibility: portable clan estate progression', ()
 });
 
 describe('estate memories in the chronicle', () => {
-  it('has an authored reaction for every purchasable tier and internal rank', () => {
-    for (const node of ENCAMPMENT_TIERS.filter((node) => node.tier > 1))
-      expect(estateReaction('encampment', node.id, node.tier)).toBeDefined();
-    for (const development of INTERNAL_DEVELOPMENTS)
-      for (const [index] of development.ranks.entries())
-        expect(estateReaction('internal', development.id, index + 1)).toBeDefined();
-  });
-
-  it('records missing reactions silently without changing reaction spacing', () => {
-    const reaction = estateReaction('internal', 'unknown', 1);
-    expect(reaction).toBeUndefined();
-    expect(estateReaction('encampment', 'encampment-6', 6)).toBeUndefined();
-    for (const population of [4, 8]) {
-      const run = richCamp();
-      run.clan.population = population;
-      run.legacy.reactionUntil = 10;
-      run.elapsed = 20;
-      rememberClan(run, 'A new practice', 'The clan learned it.', reaction, 'Remnant.');
-      expect(run.legacy.totalMemories).toBe(1);
-      expect(run.legacy.memories).toHaveLength(1);
-      expect(run.legacy.memories[0]).toMatchObject({
-        title: 'A new practice',
-        detail: 'The clan learned it.',
-        line: undefined,
-      });
-      expect(run.legacy.reactionUntil).toBe(10);
-    }
-  });
-
-  // Each internal path speaks through the companion whose concern it is.
-  const SPEAKERS: Record<string, string> = {
-    'clan-council': 'boro',
-    'ancestral-hearth': 'saran',
-    'master-craftsmen': 'nara',
-    'war-council': 'boro',
-    'supply-organisation': 'erden',
-    'travelling-merchants': 'nara',
-  };
-  /** Purchase after the previous reaction has faded, and return the one new memory. */
   function purchaseOnce(
     run: ReturnType<typeof createRun>,
     kind: 'encampment' | 'internal',
     id: string,
     rank: number,
   ) {
-    run.elapsed = Math.max(run.elapsed, run.legacy.reactionUntil);
     const total = run.legacy.totalMemories;
     expect(purchaseEstate(run, kind, id, rank)).toBe(true);
     expect(run.legacy.totalMemories).toBe(total + 1);
     return run.legacy.memories.at(-1)!;
   }
 
-  it('records exactly one memory titled with each tier and internal rank, voiced by its companion', () => {
+  it('records exactly one memory titled with each tier and internal rank', () => {
     const run = richCamp();
     run.clan.population = 100;
     for (let tier = 2; tier <= 5; tier++) {
@@ -213,18 +166,12 @@ describe('estate memories in the chronicle', () => {
       const memory = purchaseOnce(run, 'encampment', node.id, tier);
       expect(memory.title).toBe(node.title);
       expect(memory.detail).toContain(`${node.slots} building plots`);
-      expect(memory.line).toEqual(estateReaction('encampment', node.id, tier));
     }
-    const titles = new Set<string>();
     for (const development of INTERNAL_DEVELOPMENTS)
       for (const [i, node] of development.ranks.entries()) {
         const memory = purchaseOnce(run, 'internal', development.id, i + 1);
         expect(memory.title).toBe(node.title);
-        expect(memory.line?.speaker).toBe(SPEAKERS[development.id]);
-        titles.add(memory.line!.text);
       }
-    // Every rank has its own authored line rather than a shared fallback.
-    expect(titles.size).toBe(INTERNAL_DEVELOPMENTS.length * 2);
   });
 
   it('adds no memory for a blocked, replayed, or packed purchase', () => {
@@ -237,36 +184,5 @@ describe('estate memories in the chronicle', () => {
     run.phase = 'route';
     expect(purchaseEstate(run, 'encampment', 'encampment-2', 2)).toBe(false);
     expect(run.legacy).toEqual(before);
-  });
-
-  it('uses the remnant voice below five people and records only facts with camp scenes off', () => {
-    const remnant = richCamp();
-    remnant.clan.population = 4;
-    expect(purchaseOnce(remnant, 'encampment', 'encampment-2', 2).line).toEqual({
-      speaker: 'clan',
-      text: ENCAMPMENT_REMNANT,
-    });
-    remnant.elapsed = remnant.legacy.reactionUntil;
-    expect(purchaseOnce(remnant, 'internal', 'clan-council', 1).line).toEqual({
-      speaker: 'clan',
-      text: INTERNAL_DEVELOPMENT_REMNANT,
-    });
-    const quiet = richCamp();
-    quiet.story.enabled = false;
-    const memory = purchaseOnce(quiet, 'encampment', 'encampment-2', 2);
-    expect(memory.title).toBe('Established Encampment');
-    expect(memory.line).toBeUndefined();
-    expect(quiet.legacy.reactionUntil).toBe(0);
-  });
-
-  it('keeps reaction spacing: a purchase inside a shown reaction is recorded silently', () => {
-    const run = richCamp();
-    run.elapsed = 20;
-    expect(purchaseEstate(run, 'encampment', 'encampment-2', 2)).toBe(true);
-    expect(run.legacy.reactionUntil).toBe(20 + GAME.story.reactionDuration);
-    expect(purchaseEstate(run, 'internal', 'ancestral-hearth', 1)).toBe(true);
-    expect(run.legacy.memories).toHaveLength(2);
-    expect(run.legacy.memories[1]!.line).toBeUndefined();
-    expect(run.legacy.reactionUntil).toBe(20 + GAME.story.reactionDuration);
   });
 });

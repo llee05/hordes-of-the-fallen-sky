@@ -72,9 +72,9 @@ async function faceSkybreaker(page: Page): Promise<void> {
 
 async function defeatInCombat(
   page: Page,
-  options: { population: number; resolve: number; speech: boolean; coolingDown?: boolean },
+  options: { population: number; resolve: number },
 ): Promise<void> {
-  await page.evaluate(async (options) => {
+  await page.evaluate((options) => {
     const s = (window as any).__gloam.scene;
     for (const enemy of s.enemies.getChildren())
       if (enemy !== s.boss) enemy.disableBody(true, true);
@@ -84,19 +84,6 @@ async function defeatInCombat(
     s.run.clan.integrity = options.resolve;
     // Isolate the defeat reward from passive recovery while the arrow travels.
     s.run.clan.campEffects.bonuses.resolveRecovery = 0;
-    s.run.story.enabled = options.speech;
-    s.run.legacy.reactionUntil = 0;
-    if (options.coolingDown) {
-      const modulePath = '/src/game/state/legacy.ts';
-      const { rememberClan } = await import(modulePath);
-      rememberClan(
-        s.run,
-        'The watch gathered',
-        'The defenders kept close to the wagons.',
-        { speaker: 'nara', text: 'Keep close to the wagons.' },
-        'The remaining hands kept watch.',
-      );
-    }
     s.run.finalStand.phase = 'advance';
     s.run.finalStand.remaining = 999;
     s.player.setPosition(s.camp.x + 600, s.camp.y);
@@ -117,7 +104,7 @@ async function defeatInCombat(
 
 async function openDefeatMemory(page: Page) {
   await page.keyboard.press('j');
-  await page.getByRole('tab', { name: 'Our story' }).click();
+  await page.getByRole('tab', { name: 'Your clan' }).click();
   const memory = page.locator('.clan-memory').filter({ hasText: 'The Skybreaker fell' });
   await expect(memory).toHaveCount(1);
   await memory.locator('summary').click();
@@ -125,14 +112,12 @@ async function openDefeatMemory(page: Page) {
   return memory;
 }
 
-test('defeating the Skybreaker restores resolve once and retains Boro in the chronicle', async ({
+test('defeating the Skybreaker restores resolve once and retains the memory in the chronicle', async ({
   page,
 }) => {
   test.setTimeout(process.env.CI ? 90000 : 60000);
   await faceSkybreaker(page);
-  await defeatInCombat(page, { population: 8, resolve: 50, speech: true });
-  await expect(page.locator('#companion-reaction')).toContainText('Boro:');
-  await expect(page.locator('#companion-reaction')).toContainText('It’s down.');
+  await defeatInCombat(page, { population: 8, resolve: 50 });
   const reward = await page.evaluate(async () => {
     const s = (window as any).__gloam.scene;
     const configPath = '/src/game/config.ts';
@@ -143,8 +128,7 @@ test('defeating the Skybreaker restores resolve once and retains Boro in the chr
   await page.screenshot({ path: test.info().outputPath('skybreaker-defeat-hud.png') });
   const memory = await openDefeatMemory(page);
   await expect(memory).toContainText('8 people watched the great creature fall');
-  await expect(memory.locator('blockquote')).toContainText('Boro');
-  await expect(memory).toContainText('back to the wagons. We aren’t through yet.');
+  await expect(memory.locator('blockquote')).toHaveCount(0);
   const repeated = await page.evaluate(async () => {
     const s = (window as any).__gloam.scene;
     const modulePath = '/src/game/state/finalStand.ts';
@@ -163,71 +147,25 @@ test('defeating the Skybreaker restores resolve once and retains Boro in the chr
     body: JSON.stringify({ reward, repeated }),
     contentType: 'application/json',
   });
-  await page.screenshot({ path: test.info().outputPath('skybreaker-boro-memory.png') });
+  await page.screenshot({ path: test.info().outputPath('skybreaker-memory.png') });
 });
 
-for (const scenario of [
-  { name: 'five survivors still hear Boro', population: 5, speech: true, speaker: 'boro' },
-  { name: 'Camp scenes Off retains the fact without speech', population: 8, speech: false },
-]) {
-  test(`Skybreaker defeat: ${scenario.name}`, async ({ page }) => {
-    test.setTimeout(process.env.CI ? 90000 : 60000);
-    await faceSkybreaker(page);
-    await defeatInCombat(page, { ...scenario, resolve: 90 });
-    const state = await page.evaluate(() => {
-      const s = (window as any).__gloam.scene;
-      return {
-        resolve: s.run.clan.integrity,
-        memories: s.run.legacy.memories.filter((m: any) => m.title === 'The Skybreaker fell'),
-      };
-    });
-    expect(state.resolve).toBe(100);
-    expect(state.memories).toHaveLength(1);
-    expect(state.memories[0].line?.speaker).toBe(scenario.speaker);
-    await test.info().attach('skybreaker-state', {
-      body: JSON.stringify(state),
-      contentType: 'application/json',
-    });
-    if (scenario.speaker === 'boro')
-      await expect(page.locator('#companion-reaction')).toContainText('Boro:');
-    else await expect(page.locator('#companion-reaction')).toBeHidden();
-    const memory = await openDefeatMemory(page);
-    await expect(memory).toContainText(
-      `${scenario.population} people watched the great creature fall`,
-    );
-    if (scenario.speaker) {
-      await expect(memory.locator('blockquote')).toHaveCount(1);
-    } else await expect(memory.locator('blockquote')).toHaveCount(0);
-    await page.screenshot({ path: test.info().outputPath('skybreaker-memory.png') });
-  });
-}
-
 for (const defeated of [true, false]) {
-  test(`surviving the final stand preserves the ${defeated ? 'defeated' : 'living'} Skybreaker epilogue`, async ({
+  test(`surviving the final stand reports the ${defeated ? 'defeated' : 'living'} Skybreaker in results`, async ({
     page,
   }) => {
     test.setTimeout(process.env.CI ? 90000 : 60000);
     await faceSkybreaker(page);
-    if (defeated) await defeatInCombat(page, { population: 8, resolve: 50, speech: true });
+    if (defeated) await defeatInCombat(page, { population: 8, resolve: 50 });
     await page.evaluate(() => {
       const s = (window as any).__gloam.scene;
-      s.run.story.enabled = true;
       s.run.clan.stageTime = 180;
     });
-    await expect(page.getByRole('heading', { name: 'Hold the road.' })).toBeVisible();
-    await expect(page.locator('.story-dialogue')).toContainText(
-      defeated ? 'The great creature has fallen' : 'The great creature is still coming.',
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'won');
+    await expect(page.locator('.end-menu .panel-intro')).toHaveText(
+      'Refuge reached · The Heart of the Steppe · Final stand',
     );
-    await page.getByRole('button', { name: /Continue without choosing/ }).click();
-    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'epilogue');
-    await expect(page.locator('.epilogue-copy')).toContainText(
-      defeated
-        ? 'The Skybreaker has fallen behind them.'
-        : 'The Skybreaker still walks beyond the mountain.',
-    );
-    await expect(page.locator('.epilogue-copy')).toContainText(
-      'Keep a place beside the fire. Someone is still coming home.',
-    );
-    await page.screenshot({ path: test.info().outputPath('skybreaker-epilogue.png') });
+    await expect(page.locator('.end-stats')).toContainText(defeated ? 'Defeated' : 'Undefeated');
+    await page.screenshot({ path: test.info().outputPath('skybreaker-results.png') });
   });
 }

@@ -1,17 +1,5 @@
 import { GAME } from '../config';
 import { BUILDINGS, ROUTES, startingTradition } from '../data/clan';
-import {
-  ARRIVAL_REMNANT,
-  BUILDING_REMNANT,
-  DEPARTURE_REMNANT,
-  ROUTE_ACCOUNTS,
-  STARVATION_REMNANT,
-  arrivalReaction,
-  buildingReaction,
-  departureReaction,
-  lossReaction,
-  starvationReaction,
-} from '../data/storyReactions';
 import type { BuildingId, ClanState, Formation, RunState } from '../types';
 import { applyCampEffects, createCampEffects, hasDevelopment } from './camp';
 import { healKhan } from './campCombat';
@@ -29,7 +17,7 @@ import { passageProgress } from './finalStand';
 import { completeGuidance } from './guidance';
 import { arrivalLocation, availableDestinations } from './journey';
 import { isKhanActive } from './khan';
-import { rememberClan } from './legacy';
+import { ROUTE_ACCOUNTS, rememberClan } from './legacy';
 import { nomadicAssignedWorkers, nomadicPopulationCapacity } from './nomadicCamp';
 
 export function createClan(): ClanState {
@@ -216,8 +204,6 @@ export function buildStructure(
     development
       ? 'The households learned a new craft for the travelling camp.'
       : 'The households raised it in the travelling camp.',
-    buildingReaction(id, development?.id),
-    BUILDING_REMNANT,
   );
   return true;
 }
@@ -251,8 +237,6 @@ export function beginMigration(
     run,
     'The camp packed for the road',
     `${clan.population} people set out for ${destination.name}. ${ROUTE_ACCOUNTS[route.id].departed}`,
-    departureReaction(run, route.id),
-    DEPARTURE_REMNANT,
   );
   return true;
 }
@@ -290,7 +274,7 @@ export function damageClan(
     Math.floor((GAME.clan.maxResolve - previous) / GAME.clan.resolveLossBand);
   if (bandsCrossed > 0) {
     const peopleLost = Math.min(clan.population, bandsCrossed);
-    run.story.peopleLost += peopleLost;
+    run.legacy.peopleLost += peopleLost;
     clan.population -= peopleLost;
     clan.herd = Math.max(0, clan.herd - 1);
     clan.message = 'The clan has suffered losses. Bring your riders back to guard.';
@@ -302,8 +286,6 @@ export function damageClan(
         cause === 'starvation'
           ? `With the provisions gone, the clan lost ${loss}. The other households carried on.`
           : `${cause === 'eruption' ? 'The ground erupted and' : cause === 'seer' ? 'A seer struck and' : cause === 'area' ? 'A spell or a shifting of the land near camp' : 'An attack'} cost the clan ${loss}. The other households carried on.`,
-        lossReaction(run, peopleLost),
-        `${peopleLost === 1 ? 'One' : peopleLost} fewer beneath the banner. The loss remains in the tally.`,
       );
     }
   }
@@ -358,7 +340,7 @@ export function advanceClan(
   ) {
     const starvationLoss = Number(clan.population > 0);
     metricCasualties(run, starvationLoss);
-    if (clan.population > 0) run.story.peopleLost += 1;
+    if (clan.population > 0) run.legacy.peopleLost += 1;
     clan.population = Math.max(0, clan.population - 1);
     clan.herd = Math.max(0, clan.herd - 1);
     run.safety.starvationLosses += starvationLoss;
@@ -372,8 +354,6 @@ export function advanceClan(
       run,
       'The provisions ran out',
       'Hunger cost the clan a person and a horse. If resolve stays low, more losses may follow.',
-      starvationReaction(run),
-      STARVATION_REMNANT,
     );
   }
   if (clan.population === 0 || clan.integrity === 0) return 'lost';
@@ -396,7 +376,7 @@ export function advanceClan(
     clan.region += 1;
     clan.locationId = destination.id;
     clan.destinationId = undefined;
-    run.story.crossings.push({
+    run.legacy.crossings.push({
       route: route.id,
       region: clan.region,
       population: clan.population,
@@ -415,8 +395,6 @@ export function advanceClan(
       run,
       arrivedPeople ? 'New households at the fire' : 'The caravan arrived',
       `${clan.population} people reached ${destination.name} ${ROUTE_ACCOUNTS[route.id].arrived}.`,
-      arrivalReaction(run, route.id, arrivedPeople),
-      ARRIVAL_REMNANT,
     );
     return 'arrived';
   }

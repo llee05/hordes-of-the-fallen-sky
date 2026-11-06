@@ -7,17 +7,13 @@ import {
   startExpedition,
 } from './helpers';
 
-test('companions acknowledge camp work and the chronicle retains the real Khan succession', async ({
-  page,
-}) => {
+test('the chronicle retains camp work and the real Khan succession', async ({ page }) => {
   await page.goto('/');
   await startExpedition(page);
-  await page.locator('[data-story-choice="share-work"]').click();
   await page.keyboard.press('b');
   await selectCampBuilding(page, 'archery');
   await buyNode(page, 'archery-base');
   await closeOverlayOrPause(page);
-  await expect(page.locator('#companion-reaction')).toContainText('Boro:');
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.spawnTimer = 999;
@@ -26,7 +22,6 @@ test('companions acknowledge camp work and the chronicle retains the real Khan s
     scene.invulnerable = 0;
     scene.takeDamage(1000);
   });
-  await expect(page.locator('#companion-reaction')).toContainText('The road still needs a Khan');
   await page.keyboard.press('j');
   await page.getByRole('tab', { name: 'Your clan' }).click();
   await expect(page.getByRole('region', { name: 'Those who carried the banner' })).toContainText(
@@ -44,13 +39,14 @@ test('companions acknowledge camp work and the chronicle retains the real Khan s
   });
   await expect(page.locator('#khan-title')).toHaveText('THE KHAN · 2');
   await page.keyboard.press('j');
-  await page.getByRole('tab', { name: 'Our story' }).click();
+  await page.getByRole('tab', { name: 'Your clan' }).click();
   await expect(page.locator('.khan-records li')).toHaveCount(2);
   await expect(page.locator('.clan-memories')).toContainText('Khan 1 fell');
   await expect(page.locator('.clan-memories')).toContainText('Khan 2 took the banner');
   await page.locator('.clan-memory summary').first().click();
   await expect(page.locator('.clan-memory').first()).toContainText(
-    'Good bows. I hope they ride the whole road on the cart.',
+    'The Golden Pasture · The clan established this household to level 1.',
   );
+  await expect(page.locator('.clan-memory blockquote')).toHaveCount(0);
   await page.screenshot({ path: 'test-results/clan-lived-history.png' });
 });

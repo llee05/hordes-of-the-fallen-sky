@@ -1413,8 +1413,9 @@ canvas {
 }
 .end-stats {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 55px;
+  gap: 24px 36px;
   margin: 30px 0;
 }
 .end-stats strong {
@@ -1430,6 +1431,52 @@ canvas {
   margin-top: 9px;
   color: #a4baa4;
   letter-spacing: 1px;
+}
+.khan-records,
+.clan-memories {
+  margin-bottom: 24px;
+}
+.khan-records ol {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.khan-records li {
+  border-left: 2px solid #b48a48;
+  padding: 8px 14px;
+  background: #b48a4810;
+}
+.khan-records li > * {
+  display: block;
+  margin-bottom: 4px;
+}
+.khan-records small {
+  line-height: 1.5;
+  color: #675945;
+}
+.clan-memory {
+  border: 1px solid #9f815144;
+  border-left: 3px solid #a76b41;
+  background: #d7bf8b33;
+  margin-bottom: 12px;
+}
+.clan-memory summary {
+  padding: 16px;
+  cursor: pointer;
+  color: #35443d;
+  font-weight: 600;
+}
+.clan-memory summary small {
+  display: block;
+  margin: 7px 0 0 17px;
+  font: 10px var(--mono);
+  color: var(--paper-muted);
+}
+.clan-memory-body {
+  padding: 6px 20px 18px;
+  display: grid;
+  gap: 13px;
 }
 .save-alert {
   position: absolute;
@@ -2068,15 +2115,6 @@ canvas {
     font-size: 11px;
     line-height: 1.4;
     margin-block: 6px;
-  }
-  .chronicle-toast:has(.companion-reaction:not([hidden])) #clan-message {
-    display: none;
-  }
-  .chronicle-toast .companion-reaction {
-    border-top: 0;
-    padding-top: 0;
-    margin-top: 0;
-    font-size: 11px;
   }
 }
 

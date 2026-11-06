@@ -61,7 +61,7 @@ export function needsFullSuite(files) {
 
     // Known application content that can be safely mapped to areas:
     if (
-      /^src\/(game\/(data|state|entities|animation|audio|dev|systems|story)\/|ui\/|shared\/|[^/]+\.css$)/.test(
+      /^src\/(game\/(data|state|entities|animation|audio|dev|systems)\/|ui\/|shared\/|[^/]+\.css$)/.test(
         file,
       )
     ) {
@@ -121,15 +121,6 @@ export const AREA_SPEC_MAPPINGS = [
   {
     pattern: /finalStand/i,
     specs: ['tests/e2e/final-stand.spec.ts'],
-  },
-  {
-    pattern: /(story|intro)/i,
-    specs: [
-      'tests/e2e/intro.spec.ts',
-      'tests/e2e/story.spec.ts',
-      'tests/e2e/story-controller.spec.ts',
-      'tests/e2e/story-journey.spec.ts',
-    ],
   },
   {
     pattern: /(clan|khan|tradition|economy|guidance|legacy|metrics)/i,

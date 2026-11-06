@@ -30,7 +30,6 @@ describe('browser review selection', () => {
       needsFullSuite([
         'src/game/state/clan.ts',
         'src/tapestry.css',
-        'src/story.md',
         'public/credits.md',
         'README.md',
         'docs/final-stand.md',

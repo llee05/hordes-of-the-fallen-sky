@@ -2,16 +2,13 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProfileStore } from '../../desktop/profile';
-import { LOCATIONS, ROUTES, STARTING_TRADITIONS } from '../../src/game/data/clan';
-import { STORY_ORDER, storyEncounter } from '../../src/game/data/story';
+import { STARTING_TRADITIONS } from '../../src/game/data/clan';
 import { syncAreaEncounter } from '../../src/game/state/areaEncounters';
 import { beginMigration } from '../../src/game/state/clan';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
 import { syncFinalStand } from '../../src/game/state/finalStand';
 import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
 import { createRun } from '../../src/game/state/run';
-import { openNextStory, resolveStory } from '../../src/game/state/story';
-import type { RunState } from '../../src/game/types';
 import { GamePlatform } from '../../src/platform/GamePlatform';
 import { createLegacyCampRun } from '../support/legacyCamp';
 import { world } from './fixtures/expedition';
@@ -36,8 +33,6 @@ describe('full expedition snapshots', () => {
     for (let level = 0; level < 3; level++)
       expect(purchaseNomadicBuilding(run, 'fletchers-workshop')).toBe(true);
     run.phase = 'playing';
-    expect(openNextStory(run)).toBe(true);
-    expect(resolveStory(run, 'share-work')).toBe(true);
     run.xp = 3;
     const save = captureExpedition(run, world());
     const legacy = save.run as Record<string, any>;
@@ -81,81 +76,123 @@ describe('full expedition snapshots', () => {
     expect(restored.clan.estate).toBeUndefined();
     expect(restored.xp).toBe(3);
     expect(restored.health).toBe(40);
-    expect(restored.story).toEqual(run.story);
     expect(restored.legacy).toEqual(run.legacy);
   });
 
-  it('accepts authored story images and valid chronicle indexes across all destinations', () => {
-    for (const location of LOCATIONS) {
-      for (const region of [0, 1, 2, 3]) {
-        const run = createRun();
-        run.clan.locationId = location.id;
-        run.clan.region = region;
-        run.legacy.khans[0]!.region = region;
-        run.legacy.khans[0]!.fallenRegion = region;
-        run.story.crossings = [1, 2, 3].map((region, index) => ({
-          region,
-          route: ROUTES[index]!.id,
+  it('loads a pre-change save fixture with story records, resolved choices and story camp effects', () => {
+    const run = createRun('pathfinders');
+    run.phase = 'building';
+    run.clan.materials = 1000;
+    run.clan.spirit = 1000;
+    expect(purchaseNomadicBuilding(run, 'khans-ger')).toBe(true);
+    expect(purchaseNomadicBuilding(run, 'fletchers-workshop')).toBe(true);
+    const expectedEffects = structuredClone(run.clan.campEffects);
+    const expectedIdentity = structuredClone(run.clan.identity);
+    run.legacy.memories.push({
+      sequence: 1,
+      elapsed: 12,
+      region: 0,
+      locationId: 'golden-pasture',
+      population: 8,
+      title: 'Fletcher’s Workshop · Lv 1',
+      detail: 'Fletcher’s Workshop reached level 1.',
+    });
+    const preChangeSave = captureExpedition(run, world()) as Record<string, any>;
+    preChangeSave.run.phase = 'story';
+    preChangeSave.run.clan.campEffects.multipliers.materialProduction *= 1.03;
+    preChangeSave.run.clan.campEffects.bonuses.refugePeople += 1;
+    preChangeSave.run.clan.identity.iron += 1;
+    preChangeSave.run.clan.identity.wander += 1;
+    delete preChangeSave.run.legacy.crossings;
+    delete preChangeSave.run.legacy.peopleLost;
+    preChangeSave.run.legacy.reactionUntil = 25;
+    preChangeSave.run.legacy.memories[0].line = {
+      speaker: 'boro',
+      text: 'Straight shafts win before the horses meet.',
+    };
+    preChangeSave.run.story = {
+      enabled: true,
+      seen: ['fire', 'departure'],
+      peopleLost: 2,
+      crossings: [{ route: 'river', region: 1, population: 11, locationId: 'orkhon-valley' }],
+      active: {
+        id: 'river',
+        act: 1,
+        title: 'Where the water narrows.',
+        image: 'pasture-camp.png',
+        setting: 'At the ford.',
+        lines: [{ speaker: 'boro', text: 'Hold the bank.' }],
+        choices: [
+          {
+            id: 'hold-bank',
+            label: 'Hold the bank',
+            description: 'Keep the line.',
+            response: 'The riders steady.',
+            benefit: 'resolve',
+            doctrine: 'iron',
+          },
+        ],
+      },
+      records: [
+        {
+          encounter: {
+            id: 'fire',
+            act: 1,
+            title: 'A place beside the fire.',
+            image: 'hearth-fire.png',
+            setting: 'Around the first fire.',
+            lines: [{ speaker: 'saran', text: 'Keep the hearth.' }],
+            choices: [],
+          },
+          choice: {
+            id: 'share-work',
+            label: 'Share the work',
+            description: 'Every hand helps.',
+            response: 'The camp settles.',
+            benefit: 'materials',
+            doctrine: 'iron',
+          },
+          elapsed: 5,
           population: 8,
-          locationId: location.id,
-        }));
-        run.story.records = STORY_ORDER.map((id) => ({
-          encounter: storyEncounter(run, id),
-          elapsed: 0,
-          population: 8,
-          status: 'skipped',
-        }));
-        expect(decodeExpedition(captureExpedition(run, world())).run.story.records).toEqual(
-          run.story.records,
-        );
-      }
-    }
-  });
-
-  it('loads and resolves every authored choice without losing its saved outcome', () => {
-    for (const beat of STORY_ORDER) {
-      for (const option of storyEncounter(createRun(), beat).choices) {
-        const run = createRun();
-        run.story.active = storyEncounter(run, beat);
-        const loaded = decodeExpedition(captureExpedition(run, world())).run;
-        expect(resolveStory(loaded, option.id)).toBe(true);
-        const restored = decodeExpedition(captureExpedition(loaded, world())).run;
-        expect(restored.story.records[0]!.choice).toEqual(option);
-      }
-    }
-  });
-
-  it.each(['toString', 'constructor', '__proto__', 'unknown'])(
-    'rejects the unauthored choice ID %s in every saved representation',
-    (id) => {
-      for (const beat of ['court', 'river', 'earth'] as const) {
-        const run = createRun();
-        run.clan.region = 2;
-        const encounter = storyEncounter(run, beat);
-        run.story.active = storyEncounter(run, 'opening');
-        run.story.records.push({
-          encounter,
-          choice: encounter.choices[0],
-          elapsed: 0,
-          population: run.clan.population,
           status: 'chosen',
-        });
-        const snapshot = captureExpedition(run, world());
-        for (const representation of ['active', 'recorded', 'selected']) {
-          const corrupted = structuredClone(snapshot);
-          const story = (corrupted.run as unknown as RunState).story;
-          const option =
-            representation === 'active'
-              ? story.active!.choices[0]!
-              : representation === 'recorded'
-                ? story.records[0]!.encounter.choices[0]!
-                : story.records[0]!.choice!;
-          option.id = id;
-          expect(() => decodeExpedition(corrupted)).toThrow('damaged or incompatible');
-        }
-      }
-    },
-  );
+        },
+        {
+          encounter: {
+            id: 'departure',
+            act: 1,
+            title: 'Before the wagons turn.',
+            image: 'caravan-wagons.png',
+            setting: 'By the wagons.',
+            lines: [{ speaker: 'erden', text: 'Count the stores.' }],
+            choices: [],
+          },
+          choice: {
+            id: 'travel-light',
+            label: 'Travel light',
+            description: 'Move quickly.',
+            response: 'The wagons roll.',
+            benefit: 'food',
+            doctrine: 'wander',
+          },
+          elapsed: 48,
+          population: 9,
+          status: 'chosen',
+        },
+      ],
+    };
+
+    const restored = decodeExpedition(preChangeSave).run;
+    expect(restored.phase).toBe('paused');
+    expect(restored).not.toHaveProperty('story');
+    expect(restored.clan.campEffects).toEqual(expectedEffects);
+    expect(restored.clan.identity).toEqual(expectedIdentity);
+    expect(restored.legacy.peopleLost).toBe(2);
+    expect(restored.legacy.crossings).toEqual([
+      { route: 'river', region: 1, population: 11, locationId: 'orkhon-valley' },
+    ]);
+    expect(restored.legacy).not.toHaveProperty('reactionUntil');
+    expect(restored.legacy.memories[0]).not.toHaveProperty('line');
+  });
 
   it.each([
     [
@@ -186,44 +223,25 @@ describe('full expedition snapshots', () => {
     [
       'crossing region zero',
       (s: any) => {
-        s.run.story.crossings[0].region = 0;
+        s.run.legacy.crossings[0].region = 0;
       },
     ],
     [
       'crossing region four',
       (s: any) => {
-        s.run.story.crossings[0].region = 4;
+        s.run.legacy.crossings[0].region = 4;
       },
     ],
     [
       'unknown route',
       (s: any) => {
-        s.run.story.crossings[0].route = 'unknown';
-      },
-    ],
-    [
-      'unknown active image',
-      (s: any) => {
-        s.run.story.active.image = 'unknown.png';
-      },
-    ],
-    [
-      'unknown recorded image',
-      (s: any) => {
-        s.run.story.records[0].encounter.image = 'unknown.png';
+        s.run.legacy.crossings[0].route = 'unknown';
       },
     ],
   ])('rejects incompatible chronicle content: %s', async (_label, corrupt) => {
     const run = createRun();
     run.phase = 'playing';
-    openNextStory(run);
-    run.story.records.push({
-      encounter: structuredClone(run.story.active!),
-      elapsed: 0,
-      population: 8,
-      status: 'skipped',
-    });
-    run.story.crossings.push({ region: 1, route: 'river', population: 8 });
+    run.legacy.crossings.push({ region: 1, route: 'river', population: 8 });
     run.legacy.memories.push({
       sequence: 1,
       elapsed: 0,
@@ -339,25 +357,9 @@ describe('full expedition snapshots', () => {
     restored.run.clan.food = 0;
     expect(save.run.clan).not.toEqual(restored.run.clan);
   });
-  it('retains resolved story transcripts and resumes an unresolved choice without paying it twice', () => {
-    const run = createRun();
-    run.phase = 'playing';
-    expect(openNextStory(run)).toBe(true);
-    const saved = captureExpedition(run, world());
-    const first = decodeExpedition(saved).run;
-    const id = first.story.active!.choices[0]!.id;
-    expect(first.phase).toBe('story');
-    expect(resolveStory(first, id)).toBe(true);
-    const food = first.clan.food;
-    const second = decodeExpedition(captureExpedition(first, world())).run;
-    expect(second.story.records).toEqual(first.story.records);
-    expect(resolveStory(second, id)).toBe(false);
-    expect(second.clan.food).toBe(food);
-  });
   it('preserves succession and migration without healing, resetting the timer or paying arrival', () => {
     const run = createRun();
     run.phase = 'playing';
-    run.story.enabled = false;
     run.clan.stageTime = 120;
     run.phase = 'route';
     expect(beginMigration(run, 'river')).toBe(true);
@@ -406,7 +408,7 @@ describe('full expedition snapshots', () => {
         s.run.field.objective = { status: 'available' };
       },
       (s: any) => {
-        s.run.story.active = {};
+        s.run.legacy.crossings = [{}];
       },
       (s: any) => {
         s.world.enemies[0].slot = 5;

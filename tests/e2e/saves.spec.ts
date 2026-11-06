@@ -135,7 +135,6 @@ test('a carved 2.5D migration route and crossing resume with the same terrain an
 }) => {
   test.setTimeout(90000);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await startExpedition(page, { legacyCamp: false });
   await page.evaluate(() => {
     const s = (window as any).__gloam.scene;

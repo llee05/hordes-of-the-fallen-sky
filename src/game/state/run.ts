@@ -9,7 +9,6 @@ import { completeGuidance } from './guidance';
 import { createLegacy } from './legacy';
 import { createMountedCombat } from './mountedCombat';
 import { initializeNomadicCamp, nomadicExperienceMultiplier } from './nomadicCamp';
-import { createStory } from './story';
 
 export function xpForLevel(level: number): number {
   return 8 + (level - 1) * 6;
@@ -38,7 +37,6 @@ export function createRun(tradition: StartingTraditionId = 'shared-hearth'): Run
     xp: 0,
     nextLevelXp: xpForLevel(1),
     clan,
-    story: createStory(),
     stats: {
       maxHealth: GAME.player.health,
       speed: GAME.player.speed * balance.speed,

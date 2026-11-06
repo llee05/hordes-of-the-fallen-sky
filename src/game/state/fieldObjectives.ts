@@ -2,14 +2,9 @@ import { nomadicPopulationCapacity } from './nomadicCamp';
 import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import { FIELD_OBJECTIVES, type FieldObjectiveKind } from '../data/fieldObjectives';
-import {
-  FIELD_OBJECTIVE_ACCOUNTS,
-  FIELD_OBJECTIVE_REMNANTS,
-  fieldObjectiveReaction,
-} from '../data/storyReactions';
 import type { RunState } from '../types';
 import { currentLocation } from './journey';
-import { rememberClan } from './legacy';
+import { FIELD_OBJECTIVE_ACCOUNTS, rememberClan } from './legacy';
 import { isKhanActive } from './khan';
 
 export interface FieldObjective {
@@ -95,8 +90,6 @@ export function completeFieldObjective(run: RunState): boolean {
     run,
     definition.title,
     `${FIELD_OBJECTIVE_ACCOUNTS[objective.kind]} ${definition.reward}.`,
-    fieldObjectiveReaction(run, objective.kind),
-    FIELD_OBJECTIVE_REMNANTS[objective.kind],
   );
   return true;
 }

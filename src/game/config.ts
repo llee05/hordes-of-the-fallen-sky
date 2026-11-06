@@ -372,32 +372,9 @@ export const GAME = {
       horses: { materials: 44, arrivalHerd: 1, arrivalResolve: 4 },
     },
   },
-  story: {
-    campBeatDelay: 15,
-    reactionDuration: 8,
+  legacy: {
     memoryLimit: 96,
     khanRecordLimit: 64,
-    finalBeatTime: 90,
-    gifts: { food: 8, materials: 6, spirit: 4, resolve: 5 },
-    identityPerChoice: 1,
-    /** Companion trust derived from chosen responses; thresholds for the chronicle and ending. */
-    bonds: { close: 2, strained: -1 },
-    /** Small permanent camp effects attached to some responses; applied once on choosing. */
-    lasting: {
-      sharedLabour: 1.04, // material production multiplier
-      namedWatches: 0.96, // clan damage multiplier
-      carefulRations: 0.97, // food consumption multiplier
-      roomInWagons: 1, // extra people per blue-banner rescue
-      testedGround: 1.04, // food production multiplier
-      sharedSongs: 1.05, // spirit gain multiplier
-      countedWatch: 0.05, // clan resolve recovered per active second
-      everyName: 1.05, // spirit gain multiplier
-      mendedWheels: 1.05, // caravan mobility multiplier
-      restedHands: 0.06, // clan resolve recovered per active second
-      sharedTally: 0.97, // food consumption multiplier
-      witnessAccount: 1.05, // spirit gain multiplier
-      plainOrders: 0.96, // clan damage multiplier
-    },
   },
   clan: {
     maxResolve: 100,

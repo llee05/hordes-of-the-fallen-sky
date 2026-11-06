@@ -28,7 +28,6 @@ export function pacingBenchmark(
     config = GAME.pacing,
     plan = config[style];
   run.phase = 'playing';
-  run.story.enabled = false;
   metricStage(run);
   let nextKill: number = config.firstContact,
     nextContact: number = config.contactEvery;

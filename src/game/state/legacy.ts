@@ -1,14 +1,40 @@
 import { GAME } from '../config';
-import type { LocationId, RunState } from '../types';
-import type { StoryLine } from '../story/types';
+import { REGIONS } from '../data/clan';
+import type { CrossingRoute } from '../data/crossings';
+import type { FieldObjectiveKind } from '../data/fieldObjectives';
 import { currentLocation } from './journey';
-import {
-  CHOSEN_KHAN_REMNANT,
-  FALLEN_KHAN_REMNANT,
-  chosenKhanReaction,
-  clanVoiceLine,
-  fallenKhanReaction,
-} from '../data/storyReactions';
+import type { CrossingRecord, LocationId, RunState } from '../types';
+
+const STAGE_NAMES: Record<RunState['clan']['stage'], string> = {
+  camp: 'Encampment',
+  migration: 'Crossing',
+  final: 'Final stand',
+};
+
+/** How the caravan travelled each approach, for departure and arrival memories. */
+export const ROUTE_ACCOUNTS: Record<CrossingRoute, { departed: string; arrived: string }> = {
+  river: { departed: 'They followed the river.', arrived: 'by the river road' },
+  ridge: { departed: 'They took the high ridge.', arrived: 'over the high ridge' },
+  refuge: {
+    departed: 'They rode out to answer the blue banners.',
+    arrived: 'after answering the blue banners',
+  },
+};
+
+/** What a completed crossing objective accomplished, before its reward is listed. */
+export const CROSSING_OBJECTIVE_ACCOUNTS: Record<CrossingRoute, string> = {
+  river: 'The ford held against the attackers on both banks.',
+  ridge: 'The ridge attackers were defeated.',
+  refuge: 'The households under the blue banners were brought safely into the column.',
+};
+
+/** What a completed field objective accomplished, before its reward is listed. */
+export const FIELD_OBJECTIVE_ACCOUNTS: Record<FieldObjectiveKind, string> = {
+  supplies: 'The cart was cleared and its load gathered.',
+  herd: 'The loose horses were ridden back to camp.',
+  refugees: 'The stranded households were escorted back to camp.',
+  gathering: 'The raiding band was beaten.',
+};
 
 export interface KhanRecord {
   trait?: import('../data/successors').SuccessorTrait;
@@ -32,7 +58,6 @@ export interface ClanMemory {
   population: number;
   title: string;
   detail: string;
-  line?: StoryLine;
 }
 
 export interface ClanLegacy {
@@ -40,7 +65,22 @@ export interface ClanLegacy {
   khans: KhanRecord[];
   memories: ClanMemory[];
   totalMemories: number;
-  reactionUntil: number;
+  crossings: CrossingRecord[];
+  peopleLost: number;
+}
+
+export interface JourneyResults {
+  outcome: 'Refuge reached' | 'Clan lost';
+  location: string;
+  stage: string;
+  elapsed: number;
+  survivors: number;
+  herd: number;
+  pastures: string;
+  crossings: number;
+  peopleLost: number;
+  fallenKhans: number;
+  skybreaker: 'Defeated' | 'Undefeated' | 'Not reached';
 }
 
 export function createLegacy(): ClanLegacy {
@@ -48,25 +88,14 @@ export function createLegacy(): ClanLegacy {
     khans: [{ generation: 1, chosenAt: 0, region: 0, people: 8, killsAtStart: 0 }],
     memories: [],
     totalMemories: 0,
-    reactionUntil: 0,
+    crossings: [],
+    peopleLost: 0,
   };
 }
 
-/** Facts are retained even with camp scenes off. Only a reaction actually shown gets a transcript. */
-export function rememberClan(
-  run: RunState,
-  title: string,
-  detail: string,
-  reaction: StoryLine | undefined,
-  remnant: string,
-): void {
+/** Records a factual clan moment in the chronicle. */
+export function rememberClan(run: RunState, title: string, detail: string): void {
   const legacy = run.legacy;
-  const canSpeak =
-    reaction !== undefined &&
-    run.clan.population > 0 &&
-    run.story.enabled &&
-    run.elapsed >= legacy.reactionUntil;
-  const line = canSpeak ? (run.clan.population < 5 ? clanVoiceLine(remnant) : reaction) : undefined;
   legacy.totalMemories += 1;
   legacy.memories.push({
     sequence: legacy.totalMemories,
@@ -76,18 +105,8 @@ export function rememberClan(
     population: run.clan.population,
     title,
     detail,
-    line,
   });
-  if (line) legacy.reactionUntil = run.elapsed + GAME.story.reactionDuration;
-  if (legacy.memories.length > GAME.story.memoryLimit) legacy.memories.shift();
-}
-
-export function currentReaction(run: RunState): ClanMemory | undefined {
-  if (run.elapsed >= run.legacy.reactionUntil) return;
-  for (let i = run.legacy.memories.length - 1; i >= 0; i -= 1) {
-    const memory = run.legacy.memories[i]!;
-    if (memory.line) return memory;
-  }
+  if (legacy.memories.length > GAME.legacy.memoryLimit) legacy.memories.shift();
 }
 
 export function rememberFallenKhan(run: RunState): void {
@@ -101,8 +120,6 @@ export function rememberFallenKhan(run: RunState): void {
     run,
     `Khan ${run.khan.generation} fell`,
     'The clan began choosing another leader while its defenses fought on.',
-    fallenKhanReaction(run),
-    FALLEN_KHAN_REMNANT,
   );
 }
 
@@ -116,12 +133,33 @@ export function rememberChosenKhan(run: RunState): void {
     people: run.clan.population,
     killsAtStart: run.kills,
   });
-  if (run.legacy.khans.length > GAME.story.khanRecordLimit) run.legacy.khans.shift();
+  if (run.legacy.khans.length > GAME.legacy.khanRecordLimit) run.legacy.khans.shift();
   rememberClan(
     run,
     `Khan ${run.khan.generation} took the banner`,
     `${run.clan.population} people carried their camp, traditions, and journey forward under the new Khan.`,
-    chosenKhanReaction(run),
-    CHOSEN_KHAN_REMNANT,
   );
+}
+
+export function journeyResults(run: RunState): JourneyResults {
+  return {
+    outcome: run.legacy.outcome === 'won' || run.phase === 'won' ? 'Refuge reached' : 'Clan lost',
+    location: currentLocation(run).name,
+    stage: STAGE_NAMES[run.clan.stage],
+    elapsed: run.elapsed,
+    survivors: run.clan.population,
+    herd: run.clan.herd,
+    pastures: `${run.clan.region + 1}/${REGIONS.length}`,
+    crossings: run.legacy.crossings.length,
+    peopleLost: run.legacy.peopleLost,
+    fallenKhans: Math.max(
+      run.legacy.khans.filter((khan) => khan.fallenAt !== undefined).length,
+      run.khan.generation - 1 + (run.khan.successionRemaining > 0 ? 1 : 0),
+    ),
+    skybreaker: run.clan.finalBossDefeated
+      ? 'Defeated'
+      : run.clan.stage === 'final' || run.clan.finalBossSpawned
+        ? 'Undefeated'
+        : 'Not reached',
+  };
 }

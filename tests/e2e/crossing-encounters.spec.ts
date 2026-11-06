@@ -83,7 +83,6 @@ test('the angled river route carves an actual connected ford and preserves live 
 }) => {
   test.setTimeout(120000);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await startExpedition(page, { legacyCamp: false });
   await expect
     .poll(

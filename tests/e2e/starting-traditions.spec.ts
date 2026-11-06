@@ -21,7 +21,6 @@ test(
       await page.locator('.starting-traditions').evaluate((el) => el.scrollWidth <= el.clientWidth),
     ).toBe(true);
     await page.getByRole('button', { name: /Begin expedition/ }).click();
-    await page.getByRole('button', { name: /Skip intro/ }).click();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
     const run = await page.evaluate(() => (window as any).__gloam.scene.run);
@@ -58,5 +57,8 @@ test('Back keeps the chosen arrangement ready for New Game without starting time
   ).toBeVisible();
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.xp)).toBe(0);
   await page.getByRole('button', { name: /NEW GAME/ }).click();
-  await expect(page.getByRole('heading', { name: 'Beneath Eternal Heaven.' })).toBeVisible();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.startingTradition)).toBe(
+    'hearthkeepers',
+  );
 });

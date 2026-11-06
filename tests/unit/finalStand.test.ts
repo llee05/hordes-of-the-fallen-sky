@@ -82,7 +82,6 @@ it('the Skybreaker falls once: flag, capped resolve, and a single remembered mom
   expect(run.legacy.totalMemories).toBe(before + 1);
   const memory = run.legacy.memories.at(-1)!;
   expect(memory.title).toBe('The Skybreaker fell');
-  expect(memory.line?.speaker).toBe('boro');
   const settled = structuredClone({ clan: run.clan, legacy: run.legacy });
   expect(defeatSkybreaker(run)).toBe(false);
   expect({ clan: run.clan, legacy: run.legacy }).toEqual(settled);
@@ -91,18 +90,4 @@ it('the Skybreaker falls once: flag, capped resolve, and a single remembered mom
   full.clan.integrity = 100 - GAME.finalStand.bossResolve / 2;
   defeatSkybreaker(full);
   expect(full.clan.integrity).toBe(100);
-});
-it('the Skybreaker memory follows the remnant voice and Camp scenes: Off', () => {
-  const remnant = finale();
-  remnant.clan.population = 3;
-  defeatSkybreaker(remnant);
-  expect(remnant.legacy.memories.at(-1)!.line).toEqual({
-    speaker: 'clan',
-    text: 'The great creature lies still, and the few who remain turn back to the wagons.',
-  });
-  const quiet = finale();
-  quiet.story.enabled = false;
-  defeatSkybreaker(quiet);
-  expect(quiet.legacy.memories).toHaveLength(1);
-  expect(quiet.legacy.memories[0]!.line).toBeUndefined();
 });

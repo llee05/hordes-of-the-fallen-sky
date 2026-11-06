@@ -10,7 +10,6 @@ import {
   currentLocation,
 } from '../../src/game/state/journey';
 import { createRun } from '../../src/game/state/run';
-import { openNextStory } from '../../src/game/state/story';
 
 describe('developer level checkpoints', () => {
   it('covers every chapter, every crossing approach, and each named camp in chapters 2 and 3', () => {
@@ -45,9 +44,7 @@ describe('developer level checkpoints', () => {
       expect(run.clan.food).toBeGreaterThan(0);
       expect(run.clan.materials).toBeGreaterThanOrEqual(GAME.developer.materials);
       expect(run.level).toBe(GAME.developer.experienceLevels + 1);
-      expect(run.story.crossings).toHaveLength(level.region);
-      expect(openNextStory(run)).toBe(false);
-      expect(run.story.records.every((record) => record.status === 'passed')).toBe(true);
+      expect(run.legacy.crossings).toHaveLength(level.region);
       if (level.routeId) {
         expect(run.clan.stage).toBe('migration');
         expect(run.clan.routeId).toBe(level.routeId);
@@ -55,7 +52,7 @@ describe('developer level checkpoints', () => {
         const route = ROUTES.find((entry) => entry.id === level.routeId)!;
         const destination = arrivalLocation(run).id;
         expect(advanceClan(run, crossingDuration(run, route))).toBe('arrived');
-        expect(run.story.crossings).toHaveLength(level.region + 1);
+        expect(run.legacy.crossings).toHaveLength(level.region + 1);
         expect(currentLocation(run).id).toBe(destination);
         expect(advanceClan(run, 0.01)).not.toBe('arrived');
       } else if (level.region === REGIONS.length - 1) {
@@ -83,7 +80,6 @@ describe('developer level checkpoints', () => {
     createDeveloperRun('chapter:heart-of-the-steppe');
     expect(createRun()).toEqual(normal);
     expect(normal.phase).toBe('ready');
-    expect(normal.story.enabled).toBe(true);
     expect(normal.guidance.enabled).toBe(true);
   });
 });

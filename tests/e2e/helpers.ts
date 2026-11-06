@@ -33,17 +33,15 @@ export async function expectFrozen<T>(
 
 export async function openTitle(page: Page): Promise<void> {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Camp scenes: On' }).click();
   await expect(page.locator('canvas[data-world-renderer="3d"]')).toBeVisible();
 }
 
-/** Start through the real New Game and prologue actions, leaving camp-scene preferences intact. */
+/** Start through the real New Game action. */
 export async function startExpedition(
   page: Page,
   options: { legacyCamp?: boolean } = {},
 ): Promise<void> {
   await page.getByRole('button', { name: /NEW GAME/ }).click();
-  await page.getByRole('button', { name: /Skip intro/ }).click();
   // All new expeditions now share the five-core/five-choice model.
   void options;
 }
