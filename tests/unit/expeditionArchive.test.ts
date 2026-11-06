@@ -100,6 +100,8 @@ describe('full expedition snapshots', () => {
     });
     const preChangeSave = captureExpedition(run, world()) as Record<string, any>;
     preChangeSave.run.phase = 'story';
+    preChangeSave.run.clan.message =
+      'Saran sets the spare bowl beside the others. Someone hands Nara a mallet.';
     preChangeSave.run.clan.campEffects.multipliers.materialProduction *= 1.03;
     preChangeSave.run.clan.campEffects.bonuses.refugePeople += 1;
     preChangeSave.run.clan.identity.iron += 1;
@@ -184,6 +186,7 @@ describe('full expedition snapshots', () => {
 
     const restored = decodeExpedition(preChangeSave).run;
     expect(restored.phase).toBe('paused');
+    expect(restored.clan.message).toBe('');
     expect(restored).not.toHaveProperty('story');
     expect(restored.clan.campEffects).toEqual(expectedEffects);
     expect(restored.clan.identity).toEqual(expectedIdentity);

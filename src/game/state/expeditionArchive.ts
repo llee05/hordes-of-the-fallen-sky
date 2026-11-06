@@ -562,6 +562,7 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
   migrateLegacyNomadicCamp(restored.run);
   syncNomadicBuildings(restored.run);
   if (retiredStory) {
+    restored.run.clan.message = '';
     const legacy = restored.run.legacy;
     legacy.totalMemories = Math.max(legacy.totalMemories, legacy.memories.length);
     const firstSequence = legacy.totalMemories - legacy.memories.length + 1;
