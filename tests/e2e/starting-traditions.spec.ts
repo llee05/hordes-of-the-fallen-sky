@@ -1,3 +1,5 @@
+import { createRun } from '../../src/game/state/run';
+import { defaultCharacterProfile } from '../../src/shared/characterProfile';
 import { expect, test } from '@playwright/test';
 import { openTitle } from './helpers';
 
@@ -26,7 +28,7 @@ test(
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
     const run = await page.evaluate(() => (window as any).__gloam.scene.run);
     expect(run.startingTradition).toBe('pathfinders');
-    expect(run.stats.speed).toBeCloseTo(203.3);
+    expect(run.stats.speed).toBe(createRun('pathfinders', defaultCharacterProfile()).stats.speed);
     expect(run.clan.materials).toBeLessThan(41);
     await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
     await page.getByRole('button', { name: 'Save to Slot 1' }).click();

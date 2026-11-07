@@ -613,3 +613,7 @@
     height: 40px;
   }
 }
+
+#app[data-phase='character'] .game-hud {
+  visibility: hidden;
+}

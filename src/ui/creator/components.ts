@@ -61,5 +61,5 @@ export function paintedCell(
 ): string {
   const aspect = sheet === 'figures' ? 0.75 : sheet === 'insignia' ? 0.9 : 1;
   const source = `${import.meta.env.BASE_URL}art/creator-${sheet}.png`;
-  return `<svg class="creator-paint creator-${sheet} ${extraClass}" aria-hidden="true" focusable="false" viewBox="${column * aspect} ${row} ${aspect} 1" preserveAspectRatio="xMidYMid meet"><image href="${source}" width="${columns * aspect}" height="${rows}" /></svg>`;
+  return `<svg class="creator-paint creator-${sheet} ${extraClass}" aria-hidden="true" focusable="false" viewBox="0 0 ${aspect} 1" preserveAspectRatio="xMidYMid meet"><svg width="${aspect}" height="1" viewBox="${column * aspect} ${row} ${aspect} 1" overflow="hidden"><image href="${source}" width="${columns * aspect}" height="${rows}" /></svg></svg>`;
 }

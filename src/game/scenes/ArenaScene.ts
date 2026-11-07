@@ -1057,7 +1057,7 @@ export class ArenaScene extends Phaser.Scene {
       this.tweens.pauseAll();
     }
     // Capture changes above reset Phaser's global preventDefault flag.
-    if (import.meta.env.DEV && ['developer', 'console'].includes(phase))
+    if (phase === 'character' || (import.meta.env.DEV && ['developer', 'console'].includes(phase)))
       this.input.keyboard!.disableGlobalCapture();
     else this.input.keyboard!.enableGlobalCapture();
     this.publishPhase();

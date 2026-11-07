@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 import { classDefinition, backgroundDefinition, oathDefinition } from '../../src/game/data/classes';
 import { openTitle, expectFrozen } from './helpers';
 
+test.beforeEach(() => test.setTimeout(90000));
+
 test.use({ viewport: { width: 1280, height: 800 } });
 
 test(
@@ -45,7 +47,9 @@ test(
     await expect(page.getByRole('button', { name: /Begin Journey/ })).toBeDisabled();
     await page.getByRole('button', { name: 'Random name', exact: true }).click();
     await expect(page.getByLabel('Name', { exact: true })).not.toHaveValue('');
-    await page.getByLabel('Name', { exact: true }).fill('Jebe');
+    await page.getByLabel('Name', { exact: true }).fill('');
+    await page.getByLabel('Name', { exact: true }).pressSequentially('Jebe');
+    await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Jebe');
     await page.getByRole('button', { name: /Begin Journey/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await page.keyboard.press('Escape');

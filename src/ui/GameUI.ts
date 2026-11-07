@@ -641,13 +641,13 @@ export class GameUI {
     this.overlay.dataset.entry =
       run.phase !== this.phase || !this.overlay.firstElementChild ? 'phase' : 'content';
     if (run.phase !== this.phase) this.motion.cancel();
-    if (run.phase === 'playing' && this.phase === 'ready') this.showMessage();
+    if (run.phase === 'playing' && ['ready', 'character'].includes(this.phase)) this.showMessage();
     this.phase = run.phase;
     this.root.dataset.phase = run.phase;
     this.get('game-hud').inert = run.phase !== 'playing';
     this.get('game-hud').setAttribute(
       'aria-hidden',
-      String(['ready', 'settings', 'help', 'developer'].includes(run.phase)),
+      String(['ready', 'character', 'settings', 'help', 'developer'].includes(run.phase)),
     );
     this.get('menu-record').hidden = !['ready', 'paused', 'dead', 'won'].includes(run.phase);
     // Transfer focus before hiding or removing the focused menu control.
