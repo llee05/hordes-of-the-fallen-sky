@@ -5,6 +5,7 @@ type PaintedActor = Phaser.GameObjects.Image | Phaser.Physics.Arcade.Sprite;
 
 export function renderCharacter(actor: PaintedActor, motion: CharacterMotion): void {
   const frame = motion.frame;
+  if (actor.texture.key !== motion.texture) actor.setTexture(motion.texture, frame);
   // Every frame has the same logical canvas. Preserve origin, scale, and body
   // offsets rather than letting frame changes resize a physics actor.
   if (actor.frame.name !== frame) actor.setFrame(frame, false, false);

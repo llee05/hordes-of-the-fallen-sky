@@ -87,7 +87,7 @@ test('mounted gaits and bow release animate without changing collision geometry'
   });
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.frame.name))
-    .toBe('player-attack-1');
+    .toBe('mounted-archer-attack-1');
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.body.width))
     .toBe(20);
@@ -230,3 +230,59 @@ test('defeat sprites stay bounded, pause, and preserve immediate body removal, X
   });
   expect(reused).toEqual({ hurt: false, frame: 'wolf-move-0', alpha: 1, angle: 0, enabled: true });
 });
+
+for (const classId of ['mounted-archer', 'lancer', 'iron-pagoda', 'spirit-caller']) {
+  test(`${classId} profile selects its painted gait and attack without changing the body`, async ({
+    page,
+  }) => {
+    await page.evaluate((classId) => {
+      const scene = (window as any).__gloam.scene;
+      scene.run.character = { ...(scene.run.character ?? {}), classId };
+    }, classId);
+    await expect
+      .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.frame.name))
+      .toBe(`${classId}-move-0`);
+    await page.keyboard.down('d');
+    const frames = new Set<string>();
+    await expect
+      .poll(
+        async () => {
+          const sample = await page.evaluate(() => {
+            const scene = (window as any).__gloam.scene;
+            return {
+              frame: scene.player.frame.name,
+              width: scene.player.body.width,
+              displayWidth: scene.player.displayWidth,
+              texture: scene.player.texture.key,
+              anchor:
+                scene.player.frame.data.spriteSourceSize.y +
+                scene.player.frame.data.spriteSourceSize.h,
+            };
+          });
+          expect(sample).toMatchObject({
+            width: 20,
+            displayWidth: 62,
+            texture: 'steppe-classes-motion',
+            anchor: 324,
+          });
+          frames.add(sample.frame);
+          return frames.size;
+        },
+        { timeout: 10000 },
+      )
+      .toBeGreaterThanOrEqual(3);
+    await page.keyboard.up('d');
+    await page.evaluate(() => {
+      const scene = (window as any).__gloam.scene;
+      scene.khan.playerMotion.attack();
+      scene.khan.animate(0, false);
+    });
+    await expect
+      .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.frame.name))
+      .toBe(`${classId}-attack-1`);
+    await closeOverlayOrPause(page);
+    await expectFrozen(page, () =>
+      page.evaluate(() => (window as any).__gloam.scene.player.frame.name),
+    );
+  });
+}

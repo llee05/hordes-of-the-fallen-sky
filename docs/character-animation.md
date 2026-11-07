@@ -54,3 +54,59 @@ The built-in image_gen tool created this sheet. The final source and cutout prom
 ### Transparent cutout prompt
 
 > Use case: background-extraction. Edit target: attached 12-sprite animation atlas, six columns and two rows. Remove ONLY the entire dark brown / black / ochre gradient background, glow, floor and cast shadows behind all twelve sprites. Replace ALL empty space with genuinely transparent alpha, including the gutters and between legs. Preserve exactly the six civilian worker poses and six chestnut pack horse poses, same painted pixels, positions, colors, canvas 1536x1024, size and layout. Do not redraw, resize, rearrange or crop any subject. Keep fine boots, straps, manes and tails. No painted checkerboard, no colored background, no vignette, no remaining ground shadows. This is a background removal cutout for a transparent game sprite sheet.
+
+## Playable class riders
+
+`public/art/steppe-classes-motion.png` and its JSON atlas contain original painted
+riders for `mounted-archer`, `lancer`, `iron-pagoda`, and `spirit-caller`. Each has
+four canter phases, a grounded idle using the first gait pose, and two basic attack
+poses. Archer carries a recurve bow and quiver; Lancer has a long lance and rust
+cape; Iron Pagoda has heavy horse barding, a round shield and saber; Spirit Caller
+has a ring-topped staff, lapis robes and an ivory horse with turquoise mane accents.
+The miniature manuscript painting follows the supplied class concept sheets.
+
+The atlas preserves the existing explicit trim format, 256 × 360 logical canvas,
+(128, 324) ground anchor, mirrored left/right facing, linear filtering, fractional
+positions, and 62-world-unit Khan width. The original generated 1536 × 1024 PNG is
+bundled unchanged. Trim rectangles include two pixels of gutter around visible
+alpha where cell spacing allows. All classes share one added texture and one
+sprite batch, independent of class count. Existing allied and enemy sheets remain
+in use.
+
+`CharacterMotion.setPlayerClass` selects the rider skin from
+`run.character.classId`; `KhanController` reapplies it on reset, active animation,
+restore, terrain reconciliation, and succession. Motion archives remain unchanged:
+the saved character profile owns appearance. `CharacterVisuals` switches the
+texture while retaining the shared canvas, scale, origin, and physics body. Gait,
+windup, release, and hurt feedback use active gameplay seconds. No class rules,
+weapon timing, damage, or balance change here.
+
+For a local art preview before the class-start shortcut is available, run
+`npm run dev:web`, start New Game, and execute in the development browser console:
+
+```js
+window.__gloam.scene.run.character.classId = 'lancer';
+```
+
+Use any of the four IDs above. This changes appearance only; start a class through
+the character creator/developer class selection to test its actual loadout. The
+preview uses the existing development-only scene bridge and adds no production
+hook. Saved expeditions render their profile's class automatically.
+
+Remaining art: separate idle loops, special/ability poses and effect atlases
+(arrow volley, lance dust, Pagoda aura, spirit bolt/ward/ancestor), dedicated hurt
+and death poses, and original close portrait assets. Existing hit flashes and
+succession visibility continue unchanged. The combined rider/horse paintings have
+no separate clothing or mount mask, so profile clothing colours, coat variants,
+gender, hair and headgear are not yet represented in the battlefield art. Separate
+painted layers or masks are needed to recolour clothing without tinting skin,
+weapons and horse together. Additional front/back view clips are also future work;
+current gameplay uses right-facing poses and left-facing mirroring.
+
+### Class atlas generation prompt
+
+Built-in `image_gen`, transparent output. Inputs were the four supplied class
+concept sheets as silhouette/equipment/palette references and
+`steppe-mounted-motion.png` as the in-game rendering reference. Prompt:
+
+> Use case: stylized-concept. Production transparent PNG animation atlas for Hordes of the Fallen Sky. Create original sprites, not copies of concept panels. Exactly six columns and four rows, 24 isolated complete mounted riders, 1536 × 1024, real transparent background, no floor, baked shadows, lettering or panel borders. All riders face right in a consistent high three-quarter battlefield camera with warm upper-left light. Same horse torso size and ground baseline throughout, fixed body centre in each row. Row 1: Mounted Archer, fur-trimmed plumed cap, rust scarf, blue patterned deel and light lamellar armour, recurved bow and quiver, chestnut horse. Row 2: Lancer, red-plumed lamellar helmet, ivory fur shoulders, vermilion cape, long lance, dark bay horse with brass-and-lapis tack. Row 3: Iron Pagoda, broad heavy dark iron lamellar, brass edges, ivory fur mantle, rust cloak, round bronze shield and curved saber, armoured dark horse with layered barding. Row 4: Spirit Caller, ivory fur cap, long dark braids, lapis patterned robe, vermilion ribbons, bronze ring-topped ritual staff, pale ivory horse with subtle turquoise mane/tail accents. Each row: columns 1–4 distinct consecutive canter phases (reaching, compression, passing, extension); column 5 weapon-specific windup, column 6 release (draw/release bow, draw/thrust lance, raise/slash saber, lift/extend staff). All equipment inside each cell. Antique hand-painted medieval manuscript illustration adapted into readable miniature gouache sprites; matte surfaces, restrained brush grain, elegant bold contours, ochre/ivory/lapis/rust/umber/bronze. No parchment background, dust, loose projectiles, text or watermark.

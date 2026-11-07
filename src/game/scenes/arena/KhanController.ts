@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { effectAmount } from '../../../shared/visualSettings';
 import { CharacterMotion } from '../../animation/CharacterMotion';
-import { playerVisualConfig } from '../../assets/painterlyArt';
+import { renderCharacter } from '../../animation/CharacterVisuals';
 import { GAME } from '../../config';
 import { classDefinition, khanGallopSpeed, khanTargetingRange } from '../../data/classes';
 import type { Enemy } from '../../entities/actors';
@@ -42,6 +42,7 @@ export class KhanController extends ArenaSystem {
 
   reset(): void {
     this.playerMotion.reset('player');
+    this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
     this.dustTimer = 0;
   }
 
@@ -58,6 +59,7 @@ export class KhanController extends ArenaSystem {
 
   /** Moves the shadow and aura to the Khan's current position. */
   syncAttachments(): void {
+    this.renderPlayerVisual();
     this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
     this.aura.setPosition(this.player.x, this.player.y);
   }
@@ -152,17 +154,9 @@ export class KhanController extends ArenaSystem {
   }
 
   renderPlayerVisual(): void {
-    const visual = playerVisualConfig(this.run.character);
-    const targetFrame = this.playerMotion.frame.replace(/^player-/, `${visual.framePrefix}-`);
-    if (
-      this.player.texture.key !== visual.textureKey &&
-      this.arena.scene.textures.exists(visual.textureKey)
-    ) {
-      this.player.setTexture(visual.textureKey, targetFrame);
-    } else if (this.player.frame.name !== targetFrame) {
-      this.player.setFrame(targetFrame, false, false);
-    }
-    this.player.setTint(this.playerMotion.hurt ? 0xffd3b2 : visual.baseTint);
+    this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
+    renderCharacter(this.player, this.playerMotion);
+    this.player.setTint(this.playerMotion.hurt ? 0xffd3b2 : 0xffffff);
   }
 
   /** Brings an active successor back at camp with fresh motion and return protection. */
@@ -178,6 +172,7 @@ export class KhanController extends ArenaSystem {
       .setFlipX(false)
       .setDepth(100 + y);
     this.playerMotion.reset('player', 0);
+    this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
     this.run.combat.previous = undefined;
     this.run.combat.heading = undefined;
     this.run.combat.rideSeconds = 0;
@@ -202,6 +197,7 @@ export class KhanController extends ArenaSystem {
   /** Advances and draws the Khan's motion while he is active. */
   animate(dt: number, preparingVolley: boolean): void {
     if (isKhanActive(this.run)) {
+      this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
       this.playerMotion.advance(
         dt,
         this.player.body!.velocity.length(),
