@@ -3,6 +3,7 @@ import { CampBarrier } from '../../assets/CampBarrier';
 import { ClanLife } from '../../assets/ClanLife';
 import { ART_WIDTH, CAMP_VISUAL_SCALE, paintedImage } from '../../assets/painterlyArt';
 import { GAME } from '../../config';
+import { bannerColourDefinition } from '../../data/classes';
 import { campShelters } from '../../state/campLife';
 import type { ArenaContext } from './ArenaContext';
 
@@ -58,6 +59,9 @@ export class CampPresenter {
           .setDepth(y - 1),
       );
       const image = paintedImage(scene, x, y, key, width).setDepth(y).setName(key);
+      if (key === 'banner' && run.character && run.character.banner.fieldColour !== 'ivory') {
+        image.setTint(bannerColourDefinition(run.character.banner.fieldColour).spriteTint);
+      }
       image.setData('restScale', image.scaleX);
       camp.add(image);
       return image;

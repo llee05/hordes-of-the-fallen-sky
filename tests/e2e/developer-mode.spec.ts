@@ -182,3 +182,63 @@ test('developer choices and Back stay usable in a narrow viewport', async ({ pag
   await page.locator('[data-developer-level="destination:3:orkhon-valley"]').click();
   await expect(page.locator('#location')).toHaveText('ORKHON VALLEY');
 });
+
+test('developer mode starts expeditions as non-default playable classes with distinct loadouts and tints', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Developer mode F8' }).click();
+  await expect(page.locator('[data-developer-class]')).toHaveCount(4);
+
+  await page.locator('[data-developer-class="lancer"]').click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(page.locator('#weapon-label')).toHaveText('LANCE');
+  await expect(page.locator('#power')).toHaveText('24');
+  await expect(page.locator('#health')).toHaveText('120 / 120');
+  await expect(page.locator('#khan-title')).toHaveAttribute('data-character-class', 'lancer');
+
+  const lancerState = await page.evaluate(() => {
+    const scene = (window as any).__gloam.scene;
+    return {
+      phase: scene.run.phase,
+      classId: scene.run.character.classId,
+      tint: scene.player.tintTopLeft,
+      pierce: scene.run.stats.pierce,
+    };
+  });
+  expect(lancerState).toEqual({
+    phase: 'playing',
+    classId: 'lancer',
+    tint: 0xf5d6a7,
+    pierce: 2,
+  });
+
+  await page.keyboard.press('F8');
+  await page.locator('[data-developer-class="spirit-caller"]').click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(page.locator('#weapon-label')).toHaveText('STAFF');
+  await expect(page.locator('#power')).toHaveText('14');
+  await expect(page.locator('#health')).toHaveText('95 / 95');
+  await expect(page.locator('#khan-title')).toHaveAttribute(
+    'data-character-class',
+    'spirit-caller',
+  );
+
+  const callerState = await page.evaluate(() => {
+    const scene = (window as any).__gloam.scene;
+    return {
+      phase: scene.run.phase,
+      classId: scene.run.character.classId,
+      tint: scene.player.tintTopLeft,
+      projectiles: scene.run.stats.projectiles,
+      pickupRadius: scene.run.stats.pickupRadius,
+    };
+  });
+  expect(callerState).toEqual({
+    phase: 'playing',
+    classId: 'spirit-caller',
+    tint: 0xb8efe6,
+    projectiles: 2,
+    pickupRadius: 110,
+  });
+});

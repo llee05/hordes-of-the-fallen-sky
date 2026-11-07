@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { CampBarrier } from '../../assets/CampBarrier';
 import { GAME } from '../../config';
+import { classDefinition } from '../../data/classes';
 import type { AreaThreatKind } from '../../data/areaEncounters';
 import type { Enemy } from '../../entities/actors';
 import { barrierContact, campBoundary } from '../../state/campBarrier';
@@ -453,6 +454,11 @@ export class EnemyBehaviour extends ArenaSystem {
       enemy.lastGallop !== this.run.combat.gallopSerial
     ) {
       enemy.lastGallop = this.run.combat.gallopSerial;
+      const cls = classDefinition(this.run.character?.classId);
+      if (cls.id === 'lancer' || cls.id === 'iron-pagoda') {
+        enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
+        enemy.setVelocity(0, 0);
+      }
       const d = Math.max(1, playerDistance),
         push = GAME.mounted.breakthroughPush;
       if (push > 0) {

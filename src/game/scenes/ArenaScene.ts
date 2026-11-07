@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import type { GamePlatform } from '../../platform/GamePlatform';
 import type { AudioChannel } from '../../shared/audioSettings';
 import { normalizeAudioMix } from '../../shared/audioSettings';
+import { CHARACTER_CLASSES, type CharacterClassId } from '../../shared/characterProfile';
 import type { ExpeditionSave, SaveSlot } from '../../shared/expeditionSave';
 import type { NomadicBuildingId } from '../../shared/nomadicCamp.js';
 import { normalizeVisualSettings, type VisualSettings } from '../../shared/visualSettings';
@@ -24,7 +25,7 @@ import { GAME } from '../config';
 import { FORMATIONS, STARTING_TRADITIONS, type StartingTraditionId } from '../data/clan';
 import type { SuccessorTrait } from '../data/successors';
 import { createDeveloperTools, executeDeveloperCommand } from '../dev/commands';
-import { DEVELOPER_LEVELS, createDeveloperRun } from '../dev/levels';
+import { DEVELOPER_LEVELS, createDeveloperClassRun, createDeveloperRun } from '../dev/levels';
 import { Enemy, Gem, Projectile } from '../entities/actors';
 import { runFromCampArchive } from '../state/campArchive';
 import { advanceCampRecovery, gallopCooldown } from '../state/campCombat';
@@ -304,19 +305,29 @@ export class ArenaScene extends Phaser.Scene {
     preloadPainterlyArt(this);
   }
 
-  create(data?: { developerLevel?: string; expedition?: ExpeditionSave }): void {
+  create(data?: {
+    developerLevel?: string;
+    developerClass?: CharacterClassId;
+    expedition?: ExpeditionSave;
+  }): void {
     this.audio.reset();
     this.persistence.reset();
     const developerRun =
       import.meta.env.DEV && data?.developerLevel
         ? createDeveloperRun(data.developerLevel)
-        : undefined;
+        : import.meta.env.DEV && data?.developerClass
+          ? createDeveloperClassRun(
+              data.developerClass,
+              this.startingTraditionId,
+              this.platform.profile.character,
+            )
+          : undefined;
     this.developerRun = !!developerRun;
     // Keep testing preferences across checkpoints; a normal new run clears every cheat.
     if (import.meta.env.DEV && !developerRun)
       this.developerTools = createDeveloperTools(this.platform.profile.developerCommandHistory);
     this.consoleReturnPhase = 'ready';
-    this.run = developerRun ?? createRun(this.startingTraditionId);
+    this.run = developerRun ?? createRun(this.startingTraditionId, this.platform.profile.character);
     if (!developerRun) {
       this.run.guidance.enabled = this.guidanceEnabled;
     }
@@ -352,6 +363,7 @@ export class ArenaScene extends Phaser.Scene {
       .setName('khan')
       .setCollideWorldBounds(true);
     styleActor(this.player, 'player', ART_WIDTH.player!, 10);
+    this.khan.renderPlayerVisual();
 
     this.enemies = this.physics.add.group({
       classType: Enemy,
@@ -507,7 +519,7 @@ export class ArenaScene extends Phaser.Scene {
     this.input.keyboard!.resetKeys();
     this.persistence.started = true;
     this.guidanceEnabled = run.guidance.enabled;
-    Object.assign(this.timers, world.timers);
+    Object.assign(this.timers, { closeDefenseTimer: 0 }, world.timers);
     this.areaCombat.restore(world);
     this.landscape.setRegion(
       run.clan.region,
@@ -562,7 +574,7 @@ export class ArenaScene extends Phaser.Scene {
     if (this.run.phase !== 'traditions' || !STARTING_TRADITIONS.some((entry) => entry.id === id))
       return;
     this.startingTraditionId = id as StartingTraditionId;
-    this.run = createRun(this.startingTraditionId);
+    this.run = createRun(this.startingTraditionId, this.platform.profile.character);
     this.run.phase = 'traditions';
     this.run.guidance.enabled = this.guidanceEnabled;
     this.campPresenter.refresh();
@@ -652,6 +664,17 @@ export class ArenaScene extends Phaser.Scene {
       return;
     this.audio.unlock();
     this.scene.restart({ developerLevel: id });
+  }
+
+  startDeveloperClass(classId: string): void {
+    if (
+      !import.meta.env.DEV ||
+      this.run.phase !== 'developer' ||
+      !CHARACTER_CLASSES.includes(classId as CharacterClassId)
+    )
+      return;
+    this.audio.unlock();
+    this.scene.restart({ developerClass: classId as CharacterClassId });
   }
 
   togglePause(): void {
