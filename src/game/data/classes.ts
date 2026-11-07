@@ -83,6 +83,7 @@ export interface ClassWeaponDefinition {
   homingTurnRate: number;
   spreadAngle: number;
   pinsOnCharged: boolean;
+  chargedExtraPierce: number;
 }
 
 export interface ClassDefinition {
@@ -232,6 +233,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       homingTurnRate: 0,
       spreadAngle: 0.14,
       pinsOnCharged: false,
+      chargedExtraPierce: GAME.classes['mounted-archer'].chargedExtraPierce,
     },
     abilities: [
       {
@@ -271,17 +273,15 @@ export const CLASSES: readonly ClassDefinition[] = [
         level: 3,
         id: 'thumb-ring-draw',
         title: 'Thumb-Ring Draw',
-        summary: '+3 Bow Damage, -6% Attack Interval',
-        statBonuses: { damage: 3 },
-        attackIntervalMultiplier: 0.94,
+        summary: '+1 Projectile per Volley, -0.04s Attack Interval',
+        statBonuses: { projectiles: 1, attackInterval: -0.04 },
       },
       {
         level: 6,
         id: 'twin-nock-quiver',
         title: 'Twin-Nock Quiver',
-        summary: '+1 Projectile per Volley, +25 Range',
-        statBonuses: { projectiles: 1 },
-        campEffects: { bonuses: { range: 25 } },
+        summary: '+3 Bow Damage, +12 Movement Speed',
+        statBonuses: { damage: 3, speed: 12 },
       },
       {
         level: 10,
@@ -334,6 +334,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       homingTurnRate: 0,
       spreadAngle: 0.08,
       pinsOnCharged: true,
+      chargedExtraPierce: GAME.classes.lancer.chargedExtraPierce,
     },
     abilities: [
       {
@@ -435,6 +436,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       homingTurnRate: 0,
       spreadAngle: 0.22,
       pinsOnCharged: true,
+      chargedExtraPierce: GAME.classes['iron-pagoda'].chargedExtraPierce,
     },
     abilities: [
       {
@@ -482,9 +484,8 @@ export const CLASSES: readonly ClassDefinition[] = [
         level: 6,
         id: 'bulwark-discipline',
         title: 'Bulwark Discipline',
-        summary: '+1 Cleave Arc, +8% Clan Protection',
-        statBonuses: { projectiles: 1 },
-        campEffects: { multipliers: { clanProtection: 0.92 } },
+        summary: '+1 Pierce, +1 Cleave Arc',
+        statBonuses: { pierce: 1, projectiles: 1 },
       },
       {
         level: 10,
@@ -539,6 +540,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       homingTurnRate: 2.2,
       spreadAngle: 0.18,
       pinsOnCharged: true,
+      chargedExtraPierce: GAME.classes['spirit-caller'].chargedExtraPierce,
     },
     abilities: [
       {
@@ -576,16 +578,15 @@ export const CLASSES: readonly ClassDefinition[] = [
         level: 3,
         id: 'resonant-drumskin',
         title: 'Resonant Drumskin',
-        summary: '+3 Spirit Bolt Damage, +20 Pickup Radius',
-        statBonuses: { damage: 3, pickupRadius: 20 },
+        summary: '+1 Spirit Bolt Projectile, +18 Pickup Radius',
+        statBonuses: { projectiles: 1, pickupRadius: 18 },
       },
       {
         level: 6,
         id: 'ancestral-chorus',
         title: 'Ancestral Chorus',
-        summary: '+1 Spirit Bolt Projectile, +15% Spirit Gain',
-        statBonuses: { projectiles: 1 },
-        campEffects: { multipliers: { spiritGain: 1.15 } },
+        summary: '+3 Spirit Bolt Damage, -0.05s Attack Interval',
+        statBonuses: { damage: 3, attackInterval: -0.05 },
       },
       {
         level: 10,
@@ -960,6 +961,10 @@ export function playerVisualConfig(character?: CharacterProfile): {
   };
 }
 
+export function khanTargetingRange(run: Pick<RunState, 'character' | 'clan'>): number {
+  return classDefinition(run.character?.classId).stats.range + run.clan.campEffects.bonuses.range;
+}
+
 function applyStatDelta(run: RunState, bonuses?: Partial<PlayerStats>): void {
   if (!bonuses) return;
   if (bonuses.maxHealth) {
@@ -971,7 +976,10 @@ function applyStatDelta(run: RunState, bonuses?: Partial<PlayerStats>): void {
   if (bonuses.speed) run.stats.speed += bonuses.speed;
   if (bonuses.damage) run.stats.damage += bonuses.damage;
   if (bonuses.attackInterval) {
-    run.stats.attackInterval = Math.max(0.18, run.stats.attackInterval + bonuses.attackInterval);
+    run.stats.attackInterval = Math.max(
+      0.18,
+      Number((run.stats.attackInterval + bonuses.attackInterval).toFixed(3)),
+    );
   }
   if (bonuses.pickupRadius) run.stats.pickupRadius += bonuses.pickupRadius;
   if (bonuses.projectiles) run.stats.projectiles += bonuses.projectiles;
@@ -1004,10 +1012,6 @@ export function applyCharacterLoadout(run: RunState, rawProfile: CharacterProfil
   }
   if (cls.stats.gallopCooldownMultiplier !== 1) {
     run.clan.campEffects.multipliers.gallopCooldown *= cls.stats.gallopCooldownMultiplier;
-  }
-  const rangeDelta = cls.stats.range - GAME.projectile.range;
-  if (rangeDelta !== 0) {
-    run.clan.campEffects.bonuses.range += rangeDelta;
   }
   if (cls.stats.passiveRegen > 0) {
     run.clan.campEffects.bonuses.commanderRecovery += cls.stats.passiveRegen;

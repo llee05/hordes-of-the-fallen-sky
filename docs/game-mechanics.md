@@ -112,7 +112,7 @@ See [the nomadic camp guide](nomadic-camp.md) for the current building catalog, 
 
 Without a supplied character profile, the Khan uses the legacy Mounted Archer opening stats in `GAME.player`. Supplied profiles use `GAME.classes` through the class catalog, with starting-tradition, background, and oath modifiers applied at initialization. Attacks automatically choose the nearest available enemy within targeting range; there is no manual aim or attack input.
 
-Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Khan targeting range is `GAME.projectile.range + campEffects.bonuses.range + 120 × momentum` (class loadouts store their range adjustment in those bonuses); personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum adds 120 targeting range and +30% personal damage.
+Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Khan targeting range is `classDefinition(run.character?.classId).stats.range + campEffects.bonuses.range + 120 × momentum` (class weapon range is Khan-specific and does not change accompanying riders); personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum adds 120 targeting range and +30% personal damage.
 
 Accompanying riders use per-rider active-time release clocks and each fire one
 arrow per successful release, at 60% of the shared damage stat before camp modifiers. Each rider has an active-time release clock using the shared attack interval and camp host-interval modifier. Their targeting range starts at 440. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
@@ -404,19 +404,19 @@ mounted Khan sprite sheet with tint accents; dedicated class art and animations
 remain separate work.
 
 - **Mounted Archer** uses a composite recurve bow, a close-range saber sweep, and
-  a charged arrow fan. Its progression emphasizes firing speed, extra arrows,
-  range, piercing, and mobility.
+  a charged arrow fan. Its progression emphasizes extra arrows, firing speed,
+  damage, mobility, and piercing.
 - **Lancer** uses piercing lance thrusts, a nearby sweeping strike, charged pins,
   and pinning gallop breakthroughs. Its progression develops damage, piercing,
   health, speed, and additional thrusts.
 - **Iron Pagoda** uses overlapping saber arcs and nearby crushing attacks, with
   stronger personal armor, recovery, and clan protection. Charged attacks and
-  gallop breakthroughs pin. Its progression strengthens health, damage, cleaves,
-  protection, and firing speed.
+  gallop breakthroughs pin. Its progression strengthens health, damage, piercing,
+  cleaves, and firing speed.
 - **Spirit Caller** uses homing staff bolts and a pinning drum pulse. Charged
-  volleys release an additional ancestral bolt; galloping restores Khan health and
-  clan resolve. Its progression adds damage, pickup radius, bolts, Spirit gain,
-  piercing, health, and firing speed.
+  volleys release an additional charged ancestral bolt; galloping restores Khan
+  health and clan resolve. Its progression adds bolts, pickup radius, damage,
+  firing speed, piercing, and health.
 
 `src/game/data/classes.ts` owns weapon, ability, and progression definitions;
 `GAME.classes`, `GAME.backgrounds`, and `GAME.oaths` own their starting balance.

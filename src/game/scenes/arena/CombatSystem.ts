@@ -4,7 +4,7 @@ import type { CharacterMotion } from '../../animation/CharacterMotion';
 import type { CampBarrier } from '../../assets/CampBarrier';
 import { effectAmount } from '../../../shared/visualSettings';
 import { GAME } from '../../config';
-import { classDefinition } from '../../data/classes';
+import { classDefinition, khanTargetingRange } from '../../data/classes';
 import { Enemy, Gem, Projectile } from '../../entities/actors';
 import { campBoundary } from '../../state/campBarrier';
 import { hasDevelopment } from '../../state/clan';
@@ -125,7 +125,7 @@ export class CombatSystem extends ArenaSystem {
     const target = this.spatial.nearest(
       this.player.x,
       this.player.y,
-      GAME.projectile.range + this.run.clan.campEffects.bonuses.range + momentum * 120,
+      khanTargetingRange(this.run) + momentum * 120,
       (e) => !this.landscape.navigation || this.landscape.navigation.lineClear(this.player, e, 0),
     );
     if (isKhanActive(this.run) && target) {
@@ -158,7 +158,7 @@ export class CombatSystem extends ArenaSystem {
           1,
           0.85,
           true,
-          false,
+          true,
           'khan',
           1,
           true,
@@ -209,7 +209,8 @@ export class CombatSystem extends ArenaSystem {
       owner === 'khan' && cls.id !== 'mounted-archer' && arrowCount > 1
         ? cls.weapon.spreadAngle
         : volley.spacing;
-    const basePierces = this.run.stats.pierce + (charged ? 1 : 0);
+    const chargedPierce = owner === 'khan' ? cls.weapon.chargedExtraPierce : 1;
+    const basePierces = this.run.stats.pierce + (charged ? chargedPierce : 0);
     const baseSpeed = owner === 'khan' ? cls.stats.projectileSpeed : GAME.projectile.speed;
     for (let i = 0; i < arrowCount; i += 1) {
       const bolt = i === 0 ? first : (this.projectiles.get(x, y, 'bolt') as Projectile | null);

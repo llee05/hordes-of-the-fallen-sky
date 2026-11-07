@@ -219,4 +219,43 @@ describe('playable class combat', () => {
     expect(enemy.health).toBe(10000);
     expect(arena.context.timers.closeDefenseTimer).toBe(0);
   });
+
+  it.each([
+    ['mounted-archer', 1],
+    ['lancer', 2],
+    ['iron-pagoda', 1],
+    ['spirit-caller', 2],
+  ] as const)('%s charged volleys add %s class-specific pierce', (classId, extraPierce) => {
+    const arena = setup(classId);
+    const enemy = arena.spawn(180, 0);
+    arena.combat.shootVolley(1000, 1000, enemy, 1, 1, false, true, 'khan');
+    const bolt = arena.projectiles.getFirstAlive()!;
+    expect(bolt.pierces).toBe(arena.context.run.stats.pierce + extraPierce);
+  });
+
+  it('spirit-caller charged fire releases an ancestral bolt with charged damage, pierce, and pin', () => {
+    const arena = setup('spirit-caller');
+    arena.spawn(300, 0);
+    arena.context.run.combat.ready = true;
+    arena.combat.fire();
+    const bolts = arena.projectiles.getChildren().filter((bolt) => bolt.active);
+    expect(bolts).toHaveLength(3);
+    const ancestral = bolts.find((bolt) => bolt.echoIndex === 1)!;
+    expect(ancestral).toBeDefined();
+    expect(ancestral.pins).toBe(true);
+    expect(ancestral.pierces).toBe(arena.context.run.stats.pierce + 2);
+    expect(ancestral.getData('ghost')).toBe(true);
+    expect(ancestral.damage).toBeCloseTo(arena.context.run.stats.damage * 1.35 * 0.85);
+  });
+
+  it('uses class-specific Khan weapon range without changing shared rider camp range bonuses', () => {
+    const lancer = setup('lancer');
+    expect(lancer.context.run.clan.campEffects.bonuses.range).toBe(0);
+    lancer.spawn(320, 0);
+    lancer.combat.fire();
+    expect(lancer.projectiles.countActive()).toBe(0);
+    lancer.spawn(260, 0);
+    lancer.combat.fire();
+    expect(lancer.projectiles.countActive()).toBe(1);
+  });
 });

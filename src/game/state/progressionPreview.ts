@@ -1,4 +1,4 @@
-import { GAME } from '../config';
+import { khanTargetingRange } from '../data/classes';
 import { SUCCESSORS } from '../data/successors';
 import type { BuildingId, RunState } from '../types';
 import { gallopCooldown, wagonDefence } from './campCombat';
@@ -34,7 +34,7 @@ function metrics(r: RunState): Metric[] {
     { label: 'Shared attack damage', value: r.stats.damage },
     {
       label: 'Khan targeting range',
-      value: GAME.projectile.range + c.bonuses.range + r.clan.momentum * 120,
+      value: khanTargetingRange(r) + r.clan.momentum * 120,
       unit: ' paces',
       context: 'Includes the current momentum targeting bonus',
     },

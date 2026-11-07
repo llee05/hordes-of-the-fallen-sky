@@ -3,7 +3,7 @@ import { effectAmount } from '../../../shared/visualSettings';
 import { CharacterMotion } from '../../animation/CharacterMotion';
 import { playerVisualConfig } from '../../assets/painterlyArt';
 import { GAME } from '../../config';
-import { classDefinition } from '../../data/classes';
+import { classDefinition, khanTargetingRange } from '../../data/classes';
 import type { Enemy } from '../../entities/actors';
 import { areaMovementMultiplier, type AreaThreatState } from '../../state/areaThreats';
 import { gallopCooldown } from '../../state/campCombat';
@@ -206,13 +206,7 @@ export class KhanController extends ArenaSystem {
         dt,
         this.player.body!.velocity.length(),
         preparingVolley &&
-          Boolean(
-            this.spatial.nearest(
-              this.player.x,
-              this.player.y,
-              GAME.projectile.range + this.run.clan.campEffects.bonuses.range,
-            ),
-          ),
+          Boolean(this.spatial.nearest(this.player.x, this.player.y, khanTargetingRange(this.run))),
       );
       this.renderPlayerVisual();
     }
