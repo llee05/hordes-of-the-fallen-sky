@@ -5,12 +5,28 @@ import {
   CHARACTER_BANNER_TRIMS,
   defaultCharacterProfile,
 } from '../../src/shared/characterProfile';
-import { clanStandardAppearance } from '../../src/game/assets/clanStandardAppearance';
+import {
+  clanStandardAppearance,
+  CLAN_STANDARD_CACHE_SLOT,
+} from '../../src/game/assets/clanStandardAppearance';
 import atlasSource from '/art/steppe-classes-motion.json?raw';
 
 const atlas = JSON.parse(atlasSource);
 
 describe('painted clan standards', () => {
+  it('reserves a cache slot that cannot overwrite any rider or heraldry frame', () => {
+    const slot = CLAN_STANDARD_CACHE_SLOT;
+    for (const { frame } of Object.values(atlas.frames) as {
+      frame: { x: number; y: number; w: number; h: number };
+    }[]) {
+      const overlaps =
+        slot.x < frame.x + frame.w &&
+        slot.x + slot.w > frame.x &&
+        slot.y < frame.y + frame.h &&
+        slot.y + slot.h > frame.y;
+      expect(overlaps).toBe(false);
+    }
+  });
   it('has registered local layers for every saved emblem and trim choice', () => {
     for (const emblem of CHARACTER_BANNER_EMBLEMS) {
       for (const trim of CHARACTER_BANNER_TRIMS) {

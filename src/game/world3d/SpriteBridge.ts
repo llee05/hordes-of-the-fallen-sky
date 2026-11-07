@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { PAINTED_ATLAS_CHANGED } from '../assets/clanStandardCache';
 import * as THREE from 'three';
 import type { MountainHeightfield } from './MountainHeightfield';
 import { projectGround, WORLD_3D } from './worldProjection';
@@ -32,6 +33,12 @@ export class SpriteBridge {
     private readonly terrain: MountainHeightfield,
   ) {
     this.occludedKhan = new KhanOcclusion(root);
+    scene.events.on(PAINTED_ATLAS_CHANGED, this.refreshAtlas, this);
+  }
+
+  private refreshAtlas(source: HTMLCanvasElement): void {
+    const texture = this.textures.get(source);
+    if (texture) texture.needsUpdate = true;
   }
 
   update(
@@ -233,6 +240,7 @@ export class SpriteBridge {
   }
 
   destroy(): void {
+    this.scene.events.off(PAINTED_ATLAS_CHANGED, this.refreshAtlas, this);
     this.occludedKhan.destroy();
     for (const { mesh } of this.batches.values()) {
       mesh.geometry.dispose();

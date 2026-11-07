@@ -5,12 +5,13 @@ The camp and caravan standards render the saved character profile's banner
 there is no separate banner save state. Old runs without a character profile use
 the default flame/sun/crescent, ivory field and steppe-fret border.
 
-`assets/ClanStandard.ts` is a reusable container of four registered painted layers:
+`assets/ClanStandard.ts` is a reusable sprite composed from four registered painted layers:
 wood/brass pole, neutral cloth, ornamental border, and central emblem. Only the
 cloth receives the field colour. Emblem and border use that colour definition's
-contrasting ink; the pole retains its original painted materials. All layers have
-the same logical 256 × 360 canvas and (128, 324) ground anchor. The container sways
-through active gameplay seconds, keeping the layers together; menus freeze it.
+contrasting ink; the pole retains its original painted materials. The painted source layers share a 256 × 360 canvas and (128, 324) ground anchor.
+They are composited at half resolution to a 128 × 180 sprite with the same world
+size and anchor. The cached sprite sways
+through active gameplay seconds; menus freeze it.
 `CampPresenter` rebuilds standards from the current profile whenever camp drawings
 refresh, including archive restore and migration. Military and relay standards
 use the same clan heraldry.
@@ -25,8 +26,17 @@ The generated `public/art/steppe-heraldry-source.png` is the reusable 4 × 3 sou
 sheet. Its twelve parts are packed below the existing rider region in
 `steppe-classes-motion.png` and registered in the same JSON. The 1536 × 1024 rider
 region and every existing rider rectangle remain unchanged. The shared texture is
-1536 × 1744; heraldry adds no texture or draw batch to the battlefield. Four
-bounded sprite quads per standard replace its previous single quad.
+1536 × 1744; heraldry adds no texture or draw batch to the battlefield. Each standard remains one sprite quad, matching the standard it replaces.
+
+`clanStandardCache.ts` prepares one CanvasTexture under the existing atlas key
+before class actors are created. It copies every registered source frame without
+changing the artwork or rider geometry. A profile change composites the four
+painted parts once into an unused 128 × 180 atlas slot, then uploads the changed
+texture once. Repeated camp refreshes and ordinary frames do no painting or
+texture uploads. `SpriteBridge` listens for that explicit atlas-change event,
+updates its existing texture, and unregisters on destruction. All clan standards
+share the current profile and the same cached frame; the cache is bounded to one
+entry per atlas. No additional texture or draw call is introduced.
 
 To regenerate packing after editing the source sheet, install ImageMagick and run
 `node scripts/pack-heraldry.mjs`. This development-only command crops each source

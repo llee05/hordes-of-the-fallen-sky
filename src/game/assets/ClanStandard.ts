@@ -1,30 +1,19 @@
 import Phaser from 'phaser';
 import type { CharacterBanner } from '../../shared/characterProfile';
-import { clanStandardAppearance } from './clanStandardAppearance';
+import { cachedClanStandard } from './clanStandardCache';
 
-/** Registered painted layers share a texture, ground anchor and active-time sway. */
-export class ClanStandard extends Phaser.GameObjects.Container {
+/** Painted layers are flattened once per profile; active frames move one sprite. */
+export class ClanStandard extends Phaser.GameObjects.Image {
   private readonly restScale: number;
 
   constructor(scene: Phaser.Scene, x: number, y: number, width: number, banner?: CharacterBanner) {
-    super(scene, x, y);
-    const appearance = clanStandardAppearance(banner);
-    this.restScale = width / 256;
-    this.setName('banner').setScale(this.restScale);
-    for (const [name, frame, tint] of [
-      ['banner-pole', appearance.poleFrame, 0xffffff],
-      ['banner-field', appearance.fieldFrame, appearance.fieldTint],
-      ['banner-trim', appearance.trimFrame, appearance.ornamentTint],
-      ['banner-emblem', appearance.emblemFrame, appearance.ornamentTint],
-    ] as const) {
-      this.add(
-        scene.add
-          .image(0, 0, 'steppe-classes-motion', frame)
-          .setOrigin(0.5, 0.9)
-          .setName(name)
-          .setTint(tint),
-      );
-    }
+    const cached = cachedClanStandard(scene, banner);
+    super(scene, x, y, 'steppe-classes-motion', cached.frame);
+    this.restScale = width / 128;
+    this.setName('banner')
+      .setOrigin(0.5, 0.9)
+      .setScale(this.restScale)
+      .setData('appearance', cached.appearance);
     scene.add.existing(this);
   }
 

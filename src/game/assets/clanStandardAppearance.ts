@@ -1,6 +1,9 @@
 import { defaultCharacterProfile, type CharacterBanner } from '../../shared/characterProfile';
 import { bannerColourDefinition } from '../data/classes';
 
+/** Empty atlas space below the first heraldry row, reserved for one cached standard. */
+export const CLAN_STANDARD_CACHE_SLOT = { x: 0, y: 1120, w: 128, h: 180 } as const;
+
 /** Derived presentation only. The saved character profile owns all banner choices. */
 export function clanStandardAppearance(banner: CharacterBanner = defaultCharacterProfile().banner) {
   const colour = bannerColourDefinition(banner.fieldColour);
