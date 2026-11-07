@@ -36,7 +36,10 @@ texture once. Repeated camp refreshes and ordinary frames do no painting or
 texture uploads. `SpriteBridge` listens for that explicit atlas-change event,
 updates its existing texture, and unregisters on destruction. All clan standards
 share the current profile and the same cached frame; the cache is bounded to one
-entry per atlas. No additional texture or draw call is introduced.
+entry per atlas. No additional texture or draw call is introduced. Standards opt into world
+projection with the `projectInWorld` image data flag, so negative local camp depth
+does not hide the primary standard. Other scenery and camp props retain their
+existing projection behavior.
 
 To regenerate packing after editing the source sheet, install ImageMagick and run
 `node scripts/pack-heraldry.mjs`. This development-only command crops each source

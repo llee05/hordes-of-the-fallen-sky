@@ -58,9 +58,10 @@ export class SpriteBridge {
           object instanceof Phaser.GameObjects.Sprite ||
           object instanceof Phaser.GameObjects.Text
         ) {
-          // Root scenery/terrain have their own 3D representation. A negative
-          // depth inside the camp is local sorting, not background geometry.
-          if ((object.depth < 0 && !object.parentContainer) || object.scrollFactorX === 0) continue;
+          // Scenery/terrain have their own 3D representation. Painted standards
+          // explicitly project despite their negative local camp sort depth.
+          if ((object.depth < 0 && !object.getData('projectInWorld')) || object.scrollFactorX === 0)
+            continue;
           object.getWorldTransformMatrix(this.matrix, this.parent);
           const x = this.matrix.tx;
           const z = this.matrix.ty;

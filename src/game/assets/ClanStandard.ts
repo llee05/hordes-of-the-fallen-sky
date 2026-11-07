@@ -13,6 +13,7 @@ export class ClanStandard extends Phaser.GameObjects.Image {
     this.setName('banner')
       .setOrigin(0.5, 0.9)
       .setScale(this.restScale)
+      .setData('projectInWorld', true)
       .setData('appearance', cached.appearance);
     scene.add.existing(this);
   }
