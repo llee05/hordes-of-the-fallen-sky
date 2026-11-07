@@ -31,6 +31,7 @@ const BACK_PHASES = [
   'settings',
   'help',
   'traditions',
+  'character',
   'developer',
   'console',
 ];

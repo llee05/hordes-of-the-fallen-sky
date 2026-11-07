@@ -7,6 +7,7 @@ test('Golden Pasture arrivals survive at the camera edge and retire without kill
 }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /NEW GAME/ }).click();
+  await page.getByRole('button', { name: /Begin Journey/ }).click();
   await expect
     .poll(
       () => page.evaluate(() => (window as any).__gloam.scene.landscape.world3d?.pendingChunks),

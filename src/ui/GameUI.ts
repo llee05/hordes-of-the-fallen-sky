@@ -1,3 +1,4 @@
+import { characterCreatorContent } from './creator/characterCreatorContent';
 import { AUDIO_REFERENCE_CUES, type SoundKind } from '../game/audio/soundPalette';
 import { GAME } from '../game/config';
 import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
@@ -171,6 +172,10 @@ export class GameUI {
     this.overlay.addEventListener('keydown', (event) => this.handleMenuKey(event));
     this.overlay.addEventListener('input', (event) => {
       const input = event.target as HTMLInputElement;
+      if (input.matches('[data-creator-name]')) {
+        this.scene.changeCharacterOption('name', input.value);
+        return;
+      }
       if (input.matches('[data-audio-channel]')) {
         const channel = input.dataset.audioChannel as AudioChannel;
         if (AUDIO_CHANNELS.includes(channel)) {
@@ -611,7 +616,8 @@ export class GameUI {
   private renderPhase(snapshot: HudSnapshot): void {
     const { run } = snapshot;
     const preserveTree =
-      run.phase === this.phase && ['building', 'route', 'saves', 'traditions'].includes(run.phase);
+      run.phase === this.phase &&
+      ['building', 'route', 'saves', 'traditions', 'character'].includes(run.phase);
     const scroll = preserveTree
       ? this.overlay.querySelector(
           '.tree-scroll, .migration-scroll, .starting-traditions .panel-body',
@@ -680,7 +686,9 @@ export class GameUI {
     const developer = import.meta.env.DEV
       ? '<button class="menu-button" data-action="developer">Developer mode <kbd>F8</kbd></button>'
       : '';
-    if (run.phase === 'traditions') this.overlay.innerHTML = startingTraditionMenu(run);
+    if (run.phase === 'character')
+      this.overlay.innerHTML = characterCreatorContent(this.scene.characterCreator);
+    else if (run.phase === 'traditions') this.overlay.innerHTML = startingTraditionMenu(run);
     else if (run.phase === 'saves')
       this.overlay.innerHTML = saveMenu(snapshot, this.saveConfirmation);
     else if (run.phase === 'ready') {
@@ -967,6 +975,10 @@ export class GameUI {
     else if (action === 'starting-traditions') this.scene.openStartingTraditions();
     else if (button.dataset.startingTradition)
       this.scene.selectStartingTradition(button.dataset.startingTradition);
+    else if (button.dataset.creatorField && button.dataset.creatorValue)
+      this.scene.changeCharacterOption(button.dataset.creatorField, button.dataset.creatorValue);
+    else if (button.hasAttribute('data-creator-random')) this.scene.randomCharacterName();
+    else if (action === 'begin-journey') this.scene.beginJourney();
     else if (action === 'begin') this.scene.startRun();
     else if (action === 'saves') {
       this.saveConfirmation = undefined;
@@ -1134,7 +1146,7 @@ export class GameUI {
       return;
     }
     if (
-      ['building', 'route', 'developer'].includes(this.phase) &&
+      ['building', 'route', 'developer', 'character'].includes(this.phase) &&
       ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) &&
       !(event.target instanceof HTMLInputElement)
     ) {

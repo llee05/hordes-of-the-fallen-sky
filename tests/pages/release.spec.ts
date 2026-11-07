@@ -76,6 +76,7 @@ test('@gameplay browser expedition builds, pauses, resumes, and retains its prof
   await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: /NEW GAME/ }).click();
+  await page.getByRole('button', { name: /Begin Journey/ }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.keyboard.press('b');
   await page.locator('[data-camp-slot="1"]').click();
@@ -120,6 +121,7 @@ test('@gameplay a compact browser can start and build when local storage is unav
   });
   await page.goto('./');
   await page.getByRole('button', { name: /NEW GAME/ }).click();
+  await page.getByRole('button', { name: /Begin Journey/ }).click();
   await page.keyboard.press('b');
   await expect(page.locator('[data-camp-site="khans-ger"]')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

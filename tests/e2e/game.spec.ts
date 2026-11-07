@@ -30,6 +30,8 @@ test(
     await openTitle(page);
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
     await press(0);
+    await expect(page.getByRole('heading', { name: 'Character Creation' })).toBeVisible();
+    await press(0);
     await expect(page.getByRole('dialog')).toBeHidden();
     const initialX = await page.evaluate(() => (window as any).__gloam.scene.player.x);
     await page.evaluate(() => {
@@ -70,6 +72,8 @@ test(
     await expect(page).toHaveTitle('Hordes of the Fallen Sky · A people, not a place.');
     await page.screenshot({ path: 'test-results/desktop-ready.png', fullPage: true });
     await page.getByRole('button', { name: /NEW GAME/ }).focus();
+    await page.keyboard.press('Space');
+    await expect(page.getByRole('heading', { name: 'Character Creation' })).toBeVisible();
     await page.keyboard.press('Space');
     await expect(page.getByRole('dialog')).toBeHidden();
     const before = await page.evaluate(() => (window as any).__gloam.scene.player.x);

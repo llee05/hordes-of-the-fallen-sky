@@ -1,3 +1,10 @@
+import {
+  createCharacterCreator,
+  creatorProfile,
+  changeCreatorOption,
+  randomizeCreatorName,
+} from '../state/characterCreator';
+import { isValidCharacterName } from '../../shared/characterProfile';
 import Phaser from 'phaser';
 import type { GamePlatform } from '../../platform/GamePlatform';
 import type { AudioChannel } from '../../shared/audioSettings';
@@ -88,6 +95,7 @@ export interface ArenaCallbacks {
 
 export class ArenaScene extends Phaser.Scene {
   run: RunState = createRun();
+  characterCreator = createCharacterCreator();
   private player!: Phaser.Physics.Arcade.Sprite;
   private enemies!: Phaser.Physics.Arcade.Group;
   private projectiles!: Phaser.Physics.Arcade.Group;
@@ -326,6 +334,7 @@ export class ArenaScene extends Phaser.Scene {
     // Keep testing preferences across checkpoints; a normal new run clears every cheat.
     if (import.meta.env.DEV && !developerRun)
       this.developerTools = createDeveloperTools(this.platform.profile.developerCommandHistory);
+    this.characterCreator = createCharacterCreator(this.platform.profile.character);
     this.consoleReturnPhase = 'ready';
     this.run = developerRun ?? createRun(this.startingTraditionId, this.platform.profile.character);
     if (!developerRun) {
@@ -584,6 +593,31 @@ export class ArenaScene extends Phaser.Scene {
   startRun(): void {
     if (!['ready', 'traditions'].includes(this.run.phase)) return;
     this.audio.unlock();
+    this.setPhase('character');
+  }
+
+  changeCharacterOption(field: string, value: string): void {
+    if (this.run.phase !== 'character') return;
+    changeCreatorOption(this.characterCreator, field, value);
+    this.publishPhase();
+  }
+
+  randomCharacterName(): void {
+    if (this.run.phase !== 'character') return;
+    randomizeCreatorName(this.characterCreator);
+    this.publishPhase();
+  }
+
+  beginJourney(): void {
+    if (this.run.phase !== 'character' || !isValidCharacterName(this.characterCreator.profile.name))
+      return;
+    const profile = creatorProfile(this.characterCreator);
+    this.run = createRun(this.startingTraditionId, profile);
+    this.run.guidance.enabled = this.guidanceEnabled;
+    this.campPresenter.refresh();
+    this.khan.reset();
+    void this.platform.saveCharacterProfile(profile).catch(() => this.callbacks?.onSaveError());
+    this.audio.unlock();
     this.beginExpedition();
   }
 
@@ -652,7 +686,7 @@ export class ArenaScene extends Phaser.Scene {
     if (phase === 'console') phase = this.consoleReturnPhase;
     if (phase === 'developer') phase = this.developerReturnPhase;
     if (['settings', 'help'].includes(phase)) phase = this.utilityReturnPhase;
-    return !this.run.legacy.outcome && !['ready', 'traditions'].includes(phase);
+    return !this.run.legacy.outcome && !['ready', 'traditions', 'character'].includes(phase);
   }
 
   startDeveloperLevel(id: string): void {
@@ -678,7 +712,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   togglePause(): void {
-    if (this.run.phase === 'traditions') {
+    if (['traditions', 'character'].includes(this.run.phase)) {
       this.setPhase('ready');
       return;
     }
@@ -717,7 +751,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   closePlanning(): void {
-    if (this.run.phase === 'traditions') {
+    if (['traditions', 'character'].includes(this.run.phase)) {
       this.setPhase('ready');
       return;
     }

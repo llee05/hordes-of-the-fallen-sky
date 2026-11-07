@@ -1,6 +1,6 @@
 # Starting clan traditions
 
-The title's **Starting tradition** button opens four preparations for the fictional Blue Banner clan. **New Game** begins the expedition immediately using the selected arrangement. The picker pauses all simulation; Back retains the selection for the next new expedition in this app session.
+The title's **Starting tradition** button opens four preparations for the fictional Blue Banner clan. **New Game** opens character creation; **Begin Journey** starts the expedition using the selected arrangement. The picker pauses all simulation; Back retains the selection for the next new expedition in this app session.
 
 | Arrangement     | Food | Materials | Ongoing benefit                                               |
 | --------------- | ---: | --------: | ------------------------------------------------------------- |

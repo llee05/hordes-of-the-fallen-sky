@@ -50,6 +50,7 @@ test('console history, validation, focus, and narrow layouts work without changi
   await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: /NEW GAME/ }).click();
+  await page.getByRole('button', { name: /Begin Journey/ }).click();
   await page.keyboard.press('j');
   await expect(page.getByRole('heading', { name: 'A people on the move.' })).toBeVisible();
   await page.keyboard.press('F10');
