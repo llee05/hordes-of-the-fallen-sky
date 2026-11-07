@@ -1,10 +1,10 @@
 # Hordes of the Fallen Sky — game mechanics brief
 
-This is a reference for the **implemented prototype**, checked against the game code on 25 October 2026. It covers the expedition, resources, combat, spirit progression, camp upgrade tree, migration, enemies, chronicle, and persistence. Values are current balance, not promises for the final release. All times below are active gameplay seconds; menus freeze the world.
+This is a reference for the **implemented prototype**, updated for the playable-class implementation. It covers the expedition, resources, combat, spirit progression, camp upgrade tree, migration, enemies, chronicle, and persistence. Values are current balance, not promises for the final release. All times below are active gameplay seconds; menus freeze the world.
 
 ## 1. The expedition
 
-The player commands a mounted archer protecting the Blue Banner clan. Ride, dodge, collect spirit shards, develop a travelling camp, and defend three caravan crossings before holding a mountain passage for 180 seconds. The people are the objective: killing the final boss is optional.
+The player commands a mounted Khan protecting the Blue Banner clan. Ride, dodge, collect spirit shards, develop a travelling camp, and defend three caravan crossings before holding a mountain passage for 180 seconds. The people are the objective: killing the final boss is optional.
 
 The intended rhythm is **build → defend → choose when to leave → escort → rebuild**. A typical expedition targets roughly 15 minutes, but the first three camps have no forced departure time. Leaving early shortens the journey; waiting provides gathering time at the cost of pasture and increasing enemy pressure. There is no global 15-minute victory timer.
 
@@ -48,7 +48,7 @@ crossing and final stand remain at the fictional Heart of the Steppe. See
 | Threat             | 0–100%                  | Region and time in the current stage                                                       | A pressure indicator. Spawn intervals use their own stage/region formula; the displayed threat value is not an additional damage multiplier.                                                                               |
 | Identity           | Iron 0, Sky 0, Wander 0 | Construction, upgrades, route choices                                                      | Determines the clan's descriptive identity. Grants no additional stat modifiers or technology locks.                                                                                                                       |
 
-The opening camp foundations are described in [the nomadic camp guide](nomadic-camp.md). The Khan begins with one accompanying rider and one arrow per personal volley.
+The opening camp foundations are described in [the nomadic camp guide](nomadic-camp.md). The default Khan begins with one accompanying rider; personal weapons follow the [playable class rules](#playable-classes).
 
 ### Economy and scarcity
 
@@ -100,7 +100,7 @@ Each downward 20-point resolve band crossed by a hit removes one person, capped 
 
 ## 3. Spirit shards and levels
 
-Spirit shards dropped by enemies carry XP. The threshold at level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26 and so on. Excess XP carries across multiple levels without pausing combat. Levels no longer bank knowledge points. The patron tech tree, its purchases, research effects and Combinations catalogue are removed for now. **Spirit** is a separate currency automatically earned from kills and spent on camp development.
+Spirit shards dropped by enemies carry XP. The threshold at level `L` is `8 + (L − 1) × 6`: 8, 14, 20, 26 and so on. Excess XP carries across multiple levels without pausing combat. Crossing a class milestone automatically applies its stat and camp-effect bonuses, including every milestone crossed by one XP pickup. The class catalog in `src/game/data/classes.ts` owns the progression paths. Levels no longer bank knowledge points. The patron tech tree, its purchases, research effects and Combinations catalogue are removed for now. **Spirit** is a separate currency automatically earned from kills and spent on camp development.
 
 ## 4. Camp development and upgrade tree
 
@@ -110,9 +110,9 @@ See [the nomadic camp guide](nomadic-camp.md) for the current building catalog, 
 
 ### Khan, riders, and arrows
 
-The Khan starts with 100 health, 190 movement speed, 16 damage, a 0.6-second firing interval, 85 shard attraction radius, and one arrow per volley. Attacks automatically choose the nearest available enemy within targeting range; there is no manual aim or attack input.
+Without a supplied character profile, the Khan uses the legacy Mounted Archer opening stats in `GAME.player`. Supplied profiles use `GAME.classes` through the class catalog, with starting-tradition, background, and oath modifiers applied at initialization. Attacks automatically choose the nearest available enemy within targeting range; there is no manual aim or attack input.
 
-Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Before building upgrades, Khan targeting range is `440 + 120 × momentum`; personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum gives 560 targeting range and +30% personal damage.
+Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Khan targeting range is `GAME.projectile.range + campEffects.bonuses.range + 120 × momentum` (class loadouts store their range adjustment in those bonuses); personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum adds 120 targeting range and +30% personal damage.
 
 Accompanying riders use per-rider active-time release clocks and each fire one
 arrow per successful release, at 60% of the shared damage stat before camp modifiers. Each rider has an active-time release clock using the shared attack interval and camp host-interval modifier. Their targeting range starts at 440. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
@@ -124,7 +124,7 @@ min(16, 1 starting rider
         + 2 per completed blue-banner crossing)
 ```
 
-Arrows travel at 440 world units/second for 1.6 seconds and normally disappear on their first hit. Building upgrades can add piercing. Each arrow hits a pooled enemy incarnation at most once; its hit history resets on reuse. Targeting range determines when a volley is fired, rather than its entire travel distance. The shared projectile pool holds 250 friendly arrows, which can limit very large simultaneous volleys.
+Friendly projectiles last 1.6 seconds. Khan projectile speed and starting pierce follow the class catalog; allied arrows use `GAME.projectile.speed`. Progression and building upgrades can add piercing. Each arrow hits a pooled enemy incarnation at most once; its hit history resets on reuse. Targeting range determines when a volley is fired, rather than its entire travel distance. The shared projectile pool holds 250 friendly arrows, which can limit very large simultaneous volleys.
 
 ### Camp attacks and Burning Tempest
 
@@ -252,7 +252,7 @@ Touch preview supports dragging the battlefield to ride and tapping command butt
 
 Simulation, physics, economy, migration, combat animations, cooldowns, and the run timer advance only during active play. Title, pause, traditions, camp development, routes, chronicle, settings, help, defeat, and victory stop them. Losing window focus pauses active combat. UI motion respects the operating system's reduced-motion preference; menus and values respond without waiting for animation.
 
-The profile retains longest journey, audio settings, developer command history, and the portable camp checkpoint described below. Full battle resumption is documented in [the expedition save contract](expedition-saves.md). New expeditions reset resources, buildings, identity, memories, casualties, and crossings. There is no permanent spirit-stone wallet, permanent meta-tech tree, achievement system, Steamworks progression, or campaign save in this prototype.
+The profile retains longest journey, audio settings, developer command history, an optional character profile, and the portable camp checkpoint described below. Full battle resumption is documented in [the expedition save contract](expedition-saves.md). New expeditions reset resources, buildings, identity, memories, casualties, and crossings. There is no permanent spirit-stone wallet, permanent meta-tech tree, achievement system, Steamworks progression, or campaign save in this prototype.
 
 The desktop game runs offline with local assets and native, validated, atomic saves. Browser preview has separate saves. The technology stack is TypeScript, Phaser 3, Vite, and Electron; there is no runtime AI service or backend.
 
@@ -394,15 +394,44 @@ The Skybreaker cycles through advance, marked warning, one barrage and vulnerabl
 
 Combat adds bounded elite/armour markers, grouped offscreen warnings and retained major-loss explanations. Projectile contrast and cosmetic effect density are global saved preferences; neither changes hit areas or hides attack warnings. See [the readability contract](combat-readability.md).
 
-## Playable class close defense
+## Playable classes
+
+The four playable classes share automatic targeting, mounted momentum, formations,
+and succession. The temporary selection controls are documented in
+[developer tools](developer-mode.md#playable-class-testing); normal New Game still
+begins directly, without a character creation screen. Classes currently reuse the
+mounted Khan sprite sheet with tint accents; dedicated class art and animations
+remain separate work.
+
+- **Mounted Archer** uses a composite recurve bow, a close-range saber sweep, and
+  a charged arrow fan. Its progression emphasizes firing speed, extra arrows,
+  range, piercing, and mobility.
+- **Lancer** uses piercing lance thrusts, a nearby sweeping strike, charged pins,
+  and pinning gallop breakthroughs. Its progression develops damage, piercing,
+  health, speed, and additional thrusts.
+- **Iron Pagoda** uses overlapping saber arcs and nearby crushing attacks, with
+  stronger personal armor, recovery, and clan protection. Charged attacks and
+  gallop breakthroughs pin. Its progression strengthens health, damage, cleaves,
+  protection, and firing speed.
+- **Spirit Caller** uses homing staff bolts and a pinning drum pulse. Charged
+  volleys release an additional ancestral bolt; galloping restores Khan health and
+  clan resolve. Its progression adds damage, pickup radius, bolts, Spirit gain,
+  piercing, health, and firing speed.
+
+`src/game/data/classes.ts` owns weapon, ability, and progression definitions;
+`GAME.classes`, `GAME.backgrounds`, and `GAME.oaths` own their starting balance.
+A supplied character profile applies its background and oath bonuses alongside
+its class loadout. Successors retain the expedition's class and progression.
+
+### Close defense and charged attacks
 
 All four classes automatically strike nearby enemies with a clear terrain path on
 an independent cooldown. Radius, interval, and damage multiplier come from
 `GAME.classes`; damage scales with the Khan's current damage stat. The Spirit
 Caller pulse also pins enemies. Close defense freezes in menus and during Khan
-succession, and its cooldown is retained in expedition saves. Older saves begin
-with close defense ready. Charged pinning weapons apply the existing pin duration
-before armor resolves. Spirit Caller bolts steer toward live, unhit enemies at
+succession. Cooldown persistence follows the
+[save contract](expedition-saves.md#snapshot-and-hydration-contract). Charged pinning
+weapons apply the existing pin duration before armor resolves. Spirit Caller bolts steer toward live, unhit enemies at
 the class turn rate while retaining their speed.
 
 Mounted Archer charged volleys add two arrows to the current projectile count,

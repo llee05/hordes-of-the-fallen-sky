@@ -93,16 +93,24 @@ export class CombatSystem extends ArenaSystem {
     if (this.timers.closeDefenseTimer > 0) return;
     const cls = classDefinition(this.run.character?.classId);
     let struck = false;
-    this.spatial.forEachNearby(this.player.x, this.player.y, cls.stats.closeDefenseRadius, (enemy) => {
-      if (this.landscape.navigation && !this.landscape.navigation.lineClear(this.player, enemy, 0))
-        return;
-      if (cls.id === 'spirit-caller') {
-        enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
-        enemy.setVelocity(0, 0);
-      }
-      this.damageEnemy(enemy, this.run.stats.damage * cls.stats.closeDefenseDamage);
-      struck = true;
-    });
+    this.spatial.forEachNearby(
+      this.player.x,
+      this.player.y,
+      cls.stats.closeDefenseRadius,
+      (enemy) => {
+        if (
+          this.landscape.navigation &&
+          !this.landscape.navigation.lineClear(this.player, enemy, 0)
+        )
+          return;
+        if (cls.id === 'spirit-caller') {
+          enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
+          enemy.setVelocity(0, 0);
+        }
+        this.damageEnemy(enemy, this.run.stats.damage * cls.stats.closeDefenseDamage);
+        struck = true;
+      },
+    );
     if (!struck) return;
     this.timers.closeDefenseTimer = cls.stats.closeDefenseInterval;
     this.host.playerMotion.attack();

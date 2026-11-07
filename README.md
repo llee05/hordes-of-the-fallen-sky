@@ -25,7 +25,8 @@ starts a fresh test expedition with supplies.
 Escape / F8 closes the selector and returns to the previous screen. Developer runs
 do not change your saved longest journey.
 Start a new run to return to normal play. The selector is absent from production
-and packaged builds. See [developer mode](docs/developer-mode.md) for checkpoint rules.
+and packaged builds. See [developer mode](docs/developer-mode.md) for checkpoint rules and the temporary
+class picker.
 
 Press **Backtick** (<kbd>&#96;</kbd>) to open the developer console directly over
 the game; **F10** is an alternate shortcut. Use **`invincible on`** (or `god on`)
@@ -113,7 +114,7 @@ fictional Heart of the Steppe. These are stylized camps in the surrounding lands
 with compressed travel geography; real sacred places remain distinct from the
 invented calamity. See [destinations, rules, and cultural sources](docs/migration-locations.md).
 
-Start with eight people, three horses, two gers, supplies, and a mounted Khan with one accompanying rider. Attacks are automatic. Ride to collect spirit shards and gain XP levels without interrupting combat. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through. Camp development is the sole progression interface; patron research and knowledge points have been removed for now. Spirit remains the camp currency earned from kills.
+Start with eight people, three horses, two gers, supplies, and a mounted Khan with one accompanying rider. Attacks are automatic. Ride to collect spirit shards and gain XP levels without interrupting combat. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through. XP levels also grant automatic [class progression bonuses](docs/game-mechanics.md#playable-classes). Camp development is the sole progression interface; patron research and knowledge points have been removed for now. Spirit remains the camp currency earned from kills.
 
 Press **B** to visit the illustrated **nomadic camp**. Five permanent core households begin at level 1: **Khan's Ger, Horse Lines, Herding Grounds, Communal Hearth and Wagon Yard**. Choose five different workplaces from fourteen military, economy, survival, spiritual and cultural buildings for the five optional locations. Every building has three levels, a visible upgraded appearance, authored costs and effects, and a compact parchment inspector. The Khan's Ger governs population capacity and higher building levels. Search and Provisions stay within the same painted map; Escape/controller Back closes a popover before leaving. Planning freezes the world. Unsupported mount, equipment, companion, trading and corruption benefits are recorded as **Planned** data rather than simulated systems.
 
