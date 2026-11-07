@@ -7,7 +7,10 @@ import { createDeveloperClassRun } from '../../src/game/dev/levels';
 import { ALL_ENEMIES } from '../../src/game/data/enemies';
 import { CombatSystem } from '../../src/game/scenes/arena/CombatSystem';
 import { EnemyDirector } from '../../src/game/scenes/arena/EnemyDirector';
-import { EnemyBehaviour, type EnemyBehaviourHost } from '../../src/game/scenes/arena/EnemyBehaviour';
+import {
+  EnemyBehaviour,
+  type EnemyBehaviourHost,
+} from '../../src/game/scenes/arena/EnemyBehaviour';
 import { SpatialHash } from '../../src/game/systems/SpatialHash';
 import type { Enemy } from '../../src/game/entities/actors';
 import { createFakeArena } from '../support/fakeArena';
@@ -51,92 +54,100 @@ describe('playable class combat', () => {
     expect(arena.projectiles.countActive()).toBe(1);
   });
 
-  it.each(CHARACTER_CLASSES)('%s applies its gallop effect once per enemy per gallop', (classId) => {
-    const arena = setup(classId);
-    Object.assign(arena.context.landscape, { navigation: undefined });
-    Object.assign(arena.context.camp, { x: 4000, y: 4000 });
-    Object.assign(arena.context.scene.physics, {
-      moveTo: (enemy: Enemy) => enemy.setVelocity(10, 0),
-    });
-    const warnings = { clear: () => warnings };
-    const behaviour = new EnemyBehaviour(
-      arena.context,
-      { fieldMarkers: { warnings } } as unknown as EnemyBehaviourHost,
-      arena.combat,
-      arena.director,
-      arena.clanDamage,
-    );
-    const enemies = [[40, 0], [-40, 0], [0, 40], [0, -40]].map(([x, y]) => arena.spawn(x!, y!));
-    const outside = arena.spawn(100, 0);
-    arena.context.timers.dashRemaining = 0.4;
-    arena.context.run.combat.gallopSerial = 1;
-    behaviour.update(0.01);
-    const pinning = classId === 'lancer' || classId === 'iron-pagoda';
-    for (const enemy of enemies) {
-      expect(enemy.pinned).toBe(pinning ? 0.65 : 0);
-      expect(enemy.lastGallop).toBe(1);
-      expect(Math.hypot(enemy.x - 1000, enemy.y - 1000)).toBeCloseTo(88);
-      if (pinning) expect(enemy.body!.velocity.lengthSq()).toBe(0);
-      enemy.setPosition(1040, 1000);
-    }
-    expect(outside.pinned).toBe(0);
-    behaviour.update(0.1);
-    for (const enemy of enemies) {
-      expect(enemy.pinned).toBeCloseTo(pinning ? 0.55 : 0);
-      expect(enemy.x).toBe(1040);
-    }
-    arena.context.run.combat.gallopSerial++;
-    behaviour.update(0.1);
-    for (const enemy of enemies) expect(enemy.pinned).toBe(pinning ? 0.65 : 0);
-    for (const enemy of enemies) enemy.setPosition(1040, 1000);
-    arena.context.timers.dashRemaining = 0;
-    arena.context.run.combat.gallopSerial++;
-    behaviour.update(0.1);
-    for (const enemy of enemies) {
-      expect(enemy.lastGallop).toBe(2);
-      expect(enemy.x).toBe(1040);
-    }
-    arena.context.run.health = 0;
-    arena.context.run.khan.successionRemaining = 5;
-    arena.context.timers.dashRemaining = 0.4;
-    behaviour.update(0.1);
-    for (const enemy of enemies) expect(enemy.lastGallop).toBe(2);
-  });
-
-  it.each([[300, 0], [-300, 0], [0, 300], [0, -300]])(
-    'steers both spirit bolts toward a target at (%s, %s)',
-    (dx, dy) => {
-      const arena = setup('spirit-caller');
-      const target = arena.spawn(dx!, dy!);
-      arena.combat.shootVolley(1000, 1000, target, 2, 1, false, false, 'khan');
-      const bolts = arena.projectiles.getChildren();
-      const speeds = bolts.map((bolt) => Math.hypot(bolt.body!.velocity.x, bolt.body!.velocity.y));
-      arena.combat.updateProjectiles(0.01);
-      for (const [i, bolt] of bolts.entries()) {
-        const angle = Math.atan2(bolt.body!.velocity.y, bolt.body!.velocity.x);
-        const desired = Math.atan2(dy!, dx!);
-        const error = Math.abs(
-          Math.atan2(Math.sin(angle - desired), Math.cos(angle - desired)),
-        );
-        expect(error).toBeCloseTo(0.09 - 0.022);
-        expect(Math.hypot(bolt.body!.velocity.x, bolt.body!.velocity.y)).toBeCloseTo(speeds[i]!);
+  it.each(CHARACTER_CLASSES)(
+    '%s applies its gallop effect once per enemy per gallop',
+    (classId) => {
+      const arena = setup(classId);
+      Object.assign(arena.context.landscape, { navigation: undefined });
+      Object.assign(arena.context.camp, { x: 4000, y: 4000 });
+      Object.assign(arena.context.scene.physics, {
+        moveTo: (enemy: Enemy) => enemy.setVelocity(10, 0),
+      });
+      const warnings = { clear: () => warnings };
+      const behaviour = new EnemyBehaviour(
+        arena.context,
+        { fieldMarkers: { warnings } } as unknown as EnemyBehaviourHost,
+        arena.combat,
+        arena.director,
+        arena.clanDamage,
+      );
+      const enemies = [
+        [40, 0],
+        [-40, 0],
+        [0, 40],
+        [0, -40],
+      ].map(([x, y]) => arena.spawn(x!, y!));
+      const outside = arena.spawn(100, 0);
+      arena.context.timers.dashRemaining = 0.4;
+      arena.context.run.combat.gallopSerial = 1;
+      behaviour.update(0.01);
+      const pinning = classId === 'lancer' || classId === 'iron-pagoda';
+      for (const enemy of enemies) {
+        expect(enemy.pinned).toBe(pinning ? 0.65 : 0);
+        expect(enemy.lastGallop).toBe(1);
+        expect(Math.hypot(enemy.x - 1000, enemy.y - 1000)).toBeCloseTo(88);
+        if (pinning) expect(enemy.body!.velocity.lengthSq()).toBe(0);
+        enemy.setPosition(1040, 1000);
       }
-      arena.combat.updateProjectiles(0.1);
-      for (const bolt of bolts) {
-        expect(bolt.body!.velocity.x).toBeCloseTo(Math.cos(Math.atan2(dy!, dx!)) * speeds[0]!);
-        expect(bolt.body!.velocity.y).toBeCloseTo(Math.sin(Math.atan2(dy!, dx!)) * speeds[0]!);
+      expect(outside.pinned).toBe(0);
+      behaviour.update(0.1);
+      for (const enemy of enemies) {
+        expect(enemy.pinned).toBeCloseTo(pinning ? 0.55 : 0);
+        expect(enemy.x).toBe(1040);
       }
-      target.disableBody(true, true);
-      const replacement = arena.spawn(-dy!, dx!);
-      arena.combat.updateProjectiles(0.01);
-      for (const bolt of bolts) {
-        const cross =
-          bolt.body!.velocity.x * (replacement.y - bolt.y) -
-          bolt.body!.velocity.y * (replacement.x - bolt.x);
-        expect(cross).toBeGreaterThan(0);
+      arena.context.run.combat.gallopSerial++;
+      behaviour.update(0.1);
+      for (const enemy of enemies) expect(enemy.pinned).toBe(pinning ? 0.65 : 0);
+      for (const enemy of enemies) enemy.setPosition(1040, 1000);
+      arena.context.timers.dashRemaining = 0;
+      arena.context.run.combat.gallopSerial++;
+      behaviour.update(0.1);
+      for (const enemy of enemies) {
+        expect(enemy.lastGallop).toBe(2);
+        expect(enemy.x).toBe(1040);
       }
+      arena.context.run.health = 0;
+      arena.context.run.khan.successionRemaining = 5;
+      arena.context.timers.dashRemaining = 0.4;
+      behaviour.update(0.1);
+      for (const enemy of enemies) expect(enemy.lastGallop).toBe(2);
     },
   );
+
+  it.each([
+    [300, 0],
+    [-300, 0],
+    [0, 300],
+    [0, -300],
+  ])('steers both spirit bolts toward a target at (%s, %s)', (dx, dy) => {
+    const arena = setup('spirit-caller');
+    const target = arena.spawn(dx!, dy!);
+    arena.combat.shootVolley(1000, 1000, target, 2, 1, false, false, 'khan');
+    const bolts = arena.projectiles.getChildren();
+    const speeds = bolts.map((bolt) => Math.hypot(bolt.body!.velocity.x, bolt.body!.velocity.y));
+    arena.combat.updateProjectiles(0.01);
+    for (const [i, bolt] of bolts.entries()) {
+      const angle = Math.atan2(bolt.body!.velocity.y, bolt.body!.velocity.x);
+      const desired = Math.atan2(dy!, dx!);
+      const error = Math.abs(Math.atan2(Math.sin(angle - desired), Math.cos(angle - desired)));
+      expect(error).toBeCloseTo(0.09 - 0.022);
+      expect(Math.hypot(bolt.body!.velocity.x, bolt.body!.velocity.y)).toBeCloseTo(speeds[i]!);
+    }
+    arena.combat.updateProjectiles(0.1);
+    for (const bolt of bolts) {
+      expect(bolt.body!.velocity.x).toBeCloseTo(Math.cos(Math.atan2(dy!, dx!)) * speeds[0]!);
+      expect(bolt.body!.velocity.y).toBeCloseTo(Math.sin(Math.atan2(dy!, dx!)) * speeds[0]!);
+    }
+    target.disableBody(true, true);
+    const replacement = arena.spawn(-dy!, dx!);
+    arena.combat.updateProjectiles(0.01);
+    for (const bolt of bolts) {
+      const cross =
+        bolt.body!.velocity.x * (replacement.y - bolt.y) -
+        bolt.body!.velocity.y * (replacement.x - bolt.x);
+      expect(cross).toBeGreaterThan(0);
+    }
+  });
 
   it.each(['lancer', 'iron-pagoda', 'spirit-caller'])(
     '%s charged hits pin before resolving armor and reset on pool reuse',
@@ -195,7 +206,9 @@ describe('playable class combat', () => {
       arena.combat.tickFire(interval / 2);
       expect(enemies[0]!.health).toBeCloseTo(health);
       arena.combat.tickFire(interval / 2);
-      expect(enemies[0]!.health).toBeCloseTo(10000 - 2 * arena.context.run.stats.damage * multiplier);
+      expect(enemies[0]!.health).toBeCloseTo(
+        10000 - 2 * arena.context.run.stats.damage * multiplier,
+      );
     },
   );
   it.each(CHARACTER_CLASSES)('%s close defense respects terrain', (classId) => {
