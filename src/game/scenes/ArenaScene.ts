@@ -519,7 +519,7 @@ export class ArenaScene extends Phaser.Scene {
     this.input.keyboard!.resetKeys();
     this.persistence.started = true;
     this.guidanceEnabled = run.guidance.enabled;
-    Object.assign(this.timers, world.timers);
+    Object.assign(this.timers, { closeDefenseTimer: 0 }, world.timers);
     this.areaCombat.restore(world);
     this.landscape.setRegion(
       run.clan.region,

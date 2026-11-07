@@ -81,8 +81,34 @@ export class CombatSystem extends ArenaSystem {
 
   /** Counts down the Khan's attack timer and fires when it is due. */
   tickFire(dt: number): void {
+    if (this.run.phase !== 'playing') return;
+    this.tickCloseDefense(dt);
     this.timers.attackTimer -= dt;
     if (this.timers.attackTimer <= 0) this.fire();
+  }
+
+  private tickCloseDefense(dt: number): void {
+    if (!isKhanActive(this.run)) return;
+    this.timers.closeDefenseTimer = Math.max(0, (this.timers.closeDefenseTimer ?? 0) - dt);
+    if (this.timers.closeDefenseTimer > 0) return;
+    const cls = classDefinition(this.run.character?.classId);
+    let struck = false;
+    this.spatial.forEachNearby(this.player.x, this.player.y, cls.stats.closeDefenseRadius, (enemy) => {
+      if (this.landscape.navigation && !this.landscape.navigation.lineClear(this.player, enemy, 0))
+        return;
+      if (cls.id === 'spirit-caller') {
+        enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
+        enemy.setVelocity(0, 0);
+      }
+      this.damageEnemy(enemy, this.run.stats.damage * cls.stats.closeDefenseDamage);
+      struck = true;
+    });
+    if (!struck) return;
+    this.timers.closeDefenseTimer = cls.stats.closeDefenseInterval;
+    this.host.playerMotion.attack();
+    this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 5);
+    this.audio.play('impact', this.player);
+    markExpedition(this.run, 'fight');
   }
 
   fire(): void {
@@ -202,7 +228,7 @@ export class CombatSystem extends ArenaSystem {
       if (origin) bolt.hitTargets.set(origin, origin.spawnId);
       bolt.turn =
         owner === 'khan' && cls.weapon.homingTurnRate > 0
-          ? (i % 2 ? 1 : -1) * 0.45
+          ? 0
           : tempest
             ? (i % 2 ? 1 : -1) * 0.65
             : 0;
@@ -279,10 +305,29 @@ export class CombatSystem extends ArenaSystem {
     for (const bolt of this.projectiles.getChildren() as Projectile[]) {
       if (!bolt.active) continue;
       bolt.remaining -= dt;
-      if (bolt.turn) {
+      const homing =
+        bolt.source === 'khan'
+          ? classDefinition(this.run.character?.classId).weapon.homingTurnRate
+          : 0;
+      if (homing > 0 || bolt.turn) {
         const body = bolt.body as Phaser.Physics.Arcade.Body;
-        const angle = Math.atan2(body.velocity.y, body.velocity.x) + bolt.turn * dt;
-        const speed = body.velocity.length();
+        const speed = Math.hypot(body.velocity.x, body.velocity.y);
+        let angle = Math.atan2(body.velocity.y, body.velocity.x);
+        if (homing > 0) {
+          const target = this.spatial.nearest(
+            bolt.x,
+            bolt.y,
+            speed * Math.max(0, bolt.remaining),
+            (enemy) =>
+              bolt.hitTargets.get(enemy) !== enemy.spawnId &&
+              (!this.landscape.navigation || this.landscape.navigation.lineClear(bolt, enemy, 0)),
+          );
+          if (target) {
+            const desired = Math.atan2(target.y - bolt.y, target.x - bolt.x);
+            const difference = Math.atan2(Math.sin(desired - angle), Math.cos(desired - angle));
+            angle += Math.max(-homing * dt, Math.min(homing * dt, difference));
+          }
+        } else angle += bolt.turn * dt;
         bolt.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
         bolt.setRotation(angle + Math.PI / 4);
       }
@@ -321,6 +366,7 @@ export class CombatSystem extends ArenaSystem {
       bolt.pierces -= 1;
     } else bolt.disableBody(true, true);
     if (bolt.fire) enemy.burning = 2;
+    if (bolt.pins) enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
     this.damageEnemy(enemy, hitDamage);
   }
 

@@ -97,6 +97,7 @@ export interface WorldArchive {
   timers: {
     spawnTimer: number;
     attackTimer: number;
+    closeDefenseTimer?: number;
     dashTimer: number;
     dashRemaining: number;
     invulnerable: number;
@@ -378,17 +379,20 @@ const worldShape = object({
   camp: point,
   facing: point,
   zoom: positive,
-  timers: object({
-    spawnTimer: number,
-    attackTimer: number,
-    dashTimer: number,
-    dashRemaining: number,
-    invulnerable: number,
-    supportTimer: number,
-    wagonTimer: number,
-    wardTimer: number,
-    hazardTimer: number,
-  }),
+  timers: object(
+    {
+      spawnTimer: number,
+      attackTimer: number,
+      dashTimer: number,
+      dashRemaining: number,
+      invulnerable: number,
+      supportTimer: number,
+      wagonTimer: number,
+      wardTimer: number,
+      hazardTimer: number,
+    },
+    { closeDefenseTimer: number },
+  ),
   generations: list(integer, GAME.maxEnemies),
   enemies: list(
     object({

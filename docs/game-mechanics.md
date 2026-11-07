@@ -393,3 +393,14 @@ The chronicle's Your clan tab and the result screen retain per-stage active-time
 The Skybreaker cycles through advance, marked warning, one barrage and vulnerable recovery while changing camp approaches over three chapters. Two optional work parties each advance passage opening by 12 seconds. The clan can still survive the unchanged 180-second baseline without defeating the boss. See [the final-stand contract](final-stand.md).
 
 Combat adds bounded elite/armour markers, grouped offscreen warnings and retained major-loss explanations. Projectile contrast and cosmetic effect density are global saved preferences; neither changes hit areas or hides attack warnings. See [the readability contract](combat-readability.md).
+
+## Playable class close defense
+
+All four classes automatically strike nearby enemies with a clear terrain path on
+an independent cooldown. Radius, interval, and damage multiplier come from
+`GAME.classes`; damage scales with the Khan's current damage stat. The Spirit
+Caller pulse also pins enemies. Close defense freezes in menus and during Khan
+succession, and its cooldown is retained in expedition saves. Older saves begin
+with close defense ready. Charged pinning weapons apply the existing pin duration
+before armor resolves. Spirit Caller bolts steer toward live, unhit enemies at
+the class turn rate while retaining their speed.

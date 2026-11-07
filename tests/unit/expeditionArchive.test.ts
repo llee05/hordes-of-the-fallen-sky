@@ -418,6 +418,7 @@ describe('full expedition snapshots', () => {
     run.khan.trait = 'outrider';
     run.combat.previous = { x: 2600, y: 2700 };
     const runtime = world();
+    runtime.timers.closeDefenseTimer = 0.73;
     syncAreaEncounter(runtime.areaEncounter, run);
     const save = captureExpedition(run, runtime);
     const restored = decodeExpedition(JSON.parse(JSON.stringify(save)));

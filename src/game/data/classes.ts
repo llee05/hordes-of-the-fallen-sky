@@ -25,6 +25,7 @@ import {
   type CharacterProfile,
 } from '../../shared/characterProfile.js';
 import { GAME } from '../config.js';
+import { applyCampEffects } from '../state/camp.js';
 import type { CampEffectDefinition, PlayerStats, RunState } from '../types.js';
 
 export {
@@ -977,30 +978,6 @@ function applyStatDelta(run: RunState, bonuses?: Partial<PlayerStats>): void {
   if (bonuses.pierce) run.stats.pierce += bonuses.pierce;
 }
 
-function applyEffectDefinition(run: RunState, effects?: CampEffectDefinition): void {
-  if (!effects) return;
-  if (effects.multipliers) {
-    for (const [key, value] of Object.entries(effects.multipliers) as [
-      keyof typeof run.clan.campEffects.multipliers,
-      number,
-    ][]) {
-      if (typeof value === 'number') {
-        run.clan.campEffects.multipliers[key] *= value;
-      }
-    }
-  }
-  if (effects.bonuses) {
-    for (const [key, value] of Object.entries(effects.bonuses) as [
-      keyof typeof run.clan.campEffects.bonuses,
-      number,
-    ][]) {
-      if (typeof value === 'number') {
-        run.clan.campEffects.bonuses[key] += value;
-      }
-    }
-  }
-}
-
 /**
  * Applies the selected character profile's class stats, background starting bonus,
  * and oath starting bonus to a newly initialized run.
@@ -1054,14 +1031,14 @@ export function applyCharacterLoadout(run: RunState, rawProfile: CharacterProfil
       );
   }
   applyStatDelta(run, background.statBonuses);
-  applyEffectDefinition(run, background.campEffects);
+  applyCampEffects(run.clan.campEffects, background.campEffects);
 
   const oath = oathDefinition(profile.oath);
   if (oath.startingResources?.spirit) {
     run.clan.spirit += oath.startingResources.spirit;
   }
   applyStatDelta(run, oath.statBonuses);
-  applyEffectDefinition(run, oath.campEffects);
+  applyCampEffects(run.clan.campEffects, oath.campEffects);
 }
 
 /**
@@ -1083,7 +1060,7 @@ export function applyClassProgressionMilestones(
           Number((run.stats.attackInterval * node.attackIntervalMultiplier).toFixed(3)),
         );
       }
-      applyEffectDefinition(run, node.campEffects);
+      applyCampEffects(run.clan.campEffects, node.campEffects);
       unlocked.push(node);
     }
   }
