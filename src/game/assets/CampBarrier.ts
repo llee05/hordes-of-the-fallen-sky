@@ -129,11 +129,11 @@ export class CampBarrier {
     const b = { x: hurdle.b.x - hurdle.middle.x, y: hurdle.b.y - hurdle.middle.y };
     const height = (this.travelling ? 15 : 25) + (index % 3) * 1.4;
     const hit = hurdle.impactRemaining > 0;
-    const wood = hit ? 0xc59a60 : this.wear === 2 ? 0x65513d : 0x856342;
-    const light = hit ? 0xf0cc86 : 0xb08b58;
+    const wood = hit ? 0xd9c8a5 : this.wear === 2 ? 0x6b5640 : 0x9b7448;
+    const light = hit ? 0xf2e6cc : 0xd9c8a5;
     hurdle.height = height;
     hurdle.wood = wood;
-    hurdle.cloth = index % 3 === 0 ? (index % 2 === 0 ? 0x315d64 : 0x94523e) : undefined;
+    hurdle.cloth = index % 3 === 0 ? (index % 2 === 0 ? 0x607a8b : 0x98614d) : undefined;
     const plank = (
       x1: number,
       y1: number,
@@ -142,9 +142,9 @@ export class CampBarrier {
       width: number,
       color: number,
     ): void => {
-      g.lineStyle(width + 1.5, 0x4e402d, 0.95).lineBetween(x1, y1, x2, y2);
+      g.lineStyle(width + 1.8, 0x43382c, 0.98).lineBetween(x1, y1, x2, y2);
       g.lineStyle(width, color, 1).lineBetween(x1 - 0.5, y1 - 0.5, x2 - 0.5, y2 - 0.5);
-      g.lineStyle(0.8, light, 0.7).lineBetween(x1 - 1, y1 - 1.5, x2 - 1, y2 - 1.5);
+      g.lineStyle(0.85, light, 0.78).lineBetween(x1 - 1, y1 - 1.5, x2 - 1, y2 - 1.5);
     };
     // Low crossed hurdles leave silhouettes and the camp interior readable.
     plank(a.x, a.y - 6, b.x, b.y - height + 5, 2.4, wood);
@@ -171,7 +171,7 @@ export class CampBarrier {
     if (index % 3 === 0) {
       const x = (a.x + b.x) / 2;
       const y = (a.y + b.y) / 2 - height + 2;
-      const cloth = index % 2 === 0 ? 0x315d64 : 0x94523e;
+      const cloth = index % 2 === 0 ? 0x607a8b : 0x98614d;
       g.fillStyle(cloth, 1).fillPoints(
         [
           { x: x - 7, y },
@@ -181,8 +181,17 @@ export class CampBarrier {
         ],
         true,
       );
-      g.lineStyle(1, 0xd0b67c, 0.85).lineBetween(x - 4, y + 3, x + 3, y + 3);
-      g.lineStyle(1, 0xc9b888, 0.7).strokeRect(x - 2, y + 6, 3, 3);
+      g.lineStyle(1.1, 0x43382c, 0.92).strokePoints(
+        [
+          { x: x - 7, y },
+          { x: x + 6, y: y + 1 },
+          { x: x + 5, y: y + (this.wear > 0 ? 10 : 13) },
+          { x: x - 5, y: y + 12 },
+        ],
+        true,
+      );
+      g.lineStyle(1, 0xe8d9b9, 0.85).lineBetween(x - 4, y + 3, x + 3, y + 3);
+      g.lineStyle(1, 0xd9c8a5, 0.75).strokeRect(x - 2, y + 6, 3, 3);
     }
     if (this.travelling && index % 2 === 0) {
       g.fillStyle(0x453c2e, 1).fillCircle(a.x, a.y + 1, 3.5);

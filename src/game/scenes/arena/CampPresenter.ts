@@ -33,11 +33,13 @@ export class CampPresenter {
     this.clanLife = new ClanLife(scene);
     this.label = scene.add
       .text(center, center - 125 * CAMP_VISUAL_SCALE, 'YOUR CLAN', {
-        fontFamily: 'Georgia',
+        fontFamily: 'Palatino Linotype, Book Antiqua, Georgia, serif',
         fontSize: '11px',
-        color: '#f5e6bf',
-        backgroundColor: '#34483bb3',
-        padding: { x: 8, y: 4 },
+        color: '#43382c',
+        backgroundColor: '#e8d9b9eb',
+        stroke: '#43382c',
+        strokeThickness: 0.4,
+        padding: { x: 9, y: 4 },
       })
       .setOrigin(0.5)
       .setDepth(9500);

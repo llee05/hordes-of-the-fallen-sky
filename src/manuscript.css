@@ -209,13 +209,26 @@
    3. Top Scroll Clock & Menu Buttons (.expedition-clock, .hud-menu-button)
    ============================================================================ */
 .expedition-clock {
-  padding: 5px 22px 6px;
-  background: var(--ms-scroll-plaque) center / 100% 100% no-repeat;
+  padding: 6px 18px 7px;
+  background-color: var(--ms-parchment-light);
+  background-image:
+    linear-gradient(180deg, #ede0c4f5 0%, #dfd0aef5 65%, #d4c19af7 100%), var(--cloth-texture);
+  background-size:
+    100% 100%,
+    320px;
+  background-blend-mode: normal, multiply;
+  border: 1.5px solid var(--ms-ink);
+  border-top: 3px solid var(--ms-terracotta);
+  border-radius: 2px;
+  box-shadow:
+    0 3px 10px #2b211633,
+    inset 0 0 0 2px #43382c38;
   text-shadow: none;
-  filter: drop-shadow(0 2px 6px #2b211630);
 }
 
 .expedition-clock strong {
+  display: block;
+  line-height: 1.05;
   font-family: var(--ms-serif);
   font-weight: 700;
   color: var(--ms-ink);
@@ -229,13 +242,20 @@
 
 @media (max-width: 850px) {
   .expedition-clock {
-    padding: 3px 6px 4px;
+    padding: 4px 6px 5px;
   }
 }
 
 @media (max-width: 600px) {
   .expedition-clock {
-    padding: 2px 4px 3px;
+    padding: 1px 3px 2px;
+  }
+  .expedition-clock strong {
+    font-size: 18px;
+    letter-spacing: 0.5px;
+  }
+  .expedition-clock > span {
+    margin-top: 2px;
   }
 }
 

@@ -76,31 +76,42 @@ export const TERRAIN_COLOR = `
     if(isWall==1) surface=rock;
 
     // 1. Delicate topographical ink contour lines on hills, ramps, and cliffs
-    float elevWarp=worldPoint.y+sin(worldPoint.x*0.008)*3.5+cos(worldPoint.z*0.008)*3.5;
-    float contourCycle= abs(fract(elevWarp/32.0)-0.5)*2.0;
-    float contourLine=(1.0-smoothstep(0.0,0.085,contourCycle))*smoothstep(0.02,0.22,slope+float(isWall)*0.5);
+    float organicWave=sin(worldPoint.x*0.011+sin(worldPoint.z*0.009)*1.8)*6.5+cos(worldPoint.z*0.013-sin(worldPoint.x*0.008)*1.5)*5.5;
+    float elevWarp=worldPoint.y+organicWave;
+    float contourCycle=abs(fract(elevWarp/34.0)-0.5)*2.0;
+    float contourLine=(1.0-smoothstep(0.0,0.09,contourCycle))*smoothstep(0.015,0.20,slope+float(isWall)*0.5);
+
+    // Subtle meadow brushstroke contour & pigment stipple on gentle ground
+    float meadowStroke=0.0;
+    if(isWall==0 && materialA.x>0.2) {
+      float tuftWave=sin(worldPoint.x*0.045+sin(worldPoint.z*0.038)*2.4)*cos(worldPoint.z*0.042-sin(worldPoint.x*0.031)*2.1);
+      meadowStroke=smoothstep(0.82,0.96,tuftWave)*0.14*materialA.x;
+    }
 
     // 2. Organic painted boundary line where soil/shore/paths meet grassland
     float transitionEdge=materialA.x*(materialA.y+materialB.z+materialA.z);
     float boundaryStroke=smoothstep(0.14,0.24,transitionEdge)*(1.0-smoothstep(0.24,0.34,transitionEdge));
 
-    // 3. Cliff face ink joints, ledge rims, and crevice crosshatching
+    // 3. Cliff face chiseled rock blocks, ink fissures, ledge rims, and crevice crosshatching
     float cliffInk=0.0;
     float ledgeHighlight=0.0;
-    if(isWall==1 || slope>0.18) {
-      float jointCoord=(worldPoint.x*n.z-worldPoint.z*n.x)*0.045+sin(worldPoint.y*0.06)*0.9;
-      float verticalCrack=(1.0-smoothstep(0.0,0.09,abs(fract(jointCoord)-0.5)*2.0))*0.55;
-      float horizontalLedge=1.0-smoothstep(0.0,0.11,abs(fract(elevWarp/22.0)-0.5)*2.0);
-      ledgeHighlight=smoothstep(0.72,0.96,sin(elevWarp*0.28))*0.22;
-      float shadeFactor=clamp((1.0-occlusion)*1.4+slope*0.55+max(0.0,-n.x*0.35-n.z*0.25),0.0,1.0);
-      float hatchA=1.0-smoothstep(0.0,0.16,abs(fract((worldPoint.x+worldPoint.y*1.35+worldPoint.z)*0.09)-0.5)*2.0);
-      float hatchB=1.0-smoothstep(0.0,0.16,abs(fract((worldPoint.x-worldPoint.y*1.35-worldPoint.z)*0.09)-0.5)*2.0);
-      float crosshatch=(hatchA*smoothstep(0.32,0.68,shadeFactor)+hatchB*smoothstep(0.58,0.88,shadeFactor))*0.42;
-      cliffInk=clamp(verticalCrack+horizontalLedge*0.48+crosshatch,0.0,0.78)*clamp(slope*2.2+float(isWall),0.0,1.0);
+    if(isWall==1 || slope>0.16) {
+      float alongWall=(worldPoint.x*n.z-worldPoint.z*n.x);
+      float blockWarp=sin(alongWall*0.018+sin(worldPoint.y*0.045)*1.7)*9.0+cos(alongWall*0.037-worldPoint.y*0.03)*4.5;
+      float chiseledY=worldPoint.y+blockWarp;
+      float jointCoord=alongWall*0.032+sin(chiseledY*0.075)*1.35+cos(alongWall*0.011)*0.8;
+      float verticalCrack=(1.0-smoothstep(0.0,0.10,abs(fract(jointCoord)-0.5)*2.0))*0.62;
+      float horizontalLedge=1.0-smoothstep(0.0,0.12,abs(fract(chiseledY/26.0)-0.5)*2.0);
+      ledgeHighlight=smoothstep(0.68,0.95,sin(chiseledY*0.24))*0.26;
+      float shadeFactor=clamp((1.0-occlusion)*1.45+slope*0.55+max(0.0,-n.x*0.38-n.z*0.28),0.0,1.0);
+      float hatchA=1.0-smoothstep(0.0,0.17,abs(fract((alongWall+worldPoint.y*1.4)*0.085)-0.5)*2.0);
+      float hatchB=1.0-smoothstep(0.0,0.17,abs(fract((alongWall-worldPoint.y*1.4)*0.085)-0.5)*2.0);
+      float crosshatch=(hatchA*smoothstep(0.28,0.65,shadeFactor)+hatchB*smoothstep(0.55,0.86,shadeFactor))*0.46;
+      cliffInk=clamp(verticalCrack+horizontalLedge*0.52+crosshatch,0.0,0.82)*clamp(slope*2.2+float(isWall),0.0,1.0);
     }
 
     surface=mix(surface,parchmentLight,ledgeHighlight);
-    float totalInk=clamp(contourLine*0.34+boundaryStroke*0.22+cliffInk,0.0,0.72);
+    float totalInk=clamp(contourLine*0.36+meadowStroke+boundaryStroke*0.25+cliffInk,0.0,0.76);
     surface=mix(surface,inkColor,totalInk);
     float manuscriptOcclusion=mix(0.62,1.0,occlusion);
     diffuseColor.rgb*=surface*manuscriptOcclusion;

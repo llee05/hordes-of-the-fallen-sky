@@ -87,9 +87,11 @@ export class Hazards extends ArenaSystem {
       const y = this.player.y;
       const warning = this.add.graphics().setDepth(3);
       warning
-        .fillStyle(0xa14839, 0.18)
+        .fillStyle(0x98614d, 0.18)
         .fillCircle(x, y, 70)
-        .lineStyle(2, 0xe6bd7b, 0.8)
+        .lineStyle(2.2, 0x43382c, 0.85)
+        .strokeCircle(x, y, 71.5)
+        .lineStyle(1.6, 0xad824d, 0.88)
         .strokeCircle(x, y, 70);
       this.hazards.push({
         x,
@@ -106,9 +108,11 @@ export class Hazards extends ArenaSystem {
       if (hazard.source === 'seer')
         hazard.warning
           .clear()
-          .fillStyle(0x976aa9, 0.13)
+          .fillStyle(0x794e4c, 0.14)
           .fillCircle(hazard.x, hazard.y, radius)
-          .lineStyle(2, 0xcba0c6, 0.8)
+          .lineStyle(2.2, 0x43382c, 0.85)
+          .strokeCircle(hazard.x, hazard.y, radius + 1.5)
+          .lineStyle(1.6, 0x98614d, 0.85)
           .strokeCircle(hazard.x, hazard.y, radius);
       if (hazard.remaining > 0) continue;
       this.effects.burst(hazard.x, hazard.y, clan.region === 3 ? 0xbf6558 : 0x796d4d, 12);
