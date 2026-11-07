@@ -185,7 +185,13 @@ export class CombatSystem extends ArenaSystem {
     const volley =
       owner === 'wagon-ricochet'
         ? { tempest: false, count: 1, spacing: 0, damage: 1, speed: 1 }
-        : volleyFactors(this.run, count);
+        : volleyFactors(
+            this.run,
+            count +
+              (owner === 'khan' && charged && cls.id === 'mounted-archer'
+                ? GAME.classes['mounted-archer'].chargedExtraProjectiles
+                : 0),
+          );
     const direction = Math.atan2(target.y - y, target.x - x);
     const tempest = volley.tempest;
     const first = this.projectiles.get(x, y, 'bolt') as Projectile | null;

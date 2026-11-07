@@ -404,3 +404,8 @@ succession, and its cooldown is retained in expedition saves. Older saves begin
 with close defense ready. Charged pinning weapons apply the existing pin duration
 before armor resolves. Spirit Caller bolts steer toward live, unhit enemies at
 the class turn rate while retaining their speed.
+
+Mounted Archer charged volleys add two arrows to the current projectile count,
+forming a fan and retaining progression bonuses. Lancer and Iron Pagoda gallops
+pin enemies they break through for 0.65 active seconds, once per enemy per gallop,
+while retaining the existing pushback.

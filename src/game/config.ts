@@ -255,6 +255,7 @@ export const GAME = {
   player: { health: 100, speed: 190, damage: 16, attackInterval: 0.6, pickupRadius: 85 },
   classes: {
     'mounted-archer': {
+      chargedExtraProjectiles: 2,
       health: 100,
       speed: 190,
       damage: 16,
