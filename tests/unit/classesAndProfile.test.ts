@@ -3,7 +3,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ProfileStore } from '../../desktop/profile';
+import { createDeveloperClassRun } from '../../src/game/dev/levels';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
+import { damageKhan } from '../../src/game/state/khan';
 import { createRun, gainExperience } from '../../src/game/state/run';
 import { world } from './fixtures/expedition';
 import {
@@ -19,6 +21,7 @@ import {
   MOUNTS,
   OATHS,
   classDefinition,
+  playerVisualConfig,
 } from '../../src/game/data/classes';
 import {
   defaultCharacterProfile,
@@ -257,5 +260,45 @@ describe('character classes and character profile', () => {
     const restored = decodeExpedition(rawSave);
     expect(restored.run.character).toEqual(defaultCharacterProfile());
     expect(restored.run.character?.classId).toBe('mounted-archer');
+  });
+
+  it('applies distinct class visual tints, developer class runs, and class damage reduction', () => {
+    expect(playerVisualConfig(defaultCharacterProfile())).toEqual({
+      textureKey: 'steppe-mounted-motion',
+      framePrefix: 'player',
+      baseTint: 0xffffff,
+    });
+    const tints = new Set(
+      CHARACTER_CLASSES.map(
+        (classId) => playerVisualConfig({ ...defaultCharacterProfile(), classId }).baseTint,
+      ),
+    );
+    expect(tints.size).toBe(4);
+
+    const lancerVisual = playerVisualConfig({
+      ...defaultCharacterProfile(),
+      classId: 'lancer',
+      clothingColour: 'vermilion',
+      mount: 'dun',
+    });
+    expect(lancerVisual.textureKey).toBe('steppe-mounted-motion');
+    expect(lancerVisual.framePrefix).toBe('player');
+    expect(lancerVisual.baseTint).not.toBe(0xffffff);
+
+    for (const classId of CHARACTER_CLASSES) {
+      const devRun = createDeveloperClassRun(classId);
+      expect(devRun).toBeDefined();
+      expect(devRun!.phase).toBe('playing');
+      expect(devRun!.character?.classId).toBe(classId);
+    }
+
+    const pagodaRun = createRun('shared-hearth', {
+      ...defaultCharacterProfile(),
+      classId: 'iron-pagoda',
+    });
+    pagodaRun.phase = 'playing';
+    const maxHealth = pagodaRun.health;
+    expect(damageKhan(pagodaRun, 100)).toBe('hit');
+    expect(pagodaRun.health).toBeCloseTo(maxHealth - 72);
   });
 });

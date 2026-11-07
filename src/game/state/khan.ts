@@ -1,4 +1,5 @@
 import { GAME } from '../config';
+import { classDefinition } from '../data/classes';
 import { SUCCESSORS, type SuccessorTrait } from '../data/successors';
 import type { RunState } from '../types';
 import { rememberChosenKhan, rememberFallenKhan } from './legacy';
@@ -21,9 +22,11 @@ export function beginSuccession(run: RunState): boolean {
 export function damageKhan(run: RunState, amount: number): 'hit' | 'fallen' | undefined {
   if (run.phase !== 'playing' || !isKhanActive(run) || !Number.isFinite(amount) || amount <= 0)
     return;
+  const classProtection = classDefinition(run.character?.classId).stats.damageTakenMultiplier;
   run.health = Math.max(
     0,
-    run.health - amount * (run.khan.trait ? SUCCESSORS[run.khan.trait].protection : 1),
+    run.health -
+      amount * classProtection * (run.khan.trait ? SUCCESSORS[run.khan.trait].protection : 1),
   );
   if (run.health > 0) {
     return 'hit';

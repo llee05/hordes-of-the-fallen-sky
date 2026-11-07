@@ -4,6 +4,7 @@ import type { CharacterMotion } from '../../animation/CharacterMotion';
 import type { CampBarrier } from '../../assets/CampBarrier';
 import { effectAmount } from '../../../shared/visualSettings';
 import { GAME } from '../../config';
+import { classDefinition } from '../../data/classes';
 import { Enemy, Gem, Projectile } from '../../entities/actors';
 import { campBoundary } from '../../state/campBarrier';
 import { hasDevelopment } from '../../state/clan';
@@ -101,6 +102,7 @@ export class CombatSystem extends ArenaSystem {
             target.x - this.player.x) < 0,
         );
       const charged = this.run.combat.ready;
+      const cls = classDefinition(this.run.character?.classId);
       const retreat = retreatShot(this.run, this.player, this.camp, target, this.facing);
       const released = this.shootVolley(
         this.player.x,
@@ -113,9 +115,24 @@ export class CombatSystem extends ArenaSystem {
         'khan',
       );
       hostFired ||= released;
+      if (released && charged && cls.id === 'spirit-caller') {
+        // Summon Ancestor (Call Spirit): channels an ancestral spectral bolt alongside charged volleys
+        this.shootVolley(
+          this.player.x,
+          this.player.y,
+          target,
+          1,
+          0.85,
+          true,
+          false,
+          'khan',
+          1,
+          true,
+        );
+      }
       if (released && charged) {
         spendMountedVolley(this.run);
-        this.effects.burst(this.player.x, this.player.y, 0xe3c78c, 5);
+        this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 5);
       }
     }
     if (hostFired) this.run.combat.volleys++;
@@ -138,6 +155,7 @@ export class CombatSystem extends ArenaSystem {
     ghost = false,
     origin?: Enemy,
   ): boolean {
+    const cls = classDefinition(this.run.character?.classId);
     const volley =
       owner === 'wagon-ricochet'
         ? { tempest: false, count: 1, spacing: 0, damage: 1, speed: 1 }
@@ -147,11 +165,16 @@ export class CombatSystem extends ArenaSystem {
     const first = this.projectiles.get(x, y, 'bolt') as Projectile | null;
     if (!first) return false;
     const arrowCount = volley.count;
+    const spacing =
+      owner === 'khan' && cls.id !== 'mounted-archer' && arrowCount > 1
+        ? cls.weapon.spreadAngle
+        : volley.spacing;
     const basePierces = this.run.stats.pierce + (charged ? 1 : 0);
+    const baseSpeed = owner === 'khan' ? cls.stats.projectileSpeed : GAME.projectile.speed;
     for (let i = 0; i < arrowCount; i += 1) {
       const bolt = i === 0 ? first : (this.projectiles.get(x, y, 'bolt') as Projectile | null);
       if (!bolt) break;
-      const angle = direction + (i - (arrowCount - 1) / 2) * volley.spacing;
+      const angle = direction + (i - (arrowCount - 1) / 2) * spacing;
       bolt.enableBody(true, x, y, true, true);
       bolt.barrage = undefined;
       bolt.echoIndex = ancestral ? echoIndex : undefined;
@@ -170,11 +193,19 @@ export class CombatSystem extends ArenaSystem {
       bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
       bolt.tempest = tempest;
       bolt.pierces = basePierces;
-      bolt.pins = false;
+      bolt.pins = owner === 'khan' && charged && cls.weapon.pinsOnCharged;
+      if (owner === 'khan' && cls.id !== 'mounted-archer') {
+        bolt.setTint(cls.weapon.projectileTint);
+      }
       if (charged) bolt.setTint(0xe2c586);
       bolt.hitTargets.clear();
       if (origin) bolt.hitTargets.set(origin, origin.spawnId);
-      bolt.turn = tempest ? (i % 2 ? 1 : -1) * 0.65 : 0;
+      bolt.turn =
+        owner === 'khan' && cls.weapon.homingTurnRate > 0
+          ? (i % 2 ? 1 : -1) * 0.45
+          : tempest
+            ? (i % 2 ? 1 : -1) * 0.65
+            : 0;
       if (bolt.fire) bolt.setTint(0xffa04e);
       if (ancestral) bolt.setTint(0x91ded6);
       bolt.damage =
@@ -190,8 +221,8 @@ export class CombatSystem extends ArenaSystem {
       bolt.setData('ghost', ghost);
       bolt.remaining = GAME.projectile.lifetime;
       bolt.setVelocity(
-        Math.cos(angle) * GAME.projectile.speed * volley.speed,
-        Math.sin(angle) * GAME.projectile.speed * volley.speed,
+        Math.cos(angle) * baseSpeed * volley.speed,
+        Math.sin(angle) * baseSpeed * volley.speed,
       );
     }
     markExpedition(this.run, 'fight');

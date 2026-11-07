@@ -913,6 +913,52 @@ export function bannerTrimDefinition(trimId?: CharacterBannerTrimId): BannerTrim
   return BANNER_TRIMS.find((entry) => entry.id === trimId) ?? BANNER_TRIMS[0]!;
 }
 
+function blendTint(first: number, second: number): number {
+  const r1 = (first >> 16) & 0xff;
+  const g1 = (first >> 8) & 0xff;
+  const b1 = first & 0xff;
+  const r2 = (second >> 16) & 0xff;
+  const g2 = (second >> 8) & 0xff;
+  const b2 = second & 0xff;
+  const r = Math.round(r1 * 0.6 + r2 * 0.4);
+  const g = Math.round(g1 * 0.6 + g2 * 0.4);
+  const b = Math.round(b1 * 0.6 + b2 * 0.4);
+  return (r << 16) | (g << 8) | b;
+}
+
+const CLASS_BASE_TINTS: Readonly<Record<CharacterClassId, number>> = {
+  'mounted-archer': 0xffffff,
+  lancer: 0xf5d6a7,
+  'iron-pagoda': 0xcfd8e6,
+  'spirit-caller': 0xb8efe6,
+};
+
+export function playerVisualConfig(character?: CharacterProfile): {
+  textureKey: string;
+  framePrefix: string;
+  baseTint: number;
+} {
+  const classId = character?.classId ?? 'mounted-archer';
+  const clothing = clothingColourDefinition(character?.clothingColour);
+  const mount = mountDefinition(character?.mount);
+  const classTint = CLASS_BASE_TINTS[classId];
+  const customTint =
+    clothing.id === 'ivory' && mount.id === 'bay'
+      ? 0xffffff
+      : blendTint(clothing.spriteTint, mount.spriteTint);
+  const baseTint =
+    classTint === 0xffffff
+      ? customTint
+      : customTint === 0xffffff
+        ? classTint
+        : blendTint(classTint, customTint);
+  return {
+    textureKey: 'steppe-mounted-motion',
+    framePrefix: 'player',
+    baseTint,
+  };
+}
+
 function applyStatDelta(run: RunState, bonuses?: Partial<PlayerStats>): void {
   if (!bonuses) return;
   if (bonuses.maxHealth) {

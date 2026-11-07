@@ -1,8 +1,11 @@
 import Phaser from 'phaser';
 import { GAME } from '../config';
 import { characterTexture, isCharacterKind, MOTION_SHEETS } from '../animation/CharacterMotion';
+import { playerVisualConfig } from '../data/classes';
 import { LANDSCAPES, type SceneryProp } from '../data/landscapes';
 import type { TerrainArt } from '../terrain/types';
+
+export { playerVisualConfig };
 
 /** Two motion atlases and one prop atlas keep painted actors on shared textures. */
 const PROPS = new Set(['ger', 'cart', 'banner', 'sheep', 'rock', 'pillar']);

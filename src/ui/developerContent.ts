@@ -1,4 +1,5 @@
 import { GAME } from '../game/config';
+import { CLASSES } from '../game/data/classes';
 import { DEVELOPER_LEVELS } from '../game/dev/levels';
 import { DEVELOPER_COMMAND_MAX_LENGTH, type DeveloperConsoleSnapshot } from '../game/dev/commands';
 
@@ -33,6 +34,13 @@ export function developerMenu(tools?: DeveloperConsoleSnapshot): string {
       <p class="developer-kit">${GAME.developer.population} people · stocked supplies.<br>Developer runs do not change your longest journey.</p>
       <h3>Command console <kbd>&#96;</kbd></h3>
       ${commandContent(tools)}
+      <section class="developer-group" aria-label="Playable classes">
+        <h3>Playable classes · start fresh expedition</h3>
+        <div class="developer-levels">${CLASSES.map(
+          (cls) =>
+            `<button class="developer-level" data-developer-class="${cls.id}"><strong>${cls.title}</strong><span>${cls.subtitle} · ${cls.weapon.hudLabel} ${cls.stats.damage} · ${cls.stats.maxHealth} HP</span></button>`,
+        ).join('')}</div>
+      </section>
       ${(
         [
           ['chapters', 'Chapters & final stand'],
