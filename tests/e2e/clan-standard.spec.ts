@@ -58,6 +58,17 @@ test('profile standards cache one painted sprite through pause, refresh and migr
     pixels.add(sample.digest);
   }
   expect(pixels.size).toBe(5);
+  // Negative local camp depth must not hide a standard as root terrain art.
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const s = (window as any).__gloam.scene;
+        return s.camp.list
+          .filter((child: any) => child.name === 'banner')
+          .every((standard: any) => s.landscape.world3d.sprites.positions.has(standard));
+      }),
+    )
+    .toBe(true);
   await closeOverlayOrPause(page);
   await expectFrozen(page, () =>
     page.evaluate(() => {
