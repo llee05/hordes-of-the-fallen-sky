@@ -13,8 +13,7 @@ test(
         '/src/game/data/enemies.ts'
       )) as typeof import('../../src/game/data/enemies');
       const s = (window as any).__gloam.scene;
-      s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
-      for (const e of s.enemies.getChildren()) e.disableBody(true, true);
+      window.__gloam.hooks.quietBattlefield();
       s.run.clan.region = 1;
       s.run.clan.locationId = 'bogd-khan-uul';
       s.run.clan.stageTime = 40;
@@ -93,8 +92,7 @@ for (const location of ['bogd-khan-uul', 'otgontenger', 'orkhon-valley', 'eej-kh
     const audit = await page.evaluate(async () => {
       const s = (window as any).__gloam.scene;
       s.setPhase('paused');
-      s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
-      for (const e of s.enemies.getChildren()) e.disableBody(true, true);
+      window.__gloam.hooks.quietBattlefield();
       s.run.clan.stageTime = 40;
       let successes = 0;
       for (let i = 0; i < 50; i++) if (s.spawnEnemy()) successes++;
@@ -155,7 +153,7 @@ test('terrain rules warn on real cliff-foot ground and woodland concealment reve
       '/src/game/systems/AreaHabitat.ts'
     )) as typeof import('../../src/game/systems/AreaHabitat');
     const s = (window as any).__gloam.scene;
-    s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
+    window.__gloam.hooks.quietBattlefield({ clearEnemies: false });
     const nav = s.landscape.navigation;
     let point;
     for (let x = 1400; x < 4200 && !point; x += 64)
@@ -210,8 +208,7 @@ test('terrain rules warn on real cliff-foot ground and woodland concealment reve
       '/src/game/systems/AreaHabitat.ts'
     )) as typeof import('../../src/game/systems/AreaHabitat');
     const s = (window as any).__gloam.scene;
-    s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
-    for (const e of s.enemies.getChildren()) e.disableBody(true, true);
+    window.__gloam.hooks.quietBattlefield();
     s.setPhase('paused');
     const nav = s.landscape.navigation;
     let point;

@@ -1,3 +1,5 @@
+// Type-only export includes the development Window accessor in Playwright's typecheck.
+export type { ArenaTestHooks } from '../../src/game/scenes/arena/testHooks';
 import { expect, type Page } from '@playwright/test';
 
 /** Observe actual scene renders, including in menus, rather than sleeping through a slow frame. */

@@ -120,6 +120,16 @@ test('scene members used by browser tests stay reachable with their kinds', asyn
     ({ live, readable, timers, assignable, methods }) => {
       const s = (window as any).__gloam.scene;
       const found: string[] = [];
+      for (const name of [
+        'quietBattlefield',
+        'spawn',
+        'volley',
+        'advance',
+        'setTimers',
+        'invincible',
+      ] as const)
+        if (typeof window.__gloam.hooks[name] !== 'function')
+          found.push(`hooks.${name}: not a method`);
       for (const name of live) {
         const value = s[name];
         if (value === null || typeof value !== 'object') found.push(`${name}: not a live object`);
@@ -157,7 +167,32 @@ test('assigned scene timers are the timers a save captures', async ({ page }) =>
     const s = (window as any).__gloam.scene;
     const assigned = Object.fromEntries(timers.map((name, index) => [name, 10.5 + index]));
     for (const name of timers) s[name] = assigned[name];
-    return { assigned, captured: s.captureWorld().timers };
+    const captured = s.captureWorld().timers;
+    const facadeAssigned = Object.fromEntries(timers.map((name, index) => [name, 20.5 + index]));
+    window.__gloam.hooks.setTimers(facadeAssigned);
+    const facadeCaptured = s.captureWorld().timers;
+    let rejected = false;
+    try {
+      window.__gloam.hooks.setTimers({ spawnTimer: 0, renamedTimer: 99 } as never);
+    } catch (error) {
+      rejected = error instanceof Error && error.message.includes('Unknown arena timer');
+    }
+    const afterRejected = s.captureWorld().timers;
+    const beforeAdvance = s.run.elapsed;
+    window.__gloam.hooks.advance(0.1);
+    return {
+      assigned,
+      captured,
+      facadeAssigned,
+      facadeCaptured,
+      rejected,
+      afterRejected,
+      pausedElapsed: s.run.elapsed - beforeAdvance,
+    };
   }, TIMERS);
   expect(result.captured).toEqual(result.assigned);
+  expect(result.facadeCaptured).toEqual(result.facadeAssigned);
+  expect(result.rejected).toBe(true);
+  expect(result.afterRejected).toEqual(result.facadeAssigned);
+  expect(result.pausedElapsed).toBe(0);
 });

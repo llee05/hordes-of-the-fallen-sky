@@ -16,7 +16,7 @@ test('people work, households and herd reflect growth and losses, and menus free
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
-    (window as any).__gloam.scene.spawnTimer = 999;
+    window.__gloam.hooks.quietBattlefield({ timers: ['spawnTimer'], clearEnemies: false });
   });
   const visible = () =>
     page.evaluate(() => {
@@ -83,7 +83,7 @@ test('packing begins immediately, pauses with the world, and arrival relocates t
   await startExpedition(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.spawnTimer = 999;
+    window.__gloam.hooks.quietBattlefield({ timers: ['spawnTimer'], clearEnemies: false });
     scene.run.clan.stageTime = 45;
   });
   await page.keyboard.press('m');

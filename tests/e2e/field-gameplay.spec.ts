@@ -8,8 +8,11 @@ test('optional carts freeze in camp planning, pay once, and disappear on migrati
   await startExpedition(page);
   await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.developerTools.invincible = s.developerTools.clanInvincible = true;
-    s.spawnTimer = s.attackTimer = 999;
+    window.__gloam.hooks.invincible({ khan: true, clan: true });
+    window.__gloam.hooks.quietBattlefield({
+      timers: ['spawnTimer', 'attackTimer'],
+      clearEnemies: false,
+    });
     s.run.clan.stageTime = 21;
     s.updateFieldObjectives(0.01);
   });

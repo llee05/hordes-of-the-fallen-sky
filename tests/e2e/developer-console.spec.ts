@@ -80,7 +80,7 @@ test('console invincibility protects the Khan from every damage path and restore
   const health = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.player.body.reset(scene.camp.x + 450, scene.camp.y);
-    scene.invulnerable = 0;
+    window.__gloam.hooks.setTimers({ invulnerable: 0 });
     scene.takeDamage(100000);
     scene.spawnEnemy();
     const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);
@@ -133,7 +133,7 @@ test('console invincibility protects the Khan from every damage path and restore
   await page.keyboard.press('F10');
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.invulnerable = 0;
+    window.__gloam.hooks.setTimers({ invulnerable: 0 });
     scene.fireHostile({ x: scene.player.x, y: scene.player.y, definition: { damage: 10 } }, 0);
     scene.hostileShots
       .getChildren()
@@ -177,7 +177,7 @@ test('clan invincibility prevents melee, projectile, hazard and starvation losse
     scene.run.clan.pasture = 0;
     scene.run.clan.stageTime = interval - 0.01;
     scene.player.body.reset(scene.camp.x, scene.camp.y);
-    scene.invulnerable = 0;
+    window.__gloam.hooks.setTimers({ invulnerable: 0 });
     const before = {
       population: scene.run.clan.population,
       herd: scene.run.clan.herd,

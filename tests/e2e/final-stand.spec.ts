@@ -78,8 +78,8 @@ async function defeatInCombat(
     const s = (window as any).__gloam.scene;
     for (const enemy of s.enemies.getChildren())
       if (enemy !== s.boss) enemy.disableBody(true, true);
-    s.spawnTimer = 999;
-    s.invulnerable = 999;
+    window.__gloam.hooks.quietBattlefield({ timers: ['spawnTimer'], clearEnemies: false });
+    window.__gloam.hooks.setTimers({ invulnerable: 999 });
     s.run.clan.population = options.population;
     s.run.clan.integrity = options.resolve;
     // Isolate the defeat reward from passive recovery while the arrow travels.
@@ -89,7 +89,7 @@ async function defeatInCombat(
     s.player.setPosition(s.camp.x + 600, s.camp.y);
     s.boss.setPosition(s.player.x + 140, s.player.y);
     s.boss.health = 1;
-    s.attackTimer = 0;
+    window.__gloam.hooks.setTimers({ attackTimer: 0 });
   }, options);
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.finalBossDefeated), {

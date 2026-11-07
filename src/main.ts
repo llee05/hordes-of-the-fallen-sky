@@ -29,7 +29,11 @@ async function bootstrap(): Promise<void> {
   game.events.once('destroy', () => stopCloseListener?.());
 
   // Local inspection and browser tests; this reference is removed from production.
-  if (import.meta.env.DEV) Object.assign(window, { __gloam: { game, scene } });
+  if (import.meta.env.DEV) {
+    const { createTestHooks } = await import('./game/scenes/arena/testHooks');
+    const hooks = createTestHooks(scene);
+    Object.assign(window, { __gloam: { game, scene, hooks } });
+  }
   if (import.meta.hot) import.meta.hot.dispose(() => game.destroy(true));
 }
 

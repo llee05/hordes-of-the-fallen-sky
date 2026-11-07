@@ -5,10 +5,10 @@ test.beforeEach(async ({ page }) => {
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.attackTimer = 999;
-    scene.spawnTimer = 999;
-    for (const enemy of scene.enemies.getChildren()) enemy.disableBody(true, true);
+    window.__gloam.hooks.quietBattlefield({
+      timers: ['attackTimer', 'spawnTimer'],
+      clearEnemies: true,
+    });
   });
 });
 
@@ -76,7 +76,7 @@ test('mounted gaits and bow release animate without changing collision geometry'
   await closeOverlayOrPause(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.spawnTimer = 999;
+    window.__gloam.hooks.quietBattlefield({ timers: ['spawnTimer'], clearEnemies: false });
     for (let attempt = 0; attempt < 10 && !scene.enemies.countActive(true); attempt++)
       scene.spawnEnemy();
     const enemy = scene.enemies.getChildren().find((actor: any) => actor.active);

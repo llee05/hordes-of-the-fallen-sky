@@ -7,9 +7,11 @@ test.beforeEach(async ({ page }) => {
   await startExpedition(page);
   await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.spawnTimer = s.attackTimer = 999;
-    s.developerTools.invincible = s.developerTools.clanInvincible = true;
-    for (const e of s.enemies.getChildren()) e.disableBody(true, true);
+    window.__gloam.hooks.invincible({ khan: true, clan: true });
+    window.__gloam.hooks.quietBattlefield({
+      timers: ['spawnTimer', 'attackTimer'],
+      clearEnemies: true,
+    });
     Object.assign(s.run.clan, { materials: 4000, spirit: 2000, population: 30 });
   });
   await page.keyboard.press('b');
@@ -175,7 +177,7 @@ test('archery, training, fletching and sacred upgrades alter real volleys and su
     const interval = s.attackTimer;
     const player = shots.filter((p: any) => p.x === s.player.x && p.y === s.player.y);
     const damage = shots.map((p: any) => p.damage);
-    s.supportTimer = s.wagonTimer = 0;
+    window.__gloam.hooks.setTimers({ supportTimer: 0, wagonTimer: 0 });
     s.updateSupport(0.01);
     return {
       interval,

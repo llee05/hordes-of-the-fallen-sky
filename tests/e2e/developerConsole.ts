@@ -13,8 +13,6 @@ export async function checkpoint(page: Page): Promise<void> {
   await page.locator('[data-developer-level="chapter:broken-pass"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.spawnTimer = scene.attackTimer = scene.hazardTimer = 999;
-    for (const enemy of scene.enemies.getChildren()) enemy.disableBody(true, true);
+    window.__gloam.hooks.quietBattlefield();
   });
 }

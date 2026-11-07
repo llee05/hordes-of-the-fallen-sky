@@ -7,7 +7,7 @@ test.describe.configure({ mode: 'parallel' });
 async function fall(page: Page) {
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.invulnerable = 0;
+    window.__gloam.hooks.setTimers({ invulnerable: 0 });
     scene.takeDamage(1000);
   });
   await expect(page.getByText('Choosing a new Khan', { exact: true })).toBeVisible();
@@ -27,9 +27,10 @@ test.beforeEach(async ({ page }) => {
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.spawnTimer = scene.attackTimer = 999;
-    for (const enemy of scene.enemies.getChildren()) enemy.disableBody(true, true);
+    window.__gloam.hooks.quietBattlefield({
+      timers: ['spawnTimer', 'attackTimer'],
+      clearEnemies: true,
+    });
   });
 });
 

@@ -22,7 +22,10 @@ test('camp development is the only progression screen after keyboard, controller
   await expect(page.locator('#research, #research-points, #blessing-count')).toHaveCount(0);
   await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.spawnTimer = s.attackTimer = 999;
+    window.__gloam.hooks.quietBattlefield({
+      timers: ['spawnTimer', 'attackTimer'],
+      clearEnemies: false,
+    });
     s.run.xp = s.run.nextLevelXp - 1;
     const gem = s.gems.get(s.player.x, s.player.y, 'gem');
     gem.enableBody(true, s.player.x, s.player.y, true, true);

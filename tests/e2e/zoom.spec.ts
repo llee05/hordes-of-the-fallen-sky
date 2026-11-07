@@ -138,7 +138,7 @@ test('controller triggers and reset work once per press, including during succes
   await expect(page.locator('#zoom-level')).toHaveText('100%');
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.invulnerable = 0;
+    window.__gloam.hooks.setTimers({ invulnerable: 0 });
     scene.takeDamage(1000);
   });
   await page.keyboard.press('-');

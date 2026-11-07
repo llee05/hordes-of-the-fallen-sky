@@ -46,7 +46,10 @@ test.beforeEach(async ({ page }) => {
   await startExpedition(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.spawnTimer = scene.attackTimer = 999;
+    window.__gloam.hooks.quietBattlefield({
+      timers: ['spawnTimer', 'attackTimer'],
+      clearEnemies: false,
+    });
     scene.player.setPosition(scene.camp.x + 650, scene.camp.y);
     scene.cameras.main.stopFollow().centerOn(scene.camp.x, scene.camp.y);
     for (const enemy of scene.enemies.getChildren()) enemy.disableBody(true, true);
@@ -152,8 +155,8 @@ test('the barricade encloses new crafts and households while both attack and war
     scene.updateEnemies(0.01);
     scene.run.clan.paths.sanctuary = ['ancestral-ward'];
     scene.spatial.rebuild(scene.enemies.getChildren());
-    scene.supportTimer = 999;
-    scene.wardTimer = 0;
+    window.__gloam.hooks.setTimers({ supportTimer: 999 });
+    window.__gloam.hooks.setTimers({ wardTimer: 0 });
     scene.updateSupport(0.01);
     return {
       resolve: scene.run.clan.integrity,
