@@ -27,7 +27,7 @@ it('registers all four class clips to the existing rider canvas and ground ancho
       }
     }
   }
-  expect(Object.keys(atlas.frames)).toHaveLength(24);
+  expect(Object.keys(atlas.frames).filter((name) => !name.startsWith('banner-'))).toHaveLength(24);
 });
 
 const mounted = JSON.parse(

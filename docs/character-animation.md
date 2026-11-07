@@ -67,8 +67,9 @@ The miniature manuscript painting follows the supplied class concept sheets.
 
 The atlas preserves the existing explicit trim format, 256 × 360 logical canvas,
 (128, 324) ground anchor, mirrored left/right facing, linear filtering, fractional
-positions, and 62-world-unit Khan width. The original generated 1536 × 1024 PNG is
-bundled unchanged. Trim rectangles include two pixels of gutter around visible
+positions, and 62-world-unit Khan width. The original 1536 × 1024 rider region is preserved pixel-for-pixel in the
+1536 × 1744 shared atlas. Registered [clan standard layers](clan-standards.md)
+occupy the added rows below it. Trim rectangles include two pixels of gutter around visible
 alpha where cell spacing allows. All classes share one added texture and one
 sprite batch, independent of class count. Existing allied and enemy sheets remain
 in use.

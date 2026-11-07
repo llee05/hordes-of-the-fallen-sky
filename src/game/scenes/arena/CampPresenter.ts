@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { CampBarrier } from '../../assets/CampBarrier';
 import { ClanLife } from '../../assets/ClanLife';
+import { ClanStandard } from '../../assets/ClanStandard';
 import { ART_WIDTH, CAMP_VISUAL_SCALE, paintedImage } from '../../assets/painterlyArt';
 import { GAME } from '../../config';
-import { bannerColourDefinition } from '../../data/classes';
 import { campShelters } from '../../state/campLife';
 import type { ArenaContext } from './ArenaContext';
 
@@ -49,7 +49,7 @@ export class CampPresenter {
     const { scene, run, camp } = this.arena;
     camp.removeAll(true);
     const migrating = run.clan.stage === 'migration';
-    const add = (x: number, y: number, key: string, scale = 2.5): Phaser.GameObjects.Image => {
+    const add = (x: number, y: number, key: string, scale = 2.5) => {
       const width = ((ART_WIDTH[key] ?? 60) * scale) / 2.5;
       camp.add(
         scene.add
@@ -58,10 +58,13 @@ export class CampPresenter {
           .setAlpha(0.7)
           .setDepth(y - 1),
       );
-      const image = paintedImage(scene, x, y, key, width).setDepth(y).setName(key);
-      if (key === 'banner' && run.character && run.character.banner.fieldColour !== 'ivory') {
-        image.setTint(bannerColourDefinition(run.character.banner.fieldColour).spriteTint);
-      }
+      const image = (
+        key === 'banner'
+          ? new ClanStandard(scene, x, y, width, run.character?.banner)
+          : paintedImage(scene, x, y, key, width)
+      )
+        .setDepth(y)
+        .setName(key);
       image.setData('restScale', image.scaleX);
       camp.add(image);
       return image;
@@ -118,13 +121,7 @@ export class CampPresenter {
       for (const ger of this.packedGers) ger.image.destroy();
       this.packedGers = [];
     }
-    for (const child of camp.list)
-      if (child instanceof Phaser.GameObjects.Image && child.name === 'banner') {
-        const rest = child.getData('restScale') as number;
-        child
-          .setScale(rest * (1 + Math.sin(run.elapsed * 2.3 + child.x) * 0.035), rest)
-          .setAngle(Math.sin(run.elapsed * 1.7 + child.x) * 1.2);
-      }
+    for (const child of camp.list) if (child instanceof ClanStandard) child.sway(run.elapsed);
     this.placeLabel();
   }
 
