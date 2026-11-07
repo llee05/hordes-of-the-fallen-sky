@@ -253,7 +253,11 @@ export class CombatSystem extends ArenaSystem {
         owner === 'wagon-ricochet'
           ? damageOrMultiplier
           : this.run.stats.damage *
-            (charged ? GAME.mounted.chargedDamage : 1) *
+            (charged
+              ? owner === 'khan'
+                ? cls.weapon.chargedDamage
+                : GAME.mounted.chargedDamage
+              : 1) *
             damageOrMultiplier *
             volley.damage;
       bolt.setData('base-damage', bolt.damage);

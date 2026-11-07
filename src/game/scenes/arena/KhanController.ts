@@ -3,7 +3,7 @@ import { effectAmount } from '../../../shared/visualSettings';
 import { CharacterMotion } from '../../animation/CharacterMotion';
 import { playerVisualConfig } from '../../assets/painterlyArt';
 import { GAME } from '../../config';
-import { classDefinition, khanTargetingRange } from '../../data/classes';
+import { classDefinition, khanGallopSpeed, khanTargetingRange } from '../../data/classes';
 import type { Enemy } from '../../entities/actors';
 import { areaMovementMultiplier, type AreaThreatState } from '../../state/areaThreats';
 import { gallopCooldown } from '../../state/campCombat';
@@ -91,7 +91,7 @@ export class KhanController extends ArenaSystem {
       completeGuidance(this.run, 'ride');
       this.facing.copy(movement).normalize();
     }
-    if (this.timers.dashRemaining > 0) movement.copy(this.facing).scale(GAME.dash.speed);
+    if (this.timers.dashRemaining > 0) movement.copy(this.facing).scale(khanGallopSpeed(this.run));
     else
       movement.scale(
         this.run.stats.speed *

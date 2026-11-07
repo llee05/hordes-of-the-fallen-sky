@@ -146,7 +146,7 @@ Clan population or resolve reaching zero ends the expedition during the countdow
 
 ### Gallop
 
-**Space / controller A** gallops in the current or last facing direction at speed 570 for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop.
+**Space / controller A** gallops in the current or last facing direction at speed 570 (scaled by the class gallop modifier) for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop.
 
 ### Formation tree
 
@@ -406,8 +406,8 @@ remain separate work.
 - **Mounted Archer** uses a composite recurve bow, a close-range saber sweep, and
   a charged arrow fan. Its progression emphasizes extra arrows, firing speed,
   damage, mobility, and piercing.
-- **Lancer** uses piercing lance thrusts, a nearby sweeping strike, charged pins,
-  and pinning gallop breakthroughs. Its progression develops damage, piercing,
+- **Lancer** uses piercing lance thrusts, a nearby sweeping strike, heavier charged
+  pins, and faster pinning gallop breakthroughs. Its progression develops damage, piercing,
   health, speed, and additional thrusts.
 - **Iron Pagoda** uses overlapping saber arcs and nearby crushing attacks, with
   stronger personal armor, recovery, and clan protection. Charged attacks and
@@ -433,6 +433,12 @@ succession. Cooldown persistence follows the
 [save contract](expedition-saves.md#snapshot-and-hydration-contract). Charged pinning
 weapons apply the existing pin duration before armor resolves. Spirit Caller bolts steer toward live, unhit enemies at
 the class turn rate while retaining their speed.
+
+Each class sets its Khan charged-volley damage multiplier and extra pierce in
+`GAME.classes` (the Lancer's Devastating Charge deals 1.6× damage with +2 pierce;
+the other classes use 1.35×). Accompanying riders keep `GAME.mounted.chargedDamage`
+and +1 pierce. The class `gallopSpeedMultiplier` scales the Khan's gallop speed;
+the Lancer's Shock Lance gallops 12% faster.
 
 Mounted Archer charged volleys add two arrows to the current projectile count,
 forming a fan and retaining progression bonuses. Lancer and Iron Pagoda gallops

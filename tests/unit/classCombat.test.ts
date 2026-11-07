@@ -4,6 +4,8 @@ vi.mock('phaser', async () => (await import('../support/mockPhaser')).mockPhaser
 
 import { CHARACTER_CLASSES } from '../../src/shared/characterProfile';
 import { createDeveloperClassRun } from '../../src/game/dev/levels';
+import { classDefinition } from '../../src/game/data/classes';
+import { GAME } from '../../src/game/config';
 import { ALL_ENEMIES } from '../../src/game/data/enemies';
 import { CombatSystem } from '../../src/game/scenes/arena/CombatSystem';
 import { EnemyDirector } from '../../src/game/scenes/arena/EnemyDirector';
@@ -125,15 +127,16 @@ describe('playable class combat', () => {
     arena.combat.shootVolley(1000, 1000, target, 2, 1, false, false, 'khan');
     const bolts = arena.projectiles.getChildren();
     const speeds = bolts.map((bolt) => Math.hypot(bolt.body!.velocity.x, bolt.body!.velocity.y));
+    const { homingTurnRate, spreadAngle } = classDefinition('spirit-caller').weapon;
     arena.combat.updateProjectiles(0.01);
     for (const [i, bolt] of bolts.entries()) {
       const angle = Math.atan2(bolt.body!.velocity.y, bolt.body!.velocity.x);
       const desired = Math.atan2(dy!, dx!);
       const error = Math.abs(Math.atan2(Math.sin(angle - desired), Math.cos(angle - desired)));
-      expect(error).toBeCloseTo(0.09 - 0.022);
+      expect(error).toBeCloseTo(spreadAngle / 2 - homingTurnRate * 0.01);
       expect(Math.hypot(bolt.body!.velocity.x, bolt.body!.velocity.y)).toBeCloseTo(speeds[i]!);
     }
-    arena.combat.updateProjectiles(0.1);
+    arena.combat.updateProjectiles(spreadAngle / 2 / homingTurnRate);
     for (const bolt of bolts) {
       expect(bolt.body!.velocity.x).toBeCloseTo(Math.cos(Math.atan2(dy!, dx!)) * speeds[0]!);
       expect(bolt.body!.velocity.y).toBeCloseTo(Math.sin(Math.atan2(dy!, dx!)) * speeds[0]!);
@@ -169,10 +172,10 @@ describe('playable class combat', () => {
   );
 
   it.each([
-    ['mounted-archer', 96, 1.4, 0.75],
-    ['lancer', 112, 1.25, 0.9],
-    ['iron-pagoda', 128, 1.35, 0.85],
-    ['spirit-caller', 118, 1.5, 0.7],
+    ['mounted-archer', 58, 1.05, 0.625],
+    ['lancer', 74, 0.95, 0.625],
+    ['iron-pagoda', 82, 0.85, 0.73],
+    ['spirit-caller', 70, 0.9, 0.86],
   ] as const)(
     '%s strikes nearby foes on its independent active-time cooldown',
     (classId, radius, interval, multiplier) => {
@@ -251,11 +254,33 @@ describe('playable class combat', () => {
   it('uses class-specific Khan weapon range without changing shared rider camp range bonuses', () => {
     const lancer = setup('lancer');
     expect(lancer.context.run.clan.campEffects.bonuses.range).toBe(0);
-    lancer.spawn(320, 0);
+    lancer.spawn(270, 0);
     lancer.combat.fire();
     expect(lancer.projectiles.countActive()).toBe(0);
-    lancer.spawn(260, 0);
+    lancer.spawn(240, 0);
     lancer.combat.fire();
     expect(lancer.projectiles.countActive()).toBe(1);
   });
+
+  it.each([
+    ['mounted-archer', 1.35],
+    ['lancer', 1.6],
+    ['iron-pagoda', 1.35],
+    ['spirit-caller', 1.35],
+  ] as const)(
+    '%s charged volleys deal %sx damage while support volleys keep the shared bonus',
+    (classId, multiplier) => {
+      const arena = setup(classId);
+      const enemy = arena.spawn(180, 0);
+      arena.combat.shootVolley(1000, 1000, enemy, 1, 1, false, true, 'khan');
+      expect(arena.projectiles.getFirstAlive()!.damage).toBeCloseTo(
+        arena.context.run.stats.damage * multiplier,
+      );
+      for (const shot of arena.projectiles.getChildren()) shot.disableBody(true, true);
+      arena.combat.shootVolley(1000, 1000, enemy, 1, 1, false, true, 'rider');
+      expect(arena.projectiles.getFirstAlive()!.damage).toBeCloseTo(
+        arena.context.run.stats.damage * GAME.mounted.chargedDamage,
+      );
+    },
+  );
 });

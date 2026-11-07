@@ -84,6 +84,8 @@ export interface ClassWeaponDefinition {
   spreadAngle: number;
   pinsOnCharged: boolean;
   chargedExtraPierce: number;
+  /** Damage multiplier for the Khan's charged volley with this weapon. */
+  chargedDamage: number;
 }
 
 export interface ClassDefinition {
@@ -97,6 +99,7 @@ export interface ClassDefinition {
     damageTakenMultiplier: number;
     passiveRegen: number;
     gallopCooldownMultiplier: number;
+    gallopSpeedMultiplier: number;
     clanProtectionMultiplier: number;
     closeDefenseRadius: number;
     closeDefenseInterval: number;
@@ -217,6 +220,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       damageTakenMultiplier: GAME.classes['mounted-archer'].damageTakenMultiplier,
       passiveRegen: GAME.classes['mounted-archer'].passiveRegen,
       gallopCooldownMultiplier: GAME.classes['mounted-archer'].gallopCooldownMultiplier,
+      gallopSpeedMultiplier: GAME.classes['mounted-archer'].gallopSpeedMultiplier,
       clanProtectionMultiplier: GAME.classes['mounted-archer'].clanProtectionMultiplier,
       closeDefenseRadius: GAME.classes['mounted-archer'].closeDefenseRadius,
       closeDefenseInterval: GAME.classes['mounted-archer'].closeDefenseInterval,
@@ -234,6 +238,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       spreadAngle: 0.14,
       pinsOnCharged: false,
       chargedExtraPierce: GAME.classes['mounted-archer'].chargedExtraPierce,
+      chargedDamage: GAME.classes['mounted-archer'].chargedDamage,
     },
     abilities: [
       {
@@ -318,6 +323,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       damageTakenMultiplier: GAME.classes.lancer.damageTakenMultiplier,
       passiveRegen: GAME.classes.lancer.passiveRegen,
       gallopCooldownMultiplier: GAME.classes.lancer.gallopCooldownMultiplier,
+      gallopSpeedMultiplier: GAME.classes.lancer.gallopSpeedMultiplier,
       clanProtectionMultiplier: GAME.classes.lancer.clanProtectionMultiplier,
       closeDefenseRadius: GAME.classes.lancer.closeDefenseRadius,
       closeDefenseInterval: GAME.classes.lancer.closeDefenseInterval,
@@ -335,6 +341,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       spreadAngle: 0.08,
       pinsOnCharged: true,
       chargedExtraPierce: GAME.classes.lancer.chargedExtraPierce,
+      chargedDamage: GAME.classes.lancer.chargedDamage,
     },
     abilities: [
       {
@@ -357,7 +364,7 @@ export const CLASSES: readonly ClassDefinition[] = [
         slotLabel: 'Momentum',
         name: 'Devastating Charge',
         description:
-          'Full momentum releases a heavy shockwave lance thrust that pins targets in place.',
+          'Full momentum releases a heavier, deeper-piercing lance thrust that pins targets in place.',
       },
       {
         id: 'shock-lance',
@@ -365,7 +372,7 @@ export const CLASSES: readonly ClassDefinition[] = [
         slotLabel: 'Gallop',
         name: 'Shock Lance (Braced Impact)',
         description:
-          'Galloping couches the lance for faster cooldowns and deeper breakthrough pins.',
+          'Galloping couches the lance for a faster charge, shorter cooldowns and breakthrough pins.',
       },
     ],
     keyTraits: ['Piercing Reach', 'Devastating Charge', 'Line Breaker'],
@@ -420,6 +427,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       damageTakenMultiplier: GAME.classes['iron-pagoda'].damageTakenMultiplier,
       passiveRegen: GAME.classes['iron-pagoda'].passiveRegen,
       gallopCooldownMultiplier: GAME.classes['iron-pagoda'].gallopCooldownMultiplier,
+      gallopSpeedMultiplier: GAME.classes['iron-pagoda'].gallopSpeedMultiplier,
       clanProtectionMultiplier: GAME.classes['iron-pagoda'].clanProtectionMultiplier,
       closeDefenseRadius: GAME.classes['iron-pagoda'].closeDefenseRadius,
       closeDefenseInterval: GAME.classes['iron-pagoda'].closeDefenseInterval,
@@ -437,6 +445,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       spreadAngle: 0.22,
       pinsOnCharged: true,
       chargedExtraPierce: GAME.classes['iron-pagoda'].chargedExtraPierce,
+      chargedDamage: GAME.classes['iron-pagoda'].chargedDamage,
     },
     abilities: [
       {
@@ -523,6 +532,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       damageTakenMultiplier: GAME.classes['spirit-caller'].damageTakenMultiplier,
       passiveRegen: GAME.classes['spirit-caller'].passiveRegen,
       gallopCooldownMultiplier: GAME.classes['spirit-caller'].gallopCooldownMultiplier,
+      gallopSpeedMultiplier: GAME.classes['spirit-caller'].gallopSpeedMultiplier,
       clanProtectionMultiplier: GAME.classes['spirit-caller'].clanProtectionMultiplier,
       closeDefenseRadius: GAME.classes['spirit-caller'].closeDefenseRadius,
       closeDefenseInterval: GAME.classes['spirit-caller'].closeDefenseInterval,
@@ -537,10 +547,11 @@ export const CLASSES: readonly ClassDefinition[] = [
         'Channels twin homing turquoise spirit bolts and resonant ancestral drum pulses.',
       projectileStyle: 'spirit-bolt',
       projectileTint: 0x72e0d1,
-      homingTurnRate: 2.2,
+      homingTurnRate: 0.45,
       spreadAngle: 0.18,
       pinsOnCharged: true,
       chargedExtraPierce: GAME.classes['spirit-caller'].chargedExtraPierce,
+      chargedDamage: GAME.classes['spirit-caller'].chargedDamage,
     },
     abilities: [
       {
@@ -963,6 +974,11 @@ export function playerVisualConfig(character?: CharacterProfile): {
 
 export function khanTargetingRange(run: Pick<RunState, 'character' | 'clan'>): number {
   return classDefinition(run.character?.classId).stats.range + run.clan.campEffects.bonuses.range;
+}
+
+/** Khan gallop speed in world units per second, including the class gallop modifier. */
+export function khanGallopSpeed(run: Pick<RunState, 'character'>): number {
+  return GAME.dash.speed * classDefinition(run.character?.classId).stats.gallopSpeedMultiplier;
 }
 
 function applyStatDelta(run: RunState, bonuses?: Partial<PlayerStats>): void {

@@ -21,6 +21,7 @@ import {
   MOUNTS,
   OATHS,
   classDefinition,
+  khanGallopSpeed,
   khanTargetingRange,
   playerVisualConfig,
 } from '../../src/game/data/classes';
@@ -89,6 +90,38 @@ describe('character classes and character profile', () => {
       'Spirit Ward (Tengri’s Blessing)',
     ]);
   });
+
+  it.each([
+    ['mounted-archer', 440, 440, 0, 1.35, 570, 58, 1.05, 10],
+    ['lancer', 250, 520, 0, 1.6, 638.4, 74, 0.95, 15],
+    ['iron-pagoda', 215, 410, 0, 1.35, 570, 82, 0.85, 16],
+    ['spirit-caller', 380, 390, 0.45, 1.35, 570, 70, 0.9, 12],
+  ] as const)(
+    '%s weapon, charged attack, gallop, and close defense match the class table',
+    (
+      classId,
+      range,
+      projectileSpeed,
+      homing,
+      chargedDamage,
+      gallopSpeed,
+      closeRadius,
+      closeInterval,
+      closeDamage,
+    ) => {
+      const cls = classDefinition(classId);
+      const run = createRun('shared-hearth', { ...defaultCharacterProfile(), classId });
+      expect(cls.stats.range).toBe(range);
+      expect(cls.stats.projectileSpeed).toBe(projectileSpeed);
+      expect(cls.weapon.homingTurnRate).toBe(homing);
+      expect(cls.weapon.chargedDamage).toBe(chargedDamage);
+      expect(khanGallopSpeed(run)).toBeCloseTo(gallopSpeed);
+      expect(cls.stats.closeDefenseRadius).toBe(closeRadius);
+      expect(cls.stats.closeDefenseInterval).toBe(closeInterval);
+      // The table lists close-defense damage at the class's starting damage stat.
+      expect(cls.stats.damage * cls.stats.closeDefenseDamage).toBeCloseTo(closeDamage, 0);
+    },
+  );
 
   it('defines appearance, background, oath, mount, and banner options with valid metadata', () => {
     expect(HAIRSTYLES).toHaveLength(5);
@@ -182,7 +215,7 @@ describe('character classes and character profile', () => {
     });
     expect(lancerRun.clan.materials).toBe(68); // 50 base + 18 Artisan
     expect(lancerRun.clan.campEffects.bonuses.range).toBe(0);
-    expect(khanTargetingRange(lancerRun)).toBe(270);
+    expect(khanTargetingRange(lancerRun)).toBe(250);
 
     const pagodaProfile: CharacterProfile = {
       ...defaultCharacterProfile(),
@@ -203,7 +236,7 @@ describe('character classes and character profile', () => {
     expect(pagodaRun.health).toBe(170);
     expect(pagodaRun.clan.campEffects.multipliers.clanProtection).toBeLessThan(0.9);
     expect(pagodaRun.clan.campEffects.bonuses.range).toBe(0);
-    expect(khanTargetingRange(pagodaRun)).toBe(240);
+    expect(khanTargetingRange(pagodaRun)).toBe(215);
 
     const callerProfile: CharacterProfile = {
       ...defaultCharacterProfile(),
@@ -224,7 +257,7 @@ describe('character classes and character profile', () => {
     expect(callerRun.clan.spirit).toBe(18); // 0 base + 10 Ritual Apprentice + 8 Oath of the Spirits
     expect(callerRun.clan.campEffects.bonuses.resolveRecovery).toBeCloseTo(0.14); // 0.02 starting hearth + 0.12 Oath of the Spirits
     expect(callerRun.clan.campEffects.bonuses.range).toBe(0);
-    expect(khanTargetingRange(callerRun)).toBe(460);
+    expect(khanTargetingRange(callerRun)).toBe(380);
 
     // Advance all four classes across level 3 and level 6 progression milestones
     while (archerRun.level < 6) gainExperience(archerRun, archerRun.nextLevelXp);
