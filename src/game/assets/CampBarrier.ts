@@ -181,15 +181,6 @@ export class CampBarrier {
         ],
         true,
       );
-      g.lineStyle(1.1, 0x43382c, 0.92).strokePoints(
-        [
-          { x: x - 7, y },
-          { x: x + 6, y: y + 1 },
-          { x: x + 5, y: y + (this.wear > 0 ? 10 : 13) },
-          { x: x - 5, y: y + 12 },
-        ],
-        true,
-      );
       g.lineStyle(1, 0xe8d9b9, 0.85).lineBetween(x - 4, y + 3, x + 3, y + 3);
       g.lineStyle(1, 0xd9c8a5, 0.75).strokeRect(x - 2, y + 6, 3, 3);
     }

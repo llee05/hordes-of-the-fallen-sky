@@ -55,10 +55,9 @@ export class Water3D {
         vec3 water=mix(mix(bed,shallowWater,0.74),deepWater,deep*0.86);
         float time=flowTime*motionAmount*(frozen==1?0.0:1.0);
         // Manuscript flowing current lines & wave scroll curls
-        float waveA=sin(riverUv.y*0.65-time*0.7+sin(riverUv.x*11.0+riverUv.y*0.18)*1.3);
-        float waveB=cos(riverUv.y*1.15-time*0.45+cos(riverUv.x*17.0-riverUv.y*0.24)*1.1);
-        float parchmentCrest=smoothstep(0.76,0.95,waveA)*0.22+smoothstep(0.82,0.97,waveB)*0.14;
-        float inkCurrent=smoothstep(0.86,0.98,-waveA)*0.24*smoothstep(0.6,3.5,waterDepth);
+        float waveA=sin(riverUv.y*0.65-time*0.7+sin(riverUv.x*11.0+riverUv.y*0.18));
+        float parchmentCrest=smoothstep(0.74,0.95,waveA)*0.24;
+        float inkCurrent=smoothstep(0.84,0.98,-waveA)*0.24*smoothstep(0.6,3.5,waterDepth);
         float shoreEdge=1.0-smoothstep(0.0,2.1,waterDepth);
         float shoreInk=smoothstep(0.15,0.55,waterDepth)*(1.0-smoothstep(0.55,1.35,waterDepth));
         float broken=0.45+0.55*smoothstep(0.1,0.85,sin(riverUv.y*0.42+sin(riverUv.y*0.13)));

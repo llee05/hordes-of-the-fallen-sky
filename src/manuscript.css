@@ -63,14 +63,12 @@
 
 /* Soft aged-parchment folio vignette around the battlefield instead of dark cinema shade */
 .screen-shade {
-  box-shadow:
-    inset 0 0 95px #43382c2e,
-    inset 0 0 18px #43382c24;
+  box-shadow: none;
   background: linear-gradient(
     180deg,
-    #d9c8a529 0%,
-    transparent 16%,
-    transparent 84%,
+    #43382c1a 0%,
+    transparent 14%,
+    transparent 86%,
     #43382c24 100%
   );
 }
@@ -84,55 +82,24 @@
 .chronicle-toast {
   color: var(--ms-ink);
   background-color: var(--ms-parchment-light);
-  background-image:
-    var(--ms-corner-scroll), linear-gradient(180deg, #ede0c4f2 0%, #dfd0aef2 62%, #d4c19af5 100%),
-    var(--cloth-texture);
-  background-repeat: no-repeat, no-repeat, repeat;
-  background-position:
-    top 2px left 2px,
-    0 0,
-    0 0;
-  background-size:
-    42px 42px,
-    100% 100%,
-    380px;
-  background-blend-mode: normal, normal, multiply;
+  background-image: none;
+  background-blend-mode: normal;
   border: 1.5px solid var(--ms-ink);
   border-radius: 2px;
-  box-shadow:
-    0 3px 12px #2b211636,
-    inset 0 0 0 2px #f4e9d288,
-    inset 0 0 0 3px #43382c45;
+  box-shadow: inset 0 0 0 2px #cbb891;
 }
 
 .hud-surface::before {
   content: '';
   position: absolute;
   inset: 4px;
-  border: 1px solid #43382c36;
+  border: 1px solid #b5a077;
   pointer-events: none;
 }
 
 .resource-hud,
 .objective-hud {
   border-top: 3px solid var(--ms-terracotta);
-}
-
-.resource-hud {
-  background-image:
-    var(--ms-horse-vignette), var(--ms-corner-scroll),
-    linear-gradient(180deg, #ede0c4f5 0%, #dfd0aef5 65%, #d3c098f7 100%), var(--cloth-texture);
-  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
-  background-position:
-    bottom 2px right 8px,
-    top 2px left 2px,
-    0 0,
-    0 0;
-  background-size:
-    132px 48px,
-    42px 42px,
-    100% 100%,
-    380px;
 }
 
 /* ============================================================================
@@ -211,18 +178,12 @@
 .expedition-clock {
   padding: 6px 18px 7px;
   background-color: var(--ms-parchment-light);
-  background-image:
-    linear-gradient(180deg, #ede0c4f5 0%, #dfd0aef5 65%, #d4c19af7 100%), var(--cloth-texture);
-  background-size:
-    100% 100%,
-    320px;
-  background-blend-mode: normal, multiply;
+  background-image: none;
+  background-blend-mode: normal;
   border: 1.5px solid var(--ms-ink);
   border-top: 3px solid var(--ms-terracotta);
   border-radius: 2px;
-  box-shadow:
-    0 3px 10px #2b211633,
-    inset 0 0 0 2px #43382c38;
+  box-shadow: inset 0 0 0 2px #cbb891;
   text-shadow: none;
 }
 
@@ -232,7 +193,7 @@
   font-family: var(--ms-serif);
   font-weight: 700;
   color: var(--ms-ink);
-  text-shadow: 0 1px 0 #f6ecd7;
+  text-shadow: none;
 }
 
 .expedition-clock > span {
@@ -309,15 +270,15 @@
 .track,
 .xp-track {
   height: 5px;
-  background: #baa67f80;
-  border: 1px solid #43382c66;
-  box-shadow: inset 0 1px 1px #43382c26;
+  background: #c4b089;
+  border: 1px solid #75634e;
+  box-shadow: none;
 }
 
 .track > div,
 #xp-fill,
 .dash-charge {
-  background-image: repeating-linear-gradient(115deg, #43382c18 0 1.5px, transparent 1.5px 4px);
+  background-image: none;
   box-shadow: none;
 }
 
@@ -358,20 +319,6 @@
 
 .field-guide {
   border-left: 3px solid var(--ms-ochre);
-  background-image:
-    var(--ms-horse-vignette), var(--ms-corner-scroll),
-    linear-gradient(180deg, #ede0c4f5 0%, #dfd0aef5 100%), var(--cloth-texture);
-  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
-  background-position:
-    bottom 2px right 6px,
-    top 2px left 2px,
-    0 0,
-    0 0;
-  background-size:
-    115px 42px,
-    38px 38px,
-    100% 100%,
-    380px;
 }
 
 .field-guide .eyebrow {
@@ -418,11 +365,9 @@
 
 .tradition-hud {
   padding: 5px 10px 6px;
-  background: linear-gradient(180deg, #e8d9b9eb 0%, #d9c8a5eb 100%);
+  background: var(--ms-parchment-light);
   border: 1px solid var(--ms-ink);
-  box-shadow:
-    0 2px 8px #2b211629,
-    inset 0 0 0 1.5px #43382c33;
+  box-shadow: inset 0 0 0 1.5px #cbb891;
   text-shadow: none;
 }
 
@@ -472,21 +417,6 @@
   font-weight: 600;
 }
 
-.dash-button {
-  background-image:
-    var(--ms-horse-vignette), linear-gradient(180deg, #ede0c4f5 0%, #d8c69ff5 100%),
-    var(--cloth-texture);
-  background-repeat: no-repeat, no-repeat, repeat;
-  background-position:
-    bottom 2px right 4px,
-    0 0,
-    0 0;
-  background-size:
-    110px 42px,
-    100% 100%,
-    380px;
-}
-
 .dash-symbol {
   color: var(--ms-ink);
 }
@@ -510,33 +440,28 @@
 .ms-frame,
 .command-dock {
   background-color: var(--ms-parchment-aged);
-  background-image: var(--braid), linear-gradient(180deg, #e8d9b9 0%, #d5c29b 100%);
-  background-repeat: repeat-x, no-repeat;
-  background-position:
-    bottom 0 left 0,
-    0 0;
-  background-size:
-    84px 8px,
-    100% 100%;
+  background-image: var(--braid);
+  background-blend-mode: normal;
+  background-repeat: repeat-x;
+  background-position: bottom 0 left 0;
+  background-size: 84px 8px;
   border: 1.5px solid var(--ms-ink);
   border-bottom-width: 2px;
-  box-shadow:
-    0 5px 20px #2b211640,
-    inset 0 0 0 2px #43382c38;
+  box-shadow: inset 0 0 0 2px #baa67f;
 }
 
 .command-dock::before {
   inset: 3px;
-  border: 1px solid #43382c38;
+  border: 1px solid #a8946d;
 }
 
 .ms-button,
 .command-button {
-  border: 1px solid #43382c75;
-  background: linear-gradient(180deg, #f0e3c8d9 0%, #dfd0aed9 100%);
+  border: 1px solid #75634e;
+  background: var(--ms-parchment-light);
   color: var(--ms-ink);
   font-weight: 600;
-  box-shadow: inset 0 0 0 1px #f7edd880;
+  box-shadow: none;
 }
 
 .command-icon {
@@ -602,9 +527,9 @@
 .danger-edge {
   border: 1.5px solid var(--ms-ink);
   border-left: 3px solid var(--ms-burgundy);
-  background: #e8d9b9f2;
+  background: var(--ms-parchment-light);
   color: var(--ms-ink);
-  box-shadow: 0 2px 8px #2b211644;
+  box-shadow: none;
 }
 
 .danger-edge > span {
@@ -617,7 +542,7 @@
 }
 
 .elite-marker strong {
-  background: #e8d9b9f0;
+  background: var(--ms-parchment-light);
   color: var(--ms-ink);
   border: 1px solid var(--ms-ink);
 }

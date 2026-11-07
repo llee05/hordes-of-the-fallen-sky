@@ -174,40 +174,20 @@ export class AreaCombat extends ArenaSystem {
 
   private drawAreaThreat(graphics: Phaser.GameObjects.Graphics, threat: AreaThreat): void {
     const spec = GAME.areaCombat.threats[threat.kind];
-    // Manuscript danger seal: warm pigment wash, dark-ink outer ring, terracotta warning ring, and compass ticks
     graphics
-      .fillStyle(spec.color, threat.impacted ? 0.18 : 0.11)
+      .fillStyle(spec.color, threat.impacted ? 0.14 : 0.085)
       .fillCircle(threat.x, threat.y, spec.radius);
     graphics
-      .lineStyle(threat.impacted ? 1.8 : 2.8, 0x43382c, threat.impacted ? 0.55 : 0.9)
-      .strokeCircle(threat.x, threat.y, spec.radius + 1.5);
-    graphics
       .lineStyle(
-        threat.impacted ? 1.4 : 2.2,
-        threat.impacted ? spec.color : 0x98614d,
-        threat.impacted ? 0.55 : 0.92,
+        threat.impacted ? 1.5 : 2.4,
+        threat.impacted ? spec.color : 0x43382c,
+        threat.impacted ? 0.5 : 0.88,
       )
       .strokeCircle(threat.x, threat.y, spec.radius);
-    for (let i = 0; i < 8; i++) {
-      const a = (i * Math.PI) / 4;
-      const inner = spec.radius - (i % 2 === 0 ? 9 : 5.5);
+    if (!threat.impacted)
       graphics
-        .lineStyle(1.5, 0x43382c, threat.impacted ? 0.42 : 0.82)
-        .lineBetween(
-          threat.x + Math.cos(a) * inner,
-          threat.y + Math.sin(a) * inner,
-          threat.x + Math.cos(a) * spec.radius,
-          threat.y + Math.sin(a) * spec.radius,
-        );
-    }
-    if (!threat.impacted) {
-      const progressRadius = spec.radius * Math.min(1, threat.age / threat.warning);
-      graphics
-        .lineStyle(1.8, 0x43382c, 0.65)
-        .strokeCircle(threat.x, threat.y, progressRadius + 1)
-        .lineStyle(1.5, spec.color, 0.88)
-        .strokeCircle(threat.x, threat.y, progressRadius);
-    }
+        .lineStyle(1.5, 0x98614d, 0.85)
+        .strokeCircle(threat.x, threat.y, spec.radius * Math.min(1, threat.age / threat.warning));
     if (threat.kind === 'crosswind' || threat.kind === 'rift')
       graphics
         .lineStyle(2, spec.color, 0.55)

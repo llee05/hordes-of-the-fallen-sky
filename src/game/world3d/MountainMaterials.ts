@@ -77,7 +77,7 @@ export class MountainMaterials {
           `#include <color_fragment>\n${TERRAIN_COLOR}`,
         );
       };
-      material.customProgramCacheKey = () => `living-steppe-materials-v6-${wall}`;
+      material.customProgramCacheKey = () => `living-steppe-materials-v8-${wall}`;
       return material;
     };
     this.surface = make(false);
