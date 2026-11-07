@@ -68,11 +68,11 @@ function shelf(
 }
 
 const meadow: ScenePalette = {
-  grass: 0xa3ad69,
-  soil: 0xc3a574,
-  rock: 0x8d8f85,
-  snow: 0xe4e9df,
-  fog: 0xbac9bc,
+  grass: 0xa4ab6e,
+  soil: 0xc9ae7c,
+  rock: 0x898c82,
+  snow: 0xe8d9b9,
+  fog: 0xd9c8a5,
 };
 const alpine: ScenePalette = {
   grass: 0x94a17a,
@@ -239,7 +239,13 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
     floor: 60,
     snowLine: 10000,
     vegetation: 'river',
-    palette: { ...meadow, grass: 0x92aa73, rock: 0x929784 },
+    palette: {
+      grass: 0x9aa46f,
+      soil: 0xc9b082,
+      rock: 0x76858f,
+      snow: 0xe8d9b9,
+      fog: 0xd9c8a5,
+    },
     shelves: [
       shelf('river-terrace', -180, -820, 1240, 430, 150, -8),
       shelf('upper-grazing', -540, -1190, 680, 410, 165, 10),

@@ -331,10 +331,10 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       'Blue-green river braids, willow clusters, reed beds, and lush sage grazing spread across the valley.',
     surface: 'meadow',
     groundTile: 'orkhon-valley',
-    ground: 0x9faf7c,
+    ground: 0x9ea875,
     wash: 0.48,
-    patch: 0x7a956c,
-    grass: 0xd7d59d,
+    patch: 0x7d896c,
+    grass: 0xd9c8a5,
     grassCount: 1000,
     flowers: true,
     cover: [
@@ -349,10 +349,10 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     water: {
       kind: 'braided',
       width: 100,
-      color: 0x6d9e9c,
-      bank: 0xaab88a,
+      color: 0x607a8b,
+      bank: 0xc4ae82,
       course: [-2600, -380, -1100, -300, -350, -350, 450, -245, 1100, -350, 2600, -300],
     },
-    air: { color: 0xc2d1ab, alpha: 0.025, particles: 'seeds' },
+    air: { color: 0xd9c8a5, alpha: 0.025, particles: 'seeds' },
   },
 };

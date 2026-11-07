@@ -3,7 +3,7 @@ import type { MountainHeightfield } from './MountainHeightfield';
 import { waterGeometry } from './waterGeometry';
 import type { WorldRiver } from './WorldRiver';
 
-/** Turquoise channels and timber crossings occupy the same elevated world as the terrain. */
+/** Dusty-blue manuscript channels, wave-scroll linework, and timber plank crossings. */
 export class Water3D {
   readonly group = new THREE.Group();
   readonly time = { value: 0 };
@@ -33,9 +33,9 @@ export class Water3D {
       shader.uniforms.frozen = { value: frozen ? 1 : 0 };
       shader.uniforms.bedTexture = { value: bedTexture };
       shader.uniforms.deepWater = {
-        value: new THREE.Color(river.definition.color).multiplyScalar(0.65),
+        value: new THREE.Color(river.definition.color).multiplyScalar(0.84),
       };
-      shader.uniforms.shallowWater = { value: new THREE.Color(0x8cae98) };
+      shader.uniforms.shallowWater = { value: new THREE.Color(0x8ba3b0) };
       shader.vertexShader =
         `attribute float riverDepth; varying float waterDepth; varying vec2 riverUv; varying vec2 riverWorld;\n${shader.vertexShader}`.replace(
           '#include <begin_vertex>',
@@ -47,18 +47,27 @@ export class Water3D {
         uniform vec3 shallowWater;uniform vec3 deepWater;uniform sampler2D bedTexture;\n${shader.fragmentShader}`.replace(
           '#include <color_fragment>',
           `#include <color_fragment>
-        float deep=smoothstep(0.4,8.0,waterDepth);
-        vec3 bed=texture2D(bedTexture,riverWorld/170.0).rgb*vec3(0.72,0.83,0.75);
-        vec3 water=mix(mix(bed,shallowWater,0.65),deepWater,deep*0.82);
+        vec3 inkColor=vec3(0.263,0.220,0.173); // #43382C dark manuscript ink
+        vec3 parchmentLight=vec3(0.910,0.851,0.725); // #E8D9B9 light parchment
+        vec3 ochreBank=vec3(0.851,0.784,0.647); // #D9C8A5 aged parchment shore
+        float deep=smoothstep(0.35,7.0,waterDepth);
+        vec3 bed=texture2D(bedTexture,riverWorld/170.0).rgb*vec3(0.86,0.84,0.74);
+        vec3 water=mix(mix(bed,shallowWater,0.74),deepWater,deep*0.86);
         float time=flowTime*motionAmount*(frozen==1?0.0:1.0);
-        float ripple=sin(riverUv.y*.7-time*.65+sin(riverUv.x*8.0+riverUv.y*.16));
-        float stroke=pow(max(0.0,ripple),16.0)*.055;
-        float edge=1.0-smoothstep(0.0,2.2,waterDepth);
-        float broken=0.35+0.65*smoothstep(0.15,0.8,sin(riverUv.y*.4+sin(riverUv.y*.11)));
-        water=mix(water,vec3(.59,.68,.56),edge*broken*.25)+stroke;
-        if(frozen==1)water=mix(water,vec3(.54,.68,.7),.65);
+        // Manuscript flowing current lines & wave scroll curls
+        float waveA=sin(riverUv.y*0.65-time*0.7+sin(riverUv.x*11.0+riverUv.y*0.18)*1.3);
+        float waveB=cos(riverUv.y*1.15-time*0.45+cos(riverUv.x*17.0-riverUv.y*0.24)*1.1);
+        float parchmentCrest=smoothstep(0.76,0.95,waveA)*0.22+smoothstep(0.82,0.97,waveB)*0.14;
+        float inkCurrent=smoothstep(0.86,0.98,-waveA)*0.24*smoothstep(0.6,3.5,waterDepth);
+        float shoreEdge=1.0-smoothstep(0.0,2.1,waterDepth);
+        float shoreInk=smoothstep(0.15,0.55,waterDepth)*(1.0-smoothstep(0.55,1.35,waterDepth));
+        float broken=0.45+0.55*smoothstep(0.1,0.85,sin(riverUv.y*0.42+sin(riverUv.y*0.13)));
+        water=mix(water,ochreBank,shoreEdge*broken*0.36);
+        water=mix(water,parchmentLight,parchmentCrest);
+        water=mix(water,inkColor,clamp(inkCurrent+shoreInk*0.42*broken,0.0,0.55));
+        if(frozen==1)water=mix(water,vec3(0.76,0.82,0.82),0.58);
         diffuseColor.rgb*=water;
-        diffuseColor.a*=smoothstep(0.0,0.75,waterDepth);
+        diffuseColor.a*=smoothstep(0.0,0.65,waterDepth);
       `,
         );
     };
@@ -71,18 +80,48 @@ export class Water3D {
     const dummy = new THREE.Object3D();
     for (const bridge of river.bridges) {
       const planks = Math.ceil(bridge.length / 10);
+      const yaw = Math.atan2(bridge.nx, bridge.nz);
+      const tx = bridge.nz;
+      const tz = -bridge.nx;
       for (let i = 0; i < planks; i++) {
         const distance = ((i + 0.5) / planks) * bridge.length - bridge.length / 2;
-        dummy.position.set(
-          bridge.x + bridge.nx * distance,
-          bridge.height - 2,
-          bridge.z + bridge.nz * distance,
-        );
-        dummy.rotation.set(0, Math.atan2(bridge.nx, bridge.nz), 0);
-        dummy.scale.set(bridge.width, 4, bridge.length / planks - 0.5);
+        const bx = bridge.x + bridge.nx * distance;
+        const bz = bridge.z + bridge.nz * distance;
+        dummy.position.set(bx, bridge.height - 2, bz);
+        dummy.rotation.set(0, yaw, 0);
+        dummy.scale.set(bridge.width, 4, bridge.length / planks - 0.6);
         dummy.updateMatrix();
         matrices.push(dummy.matrix.clone());
-        colors.push(new THREE.Color(i % 3 ? 0xa1855b : 0xb69a6c));
+        colors.push(new THREE.Color(i % 3 === 0 ? 0xad824d : i % 3 === 1 ? 0xc29e6d : 0x98614d));
+      }
+      // Illustrated timber side-stringers and posts along both edges of the bridge
+      for (const side of [-1, 1]) {
+        const edgeOffset = side * (bridge.width * 0.46);
+        dummy.position.set(
+          bridge.x + tx * edgeOffset,
+          bridge.height + 1.2,
+          bridge.z + tz * edgeOffset,
+        );
+        dummy.rotation.set(0, yaw, 0);
+        dummy.scale.set(3.2, 2.6, bridge.length + 4);
+        dummy.updateMatrix();
+        matrices.push(dummy.matrix.clone());
+        colors.push(new THREE.Color(0x43382c));
+
+        const postCount = 4;
+        for (let p = 0; p < postCount; p++) {
+          const postDist = (p / (postCount - 1) - 0.5) * (bridge.length - 8);
+          dummy.position.set(
+            bridge.x + bridge.nx * postDist + tx * edgeOffset,
+            bridge.height + 4.5,
+            bridge.z + bridge.nz * postDist + tz * edgeOffset,
+          );
+          dummy.rotation.set(0, yaw, 0);
+          dummy.scale.set(4.2, 9.5, 4.2);
+          dummy.updateMatrix();
+          matrices.push(dummy.matrix.clone());
+          colors.push(new THREE.Color(p === 0 || p === postCount - 1 ? 0x98614d : 0x5c4d3c));
+        }
       }
     }
     const deck = new THREE.InstancedMesh(

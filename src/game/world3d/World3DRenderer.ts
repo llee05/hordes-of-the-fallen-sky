@@ -82,10 +82,10 @@ export class World3DRenderer {
     });
     scene.game.canvas.parentElement!.append(this.renderer.domElement);
     const palette = terrain instanceof ComposedTerrain ? terrain.region.scene.palette : undefined;
-    this.world.background = new THREE.Color(palette?.fog ?? 0xb1b6ab);
-    this.world.fog = new THREE.Fog(palette?.fog ?? 0xc5cdc6, 6300, 11200);
-    this.world.add(new THREE.HemisphereLight(0xe5e9df, 0x8a907e, 1.2));
-    this.world.add(new THREE.AmbientLight(0xd5decd, 0.55));
+    this.world.background = new THREE.Color(palette?.fog ?? 0xd9c8a5);
+    this.world.fog = new THREE.Fog(palette?.fog ?? 0xd9c8a5, 6300, 11200);
+    this.world.add(new THREE.HemisphereLight(0xf2e6cc, 0x7d896c, 1.18));
+    this.world.add(new THREE.AmbientLight(0xe8d9b9, 0.58));
     this.sun.castShadow = true;
     Object.assign(this.sun.shadow.camera, {
       left: -2000,
