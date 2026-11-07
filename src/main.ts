@@ -18,6 +18,10 @@ import { GameUI } from './ui/GameUI';
 if (import.meta.env.DEV) void import('./developer.css');
 
 async function bootstrap(): Promise<void> {
+  // Resolve development instrumentation before creating interactive controls.
+  const testHooksModule = import.meta.env.DEV
+    ? await import('./game/scenes/arena/testHooks')
+    : undefined;
   const platform = await GamePlatform.create();
   const scene = new ArenaScene(platform);
   const ui = new GameUI(document.querySelector<HTMLElement>('#app')!, scene, platform);
@@ -29,9 +33,8 @@ async function bootstrap(): Promise<void> {
   game.events.once('destroy', () => stopCloseListener?.());
 
   // Local inspection and browser tests; this reference is removed from production.
-  if (import.meta.env.DEV) {
-    const { createTestHooks } = await import('./game/scenes/arena/testHooks');
-    const hooks = createTestHooks(scene);
+  if (import.meta.env.DEV && testHooksModule) {
+    const hooks = testHooksModule.createTestHooks(scene);
     Object.assign(window, { __gloam: { game, scene, hooks } });
   }
   if (import.meta.hot) import.meta.hot.dispose(() => game.destroy(true));

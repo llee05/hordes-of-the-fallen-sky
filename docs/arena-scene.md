@@ -114,7 +114,8 @@ scene's test-hook block at the end of the class. Declare forwarders that only te
 
 Prefer the typed `window.__gloam.hooks` facade in `arena/testHooks.ts` for new browser
 setup. The bootstrap dynamically imports it only in `import.meta.env.DEV`; production
-builds contain neither the module nor the global. Its `Window` declaration is included
+builds contain neither the module nor the global. The import completes before UI
+creation, so interactive controls cannot appear before the hooks are installed. Its `Window` declaration is included
 by the Playwright tsconfig, so calls in `page.evaluate` need no `any` cast or runtime
 import. The facade uses a live context across scene restarts.
 
