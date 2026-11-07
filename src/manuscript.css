@@ -1,0 +1,788 @@
+/*
+ * Interactive Medieval Manuscript Design System (Phase 1 Foundations)
+ *
+ * Centralises the historical chronicle palette, typography tokens,
+ * Mongolian textile/cloud-scroll borders, and reusable UI components:
+ *   - Parchment panels (.ms-panel, .hud-surface, .game-panel, .pause-menu, .end-menu)
+ *   - Illustrated buttons & tabs (.ms-button, .command-button, .hud-menu-button, .dash-button, .ms-tabs, .journal-tabs)
+ *   - Decorative frames (.ms-frame, .command-dock)
+ *   - Tooltips & callouts (.ms-tooltip, .journal-callout, .area-intel)
+ *   - Inventory & building slots (.ms-slot, .building-card, .upgrade-card, .clan-building)
+ *   - Selection indicators (.ms-selection, [aria-selected='true'], [aria-pressed='true'])
+ *   - Progress bars (.ms-progress, .track, .xp-track)
+ *   - Resource indicators (.ms-resource, .resource)
+ *   - Dialogues & notifications (.ms-dialog, .chronicle-toast, .field-guide, .successor-choice)
+ */
+
+:root {
+  /* Core manuscript pigment palette */
+  --ms-parchment-aged: #d9c8a5;
+  --ms-parchment-light: #e8d9b9;
+  --ms-parchment-bright: #f2e6cc;
+  --ms-parchment-deep: #c7b288;
+  --ms-ink: #43382c;
+  --ms-ink-muted: #5c4d3c;
+  --ms-ink-faint: #75634e;
+  --ms-ochre: #ad824d;
+  --ms-terracotta: #98614d;
+  --ms-sage: #7d896c;
+  --ms-dusty-blue: #607a8b;
+  --ms-burgundy: #794e4c;
+
+  /* Typography tokens */
+  --ms-serif: 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+  --ms-sans: 'DM Sans', sans-serif;
+  --ms-mono: 'IBM Plex Mono', monospace;
+
+  /* Ink rules & borders */
+  --ms-ink-border: #43382cc8;
+  --ms-ink-rule: #43382c42;
+  --ms-ink-rule-dashed: #43382c59;
+  --ms-shadow: 0 4px 14px #2b211638;
+
+  /* Legacy variable aliases mapped to manuscript pigments */
+  --gold: #ad824d;
+  --blue: #607a8b;
+  --paper: #e8d9b9;
+  --paper-ink: #43382c;
+  --paper-muted: #5c4d3c;
+  --paper-line: #43382c38;
+  --felt: #d9c8a5;
+  --rust: #98614d;
+  --brass: #ad824d;
+
+  /* Decorative SVG vignettes & cloud-scroll motifs (hand-inked in #43382c & #ad824d) */
+  --ms-corner-scroll: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64' fill='none'%3E%3Cpath stroke='%2343382c' stroke-opacity='.42' stroke-width='1.1' d='M3 22V3h19M3 7h11c4 0 6 2 6 5s-3 5-6 4c-2-.5-3-2-2-4M7 3v11c0 4 2 6 5 6s5-3 4-6c-.5-2-2-3-4-2'/%3E%3C/svg%3E");
+  --ms-horse-vignette: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='56' viewBox='0 0 140 56' fill='none'%3E%3Cg stroke='%2343382c' stroke-opacity='.22' stroke-width='1.1' fill='%23ad824d' fill-opacity='.12'%3E%3Cpath d='M18 42c6-9 14-12 25-12l11-9 6 3-4 8 10 4-3 4-9-2-6 7-14 1-8 6m22-7 4 9m-15-8-4 8'/%3E%3Cpath d='M82 39c5-8 12-10 21-10l9-8 5 3-3 6 8 3-2 4-7-1-5 6-12 1-7 5m18-6 3 8m-12-7-3 7'/%3E%3C/g%3E%3Cpath stroke='%2343382c' stroke-opacity='.18' stroke-width='.9' d='M4 49q34-6 68 0t64-2'/%3E%3C/svg%3E");
+  --ms-scroll-plaque: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='64' viewBox='0 0 180 64' fill='none'%3E%3Cpath fill='%23e8d9b9' stroke='%2343382c' stroke-width='1.5' d='M14 6h152c4 0 8 4 8 9v34c0 5-4 9-8 9H14c-4 0-8-4-8-9V15c0-5 4-9 8-9Z'/%3E%3Cpath fill='%23d9c8a5' stroke='%2343382c' stroke-width='1.2' d='M6 12a6 6 0 0 1 8-6v52a6 6 0 0 1-8-6V12Zm168 0a6 6 0 0 0-8-6v52a6 6 0 0 0 8-6V12Z'/%3E%3Crect x='17' y='9.5' width='146' height='45' stroke='%2343382c' stroke-opacity='.38' stroke-width='.9'/%3E%3C/svg%3E");
+}
+
+.arena-wrap {
+  background: var(--ms-parchment-aged);
+}
+
+/* Soft aged-parchment folio vignette around the battlefield instead of dark cinema shade */
+.screen-shade {
+  box-shadow:
+    inset 0 0 95px #43382c2e,
+    inset 0 0 18px #43382c24;
+  background: linear-gradient(
+    180deg,
+    #d9c8a529 0%,
+    transparent 16%,
+    transparent 84%,
+    #43382c24 100%
+  );
+}
+
+/* ============================================================================
+   1. Parchment Panels (.ms-panel, .hud-surface, .game-panel, .pause-menu, etc.)
+   ============================================================================ */
+.ms-panel,
+.hud-surface,
+.hud-menu-button,
+.chronicle-toast {
+  color: var(--ms-ink);
+  background-color: var(--ms-parchment-light);
+  background-image:
+    var(--ms-corner-scroll), linear-gradient(180deg, #ede0c4f2 0%, #dfd0aef2 62%, #d4c19af5 100%),
+    var(--cloth-texture);
+  background-repeat: no-repeat, no-repeat, repeat;
+  background-position:
+    top 2px left 2px,
+    0 0,
+    0 0;
+  background-size:
+    42px 42px,
+    100% 100%,
+    380px;
+  background-blend-mode: normal, normal, multiply;
+  border: 1.5px solid var(--ms-ink);
+  border-radius: 2px;
+  box-shadow:
+    0 3px 12px #2b211636,
+    inset 0 0 0 2px #f4e9d288,
+    inset 0 0 0 3px #43382c45;
+}
+
+.hud-surface::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid #43382c36;
+  pointer-events: none;
+}
+
+.resource-hud,
+.objective-hud {
+  border-top: 3px solid var(--ms-terracotta);
+}
+
+.resource-hud {
+  background-image:
+    var(--ms-horse-vignette), var(--ms-corner-scroll),
+    linear-gradient(180deg, #ede0c4f5 0%, #dfd0aef5 65%, #d3c098f7 100%), var(--cloth-texture);
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+  background-position:
+    bottom 2px right 8px,
+    top 2px left 2px,
+    0 0,
+    0 0;
+  background-size:
+    132px 48px,
+    42px 42px,
+    100% 100%,
+    380px;
+}
+
+/* ============================================================================
+   2. Resource Indicators (.ms-resource, .resource)
+   ============================================================================ */
+.ms-resource,
+.resource {
+  border-right: 1px solid var(--ms-ink-rule);
+}
+
+.resource div > span,
+.host-summary,
+.health-heading,
+.vital-stats,
+.pressure-row,
+.objective-heading > span,
+.objective-hint,
+.meter-row {
+  color: var(--ms-ink-muted);
+}
+
+.resource strong {
+  font-family: var(--ms-serif);
+  font-weight: 700;
+  color: var(--ms-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.resource strong.danger,
+.economy-hud .danger {
+  color: var(--ms-burgundy);
+}
+
+.resource-icon {
+  color: var(--ms-terracotta);
+  filter: none;
+}
+
+.resource:nth-child(2) .resource-icon,
+.resource:nth-child(3) .resource-icon {
+  color: var(--ms-ochre);
+}
+
+.resource:nth-child(4) .resource-icon {
+  color: var(--ms-sage);
+}
+
+.resource:last-child .resource-icon {
+  color: var(--ms-dusty-blue);
+}
+
+.host-summary {
+  border-top: 1px dashed var(--ms-ink-rule-dashed);
+  color: var(--ms-ink-muted);
+}
+
+.host-summary > span:first-child {
+  font-family: var(--ms-serif);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--ms-ink);
+}
+
+.host-summary b {
+  color: var(--ms-ink);
+  font-weight: 600;
+}
+
+.economy-hud {
+  color: var(--ms-ink-muted);
+}
+
+/* ============================================================================
+   3. Top Scroll Clock & Menu Buttons (.expedition-clock, .hud-menu-button)
+   ============================================================================ */
+.expedition-clock {
+  padding: 5px 22px 6px;
+  background: var(--ms-scroll-plaque) center / 100% 100% no-repeat;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 6px #2b211630);
+}
+
+.expedition-clock strong {
+  font-family: var(--ms-serif);
+  font-weight: 700;
+  color: var(--ms-ink);
+  text-shadow: 0 1px 0 #f6ecd7;
+}
+
+.expedition-clock > span {
+  color: var(--ms-ink-muted);
+  font-weight: 600;
+}
+
+@media (max-width: 850px) {
+  .expedition-clock {
+    padding: 3px 6px 4px;
+  }
+}
+
+@media (max-width: 600px) {
+  .expedition-clock {
+    padding: 2px 4px 3px;
+  }
+}
+
+.hud-menu-button {
+  border-radius: 2px;
+  color: var(--ms-ink);
+}
+
+.hud-menu-button span {
+  color: var(--ms-ink);
+}
+
+.hud-menu-button kbd,
+.command-button > kbd {
+  border: 1px solid #43382c66;
+  background: #d2be96cc;
+  border-radius: 2px;
+  padding: 1px 3px;
+  color: var(--ms-ink);
+  font-weight: 600;
+}
+
+.hud-menu-button:hover,
+.dash-button:hover,
+.zoom-controls button:hover:not(:disabled) {
+  background-color: #e4d2ad;
+  border-color: var(--ms-terracotta);
+}
+
+/* ============================================================================
+   4. Objective Panel, Field Guide & Progress Bars (.ms-progress, .track)
+   ============================================================================ */
+.objective-heading strong {
+  color: var(--ms-terracotta);
+  font-weight: 600;
+}
+
+.objective-hud > p:first-of-type {
+  font-family: var(--ms-serif);
+  color: var(--ms-ink);
+}
+
+.pressure-row b,
+.health-heading b,
+.vital-stats b {
+  color: var(--ms-ink);
+  font-weight: 600;
+}
+
+.ms-progress,
+.track,
+.xp-track {
+  height: 5px;
+  background: #baa67f80;
+  border: 1px solid #43382c66;
+  box-shadow: inset 0 1px 1px #43382c26;
+}
+
+.track > div,
+#xp-fill,
+.dash-charge {
+  background-image: repeating-linear-gradient(115deg, #43382c18 0 1.5px, transparent 1.5px 4px);
+  box-shadow: none;
+}
+
+.pasture-track > div {
+  background-color: var(--ms-sage);
+}
+
+.threat-track > div {
+  background-color: var(--ms-terracotta);
+}
+
+.health-track > div {
+  background-color: var(--ms-terracotta);
+}
+
+.health-track > .low,
+.track > .low {
+  background-color: var(--ms-burgundy);
+}
+
+.resolve-track > div {
+  background-color: var(--ms-dusty-blue);
+}
+
+#xp-fill {
+  background-color: var(--ms-ochre);
+}
+
+.field-status {
+  color: var(--ms-ink-muted);
+}
+
+.clan-warning {
+  border-top: 1px dashed var(--ms-terracotta);
+  color: var(--ms-burgundy);
+  font-weight: 500;
+}
+
+.field-guide {
+  border-left: 3px solid var(--ms-ochre);
+  background-image:
+    var(--ms-horse-vignette), var(--ms-corner-scroll),
+    linear-gradient(180deg, #ede0c4f5 0%, #dfd0aef5 100%), var(--cloth-texture);
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+  background-position:
+    bottom 2px right 6px,
+    top 2px left 2px,
+    0 0,
+    0 0;
+  background-size:
+    115px 42px,
+    38px 38px,
+    100% 100%,
+    380px;
+}
+
+.field-guide .eyebrow {
+  color: var(--ms-terracotta);
+  font-weight: 600;
+}
+
+.field-guide > strong {
+  font-family: var(--ms-serif);
+  color: var(--ms-ink);
+}
+
+.guide-copy {
+  color: var(--ms-ink-muted);
+}
+
+.guide-actions button {
+  color: var(--ms-terracotta);
+  border-bottom: 1px solid #98614d88;
+  font-weight: 600;
+}
+
+.guide-actions button:last-child {
+  color: var(--ms-ink-muted);
+  border-bottom-color: #43382c55;
+}
+
+/* ============================================================================
+   5. Vitals, Tradition Marginalia, Bearing, Zoom & Gallop (.vitals-hud, .dash-button)
+   ============================================================================ */
+.vitals-hud {
+  border-left: 3px solid var(--ms-terracotta);
+}
+
+.clan-health {
+  color: var(--ms-dusty-blue);
+  font-weight: 600;
+}
+
+.khan-succession {
+  border-top: 1px dashed var(--ms-ink-rule-dashed);
+  color: var(--ms-ink);
+}
+
+.tradition-hud {
+  padding: 5px 10px 6px;
+  background: linear-gradient(180deg, #e8d9b9eb 0%, #d9c8a5eb 100%);
+  border: 1px solid var(--ms-ink);
+  box-shadow:
+    0 2px 8px #2b211629,
+    inset 0 0 0 1.5px #43382c33;
+  text-shadow: none;
+}
+
+.tradition-hud > span {
+  color: var(--ms-ink);
+  font-weight: 600;
+}
+
+.tradition-hud small {
+  color: var(--ms-ink-muted);
+}
+
+.clan-bearing {
+  color: var(--ms-ink);
+  text-shadow:
+    0 0 6px #e8d9b9,
+    0 1px 2px #e8d9b9;
+  font-weight: 600;
+}
+
+.synergy {
+  background: var(--ms-parchment-light);
+  color: var(--ms-burgundy);
+  border: 1.5px solid var(--ms-terracotta);
+  box-shadow: var(--ms-shadow);
+}
+
+.boss-bar > span {
+  color: var(--ms-ink);
+  background: #e8d9b9dd;
+  padding: 2px 8px;
+  border: 1px solid var(--ms-ink);
+  text-shadow: none;
+}
+
+#boss-fill {
+  background: var(--ms-burgundy);
+}
+
+.zoom-controls button {
+  color: var(--ms-ink);
+  border-right: 1px solid var(--ms-ink-rule);
+}
+
+#zoom-reset {
+  color: var(--ms-ink);
+  font-weight: 600;
+}
+
+.dash-button {
+  background-image:
+    var(--ms-horse-vignette), linear-gradient(180deg, #ede0c4f5 0%, #d8c69ff5 100%),
+    var(--cloth-texture);
+  background-repeat: no-repeat, no-repeat, repeat;
+  background-position:
+    bottom 2px right 4px,
+    0 0,
+    0 0;
+  background-size:
+    110px 42px,
+    100% 100%,
+    380px;
+}
+
+.dash-symbol {
+  color: var(--ms-ink);
+}
+
+.dash-button strong {
+  color: var(--ms-ink);
+  font-weight: 700;
+}
+
+.dash-button small {
+  color: var(--ms-ink-muted);
+}
+
+.dash-charge {
+  background-color: var(--ms-ochre);
+}
+
+/* ============================================================================
+   6. Decorative Frame & Command Dock (.ms-frame, .command-dock, .command-button)
+   ============================================================================ */
+.ms-frame,
+.command-dock {
+  background-color: var(--ms-parchment-aged);
+  background-image: var(--braid), linear-gradient(180deg, #e8d9b9 0%, #d5c29b 100%);
+  background-repeat: repeat-x, no-repeat;
+  background-position:
+    bottom 0 left 0,
+    0 0;
+  background-size:
+    84px 8px,
+    100% 100%;
+  border: 1.5px solid var(--ms-ink);
+  border-bottom-width: 2px;
+  box-shadow:
+    0 5px 20px #2b211640,
+    inset 0 0 0 2px #43382c38;
+}
+
+.command-dock::before {
+  inset: 3px;
+  border: 1px solid #43382c38;
+}
+
+.ms-button,
+.command-button {
+  border: 1px solid #43382c75;
+  background: linear-gradient(180deg, #f0e3c8d9 0%, #dfd0aed9 100%);
+  color: var(--ms-ink);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #f7edd880;
+}
+
+.command-icon {
+  color: var(--ms-terracotta);
+}
+
+.command-button:nth-child(2) .command-icon {
+  color: var(--ms-dusty-blue);
+}
+
+.command-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f6ebd4 0%, #e6d6b3 100%);
+  border-color: var(--ms-ink);
+}
+
+.migrate-button {
+  background: linear-gradient(180deg, #ebd6b2e6 0%, #d8bc8ee6 100%);
+  border-color: var(--ms-terracotta);
+}
+
+.migrate-button .command-icon {
+  color: var(--ms-burgundy);
+}
+
+/* ============================================================================
+   7. Dialogues, Toasts & Notifications (.ms-dialog, .chronicle-toast, .successor-choice)
+   ============================================================================ */
+.ms-dialog,
+.chronicle-toast {
+  border: 1.5px solid var(--ms-ink);
+  border-left: 4px solid var(--ms-terracotta);
+  background-color: var(--ms-parchment-light);
+}
+
+.chronicle-toast > span {
+  color: var(--ms-terracotta);
+}
+
+.chronicle-toast p {
+  font-family: var(--ms-serif);
+  color: var(--ms-ink);
+}
+
+.successor-choice {
+  color: var(--ms-ink);
+  border-top: 3px solid var(--ms-terracotta);
+}
+
+.successor-choice button {
+  color: var(--ms-ink);
+  background: #e8d9b9;
+  border: 1px solid var(--ms-ink);
+}
+
+.successor-choice button[aria-pressed='true'],
+.ms-selection {
+  border-color: var(--ms-terracotta);
+  background: #dcc69b;
+  box-shadow: inset 0 0 0 1.5px var(--ms-terracotta);
+}
+
+/* Combat readability badges in manuscript style */
+.danger-edge {
+  border: 1.5px solid var(--ms-ink);
+  border-left: 3px solid var(--ms-burgundy);
+  background: #e8d9b9f2;
+  color: var(--ms-ink);
+  box-shadow: 0 2px 8px #2b211644;
+}
+
+.danger-edge > span {
+  color: var(--ms-burgundy);
+}
+
+.elite-marker {
+  color: var(--ms-ink);
+  text-shadow: none;
+}
+
+.elite-marker strong {
+  background: #e8d9b9f0;
+  color: var(--ms-ink);
+  border: 1px solid var(--ms-ink);
+}
+
+.elite-marker > div {
+  background: #baa67f;
+  border: 1px solid var(--ms-ink);
+}
+
+.elite-marker i {
+  background: var(--ms-terracotta);
+}
+
+.major-loss {
+  border: 1px solid var(--ms-burgundy);
+  border-left: 3px solid var(--ms-burgundy);
+  color: var(--ms-burgundy);
+  background: #e8d9b9e6;
+}
+
+/* ============================================================================
+   8. Title Screen, Pause Menu, Chronicle Tabs & Slots (.title-menu, .game-panel)
+   ============================================================================ */
+.title-menu::before {
+  background-color: #e6d6b5f5;
+  background-image: linear-gradient(180deg, #ede0c4f7 0%, #d9c8a5f7 100%), var(--cloth-texture);
+  border: 1.5px solid var(--ms-ink);
+  box-shadow:
+    0 10px 36px #2b211645,
+    inset 0 0 0 3px #43382c33;
+}
+
+.title-menu::after {
+  border: 1px dashed #43382c55;
+  border-top: 12px solid transparent;
+}
+
+.title-emblem {
+  color: var(--ms-terracotta);
+  filter: none;
+}
+
+.title-menu h1 {
+  font-family: var(--ms-serif);
+  color: var(--ms-ink);
+  text-shadow: 0 1px 0 #f6ecd7;
+}
+
+.title-menu h1 .title-prefix {
+  color: var(--ms-terracotta);
+}
+
+.title-menu h1 em {
+  color: var(--ms-dusty-blue);
+}
+
+.eyebrow {
+  color: var(--ms-terracotta);
+}
+
+.title-tagline,
+.title-menu .settings-note {
+  color: var(--ms-ink);
+}
+
+.title-caption,
+.menu-quit {
+  color: var(--ms-ink-muted);
+}
+
+.menu-button {
+  font-family: var(--ms-serif);
+  color: var(--ms-ink);
+  border-bottom: 1px solid var(--ms-ink-rule);
+}
+
+.menu-button:hover {
+  background: #c9b38738;
+  color: var(--ms-terracotta);
+}
+
+.menu-button.featured {
+  color: #f6ecd7;
+  background-color: var(--ms-terracotta);
+  border: 1.5px solid var(--ms-ink);
+  box-shadow:
+    inset 0 0 0 2px #e8d9b944,
+    0 3px 8px #2b211633;
+}
+
+.menu-button.featured::before {
+  color: #f6ecd7;
+}
+
+.menu-button.featured:hover {
+  background-color: var(--ms-burgundy);
+  border-color: var(--ms-ink);
+}
+
+.menu-record {
+  padding: 6px 12px;
+  background: #e8d9b9e6;
+  border: 1px solid var(--ms-ink);
+  text-shadow: none;
+}
+
+.menu-record > span {
+  color: var(--ms-ink-muted);
+}
+
+.menu-record > strong {
+  color: var(--ms-ink);
+}
+
+.pause-menu,
+.end-menu,
+.game-panel {
+  color: var(--ms-ink);
+  background-color: var(--ms-parchment-light);
+  background-image: linear-gradient(180deg, #ede0c4f5 0%, #d9c8a5f5 100%), var(--cloth-texture);
+  border: 1.5px solid var(--ms-ink);
+  border-top: 8px solid var(--ms-terracotta);
+  box-shadow:
+    0 12px 50px #1e170f66,
+    inset 0 0 0 3px #43382c33;
+}
+
+.pause-menu h2,
+.end-menu h2,
+.panel-heading h2 {
+  font-family: var(--ms-serif);
+  color: var(--ms-ink);
+}
+
+.pause-menu .panel-intro,
+.end-menu .panel-intro {
+  color: var(--ms-ink-muted);
+}
+
+.panel-close,
+.primary-button,
+.setting-button {
+  color: #f6ecd7;
+  background: var(--ms-ink);
+  border: 1px solid var(--ms-ink);
+  box-shadow: inset 0 0 0 2px #e8d9b933;
+}
+
+.panel-close:hover,
+.primary-button:hover,
+.setting-button:hover {
+  background: var(--ms-terracotta);
+}
+
+.secondary-button {
+  color: var(--ms-ink);
+  border-color: var(--ms-ink);
+  background: #e8d9b999;
+}
+
+.secondary-button:hover {
+  background: #d9c8a5;
+}
+
+.ms-tabs button[aria-selected='true'],
+.journal-tabs button[aria-selected='true'] {
+  color: #f6ecd7;
+  background-color: var(--ms-ink);
+  border-color: var(--ms-ink);
+}
+
+.ms-slot,
+.building-card,
+.upgrade-card,
+.clan-building,
+.destination-card {
+  border-color: #43382c66;
+  background: #f2e6cc66;
+}
+
+.ms-tooltip,
+.journal-callout,
+.area-intel {
+  border: 1px solid #43382c55;
+  border-left: 3px solid var(--ms-terracotta);
+  background: #e8d9b988;
+  color: var(--ms-ink);
+}

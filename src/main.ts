@@ -14,6 +14,7 @@ import './saves.css';
 import './style.css';
 import './tapestry.css';
 import './traditions.css';
+import './manuscript.css';
 import { GameUI } from './ui/GameUI';
 if (import.meta.env.DEV) void import('./developer.css');
 

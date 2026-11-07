@@ -173,7 +173,7 @@ export function destinationIllustration(id: LocationId): string {
                   })
                   .join('')
               : '';
-          return `<path d="${waterPath(riverOutline(sections, 1, 12))}" fill="${color(water.bank)}" opacity=".7"/><path data-river-channel="${index}" d="${waterPath(riverOutline(sections))}" fill="${color(water.color)}"/><path d="${waterPath(riverOutline(sections, 0.45, 0, 0.08))}" fill="#426f76" opacity=".2"/>${ice}`;
+          return `<path d="${waterPath(riverOutline(sections, 1, 12))}" fill="${color(water.bank)}" stroke="#43382c" stroke-width=".6" stroke-opacity=".45" opacity=".8"/><path data-river-channel="${index}" d="${waterPath(riverOutline(sections))}" fill="${color(water.color)}" stroke="#43382c" stroke-width=".75" stroke-opacity=".65"/><path d="${waterPath(riverOutline(sections, 0.45, 0, 0.08))}" fill="#e8d9b9" opacity=".32"/>${ice}`;
         })
         .join('')}</g>`
     : '';
@@ -187,17 +187,17 @@ export function destinationIllustration(id: LocationId): string {
       return `<svg x="${x}" y="${y}" width="${width}" height="${height}" viewBox="${frame.x} ${frame.y} ${frame.w} ${frame.h}" overflow="hidden"><image href="${root}${scenery.meta.image}" width="${scenery.meta.size.w}" height="${scenery.meta.size.h}"/></svg>`;
     })
     .join('');
-  return `<svg class="destination-illustration" data-landscape="${id}" viewBox="0 0 240 110" aria-hidden="true" focusable="false"><path d="M0 65Q55 45 120 64T240 58V110H0Z" fill="${color(landscape.ground)}"/><path d="M0 91Q80 72 151 92T240 83V110H0Z" fill="${color(landscape.patch)}" opacity=".5"/>${river}${landmarks}</svg>`;
+  return `<svg class="destination-illustration" data-landscape="${id}" viewBox="0 0 240 110" aria-hidden="true" focusable="false"><rect width="240" height="110" fill="#e8d9b9" fill-opacity=".55"/><path d="M0 65Q55 45 120 64T240 58V110H0Z" fill="${color(landscape.ground)}" stroke="#43382c" stroke-width="1" stroke-opacity=".65"/><path d="M12 73Q64 56 122 72T228 66" fill="none" stroke="#43382c" stroke-width=".65" stroke-dasharray="4 3" stroke-opacity=".42"/><path d="M0 91Q80 72 151 92T240 83V110H0Z" fill="${color(landscape.patch)}" opacity=".65" stroke="#43382c" stroke-width=".8" stroke-opacity=".5"/>${river}${landmarks}<rect x=".75" y=".75" width="238.5" height="108.5" fill="none" stroke="#43382c" stroke-width="1.2" stroke-opacity=".55"/></svg>`;
 }
 
 export function routeIllustration(name: 'river' | 'ridge' | 'refuge'): string {
   const landscape = {
     river:
-      '<path d="M0 60 50 42l35 9 55-20 60 20 40-10v55H0Z" fill="#b3b58b"/><path d="m0 76 52-18 36 12 38-12 55 13 59-14v39H0Z" fill="#828e72"/><path d="M144 34c-68 32 72 19-6 39L72 96h56l37-18c72-34-54-17-12-44Z" fill="#89b6b5"/><path class="route-current" d="M150 39c-33 17 47 20-4 34l-47 17" stroke="#dbd7b8" stroke-width="2" fill="none"/>',
+      '<path d="M0 60 50 42l35 9 55-20 60 20 40-10v55H0Z" fill="#d9c8a5" stroke="#43382c" stroke-width="1"/><path d="m0 76 52-18 36 12 38-12 55 13 59-14v39H0Z" fill="#7d896c" stroke="#43382c" stroke-width="1"/><path d="M144 34c-68 32 72 19-6 39L72 96h56l37-18c72-34-54-17-12-44Z" fill="#607a8b" stroke="#43382c" stroke-width="1"/><path class="route-current" d="M150 39c-33 17 47 20-4 34l-47 17" stroke="#e8d9b9" stroke-width="1.8" fill="none"/>',
     ridge:
-      '<path d="m0 87 57-62 35 32L143 7l86 80Z" fill="#667c77"/><path d="m57 25 10 50 25-18-18-15Zm86-18 4 54 29-22-18-10Z" fill="#d2c8a8"/><path d="m143 7-38 66 42-12Zm33 32-29 22 45 8Z" fill="#415e64"/><path d="m0 85 60-14 55 14 73-17 52 15v13H0Z" fill="#a09d72"/>',
+      '<path d="m0 87 57-62 35 32L143 7l86 80Z" fill="#607a8b" stroke="#43382c" stroke-width="1.1"/><path d="m57 25 10 50 25-18-18-15Zm86-18 4 54 29-22-18-10Z" fill="#e8d9b9"/><path d="m143 7-38 66 42-12Zm33 32-29 22 45 8Z" fill="#43382c" fill-opacity=".35"/><path d="m0 85 60-14 55 14 73-17 52 15v13H0Z" fill="#ad824d" stroke="#43382c" stroke-width="1"/>',
     refuge:
-      '<path d="m0 77 46-22 40 12 53-23 45 13 56-11v50H0Z" fill="#a7ac7d"/><path d="m0 91 52-17 56 11 58-17 74 10v18H0Z" fill="#7c9077"/><path d="M89 77V15m47 53V7" stroke="#635c42" stroke-width="3"/><g class="route-flags"><path d="M91 17c15-10 19 10 37 0v25c-18 10-22-10-37 0Z" fill="#3b7c82"/><path d="M138 10c16-10 20 10 37 0v29c-17 10-21-10-37 0Z" fill="#a25b40"/><path d="m108 23 4 6-4 5-4-5Zm45-5 4 6-4 5-4-5Z" fill="#e4bf78"/></g>',
+      '<path d="m0 77 46-22 40 12 53-23 45 13 56-11v50H0Z" fill="#d9c8a5" stroke="#43382c" stroke-width="1"/><path d="m0 91 52-17 56 11 58-17 74 10v18H0Z" fill="#7d896c" stroke="#43382c" stroke-width="1"/><path d="M89 77V15m47 53V7" stroke="#43382c" stroke-width="2.4"/><g class="route-flags"><path d="M91 17c15-10 19 10 37 0v25c-18 10-22-10-37 0Z" fill="#607a8b" stroke="#43382c" stroke-width="1"/><path d="M138 10c16-10 20 10 37 0v29c-17 10-21-10-37 0Z" fill="#98614d" stroke="#43382c" stroke-width="1"/><path d="m108 23 4 6-4 5-4-5Zm45-5 4 6-4 5-4-5Z" fill="#e8d9b9"/></g>',
   };
-  return `<svg class="route-illustration" viewBox="0 0 240 96" aria-hidden="true" focusable="false"><circle cx="188" cy="23" r="13" fill="#d4aa65" opacity=".65"/>${landscape[name]}<path d="M0 95h240" stroke="#9b7546" stroke-width="2"/></svg>`;
+  return `<svg class="route-illustration" viewBox="0 0 240 96" aria-hidden="true" focusable="false"><rect width="240" height="96" fill="#e8d9b9" fill-opacity=".6"/><circle cx="188" cy="23" r="13" fill="#ad824d" opacity=".55" stroke="#43382c" stroke-width=".9"/>${landscape[name]}<path d="M0 95h240" stroke="#43382c" stroke-width="2"/></svg>`;
 }
