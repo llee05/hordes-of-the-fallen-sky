@@ -1,5 +1,6 @@
 import { availableFormations } from './clan';
 import { applyCampEffects } from './camp';
+import { isCharacterProfile, normalizeCharacterProfile } from '../../shared/characterProfile';
 import { isExpeditionSave, isRecord, type ExpeditionSave } from '../../shared/expeditionSave';
 import { isNomadicCamp } from '../../shared/nomadicCamp.js';
 import type { MotionArchive } from '../animation/CharacterMotion';
@@ -231,6 +232,7 @@ const optional: Record<string, Record<string, Rule>> = {
       ),
     }),
     startingTradition: oneOf(STARTING_TRADITIONS.map((entry) => entry.id)),
+    character: isCharacterProfile,
     crossing: object(
       {
         key: string,
@@ -559,6 +561,7 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
   )
     throw new Error('This expedition contains invalid progression or actor references.');
   const restored = structuredClone({ run, world });
+  restored.run.character = normalizeCharacterProfile(restored.run.character);
   migrateLegacyNomadicCamp(restored.run);
   syncNomadicBuildings(restored.run);
   if (retiredStory) {

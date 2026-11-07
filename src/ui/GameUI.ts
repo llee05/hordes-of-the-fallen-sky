@@ -641,10 +641,11 @@ export class GameUI {
     // Transfer focus before hiding or removing the focused menu control.
     if (run.phase === 'playing') this.get('arena-wrap').focus({ preventScroll: true });
     this.overlay.hidden = run.phase === 'playing';
-    this.overlay.className = `overlay ${run.phase === 'console' ? 'console-screen' : run.phase === 'building' ? 'planning camp-planning' : run.phase === 'ready' ? 'ready-screen' : ['route', 'journal', 'settings', 'help', 'developer', 'saves', 'traditions'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
+    this.overlay.className = `overlay ${run.phase === 'console' ? 'console-screen' : run.phase === 'building' ? 'planning camp-planning' : run.phase === 'character' ? 'planning character-creation-screen' : run.phase === 'ready' ? 'ready-screen' : ['route', 'journal', 'settings', 'help', 'developer', 'saves', 'traditions'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
     const labels: Record<RunPhase, string> = {
       ready: 'THE SKY IS WAITING',
       traditions: 'STARTING CLAN TRADITION',
+      character: 'CHARACTER CREATION',
       playing: 'THE CLAN ENDURES',
       paused: 'EXPEDITION PAUSED',
       saves: 'SAVED EXPEDITIONS',
