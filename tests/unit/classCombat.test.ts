@@ -32,6 +32,33 @@ function setup(classId: string) {
 }
 
 describe('playable class combat', () => {
+  it.each([
+    ['mounted-archer', 0.12, 0.28],
+    ['lancer', 0.08, 0.08],
+    ['iron-pagoda', 0.22, 0.22],
+    ['spirit-caller', 0.18, 0.18],
+  ] as const)(
+    '%s keeps its weapon spacing across Burning Tempest',
+    (classId, ordinary, tempest) => {
+      const arena = setup(classId);
+      const target = arena.spawn(200, 0);
+      for (const [enabled, spacing] of [[false, ordinary], [true, tempest]] as const) {
+        arena.context.run.clan.paths.archery = enabled ? ['fire-arrows'] : [];
+        arena.context.run.clan.paths.sanctuary = enabled ? ['wind-shamans'] : [];
+        arena.combat.shootVolley(1000, 1000, target, 3, 1, false, false, 'khan');
+        const arrows = arena.projectiles.getChildren().filter((arrow) => arrow.active);
+        expect(arrows).toHaveLength(enabled ? 5 : 3);
+        const angles = arrows.map((arrow) =>
+          Math.atan2(arrow.body!.velocity.y, arrow.body!.velocity.x),
+        );
+        for (let i = 1; i < angles.length; i++) {
+          expect(angles[i]! - angles[i - 1]!).toBeCloseTo(spacing);
+        }
+        for (const arrow of arrows) arrow.disableBody(true, true);
+      }
+    },
+  );
+
   it.each([1, 2])('adds a charged archer fan to %s base projectiles', (baseCount) => {
     const arena = setup('mounted-archer');
     arena.spawn(300, 0);

@@ -14,7 +14,7 @@ import { acceptCampBarrage, defeatSkybreaker } from '../../state/finalStand';
 import { isKhanActive } from '../../state/khan';
 import { retreatShot, spendMountedVolley } from '../../state/mountedCombat';
 import { gainExperience } from '../../state/run';
-import { volleyFactors } from '../../state/volley';
+import { khanVolleyFactors, volleyFactors } from '../../state/volley';
 import type { EnemyDefinition } from '../../types';
 import { projectileTerrainClear } from '../../world3d/projectileTerrain';
 import type { ArenaContext } from './ArenaContext';
@@ -193,7 +193,7 @@ export class CombatSystem extends ArenaSystem {
     const volley =
       owner === 'wagon-ricochet'
         ? { tempest: false, count: 1, spacing: 0, damage: 1, speed: 1 }
-        : volleyFactors(
+        : (owner === 'khan' ? khanVolleyFactors : volleyFactors)(
             this.run,
             count +
               (owner === 'khan' && charged && cls.id === 'mounted-archer'
@@ -205,10 +205,7 @@ export class CombatSystem extends ArenaSystem {
     const first = this.projectiles.get(x, y, 'bolt') as Projectile | null;
     if (!first) return false;
     const arrowCount = volley.count;
-    const spacing =
-      owner === 'khan' && cls.id !== 'mounted-archer' && arrowCount > 1
-        ? cls.weapon.spreadAngle
-        : volley.spacing;
+    const spacing = volley.spacing;
     const chargedPierce = owner === 'khan' ? cls.weapon.chargedExtraPierce : 1;
     const basePierces = this.run.stats.pierce + (charged ? chargedPierce : 0);
     const baseSpeed = owner === 'khan' ? cls.stats.projectileSpeed : GAME.projectile.speed;
