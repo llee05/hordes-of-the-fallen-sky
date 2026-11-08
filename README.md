@@ -25,7 +25,8 @@ starts a fresh test expedition with supplies.
 Escape / F8 closes the selector and returns to the previous screen. Developer runs
 do not change your saved longest journey.
 Start a new run to return to normal play. The selector is absent from production
-and packaged builds. See [developer mode](docs/developer-mode.md) for checkpoint rules.
+and packaged builds. See [developer mode](docs/developer-mode.md) for checkpoint rules and the temporary
+class picker.
 
 Press **Backtick** (<kbd>&#96;</kbd>) to open the developer console directly over
 the game; **F10** is an alternate shortcut. Use **`invincible on`** (or `god on`)
@@ -113,13 +114,13 @@ fictional Heart of the Steppe. These are stylized camps in the surrounding lands
 with compressed travel geography; real sacred places remain distinct from the
 invented calamity. See [destinations, rules, and cultural sources](docs/migration-locations.md).
 
-Start with eight people, three horses, two gers, supplies, and a mounted Khan with one accompanying rider. Attacks are automatic. Ride to collect spirit shards and gain XP levels without interrupting combat. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through. Camp development is the sole progression interface; patron research and knowledge points have been removed for now. Spirit remains the camp currency earned from kills.
+Start with eight people, three horses, two gers, supplies, and a mounted Khan with one accompanying rider. Attacks are automatic. Ride to collect spirit shards and gain XP levels without interrupting combat. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through. XP levels also grant automatic [class progression bonuses](docs/game-mechanics.md#playable-classes). Camp development is the sole progression interface; patron research and knowledge points have been removed for now. Spirit remains the camp currency earned from kills.
 
 Press **B** to visit the illustrated **nomadic camp**. Five permanent core households begin at level 1: **Khan's Ger, Horse Lines, Herding Grounds, Communal Hearth and Wagon Yard**. Choose five different workplaces from fourteen military, economy, survival, spiritual and cultural buildings for the five optional locations. Every building has three levels, a visible upgraded appearance, authored costs and effects, and a compact parchment inspector. The Khan's Ger governs population capacity and higher building levels. Search and Provisions stay within the same painted map; Escape/controller Back closes a popover before leaving. Planning freezes the world. Unsupported mount, equipment, companion, trading and corruption benefits are recorded as **Planned** data rather than simulated systems.
 
 Purchases and completed crossings save the portable camp checkpoint. **Continue clan camp** restores its choices, levels and actual supplies into a fresh expedition; **Continue expedition** restores the whole battle and journey. Old facilities map to their corresponding new buildings, while retired tiers, internal ranks and craft branches are refunded once. See [the nomadic camp guide](docs/nomadic-camp.md) for the complete catalog, effects, prices and migration mapping.
 
-**Advanced Fletcher's Workshop + Shaman's Ger = the Burning Tempest:** curving, flaming arrow fans with lingering burn damage.
+**Advanced Fletcher's Workshop + Shaman's Ger = the Burning Tempest:** enhanced flaming volleys with lingering burn damage. See [combat rules](docs/game-mechanics.md#camp-attacks-and-burning-tempest) for class-specific behavior.
 
 **The Khan is a title carried by successive leaders.** If he falls, the clan spends **10 active seconds choosing a new Khan** while riders and camp defenses keep fighting. A visible countdown marks succession. The successor returns at the current camp or moving caravan with full maximum health, a ready gallop, and 3 seconds of protection. During the countdown, optionally choose an outrider (+5% riding speed) or hearthguard (8% less Khan damage) using 1 / 2, controller left / right, or the HUD. Their trait lasts for that generation; leaving the choice alone returns an unmodified successor. All resources and buildings, and journey progress carry on. Menus pause the countdown. Losing the clan’s people or resolve still ends the expedition.
 

@@ -1,4 +1,9 @@
 import { isCampArchive, normalizeCampArchive, type CampArchive } from './campArchive.js';
+import {
+  isCharacterProfile,
+  normalizeCharacterProfile,
+  type CharacterProfile,
+} from './characterProfile.js';
 import { isDeveloperHistory, normalizeDeveloperHistory } from './developerHistory.js';
 import { isAudioMix, normalizeAudioMix, type AudioMix } from './audioSettings.js';
 import {
@@ -15,6 +20,7 @@ export interface PlayerProfile {
   visualSettings?: VisualSettings;
   developerCommandHistory?: string[];
   camp?: CampArchive;
+  character?: CharacterProfile;
 }
 
 export function defaultProfile(): PlayerProfile {
@@ -29,6 +35,9 @@ export function isProfile(value: unknown): value is PlayerProfile {
       isVisualSettings(value.visualSettings)) &&
     (!('audioMix' in value) || value.audioMix === undefined || isAudioMix(value.audioMix)) &&
     (!('camp' in value) || value.camp === undefined || isCampArchive(value.camp)) &&
+    (!('character' in value) ||
+      value.character === undefined ||
+      isCharacterProfile(value.character)) &&
     (!('developerCommandHistory' in value) ||
       value.developerCommandHistory === undefined ||
       isDeveloperHistory(value.developerCommandHistory))
@@ -54,6 +63,10 @@ export function normalizeProfile(value: unknown): PlayerProfile {
     'developerCommandHistory' in value ? value.developerCommandHistory : undefined,
   );
   const camp = normalizeCampArchive('camp' in value ? value.camp : undefined);
+  const character =
+    'character' in value && isCharacterProfile(value.character)
+      ? normalizeCharacterProfile(value.character)
+      : undefined;
   return {
     version: 1,
     bestSeconds: value.bestSeconds,
@@ -66,5 +79,6 @@ export function normalizeProfile(value: unknown): PlayerProfile {
       : {}),
     ...(history.length ? { developerCommandHistory: history } : {}),
     ...(camp ? { camp } : {}),
+    ...(character ? { character } : {}),
   };
 }

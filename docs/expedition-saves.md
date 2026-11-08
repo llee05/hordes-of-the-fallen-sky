@@ -22,6 +22,14 @@ Legacy version 1 saves may contain retired research fields and pre-removal story
 
 Snapshots preserve the entire run, including already-applied camp/stat effects and XP, succession and selected traits, crossing rewards and escort state, field objectives, and clan memories. They also preserve player/camp/rider positions, velocity and facing, animation clocks, combat/camp-support/encounter timers, hazards, live enemies, both projectile pools, and dropped XP.
 
+Version 1 accepts an optional validated `run.character` profile. Saves without it
+receive the default Mounted Archer identity while retaining stored stats and
+effects; loading never reapplies class, background, oath, or progression bonuses.
+The optional `world.timers.closeDefenseTimer` preserves the close-defense cooldown;
+older saves without it start with close defense ready. `profile.json` separately
+accepts an optional validated character profile for new expeditions; see
+[developer class testing](developer-mode.md#playable-class-testing) for picker behavior.
+
 Enemy pool slots and incarnation counters survive hydration, including inactive pool entries. Projectile hit references and enemy-owned warnings therefore continue to reference the same incarnation. Loading initializes actors directly rather than using spawn placement rules, which would reject existing nearby enemies. The boss reference is rebuilt from its saved definition. Terrain/navigation are reconstructed from the saved chapter, location, and migration route. Zoom is restored within the current viewport's limits. Non-gameplay defeat copies, dust, packing transitions, and ambient voices are recreated rather than persisted.
 
 Hydration never calls purchase/apply-upgrade, arrival, healing, succession completion, or an active-time update. Stored effects are used directly for current saves. Version 1 also accepts the optional validated `clan.nomadicCamp` ownership record; saves without it undergo [legacy camp migration](nomadic-camp.md#portable-checkpoints-and-full-expeditions) before resuming. Compatibility building counters and craft flags are then derived from ownership. Loading opens **paused**; returning to combat is explicit. Held movement/touch inputs and cheat flags reset. No rewards or cooldowns are refreshed by loading.

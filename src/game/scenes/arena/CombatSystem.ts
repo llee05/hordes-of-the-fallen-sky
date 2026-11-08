@@ -4,6 +4,7 @@ import type { CharacterMotion } from '../../animation/CharacterMotion';
 import type { CampBarrier } from '../../assets/CampBarrier';
 import { effectAmount } from '../../../shared/visualSettings';
 import { GAME } from '../../config';
+import { classDefinition, khanTargetingRange } from '../../data/classes';
 import { Enemy, Gem, Projectile } from '../../entities/actors';
 import { campBoundary } from '../../state/campBarrier';
 import { hasDevelopment } from '../../state/clan';
@@ -13,7 +14,7 @@ import { acceptCampBarrage, defeatSkybreaker } from '../../state/finalStand';
 import { isKhanActive } from '../../state/khan';
 import { retreatShot, spendMountedVolley } from '../../state/mountedCombat';
 import { gainExperience } from '../../state/run';
-import { volleyFactors } from '../../state/volley';
+import { khanVolleyFactors, volleyFactors } from '../../state/volley';
 import type { EnemyDefinition } from '../../types';
 import { projectileTerrainClear } from '../../world3d/projectileTerrain';
 import type { ArenaContext } from './ArenaContext';
@@ -80,8 +81,42 @@ export class CombatSystem extends ArenaSystem {
 
   /** Counts down the Khan's attack timer and fires when it is due. */
   tickFire(dt: number): void {
+    if (this.run.phase !== 'playing') return;
+    this.tickCloseDefense(dt);
     this.timers.attackTimer -= dt;
     if (this.timers.attackTimer <= 0) this.fire();
+  }
+
+  private tickCloseDefense(dt: number): void {
+    if (!isKhanActive(this.run)) return;
+    this.timers.closeDefenseTimer = Math.max(0, (this.timers.closeDefenseTimer ?? 0) - dt);
+    if (this.timers.closeDefenseTimer > 0) return;
+    const cls = classDefinition(this.run.character?.classId);
+    let struck = false;
+    this.spatial.forEachNearby(
+      this.player.x,
+      this.player.y,
+      cls.stats.closeDefenseRadius,
+      (enemy) => {
+        if (
+          this.landscape.navigation &&
+          !this.landscape.navigation.lineClear(this.player, enemy, 0)
+        )
+          return;
+        if (cls.id === 'spirit-caller') {
+          enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
+          enemy.setVelocity(0, 0);
+        }
+        this.damageEnemy(enemy, this.run.stats.damage * cls.stats.closeDefenseDamage);
+        struck = true;
+      },
+    );
+    if (!struck) return;
+    this.timers.closeDefenseTimer = cls.stats.closeDefenseInterval;
+    this.host.playerMotion.attack();
+    this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 5);
+    this.audio.play('impact', this.player);
+    markExpedition(this.run, 'fight');
   }
 
   fire(): void {
@@ -90,7 +125,7 @@ export class CombatSystem extends ArenaSystem {
     const target = this.spatial.nearest(
       this.player.x,
       this.player.y,
-      GAME.projectile.range + this.run.clan.campEffects.bonuses.range + momentum * 120,
+      khanTargetingRange(this.run) + momentum * 120,
       (e) => !this.landscape.navigation || this.landscape.navigation.lineClear(this.player, e, 0),
     );
     if (isKhanActive(this.run) && target) {
@@ -101,6 +136,7 @@ export class CombatSystem extends ArenaSystem {
             target.x - this.player.x) < 0,
         );
       const charged = this.run.combat.ready;
+      const cls = classDefinition(this.run.character?.classId);
       const retreat = retreatShot(this.run, this.player, this.camp, target, this.facing);
       const released = this.shootVolley(
         this.player.x,
@@ -113,9 +149,24 @@ export class CombatSystem extends ArenaSystem {
         'khan',
       );
       hostFired ||= released;
+      if (released && charged && cls.id === 'spirit-caller') {
+        // Summon Ancestor (Call Spirit): channels an ancestral spectral bolt alongside charged volleys
+        this.shootVolley(
+          this.player.x,
+          this.player.y,
+          target,
+          1,
+          0.85,
+          true,
+          true,
+          'khan',
+          1,
+          true,
+        );
+      }
       if (released && charged) {
         spendMountedVolley(this.run);
-        this.effects.burst(this.player.x, this.player.y, 0xe3c78c, 5);
+        this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 5);
       }
     }
     if (hostFired) this.run.combat.volleys++;
@@ -138,20 +189,30 @@ export class CombatSystem extends ArenaSystem {
     ghost = false,
     origin?: Enemy,
   ): boolean {
+    const cls = classDefinition(this.run.character?.classId);
     const volley =
       owner === 'wagon-ricochet'
         ? { tempest: false, count: 1, spacing: 0, damage: 1, speed: 1 }
-        : volleyFactors(this.run, count);
+        : (owner === 'khan' ? khanVolleyFactors : volleyFactors)(
+            this.run,
+            count +
+              (owner === 'khan' && charged && cls.id === 'mounted-archer'
+                ? GAME.classes['mounted-archer'].chargedExtraProjectiles
+                : 0),
+          );
     const direction = Math.atan2(target.y - y, target.x - x);
     const tempest = volley.tempest;
     const first = this.projectiles.get(x, y, 'bolt') as Projectile | null;
     if (!first) return false;
     const arrowCount = volley.count;
-    const basePierces = this.run.stats.pierce + (charged ? 1 : 0);
+    const spacing = volley.spacing;
+    const chargedPierce = owner === 'khan' ? cls.weapon.chargedExtraPierce : 1;
+    const basePierces = this.run.stats.pierce + (charged ? chargedPierce : 0);
+    const baseSpeed = owner === 'khan' ? cls.stats.projectileSpeed : GAME.projectile.speed;
     for (let i = 0; i < arrowCount; i += 1) {
       const bolt = i === 0 ? first : (this.projectiles.get(x, y, 'bolt') as Projectile | null);
       if (!bolt) break;
-      const angle = direction + (i - (arrowCount - 1) / 2) * volley.spacing;
+      const angle = direction + (i - (arrowCount - 1) / 2) * spacing;
       bolt.enableBody(true, x, y, true, true);
       bolt.barrage = undefined;
       bolt.echoIndex = ancestral ? echoIndex : undefined;
@@ -170,18 +231,30 @@ export class CombatSystem extends ArenaSystem {
       bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
       bolt.tempest = tempest;
       bolt.pierces = basePierces;
-      bolt.pins = false;
+      bolt.pins = owner === 'khan' && charged && cls.weapon.pinsOnCharged;
+      if (owner === 'khan' && cls.id !== 'mounted-archer') {
+        bolt.setTint(cls.weapon.projectileTint);
+      }
       if (charged) bolt.setTint(0xe2c586);
       bolt.hitTargets.clear();
       if (origin) bolt.hitTargets.set(origin, origin.spawnId);
-      bolt.turn = tempest ? (i % 2 ? 1 : -1) * 0.65 : 0;
+      bolt.turn =
+        owner === 'khan' && cls.weapon.homingTurnRate > 0
+          ? 0
+          : tempest
+            ? (i % 2 ? 1 : -1) * 0.65
+            : 0;
       if (bolt.fire) bolt.setTint(0xffa04e);
       if (ancestral) bolt.setTint(0x91ded6);
       bolt.damage =
         owner === 'wagon-ricochet'
           ? damageOrMultiplier
           : this.run.stats.damage *
-            (charged ? GAME.mounted.chargedDamage : 1) *
+            (charged
+              ? owner === 'khan'
+                ? cls.weapon.chargedDamage
+                : GAME.mounted.chargedDamage
+              : 1) *
             damageOrMultiplier *
             volley.damage;
       bolt.setData('base-damage', bolt.damage);
@@ -190,8 +263,8 @@ export class CombatSystem extends ArenaSystem {
       bolt.setData('ghost', ghost);
       bolt.remaining = GAME.projectile.lifetime;
       bolt.setVelocity(
-        Math.cos(angle) * GAME.projectile.speed * volley.speed,
-        Math.sin(angle) * GAME.projectile.speed * volley.speed,
+        Math.cos(angle) * baseSpeed * volley.speed,
+        Math.sin(angle) * baseSpeed * volley.speed,
       );
     }
     markExpedition(this.run, 'fight');
@@ -248,10 +321,29 @@ export class CombatSystem extends ArenaSystem {
     for (const bolt of this.projectiles.getChildren() as Projectile[]) {
       if (!bolt.active) continue;
       bolt.remaining -= dt;
-      if (bolt.turn) {
+      const homing =
+        bolt.source === 'khan'
+          ? classDefinition(this.run.character?.classId).weapon.homingTurnRate
+          : 0;
+      if (homing > 0 || bolt.turn) {
         const body = bolt.body as Phaser.Physics.Arcade.Body;
-        const angle = Math.atan2(body.velocity.y, body.velocity.x) + bolt.turn * dt;
-        const speed = body.velocity.length();
+        const speed = Math.hypot(body.velocity.x, body.velocity.y);
+        let angle = Math.atan2(body.velocity.y, body.velocity.x);
+        if (homing > 0) {
+          const target = this.spatial.nearest(
+            bolt.x,
+            bolt.y,
+            speed * Math.max(0, bolt.remaining),
+            (enemy) =>
+              bolt.hitTargets.get(enemy) !== enemy.spawnId &&
+              (!this.landscape.navigation || this.landscape.navigation.lineClear(bolt, enemy, 0)),
+          );
+          if (target) {
+            const desired = Math.atan2(target.y - bolt.y, target.x - bolt.x);
+            const difference = Math.atan2(Math.sin(desired - angle), Math.cos(desired - angle));
+            angle += Math.max(-homing * dt, Math.min(homing * dt, difference));
+          }
+        } else angle += bolt.turn * dt;
         bolt.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
         bolt.setRotation(angle + Math.PI / 4);
       }
@@ -290,6 +382,7 @@ export class CombatSystem extends ArenaSystem {
       bolt.pierces -= 1;
     } else bolt.disableBody(true, true);
     if (bolt.fire) enemy.burning = 2;
+    if (bolt.pins) enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
     this.damageEnemy(enemy, hitDamage);
   }
 

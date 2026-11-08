@@ -64,6 +64,22 @@ opening or closing the console. `GameUI` renders a dark console at the top of th
 screen while retaining the battlefield and HUD underneath. Both controls remain
 absent from production and packaged play.
 
+## Playable class testing
+
+Open **Developer mode** with F8 or from the title or pause menu, then select a
+button under **Playable classes · start fresh expedition**. The selection
+immediately replaces the current run with a fresh expedition at Golden Pasture,
+using the selected starting tradition and class. Unlike stocked level checkpoints,
+class runs use normal opening supplies plus character loadout bonuses. The saved
+character profile supplies background, oath, and appearance when present;
+otherwise the defaults are Steppe Herder and Oath of the Steppe.
+
+This temporary picker does not save the class as a preference. Class runs show
+**DEVELOPER RUN**, retain the current cheat toggles, and cannot overwrite normal
+expedition saves or longest-journey records. A normal new run uses the saved
+profile, if any. See [playable classes](game-mechanics.md#playable-classes) for
+weapons, abilities, and progression. Character creation remains separate work.
+
 ## Level checkpoints
 
 Run `npm run dev` for Electron or `npm run dev:web` for the browser. Choose

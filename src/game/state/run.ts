@@ -1,4 +1,6 @@
+import { defaultCharacterProfile, type CharacterProfile } from '../../shared/characterProfile';
 import { GAME } from '../config';
+import { applyCharacterLoadout, applyClassProgressionMilestones } from '../data/classes';
 import { startingTradition, type StartingTraditionId } from '../data/clan';
 import type { RunState } from '../types';
 import { createClan } from './clan';
@@ -14,7 +16,10 @@ export function xpForLevel(level: number): number {
   return 8 + (level - 1) * 6;
 }
 
-export function createRun(tradition: StartingTraditionId = 'shared-hearth'): RunState {
+export function createRun(
+  tradition: StartingTraditionId = 'shared-hearth',
+  character?: CharacterProfile,
+): RunState {
   const { balance } = startingTradition(tradition);
   const clan = createClan();
   clan.food = balance.food;
@@ -22,6 +27,7 @@ export function createRun(tradition: StartingTraditionId = 'shared-hearth'): Run
   const run: RunState = {
     metrics: { stages: [] },
     startingTradition: tradition,
+    character: defaultCharacterProfile(),
     legacy: createLegacy(),
     safety: createClanSafety(),
     combat: createMountedCombat(),
@@ -48,18 +54,25 @@ export function createRun(tradition: StartingTraditionId = 'shared-hearth'): Run
     },
   };
   initializeNomadicCamp(run);
+  if (character) {
+    applyCharacterLoadout(run, character);
+  }
   return run;
 }
 
 export function gainExperience(run: RunState, amount: number): boolean {
   run.xp += Math.max(0, amount) * nomadicExperienceMultiplier(run);
   if (amount > 0) completeGuidance(run, 'shards');
+  const previousLevel = run.level;
   let leveled = false;
   while (run.xp >= run.nextLevelXp) {
     run.xp -= run.nextLevelXp;
     run.level += 1;
     run.nextLevelXp = xpForLevel(run.level);
     leveled = true;
+  }
+  if (leveled) {
+    applyClassProgressionMilestones(run, previousLevel, run.level);
   }
   return leveled;
 }

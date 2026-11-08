@@ -1,11 +1,11 @@
-import { GAME } from '../config';
+import { khanTargetingRange } from '../data/classes';
 import { SUCCESSORS } from '../data/successors';
 import type { BuildingId, RunState } from '../types';
 import { gallopCooldown, wagonDefence } from './campCombat';
 import { clanDamageMultiplier, hasDevelopment, riderCount } from './clan';
 import { developmentPreview } from './developmentPreview';
 import { economyForecast, migrationMobility, pastureDepletion } from './economy';
-import { volleyFactors } from './volley';
+import { khanVolleyFactors } from './volley';
 
 export interface StatChange {
   label: string;
@@ -25,7 +25,7 @@ const n = (value: number) => Number(value.toFixed(3)).toString();
 function metrics(r: RunState): Metric[] {
   const rates = economyForecast(r),
     c = r.clan.campEffects;
-  const volley = volleyFactors(r, r.stats.projectiles);
+  const volley = khanVolleyFactors(r, r.stats.projectiles);
   return [
     { label: 'Clan population', value: r.clan.population },
     { label: 'Herd', value: r.clan.herd },
@@ -34,7 +34,7 @@ function metrics(r: RunState): Metric[] {
     { label: 'Shared attack damage', value: r.stats.damage },
     {
       label: 'Khan targeting range',
-      value: GAME.projectile.range + c.bonuses.range + r.clan.momentum * 120,
+      value: khanTargetingRange(r) + r.clan.momentum * 120,
       unit: ' paces',
       context: 'Includes the current momentum targeting bonus',
     },

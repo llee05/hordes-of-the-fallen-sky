@@ -1,5 +1,6 @@
 import { availableFormations } from './clan';
 import { applyCampEffects } from './camp';
+import { isCharacterProfile, normalizeCharacterProfile } from '../../shared/characterProfile';
 import { isExpeditionSave, isRecord, type ExpeditionSave } from '../../shared/expeditionSave';
 import { isNomadicCamp } from '../../shared/nomadicCamp.js';
 import type { MotionArchive } from '../animation/CharacterMotion';
@@ -96,6 +97,7 @@ export interface WorldArchive {
   timers: {
     spawnTimer: number;
     attackTimer: number;
+    closeDefenseTimer?: number;
     dashTimer: number;
     dashRemaining: number;
     invulnerable: number;
@@ -231,6 +233,7 @@ const optional: Record<string, Record<string, Rule>> = {
       ),
     }),
     startingTradition: oneOf(STARTING_TRADITIONS.map((entry) => entry.id)),
+    character: isCharacterProfile,
     crossing: object(
       {
         key: string,
@@ -376,17 +379,20 @@ const worldShape = object({
   camp: point,
   facing: point,
   zoom: positive,
-  timers: object({
-    spawnTimer: number,
-    attackTimer: number,
-    dashTimer: number,
-    dashRemaining: number,
-    invulnerable: number,
-    supportTimer: number,
-    wagonTimer: number,
-    wardTimer: number,
-    hazardTimer: number,
-  }),
+  timers: object(
+    {
+      spawnTimer: number,
+      attackTimer: number,
+      dashTimer: number,
+      dashRemaining: number,
+      invulnerable: number,
+      supportTimer: number,
+      wagonTimer: number,
+      wardTimer: number,
+      hazardTimer: number,
+    },
+    { closeDefenseTimer: number },
+  ),
   generations: list(integer, GAME.maxEnemies),
   enemies: list(
     object({
@@ -559,6 +565,7 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
   )
     throw new Error('This expedition contains invalid progression or actor references.');
   const restored = structuredClone({ run, world });
+  restored.run.character = normalizeCharacterProfile(restored.run.character);
   migrateLegacyNomadicCamp(restored.run);
   syncNomadicBuildings(restored.run);
   if (retiredStory) {

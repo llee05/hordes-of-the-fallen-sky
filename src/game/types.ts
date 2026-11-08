@@ -1,3 +1,4 @@
+import type { CharacterProfile } from '../shared/characterProfile.js';
 import type { NomadicCamp } from '../shared/nomadicCamp.js';
 import type { DeveloperConsoleSnapshot } from './dev/commands';
 import type { GuidanceState } from './state/guidance';
@@ -6,6 +7,7 @@ import type { ClanLegacy } from './state/legacy';
 export type RunPhase =
   | 'ready'
   | 'traditions'
+  | 'character'
   | 'playing'
   | 'paused'
   | 'saves'
@@ -132,6 +134,8 @@ export interface RunState {
   metrics?: import('./state/expeditionMetrics').ExpeditionMetrics;
   /** Missing only in expeditions saved before starting arrangements were introduced. */
   startingTradition?: keyof typeof import('./config').GAME.clan.starts;
+  /** Missing only in expeditions saved before character creation was introduced. */
+  character?: CharacterProfile;
   safety: import('./state/clanSafety').ClanSafety;
   crossing?: import('./state/crossingEncounters').CrossingEncounter;
   combat: import('./state/mountedCombat').MountedCombatState;

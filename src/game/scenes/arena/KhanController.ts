@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { effectAmount } from '../../../shared/visualSettings';
 import { CharacterMotion } from '../../animation/CharacterMotion';
-import { renderCharacter } from '../../animation/CharacterVisuals';
+import { playerVisualConfig } from '../../assets/painterlyArt';
 import { GAME } from '../../config';
+import { classDefinition, khanGallopSpeed, khanTargetingRange } from '../../data/classes';
 import type { Enemy } from '../../entities/actors';
 import { areaMovementMultiplier, type AreaThreatState } from '../../state/areaThreats';
 import { gallopCooldown } from '../../state/campCombat';
@@ -70,7 +71,13 @@ export class KhanController extends ArenaSystem {
     this.timers.dashTimer = gallopCooldown(this.run);
     this.timers.invulnerable = Math.max(this.timers.invulnerable, GAME.dash.duration);
     this.audio.play('dash');
-    this.effects.burst(this.player.x, this.player.y, 0xc8df9b, 7);
+    const cls = classDefinition(this.run.character?.classId);
+    if (cls.id === 'spirit-caller') {
+      // Spirit Ward (Tengri's Blessing): galloping restores Khan vitality and steadies clan resolve
+      this.run.health = Math.min(this.run.stats.maxHealth, this.run.health + 8);
+      this.run.clan.integrity = Math.min(GAME.clan.maxResolve, this.run.clan.integrity + 1.5);
+    }
+    this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 7);
   }
 
   /** Rides along `movement` (the input intent, rotated here into world space). */
@@ -84,7 +91,7 @@ export class KhanController extends ArenaSystem {
       completeGuidance(this.run, 'ride');
       this.facing.copy(movement).normalize();
     }
-    if (this.timers.dashRemaining > 0) movement.copy(this.facing).scale(GAME.dash.speed);
+    if (this.timers.dashRemaining > 0) movement.copy(this.facing).scale(khanGallopSpeed(this.run));
     else
       movement.scale(
         this.run.stats.speed *
@@ -144,6 +151,20 @@ export class KhanController extends ArenaSystem {
     this.arena.hud.refresh();
   }
 
+  renderPlayerVisual(): void {
+    const visual = playerVisualConfig(this.run.character);
+    const targetFrame = this.playerMotion.frame.replace(/^player-/, `${visual.framePrefix}-`);
+    if (
+      this.player.texture.key !== visual.textureKey &&
+      this.arena.scene.textures.exists(visual.textureKey)
+    ) {
+      this.player.setTexture(visual.textureKey, targetFrame);
+    } else if (this.player.frame.name !== targetFrame) {
+      this.player.setFrame(targetFrame, false, false);
+    }
+    this.player.setTint(this.playerMotion.hurt ? 0xffd3b2 : visual.baseTint);
+  }
+
   /** Brings an active successor back at camp with fresh motion and return protection. */
   returnKhan(): void {
     if (!isKhanActive(this.run)) return;
@@ -161,7 +182,7 @@ export class KhanController extends ArenaSystem {
     this.run.combat.heading = undefined;
     this.run.combat.rideSeconds = 0;
     this.run.combat.ready = false;
-    renderCharacter(this.player, this.playerMotion);
+    this.renderPlayerVisual();
     this.shadow
       .setPosition(x + 9, y + 5)
       .setDepth(99 + y)
@@ -185,16 +206,9 @@ export class KhanController extends ArenaSystem {
         dt,
         this.player.body!.velocity.length(),
         preparingVolley &&
-          Boolean(
-            this.spatial.nearest(
-              this.player.x,
-              this.player.y,
-              GAME.projectile.range + this.run.clan.campEffects.bonuses.range,
-            ),
-          ),
+          Boolean(this.spatial.nearest(this.player.x, this.player.y, khanTargetingRange(this.run))),
       );
-      renderCharacter(this.player, this.playerMotion);
-      this.player.setTint(this.playerMotion.hurt ? 0xffd3b2 : 0xffffff);
+      this.renderPlayerVisual();
     }
   }
 
@@ -208,7 +222,7 @@ export class KhanController extends ArenaSystem {
     this.player.setVelocity(world.player.vx, world.player.vy).setFlipX(world.player.flip);
     this.facing.set(world.facing.x, world.facing.y);
     this.playerMotion.restore(world.player.motion);
-    renderCharacter(this.player, this.playerMotion);
+    this.renderPlayerVisual();
     this.player.setDepth(100 + this.player.y);
     this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
     this.aura.setPosition(this.player.x, this.player.y);

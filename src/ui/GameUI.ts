@@ -1,6 +1,7 @@
 import { AUDIO_REFERENCE_CUES, type SoundKind } from '../game/audio/soundPalette';
 import { GAME } from '../game/config';
 import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
+import { classDefinition } from '../game/data/classes';
 import { FORMATIONS, startingTradition } from '../game/data/clan';
 import { CROSSING_ENCOUNTERS } from '../game/data/crossings';
 import { AREA_ENEMIES } from '../game/data/enemies';
@@ -127,7 +128,7 @@ export class GameUI {
             .join(
               '',
             )}</div><small id="successor-selection">1 / 2 · controller left / right</small></aside>
-          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span>BOW <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
+          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span><span id="weapon-label">BOW</span> <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
           <section class="tradition-hud" aria-label="Run progression"><span>LEVEL <b id="level">01</b></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small></section>
           <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
           <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">${clanMark('bow')}</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
@@ -450,7 +451,12 @@ export class GameUI {
     this.text('doctrine', clanDoctrine(run));
     this.text('riders', riderCount(run));
     this.text('workers', `${assignedWorkers(run)} / ${clan.population}`);
+    const activeClass = classDefinition(run.character?.classId);
+    this.text('weapon-label', activeClass.weapon.hudLabel);
     this.text('power', Math.round(run.stats.damage));
+    const khanTitle = this.get('khan-title');
+    khanTitle.dataset.characterClass = activeClass.id;
+    khanTitle.dataset.characterName = run.character?.name ?? '';
     this.number(
       'integrity',
       Math.ceil(clan.integrity),
@@ -645,6 +651,7 @@ export class GameUI {
     const labels: Record<RunPhase, string> = {
       ready: 'THE SKY IS WAITING',
       traditions: 'STARTING CLAN TRADITION',
+      character: 'CHARACTER CREATION',
       playing: 'THE CLAN ENDURES',
       paused: 'EXPEDITION PAUSED',
       saves: 'SAVED EXPEDITIONS',
@@ -955,6 +962,8 @@ export class GameUI {
       this.scene.executeDeveloperCommand('clan-invincible');
     else if (import.meta.env.DEV && button.dataset.developerLevel)
       this.scene.startDeveloperLevel(button.dataset.developerLevel);
+    else if (import.meta.env.DEV && button.dataset.developerClass)
+      this.scene.startDeveloperClass(button.dataset.developerClass);
     else if (action === 'starting-traditions') this.scene.openStartingTraditions();
     else if (button.dataset.startingTradition)
       this.scene.selectStartingTradition(button.dataset.startingTradition);

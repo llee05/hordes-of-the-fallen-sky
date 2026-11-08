@@ -1,3 +1,4 @@
+import { classDefinition } from '../data/classes';
 import type { RunState } from '../types';
 import { burningTempest } from './clan';
 
@@ -10,4 +11,13 @@ export function volleyFactors(run: RunState, count: number) {
     damage: run.clan.formation === 'encircle' && run.clan.momentum > 0.5 ? 1.3 : 1,
     speed: 1,
   };
+}
+
+export function khanVolleyFactors(run: RunState, count: number) {
+  const volley = volleyFactors(run, count);
+  const cls = classDefinition(run.character?.classId);
+  if (cls.id !== 'mounted-archer' && volley.count > 1) {
+    volley.spacing = cls.weapon.spreadAngle;
+  }
+  return volley;
 }

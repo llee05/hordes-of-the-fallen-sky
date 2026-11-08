@@ -1,4 +1,5 @@
 import type { CampArchive } from '../shared/campArchive';
+import { normalizeCharacterProfile, type CharacterProfile } from '../shared/characterProfile';
 import type { DesktopBridge } from '../shared/desktop';
 import { decodeExpedition } from '../game/state/expeditionArchive';
 import { defaultProfile, normalizeProfile } from '../shared/profile';
@@ -205,6 +206,11 @@ export class GamePlatform {
 
   saveCamp(camp: CampArchive): Promise<void> {
     this.profile.camp = structuredClone(camp);
+    return this.save();
+  }
+
+  saveCharacterProfile(character: CharacterProfile): Promise<void> {
+    this.profile.character = normalizeCharacterProfile(character);
     return this.save();
   }
 
