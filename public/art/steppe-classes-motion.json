@@ -1,0 +1,734 @@
+{
+  "frames": {
+    "mounted-archer-move-0": {
+      "frame": {
+        "x": 14,
+        "y": 22,
+        "w": 223,
+        "h": 219
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 14,
+        "y": 105,
+        "w": 223,
+        "h": 219
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "mounted-archer-move-1": {
+      "frame": {
+        "x": 274,
+        "y": 22,
+        "w": 214,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 18,
+        "y": 104,
+        "w": 214,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "mounted-archer-move-2": {
+      "frame": {
+        "x": 524,
+        "y": 24,
+        "w": 220,
+        "h": 216
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 108,
+        "w": 220,
+        "h": 216
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "mounted-archer-move-3": {
+      "frame": {
+        "x": 771,
+        "y": 27,
+        "w": 233,
+        "h": 212
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 112,
+        "w": 233,
+        "h": 212
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "mounted-archer-attack-0": {
+      "frame": {
+        "x": 1037,
+        "y": 9,
+        "w": 217,
+        "h": 232
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 92,
+        "w": 217,
+        "h": 232
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "mounted-archer-attack-1": {
+      "frame": {
+        "x": 1292,
+        "y": 17,
+        "w": 226,
+        "h": 223
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 101,
+        "w": 226,
+        "h": 223
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "lancer-move-0": {
+      "frame": {
+        "x": 11,
+        "y": 257,
+        "w": 225,
+        "h": 235
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 11,
+        "y": 89,
+        "w": 225,
+        "h": 235
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "lancer-move-1": {
+      "frame": {
+        "x": 274,
+        "y": 261,
+        "w": 212,
+        "h": 236
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 18,
+        "y": 88,
+        "w": 212,
+        "h": 236
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "lancer-move-2": {
+      "frame": {
+        "x": 522,
+        "y": 259,
+        "w": 246,
+        "h": 231
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 10,
+        "y": 93,
+        "w": 246,
+        "h": 231
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "lancer-move-3": {
+      "frame": {
+        "x": 768,
+        "y": 264,
+        "w": 233,
+        "h": 228
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 96,
+        "w": 233,
+        "h": 228
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "lancer-attack-0": {
+      "frame": {
+        "x": 1037,
+        "y": 258,
+        "w": 212,
+        "h": 238
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 86,
+        "w": 212,
+        "h": 238
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "lancer-attack-1": {
+      "frame": {
+        "x": 1287,
+        "y": 274,
+        "w": 242,
+        "h": 220
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 7,
+        "y": 104,
+        "w": 242,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "iron-pagoda-move-0": {
+      "frame": {
+        "x": 10,
+        "y": 519,
+        "w": 223,
+        "h": 233
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 10,
+        "y": 91,
+        "w": 223,
+        "h": 233
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "iron-pagoda-move-1": {
+      "frame": {
+        "x": 274,
+        "y": 522,
+        "w": 215,
+        "h": 234
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 18,
+        "y": 90,
+        "w": 215,
+        "h": 234
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "iron-pagoda-move-2": {
+      "frame": {
+        "x": 521,
+        "y": 523,
+        "w": 222,
+        "h": 229
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 95,
+        "w": 222,
+        "h": 229
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "iron-pagoda-move-3": {
+      "frame": {
+        "x": 768,
+        "y": 524,
+        "w": 234,
+        "h": 227
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 97,
+        "w": 234,
+        "h": 227
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "iron-pagoda-attack-0": {
+      "frame": {
+        "x": 1037,
+        "y": 512,
+        "w": 219,
+        "h": 246
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 78,
+        "w": 219,
+        "h": 246
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "iron-pagoda-attack-1": {
+      "frame": {
+        "x": 1291,
+        "y": 527,
+        "w": 238,
+        "h": 230
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 11,
+        "y": 94,
+        "w": 238,
+        "h": 230
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "spirit-caller-move-0": {
+      "frame": {
+        "x": 9,
+        "y": 768,
+        "w": 235,
+        "h": 235
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 89,
+        "w": 235,
+        "h": 235
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "spirit-caller-move-1": {
+      "frame": {
+        "x": 266,
+        "y": 779,
+        "w": 229,
+        "h": 227
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 10,
+        "y": 97,
+        "w": 229,
+        "h": 227
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "spirit-caller-move-2": {
+      "frame": {
+        "x": 518,
+        "y": 776,
+        "w": 230,
+        "h": 229
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 6,
+        "y": 95,
+        "w": 230,
+        "h": 229
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "spirit-caller-move-3": {
+      "frame": {
+        "x": 768,
+        "y": 777,
+        "w": 238,
+        "h": 226
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 98,
+        "w": 238,
+        "h": 226
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "spirit-caller-attack-0": {
+      "frame": {
+        "x": 1027,
+        "y": 768,
+        "w": 228,
+        "h": 237
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 87,
+        "w": 228,
+        "h": 237
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "spirit-caller-attack-1": {
+      "frame": {
+        "x": 1283,
+        "y": 795,
+        "w": 246,
+        "h": 210
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 114,
+        "w": 246,
+        "h": 210
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "banner-emblem-flame-sun": {
+      "frame": {
+        "x": 2,
+        "y": 1026,
+        "w": 52,
+        "h": 76
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 114,
+        "y": 75,
+        "w": 52,
+        "h": 76
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "banner-emblem-wolf": {
+      "frame": {
+        "x": 258,
+        "y": 1026,
+        "w": 70,
+        "h": 72
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 105,
+        "y": 77,
+        "w": 70,
+        "h": 72
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "banner-emblem-hawk": {
+      "frame": {
+        "x": 514,
+        "y": 1026,
+        "w": 70,
+        "h": 56
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 105,
+        "y": 85,
+        "w": 70,
+        "h": 56
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "banner-emblem-cloud": {
+      "frame": {
+        "x": 770,
+        "y": 1026,
+        "w": 70,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 105,
+        "y": 89,
+        "w": 70,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "banner-emblem-knot": {
+      "frame": {
+        "x": 1026,
+        "y": 1026,
+        "w": 59,
+        "h": 76
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 111,
+        "y": 75,
+        "w": 59,
+        "h": 76
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "banner-trim-steppe-fret": {
+      "frame": {
+        "x": 1282,
+        "y": 1026,
+        "w": 190,
+        "h": 126
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 45,
+        "y": 50,
+        "w": 190,
+        "h": 126
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "banner-trim-cloud-scroll": {
+      "frame": {
+        "x": 2,
+        "y": 1386,
+        "w": 190,
+        "h": 126
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 45,
+        "y": 50,
+        "w": 190,
+        "h": 126
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "banner-trim-horn-curl": {
+      "frame": {
+        "x": 258,
+        "y": 1386,
+        "w": 190,
+        "h": 126
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 45,
+        "y": 50,
+        "w": 190,
+        "h": 126
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "banner-trim-braided-cord": {
+      "frame": {
+        "x": 514,
+        "y": 1386,
+        "w": 190,
+        "h": 126
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 45,
+        "y": 50,
+        "w": 190,
+        "h": 126
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "banner-trim-lattice-band": {
+      "frame": {
+        "x": 770,
+        "y": 1386,
+        "w": 190,
+        "h": 126
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 45,
+        "y": 50,
+        "w": 190,
+        "h": 126
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "banner-pole": {
+      "frame": {
+        "x": 1026,
+        "y": 1386,
+        "w": 48,
+        "h": 300
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 10,
+        "y": 24,
+        "w": 48,
+        "h": 300
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "banner-field": {
+      "frame": {
+        "x": 1282,
+        "y": 1386,
+        "w": 190,
+        "h": 126
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 45,
+        "y": 50,
+        "w": 190,
+        "h": 126
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    }
+  },
+  "meta": {
+    "app": "Hordes of the Fallen Sky",
+    "image": "steppe-classes-motion.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1536,
+      "h": 1744
+    },
+    "scale": "1"
+  }
+}

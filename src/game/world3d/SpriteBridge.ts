@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { PAINTED_ATLAS_CHANGED } from '../assets/clanStandardCache';
 import * as THREE from 'three';
 import type { MountainHeightfield } from './MountainHeightfield';
 import { projectGround, WORLD_3D } from './worldProjection';
@@ -32,6 +33,12 @@ export class SpriteBridge {
     private readonly terrain: MountainHeightfield,
   ) {
     this.occludedKhan = new KhanOcclusion(root);
+    scene.events.on(PAINTED_ATLAS_CHANGED, this.refreshAtlas, this);
+  }
+
+  private refreshAtlas(source: HTMLCanvasElement): void {
+    const texture = this.textures.get(source);
+    if (texture) texture.needsUpdate = true;
   }
 
   update(
@@ -51,8 +58,10 @@ export class SpriteBridge {
           object instanceof Phaser.GameObjects.Sprite ||
           object instanceof Phaser.GameObjects.Text
         ) {
-          // Scenery and terrain have their own 3D representation.
-          if (object.depth < 0 || object.scrollFactorX === 0) continue;
+          // Scenery/terrain have their own 3D representation. Painted standards
+          // explicitly project despite their negative local camp sort depth.
+          if ((object.depth < 0 && !object.getData('projectInWorld')) || object.scrollFactorX === 0)
+            continue;
           object.getWorldTransformMatrix(this.matrix, this.parent);
           const x = this.matrix.tx;
           const z = this.matrix.ty;
@@ -233,6 +242,7 @@ export class SpriteBridge {
   }
 
   destroy(): void {
+    this.scene.events.off(PAINTED_ATLAS_CHANGED, this.refreshAtlas, this);
     this.occludedKhan.destroy();
     for (const { mesh } of this.batches.values()) {
       mesh.geometry.dispose();

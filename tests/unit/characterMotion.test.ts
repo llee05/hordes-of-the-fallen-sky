@@ -7,6 +7,28 @@ import {
 import mountedSource from '/art/steppe-mounted-motion.json?raw';
 import clanSource from '/art/steppe-clan-motion.json?raw';
 import creatureSource from '/art/steppe-creature-motion.json?raw';
+import { CHARACTER_CLASSES } from '../../src/shared/characterProfile';
+import classesSource from '/art/steppe-classes-motion.json?raw';
+
+it('registers all four class clips to the existing rider canvas and ground anchor', () => {
+  const atlas = JSON.parse(classesSource);
+  for (const classId of CHARACTER_CLASSES) {
+    for (const [action, count] of [
+      ['move', 4],
+      ['attack', 2],
+    ] as const) {
+      for (let i = 0; i < count; i++) {
+        const entry = atlas.frames[`${classId}-${action}-${i}`];
+        expect(entry.sourceSize).toEqual({ w: 256, h: 360 });
+        expect(entry.spriteSourceSize.y + entry.spriteSourceSize.h).toBe(324);
+        expect(entry.frame.x + entry.frame.w).toBeLessThanOrEqual(1536);
+        expect(entry.frame.y + entry.frame.h).toBeLessThanOrEqual(1024);
+        expect(entry.spriteSourceSize.x + entry.spriteSourceSize.w).toBeLessThanOrEqual(256);
+      }
+    }
+  }
+  expect(Object.keys(atlas.frames).filter((name) => !name.startsWith('banner-'))).toHaveLength(24);
+});
 
 const mounted = JSON.parse(
   mountedSource,
@@ -18,6 +40,32 @@ const creatures = JSON.parse(
 ) as typeof import('../../public/art/steppe-creature-motion.json');
 
 describe('character presentation clocks', () => {
+  it.each(CHARACTER_CLASSES)(
+    'selects %s art through gait, attack, pause, restore and succession',
+    (classId) => {
+      const motion = new CharacterMotion('player');
+      motion.setPlayerClass(classId);
+      expect(motion.texture).toBe('steppe-classes-motion');
+      expect(motion.frame).toBe(`${classId}-move-0`);
+      const frames = new Set<string>();
+      for (let i = 0; i < 20; i++) {
+        motion.advance(0.05, 175);
+        frames.add(motion.frame);
+      }
+      expect(frames.size).toBe(4);
+      motion.advance(0.01, 0, true);
+      expect(motion.frame).toBe(`${classId}-attack-0`);
+      motion.attack();
+      const saved = motion.capture();
+      motion.advance(0, 200);
+      expect(motion.capture()).toEqual(saved);
+      expect(motion.frame).toBe(`${classId}-attack-1`);
+      motion.reset('player');
+      expect(motion.frame).toBe(`${classId}-move-0`);
+      motion.restore(saved);
+      expect(motion.frame).toBe(`${classId}-attack-1`);
+    },
+  );
   it('cycles distinct locomotion frames, accelerates for gallop, and holds a grounded idle', () => {
     const rider = new CharacterMotion('player');
     const walking = new Set<string>();

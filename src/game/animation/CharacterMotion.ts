@@ -1,3 +1,5 @@
+import type { CharacterClassId } from '../../shared/characterProfile';
+
 const PROFILES = {
   worker: { sheet: 'clan', stride: 30, idleFps: 1, recovery: 0.18, resting: true },
   packhorse: { sheet: 'clan', stride: 50, idleFps: 0.8, recovery: 0.18, resting: true },
@@ -13,7 +15,7 @@ const PROFILES = {
 
 export type CharacterKind = keyof typeof PROFILES;
 export const CHARACTER_KINDS = Object.keys(PROFILES) as CharacterKind[];
-export const MOTION_SHEETS = ['mounted', 'creature', 'clan'] as const;
+export const MOTION_SHEETS = ['mounted', 'creature', 'clan', 'classes'] as const;
 export interface MotionArchive {
   cycle: number;
   releaseRemaining: number;
@@ -39,6 +41,18 @@ export class CharacterMotion {
   private hurtRemaining = 0;
   private moving = false;
   private windingUp = false;
+  private playerClass?: CharacterClassId;
+
+  /** Appearance comes from the profile, never from the motion save archive. */
+  setPlayerClass(classId: CharacterClassId): void {
+    this.playerClass = classId;
+  }
+
+  get texture(): string {
+    return this.kind === 'player' && this.playerClass
+      ? 'steppe-classes-motion'
+      : characterTexture(this.kind)[0];
+  }
 
   constructor(kind: CharacterKind, offset = 0) {
     this.kind = kind;
@@ -90,11 +104,12 @@ export class CharacterMotion {
   }
 
   get frame(): string {
-    if (this.releaseRemaining > 0) return `${this.kind}-attack-1`;
-    if (this.windingUp) return `${this.kind}-attack-0`;
+    const kind = this.kind === 'player' && this.playerClass ? this.playerClass : this.kind;
+    if (this.releaseRemaining > 0) return `${kind}-attack-1`;
+    if (this.windingUp) return `${kind}-attack-0`;
     if (!this.moving && 'resting' in PROFILES[this.kind])
       return `${this.kind}-attack-${Math.floor(this.cycle * 4) % 2}`;
     const frame = this.moving || PROFILES[this.kind].idleFps > 0 ? Math.floor(this.cycle * 4) : 0;
-    return `${this.kind}-move-${frame}`;
+    return `${kind}-move-${frame}`;
   }
 }
