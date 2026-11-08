@@ -70,8 +70,8 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
     `${root}steppe-ground-details-v1.png`,
     `${root}steppe-ground-details-v1.json`,
   );
-  scene.load.image('tapestry-meadow', `${root}tapestry-meadow-v3.png`);
-  scene.load.image('tapestry-stone', `${root}tapestry-stone-v3.png`);
+  scene.load.image('tapestry-meadow', `${root}tapestry-meadow-inkwash-v1.png`);
+  scene.load.image('tapestry-stone', `${root}tapestry-stone-inkwash-v1.png`);
   scene.load.atlas(
     'tapestry-scenery',
     `${root}tapestry-scenery-v3.png`,
