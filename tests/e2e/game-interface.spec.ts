@@ -85,7 +85,7 @@ test('painted atlases keep world-space collision sizes and sort miniatures by th
     mounted: true,
     creatures: true,
     props: true,
-    texture: 'steppe-mounted-motion',
+    texture: 'steppe-classes-motion',
     canvasWidth: 256,
     canvasHeight: 360,
     displayWidth: 62,
@@ -93,7 +93,7 @@ test('painted atlases keep world-space collision sizes and sort miniatures by th
     roundPixels: false,
     imageRendering: 'auto',
   });
-  expect(art.frame).toMatch(/^player-(move|attack)-\d$/);
+  expect(art.frame).toMatch(/^mounted-archer-(move|attack)-\d$/);
   expect(art.sourceWidth).toBeGreaterThan(200);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;

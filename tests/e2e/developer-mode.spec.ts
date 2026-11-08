@@ -183,7 +183,7 @@ test('developer choices and Back stay usable in a narrow viewport', async ({ pag
   await expect(page.locator('#location')).toHaveText('ORKHON VALLEY');
 });
 
-test('developer mode starts expeditions as non-default playable classes with distinct loadouts and tints', async ({
+test('developer mode starts expeditions as non-default playable classes with distinct loadouts and painted sprites', async ({
   page,
 }) => {
   await page.goto('/');
@@ -202,16 +202,19 @@ test('developer mode starts expeditions as non-default playable classes with dis
     return {
       phase: scene.run.phase,
       classId: scene.run.character.classId,
-      tint: scene.player.tintTopLeft,
+      texture: scene.player.texture.key,
+      frame: scene.player.frame.name,
       pierce: scene.run.stats.pierce,
     };
   });
-  expect(lancerState).toEqual({
+  expect(lancerState).toMatchObject({
     phase: 'playing',
     classId: 'lancer',
-    tint: 0xf5d6a7,
+    texture: 'steppe-classes-motion',
     pierce: 2,
   });
+
+  expect(lancerState.frame).toMatch(/^lancer-(move|attack)-\d$/);
 
   await page.keyboard.press('F8');
   await page.locator('[data-developer-class="spirit-caller"]').click();
@@ -229,16 +232,18 @@ test('developer mode starts expeditions as non-default playable classes with dis
     return {
       phase: scene.run.phase,
       classId: scene.run.character.classId,
-      tint: scene.player.tintTopLeft,
+      texture: scene.player.texture.key,
+      frame: scene.player.frame.name,
       projectiles: scene.run.stats.projectiles,
       pickupRadius: scene.run.stats.pickupRadius,
     };
   });
-  expect(callerState).toEqual({
+  expect(callerState).toMatchObject({
     phase: 'playing',
     classId: 'spirit-caller',
-    tint: 0xb8efe6,
+    texture: 'steppe-classes-motion',
     projectiles: 2,
     pickupRadius: 110,
   });
+  expect(callerState.frame).toMatch(/^spirit-caller-(move|attack)-\d$/);
 });
