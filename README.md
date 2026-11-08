@@ -120,7 +120,7 @@ Press **B** to visit the illustrated **nomadic camp**. Five permanent core house
 
 Purchases and completed crossings save the portable camp checkpoint. **Continue clan camp** restores its choices, levels and actual supplies into a fresh expedition; **Continue expedition** restores the whole battle and journey. Old facilities map to their corresponding new buildings, while retired tiers, internal ranks and craft branches are refunded once. See [the nomadic camp guide](docs/nomadic-camp.md) for the complete catalog, effects, prices and migration mapping.
 
-**Advanced Fletcher's Workshop + Shaman's Ger = the Burning Tempest:** curving, flaming arrow fans with lingering burn damage.
+**Advanced Fletcher's Workshop + Shaman's Ger = the Burning Tempest:** enhanced flaming volleys with lingering burn damage. See [combat rules](docs/game-mechanics.md#camp-attacks-and-burning-tempest) for class-specific behavior.
 
 **The Khan is a title carried by successive leaders.** If he falls, the clan spends **10 active seconds choosing a new Khan** while riders and camp defenses keep fighting. A visible countdown marks succession. The successor returns at the current camp or moving caravan with full maximum health, a ready gallop, and 3 seconds of protection. During the countdown, optionally choose an outrider (+5% riding speed) or hearthguard (8% less Khan damage) using 1 / 2, controller left / right, or the HUD. Their trait lasts for that generation; leaving the choice alone returns an unmodified successor. All resources and buildings, and journey progress carry on. Menus pause the countdown. Losing the clan’s people or resolve still ends the expedition.
 

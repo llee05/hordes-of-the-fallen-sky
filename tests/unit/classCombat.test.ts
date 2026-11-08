@@ -42,7 +42,10 @@ describe('playable class combat', () => {
     (classId, ordinary, tempest) => {
       const arena = setup(classId);
       const target = arena.spawn(200, 0);
-      for (const [enabled, spacing] of [[false, ordinary], [true, tempest]] as const) {
+      for (const [enabled, spacing] of [
+        [false, ordinary],
+        [true, tempest],
+      ] as const) {
         arena.context.run.clan.paths.archery = enabled ? ['fire-arrows'] : [];
         arena.context.run.clan.paths.sanctuary = enabled ? ['wind-shamans'] : [];
         arena.combat.shootVolley(1000, 1000, target, 3, 1, false, false, 'khan');

@@ -130,7 +130,7 @@ Friendly projectiles last 1.6 seconds. Khan projectile speed and starting pierce
 
 Sacred Ovoo lightning searches within 520 units of the living Khan, then the camp, and deals three times shared damage in a 70-unit radius. Its base interval is 3.5 seconds, or 1.8 with Shaman’s Ger, multiplied by the camp’s sanctuary-interval modifier and by 1.5 during Red Eclipse. The Wagon Yard fires within 520 units every 0.9 seconds, at shared damage ×1.5 while stationary or ×0.7 during migration. These support clocks continue during migration and succession and remain independent of host firing haste.
 
-The building requirements for **Burning Tempest** are listed in [the camp overview](../README.md#build-defend-migrate). Ordinary friendly volleys gain two additional arrows, a wider fan and alternating curvature ±0.65 radians/second. Khan, rider and wagon arrows participate. Fire-arrow hits apply a two-second burn at shared damage ×0.45 per second, multiplied by the camp burn-damage modifier; hits refresh the timer rather than stacking separate burns.
+The building requirements for **Burning Tempest** are listed in [the camp overview](../README.md#build-defend-migrate). Ordinary friendly volleys gain two additional projectiles. Mounted Archer, rider and wagon volleys gain a wider fan and alternating curvature ±0.65 radians/second. Other Khan classes retain their weapon's spread; Spirit Caller bolts home instead of using alternating curvature. Khan, rider and wagon projectiles participate; the Spirit Caller's additional ancestral bolt remains a single shot. Fire-arrow hits apply a two-second burn at shared damage ×0.45 per second, multiplied by the camp burn-damage modifier; hits refresh the timer rather than stacking separate burns.
 
 ### Choosing a new Khan
 
@@ -311,8 +311,9 @@ independent rules live in their corresponding state modules.
 Actual travelled ground, rather than movement input, now builds momentum at 0.28
 per second. Stopping, reversing abruptly, or pressing into a cliff loses momentum.
 After 3.5 seconds of sustained riding, the next successfully released Khan volley
-has 35% extra damage and one extra pierced target; a full projectile pool does not
-consume it. The HUD shows its charge. Feigned retreat adds 15% Khan volley damage
+gains the [class's charged-attack bonuses](#close-defense-and-charged-attacks);
+a full projectile pool does not consume the charge. The HUD shows its charge.
+Feigned retreat adds 15% Khan volley damage
 when shooting behind while riding away from camp. Gallops push nearby enemies once
 per charge, sweeping against terrain rather than displacing them through walls.
 
