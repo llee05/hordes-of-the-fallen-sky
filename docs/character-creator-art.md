@@ -16,7 +16,7 @@ content IDs. Rows and columns below are numbered from one.
 | `creator-choices.png`  | 5 × 5 | Rows: woman's five hairstyles, man's five hairstyles, five headgear options, five mount coats, five origin vignettes. Columns follow the content arrays in `data/classes.ts`. |
 | `creator-insignia.png` | 5 × 3 | Rows: three oath vignettes (last two cells unused), five emblems, five trim patterns.                                                                                         |
 
-The class choice cards use close head-and-shoulders portraits (`portrait-{classId}.png` and `@2x.png`), matching each class's look and headgear from its concept sheet on transparent backgrounds. If an image asset fails to load, the choice card falls back to the full figure cell from `creator-figures.png`.
+The class choice cards use close head-and-shoulders portraits (`portrait-{classId}-{gender}.png` and `@2x.png`, with legacy `portrait-{classId}.png` as fallback), matching each class's look and headgear from its concept sheet on transparent backgrounds and reflecting the selected gender. If an image asset fails to load, the choice card falls back to the full figure cell from `creator-figures.png`.
 
 Each gender has one predefined face; hairstyle portraits repeat that face.
 Selected headgear appears in a portrait inset. The central figure reflects class

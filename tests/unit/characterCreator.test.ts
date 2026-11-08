@@ -90,18 +90,25 @@ describe('character creator profile mapping', () => {
     expect(characterCreatorContent(state)).not.toContain('data-creator-field="face"');
   });
   it('wires class choice portraits with 2x versions and fallback figures', () => {
-    const markup = classPortrait('lancer', '<svg class="fallback-figure"></svg>');
-    expect(markup).toContain('portrait-lancer.png');
-    expect(markup).toContain('portrait-lancer@2x.png 2x');
+    const markup = classPortrait('lancer', 'woman', '<svg class="fallback-figure"></svg>');
+    expect(markup).toContain('portrait-lancer-woman.png');
+    expect(markup).toContain('portrait-lancer-woman@2x.png 2x');
     expect(markup).toContain('creator-portrait-fallback');
     expect(markup).toContain('fallback-figure');
 
     const state = createCharacterCreator();
     const html = characterCreatorContent(state);
-    expect(html).toContain('portrait-mounted-archer.png');
-    expect(html).toContain('portrait-lancer.png');
-    expect(html).toContain('portrait-iron-pagoda.png');
-    expect(html).toContain('portrait-spirit-caller.png');
+    expect(html).toContain('portrait-mounted-archer-woman.png');
+    expect(html).toContain('portrait-lancer-woman.png');
+    expect(html).toContain('portrait-iron-pagoda-woman.png');
+    expect(html).toContain('portrait-spirit-caller-woman.png');
     expect(html).toContain('creator-figures');
+
+    state.profile.gender = 'man';
+    const htmlMan = characterCreatorContent(state);
+    expect(htmlMan).toContain('portrait-mounted-archer-man.png');
+    expect(htmlMan).toContain('portrait-lancer-man.png');
+    expect(htmlMan).toContain('portrait-iron-pagoda-man.png');
+    expect(htmlMan).toContain('portrait-spirit-caller-man.png');
   });
 });

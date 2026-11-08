@@ -65,8 +65,12 @@ export function paintedCell(
 }
 
 /** Class choice portrait with fallback to painted cell figure if asset fails to load. */
-export function classPortrait(classId: string, fallbackArt: string): string {
-  const src = `${import.meta.env.BASE_URL}art/portrait-${classId}.png`;
-  const src2x = `${import.meta.env.BASE_URL}art/portrait-${classId}@2x.png`;
+export function classPortrait(classId: string, gender: string, fallbackArt: string): string;
+export function classPortrait(classId: string, fallbackArt: string): string;
+export function classPortrait(classId: string, param2: string, param3?: string): string {
+  const gender = param3 !== undefined ? param2 : 'woman';
+  const fallbackArt = param3 !== undefined ? param3 : param2;
+  const src = `${import.meta.env.BASE_URL}art/portrait-${classId}-${gender}.png`;
+  const src2x = `${import.meta.env.BASE_URL}art/portrait-${classId}-${gender}@2x.png`;
   return `<span class="creator-paint creator-class-portrait"><img class="creator-portrait-img" src="${src}" srcset="${src} 1x, ${src2x} 2x" alt="" loading="lazy" /><span class="creator-portrait-fallback" aria-hidden="true">${fallbackArt}</span></span>`;
 }

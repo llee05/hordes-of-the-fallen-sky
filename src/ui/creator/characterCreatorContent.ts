@@ -83,7 +83,7 @@ export function characterCreatorContent(state: CharacterCreatorState): string {
             CLASSES.map((c, i) => ({
               id: c.id,
               title: c.title,
-              art: classPortrait(c.id, figure(i)),
+              art: classPortrait(c.id, p.gender, figure(i)),
             })),
             p.classId,
             'creator-classes',
