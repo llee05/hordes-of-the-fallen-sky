@@ -44,6 +44,7 @@ export async function startExpedition(
   options: { legacyCamp?: boolean } = {},
 ): Promise<void> {
   await page.getByRole('button', { name: /NEW GAME/ }).click();
+  await page.getByRole('button', { name: /Begin Journey/ }).click();
   // All new expeditions now share the five-core/five-choice model.
   void options;
 }

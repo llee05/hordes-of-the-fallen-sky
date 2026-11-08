@@ -45,6 +45,7 @@ test('desktop starting traditions and combat settings fit a compact window and p
     await page.screenshot({ path: 'test-results/native-combat-settings.png' });
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: /NEW GAME/ }).click();
+    await page.getByRole('button', { name: /Begin Journey/ }).click();
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
     await page.getByRole('button', { name: 'Save to Slot 1' }).click();

@@ -1,3 +1,5 @@
+import { createRun } from '../../src/game/state/run';
+import { defaultCharacterProfile } from '../../src/shared/characterProfile';
 import { expect, test } from '@playwright/test';
 import { openTitle } from './helpers';
 
@@ -21,11 +23,12 @@ test(
       await page.locator('.starting-traditions').evaluate((el) => el.scrollWidth <= el.clientWidth),
     ).toBe(true);
     await page.getByRole('button', { name: /Begin expedition/ }).click();
+    await page.getByRole('button', { name: /Begin Journey/ }).click();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
     const run = await page.evaluate(() => (window as any).__gloam.scene.run);
     expect(run.startingTradition).toBe('pathfinders');
-    expect(run.stats.speed).toBeCloseTo(203.3);
+    expect(run.stats.speed).toBe(createRun('pathfinders', defaultCharacterProfile()).stats.speed);
     expect(run.clan.materials).toBeLessThan(41);
     await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
     await page.getByRole('button', { name: 'Save to Slot 1' }).click();
@@ -57,6 +60,7 @@ test('Back keeps the chosen arrangement ready for New Game without starting time
   ).toBeVisible();
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.xp)).toBe(0);
   await page.getByRole('button', { name: /NEW GAME/ }).click();
+  await page.getByRole('button', { name: /Begin Journey/ }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.startingTradition)).toBe(
     'hearthkeepers',

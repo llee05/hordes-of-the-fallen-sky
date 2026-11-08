@@ -27,6 +27,7 @@ test('connected progression maps, camp comparisons, and recipe links fit native 
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.getByRole('button', { name: /NEW GAME/ }).click();
+    await page.getByRole('button', { name: /Begin Journey/ }).click();
     await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       scene.spawnTimer = scene.attackTimer = 999;

@@ -21,6 +21,7 @@ test(
     await closeOverlayOrPause(page);
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
     await page.getByRole('button', { name: /NEW GAME/ }).click();
+    await page.getByRole('button', { name: /Begin Journey/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await page.keyboard.press('F8');
     await expect(page.getByRole('heading', { name: 'Developer mode' })).toBeVisible();
@@ -152,6 +153,7 @@ test('developer outcomes leave saved records intact and a normal new game clears
   await page.getByRole('button', { name: /RAISE THE BANNERS AGAIN/ }).click();
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   await page.getByRole('button', { name: /NEW GAME/ }).click();
+  await page.getByRole('button', { name: /Begin Journey/ }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
   expect(
     await page.evaluate(() => {

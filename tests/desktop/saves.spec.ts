@@ -24,6 +24,7 @@ test('native expeditions survive a real window close, relaunch paused, and keep 
   try {
     let page = await app.firstWindow();
     await page.getByRole('button', { name: /NEW GAME/ }).click();
+    await page.getByRole('button', { name: /Begin Journey/ }).click();
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Save to Slot 1' })).toBeEnabled();

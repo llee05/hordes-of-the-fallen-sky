@@ -23,6 +23,7 @@ test('desktop migration offers named destinations and frozen, responsive travel 
   try {
     const page = await app.firstWindow();
     await page.getByRole('button', { name: /NEW GAME/ }).click();
+    await page.getByRole('button', { name: /Begin Journey/ }).click();
     await page.keyboard.press('b');
     await selectCampBuilding(page, 'archery');
     await buyNode(page, 'archery-base');
@@ -125,6 +126,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
     await closeOverlayOrPause(page);
     await page.getByRole('button', { name: /NEW GAME/ }).click();
+    await page.getByRole('button', { name: /Begin Journey/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await expect(page.locator('#khan-title')).toHaveText('THE KHAN');
     await expect(page.locator('#food-rate')).toContainText('Food net +1.');

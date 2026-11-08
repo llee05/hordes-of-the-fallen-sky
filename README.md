@@ -49,7 +49,7 @@ builds once the repository's Pages source is set to **GitHub Actions**.
 
 ## Desktop presentation
 
-The game opens at the title menu. **New Game** begins the expedition at Golden Pasture.
+The game opens at the title menu. **New Game** opens [character creation](docs/character-creator.md). Choose identity, appearance, origin, combat tradition, oath, mount, banner and name, then **Begin Journey** starts the expedition at Golden Pasture. The last character profile is remembered.
 
 The title is embroidered across an indigo felt banner over the painted steppe. Woven rust-red trim, brass clan symbols, and warm manuscript pages carry the world's art into the interface. Camp cards reuse the painted gers, riders, and wagons from the battlefield; migration choices have illustrated landscape vignettes. All UI materials and artwork ship locally.
 
