@@ -5,9 +5,10 @@ test.beforeEach(async ({ page }) => {
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
-    const s = (window as any).__gloam.scene;
-    s.spawnTimer = s.attackTimer = 999;
-    for (const e of s.enemies.getChildren()) e.disableBody(true, true);
+    window.__gloam.hooks.quietBattlefield({
+      timers: ['spawnTimer', 'attackTimer'],
+      clearEnemies: true,
+    });
   });
 });
 
@@ -39,7 +40,7 @@ test('seer danger zones warn and strike in the opening area, while menus freeze 
     const s = (window as any).__gloam.scene,
       h = s.hazards.find((h: any) => h.source === 'seer');
     s.player.body.reset(h.x, h.y);
-    s.invulnerable = 0;
+    window.__gloam.hooks.setTimers({ invulnerable: 0 });
     const health = s.run.health;
     const visible = h.warning.commandBuffer.length > 0;
     s.updateHazards(2);

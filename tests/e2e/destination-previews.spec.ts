@@ -11,7 +11,10 @@ test('destination previews retain landscape descriptions, river channels, threat
   await startExpedition(page);
   await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.spawnTimer = s.attackTimer = 999;
+    window.__gloam.hooks.quietBattlefield({
+      timers: ['spawnTimer', 'attackTimer'],
+      clearEnemies: false,
+    });
     s.run.clan.stageTime = 45;
   });
   await expect(page.locator('#migrate')).toBeEnabled();

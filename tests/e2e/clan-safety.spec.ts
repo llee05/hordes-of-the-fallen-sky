@@ -5,9 +5,10 @@ test.beforeEach(async ({ page }) => {
   await openTitle(page);
   await startExpedition(page);
   await page.evaluate(() => {
-    const s = (window as any).__gloam.scene;
-    s.spawnTimer = s.attackTimer = 999;
-    for (const e of s.enemies.getChildren()) e.disableBody(true, true);
+    window.__gloam.hooks.quietBattlefield({
+      timers: ['spawnTimer', 'attackTimer'],
+      clearEnemies: true,
+    });
   });
 });
 test('successor preferences respect menus and take effect only after the existing countdown', async ({
@@ -15,7 +16,7 @@ test('successor preferences respect menus and take effect only after the existin
 }) => {
   await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.invulnerable = 0;
+    window.__gloam.hooks.setTimers({ invulnerable: 0 });
     s.takeDamage(1000);
   });
   await expect(page.locator('#successor-choice')).toBeVisible();
@@ -74,7 +75,7 @@ test('successor preferences respect menus and take effect only after the existin
   await expect(page.locator('#successor-choice')).toBeHidden();
   const returned = await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.invulnerable = 0;
+    window.__gloam.hooks.setTimers({ invulnerable: 0 });
     s.takeDamage(10);
     return {
       health: s.run.health,

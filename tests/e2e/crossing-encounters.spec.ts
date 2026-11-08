@@ -11,8 +11,11 @@ test(
         await startExpedition(page);
         await page.evaluate(() => {
           const s = (window as any).__gloam.scene;
-          s.developerTools.invincible = s.developerTools.clanInvincible = true;
-          s.spawnTimer = s.attackTimer = 999;
+          window.__gloam.hooks.invincible({ khan: true, clan: true });
+          window.__gloam.hooks.quietBattlefield({
+            timers: ['spawnTimer', 'attackTimer'],
+            clearEnemies: false,
+          });
           s.run.clan.stageTime = 45;
           for (const e of s.enemies.getChildren()) e.disableBody(true, true);
         });
@@ -92,9 +95,12 @@ test('the angled river route carves an actual connected ford and preserves live 
     .toBe(0);
   await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.developerTools.invincible = s.developerTools.clanInvincible = true;
+    window.__gloam.hooks.invincible({ khan: true, clan: true });
     s.run.clan.stageTime = 45;
-    s.spawnTimer = s.attackTimer = 999;
+    window.__gloam.hooks.quietBattlefield({
+      timers: ['spawnTimer', 'attackTimer'],
+      clearEnemies: false,
+    });
   });
   await expect(page.locator('#migrate')).toBeEnabled();
   await page.locator('#migrate').click();

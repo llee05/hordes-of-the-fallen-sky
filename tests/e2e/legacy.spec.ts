@@ -16,10 +16,10 @@ test('the chronicle retains camp work and the real Khan succession', async ({ pa
   await closeOverlayOrPause(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.spawnTimer = 999;
+    window.__gloam.hooks.quietBattlefield({ timers: ['spawnTimer'], clearEnemies: false });
     scene.run.elapsed = 42;
     scene.run.kills = 7;
-    scene.invulnerable = 0;
+    window.__gloam.hooks.setTimers({ invulnerable: 0 });
     scene.takeDamage(1000);
   });
   await page.keyboard.press('j');

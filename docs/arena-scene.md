@@ -111,3 +111,30 @@ assign or call its members by name. `tests/e2e/scene-hooks.spec.ts` lists those 
 kinds. When code moves into a system, keep each listed name working through a forwarder in the
 scene's test-hook block at the end of the class. Declare forwarders that only tests use without
 `private`, because `noUnusedLocals` rejects unused private members.
+
+Prefer the typed `window.__gloam.hooks` facade in `arena/testHooks.ts` for new browser
+setup. The bootstrap dynamically imports it only in `import.meta.env.DEV`; production
+builds contain neither the module nor the global. The import completes before UI
+creation, so interactive controls cannot appear before the hooks are installed. Its `Window` declaration is included
+by the Playwright tsconfig, so calls in `page.evaluate` need no `any` cast or runtime
+import. The facade uses a live context across scene restarts.
+
+- `setTimers(partial)` validates all names and finite numeric values before writing the
+  real `ArenaTimers` record. Unknown keys fail TypeScript and throw at runtime.
+- `quietBattlefield({ timers?, clearEnemies? })` sets selected timers to 999. The default
+  selection is spawn, attack and hazard, and existing enemies are cleared. Existing specs
+  pass their original selection and clearing behavior to preserve their setup exactly.
+- `spawn({ id?, x, y, health? })` uses the real director with a named position and optional
+  definition/health override; returns the director's success flag.
+- `volley({ from, target, count, damage, source, ancestral?, charged?, echoIndex?, ghost?, origin? })`
+  calls real combat with named options; damage retains the combat method's damage or
+  multiplier semantics, and source is the projectile owner.
+- `advance(seconds)` calls the real scene `update` in 60Hz steps and a final partial
+  frame. It does not step Phaser physics separately or skip the expedition clock.
+  Menu phases continue to freeze simulation. Use it for simulation setup, and use real
+  rendered frames when testing physics or input. Negative/nonfinite durations throw.
+- `invincible({ khan?, clan? })` changes only the supplied developer protection flags.
+
+The existing scene forwarders and their contract tests remain intact. Remaining direct
+combat calls and expedition-clock skips can migrate separately; clock-skip tests should
+retain explicit clock edits when skipping itself is the behavior under test.

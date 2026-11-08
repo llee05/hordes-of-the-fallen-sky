@@ -115,7 +115,7 @@ test('guidance leaves danger warnings and controls readable at supported preview
   await expect.poll(() => page.locator('#field-guide').evaluate((el) => el.style.top)).toBe('');
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.invulnerable = 0;
+    window.__gloam.hooks.setTimers({ invulnerable: 0 });
     scene.takeDamage(1000);
   });
   await expect(page.locator('#field-guide')).toContainText('The people carry on');

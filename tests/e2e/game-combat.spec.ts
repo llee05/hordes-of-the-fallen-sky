@@ -45,7 +45,7 @@ test('guard riders fire at camp threats while the commander scouts away', async 
     const enemy = scene.enemies.getChildren().find((item: any) => item.active);
     enemy.setPosition(scene.camp.x + 150, scene.camp.y);
     enemy.health = 1;
-    scene.attackTimer = 0;
+    window.__gloam.hooks.setTimers({ attackTimer: 0 });
   });
   await expect(page.locator('#kills')).not.toHaveText('0');
 });

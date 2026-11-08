@@ -70,7 +70,7 @@ test('switching checkpoints clears old actors, hazards, boss state, and successi
     gem.enableBody(true, scene.player.x + 500, scene.player.y, true, true);
     gem.value = 100;
     scene.run.xp = 3;
-    scene.invulnerable = 0;
+    window.__gloam.hooks.setTimers({ invulnerable: 0 });
     scene.takeDamage(1000);
     (window as any).oldDeveloperWorld = { boss: scene.boss, gem, warning, enemies: scene.enemies };
   });

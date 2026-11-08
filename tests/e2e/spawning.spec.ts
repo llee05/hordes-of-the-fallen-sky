@@ -15,8 +15,8 @@ test('Golden Pasture arrivals survive at the camera edge and retire without kill
     .toBe(0);
   await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
-    s.developerTools.invincible = s.developerTools.clanInvincible = true;
+    window.__gloam.hooks.quietBattlefield({ clearEnemies: false });
+    window.__gloam.hooks.invincible({ khan: true, clan: true });
     s.run.phase = 'paused';
     s.physics.pause();
     s.audio.muted = true;

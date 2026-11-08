@@ -36,8 +36,10 @@ test.beforeEach(async ({ page }) => {
   expect(await page.evaluate(() => (window as any).audioContextsCreated)).toBe(1);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.spawnTimer = scene.attackTimer = 999;
-    for (const enemy of scene.enemies.getChildren()) enemy.disableBody(true, true);
+    window.__gloam.hooks.quietBattlefield({
+      timers: ['spawnTimer', 'attackTimer'],
+      clearEnemies: true,
+    });
     scene.audio.reset();
     scene.audio.setPlaying(true);
     Object.assign(window, { heardSounds: [], heardAuditions: [] });
@@ -174,7 +176,7 @@ test('the journey and successive Khans have distinct cues, with one audio contex
   await expect.poll(async () => (await heard(page)).includes('arrive')).toBe(true);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.invulnerable = 0;
+    window.__gloam.hooks.setTimers({ invulnerable: 0 });
     scene.takeDamage(1000);
     scene.run.khan.successionRemaining = 0.01;
   });

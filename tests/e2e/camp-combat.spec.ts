@@ -58,8 +58,11 @@ test.beforeEach(async ({ page }) => {
   await startExpedition(page);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
-    scene.spawnTimer = scene.attackTimer = 999;
-    scene.invulnerable = 999;
+    window.__gloam.hooks.quietBattlefield({
+      timers: ['spawnTimer', 'attackTimer'],
+      clearEnemies: false,
+    });
+    window.__gloam.hooks.setTimers({ invulnerable: 999 });
     scene.player.setPosition(scene.camp.x + 750, scene.camp.y);
     for (const enemy of scene.enemies.getChildren()) enemy.disableBody(true, true);
   });
@@ -207,8 +210,8 @@ test('every enemy can hold and animate a camp attack, including a charging rider
     const scene = (window as any).__gloam.scene;
     scene.run.clan.paths.sanctuary = ['ancestral-ward'];
     scene.spatial.rebuild(scene.enemies.getChildren());
-    scene.supportTimer = 999;
-    scene.wardTimer = 0;
+    window.__gloam.hooks.setTimers({ supportTimer: 999 });
+    window.__gloam.hooks.setTimers({ wardTimer: 0 });
     scene.updateSupport(0.01);
     return scene.enemies
       .getChildren()

@@ -40,8 +40,8 @@ test(
       gem.enableBody(true, gem.x, gem.y, true, true);
       gem.value = 37;
       gem.attracted = true;
-      s.dashTimer = 2.8;
-      s.invulnerable = 0.4;
+      window.__gloam.hooks.setTimers({ dashTimer: 2.8 });
+      window.__gloam.hooks.setTimers({ invulnerable: 0.4 });
     });
     await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
     await page.getByRole('button', { name: 'Save to Slot 1', exact: true }).click();

@@ -1,7 +1,13 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["node", "vite/client"]
   },
-  "include": ["tests/e2e", "tests/desktop", "tests/pages", "playwright*.ts"]
+  "include": [
+    "tests/e2e",
+    "tests/desktop",
+    "tests/pages",
+    "playwright*.ts",
+    "src/platform/desktop.d.ts"
+  ]
 }

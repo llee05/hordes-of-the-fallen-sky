@@ -114,9 +114,8 @@ for (const group of groups)
 
         if (isLandscapeCheck) {
           await page.evaluate(() => {
-            const s = (window as any).__gloam.scene;
-            s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
-            s.developerTools.invincible = s.developerTools.clanInvincible = true;
+            window.__gloam.hooks.quietBattlefield({ clearEnemies: false });
+            window.__gloam.hooks.invincible({ khan: true, clan: true });
           });
           await settled(page);
           const result = await page.evaluate(() => {

@@ -13,10 +13,8 @@ async function open(page: Page): Promise<void> {
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await expect(page.locator('canvas[data-world-renderer="3d"]')).toBeVisible();
   await page.evaluate(() => {
-    const s = (window as any).__gloam.scene;
-    s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
-    s.developerTools.invincible = s.developerTools.clanInvincible = true;
-    for (const e of s.enemies.getChildren()) e.disableBody(true, true);
+    window.__gloam.hooks.invincible({ khan: true, clan: true });
+    window.__gloam.hooks.quietBattlefield();
   });
   await settled(page);
 }

@@ -13,14 +13,13 @@ test('a real opening fight records active time and the chronicle exposes its mil
       '/src/game/data/enemies.ts'
     )) as typeof import('../../src/game/data/enemies');
     const scene = (window as any).__gloam.scene;
-    scene.spawnTimer = 999;
-    for (const enemy of scene.enemies.getChildren()) enemy.disableBody(true, true);
+    window.__gloam.hooks.quietBattlefield({ timers: ['spawnTimer'], clearEnemies: true });
     scene.spawnEnemy(ENEMIES[0]);
     const enemy = scene.enemies.getFirstAlive();
     enemy.body.reset(scene.player.x + 100, scene.player.y);
     enemy.definition = { ...enemy.definition, speed: 0 };
     enemy.health = enemy.maxHealth = 10000;
-    scene.attackTimer = 0;
+    window.__gloam.hooks.setTimers({ attackTimer: 0 });
   });
   await expect
     .poll(
