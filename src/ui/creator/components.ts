@@ -63,3 +63,10 @@ export function paintedCell(
   const source = `${import.meta.env.BASE_URL}art/creator-${sheet}.png`;
   return `<svg class="creator-paint creator-${sheet} ${extraClass}" aria-hidden="true" focusable="false" viewBox="0 0 ${aspect} 1" preserveAspectRatio="xMidYMid meet"><svg width="${aspect}" height="1" viewBox="${column * aspect} ${row} ${aspect} 1" overflow="hidden"><image href="${source}" width="${columns * aspect}" height="${rows}" /></svg></svg>`;
 }
+
+/** Class choice portrait with fallback to painted cell figure if asset fails to load. */
+export function classPortrait(classId: string, fallbackArt: string): string {
+  const src = `${import.meta.env.BASE_URL}art/portrait-${classId}.png`;
+  const src2x = `${import.meta.env.BASE_URL}art/portrait-${classId}@2x.png`;
+  return `<span class="creator-paint creator-class-portrait"><img class="creator-portrait-img" src="${src}" srcset="${src} 1x, ${src2x} 2x" alt="" loading="lazy" /><span class="creator-portrait-fallback" aria-hidden="true">${fallbackArt}</span></span>`;
+}

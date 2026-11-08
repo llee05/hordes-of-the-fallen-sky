@@ -18,7 +18,14 @@ import {
 import type { CharacterCreatorState } from '../../game/state/characterCreator';
 import { isValidCharacterName, MAX_CHARACTER_NAME_LENGTH } from '../../shared/characterProfile';
 import { escapeHtml } from '../progressionTree';
-import { optionCarousel, paintedCell, panelFrame, radioList, swatchRow } from './components';
+import {
+  classPortrait,
+  optionCarousel,
+  paintedCell,
+  panelFrame,
+  radioList,
+  swatchRow,
+} from './components';
 
 export function characterCreatorContent(state: CharacterCreatorState): string {
   const p = state.profile;
@@ -73,7 +80,11 @@ export function characterCreatorContent(state: CharacterCreatorState): string {
           `${radioList(
             'classId',
             'Combat tradition',
-            CLASSES.map((c, i) => ({ id: c.id, title: c.title, art: figure(i) })),
+            CLASSES.map((c, i) => ({
+              id: c.id,
+              title: c.title,
+              art: classPortrait(c.id, figure(i)),
+            })),
             p.classId,
             'creator-classes',
           )}<div class="creator-class-description" aria-live="polite"><div><h4>${escapeHtml(tradition.title)}</h4><p>${escapeHtml(tradition.summary)}</p></div><div><strong>Key traits</strong><ul>${tradition.keyTraits.map((trait) => `<li>${escapeHtml(trait)}</li>`).join('')}</ul></div></div>`,

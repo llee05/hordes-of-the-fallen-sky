@@ -170,6 +170,16 @@ export class GameUI {
     });
     this.overlay.addEventListener('click', (event) => this.handleMenuClick(event));
     this.overlay.addEventListener('keydown', (event) => this.handleMenuKey(event));
+    this.overlay.addEventListener(
+      'error',
+      (event) => {
+        const target = event.target as HTMLElement;
+        if (target?.classList?.contains('creator-portrait-img')) {
+          target.classList.add('is-fallback');
+        }
+      },
+      true,
+    );
     this.overlay.addEventListener('input', (event) => {
       const input = event.target as HTMLInputElement;
       if (input.matches('[data-creator-name]')) {

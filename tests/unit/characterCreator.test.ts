@@ -14,6 +14,7 @@ import {
 import { createRun } from '../../src/game/state/run';
 import { classDefinition, oathDefinition } from '../../src/game/data/classes';
 import { characterCreatorContent } from '../../src/ui/creator/characterCreatorContent';
+import { classPortrait } from '../../src/ui/creator/components';
 
 describe('character creator profile mapping', () => {
   it('prefills legacy profiles with defaults without sharing mutable banner state', () => {
@@ -87,5 +88,20 @@ describe('character creator profile mapping', () => {
       expect(state.profile.name).not.toBe(before);
     }
     expect(characterCreatorContent(state)).not.toContain('data-creator-field="face"');
+  });
+  it('wires class choice portraits with 2x versions and fallback figures', () => {
+    const markup = classPortrait('lancer', '<svg class="fallback-figure"></svg>');
+    expect(markup).toContain('portrait-lancer.png');
+    expect(markup).toContain('portrait-lancer@2x.png 2x');
+    expect(markup).toContain('creator-portrait-fallback');
+    expect(markup).toContain('fallback-figure');
+
+    const state = createCharacterCreator();
+    const html = characterCreatorContent(state);
+    expect(html).toContain('portrait-mounted-archer.png');
+    expect(html).toContain('portrait-lancer.png');
+    expect(html).toContain('portrait-iron-pagoda.png');
+    expect(html).toContain('portrait-spirit-caller.png');
+    expect(html).toContain('creator-figures');
   });
 });

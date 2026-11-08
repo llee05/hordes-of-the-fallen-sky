@@ -345,6 +345,31 @@
   flex: 1;
   min-height: 0;
 }
+.creator-class-portrait {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.creator-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.creator-portrait-img + .creator-portrait-fallback {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+.creator-portrait-img.is-fallback {
+  display: none;
+}
+.creator-portrait-img.is-fallback + .creator-portrait-fallback {
+  display: block;
+}
 .creator-classes .creator-option > span:last-child {
   font-size: 13px;
   font-weight: bold;
