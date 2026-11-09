@@ -194,28 +194,22 @@ describe('full expedition snapshots', () => {
       { route: 'river', population: 11, locationId: 'orkhon-valley' },
     ]);
     expect(restored.legacy).not.toHaveProperty('reactionUntil');
-    expect(restored.legacy.memories[0]).not.toHaveProperty('line');
-    expect(restored.legacy.totalMemories).toBe(3);
+    expect(restored.legacy.totalMemories).toBe(0);
+    expect(restored.legacy.memories).toEqual([]);
+
+    restored.phase = 'building';
+    expect(purchaseNomadicBuilding(restored, 'fletchers-workshop')).toBe(true);
+    expect(restored.legacy.totalMemories).toBe(1);
     expect(restored.legacy.memories).toEqual([
       expect.objectContaining({
         sequence: 1,
-        title: "Khan's Ger",
-        detail: 'The clan improved this household to level 2.',
-      }),
-      expect.objectContaining({
-        sequence: 2,
         title: "Fletcher's Workshop",
-        detail: 'The clan established this household to level 1.',
-      }),
-      expect.objectContaining({
-        sequence: 3,
-        title: 'Fletcher’s Workshop · Lv 1',
-        detail: 'Fletcher’s Workshop reached level 1.',
+        detail: 'The clan improved this household to level 2.',
       }),
     ]);
   });
 
-  it('preserves migrated facts, repairs chronology, and continues recording purchases', () => {
+  it('clears retired story memories and restarts purchase chronology', () => {
     const run = createRun('pathfinders');
     run.phase = 'building';
     run.clan.materials = 1000;
@@ -242,21 +236,16 @@ describe('full expedition snapshots', () => {
     };
 
     const restored = decodeExpedition(preChangeSave).run;
-    expect(restored.legacy.totalMemories).toBe(3);
-    expect(restored.legacy.memories.map((memory) => memory.sequence)).toEqual([1, 2, 3]);
-    expect(restored.legacy.memories.map((memory) => memory.title)).toEqual([
-      "Khan's Ger",
-      "Fletcher's Workshop",
-      'Fletcher’s Workshop · Lv 1',
-    ]);
-    expect(clanMemories(restored)).toContain('The latest 3 of 3 moments from this expedition.');
+    expect(restored.legacy.totalMemories).toBe(0);
+    expect(restored.legacy.memories).toEqual([]);
+    expect(clanMemories(restored)).toBe('');
 
     restored.phase = 'building';
     expect(purchaseNomadicBuilding(restored, 'fletchers-workshop')).toBe(true);
-    expect(restored.legacy.totalMemories).toBe(4);
-    expect(restored.legacy.memories.map((memory) => memory.sequence)).toEqual([1, 2, 3, 4]);
+    expect(restored.legacy.totalMemories).toBe(1);
+    expect(restored.legacy.memories.map((memory) => memory.sequence)).toEqual([1]);
     expect(restored.legacy.memories.at(-1)).toMatchObject({
-      sequence: 4,
+      sequence: 1,
       title: "Fletcher's Workshop",
       detail: 'The clan improved this household to level 2.',
     });
