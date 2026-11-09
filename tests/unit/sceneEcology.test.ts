@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { sceneDressing } from '../../src/game/world3d/sceneDressing';
 import { ComposedTerrain } from '../../src/game/world3d/ComposedTerrain';
 import { composedRegion } from '../../src/game/data/worldRegions';
+import { LANDSCAPES } from '../../src/game/data/landscapes';
 import { MEADOW_STREAM } from './fixtures/stream';
 
 describe('clustered landscape ecology', () => {
