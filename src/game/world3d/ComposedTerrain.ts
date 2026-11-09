@@ -1,6 +1,6 @@
 import type { ComposedRegion, SceneShelf } from '../data/worldRegions';
 import { coherentNoise, fractalNoise, smoothstep } from '../terrain/noise';
-import type { TerrainBounds } from '../terrain/types';
+import type { TerrainBounds, TerrainCell, TerrainPoint } from '../terrain/types';
 import { MountainHeightfield, type HeightNode } from './MountainHeightfield';
 import type { RiverDefinition } from '../assets/riverGeometry';
 import { WorldRiver } from './WorldRiver';
@@ -37,7 +37,10 @@ export class ComposedTerrain extends MountainHeightfield {
     return Math.max(camp, 1 - smoothstep(0, 110, distance));
   }
 
-  private field(shelf: SceneShelf, x: number, z: number): number {
+  /** Signed distance in world units, positive inside the shelf. */
+  protected field(shelf: SceneShelf, x: number, z: number): number {
+    if (shelf.outline)
+      return outlineField(shelf.outline, x - this.worldSize / 2, z - this.worldSize / 2);
     const turn = (shelf.turn * Math.PI) / 180;
     const dx = x - this.worldSize / 2 - shelf.x;
     const dz = z - this.worldSize / 2 - shelf.z;
@@ -62,8 +65,11 @@ export class ComposedTerrain extends MountainHeightfield {
     const wz = z + (coherentNoise(x / 1700, z / 1700, this.seed + 7) - 0.5) * 180;
     const ridge = fractalNoise(wx / 1000, wz / 600, this.seed + 19, true);
     const hill =
-      (coherentNoise(wx / 380, wz / 380, this.seed + 41) - 0.5) * 20 + (ridge - 0.5) * 32;
+      ((coherentNoise(wx / 380, wz / 380, this.seed + 41) - 0.5) * 20 + (ridge - 0.5) * 32) *
+      (scene.relief ?? 1);
     const river = this.river?.sample(x, z);
+    // Gorge rivers meet authored cliffs directly instead of grading the shelves into banks.
+    const gorge = !!this.river?.definition.gorge;
     const shore = river?.shoreDistance ?? Infinity;
     const bank = river ? smoothstep(0, 110, shore) : 1;
     const bed = river
@@ -90,7 +96,8 @@ export class ComposedTerrain extends MountainHeightfield {
         const strength = 1 - smoothstep(approach.halfWidth, approach.shoulder, distance);
         if (strength > ramp) {
           ramp = strength;
-          grade = smoothstep(0, 1, t);
+          // Authored ramps climb at a constant walkable grade over their shorter length.
+          grade = shelf.outline ? t : smoothstep(0, 1, t);
         }
       }
       const peak =
@@ -101,13 +108,14 @@ export class ComposedTerrain extends MountainHeightfield {
         ? 1
         : 1 + (coherentNoise(x / 240, z / 270, this.seed + 719) - 0.5) * 0.07;
       const height = shelf.rise * weathering + peak;
-      const bankGrade = river
-        ? smoothstep(8, 72 + (shelf.rise + (shelf.peak ?? 0)) * (shelf.camp ? 3 : 2), shore)
-        : 1;
+      const bankGrade =
+        river && !gorge
+          ? smoothstep(8, 72 + (shelf.rise + (shelf.peak ?? 0)) * (shelf.camp ? 3 : 2), shore)
+          : 1;
       base += height * ramp * grade * (1 - shelter) * bankGrade;
       const rise = height * (1 - ramp) * (1 - shelter) * bankGrade;
       // Round small cliff remnants into the riverbank rather than leaving dark slivers.
-      const roundedBank = river ? 1 - smoothstep(300, 500, shore) : 0;
+      const roundedBank = river && !gorge ? 1 - smoothstep(300, 500, shore) : 0;
       base += rise * roundedBank * smoothstep(-96, 96, field);
       return { field, rise: rise * (1 - roundedBank) };
     });
@@ -127,6 +135,33 @@ export class ComposedTerrain extends MountainHeightfield {
       return 0;
     const water = this.river.sample(x, z);
     return Math.max(0, Math.min(1, -water.shoreDistance / water.halfWidth));
+  }
+
+  /** Gorge water outside bridge decks and authored obstacle footprints block movement. */
+  override cell(column: number, row: number): TerrainCell {
+    const cell = super.cell(column, row);
+    if (cell.blocked) return cell;
+    const center = this.worldSize / 2;
+    const cx = cell.x + cell.width / 2,
+      cz = cell.y + cell.height / 2;
+    for (const obstacle of this.region.scene.obstacles ?? [])
+      if (Math.hypot(cx - center - obstacle.x, cz - center - obstacle.y) < obstacle.radius + 12)
+        return { ...cell, blocked: true };
+    if (!this.river?.definition.gorge) return cell;
+    let wet = 0,
+      probes = 0;
+    for (let j = 0; j <= cell.height; j += 16)
+      for (let i = 0; i <= cell.width; i += 16) {
+        probes++;
+        const x = cell.x + i,
+          z = cell.y + j;
+        if (
+          this.river.bridgeHeight(x, z) === undefined &&
+          this.river.sample(x, z).shoreDistance < 0
+        )
+          wet++;
+      }
+    return wet >= probes * 0.4 ? { ...cell, blocked: true } : cell;
   }
 
   override rawHeight(x: number, z: number): number {
@@ -205,4 +240,23 @@ export class ComposedTerrain extends MountainHeightfield {
       Math.max(0, normalY)
     );
   }
+}
+
+/** Signed distance to a simple polygon: positive inside, negative outside. */
+export function outlineField(outline: readonly TerrainPoint[], x: number, z: number): number {
+  let distance = Infinity;
+  let inside = false;
+  for (let i = 0, j = outline.length - 1; i < outline.length; j = i++) {
+    const a = outline[j]!,
+      b = outline[i]!;
+    const dx = b.x - a.x,
+      dz = b.y - a.y;
+    const t = Math.max(
+      0,
+      Math.min(1, ((x - a.x) * dx + (z - a.y) * dz) / (dx * dx + dz * dz || 1)),
+    );
+    distance = Math.min(distance, Math.hypot(x - a.x - dx * t, z - a.y - dz * t));
+    if (a.y > z !== b.y > z && x < a.x + ((z - a.y) * dx) / dz) inside = !inside;
+  }
+  return inside ? distance : -distance;
 }

@@ -4,6 +4,7 @@ import { characterTexture, isCharacterKind, MOTION_SHEETS } from '../animation/C
 import { playerVisualConfig } from '../data/classes';
 import { LANDSCAPES, type SceneryProp } from '../data/landscapes';
 import type { TerrainArt } from '../terrain/types';
+import { ORKHON_ATLAS, ORKHON_TILES, orkhonTileKey, type OrkhonTile } from './orkhonValleyArt';
 
 export { playerVisualConfig };
 
@@ -78,15 +79,9 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
     `${root}tapestry-scenery-v3.json`,
   );
   const orkhon = `${root}orkhon-valley/`;
-  scene.load.image('orkhon-meadow', `${orkhon}meadow.png`);
-  scene.load.image('orkhon-worn-grass', `${orkhon}worn-grass.png`);
-  scene.load.image('orkhon-packed-earth', `${orkhon}packed-earth.png`);
-  scene.load.image('orkhon-gravel', `${orkhon}gravel.png`);
-  scene.load.image('orkhon-basalt-stone', `${orkhon}basalt-stone.png`);
-  scene.load.image('orkhon-basalt-cliff', `${orkhon}basalt-cliff.png`);
-  scene.load.image('orkhon-riverbed', `${orkhon}riverbed.png`);
-  scene.load.image('orkhon-river-water', `${orkhon}river-water.png`);
-  scene.load.atlas('orkhon-scenery', `${orkhon}orkhon-scenery.png`, `${orkhon}orkhon-scenery.json`);
+  for (const tile of Object.keys(ORKHON_TILES) as OrkhonTile[])
+    scene.load.image(orkhonTileKey(tile), `${orkhon}${ORKHON_TILES[tile]}.png`);
+  scene.load.atlas(ORKHON_ATLAS, `${orkhon}${ORKHON_ATLAS}.png`, `${orkhon}${ORKHON_ATLAS}.json`);
 }
 
 export function sceneryImage(

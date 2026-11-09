@@ -62,7 +62,8 @@ describe('location scenery content', () => {
     expect(LANDSCAPES.otgontenger.landmarks[0]?.prop).toBe('snow-dome');
     expect(LANDSCAPES['khan-tengri'].landmarks[0]?.prop).toBe('pyramid');
     expect(LANDSCAPES.belukha.landmarks[0]?.prop).toBe('twin-summit');
-    expect(LANDSCAPES['orkhon-valley'].water?.kind).toBe('braided');
+    expect(LANDSCAPES['orkhon-valley'].water?.kind).toBe('stream');
+    expect(LANDSCAPES['orkhon-valley'].water?.gorge?.bridges.length).toBeGreaterThan(0);
   });
 
   it('keeps atlas frames in bounds with a shared ground anchor and no overlapping crops', () => {

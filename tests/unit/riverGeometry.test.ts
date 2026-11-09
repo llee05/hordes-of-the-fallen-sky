@@ -32,7 +32,8 @@ describe('river shorelines', () => {
       expect(channels).toHaveLength(water.kind === 'braided' ? 2 : 1);
       for (const channel of channels) {
         expect(channel.sections.length).toBeLessThan(350);
-        expect(channel.length).toBeGreaterThan(5000);
+        // The Orkhon gorge starts below the falls rather than at the world edge.
+        expect(channel.length).toBeGreaterThan(water.gorge ? 4000 : 5000);
         let previous = -1;
         for (const section of channel.sections) {
           expect(Object.values(section).every(Number.isFinite)).toBe(true);
@@ -57,16 +58,13 @@ describe('river shorelines', () => {
     }
   });
 
-  it('splits the Orkhon braids around dry bars and rejoins them along the authored river', () => {
-    const channels = riverChannels(LANDSCAPES['orkhon-valley'].water!);
-    const [main, branch] = channels;
-    expect(main!.sections[0]!.y).toBeCloseTo(branch!.sections[0]!.y);
-    expect(main!.sections.at(-1)!.y).toBeCloseTo(branch!.sections.at(-1)!.y);
-    const index = Math.floor(main!.sections.length / 6);
-    const a = main!.sections[index]!;
-    const b = branch!.sections[index]!;
-    expect(Math.abs(a.y - b.y)).toBeGreaterThan(a.left + b.right);
-    expect(isRiverWater(channels, a.x, (a.y + b.y) / 2)).toBe(false);
+  it('keeps the Orkhon gorge as one channel from the falls to the southern edge', () => {
+    const water = LANDSCAPES['orkhon-valley'].water!;
+    const [main, ...rest] = riverChannels(water);
+    expect(rest).toHaveLength(0);
+    expect(main!.sections[0]!.y).toBeLessThan(-1400);
+    expect(main!.sections.at(-1)!.y).toBeGreaterThan(2600);
+    expect(Math.min(...main!.sections.map((section) => section.x))).toBeGreaterThan(1500);
   });
 
   it('recognizes water and dry ground beside authored channels', () => {

@@ -1,6 +1,7 @@
 import type { LocationId } from '../types';
 import type { MountainRegion } from '../terrain/types';
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
+import { ORKHON_VALLEY } from './orkhonValley';
 
 export type SceneryProp =
   | 'larch'
@@ -45,8 +46,17 @@ export interface LandscapeDefinition {
     width: number;
     color: number;
     bank: number;
-    /** Spline coordinates relative to the camp. All channels are decorative. */
+    /** Spline coordinates relative to the camp. All channels are decorative unless `gorge` is set. */
     course: readonly number[];
+    /**
+     * An authored gorge river keeps its exact course, cannot be waded and is crossed only at these
+     * bridge decks. `angle` is the deck direction in radians; `rapids` is the channel distance
+     * below the source drawn as rapids.
+     */
+    gorge?: {
+      rapids: number;
+      bridges: readonly { x: number; y: number; angle: number; length: number; width: number }[];
+    };
   };
   air: { color: number; alpha: number; particles: 'seeds' | 'snow' | 'dust' | 'mist' };
 }
@@ -235,9 +245,9 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     air: { color: 0xe3bd8c, alpha: 0.045, particles: 'dust' },
   },
   'orkhon-valley': {
-    title: 'The braided pasture',
+    title: 'The basalt gorge',
     description:
-      'Blue-green river braids, willow clusters, reed beds, and lush sage grazing spread across the valley.',
+      'An open steppe valley ringed by basalt plateaus, with the eastern falls feeding a river gorge.',
     surface: 'meadow',
     groundTile: 'orkhon-valley',
     ground: 0x9faf7c,
@@ -247,8 +257,8 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
     grassCount: 1000,
     flowers: true,
     cover: [
-      { prop: 'willow', count: 65, width: [85, 135] },
-      { prop: 'reeds', count: 100, width: [35, 70] },
+      { prop: 'willow', count: 45, width: [85, 135] },
+      { prop: 'reeds', count: 60, width: [35, 70] },
     ],
     landmarks: [
       landmark('willow', -410, -160, 195),
@@ -256,11 +266,12 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       landmark('foothill', -380, 335, 255),
     ],
     water: {
-      kind: 'braided',
-      width: 100,
-      color: 0x6d9e9c,
+      kind: 'stream',
+      width: ORKHON_VALLEY.river.width,
+      color: 0x4d7f95,
       bank: 0xaab88a,
-      course: [-2600, -380, -1100, -300, -350, -350, 450, -245, 1100, -350, 2600, -300],
+      course: ORKHON_VALLEY.river.course,
+      gorge: { rapids: ORKHON_VALLEY.river.rapids, bridges: ORKHON_VALLEY.river.bridges },
     },
     air: { color: 0xc2d1ab, alpha: 0.025, particles: 'seeds' },
   },

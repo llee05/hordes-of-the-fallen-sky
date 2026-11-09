@@ -123,7 +123,7 @@ export class World3DRenderer {
         terrain.river,
         terrain,
         this.materials.bedTexture,
-        this.materials.waterTexture,
+        this.materials.waterTextures,
       );
       this.world.add(this.water.group);
     }
@@ -442,7 +442,7 @@ export class World3DRenderer {
       for (const prop of sceneDressing(this.terrain, bounds)) {
         const image = this.scene.add
           .image(prop.x, prop.z, prop.texture, prop.frame)
-          .setOrigin(0.5, 0.9)
+          .setOrigin(0.5, prop.originY ?? 0.9)
           .setDepth(100 + prop.z)
           .setName(`scene-prop-${prop.kind}`)
           .setFlipX(prop.flip)

@@ -49,10 +49,12 @@ camera-facing atlas frames and depth testing rather than individual mountain spr
 water and shoreline foam follow the existing regional splines. Instanced timber
 planks form crossings; actor feet meet their deck elevation. Frozen rivers omit
 wooden crossings. Water animation uses active gameplay seconds and freezes in menus.
-The channels remain shallow traversable decoration; this change adds no swimming rule.
+The channels remain shallow traversable decoration, except Orkhon Valley's authored gorge,
+whose water blocks movement outside its bridge deck. There is no swimming rule.
 
 Navigation uses resident horizontal flow fields with conservative slope and cliff
-probes. Traversable ramps connect the elevations. Arrows retain their original
+probes. Traversable ramps connect the elevations. Shelves may use authored polygon
+outlines; [Orkhon Valley](orkhon-valley.md) uses them for its two-level plateaus. Arrows retain their original
 horizontal range and stop at vertical discontinuities. No ballistic or elevation
 damage rules are introduced.
 

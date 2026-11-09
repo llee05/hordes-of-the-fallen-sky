@@ -43,6 +43,8 @@ export class WorldRiver {
   ) {
     this.channels = riverChannels(definition).map((channel, channelIndex) => {
       const points = channel.sections.map((section) => {
+        // An authored gorge keeps its exact course so cliffs, bridges and falls stay registered.
+        if (definition.gorge) return { x: section.x, y: section.y };
         const envelope = Math.sin((section.distance / channel.length) * Math.PI);
         const bend =
           (Math.sin(section.distance / 420 + (seed % 31)) * 45 +
@@ -85,18 +87,29 @@ export class WorldRiver {
           dz = b.y - a.y;
         this.segments.push({ a, b, dx, dz, lengthSquared: dx * dx + dz * dz });
       }
-    this.bridges = (definition.kind === 'frozen' ? [] : [0.32, 0.68]).map((t) => {
-      const section = riverSectionAt(this.channels[0]!, this.channels[0]!.length * t);
-      return {
-        x: center + section.x,
-        z: center + section.y,
-        nx: section.nx,
-        nz: section.ny,
-        length: section.left + section.right + 36,
-        width: 46,
-        height: floor + 8,
-      };
-    });
+    const authored = definition.gorge?.bridges.map((bridge) => ({
+      x: center + bridge.x,
+      z: center + bridge.y,
+      nx: Math.cos(bridge.angle),
+      nz: Math.sin(bridge.angle),
+      length: bridge.length,
+      width: bridge.width,
+      height: floor + 8,
+    }));
+    this.bridges =
+      authored ??
+      (definition.kind === 'frozen' ? [] : [0.32, 0.68]).map((t) => {
+        const section = riverSectionAt(this.channels[0]!, this.channels[0]!.length * t);
+        return {
+          x: center + section.x,
+          z: center + section.y,
+          nx: section.nx,
+          nz: section.ny,
+          length: section.left + section.right + 36,
+          width: 46,
+          height: floor + 8,
+        };
+      });
   }
   sample(x: number, z: number): RiverSample {
     const key = `${x},${z}`,
