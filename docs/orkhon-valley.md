@@ -39,6 +39,25 @@ water outside a bridge deck. Landmark `footprint`s become `obstacles` and are so
 Collision walls, the shared enemy flow fields and riders all use these navigation cells,
 so enemies route through ramps and over the bridge instead of sticking on cliffs.
 
+## Landmarks and game systems
+
+Landmarks map onto existing systems where one exists (`systems/authoredSites.ts`):
+
+| Landmark                                 | System                                                    |
+| ---------------------------------------- | --------------------------------------------------------- |
+| Central camp                             | The live camp: gers, fence, standard, defences, migration |
+| Ruins, sacred ovoo, valley relic shrine  | Field objectives are placed beside them, in that order    |
+| Four raider camps                        | Ordinary arrivals come from a raider camp's direction     |
+| Heights shrine, standing stones, pillars | Scenery with solid footprints                             |
+| Camp outskirts, banners, racks           | Scenery                                                   |
+
+Field objectives fall back to the usual ring around the camp if a site has no reachable
+ground nearby. Arrivals keep spawning just outside the camera; only the bearing of
+ordinary (non-warning, non-assault) spawns changes, by up to ±26° around a randomly chosen
+raider camp. Warning and assault waves keep their river-bank pattern. There is no boon,
+loot or shrine system to attach the ovoo, ruins or shrines to, so they add no new rules.
+Every other location keeps the uniform arrival bearing and the field objective ring.
+
 ## Painted cliffs, ramps, falls and bridge
 
 `world3d/orkhonOverlay.ts` builds one unlit, depth-tested mesh from the sprite atlas:

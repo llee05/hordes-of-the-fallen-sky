@@ -9,8 +9,14 @@ import {
 } from '../../src/game/assets/orkhonValleyArt';
 import { GAME } from '../../src/game/config';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
-import { ORKHON_FOOTPRINTS, ORKHON_VALLEY } from '../../src/game/data/orkhonValley';
-import { composedRegion } from '../../src/game/data/worldRegions';
+import {
+  ORKHON_ENEMY_CAMPS,
+  ORKHON_FIELD_SITES,
+  ORKHON_FOOTPRINTS,
+  ORKHON_VALLEY,
+} from '../../src/game/data/orkhonValley';
+import { WORLD_REGIONS, composedRegion } from '../../src/game/data/worldRegions';
+import { ambientArrivalAngle, authoredFieldSite } from '../../src/game/systems/authoredSites';
 import { TerrainNavigation } from '../../src/game/terrain/TerrainNavigation';
 import type { TerrainPoint } from '../../src/game/terrain/types';
 import { ComposedTerrain, outlineField } from '../../src/game/world3d/ComposedTerrain';
@@ -242,9 +248,15 @@ describe('Orkhon Valley two-level terrain', () => {
     ).toBe(true);
   });
 
-  it('keeps landmark footprints solid', () => {
+  it('keeps landmark footprints solid and their field sites reachable beside them', () => {
     for (const landmark of ORKHON_FOOTPRINTS)
       expect(nav.isWalkable(C + landmark.x, C + landmark.y), landmark.id).toBe(false);
+    for (let issued = 0; issued < ORKHON_FIELD_SITES.length; issued++) {
+      const site = authoredFieldSite('orkhon-valley', issued)!;
+      const near = nav.nearestWalkable(site)!;
+      expect(Math.hypot(near.x - site.x, near.y - site.y)).toBeLessThan(220);
+    }
+    expect(authoredFieldSite('otgontenger', 0)).toBeUndefined();
   });
 
   it('keeps large open combat space on the valley floor around the camp', () => {
@@ -395,6 +407,32 @@ describe('Orkhon Valley painted scene', () => {
       if (outlineField(plateau.outline, middle.x + n.x * 40, middle.y + n.y * 40) > 0)
         n = { x: -n.x, y: -n.y };
       expect(n.x * CAMERA_DIRECTION.x + n.y * CAMERA_DIRECTION.y).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('Orkhon Valley landmark systems', () => {
+  it('sends ordinary arrivals from the direction of a raider camp', () => {
+    const anchor = { x: C, y: C };
+    for (const [index, camp] of ORKHON_ENEMY_CAMPS.entries()) {
+      const pick = (index + 0.5) / ORKHON_ENEMY_CAMPS.length;
+      const draws = [pick, 0.5];
+      const angle = ambientArrivalAngle('orkhon-valley', anchor, () => draws.shift()!);
+      expect(angle).toBeCloseTo(Math.atan2(camp.y, camp.x));
+    }
+  });
+
+  it('keeps every other location on a single uniform bearing draw', () => {
+    for (const id of Object.keys(WORLD_REGIONS) as (keyof typeof WORLD_REGIONS)[]) {
+      if (id === 'orkhon-valley') continue;
+      let draws = 0;
+      const angle = ambientArrivalAngle(id, { x: C, y: C }, () => {
+        draws++;
+        return 0.25;
+      });
+      expect(angle).toBeCloseTo(Math.PI / 2);
+      expect(draws).toBe(1);
+      expect(composedRegion(id).scene.shelves[0]!.id).toBe('camp-shelf');
     }
   });
 });
