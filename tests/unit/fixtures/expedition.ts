@@ -19,7 +19,6 @@ export function world(): WorldArchive {
       supportTimer: 1,
       wagonTimer: 2,
       wardTimer: 3,
-      hazardTimer: 4,
     },
     generations: [4, 2],
     enemies: [

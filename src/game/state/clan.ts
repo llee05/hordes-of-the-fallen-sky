@@ -12,9 +12,8 @@ import {
 import { recordClanDamage, type ClanDamageCause } from './clanSafety';
 import { travelDuration, economyRates, pastureDepletion } from './economy';
 import { markExpedition, metricCasualties, metricStage } from './expeditionMetrics';
-import { passageProgress } from './finalStand';
 import { completeGuidance } from './guidance';
-import { arrivalLocation, availableDestinations } from './journey';
+import { STARTING_LOCATION_ID, arrivalLocation, availableDestinations } from './journey';
 import { isKhanActive } from './khan';
 import { ROUTE_ACCOUNTS, rememberClan } from './legacy';
 import { nomadicAssignedWorkers, nomadicPopulationCapacity } from './nomadicCamp';
@@ -24,7 +23,7 @@ export function createClan(): ClanState {
     campEffects: createCampEffects(),
     estate: createCampEstate(),
     stage: 'camp',
-    region: 0,
+    locationId: STARTING_LOCATION_ID,
     stageTime: 0,
     pasture: 100,
     threat: 0,
@@ -43,8 +42,6 @@ export function createClan(): ClanState {
     identity: { iron: 0, sky: 0, wander: 0 },
     formation: 'guard',
     momentum: 0,
-    finalBossSpawned: false,
-    finalBossDefeated: false,
     rescuedRiders: 0,
     message: 'Eight people. Three horses. One last patch of blue sky. Build your clan with B.',
   };
@@ -208,9 +205,7 @@ export function buildStructure(
 }
 
 export function canMigrate(run: RunState): boolean {
-  return (
-    run.clan.stage === 'camp' && run.clan.stageTime >= GAME.clan.minimumCamp && run.clan.region < 3
-  );
+  return run.clan.stage === 'camp' && run.clan.stageTime >= GAME.clan.minimumCamp;
 }
 
 export function beginMigration(
@@ -283,7 +278,7 @@ export function damageClan(
         'A place left empty',
         cause === 'starvation'
           ? `With the provisions gone, the clan lost ${loss}. The other households carried on.`
-          : `${cause === 'eruption' ? 'The ground erupted and' : cause === 'seer' ? 'A seer struck and' : cause === 'area' ? 'A spell or a shifting of the land near camp' : 'An attack'} cost the clan ${loss}. The other households carried on.`,
+          : `${cause === 'seer' ? 'A seer struck and' : cause === 'area' ? 'A spell or a shifting of the land near camp' : 'An attack'} cost the clan ${loss}. The other households carried on.`,
       );
     }
   }
@@ -301,7 +296,7 @@ export function advanceClan(
   run: RunState,
   dt: number,
   protectionOptions?: ClanProtection,
-): 'arrived' | 'lost' | 'saved' | undefined {
+): 'arrived' | 'lost' | undefined {
   if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
   if (run.clan.population <= 0 || run.clan.integrity <= 0) return 'lost';
   metricStage(run);
@@ -326,10 +321,7 @@ export function advanceClan(
     clan.migrationProgress = Math.min(1, clan.stageTime / travelDuration(run, route));
   }
   clan.food = Math.max(0, clan.food);
-  clan.threat = Math.min(
-    100,
-    clan.region * 16 + clan.stageTime * (clan.stage === 'migration' ? 0.2 : 0.28),
-  );
+  clan.threat = Math.min(100, clan.stageTime * (clan.stage === 'migration' ? 0.2 : 0.28));
   if (
     !protectionOptions?.invincible &&
     clan.food === 0 &&
@@ -370,24 +362,19 @@ export function advanceClan(
     if (route.id === 'refuge') clan.rescuedRiders += GAME.clan.arrival.refugeRiders;
     clan.herd = Math.min(GAME.clan.maxHerd, clan.herd + route.herd + bonuses.arrivalHerd);
     completeGuidance(run, 'journey');
-    clan.region += 1;
     clan.locationId = destination.id;
     clan.destinationId = undefined;
     run.legacy.crossings.push({
       route: route.id,
-      region: clan.region,
       population: clan.population,
       locationId: destination.id,
     });
-    clan.stage = clan.region === 3 ? 'final' : 'camp';
+    clan.stage = 'camp';
     clan.stageTime = 0;
     clan.pasture = 100;
     restoreResolve(run, GAME.clan.arrival.resolve + bonuses.arrivalResolve);
     if (isKhanActive(run)) healKhan(run, GAME.clan.arrival.health + bonuses.arrivalHealth);
-    clan.message =
-      clan.stage === 'final'
-        ? 'The Red Eclipse. Protect your people for three minutes while the mountain passage opens.'
-        : `${destination.name}. ${arrivedPeople ? `${arrivedPeople} survivors join the clan. ` : ''}Fresh pasture. Unpack, rebuild, and decide how long to stay.`;
+    clan.message = `${destination.name}. ${arrivedPeople ? `${arrivedPeople} survivors join the clan. ` : ''}Fresh pasture. Unpack, rebuild, and decide how long to stay.`;
     rememberClan(
       run,
       arrivedPeople ? 'New households at the fire' : 'The caravan arrived',
@@ -395,7 +382,6 @@ export function advanceClan(
     );
     return 'arrived';
   }
-  if (clan.stage === 'final' && passageProgress(run) >= 1) return 'saved';
 }
 
 export function clanDoctrine(run: RunState): string {

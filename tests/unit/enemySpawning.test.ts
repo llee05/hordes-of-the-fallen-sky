@@ -147,11 +147,12 @@ describe('projected enemy arrivals', () => {
     expect(border.walkable(safeEdge.x, safeEdge.y)).toBe(true);
   });
   it('preserves introductory pacing and migration pressure, retrying rejected positions quickly without catch-up bursts', () => {
-    expect(encounterSpawnDelay(0, 0)).toBe(2);
-    expect(encounterSpawnDelay(17.99, 0)).toBe(2);
-    expect(encounterSpawnDelay(18, 0)).toBe(spawnInterval(18));
-    expect(encounterSpawnDelay(50, 1, 1.5)).toBe(spawnInterval(115) / 1.5);
-    expect(encounterSpawnDelay(0, 0, 1, false)).toBe(0.2);
-    expect(encounterSpawnDelay(180, 3, 1.5, false)).toBe(0.2);
+    expect(encounterSpawnDelay(0, true)).toBe(2);
+    expect(encounterSpawnDelay(17.99, true)).toBe(2);
+    expect(encounterSpawnDelay(18, true)).toBe(spawnInterval(18));
+    expect(encounterSpawnDelay(0, false)).toBe(spawnInterval(0));
+    expect(encounterSpawnDelay(50, false, 1.5)).toBe(spawnInterval(50) / 1.5);
+    expect(encounterSpawnDelay(0, true, 1, false)).toBe(0.2);
+    expect(encounterSpawnDelay(180, false, 1.5, false)).toBe(0.2);
   });
 });

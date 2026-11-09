@@ -78,7 +78,6 @@ import { CombatSystem, type HostileShooter } from './arena/CombatSystem';
 import { EnemyBehaviour } from './arena/EnemyBehaviour';
 import { EnemyDirector, type SpawnDirective } from './arena/EnemyDirector';
 import { FieldObjectiveDirector } from './arena/FieldObjectiveDirector';
-import { FinalStandDirector } from './arena/FinalStandDirector';
 import { Hazards, type Hazard } from './arena/Hazards';
 import { HudPresenter } from './arena/HudPresenter';
 import { KhanController } from './arena/KhanController';
@@ -132,7 +131,6 @@ export class ArenaScene extends Phaser.Scene {
   private readonly animator = new CharacterAnimator(this.arena, this.khan, this.riderHost);
   private readonly campDefences = new CampDefences(this.arena, this.combat);
   private readonly fieldObjectives = new FieldObjectiveDirector(this.arena, this.enemyDirector);
-  private readonly finalStand = this.createFinalStand();
   private readonly enemyBehaviour = this.createEnemyBehaviour();
   /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
   private readonly controls = new ArenaInput(this.arena, this.controller, this.actionKeys);
@@ -149,7 +147,7 @@ export class ArenaScene extends Phaser.Scene {
   private facing = new Phaser.Math.Vector2(0, 1);
   /** Created once, so the pending write and save generation survive a restart. */
   private readonly persistence: ArenaPersistence;
-  private saveMenuReturn: 'ready' | 'paused' | 'dead' | 'won' = 'ready';
+  private saveMenuReturn: 'ready' | 'paused' | 'dead' = 'ready';
   private visualSettings: VisualSettings;
   constructor(private readonly platform: GamePlatform) {
     super('arena');
@@ -266,20 +264,6 @@ export class ArenaScene extends Phaser.Scene {
     );
   }
 
-  private createFinalStand(): FinalStandDirector {
-    const scene = this;
-    return new FinalStandDirector(
-      this.arena,
-      {
-        get fieldWarnings() {
-          return scene.fieldMarkers.warnings;
-        },
-      },
-      this.combat,
-      this.enemyDirector,
-    );
-  }
-
   private createCombat(): CombatSystem {
     const scene = this;
     return new CombatSystem(
@@ -353,7 +337,6 @@ export class ArenaScene extends Phaser.Scene {
     this.areaCombat.create();
     this.animator.create();
     this.fieldObjectives.create();
-    this.finalStand.reset();
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.landscape = new SteppeLandscape(this);
     const center = GAME.worldSize / 2;
@@ -422,7 +405,7 @@ export class ArenaScene extends Phaser.Scene {
     this.physics.pause();
     this.tweens.pauseAll();
     if (developerRun) {
-      this.landscape.setRegion(this.run.clan.region, currentLocation(this.run));
+      this.landscape.setLocation(currentLocation(this.run));
       this.reconcileTerrain();
       this.campBarrier.relocate(this.run, this.camp);
       this.timers.invulnerable = GAME.khan.returnProtection;
@@ -440,7 +423,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   openSaves(): void {
-    if (!['ready', 'paused', 'dead', 'won'].includes(this.run.phase)) return;
+    if (!['ready', 'paused', 'dead'].includes(this.run.phase)) return;
     this.saveMenuReturn = this.run.phase as typeof this.saveMenuReturn;
     this.persistence.message = this.platform.saveStorageError
       ? 'Save storage could not be read. Try opening this menu again.'
@@ -486,7 +469,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   async loadExpedition(slot: SaveSlot): Promise<void> {
-    if (!['ready', 'paused', 'saves', 'dead', 'won'].includes(this.run.phase)) return;
+    if (!['ready', 'paused', 'saves', 'dead'].includes(this.run.phase)) return;
     const save = await this.platform.loadExpedition(slot);
     // Validate completely before tearing down the current, still playable scene.
     decodeExpedition(save);
@@ -527,7 +510,7 @@ export class ArenaScene extends Phaser.Scene {
     this.guidanceEnabled = run.guidance.enabled;
     Object.assign(this.timers, { closeDefenseTimer: 0 }, world.timers);
     this.areaCombat.restore(world);
-    this.landscape.setRegion(run.clan.region, currentLocation(run));
+    this.landscape.setLocation(currentLocation(run));
     this.campPresenter.restore(world.camp);
     this.khan.restore(world);
     if (!isKhanActive(run)) this.khan.hideFallenKhan();
@@ -548,7 +531,6 @@ export class ArenaScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09).setFollowOffset(0, 0);
     this.cameras.main.centerOn(this.player.x, this.player.y);
     this.areaCombat.update(0);
-    this.finalStand.update(0);
     this.fieldObjectives.refreshMarkers();
     this.setPhase('paused');
   }
@@ -766,7 +748,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   toggleJournal(): void {
-    if (['playing', 'won', 'dead'].includes(this.run.phase)) this.setPhase('journal');
+    if (['playing', 'dead'].includes(this.run.phase)) this.setPhase('journal');
     else if (this.run.phase === 'journal') this.closePlanning();
   }
 
@@ -939,10 +921,6 @@ export class ArenaScene extends Phaser.Scene {
       this.finish('dead');
       return;
     }
-    if (outcome === 'saved') {
-      this.finish('won');
-      return;
-    }
     if (outcome === 'arrived') this.arrive();
     if (this.run.phase !== 'playing') return;
     this.updateCamp(dt);
@@ -961,7 +939,6 @@ export class ArenaScene extends Phaser.Scene {
       speed: isKhanActive(this.run) ? this.player.body!.velocity.length() : 0,
       galloping: this.timers.dashRemaining > 0,
       caravan: this.run.clan.stage === 'migration',
-      region: this.run.clan.region,
       environment: environmentForLocation(currentLocation(this.run)),
       listener: isKhanActive(this.run) ? this.player : this.camp,
       camp: this.camp,
@@ -985,7 +962,6 @@ export class ArenaScene extends Phaser.Scene {
     )
       this.audio.play('encounter');
     this.fieldObjectives.update(dt);
-    this.finalStand.update(dt);
     this.enemyBehaviour.update(dt);
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
       this.finish('dead');
@@ -1011,7 +987,6 @@ export class ArenaScene extends Phaser.Scene {
       this.hudTimer = GAME.hud.updateInterval;
       this.callbacks?.onHud(this.snapshot());
     }
-    this.enemyDirector.tickFinalBoss();
   }
 
   selectSuccessor(trait: SuccessorTrait): void {
@@ -1020,14 +995,14 @@ export class ArenaScene extends Phaser.Scene {
     this.callbacks?.onHud(this.snapshot());
   }
 
-  private finish(phase: 'won' | 'dead'): void {
+  private finish(phase: 'dead'): void {
     this.run.legacy.outcome = phase;
     if (!this.developerRun) {
       this.best = Math.max(this.best, Math.floor(this.run.elapsed));
       void this.platform.saveBest(this.best).catch(() => this.callbacks?.onSaveError());
     }
     this.setPhase(phase);
-    this.audio.play(phase === 'won' ? 'victory' : 'loss');
+    this.audio.play('loss');
   }
 
   private setPhase(phase: RunState['phase']): void {
@@ -1070,7 +1045,6 @@ export class ArenaScene extends Phaser.Scene {
         busy: this.persistence.busy,
         message: this.persistence.message,
       },
-      boss: this.enemyDirector.boss,
     });
   }
   private publishPhase(): void {
@@ -1103,7 +1077,7 @@ export class ArenaScene extends Phaser.Scene {
       if (gem.active) gem.setPosition(center, center + 100);
     this.hazardSystem.clear();
     this.areaCombat.reset();
-    this.landscape.setRegion(this.run.clan.region, currentLocation(this.run));
+    this.landscape.setLocation(currentLocation(this.run));
     this.reconcileTerrain();
     this.campPresenter.refresh();
     this.campBarrier.relocate(this.run, this.camp);
@@ -1168,9 +1142,6 @@ export class ArenaScene extends Phaser.Scene {
   updateFieldObjectives(dt: number): void {
     this.fieldObjectives.update(dt);
   }
-  updateFinalStand(dt: number): void {
-    this.finalStand.update(dt);
-  }
   get defeats(): DefeatSprites {
     return this.animator.defeats;
   }
@@ -1228,9 +1199,6 @@ export class ArenaScene extends Phaser.Scene {
   fireRiders(): void {
     this.riderHost.fire();
   }
-  get boss(): Enemy | undefined {
-    return this.enemyDirector.boss;
-  }
   spawnEnemy(forced?: EnemyDefinition, directive?: SpawnDirective): boolean {
     return this.enemyDirector.spawn(forced, directive);
   }
@@ -1281,11 +1249,5 @@ export class ArenaScene extends Phaser.Scene {
   }
   set wardTimer(value: number) {
     this.timers.wardTimer = value;
-  }
-  get hazardTimer(): number {
-    return this.timers.hazardTimer;
-  }
-  set hazardTimer(value: number) {
-    this.timers.hazardTimer = value;
   }
 }

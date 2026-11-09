@@ -1,6 +1,6 @@
 import type { LocationId } from '../types';
 export type AreaHabitat = 'open' | 'grove' | 'shore' | 'ridge' | 'snow' | 'shelter';
-export type AreaThreatKind = 'frost' | 'mire' | 'rockfall' | 'crosswind' | 'cinder' | 'rift';
+export type AreaThreatKind = 'frost' | 'mire' | 'rockfall' | 'crosswind' | 'cinder';
 export interface AreaEncounterDefinition {
   title: string;
   warning: string;
@@ -13,45 +13,6 @@ export interface AreaEncounterDefinition {
 }
 /** These are fictional unreturned shaped by terrain, never the honoured powers of real sacred places. */
 export const AREA_ENCOUNTERS: Readonly<Record<LocationId, AreaEncounterDefinition>> = {
-  'golden-pasture': {
-    title: 'The grassland hunt',
-    warning: 'Prowlers are spreading through the long grass.',
-    rule: 'Packs come at you from one flank, then the other.',
-    counter: 'Keep moving, and charge a volley before the pack closes in.',
-    natives: ['thistle-prowler', 'dustwing'],
-    habitat: 'open',
-    pattern: 'flanks',
-  },
-  'silent-river': {
-    title: 'The frozen shallows',
-    warning: 'Rime is gathering along the river.',
-    rule: 'Marked ice patches slow riders on the banks.',
-    counter: 'Get out of the blue circles before they freeze, and keep to the dry banks.',
-    natives: ['rime-hound', 'icebound-lancer'],
-    habitat: 'shore',
-    pattern: 'banks',
-    threat: 'frost',
-  },
-  'broken-pass': {
-    title: 'The falling slate',
-    warning: 'Loose stone is shifting above the road.',
-    rule: 'Rock comes down at the foot of the exposed cliffs.',
-    counter: 'Watch for the marked falls and ride out onto open ground.',
-    natives: ['scree-crawler', 'slate-needle'],
-    habitat: 'ridge',
-    pattern: 'shelves',
-    threat: 'rockfall',
-  },
-  'heart-of-the-steppe': {
-    title: 'The torn threshold',
-    warning: 'The rift is gathering across the basin.',
-    rule: 'Rift strikes sweep the open approaches one after another.',
-    counter: 'Cross each marked lane just after it strikes, and keep the households covered.',
-    natives: ['ashbound-outrider', 'rift-cantor'],
-    habitat: 'open',
-    pattern: 'crossfire',
-    threat: 'rift',
-  },
   otgontenger: {
     title: 'Below the white ridge',
     warning: 'Snowline hunters are coming down from the shelves.',

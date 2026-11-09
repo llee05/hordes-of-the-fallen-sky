@@ -17,7 +17,7 @@ export const DEVELOPER_COMMANDS = [
     name: 'benchmark',
     usage: 'benchmark',
     description:
-      'Compare twelve deterministic journey pressure scenarios; does not change this expedition.',
+      'Compare twelve deterministic fixed-length pressure scenarios; does not change this expedition.',
   },
   {
     name: 'metrics',

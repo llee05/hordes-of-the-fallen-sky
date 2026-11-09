@@ -120,7 +120,7 @@ const state = {
   speed: 190,
   galloping: false,
   caravan: false,
-  region: 0,
+  environment: 'steppe' as const,
   listener: { x: 0, y: 0 },
   camp: { x: 0, y: 0 },
 };
@@ -218,14 +218,14 @@ describe('recorded, layered and bounded steppe audio', () => {
     const audio = await prepared(),
       context = Context.latest,
       decoded = context.decoded;
-    const crowd = SOUND_KINDS.filter((kind) => kind !== 'victory');
+    const crowd = SOUND_KINDS.filter((kind) => kind !== 'loss');
     for (let i = 0; i < 1200; i++) {
       audio.play(crowd[i % crowd.length]!);
       expect(context.active().length).toBeLessThanOrEqual(AUDIO_LIMITS.sources);
       expect(audio.diagnostics.events).toBeLessThanOrEqual(AUDIO_LIMITS.events);
     }
     context.advance(0.2);
-    expect(audio.play('victory')).toBe(true);
+    expect(audio.play('loss')).toBe(true);
     expect(context.decoded).toBe(decoded);
     expect(context.active().length).toBeLessThanOrEqual(AUDIO_LIMITS.sources);
     audio.reset();

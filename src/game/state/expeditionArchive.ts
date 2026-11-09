@@ -6,7 +6,7 @@ import { isNomadicCamp } from '../../shared/nomadicCamp.js';
 import type { MotionArchive } from '../animation/CharacterMotion';
 import { GAME } from '../config';
 import { BUILDINGS, LOCATIONS, ROUTES, STARTING_TRADITIONS } from '../data/clan';
-import { ALL_ENEMIES, SKYBREAKER } from '../data/enemies';
+import { ALL_ENEMIES } from '../data/enemies';
 import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
 import { NOMADIC_BUILDINGS } from '../data/nomadicCamp';
 import { SUCCESSORS } from '../data/successors';
@@ -35,6 +35,7 @@ import {
   syncNomadicBuildings,
 } from './nomadicCamp';
 import { migrateLegacyNomadicCamp } from './nomadicCampMigration';
+import { migrateRetiredJourney } from './retiredJourney';
 import { createRun } from './run';
 
 interface Point {
@@ -70,7 +71,6 @@ export interface EnemyArchive extends BodyArchive {
 }
 export interface ProjectileArchive extends BodyArchive {
   source?: string;
-  barrage?: number;
   damage: number;
   remaining: number;
   fire: boolean;
@@ -103,7 +103,6 @@ export interface WorldArchive {
     supportTimer: number;
     wagonTimer: number;
     wardTimer: number;
-    hazardTimer: number;
   };
   generations: number[];
   enemies: EnemyArchive[];
@@ -133,29 +132,26 @@ const motion = object({
   windingUp: boolean,
 });
 const location = oneOf(LOCATIONS.map((l) => l.id));
-const region = oneOf([0, 1, 2, 3]);
 const trait = oneOf(Object.keys(SUCCESSORS));
 const khanRecord = object(
   {
     generation: integer,
     chosenAt: number,
-    region,
+    locationId: location,
     people: number,
     killsAtStart: integer,
   },
   {
     trait,
-    locationId: location,
     fallenAt: number,
-    fallenRegion: region,
     fallenLocationId: location,
     killsAtFall: integer,
   },
 );
 const overrides: Record<string, Rule> = {
   phase: oneOf(['playing', 'paused']),
-  'clan.stage': oneOf(['camp', 'migration', 'final']),
-  'clan.region': oneOf([0, 1, 2, 3]),
+  'clan.stage': oneOf(['camp', 'migration']),
+  'clan.locationId': location,
   'clan.routeId': oneOf(['', ...ROUTES.map((r) => r.id)]),
   'clan.formation': oneOf(['guard', 'encircle', 'wedge', 'retreat']),
   'clan.paths': object(
@@ -169,57 +165,35 @@ const overrides: Record<string, Rule> = {
     object({ x: number, y: number, remaining: number }),
     GAME.mounted.maxTrails,
   ),
-  'legacy.khans': list(
-    (value) =>
-      khanRecord(value) &&
-      isRecord(value) &&
-      (value.fallenAt === undefined || region(value.fallenRegion)),
-    GAME.legacy.khanRecordLimit,
-  ),
+  'legacy.khans': list(khanRecord, GAME.legacy.khanRecordLimit),
   'legacy.memories': list(
-    object(
-      {
-        sequence: integer,
-        elapsed: number,
-        region,
-        population: number,
-        title: string,
-        detail: string,
-      },
-      { locationId: location },
-    ),
+    object({
+      sequence: integer,
+      elapsed: number,
+      locationId: location,
+      population: number,
+      title: string,
+      detail: string,
+    }),
     GAME.legacy.memoryLimit,
   ),
   'legacy.crossings': list(
-    object(
-      {
-        route: oneOf(ROUTES.map((route) => route.id)),
-        region: oneOf([1, 2, 3]),
-        population: number,
-      },
-      { locationId: location },
-    ),
+    object({
+      route: oneOf(ROUTES.map((route) => route.id)),
+      population: number,
+      locationId: location,
+    }),
     100,
   ),
 };
 const optional: Record<string, Record<string, Rule>> = {
   '': {
-    finalStand: object(
-      {
-        phase: oneOf(['advance', 'warning', 'recovery']),
-        remaining: positive,
-        cycle: integer,
-        approach: oneOf([0, 1, 2, 3]),
-        works: list(object({ progress: positive, done: boolean }, { x: number, y: number }), 2),
-      },
-      { aim: point, lastCampBarrage: integer },
-    ),
     metrics: object({
       stages: list(
         object({
           key: string,
           location: string,
-          stage: oneOf(['camp', 'migration', 'final']),
+          stage: oneOf(['camp', 'migration']),
           startedAt: positive,
           marks: object({}, Object.fromEntries(EXPEDITION_MILESTONES.map((id) => [id, positive]))),
           damage: positive,
@@ -234,14 +208,14 @@ const optional: Record<string, Record<string, Rule>> = {
     startingTradition: oneOf(STARTING_TRADITIONS.map((entry) => entry.id)),
     character: isCharacterProfile,
   },
-  clan: { locationId: location, destinationId: location },
+  clan: { destinationId: location },
   khan: { candidate: trait, trait },
   encounters: { phase: oneOf(['probing', 'warning', 'assault', 'elite', 'recovery']) },
   combat: { previous: point, heading: point, riderFireAt: list(number, 16) },
   safety: {
     lastDamage: object(
       {
-        cause: oneOf(['attack', 'starvation', 'eruption', 'seer', 'area']),
+        cause: oneOf(['attack', 'starvation', 'seer', 'area']),
         at: number,
         amount: number,
         people: number,
@@ -250,7 +224,7 @@ const optional: Record<string, Record<string, Rule>> = {
     ),
     lastMajorLoss: object(
       {
-        cause: oneOf(['attack', 'starvation', 'eruption', 'seer', 'area']),
+        cause: oneOf(['attack', 'starvation', 'seer', 'area']),
         at: number,
         amount: number,
         people: number,
@@ -328,7 +302,6 @@ const projectile = object(
   },
   {
     previous: point,
-    barrage: integer,
     source: string,
     echoIndex: integer,
     precision: boolean,
@@ -340,7 +313,7 @@ const projectile = object(
 const threat = object(
   {
     id: integer,
-    kind: oneOf(['frost', 'rockfall', 'mire', 'crosswind', 'cinder', 'rift']),
+    kind: oneOf(['frost', 'rockfall', 'mire', 'crosswind', 'cinder']),
     x: number,
     y: number,
     age: number,
@@ -365,7 +338,6 @@ const worldShape = object({
       supportTimer: number,
       wagonTimer: number,
       wardTimer: number,
-      hazardTimer: number,
     },
     { closeDefenseTimer: number },
   ),
@@ -374,7 +346,7 @@ const worldShape = object({
     object({
       ...bodyFields,
       slot: integer,
-      definition: oneOf([...ALL_ENEMIES, SKYBREAKER].map((e) => e.id)),
+      definition: oneOf(ALL_ENEMIES.map((e) => e.id)),
       state: enemyState,
       motion,
     }),
@@ -503,6 +475,7 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
     if (isRecord(legacy.stats) && legacy.stats.pierce === undefined) legacy.stats.pierce = 0;
     if (isRecord(value.world)) delete value.world.support;
   }
+  const retiredJourney = isRecord(value) && migrateRetiredJourney(value);
   if (!isExpeditionSave(value) || !runShape(value.run) || !worldShape(value.world))
     throw new Error('This expedition is damaged or incompatible with the current game.');
   const run = value.run as unknown as RunState;
@@ -544,6 +517,8 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
   restored.run.character = normalizeCharacterProfile(restored.run.character);
   migrateLegacyNomadicCamp(restored.run);
   syncNomadicBuildings(restored.run);
+  if (retiredJourney)
+    restored.run.clan.message = `The journey chapters have been retired. Your clan now camps at ${currentLocation(restored.run).name}.`;
   if (retiredStory) {
     restored.run.clan.message = '';
     const legacy = restored.run.legacy;

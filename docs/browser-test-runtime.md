@@ -53,7 +53,7 @@ flock /tmp/bh-playwright.lock env E2E_PORT=5268 \
 ```
 
 `test:e2e:changed` automatically includes keyboard/lifecycle and default 3D smoke
-tests alongside the fast 29-test `@core` subset. Without `--spec`, application code changes
+tests alongside the fast 27-test `@core` subset. Without `--spec`, application code changes
 run the `@core` subset plus the specs mapped to touched areas. Changes to `public/art`,
 terrain or renderer code, saves, input, ArenaScene, dependency/build configs, or unknown
 files fall back to the full suite (pass `--full` to force the full suite explicitly).

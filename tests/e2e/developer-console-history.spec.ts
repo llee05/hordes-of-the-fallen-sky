@@ -88,7 +88,7 @@ test('Up recalls saved commands after reload and checkpoints, while Down restore
   await expect(input).toHaveValue('unfinished');
   await page.keyboard.press('Backquote');
   await page.keyboard.press('F8');
-  await page.locator('[data-developer-level="chapter:golden-pasture"]').click();
+  await page.locator('[data-developer-level="place:otgontenger"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.keyboard.press('Backquote');
   await input.press('ArrowUp');

@@ -227,7 +227,7 @@ test('the same bounded barrier follows the caravan, freezes, redeploys on arriva
     scene.run.clan.stageTime = 100;
   });
   await expect
-    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.region))
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.legacy.crossings.length))
     .toBe(1);
   const arrived = await barrierState(page);
   expect(arrived.travelling).toBe(false);

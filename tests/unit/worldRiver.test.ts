@@ -4,13 +4,13 @@ import { waterGeometry } from '../../src/game/world3d/waterGeometry';
 import { Water3D } from '../../src/game/world3d/Water3D';
 import { ComposedTerrain } from '../../src/game/world3d/ComposedTerrain';
 import { composedRegion } from '../../src/game/data/worldRegions';
-import { LANDSCAPES } from '../../src/game/data/landscapes';
 import { riverPoint } from '../../src/game/assets/riverGeometry';
 import * as THREE from 'three';
+import { MEADOW_STREAM } from './fixtures/stream';
 
 describe('integrated organic rivers', () => {
   it('shares repeatable variable-width shores with carving and moisture queries', () => {
-    const def = LANDSCAPES['golden-pasture'].water!;
+    const def = MEADOW_STREAM;
     const river = new WorldRiver(def, 2600, 65, 123);
     expect(river.channels).toEqual(new WorldRiver(def, 2600, 65, 123).channels);
     expect(river.channels).not.toEqual(new WorldRiver(def, 2600, 65, 124).channels);
@@ -25,10 +25,7 @@ describe('integrated organic rivers', () => {
     expect(sections.filter((s) => Math.abs(s.x) < 100).every((s) => s.y <= -525)).toBe(true);
   });
   it('registers shallows against the actual bed and freezes reduced-motion water', () => {
-    const terrain = new ComposedTerrain(
-      composedRegion('golden-pasture'),
-      LANDSCAPES['golden-pasture'].water,
-    );
+    const terrain = new ComposedTerrain(composedRegion('altan-ovoo'), MEADOW_STREAM);
     const river = terrain.river!,
       geometry = waterGeometry(river, terrain);
     const shore: number[] = [],

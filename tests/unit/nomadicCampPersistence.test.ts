@@ -33,8 +33,9 @@ describe('nomadic foundations, effects and persistence', () => {
     expect(Object.values(run.clan.nomadicCamp!.core)).toEqual([1, 1, 1, 1, 1]);
     expect(nomadicAssignedWorkers(run.clan.nomadicCamp!)).toBe(0);
     expect(nomadicPopulationCapacity(run)).toBe(40);
-    expect(economyRates(run).foodNet).toBeCloseTo(1.24);
-    expect(economyRates(run).materials).toBeCloseTo(0.4664);
+    // Mount Otgontenger gathers 0.85 food and 1.25 materials.
+    expect(economyRates(run).foodNet).toBeCloseTo(1.43 * 0.85 - 0.19);
+    expect(economyRates(run).materials).toBeCloseTo(0.4664 * 1.25);
     expect(run.clan.campEffects.bonuses.commanderRecovery).toBeGreaterThan(0);
   });
   it('does not let the permanent hearth revive a clan that has already fallen', () => {

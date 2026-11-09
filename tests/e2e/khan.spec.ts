@@ -175,7 +175,7 @@ test('successors return to the moving caravan and an arrival cannot end successi
     (window as any).__gloam.scene.run.clan.stageTime = 70;
   });
   await expect
-    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.region))
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.legacy.crossings.length))
     .toBe(1);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.health)).toBe(0);
   expect(await page.evaluate(() => (window as any).__gloam.scene.player.body.enable)).toBe(false);
@@ -236,16 +236,4 @@ test('losing the clan during succession ends the expedition and a fresh run rese
     generation: 1,
     successionRemaining: 0,
   });
-});
-
-test('the clan can complete the final stand while choosing a new Khan', async ({ page }) => {
-  await fall(page);
-  await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.run.clan.stage = 'final';
-    scene.run.clan.region = 3;
-    scene.run.clan.stageTime = 180;
-  });
-  await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
-  expect(await page.evaluate(() => (window as any).__gloam.scene.run.health)).toBe(0);
 });

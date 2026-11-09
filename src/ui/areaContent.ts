@@ -24,7 +24,6 @@ export function enemyTacticText(enemy: EnemyDefinition): string {
       rockfall: 'Calls down marked stone.',
       crosswind: 'Marks a cutting gust.',
       cinder: 'Calls cinders that scorch the ground a moment.',
-      rift: 'Marks a rift strike.',
     };
     text += ` ${abilities[enemy.ability.kind]} Defeat or pin it before release.`;
   }

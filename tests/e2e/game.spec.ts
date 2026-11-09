@@ -107,7 +107,7 @@ test(
 );
 
 test(
-  'clan defeat, victory, best time, and replay complete the run lifecycle',
+  'clan defeat, best time, and replay complete the run lifecycle',
   { tag: '@core' },
   async ({ page }) => {
     await openTitle(page);
@@ -123,10 +123,10 @@ test(
     });
     await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
     await expect(page.locator('.end-menu .panel-intro')).toHaveText(
-      'Clan lost · The Golden Pasture · Encampment',
+      'Clan lost · Mount Otgontenger · Encampment',
     );
     await expect(page.locator('.end-stats')).toContainText('SURVIVORS');
-    await expect(page.locator('.end-stats')).toContainText('SKYBREAKER');
+    await expect(page.locator('.end-stats')).not.toContainText('SKYBREAKER');
     await expect(page.locator('#best')).toHaveText('00:42');
     await page.getByRole('button', { name: 'Clan chronicle', exact: true }).click();
     await page.getByRole('tab', { name: 'Your clan' }).click();
@@ -144,21 +144,16 @@ test(
     await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       scene.run.elapsed = 900;
-      scene.run.clan.stage = 'final';
-      scene.run.clan.region = 3;
-      scene.run.clan.stageTime = 180;
+      scene.run.clan.integrity = 0;
     });
-    await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
-    await expect(page.locator('.end-menu .panel-intro')).toHaveText(
-      'Refuge reached · The Heart of the Steppe · Final stand',
-    );
+    await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
     await expect(page.locator('#best')).toHaveText('15:00');
     await page.getByRole('button', { name: 'Clan chronicle', exact: true }).click();
     await page.getByRole('tab', { name: 'Your clan' }).click();
     await expect(page.locator('.khan-records')).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'won');
-    await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'dead');
+    await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
     await page.reload();
     await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
     await expect(page.locator('#best')).toHaveText('15:00');

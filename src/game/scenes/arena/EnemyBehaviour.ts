@@ -5,7 +5,6 @@ import { classDefinition } from '../../data/classes';
 import type { AreaThreatKind } from '../../data/areaEncounters';
 import type { Enemy } from '../../entities/actors';
 import { barrierContact, campBoundary } from '../../state/campBarrier';
-import type { FinalStandState } from '../../state/finalStand';
 import { currentLocation } from '../../state/journey';
 import { isKhanActive } from '../../state/khan';
 import { areaSurface, habitatPreference } from '../../systems/AreaHabitat';
@@ -35,7 +34,6 @@ interface EnemyAim {
   playerDistance: number;
   attackingCamp: boolean;
   target: { x: number; y: number };
-  finale: FinalStandState | undefined;
   distance: number;
   behavior: EnemyDefinition['behavior'];
   ranged: boolean;
@@ -74,7 +72,6 @@ export class EnemyBehaviour extends ArenaSystem {
       if (!enemy.active) continue;
       this.markObjectiveGuard(enemy, warnings);
       let campDistance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.camp.x, this.camp.y);
-      this.drawFinaleWarning(enemy, warnings);
       campDistance = this.keepOutsideCamp(enemy, campDistance, boundary);
       this.advanceTimers(enemy, shadow, dt);
       const playerDistance = khanActive
@@ -106,18 +103,6 @@ export class EnemyBehaviour extends ArenaSystem {
       enemy.objectiveId === objective.id
     )
       warnings.lineStyle(2, 0xdfbc74, 0.8).strokeCircle(enemy.x, enemy.y, 22);
-  }
-
-  /** Draws the Skybreaker's aimed line or its vulnerable ring. */
-  private drawFinaleWarning(enemy: Enemy, warnings: Phaser.GameObjects.Graphics): void {
-    const finaleWarning = enemy === this.enemyDirector.boss ? this.run.finalStand : undefined;
-    if (finaleWarning?.phase === 'warning' && finaleWarning.aim)
-      warnings
-        .lineStyle(4, 0xdc976a, 0.85)
-        .lineBetween(enemy.x, enemy.y, finaleWarning.aim.x, finaleWarning.aim.y)
-        .strokeCircle(finaleWarning.aim.x, finaleWarning.aim.y, 70);
-    if (finaleWarning?.phase === 'recovery')
-      warnings.lineStyle(3, 0xf0d194, 0.8).strokeCircle(enemy.x, enemy.y, 52);
   }
 
   /** Pushes an attacker out of the camp's barrier; returns its distance from camp. */
@@ -153,7 +138,6 @@ export class EnemyBehaviour extends ArenaSystem {
     if (
       playerDistance > GAME.spawning.despawnDistance &&
       campDistance > GAME.spawning.despawnDistance &&
-      enemy !== this.enemyDirector.boss &&
       !this.landscape.world3d?.nearView(enemy, GAME.spawning.viewRetentionMargin)
     ) {
       enemy.disableBody(true, true);
@@ -170,20 +154,11 @@ export class EnemyBehaviour extends ArenaSystem {
     boundary: CampBoundary,
   ): EnemyAim {
     const attackingCamp = campDistance <= boundary.attackRange;
-    let target: { x: number; y: number } =
+    const target: { x: number; y: number } =
       attackingCamp || campDistance < playerDistance * 1.25 ? this.camp : this.player;
-    const finale = enemy.definition.behavior === 'boss' ? this.run.finalStand : undefined;
-    if (finale) {
-      const angle = (finale.approach * Math.PI) / 2;
-      const desired = {
-        x: this.camp.x + Math.cos(angle) * (boundary.attackRange + 180),
-        y: this.camp.y + Math.sin(angle) * (boundary.attackRange + 180),
-      };
-      target = this.landscape.navigation?.nearestWalkable(desired) ?? desired;
-    }
     const distance = Phaser.Math.Distance.Between(enemy.x, enemy.y, target.x, target.y);
     const behavior = enemy.definition.behavior;
-    const ranged = behavior === 'ranged' || behavior === 'boss';
+    const ranged = behavior === 'ranged';
     const clearShot =
       !this.landscape.world3d ||
       !ranged ||
@@ -194,7 +169,6 @@ export class EnemyBehaviour extends ArenaSystem {
       playerDistance,
       attackingCamp,
       target,
-      finale,
       distance,
       behavior,
       ranged,
@@ -204,11 +178,9 @@ export class EnemyBehaviour extends ArenaSystem {
 
   /** Base speed over this terrain, with habitat speed and concealment. */
   private terrainSpeed(enemy: Enemy, aim: EnemyAim): number {
-    const clan = this.run.clan;
     const { campDistance, playerDistance } = aim;
     let speed =
       enemy.definition.speed *
-      (1 + clan.region * 0.1) *
       Math.max(
         0.65,
         1 /
@@ -241,16 +213,15 @@ export class EnemyBehaviour extends ArenaSystem {
 
   /** Stops pinned, held or aiming enemies and slows them in trails. */
   private adjustSpeed(enemy: Enemy, aim: EnemyAim, speed: number): number {
-    const { finale, distance, ranged, clearShot } = aim;
-    speed *= 1;
-    if (enemy.pinned > 0 || (finale && finale.phase !== 'advance')) speed = 0;
+    const { distance, ranged, clearShot } = aim;
+    if (enemy.pinned > 0) speed = 0;
     if (
       this.run.combat.trails.some(
         (t) => Math.hypot(enemy.x - t.x, enemy.y - t.y) < GAME.mounted.trailRadius,
       )
     )
       speed *= 1 - GAME.mounted.trailSlow;
-    if (ranged && !finale && distance < 260 && clearShot) speed = 0;
+    if (ranged && distance < 260 && clearShot) speed = 0;
     return speed;
   }
 
@@ -262,10 +233,8 @@ export class EnemyBehaviour extends ArenaSystem {
     dt: number,
     warnings: Phaser.GameObjects.Graphics,
   ): void {
-    const { attackingCamp, target, finale, distance, behavior, ranged, clearShot } = aim;
-    if (finale && finale.phase !== 'advance') {
-      enemy.setVelocity(0, 0);
-    } else if (attackingCamp) {
+    const { attackingCamp, target, distance, behavior, ranged, clearShot } = aim;
+    if (attackingCamp) {
       // Hold outside the tents instead of walking (or charging) into their centre.
       enemy.setVelocity(0, 0);
       enemy.chargeTimer = 0;
@@ -323,8 +292,7 @@ export class EnemyBehaviour extends ArenaSystem {
           tactical !== target && (!navigation || navigation.lineClear(enemy, tactical))
             ? tactical
             : (navigation?.waypoint(enemy, target, enemy.definition.navigation) ?? target);
-        const hold =
-          !finale && ranged && clearShot && Math.abs(distance - GAME.tactics.seerRange) < 55;
+        const hold = ranged && clearShot && Math.abs(distance - GAME.tactics.seerRange) < 55;
         if (hold || speed === 0) enemy.setVelocity(0, 0);
         else this.physics.moveTo(enemy, waypoint.x, waypoint.y, speed);
       }
@@ -333,14 +301,13 @@ export class EnemyBehaviour extends ArenaSystem {
 
   /** Faces the target and shows an attack wind-up. */
   private showIntent(enemy: Enemy, aim: EnemyAim): void {
-    const { attackingCamp, target, finale, distance, behavior } = aim;
+    const { attackingCamp, target, distance, behavior } = aim;
     enemy.setFlipX(
       (this.landscape.world3d?.screenX(enemy.x - target.x, enemy.y - target.y) ??
         enemy.x - target.x) > 0,
     );
     enemy.preparingAttack =
-      finale?.phase === 'warning' ||
-      ((behavior === 'ranged' || behavior === 'boss') &&
+      (behavior === 'ranged' &&
         distance < 650 &&
         enemy.attackTimer > 0 &&
         enemy.attackTimer < 0.25) ||
@@ -354,8 +321,8 @@ export class EnemyBehaviour extends ArenaSystem {
 
   /** Strikes the camp barrier when in range and ready. */
   private attackCamp(enemy: Enemy, aim: EnemyAim): void {
-    const { attackingCamp, finale } = aim;
-    if (attackingCamp && !finale && enemy.clanAttackTimer <= 0) {
+    const { attackingCamp } = aim;
+    if (attackingCamp && enemy.clanAttackTimer <= 0) {
       enemy.motion.attack();
       this.clanDamage.damage(
         enemy.definition.damage * GAME.camp.enemyAttack.damageMultiplier,
@@ -370,28 +337,25 @@ export class EnemyBehaviour extends ArenaSystem {
     }
   }
 
-  /** Fires a ranged volley or the Skybreaker's ring. */
+  /** Fires a ranged volley. */
   private shootRanged(enemy: Enemy, aim: EnemyAim): void {
-    const { target, finale, distance, behavior, clearShot } = aim;
+    const { target, distance, behavior, clearShot } = aim;
     if (
-      (behavior === 'ranged' || (behavior === 'boss' && !finale)) &&
+      behavior === 'ranged' &&
       clearShot &&
       enemy.pinned <= 0 &&
       enemy.attackTimer <= 0 &&
       distance < 650
     ) {
       const angle = Math.atan2(target.y - enemy.y, target.x - enemy.x);
-      const count = behavior === 'boss' ? 12 : (enemy.definition.volley?.shots ?? 1);
+      const count = enemy.definition.volley?.shots ?? 1;
       enemy.motion.attack();
       for (let i = 0; i < count; i += 1)
         this.combat.fireHostile(
           enemy,
-          angle +
-            (behavior === 'boss'
-              ? (i * Math.PI * 2) / count
-              : (i - (count - 1) / 2) * (enemy.definition.volley?.spread ?? 0)),
+          angle + (i - (count - 1) / 2) * (enemy.definition.volley?.spread ?? 0),
         );
-      enemy.attackTimer = behavior === 'boss' ? 2.5 : (enemy.definition.volley?.interval ?? 3.5);
+      enemy.attackTimer = enemy.definition.volley?.interval ?? 3.5;
     }
   }
 

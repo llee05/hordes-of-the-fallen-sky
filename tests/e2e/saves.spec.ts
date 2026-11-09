@@ -122,7 +122,7 @@ test('save and return to title preserves a normal expedition and developer runs 
   await expect(page.getByRole('button', { name: /CONTINUE EXPEDITION/ })).toBeVisible();
   const before = await page.evaluate(() => localStorage.getItem('gloam-expedition-auto'));
   await page.keyboard.press('F8');
-  await page.locator('[data-developer-level="destination:2:otgontenger"]').click();
+  await page.locator('[data-developer-level="place:otgontenger"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();

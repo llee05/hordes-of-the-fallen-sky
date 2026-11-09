@@ -35,7 +35,7 @@ test('using cheats marks a normal run, preserves records, carries between checkp
     ),
   ).toBe(saved);
   await page.keyboard.press('F8');
-  await page.locator('[data-developer-level="chapter:golden-pasture"]').click();
+  await page.locator('[data-developer-level="place:otgontenger"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#developer-run')).toContainText('INVINCIBLE');
   await page.keyboard.press('F10');

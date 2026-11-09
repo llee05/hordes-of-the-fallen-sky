@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { LOCATIONS, REGIONS, type MigrationLocation } from '../data/clan';
+import { LOCATIONS, type MigrationLocation } from '../data/clan';
 import { TerrainNavigation } from '../terrain/TerrainNavigation';
 import { World3DRenderer } from '../world3d/World3DRenderer';
 import { ComposedTerrain } from '../world3d/ComposedTerrain';
@@ -12,12 +12,12 @@ export class SteppeLandscape {
   navigation?: TerrainNavigation;
 
   constructor(private readonly scene: Phaser.Scene) {
-    this.setRegion(0);
+    this.setLocation(LOCATIONS[0]!);
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.world3d?.destroy());
   }
 
-  setRegion(region: number, location?: MigrationLocation): void {
-    const id = location?.id ?? REGIONS[region]?.id ?? LOCATIONS[0]!.id;
+  setLocation(location: MigrationLocation): void {
+    const { id } = location;
     this.world3d?.destroy();
     this.world3d = undefined;
     this.navigation = undefined;

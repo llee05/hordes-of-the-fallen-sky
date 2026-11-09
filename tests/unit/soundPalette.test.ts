@@ -69,9 +69,6 @@ describe('licensed organic recording palette', () => {
     expect(spatialMix({ x: -500, y: 0 }, { x: 0, y: 0 }).pan).toBeLessThan(0);
     expect(spatialMix({ x: 3000, y: 0 }, { x: 0, y: 0 }).attenuation).toBeLessThan(0.04);
     expect(spatialMix({ x: NaN, y: 0 }, { x: 0, y: 0 }).attenuation).toBe(0);
-    expect(environmentForLocation(LOCATIONS.find((l) => l.id === 'silent-river')!)).toBe(
-      'mountain',
-    );
     for (const location of LOCATIONS)
       expect(environmentForLocation(location)).toMatch(
         /steppe|river|mountain|forest|desert|volcanic/,

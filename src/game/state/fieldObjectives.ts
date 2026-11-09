@@ -3,7 +3,7 @@ import { restoreResolve } from './clan';
 import { GAME } from '../config';
 import { FIELD_OBJECTIVES, type FieldObjectiveKind } from '../data/fieldObjectives';
 import type { RunState } from '../types';
-import { currentLocation } from './journey';
+import { completedMigrations, currentLocation } from './journey';
 import { FIELD_OBJECTIVE_ACCOUNTS, rememberClan } from './legacy';
 import { isKhanActive } from './khan';
 
@@ -27,7 +27,7 @@ export function createFieldState(): FieldState {
   return { key: '', issued: 0, nextAt: GAME.field.firstAt };
 }
 export function syncFieldState(run: RunState): void {
-  const key = `${run.clan.region}:${run.clan.stage}:${currentLocation(run).id}`;
+  const key = `${completedMigrations(run)}:${run.clan.stage}:${currentLocation(run).id}`;
   if (run.field.key === key) return;
   const objective = run.field.objective;
   if (objective && (objective.status === 'available' || objective.status === 'returning'))
@@ -51,7 +51,7 @@ export function startFieldObjective(
 ): boolean {
   if (!fieldObjectiveDue(run) || !Number.isFinite(point.x + point.y)) return false;
   const kinds = Object.keys(FIELD_OBJECTIVES) as FieldObjectiveKind[];
-  const selected = kind ?? kinds[(run.clan.region * 2 + run.field.issued) % kinds.length]!;
+  const selected = kind ?? kinds[(completedMigrations(run) * 2 + run.field.issued) % kinds.length]!;
   run.field.issued++;
   run.field.objective = {
     id: run.field.issued,

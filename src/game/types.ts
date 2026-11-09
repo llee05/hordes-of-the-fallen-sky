@@ -18,18 +18,13 @@ export type RunPhase =
   | 'help'
   | 'developer'
   | 'console'
-  | 'dead'
-  | 'won';
-export type JourneyStage = 'camp' | 'migration' | 'final';
+  | 'dead';
+export type JourneyStage = 'camp' | 'migration';
 export type BuildingId =
   'ger' | 'archery' | 'herd' | 'sanctuary' | 'wagon' | 'felt' | 'provisions' | 'relay';
 export type Formation = 'guard' | 'encircle' | 'wedge' | 'retreat';
 export type Doctrine = 'iron' | 'sky' | 'wander';
 export type LocationId =
-  | 'golden-pasture'
-  | 'silent-river'
-  | 'broken-pass'
-  | 'heart-of-the-steppe'
   | 'otgontenger'
   | 'bogd-khan-uul'
   | 'altai-tavan-bogd'
@@ -52,9 +47,8 @@ export interface ClanState {
   estate?: CampEstate;
   campEffects: CampEffects;
   stage: JourneyStage;
-  region: number;
-  /** Journey chapter and physical location are independent. Unset uses the original chapter camp. */
-  locationId?: LocationId;
+  /** The real place the clan is camped at, or departing from during a migration. */
+  locationId: LocationId;
   destinationId?: LocationId;
   stageTime: number;
   pasture: number;
@@ -72,8 +66,6 @@ export interface ClanState {
   identity: Record<Doctrine, number>;
   formation: Formation;
   momentum: number;
-  finalBossSpawned: boolean;
-  finalBossDefeated: boolean;
   rescuedRiders: number;
   message: string;
 }
@@ -122,15 +114,14 @@ export interface PlayerStats {
   pierce: number;
 }
 
+/** A completed migration; retained under the original `legacy.crossings` save key. */
 export interface CrossingRecord {
-  region: number;
   route: string;
   population: number;
-  locationId?: LocationId;
+  locationId: LocationId;
 }
 
 export interface RunState {
-  finalStand?: import('./state/finalStand').FinalStandState;
   metrics?: import('./state/expeditionMetrics').ExpeditionMetrics;
   /** Missing only in expeditions saved before starting arrangements were introduced. */
   startingTradition?: keyof typeof import('./config').GAME.clan.starts;
@@ -182,7 +173,7 @@ export interface EnemyDefinition {
   weight: number;
   scale: number;
   navigation?: 'ground' | 'pack' | 'heavy';
-  behavior?: 'ranged' | 'charger' | 'boss';
+  behavior?: 'ranged' | 'charger';
 }
 
 export interface HudSnapshot {
@@ -205,7 +196,6 @@ export interface HudSnapshot {
   dashReady: number;
   dashCooldown: number;
   best: number;
-  bossHealth?: number;
   clanBearing: string;
   fieldBearing?: string;
   campPressure?: string;

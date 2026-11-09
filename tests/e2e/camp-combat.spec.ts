@@ -165,12 +165,12 @@ test('every enemy can hold and animate a camp attack, including a charging rider
   page,
 }) => {
   const attackers = await page.evaluate(async () => {
-    const { ENEMIES, SKYBREAKER } = (await import(
+    const { ENEMIES } = (await import(
       // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
       '/src/game/data/enemies.ts'
     )) as typeof import('../../src/game/data/enemies');
     const scene = (window as any).__gloam.scene;
-    const definitions = [...ENEMIES, SKYBREAKER];
+    const definitions = [...ENEMIES];
     for (const [index, definition] of definitions.entries()) {
       const before = scene.enemies.countActive(true);
       for (let attempt = 0; attempt < 10 && scene.enemies.countActive(true) === before; attempt++)
@@ -200,8 +200,8 @@ test('every enemy can hold and animate a camp attack, including a charging rider
       })),
     };
   });
-  expect(attackers.enemies).toHaveLength(8);
-  expect(attackers.shots).toBe(14);
+  expect(attackers.enemies).toHaveLength(7);
+  expect(attackers.shots).toBe(2);
   for (const enemy of attackers.enemies) {
     expect(enemy).toMatchObject({ active: true, body: true, speed: 0, charging: 0, cooldown: 1.5 });
     expect(enemy.frame).toBe(`${enemy.texture}-attack-1`);

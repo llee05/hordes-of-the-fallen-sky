@@ -1,4 +1,3 @@
-import { GAME } from '../../config';
 import type { WorldArchive } from '../../state/expeditionArchive';
 
 /**
@@ -20,6 +19,5 @@ export function createArenaTimers(): ArenaTimers {
     supportTimer: 0,
     wagonTimer: 0,
     wardTimer: 0,
-    hazardTimer: GAME.hazards.initialDelay,
   };
 }

@@ -10,15 +10,15 @@ import {
 import { createRun } from '../../src/game/state/run';
 
 describe('readable clan survival', () => {
-  it('distinguishes combat, eruptions and starvation without changing protection or counting invincible losses', () => {
+  it('distinguishes combat, seer marks and starvation without changing protection or counting invincible losses', () => {
     const r = createRun();
     r.phase = 'playing';
     r.clan.formation = 'encircle';
     damageClan(r, 25);
     expect(r.safety.combatLosses).toBe(1);
     expect(r.safety.lastDamage).toMatchObject({ cause: 'attack', people: 1, amount: 25 });
-    damageClan(r, 25, undefined, 'eruption');
-    expect(r.safety.lastDamage?.cause).toBe('eruption');
+    damageClan(r, 25, undefined, 'seer');
+    expect(r.safety.lastDamage?.cause).toBe('seer');
     expect(r.safety.combatLosses).toBe(2);
     const before = structuredClone(r);
     damageClan(r, 1000, { invincible: true }, 'seer');

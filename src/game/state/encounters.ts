@@ -9,7 +9,7 @@ import {
 import { areaRoster, chooseEnemy } from '../data/enemies';
 import { terrainSeed } from '../terrain/noise';
 import type { RunState } from '../types';
-import { currentLocation } from './journey';
+import { completedMigrations, currentLocation } from './journey';
 
 export interface EncounterState {
   key: string;
@@ -32,9 +32,11 @@ export function encounterPlan(run: RunState) {
     time -= p.duration;
   }
   const angle =
-    ((terrainSeed(`${currentLocation(run).id}:${run.clan.region}:${cycle}`) % 8) * Math.PI) / 4;
+    ((terrainSeed(`${currentLocation(run).id}:${completedMigrations(run)}:${cycle}`) % 8) *
+      Math.PI) /
+    4;
   return {
-    key: `${run.clan.region}:${run.clan.stage}:${currentLocation(run).id}:${cycle}`,
+    key: `${completedMigrations(run)}:${run.clan.stage}:${currentLocation(run).id}:${cycle}`,
     phase: (run.clan.stageTime < intro ? 'probing' : phase.id) as EncounterPhase,
     title: run.clan.stageTime < intro ? 'Scattered scouts' : phase.title,
     remaining: run.clan.stageTime < intro ? intro - run.clan.stageTime : phase.duration - time,
@@ -60,7 +62,7 @@ export function advanceEncounters(run: RunState, _combatActive: boolean): boolea
 }
 export function encounterEnemy(run: RunState, random = Math.random) {
   const plan = encounterPlan(run),
-    score = run.elapsed + run.clan.region * 80;
+    score = run.elapsed;
   const elite =
     plan.phase === 'elite' &&
     !run.encounters.eliteSpawned &&
@@ -73,7 +75,8 @@ export function encounterEnemy(run: RunState, random = Math.random) {
   const locals = areaRoster(currentLocation(run).id, score, run.clan.stageTime).filter(
     (e) => !!e.home,
   );
-  const gentleOpening = run.clan.region === 0 && run.clan.stageTime < GAME.spawning.openingDuration;
+  const gentleOpening =
+    completedMigrations(run) === 0 && run.clan.stageTime < GAME.spawning.openingDuration;
   if (!elite && !gentleOpening && locals.length && random() < GAME.areaEnemies.localShare) {
     return {
       definition: locals[Math.min(locals.length - 1, Math.floor(random() * locals.length))]!,
@@ -90,9 +93,9 @@ export function encounterEnemy(run: RunState, random = Math.random) {
   };
 }
 
-/** Crossing waves and gatherings retain familiar enemies while admitting natives of the physical area. */
+/** Gatherings retain familiar enemies while admitting natives of the physical area. */
 export function supportingAreaEnemy(run: RunState, index: number, preferred: readonly string[]) {
-  const score = run.elapsed + run.clan.region * 80;
+  const score = run.elapsed;
   const local = areaRoster(currentLocation(run).id, score, run.clan.stageTime).filter(
     (e) => !!e.home,
   );

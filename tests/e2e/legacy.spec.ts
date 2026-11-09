@@ -45,7 +45,7 @@ test('the chronicle retains camp work and the real Khan succession', async ({ pa
   await expect(page.locator('.clan-memories')).toContainText('Khan 2 took the banner');
   await page.locator('.clan-memory summary').first().click();
   await expect(page.locator('.clan-memory').first()).toContainText(
-    'The Golden Pasture · The clan established this household to level 1.',
+    'Mount Otgontenger · The clan established this household to level 1.',
   );
   await expect(page.locator('.clan-memory blockquote')).toHaveCount(0);
   await page.screenshot({ path: 'test-results/clan-lived-history.png' });

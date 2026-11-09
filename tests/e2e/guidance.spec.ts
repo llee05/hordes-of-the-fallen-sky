@@ -8,7 +8,7 @@ import {
 } from './helpers';
 
 test(
-  'guidance follows riding, camp purchases, shards, formations, and the first crossing',
+  'guidance follows riding, camp purchases, shards, formations, and the first migration',
   { tag: '@core' },
   async ({ page }) => {
     await openTitle(page);
@@ -70,7 +70,7 @@ test('tips can be hidden and restored while danger warnings remain visible', asy
   await closeOverlayOrPause(page);
   await closeOverlayOrPause(page);
   await expect(page.locator('#field-guide')).toBeVisible();
-  await page.screenshot({ path: 'test-results/first-crossing-guidance.png' });
+  await page.screenshot({ path: 'test-results/first-migration-guidance.png' });
 });
 
 test('guidance leaves danger warnings and controls readable at supported preview sizes', async ({

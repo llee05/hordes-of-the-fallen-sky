@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
-import { BUILDINGS, type BuildingDefinition } from '../../src/game/data/clan';
+import { BUILDINGS, LOCATIONS, type BuildingDefinition } from '../../src/game/data/clan';
+import { availableDestinations } from '../../src/game/state/journey';
 import {
   advanceClan,
   assignedWorkers,
@@ -64,7 +65,6 @@ describe('a civilization that moves', () => {
       'help',
       'console',
       'dead',
-      'won',
     ] as const) {
       const run = createRun();
       run.phase = phase;
@@ -252,10 +252,10 @@ describe('a civilization that moves', () => {
     run.phase = 'playing';
     expect(advanceClan(run, 30)).toBeUndefined();
     expect(run.clan.migrationProgress).toBeGreaterThan(0);
-    expect(advanceClan(run, 30)).toBe('arrived');
+    expect(advanceClan(run, 40)).toBe('arrived');
     expect(run.clan).toMatchObject({
       stage: 'camp',
-      region: 1,
+      locationId: 'bogd-khan-uul',
       population: 16,
       pasture: 100,
       stageTime: 0,
@@ -264,20 +264,18 @@ describe('a civilization that moves', () => {
     expect(beginMigration(run, 'refuge')).toBe(false);
   });
 
-  it('makes remounts faster and winter migration slower', () => {
-    const progress = (region: number, remounts: boolean): number => {
+  it('makes remounts faster', () => {
+    const progress = (remounts: boolean): number => {
       const run = createRun();
       run.clan.stageTime = 45;
       run.phase = 'route';
       beginMigration(run, 'river');
       run.phase = 'playing';
-      run.clan.region = region;
       if (remounts) run.clan.paths.herd = ['remount-herds'];
       advanceClan(run, 10);
       return run.clan.migrationProgress;
     };
-    expect(progress(0, true)).toBeGreaterThan(progress(0, false));
-    expect(progress(1, false)).toBeLessThan(progress(0, false));
+    expect(progress(true)).toBeGreaterThan(progress(false));
   });
 
   it('loses families and livestock when provisions are exhausted', () => {
@@ -291,21 +289,22 @@ describe('a civilization that moves', () => {
     expect(run.clan.integrity).toBeLessThan(100);
   });
 
-  it('reaches the final region through three migrations and saves people without requiring boss kills', () => {
+  it('migrates to any other real place, including earlier camps, with no win condition', () => {
     const run = createRun();
-    for (let region = 0; region < 3; region += 1) {
+    run.clan.food = 10000;
+    const start = run.clan.locationId;
+    for (const destination of [...LOCATIONS.slice(1).map((l) => l.id), start]) {
       run.phase = 'route';
       run.clan.stageTime = GAME.clan.minimumCamp;
-      expect(beginMigration(run, 'river')).toBe(true);
+      expect(availableDestinations(run).map((l) => l.id)).not.toContain(run.clan.locationId);
+      expect(beginMigration(run, 'river', destination)).toBe(true);
       run.phase = 'playing';
-      expect(advanceClan(run, 100)).toBe('arrived');
+      expect(advanceClan(run, 200)).toBe('arrived');
+      expect(run.clan.locationId).toBe(destination);
     }
-    expect(run.clan).toMatchObject({ stage: 'final', region: 3 });
-    expect(canMigrate(run)).toBe(false);
-    expect(advanceClan(run, GAME.clan.finalDuration - 1)).toBeUndefined();
-    expect(advanceClan(run, 1)).toBe('saved');
-    expect(run.kills).toBe(0);
-    expect(run.clan.finalBossDefeated).toBe(false);
+    expect(run.legacy.crossings).toHaveLength(LOCATIONS.length);
+    expect(run.clan.stage).toBe('camp');
+    expect(advanceClan(run, 600)).toBeUndefined();
     run.clan.integrity = 0;
     expect(advanceClan(run, 1)).toBe('lost');
   });

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test.use({ viewport: { width: 1280, height: 800 }, trace: 'off' });
 
-test('Golden Pasture arrivals survive at the camera edge and retire without kills when distant', async ({
+test('Mount Otgontenger arrivals survive at the camera edge and retire without kills when distant', async ({
   page,
 }) => {
   await page.goto('/');

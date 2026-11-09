@@ -6,7 +6,6 @@ import { STARTING_TRADITIONS } from '../../src/game/data/clan';
 import { syncAreaEncounter } from '../../src/game/state/areaEncounters';
 import { beginMigration } from '../../src/game/state/clan';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
-import { syncFinalStand } from '../../src/game/state/finalStand';
 import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
 import { createRun } from '../../src/game/state/run';
 import { GamePlatform } from '../../src/platform/GamePlatform';
@@ -92,13 +91,13 @@ describe('full expedition snapshots', () => {
     run.legacy.memories.push({
       sequence: 1,
       elapsed: 12,
-      region: 0,
-      locationId: 'golden-pasture',
+      locationId: 'otgontenger',
       population: 8,
       title: 'Fletcher’s Workshop · Lv 1',
       detail: 'Fletcher’s Workshop reached level 1.',
     });
     const preChangeSave = captureExpedition(run, world()) as Record<string, any>;
+    preChangeSave.run.clan.region = 1;
     preChangeSave.run.phase = 'story';
     preChangeSave.run.clan.message =
       'Saran sets the spare bowl beside the others. Someone hands Nara a mallet.';
@@ -192,7 +191,7 @@ describe('full expedition snapshots', () => {
     expect(restored.clan.identity).toEqual(expectedIdentity);
     expect(restored.legacy.peopleLost).toBe(2);
     expect(restored.legacy.crossings).toEqual([
-      { route: 'river', region: 1, population: 11, locationId: 'orkhon-valley' },
+      { route: 'river', population: 11, locationId: 'orkhon-valley' },
     ]);
     expect(restored.legacy).not.toHaveProperty('reactionUntil');
     expect(restored.legacy.memories[0]).not.toHaveProperty('line');
@@ -226,13 +225,13 @@ describe('full expedition snapshots', () => {
     run.legacy.memories.push({
       sequence: 1,
       elapsed: 12,
-      region: 0,
-      locationId: 'golden-pasture',
+      locationId: 'otgontenger',
       population: 8,
       title: 'Fletcher’s Workshop · Lv 1',
       detail: 'Fletcher’s Workshop reached level 1.',
     });
     const preChangeSave = captureExpedition(run, world()) as Record<string, any>;
+    preChangeSave.run.clan.region = 0;
     preChangeSave.run.legacy.totalMemories = 2;
     preChangeSave.run.story = {
       enabled: true,
@@ -265,40 +264,39 @@ describe('full expedition snapshots', () => {
 
   it.each([
     [
-      'Khan region',
+      'Khan location',
       (s: any) => {
-        s.run.legacy.khans[0].region = 4;
+        s.run.legacy.khans[0].locationId = 'golden-pasture';
       },
     ],
     [
-      'fallen region',
+      'missing Khan location',
       (s: any) => {
-        s.run.legacy.khans[0].fallenRegion = 7;
+        delete s.run.legacy.khans[0].locationId;
       },
     ],
     [
-      'missing fallen region',
+      'memory location',
       (s: any) => {
-        s.run.legacy.khans[0].fallenAt = 1;
-        delete s.run.legacy.khans[0].fallenRegion;
+        s.run.legacy.memories[0].locationId = 'silent-river';
       },
     ],
     [
-      'memory region',
+      'missing crossing location',
       (s: any) => {
-        s.run.legacy.memories[0].region = 4;
+        delete s.run.legacy.crossings[0].locationId;
       },
     ],
     [
-      'crossing region zero',
+      'camp location',
       (s: any) => {
-        s.run.legacy.crossings[0].region = 0;
+        s.run.clan.locationId = 'heart-of-the-steppe';
       },
     ],
     [
-      'crossing region four',
+      'final stage',
       (s: any) => {
-        s.run.legacy.crossings[0].region = 4;
+        s.run.clan.stage = 'final';
       },
     ],
     [
@@ -310,11 +308,11 @@ describe('full expedition snapshots', () => {
   ])('rejects incompatible chronicle content: %s', async (_label, corrupt) => {
     const run = createRun();
     run.phase = 'playing';
-    run.legacy.crossings.push({ region: 1, route: 'river', population: 8 });
+    run.legacy.crossings.push({ route: 'river', population: 8, locationId: 'belukha' });
     run.legacy.memories.push({
       sequence: 1,
       elapsed: 0,
-      region: 0,
+      locationId: 'otgontenger',
       population: 8,
       title: 'Camp',
       detail: 'Remembered',
@@ -366,34 +364,81 @@ describe('full expedition snapshots', () => {
     }
   });
 
-  it('preserves final warnings, work progress and already-braced barrage identities', () => {
+  it('maps an expedition saved with journey chapters, crossings and the final stand to real places', () => {
     const run = createRun();
-    run.clan.stage = 'final';
-    run.clan.region = 3;
-    const state = syncFinalStand(run)!;
-    state.phase = 'warning';
-    state.remaining = 0.8;
-    state.cycle = 3;
-    state.approach = 3;
-    state.aim = { x: 2500, y: 2600 };
-    state.lastCampBarrage = 2;
-    state.works[0]!.progress = 2;
+    run.phase = 'playing';
+    run.legacy.memories.push({
+      sequence: 1,
+      elapsed: 0,
+      locationId: 'otgontenger',
+      population: 8,
+      title: 'Camp',
+      detail: 'Remembered',
+    });
+    run.legacy.crossings.push({ route: 'river', population: 8, locationId: 'orkhon-valley' });
     const runtime = world();
-    runtime.hostileShots = [{ ...runtime.projectiles[0]!, barrage: 2, source: 'Skybreaker' }];
-    runtime.enemies[0]!.state.elite = true;
-    run.safety.lastMajorLoss = {
-      cause: 'attack',
-      at: 0,
-      amount: 20,
-      people: 1,
-      source: 'Skybreaker',
-    };
-    const restored = decodeExpedition(captureExpedition(run, runtime));
-    expect(restored.run.finalStand).toEqual(state);
-    expect(restored.world.hostileShots[0]!.barrage).toBe(2);
-    expect(restored.world.hostileShots[0]!.source).toBe('Skybreaker');
-    expect(restored.world.enemies[0]!.state.elite).toBe(true);
-    expect(restored.run.safety.lastMajorLoss).toEqual(run.safety.lastMajorLoss);
+    runtime.hazards = [
+      { x: 1, y: 2, remaining: 1 },
+      { x: 3, y: 4, remaining: 1, radius: 75, damage: 12, source: 'seer' },
+    ];
+    const retired = captureExpedition(run, runtime) as Record<string, any>;
+    const clan = retired.run.clan;
+    clan.region = 3;
+    clan.stage = 'final';
+    clan.locationId = 'heart-of-the-steppe';
+    clan.finalBossSpawned = true;
+    clan.finalBossDefeated = false;
+    retired.summary.stage = 'final';
+    retired.run.finalStand = { phase: 'advance', remaining: 4, cycle: 0, approach: 0, works: [] };
+    retired.run.crossing = { key: '2:river:1', route: 'river', phase: 'ended' };
+    retired.run.safety.protectedCrossings = 2;
+    retired.run.safety.lastDamage = { cause: 'eruption', at: 1, amount: 3, people: 0 };
+    retired.run.guidance.completed = ['ride', 'crossing'];
+    retired.run.metrics.stages = [{ ...retired.run.metrics.stages[0], stage: 'final' }].filter(
+      (stage) => stage.key,
+    );
+    Object.assign(retired.run.legacy.khans[0], { region: 0, fallenAt: 5, fallenRegion: 2 });
+    delete retired.run.legacy.khans[0].locationId;
+    Object.assign(retired.run.legacy.memories[0], { region: 1 });
+    delete retired.run.legacy.memories[0].locationId;
+    Object.assign(retired.run.legacy.crossings[0], { region: 1, locationId: 'silent-river' });
+    retired.world.timers.hazardTimer = 3;
+    retired.world.enemies[0].state.crossingId = '2:river:1';
+    retired.world.enemies.push({
+      ...retired.world.enemies[0],
+      slot: 0,
+      definition: 'skybreaker',
+      state: { ...retired.world.enemies[0].state, spawnId: 4, tacticalSlot: 0 },
+    });
+    retired.world.hostileShots = [{ ...retired.world.projectiles[0], barrage: 2 }];
+
+    const { run: restored, world: restoredWorld } = decodeExpedition(retired);
+    expect(restored.clan).toMatchObject({ stage: 'camp', locationId: 'khan-tengri' });
+    expect('region' in restored.clan).toBe(false);
+    expect('finalBossSpawned' in restored.clan).toBe(false);
+    expect(restored.clan.message).toContain('Khan Tengri Peak');
+    expect('finalStand' in restored).toBe(false);
+    expect('crossing' in restored).toBe(false);
+    expect('protectedCrossings' in restored.safety).toBe(false);
+    expect(restored.safety.lastDamage?.cause).toBe('area');
+    expect(restored.guidance.completed).toEqual(['ride', 'journey']);
+    expect(restored.legacy.khans[0]).toMatchObject({
+      locationId: 'otgontenger',
+      fallenLocationId: 'altai-tavan-bogd',
+    });
+    expect(restored.legacy.memories[0]!.locationId).toBe('orkhon-valley');
+    expect(restored.legacy.crossings).toEqual([
+      { route: 'river', population: 8, locationId: 'orkhon-valley' },
+    ]);
+    expect('hazardTimer' in restoredWorld.timers).toBe(false);
+    expect(restoredWorld.enemies.map((enemy) => enemy.definition)).toEqual([
+      retired.world.enemies[0].definition,
+    ]);
+    expect(restoredWorld.hazards).toHaveLength(1);
+    expect('barrage' in restoredWorld.hostileShots[0]!).toBe(false);
+
+    const current = captureExpedition(restored, restoredWorld);
+    expect(decodeExpedition(current).run.clan.locationId).toBe('khan-tengri');
   });
   it('round-trips every starting tradition without reapplying supplies or movement bonuses', () => {
     for (const entry of STARTING_TRADITIONS) {

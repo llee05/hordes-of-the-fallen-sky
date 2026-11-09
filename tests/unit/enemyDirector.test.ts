@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 vi.mock('phaser', async () => (await import('../support/mockPhaser')).mockPhaser());
 
 import { GAME } from '../../src/game/config';
-import { SKYBREAKER } from '../../src/game/data/enemies';
 import { EnemyDirector } from '../../src/game/scenes/arena/EnemyDirector';
 import { createFakeArena } from '../support/fakeArena';
 
@@ -39,21 +38,5 @@ describe('EnemyDirector pool, retry limits and boss arrival', () => {
     director.tickSpawns(0.016);
     expect(arena.enemies.countActive(true)).toBe(GAME.maxEnemies);
     expect(arena.context.timers.spawnTimer).toBe(2);
-
-    // Final stand boss arrival deferred when pool full
-    arena.context.run.clan.stage = 'final';
-    arena.context.run.clan.stageTime = 20;
-    arena.context.run.clan.finalBossSpawned = false;
-
-    director.tickFinalBoss();
-    expect(arena.context.run.clan.finalBossSpawned).toBe(false);
-    expect(director.boss).toBeUndefined();
-
-    // Free a slot and tick boss again
-    arena.enemies.getFirstAlive()!.disableBody(true, true);
-    director.tickFinalBoss();
-    expect(arena.context.run.clan.finalBossSpawned).toBe(true);
-    expect(director.boss).toBeDefined();
-    expect(director.boss?.definition.id).toBe(SKYBREAKER.id);
   });
 });

@@ -26,11 +26,11 @@ test('orthographic terrain and console run in the existing Electron shell at bot
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.getByRole('button', { name: 'Developer mode F8' }).click();
-    await page.locator('[data-developer-level="destination:2:otgontenger"]').click();
+    await page.locator('[data-developer-level="place:otgontenger"]').click();
     await expect(page.locator('canvas[data-world-renderer="3d"]')).toBeVisible();
     await page.evaluate(() => {
       const s = (window as any).__gloam.scene;
-      s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
+      s.spawnTimer = s.attackTimer = 999;
       s.developerTools.invincible = s.developerTools.clanInvincible = true;
     });
     for (const size of [

@@ -68,7 +68,7 @@ test('healer recovery respects paused gameplay and never advances a fallen Khan 
   ).toEqual([0, 7]);
 });
 
-test('hunting and trading arrival benefits travel with the camp and pay only at crossing completion', async ({
+test('hunting and trading arrival benefits travel with the camp and pay only at migration arrival', async ({
   page,
 }) => {
   test.setTimeout(60000);
@@ -92,7 +92,7 @@ test('hunting and trading arrival benefits travel with the camp and pay only at 
     (window as any).__gloam.scene.run.clan.stageTime = 70;
   });
   await expect
-    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.region))
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.legacy.crossings.length))
     .toBe(1);
   await page.keyboard.press('b');
   const arrived = await page.evaluate(() => {

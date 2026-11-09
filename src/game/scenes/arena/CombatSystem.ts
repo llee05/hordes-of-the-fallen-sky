@@ -10,7 +10,6 @@ import { campBoundary } from '../../state/campBarrier';
 import { hasDevelopment } from '../../state/clan';
 import type { ProjectileArchive, WorldArchive } from '../../state/expeditionArchive';
 import { markExpedition } from '../../state/expeditionMetrics';
-import { acceptCampBarrage, defeatSkybreaker } from '../../state/finalStand';
 import { isKhanActive } from '../../state/khan';
 import { retreatShot, spendMountedVolley } from '../../state/mountedCombat';
 import { gainExperience } from '../../state/run';
@@ -214,7 +213,6 @@ export class CombatSystem extends ArenaSystem {
       if (!bolt) break;
       const angle = direction + (i - (arrowCount - 1) / 2) * spacing;
       bolt.enableBody(true, x, y, true, true);
-      bolt.barrage = undefined;
       bolt.echoIndex = ancestral ? echoIndex : undefined;
       bolt.source =
         owner === 'khan' || owner === 'wagon' || owner === 'wagon-ricochet' ? owner : undefined;
@@ -277,7 +275,6 @@ export class CombatSystem extends ArenaSystem {
     if (!shot) return;
     shot.enableBody(true, enemy.x, enemy.y, true, true);
     if (this.run.phase === 'playing') markExpedition(this.run, 'fight');
-    shot.barrage = undefined;
     shot.source = enemy.definition.title ?? enemy.definition.id;
     shot.setData('terrain-previous', { x: enemy.x, y: enemy.y });
     shot
@@ -356,8 +353,7 @@ export class CombatSystem extends ArenaSystem {
       else if (
         Phaser.Math.Distance.Between(shot.x, shot.y, this.camp.x, this.camp.y) <= boundary.radius
       ) {
-        if (acceptCampBarrage(this.run, shot.barrage))
-          this.clanDamage.damage(shot.damage * 0.5, 'attack', shot.source, shot);
+        this.clanDamage.damage(shot.damage * 0.5, 'attack', shot.source, shot);
         const impact = this.host.campBarrier.hit(this.camp, shot);
         this.audio.play('barrier', impact);
         this.effects.burst(impact.x, impact.y - 12, 0xc9a26a, 3);
@@ -398,8 +394,6 @@ export class CombatSystem extends ArenaSystem {
 
   damageEnemy(enemy: Enemy, amount: number): number {
     if (!enemy.active) return 0;
-    if (enemy === this.enemyDirector.boss && this.run.finalStand?.phase === 'recovery')
-      amount *= GAME.finalStand.vulnerableDamage;
     const hasArmor =
       (enemy.definition.armor !== undefined || enemy.definition.id === 'brute') &&
       enemy.pinned <= 0;
@@ -428,7 +422,6 @@ export class CombatSystem extends ArenaSystem {
     )
       objective.defeated++;
     this.run.clan.spirit += value * 0.4 * this.run.clan.campEffects.multipliers.spiritGain;
-    if (enemy === this.enemyDirector.boss) defeatSkybreaker(this.run);
     this.effects.burst(x, y, 0xa58aad, 5);
     const gem = this.gems.get(x, y, 'gem') as Gem | null;
     if (gem) {
@@ -504,7 +497,6 @@ export class CombatSystem extends ArenaSystem {
           rotation: p.rotation,
           tint: p.tintTopLeft,
           previous: p.getData('terrain-previous') as { x: number; y: number } | undefined,
-          barrage: p.barrage,
           source: p.source,
           hits: [...p.hitTargets].map(([enemy, spawnId]) => ({
             slot: pool.indexOf(enemy),

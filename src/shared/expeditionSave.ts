@@ -71,6 +71,7 @@ export function isExpeditionSave(value: unknown): value is ExpeditionSave {
     typeof summary.level === 'number' &&
     summary.level >= 1 &&
     summary.level <= 10000 &&
+    // `final` remains listable: those retired final-stand saves load as camps.
     ['camp', 'migration', 'final'].includes(summary.stage as string) &&
     isRecord(run) &&
     isRecord(world)

@@ -150,7 +150,8 @@ describe('legacy checkpoint compatibility: portable camp development effects', (
     beginMigration(run, 'river');
     run.phase = 'playing';
     advanceClan(run, 10);
-    expect(run.clan.migrationProgress).toBeCloseTo((10 * 1.036 * 1.1) / 72);
+    // Leaving Mount Otgontenger (0.9 mobility) for Bogd Khan Uul (ordinary approach time).
+    expect(run.clan.migrationProgress).toBeCloseTo((10 * 1.036 * 1.1 * 0.9) / 72);
   });
 
   it('recovers health only during active time and resolve only while stationary', () => {

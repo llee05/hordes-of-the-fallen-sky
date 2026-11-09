@@ -1,5 +1,5 @@
 import type { RunState } from '../types';
-import { currentLocation } from './journey';
+import { completedMigrations, currentLocation } from './journey';
 
 export const EXPEDITION_MILESTONES = [
   'fight',
@@ -29,7 +29,7 @@ export interface ExpeditionMetrics {
 
 export function metricStage(run: RunState): ExpeditionStageMetrics {
   const metrics = (run.metrics ??= { stages: [] });
-  const key = `${run.clan.region}:${run.clan.stage}:${currentLocation(run).id}`;
+  const key = `${completedMigrations(run)}:${run.clan.stage}:${currentLocation(run).id}`;
   let stage = metrics.stages.at(-1);
   if (!stage || stage.key !== key) {
     stage = {

@@ -20,7 +20,7 @@ export function developmentPreview(run: RunState, id: BuildingId, path?: string)
     after: economyForecast(preview),
     foodGift: preview.clan.food - run.clan.food,
     travelFood:
-      run.clan.stage === 'camp' && run.clan.region < 3
+      run.clan.stage === 'camp'
         ? {
             before: availableDestinations(run).flatMap((destination) =>
               ROUTES.map((route) => travelForecast(run, route, destination).foodNeeded),

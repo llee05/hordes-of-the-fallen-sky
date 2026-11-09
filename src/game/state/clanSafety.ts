@@ -1,6 +1,6 @@
 import type { RunState } from '../types';
 import { markExpedition, metricCasualties, metricStage } from './expeditionMetrics';
-export type ClanDamageCause = 'attack' | 'starvation' | 'eruption' | 'seer' | 'area';
+export type ClanDamageCause = 'attack' | 'starvation' | 'seer' | 'area';
 export interface ClanDamageObservation {
   cause: ClanDamageCause;
   at: number;

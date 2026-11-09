@@ -1,47 +1,33 @@
-import { LOCATIONS, REGIONS, type MigrationLocation } from '../data/clan';
-import type { RunState } from '../types';
+import { LOCATIONS, type MigrationLocation } from '../data/clan';
+import type { LocationId, RunState } from '../types';
+
+/** Normal expeditions begin at Mount Otgontenger, the first real place in the catalogue. */
+export const STARTING_LOCATION_ID: LocationId = 'otgontenger';
 
 export function locationById(id: string): MigrationLocation | undefined {
   return LOCATIONS.find((location) => location.id === id);
 }
 
-export function chapterLocation(region: number): MigrationLocation {
-  return locationById(REGIONS[region]!.id)!;
-}
-
 export function currentLocation(run: RunState): MigrationLocation {
-  return (
-    (run.clan.locationId && locationById(run.clan.locationId)) || chapterLocation(run.clan.region)
-  );
+  return locationById(run.clan.locationId) ?? LOCATIONS[0]!;
 }
 
+/** Completed migrations; also the index of the clan's current camp along this expedition. */
+export function completedMigrations(run: RunState): number {
+  return run.legacy.crossings.length;
+}
+
+/** The chosen target while travelling, otherwise the first destination still open. */
 export function arrivalLocation(run: RunState): MigrationLocation {
   return (
     (run.clan.destinationId && locationById(run.clan.destinationId)) ||
-    chapterLocation(Math.min(REGIONS.length - 1, run.clan.region + 1))
+    availableDestinations(run)[0] ||
+    currentLocation(run)
   );
 }
 
-/** Chronicle stops retain completed destinations and show the chosen target during a crossing. */
-export function locationAtChapter(run: RunState, chapter: number): MigrationLocation {
-  if (chapter === run.clan.region) return currentLocation(run);
-  if (run.clan.stage === 'migration' && chapter === run.clan.region + 1)
-    return arrivalLocation(run);
-  const id = run.legacy.crossings.find((crossing) => crossing.region === chapter)?.locationId;
-  return (id && locationById(id)) || chapterLocation(chapter);
-}
-
-/** Two freely chosen camp stops precede the original, explicitly fictional final refuge. */
+/** While camped, the clan may migrate to any other real place, including ones it left before. */
 export function availableDestinations(run: RunState): readonly MigrationLocation[] {
-  if (run.clan.stage !== 'camp' || run.clan.region >= REGIONS.length - 1) return [];
-  const next = chapterLocation(run.clan.region + 1);
-  if (run.clan.region === REGIONS.length - 2) return [next];
-  const visited = new Set(run.legacy.crossings.map((crossing) => crossing.locationId));
-  return [
-    next,
-    ...LOCATIONS.filter(
-      (location) =>
-        location.context && location.id !== currentLocation(run).id && !visited.has(location.id),
-    ),
-  ];
+  if (run.clan.stage !== 'camp') return [];
+  return LOCATIONS.filter((location) => location.id !== currentLocation(run).id);
 }

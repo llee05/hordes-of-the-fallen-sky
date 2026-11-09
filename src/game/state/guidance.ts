@@ -22,7 +22,11 @@ export function completeGuidance(run: RunState, step: GuidanceStep): void {
 
 /** A single suggestion follows real actions; reading it never pauses or changes the expedition. */
 export function currentGuidance(run: RunState): Guidance | undefined {
-  if (!run.guidance.enabled || run.clan.region > 0 || run.guidance.completed.includes('journey'))
+  if (
+    !run.guidance.enabled ||
+    run.legacy.crossings.length > 0 ||
+    run.guidance.completed.includes('journey')
+  )
     return;
   const done = (step: GuidanceStep) => run.guidance.completed.includes(step);
   if (run.khan.successionRemaining > 0)
@@ -98,18 +102,12 @@ export function clanWarning(
   if (clan.food < 15)
     return clan.stage === 'migration'
       ? 'Food is low. Guard the caravan; the route rewards come on arrival.'
-      : clan.stage === 'final'
-        ? 'Food is low. Build up herding or provisions and protect what stores remain.'
-        : 'Food is low. Build up herding or provisions, or look for a river route.';
+      : 'Food is low. Build up herding or provisions, or look for a river route.';
   if (forecast.foodSeconds !== undefined && forecast.foodSeconds <= GAME.clan.foodWarningSeconds)
     return clan.stage === 'migration'
       ? 'Food will run out before arrival. Protect the caravan; supplies wait at the far end.'
-      : clan.stage === 'final'
-        ? 'Food will run out before the passage opens. Build up herding or provisions.'
-        : 'Food will run out soon. Build up herding or provisions, or scout a route ahead.';
+      : 'Food will run out soon. Build up herding or provisions, or scout a route ahead.';
   if (clan.stage === 'camp' && clan.pasture <= 25)
     return 'The pasture is nearly spent. Gathering slows, but every mouth still needs feeding. Scout a route ahead.';
-  if (clan.stage === 'final' && clan.pasture <= 25)
-    return 'The pasture is nearly spent. Guard your provisions and hold until the passage opens.';
   return '';
 }

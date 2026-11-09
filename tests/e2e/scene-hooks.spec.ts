@@ -38,7 +38,6 @@ const LIVE = [
 
 /** Values tests read; they may be undefined or primitive. */
 const READABLE = [
-  'boss',
   'dragOrigin',
   'developerRun',
   'saveBusy',
@@ -56,7 +55,6 @@ const TIMERS = [
   'supportTimer',
   'wagonTimer',
   'wardTimer',
-  'hazardTimer',
 ] as const;
 
 /** Other members tests assign directly. */
@@ -82,7 +80,6 @@ const METHODS = [
   'updateSupport',
   'updateCamp',
   'updateAreaCombat',
-  'updateFinalStand',
   'updateFieldObjectives',
   'updateCharacterAnimations',
   'hideFallenKhan',

@@ -14,7 +14,7 @@ test(
       )) as typeof import('../../src/game/data/enemies');
       const s = (window as any).__gloam.scene;
       window.__gloam.hooks.quietBattlefield();
-      s.run.clan.region = 1;
+      s.run.legacy.crossings.push({ route: 'river', population: 8, locationId: 'otgontenger' });
       s.run.clan.locationId = 'bogd-khan-uul';
       s.run.clan.stageTime = 40;
       s.player.body.reset(s.camp.x + 600, s.camp.y + 100);
@@ -77,7 +77,7 @@ for (const location of ['bogd-khan-uul', 'otgontenger', 'orkhon-valley', 'eej-kh
     test.setTimeout(120000);
     await page.goto('/');
     await page.getByRole('button', { name: 'Developer mode F8' }).click();
-    await page.locator(`[data-developer-level="destination:2:${location}"]`).click();
+    await page.locator(`[data-developer-level="place:${location}"]`).click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
     await expect
@@ -135,7 +135,7 @@ test('terrain rules warn on real cliff-foot ground and woodland concealment reve
   test.setTimeout(120000);
   await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
-  await page.locator('[data-developer-level="destination:2:otgontenger"]').click();
+  await page.locator('[data-developer-level="place:otgontenger"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await expect
@@ -186,7 +186,7 @@ test('terrain rules warn on real cliff-foot ground and woodland concealment reve
   expect(rock.count).toBeGreaterThan(0);
   expect(rock.count).toBeLessThanOrEqual(3);
   await page.keyboard.press('F8');
-  await page.locator('[data-developer-level="destination:2:bogd-khan-uul"]').click();
+  await page.locator('[data-developer-level="place:bogd-khan-uul"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   await expect

@@ -244,7 +244,7 @@ Actors use bounded pools and a spatial grid. Combat, economy, and physics stop i
 npm run check           # Formatting, renderer/desktop/Playwright typechecks, unit tests, production build
 npm run test:coverage   # Unit tests with per-directory coverage floors
 npm run test:local      # Local browser gameplay suite, then Electron (excludes @perf)
-npm run test:e2e:core   # Fast 29-test core browser subset under shared lock
+npm run test:e2e:core   # Fast 27-test core browser subset under shared lock
 npm run test:perf       # Exclusive browser + Electron graphics/FPS budgets, idle host required
 npm run test:desktop    # Actual Electron against offline production files
 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
@@ -298,7 +298,7 @@ or GPU performance results.
 | Suite / configuration                                                               | Classification and where it runs                                                                                                                                                                                                                                                   |
 | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Format, renderer/desktop/Playwright typechecks, Vitest unit tests, production build | Fast correctness checks; GitHub Actions and local `npm run check`. Unit simulations advance explicit time without a live renderer or wall-clock gameplay.                                                                                                                          |
-| `tests/e2e` browser specs                                                           | Mixed UI/save correctness and live gameplay/graphics coverage; local `npm run test:e2e`. Fast 29-test `@core` subset runs via `test:e2e:core`. Performance tests tagged `@perf` run separately through `test:perf`.                                                                |
+| `tests/e2e` browser specs                                                           | Mixed UI/save correctness and live gameplay/graphics coverage; local `npm run test:e2e`. Fast 27-test `@core` subset runs via `test:e2e:core`. Performance tests tagged `@perf` run separately through `test:perf`.                                                                |
 | `tests/desktop` Playwright specs                                                    | Native correctness, layout, gameplay, and graphics/performance coverage; local `npm run test:desktop`; `@perf` runs through `test:perf`.                                                                                                                                           |
 | `tests/pages` artwork smoke                                                         | Release correctness at the Pages subpath without starting gameplay: bundled assets, fonts, and the absence of development hooks and desktop capabilities; GitHub Actions and local `npm run test:pages` after a build. No combat, position, animation, or frame-budget assertions. |
 | `tests/pages` `@gameplay` smoke                                                     | Real camp purchases, pause/resume, sound preference persistence, and play with unavailable storage; local `npm run test:pages` after a build. Tagged `@gameplay` and never run by GitHub Actions.                                                                                  |
@@ -338,7 +338,7 @@ one on the configured port so it cannot test another checkout's build. Set
 `E2E_REUSE_SERVER=1` to opt into reusing an existing server on the same port.
 
 For a quick review, run `npm run test:e2e:changed -- origin/main` (fetch the
-base branch first). By default, it runs the fast 29-test `@core` subset plus any
+base branch first). By default, it runs the fast 27-test `@core` subset plus any
 specs mapped to touched application areas and smoke tests. Add `--list` to
 inspect the selection. Changes to `public/art`, terrain or renderer code, saves,
 input, ArenaScene, dependency/build configs, or unknown files conservatively run

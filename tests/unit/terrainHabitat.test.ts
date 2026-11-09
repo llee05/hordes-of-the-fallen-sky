@@ -3,10 +3,11 @@ import { ComposedTerrain } from '../../src/game/world3d/ComposedTerrain';
 import { composedRegion } from '../../src/game/data/worldRegions';
 import { terrainHabitat, terrainMaterialWeights } from '../../src/game/world3d/terrainHabitat';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
+import { MEADOW_STREAM } from './fixtures/stream';
 
 describe('shared material and ecology masks', () => {
   it('keeps all cover weights finite and normalized across biomes, elevations, and slopes', () => {
-    for (const id of ['golden-pasture', 'eej-khairkhan', 'otgontenger'] as const) {
+    for (const id of ['orkhon-valley', 'eej-khairkhan', 'otgontenger'] as const) {
       const t = new ComposedTerrain(composedRegion(id), LANDSCAPES[id].water);
       for (let x = 2000; x < 3400; x += 137)
         for (const h of [65, 215, 430, 900])
@@ -19,11 +20,8 @@ describe('shared material and ecology masks', () => {
     }
   });
   it('creates coherent patches, damp river margins, and exposed rocky shelves without changing geometry', () => {
-    const dry = new ComposedTerrain(composedRegion('golden-pasture'));
-    const wet = new ComposedTerrain(
-      composedRegion('golden-pasture'),
-      LANDSCAPES['golden-pasture'].water,
-    );
+    const dry = new ComposedTerrain(composedRegion('orkhon-valley'));
+    const wet = new ComposedTerrain(composedRegion('orkhon-valley'), MEADOW_STREAM);
     const p = wet.river!.channels[0]!.sections[100]!;
     const x = p.x + 2600,
       z = p.y + 2600;

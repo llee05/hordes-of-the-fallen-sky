@@ -56,13 +56,7 @@ describe('location scenery content', () => {
   });
 
   it('keeps dry camps dry and distinguishes the mountain silhouettes', () => {
-    for (const id of [
-      'broken-pass',
-      'bogd-khan-uul',
-      'khan-tengri',
-      'altan-ovoo',
-      'eej-khairkhan',
-    ] as const)
+    for (const id of ['bogd-khan-uul', 'khan-tengri', 'altan-ovoo', 'eej-khairkhan'] as const)
       expect(LANDSCAPES[id].water).toBeUndefined();
     expect(LANDSCAPES['altai-tavan-bogd'].landmarks.filter((item) => item.y < 0)).toHaveLength(5);
     expect(LANDSCAPES.otgontenger.landmarks[0]?.prop).toBe('snow-dome');

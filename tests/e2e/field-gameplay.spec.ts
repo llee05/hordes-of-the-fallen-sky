@@ -64,10 +64,10 @@ test('marked gathering guards remain ordinary enemies and complete a bounded obj
   await startExpedition(page);
   const result = await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
-    s.run.clan.region = 1;
+    s.run.legacy.crossings.push({ route: 'river', population: 8, locationId: 'otgontenger' });
     s.run.clan.stageTime = 30;
     s.updateFieldObjectives(0.01);
-    // Second opportunity in this chapter is the enemy gathering.
+    // After one migration, the second opportunity at a camp is the enemy gathering.
     s.run.field.objective.status = 'complete';
     s.run.field.nextAt = 0;
     for (let i = 0; i < 5; i++) s.updateFieldObjectives(0.01);
@@ -80,7 +80,6 @@ test('marked gathering guards remain ordinary enemies and complete a bounded obj
       guards: guards.length,
       status: o.status,
       defeated: o.defeated,
-      boss: !!s.boss,
       kills: s.run.kills,
       memories: s.run.legacy.memories.map((m: any) => m.title),
     };
@@ -90,7 +89,6 @@ test('marked gathering guards remain ordinary enemies and complete a bounded obj
     guards: 3,
     status: 'complete',
     defeated: 3,
-    boss: false,
     kills: 3,
   });
   expect(result.memories).toContain('An enemy gathering');

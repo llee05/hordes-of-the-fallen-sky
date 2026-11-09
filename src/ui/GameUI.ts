@@ -19,7 +19,6 @@ import {
 } from '../game/state/clan';
 import { economyForecast } from '../game/state/economy';
 import { encounterPlan } from '../game/state/encounters';
-import { finalChapter, passageBonus, passageProgress } from '../game/state/finalStand';
 import { clanWarning, currentGuidance } from '../game/state/guidance';
 import { arrivalLocation, availableDestinations, currentLocation } from '../game/state/journey';
 import { isKhanActive } from '../game/state/khan';
@@ -113,11 +112,10 @@ export class GameUI {
           </section>
           <div class="expedition-clock"><strong id="timer">00:00</strong><span id="stage-label">ENCAMPMENT</span>${import.meta.env.DEV ? '<span id="developer-run" hidden>DEVELOPER RUN · F8</span>' : ''}</div>
           <nav class="hud-menu" aria-label="Game menus"><button id="journal" class="hud-menu-button" title="Clan chronicle (Tab / J)" aria-label="Open clan chronicle" aria-keyshortcuts="Tab J"><span>${clanMark('journal')}</span><kbd>TAB</kbd></button><button id="pause" class="hud-menu-button" aria-label="Pause" title="Pause (Escape)"><span>${clanMark('pause')}</span><kbd>ESC</kbd></button></nav>
-          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p id="objective">Grow the camp. Keep your people alive.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Journey</span><b id="migration-percent">0%</b></div><div class="track"><div id="migration-fill"></div></div></div><p class="objective-hint" id="migration-hint">Routes open in 45s.</p><p id="camp-pressure" class="field-status" role="status"></p><p id="clan-losses" class="field-status"></p><p id="major-loss" class="major-loss" role="status" hidden></p><p id="encounter-status" class="field-status" role="status"></p><p id="field-objective" class="field-status"></p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
+          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><strong id="location">OTGONTENGER</strong><span id="camp-age">DAY 1</span></div><p id="objective">Grow the camp. Keep your people alive.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Journey</span><b id="migration-percent">0%</b></div><div class="track"><div id="migration-fill"></div></div></div><p class="objective-hint" id="migration-hint">Routes open in 45s.</p><p id="camp-pressure" class="field-status" role="status"></p><p id="clan-losses" class="field-status"></p><p id="major-loss" class="major-loss" role="status" hidden></p><p id="encounter-status" class="field-status" role="status"></p><p id="field-objective" class="field-status"></p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
           <aside id="field-guide" class="field-guide hud-surface" aria-label="Expedition guidance" hidden></aside>
           <div class="zoom-controls hud-surface" role="group" aria-label="Battlefield zoom"><button id="zoom-out" aria-label="Zoom out" aria-keyshortcuts="-" title="Zoom out (− / LT)">−</button><button id="zoom-reset" aria-label="Reset battlefield zoom to 100%" aria-keyshortcuts="0" title="Reset zoom (0 / Right stick click)"><span id="zoom-level">100%</span></button><button id="zoom-in" aria-label="Zoom in" aria-keyshortcuts="+" title="Zoom in (+ / RT)">+</button></div>
           <div id="danger-warnings" class="danger-warnings" aria-label="Offscreen danger warnings" role="list"></div><div id="elite-markers" class="elite-markers" aria-label="Elite and armoured enemies" role="list"></div><div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
-          <div id="boss-bar" class="boss-bar" hidden><span id="boss-stage">THE SKYBREAKER</span><div class="track"><div id="boss-fill"></div></div></div>
           <aside id="successor-choice" class="successor-choice hud-surface" aria-label="Choose successor" hidden><strong>Who will carry the banner?</strong><p>The countdown runs on. Choosing is up to you.</p><div>${Object.entries(
             SUCCESSORS,
           )
@@ -276,7 +274,7 @@ export class GameUI {
     (this.get('zoom-in') as HTMLButtonElement).disabled =
       snapshot.run.phase !== 'playing' || snapshot.zoom >= snapshot.maxZoom - 0.0001;
     (this.get('zoom-reset') as HTMLButtonElement).disabled = snapshot.run.phase !== 'playing';
-    const { run, dashReady, dashCooldown, best, bossHealth, clanBearing } = snapshot;
+    const { run, dashReady, dashCooldown, best, clanBearing } = snapshot;
     this.motion.setPlaying(run.phase === 'playing');
     const combatVisible = run.phase === 'playing';
     const warningMarkup = combatVisible
@@ -336,7 +334,6 @@ export class GameUI {
       causes = {
         attack: 'Enemy attacks',
         starvation: 'Starvation',
-        eruption: 'Ground eruption',
         seer: 'Seer strike',
         area: 'Local terrain or spell',
       };
@@ -381,27 +378,6 @@ export class GameUI {
         'field-objective',
         `Optional ${snapshot.fieldBearing ?? ''}: ${FIELD_OBJECTIVES[objective.kind].title} · ${objective.status === 'returning' ? 'Escort to camp' : FIELD_OBJECTIVES[objective.kind].instruction} ${FIELD_OBJECTIVES[objective.kind].reward}${objective.kind === 'gathering' ? ` · ${objective.defeated}/${GAME.field.guards}` : ''}`,
       );
-    if (clan.stage === 'final') {
-      const finale = run.finalStand;
-      const chapter = ['Gather the households', 'Hold the approaches', 'Carry the living'][
-        finalChapter(run)
-      ];
-      this.text(
-        'boss-stage',
-        `THE SKYBREAKER · ${chapter}${finale?.phase === 'warning' ? ' · ATTACK IN ' + finale.remaining.toFixed(1) + 's' : finale?.phase === 'recovery' ? ' · VULNERABLE +50%' : ''}`,
-      );
-      const pending = finale?.works.findIndex(
-        (work, i) => !work.done && clan.stageTime >= GAME.finalStand.workUnlockAt[i]!,
-      );
-      if (pending !== undefined && pending >= 0) {
-        const work = finale!.works[pending]!;
-        this.text(
-          'field-objective',
-          `Optional: help work party ${pending + 1}. Stay by the marked workers, enemies clear, for ${GAME.finalStand.workSeconds}s (${work.progress.toFixed(1)}s). Each party opens the passage ${GAME.finalStand.workBonus}s sooner.`,
-        );
-        this.get('field-objective').hidden = false;
-      }
-    }
     const region = currentLocation(run);
     if (
       snapshot.saves?.message.includes('complete') ||
@@ -464,41 +440,28 @@ export class GameUI {
     this.text('threat', `${Math.round(clan.threat)}%`);
     this.meter('threat-fill', clan.threat);
     this.text('location', region.short);
-    this.text('region-count', `${String(clan.region + 1).padStart(2, '0')} / 04`);
     this.text(
       'camp-age',
       clan.stage === 'migration' ? 'ON THE MOVE' : `DAY ${1 + Math.floor(clan.stageTime / 30)}`,
     );
-    this.text(
-      'stage-label',
-      clan.stage === 'migration'
-        ? 'THE GREAT FLIGHT'
-        : clan.stage === 'final'
-          ? 'THE LAST STAND'
-          : 'ENCAMPMENT',
-    );
+    this.text('stage-label', clan.stage === 'migration' ? 'THE GREAT FLIGHT' : 'ENCAMPMENT');
     this.text(
       'objective',
       clan.stage === 'migration'
         ? `Escort the caravan to ${arrivalLocation(run).name}.`
-        : clan.stage === 'final'
-          ? 'Guard the families clearing the mountain passage.'
-          : 'Grow the camp. Keep your people alive.',
+        : 'Grow the camp. Keep your people alive.',
     );
     this.get('migration-progress').hidden = clan.stage === 'camp';
-    const progress = clan.stage === 'final' ? passageProgress(run) : clan.migrationProgress;
-    this.text('progress-label', clan.stage === 'final' ? 'Passage opens' : 'Journey');
+    const progress = clan.migrationProgress;
     this.text('migration-percent', `${Math.min(Math.round(progress * 100), 100)}%`);
     this.meter('migration-fill', progress * 100);
     this.text(
       'migration-hint',
       clan.stage === 'migration'
         ? 'Guard the wagons on the road east.'
-        : clan.stage === 'final'
-          ? `${formatTime(Math.max(0, GAME.clan.finalDuration - clan.stageTime - passageBonus(run)))} until the passage opens.`
-          : canMigrate(run)
-            ? 'The roads are open. Pack up with M.'
-            : `Routes open in ${Math.ceil(GAME.clan.minimumCamp - clan.stageTime)}s. Build up the camp with B.`,
+        : canMigrate(run)
+          ? 'The roads are open. Pack up with M.'
+          : `Routes open in ${Math.ceil(GAME.clan.minimumCamp - clan.stageTime)}s. Build up the camp with B.`,
     );
     const formationTitle = FORMATIONS[clan.formation].title;
     if (this.get('formation-name').textContent !== formationTitle) {
@@ -516,8 +479,6 @@ export class GameUI {
     (this.get('formation') as HTMLButtonElement).disabled =
       run.phase !== 'playing' || availableFormations(run).length < 2;
     this.get('synergy').hidden = !burningTempest(run);
-    this.get('boss-bar').hidden = bossHealth === undefined;
-    if (bossHealth !== undefined) this.meter('boss-fill', bossHealth * 100);
     this.text('best', best > 0 ? formatTime(best) : '— — : — —');
     this.text('clan-message', clan.message);
     this.layoutGuidance();
@@ -640,7 +601,7 @@ export class GameUI {
       'aria-hidden',
       String(['ready', 'character', 'settings', 'help', 'developer'].includes(run.phase)),
     );
-    this.get('menu-record').hidden = !['ready', 'paused', 'dead', 'won'].includes(run.phase);
+    this.get('menu-record').hidden = !['ready', 'paused', 'dead'].includes(run.phase);
     // Transfer focus before hiding or removing the focused menu control.
     if (run.phase === 'playing') this.get('arena-wrap').focus({ preventScroll: true });
     this.overlay.hidden = run.phase === 'playing';
@@ -660,7 +621,6 @@ export class GameUI {
       developer: import.meta.env.DEV ? 'DEVELOPER LEVEL SELECTOR' : '',
       console: import.meta.env.DEV ? 'DEVELOPER CONSOLE' : '',
       dead: 'THE BANNERS FALL',
-      won: 'THE CLAN IS SAVED',
     };
     this.text('run-status', labels[run.phase]);
     if (run.phase === 'playing') {
@@ -706,9 +666,8 @@ export class GameUI {
     else if (import.meta.env.DEV && run.phase === 'console')
       this.overlay.innerHTML = developerConsole(snapshot.developerConsole);
     else {
-      const won = run.phase === 'won';
       const results = journeyResults(run);
-      this.overlay.innerHTML = `<section class="end-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">${won ? 'A PEOPLE, STILL ALIVE' : 'THE STEPPE WILL REMEMBER'}</p><h2 id="overlay-title">${won ? 'A sky worth saving.' : 'The banners fall.'}</h2><p class="panel-intro">${escapeHtml(results.outcome)} · ${escapeHtml(results.location)} · ${escapeHtml(results.stage)}</p><div class="end-stats"><div><strong>${formatTime(results.elapsed)}</strong><span>JOURNEY</span></div><div><strong>${results.survivors}</strong><span>SURVIVORS</span></div><div><strong>${results.herd}</strong><span>HERD</span></div><div><strong>${results.pastures}</strong><span>PASTURES</span></div><div><strong>${results.fallenKhans}</strong><span>FALLEN KHANS</span></div><div><strong>${escapeHtml(results.skybreaker)}</strong><span>SKYBREAKER</span></div></div>${expeditionMetricsContent(run)}<nav class="main-menu"><button class="menu-button featured" data-action="restart" data-primary>RAISE THE BANNERS AGAIN <span>→</span></button><button class="menu-button" data-action="journal">Clan chronicle</button>${savedMenu}${quit}</nav></section>`;
+      this.overlay.innerHTML = `<section class="end-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">THE STEPPE WILL REMEMBER</p><h2 id="overlay-title">The banners fall.</h2><p class="panel-intro">Clan lost · ${escapeHtml(results.location)} · ${escapeHtml(results.stage)}</p><div class="end-stats"><div><strong>${formatTime(results.elapsed)}</strong><span>JOURNEY</span></div><div><strong>${results.survivors}</strong><span>SURVIVORS</span></div><div><strong>${results.herd}</strong><span>HERD</span></div><div><strong>${results.pastures}</strong><span>PASTURES</span></div><div><strong>${results.fallenKhans}</strong><span>FALLEN KHANS</span></div></div>${expeditionMetricsContent(run)}<nav class="main-menu"><button class="menu-button featured" data-action="restart" data-primary>RAISE THE BANNERS AGAIN <span>→</span></button><button class="menu-button" data-action="journal">Clan chronicle</button>${savedMenu}${quit}</nav></section>`;
     }
     if (import.meta.env.DEV && ['developer', 'console'].includes(run.phase)) {
       this.developerRevision = -1;

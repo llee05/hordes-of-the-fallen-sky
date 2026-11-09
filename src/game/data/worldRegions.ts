@@ -91,58 +91,6 @@ const desert: ScenePalette = {
 
 /** Hand-composed terrain masses surround an open, continuous combat and caravan floor. */
 export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
-  'golden-pasture': {
-    id: 'golden-pasture',
-    floor: 65,
-    snowLine: 10000,
-    vegetation: 'meadow',
-    palette: meadow,
-    shelves: [
-      shelf('meadow-bluff', -180, -800, 1160, 450, 165, -8),
-      shelf('upper-pasture', -480, -1160, 680, 380, 145, 12),
-      shelf('eastern-shoulder', 920, 650, 460, 380, 135, -18),
-      shelf('distant-ridge', 100, -2120, 2350, 620, 260, 4, 110),
-    ],
-  },
-  'silent-river': {
-    id: 'silent-river',
-    floor: 70,
-    snowLine: 160,
-    vegetation: 'river',
-    palette: { ...alpine, grass: 0xa4b5a1 },
-    shelves: [
-      shelf('frozen-bank', -160, -850, 1250, 420, 155, 3),
-      shelf('ice-shelf', 460, -1250, 610, 370, 190, -10),
-      shelf('western-stone', -980, 520, 380, 500, 165, 12),
-      shelf('distant-ridge', 0, -2140, 2400, 620, 300, 0, 100),
-    ],
-  },
-  'broken-pass': {
-    id: 'broken-pass',
-    floor: 70,
-    snowLine: 10000,
-    vegetation: 'alpine',
-    palette: { ...meadow, grass: 0x999c6b, rock: 0x797d81 },
-    shelves: [
-      shelf('western-wall', -900, -250, 430, 1100, 300, -12),
-      shelf('western-crown', -1100, -720, 300, 540, 220, -12),
-      shelf('eastern-wall', 980, -760, 510, 640, 330, 12),
-      shelf('distant-ridge', 0, -2080, 2360, 640, 380, 0, 150),
-    ],
-  },
-  'heart-of-the-steppe': {
-    id: 'heart-of-the-steppe',
-    floor: 80,
-    snowLine: 10000,
-    vegetation: 'alpine',
-    palette: { grass: 0x7b9086, soil: 0xa1a092, rock: 0x656b83, snow: 0xd7e4e4, fog: 0x718ba2 },
-    shelves: [
-      shelf('indigo-gate', -180, -810, 1150, 440, 310, -5),
-      shelf('higher-threshold', -450, -1200, 620, 420, 290, 12),
-      shelf('eastern-bastion', 1000, 550, 480, 420, 290, -18),
-      shelf('distant-ridge', 0, -2120, 2420, 660, 400, 4, 200),
-    ],
-  },
   otgontenger: {
     id: 'otgontenger',
     floor: 80,

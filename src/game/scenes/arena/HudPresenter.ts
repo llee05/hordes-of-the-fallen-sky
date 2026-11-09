@@ -1,4 +1,3 @@
-import { SKYBREAKER } from '../../data/enemies';
 import type { DeveloperConsoleSnapshot } from '../../dev/commands';
 import type { Enemy, Projectile } from '../../entities/actors';
 import { campBoundary } from '../../state/campBarrier';
@@ -34,7 +33,6 @@ export interface HudSession {
   developerRun: boolean;
   developerConsole?: DeveloperConsoleSnapshot;
   saves: NonNullable<HudSnapshot['saves']>;
-  boss?: Enemy;
 }
 
 /** Builds the HUD snapshot from the live world. It reads state only and changes nothing. */
@@ -62,7 +60,7 @@ export class HudPresenter {
       : undefined;
     const zoomLimits = cameraZoomLimits(camera.width, camera.height);
     return {
-      combatReadability: this.combatReadability(session.boss),
+      combatReadability: this.combatReadability(),
       saves: session.saves,
       campPressure: this.campPressure(),
       fieldBearing,
@@ -75,7 +73,6 @@ export class HudPresenter {
       dashReady: Math.max(0, 1 - this.arena.timers.dashTimer / gallopCooldown(run)),
       dashCooldown: gallopCooldown(run),
       best: session.best,
-      bossHealth: session.boss?.active ? session.boss.health / SKYBREAKER.health : undefined,
       clanBearing: `${direction} CLAN · ${Math.round(Math.hypot(dx, dy))} PACES`,
     };
   }
@@ -90,9 +87,7 @@ export class HudPresenter {
     };
   }
 
-  private combatReadability(
-    boss: Enemy | undefined,
-  ): NonNullable<HudSnapshot['combatReadability']> {
+  private combatReadability(): NonNullable<HudSnapshot['combatReadability']> {
     const { run, player, camp } = this.arena;
     const width = this.arena.scene.scale.width,
       height = this.arena.scene.scale.height;
@@ -125,7 +120,6 @@ export class HudPresenter {
         key = `${enemy.tacticalSlot}:${enemy.spawnId}`;
       if (
         (enemy.elite || enemy.definition.tacticalRole === 'bulwark') &&
-        enemy !== boss &&
         p.x > 30 &&
         p.x < width - 30 &&
         p.y > 70 &&
@@ -143,13 +137,6 @@ export class HudPresenter {
         });
       if (enemy.tactics.phase === 'windup')
         threats.push({ id: key, label: 'Charging enemy', ...p, eta: enemy.tactics.remaining });
-      else if (enemy === boss && run.finalStand?.phase === 'warning')
-        threats.push({
-          id: key,
-          label: 'Skybreaker barrage',
-          ...p,
-          eta: run.finalStand.remaining,
-        });
       else if (
         enemy.definition.behavior === 'ranged' &&
         enemy.attackTimer > 0 &&

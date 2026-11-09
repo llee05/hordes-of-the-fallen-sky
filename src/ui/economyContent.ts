@@ -16,11 +16,7 @@ export function foodOutlook(run: RunState, forecast = economyForecast(run)): str
     return forecast.foodSeconds <= 0
       ? 'Stores empty'
       : `Stores empty in ~${formatTime(Math.ceil(forecast.foodSeconds))}`;
-  return run.clan.stage === 'migration'
-    ? 'Food lasts to arrival'
-    : run.clan.stage === 'final'
-      ? 'Food lasts to passage'
-      : 'Stores sustained';
+  return run.clan.stage === 'migration' ? 'Food lasts to arrival' : 'Stores sustained';
 }
 
 export function economySummary(run: RunState): string {

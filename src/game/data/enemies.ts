@@ -109,14 +109,13 @@ export function spawnInterval(elapsed: number): number {
 /** Active-time pacing; a rejected placement retries without consuming an entire encounter slot. */
 export function encounterSpawnDelay(
   stageTime: number,
-  region: number,
+  firstCamp: boolean,
   danger = 1,
   spawned = true,
 ): number {
   if (!spawned) return GAME.spawning.retryInterval;
-  if (region === 0 && stageTime < GAME.spawning.openingDuration)
-    return GAME.spawning.openingInterval;
-  return spawnInterval(stageTime + region * 65) / danger;
+  if (firstCamp && stageTime < GAME.spawning.openingDuration) return GAME.spawning.openingInterval;
+  return spawnInterval(stageTime) / danger;
 }
 
 export function chooseEnemy(elapsed: number, random = Math.random): EnemyDefinition {
@@ -128,20 +127,6 @@ export function chooseEnemy(elapsed: number, random = Math.random): EnemyDefinit
   }
   return available[available.length - 1]!;
 }
-
-export const SKYBREAKER: EnemyDefinition = {
-  id: 'skybreaker',
-  title: 'Skybreaker',
-  texture: 'skybreaker',
-  health: 3600,
-  speed: 42,
-  damage: 26,
-  xp: 160,
-  unlockAt: 0,
-  weight: 0,
-  scale: 4,
-  behavior: 'boss',
-};
 
 type LocalArchetype = keyof typeof GAME.areaEnemies.profiles;
 function native(
@@ -195,48 +180,6 @@ function native(
 }
 /** Local variants reuse registered painted clips; their identity and rules are independent of artwork. */
 export const AREA_ENEMIES: readonly EnemyDefinition[] = [
-  native('golden-pasture', 'thistle-prowler', 'Thistle prowler', 'prowler', 0xdbd09c, 'open'),
-  native('golden-pasture', 'dustwing', 'Dustwing', 'skirmisher', 0xd8bb96, 'open', undefined, true),
-  native('silent-river', 'rime-hound', 'Rime hound', 'prowler', 0xbcd8df, 'shore', 'frost'),
-  native(
-    'silent-river',
-    'icebound-lancer',
-    'Icebound lancer',
-    'lancer',
-    0xacc7e3,
-    'snow',
-    undefined,
-    true,
-  ),
-  native('broken-pass', 'scree-crawler', 'Scree crawler', 'bulwark', 0xb9ac97, 'ridge', 'rockfall'),
-  native(
-    'broken-pass',
-    'slate-needle',
-    'Slate needle',
-    'caller',
-    0xa9b3c3,
-    'ridge',
-    undefined,
-    true,
-  ),
-  native(
-    'heart-of-the-steppe',
-    'ashbound-outrider',
-    'Ashbound outrider',
-    'lancer',
-    0xb1a3bd,
-    'open',
-  ),
-  native(
-    'heart-of-the-steppe',
-    'rift-cantor',
-    'Rift cantor',
-    'caller',
-    0xb1a5d1,
-    'ridge',
-    'rift',
-    true,
-  ),
   native('otgontenger', 'snowline-hunter', 'Snowline hunter', 'prowler', 0xd8e5db, 'snow'),
   native(
     'otgontenger',

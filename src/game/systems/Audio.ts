@@ -303,18 +303,15 @@ export class GameAudio {
       speed: number;
       galloping: boolean;
       caravan: boolean;
-      region: number;
       listener: Point;
       camp: Point;
-      environment?: AudioEnvironment;
+      environment: AudioEnvironment;
       threat?: number;
     },
   ): void {
     if (!this.playing || !Number.isFinite(dt) || dt <= 0) return;
     this.listener = { x: state.listener.x, y: state.listener.y };
-    this.environment =
-      state.environment ??
-      (state.region === 1 ? 'river' : state.region >= 2 ? 'mountain' : 'steppe');
+    this.environment = state.environment;
     this.campDistance = Math.hypot(state.camp.x - this.listener.x, state.camp.y - this.listener.y);
     this.activity = Math.max(0, this.activity - dt * 0.12);
     if (state.speed > 5) {

@@ -188,7 +188,7 @@ export class AreaCombat extends ArenaSystem {
       graphics
         .lineStyle(1, spec.color, 0.7)
         .strokeCircle(threat.x, threat.y, spec.radius * Math.min(1, threat.age / threat.warning));
-    if (threat.kind === 'crosswind' || threat.kind === 'rift')
+    if (threat.kind === 'crosswind')
       graphics
         .lineStyle(2, spec.color, 0.5)
         .lineBetween(

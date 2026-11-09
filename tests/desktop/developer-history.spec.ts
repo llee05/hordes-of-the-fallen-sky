@@ -24,7 +24,7 @@ test('native developer history survives app restart without restoring cheat flag
   try {
     let page = await app.firstWindow();
     await page.getByRole('button', { name: 'Developer mode F8' }).click();
-    await page.locator('[data-developer-level="chapter:golden-pasture"]').click();
+    await page.locator('[data-developer-level="place:otgontenger"]').click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await page.keyboard.press('Backquote');
     let input = page.getByRole('textbox', { name: 'Command', exact: true });
