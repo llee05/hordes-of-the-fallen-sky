@@ -1,7 +1,7 @@
 # Character creation
 
 Run `npm run dev` and choose **New Game** on the title screen. **Begin Journey**
-starts the expedition at Golden Pasture with the chosen profile. Starting clan
+starts the expedition at Mount Otgontenger with the chosen profile. Starting clan
 traditions still select the clan's opening arrangement before character creation.
 Escape, controller B, or **Back to title** returns without starting simulation;
 the current draft remains available until the scene restarts.

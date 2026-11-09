@@ -6,11 +6,10 @@ Hordes of the Fallen Sky’s art direction combines the readable miniature scale
 
 Golden, sage, and ochre grasses form a quiet field beneath ivory felt gers, turquoise and vermilion banners, chestnut horses, and decorated wooden carts. Warm sunlight falls from the upper left. Soft olive shadows anchor the miniatures. The living clan uses textile bands, rope, wood, and felt; the calamity uses ash, stone, bone, indigo cloth, and restrained turquoise light.
 
-All twelve locations share the same painting language and have distinct landscapes.
-Golden flowering meadows, frozen riverbanks, fractured slate corridors, woodland
-foothills, snow crowns and glacial ridges, extinct volcanic steppe, granite desert,
-and braided river pasture use their own surface palettes, vegetation, landforms,
-and watercourses. Their geography persists across chapters.
+All eight locations share the same painting language and have distinct landscapes.
+Woodland foothills, snow crowns and glacial ridges, a marble spire, extinct volcanic
+steppe, granite desert, and braided river pasture use their own surface palettes,
+vegetation, landforms, and watercourses. Their geography persists across visits.
 
 `data/landscapes.ts` authors each location's painted preview. The locally bundled
 `steppe-scenery` atlas adds larch, pine, willow, foothill, snow dome, pyramid, glacier,

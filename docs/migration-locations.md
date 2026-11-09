@@ -1,17 +1,16 @@
 # Migration destinations
 
-The first two crossings can lead to eight additional named camps: Mount Otgontenger,
-Bogd Khan Uul, Altai Tavan Bogd, Khan Tengri Peak, Mount Belukha (Üch-Sümer), Altan
-Ovoo, Eej Khairkhan, and Orkhon Valley. The original Silent River and Broken Pass
-remain available. Visited named camps are excluded from later choices. The third
-crossing still leads to the fictional Heart of the Steppe and its 180-second final
-stand. An expedition still has three crossings and four chapters.
+The game contains eight real places: Mount Otgontenger, Bogd Khan Uul, Altai Tavan
+Bogd, Khan Tengri Peak, Mount Belukha (Üch-Sümer), Altan Ovoo, Eej Khairkhan, and
+Orkhon Valley. A new expedition starts at Mount Otgontenger. From any camp the clan
+can migrate to any of the other seven, including places it left earlier. The four
+fictional chapter camps, the crossing encounters, and the final stand have been
+removed; the run shape will be redesigned later.
 
 Destinations are camps in the surrounding landscape, not summit ascents or depictions
 of ceremonies. The journey compresses geography and travel time for a fantasy game;
-it is not a geographically accurate itinerary. The White Silence and Earth That
-Walks remain fictional chapter events that can affect whichever camp is chosen.
-The calamity, hostile creatures, passage, and all resource modifiers are invented.
+it is not a geographically accurate itinerary.
+The calamity, hostile creatures, and all resource modifiers are invented.
 Real sacred sites are not the source of the calamity or rewards for religious acts.
 Mongolian, Turkic, and Altaian traditions retain their distinct contexts.
 
@@ -24,33 +23,33 @@ Earlier narrative treatments for each named destination are archived in [`docs/a
 `data/clan.ts` defines `LOCATIONS` with stable IDs, names, geographical/cultural
 context, visual terrain, and gameplay modifiers from `GAME.locations`. Food and
 materials modifiers affect production at the current camp. Mobility affects departures
-from that camp; the chosen destination's crossing modifier affects the incoming trip.
-All modifiers stack with seasonal conditions and camp developments.
+from that camp; the chosen destination's travel modifier affects the incoming trip.
+All modifiers stack with camp developments.
 
 `state/journey.ts` resolves the current camp, pending arrival, and available
-destinations. The numeric `clan.region` remains the journey/difficulty chapter;
-`clan.locationId` identifies the actual camp, and `clan.destinationId` exists only
-while travelling. Legacy chapter camps are used when no explicit location is set.
+destinations. `clan.locationId` identifies the actual camp, and `clan.destinationId`
+exists only while travelling. `legacy.crossings` (a retained save key) lists completed
+migrations; its length counts camps reached after the first.
 `beginMigration` validates the route and destination before changing anything. Arrival
-changes the location and records it in the crossing and clan memories exactly once;
+changes the location and records it in the migration and clan memories exactly once;
 it preserves the existing buildings, supplies, succession, and XP rules.
 Khan records retain both their chosen and fallen locations.
 
-The simulation and `crossingForecast` share `crossingDuration`; forecasts never
+The simulation and `travelForecast` share `travelDuration`; forecasts never
 count arrival rewards toward provisions consumed before arrival.
 
 `ui/migrationContent.ts` renders the destination picker and the three approach cards.
 The selected destination is temporary UI view state until `ArenaScene.chooseRoute`
-validates and starts the crossing. Inspection preserves focus, scroll, and every
+validates and starts the migration. Inspection preserves focus, scroll, and every
 simulation value. Keyboard arrows, Tab, mouse, and controller navigation can inspect
 destinations without departing. Escape closes planning. Camp purchase previews use
 the food-cost range across all currently available destination/approach combinations.
-The chronicle's four stops retain completed locations and show the chosen destination
-while travelling. Cultural descriptions and the resource effects are displayed
+The chronicle lists all eight places, marking the current camp, places already
+reached, and the chosen destination while travelling. Cultural descriptions and the resource effects are displayed
 separately. All art, fonts, and source context ship locally. Each location has its own terrain,
 vegetation, watercourse (where present), painted landmarks, and atmosphere; migration
 cards preview the same scenery. See [the landscape catalog](location-landscapes.md)
-for the twelve compositions and renderer contract.
+for the eight compositions and renderer contract.
 
 ## Cultural context and sources
 

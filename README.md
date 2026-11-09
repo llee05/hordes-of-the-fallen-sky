@@ -1,8 +1,8 @@
 # Hordes of the Fallen Sky
 
-A Mongolian-inspired nomadic civilization builder × mounted bullet heaven. **TypeScript + Phaser 3 + Electron + Vite.** The cities have fallen, the sky is going dark, and a small clan survives by moving. Build a people, defend their temporary home, and protect the caravan on its journey to the sacred heart of the steppe.
+A Mongolian-inspired nomadic civilization builder × mounted bullet heaven. **TypeScript + Phaser 3 + Electron + Vite.** The cities have fallen, the sky is going dark, and a small clan survives by moving. Build a people, defend their temporary home, and protect the caravan on its journey between the sacred places of the steppe.
 
-This playable prototype includes a four-stage expedition: three defended crossings, a final mountain stand, and a journey results summary. Its civilization systems include five permanent camp households and five optional workplaces chosen from fourteen building types, abstracted population and workers, three resources, four journey chapters with eight additional named camp destinations, five shared standard enemies, two shared elites, 24 local enemy variants, and one boss. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and broader campaign unlocks remain future work.
+This playable prototype contains eight real places to camp at and migrate between, with a journey results summary when the clan is lost. Journey chapters, crossing encounters and the final stand have been removed while a new run structure is designed. Its civilization systems include five permanent camp households and five optional workplaces chosen from fourteen building types, abstracted population and workers, three resources, five shared standard enemies, two shared elites, and 16 local enemy variants. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and broader campaign unlocks remain future work.
 
 Archived narrative documentation from the earlier story prototype is kept in [`docs/archive/story/`](docs/archive/story/README.md) as reference for a future story rework, including [the world lore](docs/archive/story/lore.md).
 
@@ -19,9 +19,8 @@ npm start           # Play the offline desktop build
 ```
 
 Development builds include **Developer mode** in the title and pause menus. Press
-**F8** from any screen to open the level selector: jump to any of the four chapters,
-any crossing approach, or any named destination in chapters 2 and 3. Each choice
-starts a fresh test expedition with supplies.
+**F8** from any screen to open the level selector: jump to a fresh camp at any of
+the eight real places. Each choice starts a fresh test expedition with supplies.
 Escape / F8 closes the selector and returns to the previous screen. Developer runs
 do not change your saved longest journey.
 Start a new run to return to normal play. The selector is absent from production
@@ -49,15 +48,15 @@ builds once the repository's Pages source is set to **GitHub Actions**.
 
 ## Desktop presentation
 
-The game opens at the title menu. **New Game** opens [character creation](docs/character-creator.md). Choose identity, appearance, origin, combat tradition, oath, mount, banner and name, then **Begin Journey** starts the expedition at Golden Pasture. The last character profile is remembered.
+The game opens at the title menu. **New Game** opens [character creation](docs/character-creator.md). Choose identity, appearance, origin, combat tradition, oath, mount, banner and name, then **Begin Journey** starts the expedition at Mount Otgontenger. The last character profile is remembered.
 
 The title is embroidered across an indigo felt banner over the painted steppe. Woven rust-red trim, brass clan symbols, and warm manuscript pages carry the world's art into the interface. Camp cards reuse the painted gers, riders, and wagons from the battlefield; migration choices have illustrated landscape vignettes. All UI materials and artwork ship locally.
 
-The battlefield fills the entire game window. Zoom with the mouse wheel, + / − (including the number pad), or controller RT / LT. The on-screen − / percentage / + controls offer the same actions; click the percentage, press 0, or click the right stick to reset to 100%. Zoom ranges from 60% to 160% and keeps the interface readable at its original size. It is available during active play, follows the Khan or caravan during succession, and carries across new expeditions for the app session. Compact resources and objectives sit at the top, with Khan health, clan resolve, gallop, and a keyboard command dock near the bottom. Brief clan messages appear as notifications. Dismissible contextual guidance teaches riding, camp development, shards, formations, and the first crossing through actual actions. Hide tips in the field or restore them from How to play; the preference lasts for the app session. Persistent food, resolve, population, and pasture warnings remain visible when tips are hidden.
+The battlefield fills the entire game window. Zoom with the mouse wheel, + / − (including the number pad), or controller RT / LT. The on-screen − / percentage / + controls offer the same actions; click the percentage, press 0, or click the right stick to reset to 100%. Zoom ranges from 60% to 160% and keeps the interface readable at its original size. It is available during active play, follows the Khan or caravan during succession, and carries across new expeditions for the app session. Compact resources and objectives sit at the top, with Khan health, clan resolve, gallop, and a keyboard command dock near the bottom. Brief clan messages appear as notifications. Dismissible contextual guidance teaches riding, camp development, shards, formations, and the first migration through actual actions. Hide tips in the field or restore them from How to play; the preference lasts for the app session. Persistent food, resolve, population, and pasture warnings remain visible when tips are hidden.
 
 The title cloth breathes gently, parchment menus settle into place, and illustrations respond to mouse or keyboard focus. Resource changes, damage, gallop readiness, and newly available migration routes have brief visual feedback. Controls respond immediately throughout. The operating system's reduced-motion preference disables interface animations and transitions, including when changed while the game is open.
 
-During play, press **Tab** or **J** (controller **View**) to open the clan chronicle. Its **The journey** and **Your clan** tabs show locations, buildings, workforce, formations, Khans, and factual memories while simulation is paused. Arrow keys switch focused tabs; Escape or J closes the chronicle. You can open camp development or choose an available migration route directly from it during an ongoing expedition. After victory or defeat, use **Clan chronicle** on the results screen to inspect the records; closing it returns to those results. Tab and Shift+Tab navigate menu controls.
+During play, press **Tab** or **J** (controller **View**) to open the clan chronicle. Its **The journey** and **Your clan** tabs show locations, buildings, workforce, formations, Khans, and factual memories while simulation is paused. Arrow keys switch focused tabs; Escape or J closes the chronicle. You can open camp development or choose an available migration route directly from it during an ongoing expedition. After defeat, use **Clan chronicle** on the results screen to inspect the records; closing it returns to those results. Tab and Shift+Tab navigate menu controls.
 
 The title and pause menus contain **Settings** and **How to play**. Mute and separate music, ambience, combat, and interface levels save automatically. Settings also offers five recorded reference auditions. Fullscreen is available in Settings or with F11 / Alt+Enter. Escape backs out to the menu you came from; closing Settings during a paused expedition keeps that expedition paused. Native Quit game is available in the main and pause menus. Keyboard, mouse, controller, and touch-preview actions use the same scene-owned run state.
 
@@ -67,16 +66,16 @@ The sound palette uses licensed recordings of recurve bows, real horse contacts,
 
 The game now uses a stylized painterly 2.5D presentation: golden brushwork grasslands, miniature mounted warriors, decorated ivory gers, turquoise and vermilion banners, and cold, unsettling calamity creatures. Soft shadows and parchment panels carry the direction through gameplay. Visible camp workers carry felt between shared stores and established workplaces. A bounded pack herd grazes at camp and walks with the caravan. Additional households raise more shelters, while losses reduce the visible group. Packing briefly folds the old camp into the travelling carts while departure begins immediately. These visual representatives use the existing population and worker assignments; they do not add a second economy. All artwork ships locally. See [the art direction and generation prompts](docs/living-steppe-tapestry.md).
 
-Every location has two native enemy variants alongside familiar shared unreturned. Terrain rules distinguish woodland ambushes, frozen banks, cliff-foot rockfall, exposed-shelf crossfire, cinder falls, granite shelter, and reed-bank mire. Destination previews and the chronicle explain local enemies and their counters before departure. Native variants reuse the existing painted animation sets with palette accents and distinct attack patterns; dedicated creature artwork can replace those clips later. See [area encounters and enemy rosters](docs/area-encounters.md).
+Every location has two native enemy variants alongside familiar shared unreturned. Terrain rules distinguish woodland ambushes, glacial frost, cliff-foot rockfall, exposed-spire crosswinds, cinder falls, granite shelter, and reed-bank mire. Destination previews and the chronicle explain local enemies and their counters before departure. Native variants reuse the existing painted animation sets with palette accents and distinct attack patterns; dedicated creature artwork can replace those clips later. See [area encounters and enemy rosters](docs/area-encounters.md).
 
-Every location has a distinct painted landscape: golden meadow, frozen river, slate pass, forested foothills, snowy peaks and glaciers, volcanic steppe, granite desert, and braided river pasture. Terrain colors, vegetation, watercourses, landmark silhouettes, and atmosphere follow the chosen place. Migration cards preview the same scenery before departure. See [the twelve-location landscape catalog](docs/location-landscapes.md).
+Every location has a distinct painted landscape: snowy peaks, forested foothills, glaciers, a marble spire, volcanic steppe, granite desert, and braided river pasture. Terrain colors, vegetation, watercourses, landmark silhouettes, and atmosphere follow the chosen place. Migration cards preview the same scenery before departure. See [the location landscape catalog](docs/location-landscapes.md).
 
 Mount Otgontenger has connected ridges, terraces,
 rock shelves, snowy summits, and broad winding passes. Full cliff faces, contact
 occlusion, and cast shadows communicate height around open camp and caravan space.
 Rubble gathers below cliffs, scrub occupies shelves, and sparse conifers stay low.
 
-Angled 2.5D scenes render across all twelve destinations. An orthographic
+Angled 2.5D scenes render across all eight destinations. An orthographic
 Three.js world supplies raised shelves, vertical cliff faces, snowfields,
 shadows, river gorges, and timber crossings. Existing painted characters and camps
 stand on the terrain while Phaser retains physics, combat, and animation. Riding
@@ -92,33 +91,21 @@ The Khan, allied archers, and all six creature designs have painted sprite anima
 
 Choose **Starting tradition** at the title to compare Shared hearth, Outrider circle, Hearthkeepers, and Pathfinders. Their riders, protection, movement, and starting-store tradeoffs change the opening while every facility remains available. The chosen preparation persists through the expedition and full saves. See [starting clan traditions](docs/starting-traditions.md).
 
-The final stand has three dramatic chapters, rotating Skybreaker approaches, marked windups, and four-second recovery windows. Optional work parties can open the passage up to 24 seconds sooner; survival still wins with the boss alive. See [the final-stand rules](docs/final-stand.md).
-
 Brass elite/armour labels, directional offscreen danger warnings, and brief named-cause clan-loss messages make crowded combat easier to read. Settings offers saved **Projectile contrast** and **Effect density** controls; Minimal keeps combat warnings visible while removing decorative bursts and dust. See [combat readability](docs/combat-readability.md).
 
-Per-stage expedition milestones appear in the chronicle and results. In development, `metrics` prints observations and `benchmark` compares all four starting arrangements under riding, guarding and early-migration schedules. The twelve full-journey pressure checks exercise real economy and progression with modelled combat exposure. See [pacing and balance checks](docs/expedition-pacing.md).
+Per-stage expedition milestones appear in the chronicle and results. In development, `metrics` prints observations and `benchmark` compares all four starting arrangements under riding, guarding and early-migration schedules. The twelve fixed-length pressure checks exercise real economy and progression with modelled combat exposure. See [pacing and balance checks](docs/expedition-pacing.md).
 
 ## Build, defend, migrate
 
-The expedition begins at Golden Pasture, crosses through two chosen intermediate camps (with Silent River and Broken Pass as the defaults), and concludes at the fictional Heart of the Steppe. The chronicle's **Your clan** tab records each Khan’s time carrying the banner, the host’s victories during that tenure, and factual clan memories (camp work, departures, arrivals, crossings, losses, succession, and defeating the Skybreaker). The record retains the latest 96 clan moments and 64 Khans, with total counts visible.
+The expedition begins at Mount Otgontenger. From any camp, the clan can migrate to any of the other seven real places: **Mount Otgontenger, Bogd Khan Uul, Altai Tavan Bogd, Khan Tengri Peak, Mount Belukha (Üch-Sümer), Altan Ovoo, Eej Khairkhan, and Orkhon Valley**, including ones it left earlier. Press M after routes open, choose a camp, then choose a river, ridge, or rescue route. Each place has its own gathering and travel modifiers, shown alongside its cultural context and destination-specific food forecasts. The HUD, camp, chronicle, and Khan records retain the actual location. These are stylized camps in the surrounding landscapes, with compressed travel geography; real sacred places remain distinct from the invented calamity. See [destinations, rules, and cultural sources](docs/migration-locations.md).
 
-The first two departures also offer **Mount Otgontenger, Bogd Khan Uul, Altai Tavan
-Bogd, Khan Tengri Peak, Mount Belukha (Üch-Sümer), Altan Ovoo, Eej Khairkhan, and
-Orkhon Valley** as alternative destinations. Press M after routes open, choose a
-camp, then choose a river, ridge, or rescue approach. Each place has its own gathering
-and travel modifiers, shown alongside its cultural context and destination-specific
-food forecasts. Visited places are left behind. The HUD, camp,
-chronicle, and Khan records retain the actual location; chapter weather and pressures
-still follow the four-stage expedition. The third crossing leads to the
-fictional Heart of the Steppe. These are stylized camps in the surrounding landscapes,
-with compressed travel geography; real sacred places remain distinct from the
-invented calamity. See [destinations, rules, and cultural sources](docs/migration-locations.md).
+There are no journey chapters, crossing encounters, or final stand for now, and no victory condition: the expedition continues until the clan's people or resolve run out. The chronicle's **Your clan** tab records each Khan’s time carrying the banner, the host’s victories during that tenure, and factual clan memories (camp work, departures, arrivals, losses, and succession). The record retains the latest 96 clan moments and 64 Khans, with total counts visible.
 
 Start with eight people, three horses, two gers, supplies, and a mounted Khan with one accompanying rider. Attacks are automatic. Ride to collect spirit shards and gain XP levels without interrupting combat. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through. XP levels also grant automatic [class progression bonuses](docs/game-mechanics.md#playable-classes). Camp development is the sole progression interface; patron research and knowledge points have been removed for now. Spirit remains the camp currency earned from kills.
 
 Press **B** to visit the illustrated **nomadic camp**. Five permanent core households begin at level 1: **Khan's Ger, Horse Lines, Herding Grounds, Communal Hearth and Wagon Yard**. Choose five different workplaces from fourteen military, economy, survival, spiritual and cultural buildings for the five optional locations. Every building has three levels, a visible upgraded appearance, authored costs and effects, and a compact parchment inspector. The Khan's Ger governs population capacity and higher building levels. Search and Provisions stay within the same painted map; Escape/controller Back closes a popover before leaving. Planning freezes the world. Unsupported mount, equipment, companion, trading and corruption benefits are recorded as **Planned** data rather than simulated systems.
 
-Purchases and completed crossings save the portable camp checkpoint. **Continue clan camp** restores its choices, levels and actual supplies into a fresh expedition; **Continue expedition** restores the whole battle and journey. Old facilities map to their corresponding new buildings, while retired tiers, internal ranks and craft branches are refunded once. See [the nomadic camp guide](docs/nomadic-camp.md) for the complete catalog, effects, prices and migration mapping.
+Purchases and completed migrations save the portable camp checkpoint. **Continue clan camp** restores its choices, levels and actual supplies into a fresh expedition; **Continue expedition** restores the whole battle and journey. Old facilities map to their corresponding new buildings, while retired tiers, internal ranks and craft branches are refunded once. See [the nomadic camp guide](docs/nomadic-camp.md) for the complete catalog, effects, prices and migration mapping.
 
 **Advanced Fletcher's Workshop + Shaman's Ger = the Burning Tempest:** enhanced flaming volleys with lingering burn damage. See [combat rules](docs/game-mechanics.md#camp-attacks-and-burning-tempest) for class-specific behavior.
 
@@ -130,23 +117,18 @@ Battles alternate warned assaults, featured enemies, and recovery windows. Optio
 
 Pastures deplete and spawn pressure increases while you stay. After 45 active seconds at a camp, press **M** to inspect routes. You choose when to leave. Stay to gather materials and grow, or pack up before grazing and provisions run out. Refugees strengthen your host but consume food. Starvation and attacks can cost families and livestock; losing all people or clan resolve ends the run.
 
-Choose a river crossing for food and horses, an exposed ridge for materials and spirit, or blue banners for refugees and veteran riders. **Rewards arrive only after a successful crossing.** Each approach also offers a distinct optional encounter: attacks from both banks at a carved ford, an ambush ahead on an exposed ridge, or additional households to escort into the moving column. A crossing without casualties restores four extra resolve. The caravan travels east automatically; ride alongside it and defend the supply carts. Structures cannot be developed while packed. Arrival restores some resolve and a living Khan’s health, refreshes the pasture, and preserves your build and uncollected XP.
+Choose a river route for food and horses, an exposed ridge for materials and spirit, or blue banners for refugees and veteran riders. **Rewards arrive only after the caravan arrives.** The caravan travels east automatically; ride alongside it and defend the supply carts. Structures cannot be developed while packed. Arrival restores some resolve and a living Khan’s health, refreshes the pasture, and preserves your build and uncollected XP.
 
-The journey's chapter pressures follow the clan through whichever camps it chooses. After the first crossing, the White Silence reduces grazing and caravan speed. After the second, the Earth That Walks brings ground eruptions that warn before striking. At the fictional Heart of the Steppe, the Red Eclipse weakens rituals and brings the Skybreaker. Protect your people for three minutes until the passage opens. **Victory depends on saving the clan; killing the boss is optional.** Defeating it restores resolve.
-
-Victory and defeat open the journey results screen, reporting the journey outcome, duration, survivors, herd, pastures reached, fallen Khans, and the Skybreaker's fate. Memories and crossings reset with each new expedition and are preserved when resuming a saved expedition; they do not add permanent unlocks.
-
-An expedition is intended to take about 15 minutes with roughly three minutes of growth per camp. Earlier departures shorten the journey; longer stays increase danger. This is a prototype balance, not a fixed time limit.
+Defeat opens the journey results screen, reporting the location, duration, survivors, herd, camps reached, and fallen Khans. Memories and migrations reset with each new expedition and are preserved when resuming a saved expedition; they do not add permanent unlocks.
 
 Plan supplies with the live **Food net** rate and **Stores empty in** estimate beneath
 the resource bar. The estimate follows pasture depletion or recovery, current
-households, winter conditions, and learned improvements; food can be increasing now
-and still run out later. During crossings and the final stand, it reports whether
-supplies last to arrival or the passage opening. Imminent shortages remain visible
+households, the current place, and learned improvements; food can be increasing now
+and still run out later. During migration, it reports whether supplies last to arrival. Imminent shortages remain visible
 when tips are hidden. In the camp inspector, **Provisions & gathering** breaks down
 production, consumption, and material gathering. Eligible building inspectors preview
 the actual purchase’s changes to combat and economy values, including food duration
-and crossing costs. You can preview an upgrade while saving up its resource cost. Route cards show estimated travel
+and journey food costs. You can preview an upgrade while saving up its resource cost. Route cards show estimated travel
 time, food needed en route, food after arrival rewards or rescue costs, and shortages
 before arrival. Estimates assume current households and improvements without future
 battle losses or purchases; risky routes remain your choice.
@@ -197,7 +179,7 @@ To preserve existing profiles, native saves retain the original internal **Gloam
 
 **Continue expedition** resumes the latest full save. **Saved expeditions**, on the title, pause, and results screens, offers three manual slots plus an autosave, with location, journey time, population, level, and save date. Overwriting, deleting, and loading over a live expedition require confirmation. Loaded expeditions open paused; no simulation runs while the game is closed. **Save and return to title** keeps the current journey. **New Game** starts fresh; the existing **Continue clan camp** still carries only the portable camp into a fresh journey.
 
-Autosaves run every 30 active seconds, on pausing, after progression/travel checkpoints, and before a normal desktop close or Quit. Normal saves preserve the Khan and succession timer, resources and facilities, migration and objectives, enemies, projectiles, dropped XP, and ability/encounter cooldowns. Developer and cheated runs cannot overwrite normal saves. Manual slots remain available after defeat or victory.
+Autosaves run every 30 active seconds, on pausing, after progression/travel checkpoints, and before a normal desktop close or Quit. Normal saves preserve the Khan and succession timer, resources and facilities, migration and objectives, enemies, projectiles, dropped XP, and ability/encounter cooldowns. Developer and cheated runs cannot overwrite normal saves. Manual slots remain available after defeat.
 
 Profile preferences remain in `profile.json`; full saves use `expedition-auto.json` and `expedition-slot-1.json` through `expedition-slot-3.json` beside it. Writes are validated, queued, flushed, and atomically renamed, with a previous-save `.bak` recovery copy. Damaged or incompatible slots show their status; failed saves never report success. A failed close-time save lets you keep playing and retry or explicitly quit without saving. Native saves never use the install directory or localStorage. Browser preview saves remain separate. See [the save-system contract](docs/expedition-saves.md).
 
@@ -208,13 +190,13 @@ src/game/config.ts             Balance, world, and journey timings (seconds)
 src/game/types.ts              Run, clan, and snapshot contracts
 src/game/state/run.ts          Experience and run lifecycle
 src/game/state/khan.ts         Khan presence, lethal hits, and active-time succession
-src/game/state/clan.ts         Economy, construction, migration, victory
+src/game/state/clan.ts         Economy, construction, migration, clan loss
 src/game/state/camp.ts         Typed camp effects, neutral defaults, and once-only grants
 src/game/data/clan.ts          Legacy crafts, routes, regions, formations
 src/game/data/nomadicCamp.ts   Current camp building registry and level effects
 src/game/state/nomadicCamp.ts  Validated building purchases and compatibility projections
-src/game/data/landscapes.ts    Twelve location palettes, landmarks, vegetation, water, weather
-src/game/data/enemies.ts       Five enemies, two elites, and the Skybreaker
+src/game/data/landscapes.ts    Eight location palettes, landmarks, vegetation, water, weather
+src/game/data/enemies.ts       Five enemies, two elites, and local variants
 src/game/assets/painterlyArt.ts Shared painted atlases, sizing, collision alignment, effects
 src/game/assets/SteppeLandscape.ts Painterly ground, riverbanks, weather, regional scenery
 src/game/assets/landscapeLayout.ts Seeded scenery placement and clear caravan corridor
@@ -291,7 +273,7 @@ play the game; the Pages Playwright config excludes them when `CI` is set, so
 GitHub never runs them and `npm run test:pages` keeps all three locally.
 The separate browser E2E workflow (focused PR runs, full shards, and nightly runs)
 is removed. Browser and desktop gameplay, graphics, and performance tests run
-locally, including Golden Pasture's texture/FPS budgets; there is no desktop nightly
+locally, including Orkhon Valley's texture/FPS budgets; there is no desktop nightly
 job. Software-rendered hosted runners do not provide reliable real-time simulation
 or GPU performance results.
 
@@ -368,7 +350,7 @@ later and Windows does not expose load average. See the
 [measured review and rendering comparisons](docs/browser-test-runtime.md) for
 selection limits, timings, and the decision to retain the full-suite defaults.
 
-Browser tests cover keyboard, controller, touch, combat, traditions, planning, the Burning Tempest, caravan damage, route rewards, remote camp defense, three crossings, clan-survival victory, full-window layout, and paused chronicle/settings/help navigation. Electron tests exercise the offline build, layout, native save persistence, sandboxing, fullscreen, and quit using isolated saves. Tests never use normal save files. Linux needs a display session or Xvfb for Electron.
+Browser tests cover keyboard, controller, touch, combat, traditions, planning, the Burning Tempest, caravan damage, route rewards, remote camp defense, migrations between real places, full-window layout, and paused chronicle/settings/help navigation. Electron tests exercise the offline build, layout, native save persistence, sandboxing, fullscreen, and quit using isolated saves. Tests never use normal save files. Linux needs a display session or Xvfb for Electron.
 
 Further release work includes extended balancing and playtesting, target-hardware performance, a longer campaign, permanent unlocks, platform validation, release art, real Steamworks APIs, and Steam review.
 

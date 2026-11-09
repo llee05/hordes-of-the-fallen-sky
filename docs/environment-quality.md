@@ -1,8 +1,9 @@
 # Environmental materials and ecology
 
 The environment quality pass keeps Phaser simulation, Three.js terrain, existing
-actors/buildings, and the 48° orthographic camera. Golden Pasture is the reference
-scene: seed `living-steppe-scenes-v3:golden-pasture`, camera target (2600,2600), zoom 1.
+actors/buildings, and the 48° orthographic camera. Orkhon Valley is the reference
+scene: seed `living-steppe-scenes-v3:orkhon-valley`, camera target (2600,2600), zoom 1.
+Earlier passes used the retired Golden Pasture camp, so the measurements below came from it.
 Before/after captures live under `test-results/environment/`.
 
 ## Material inspection and changes
@@ -60,8 +61,8 @@ cached nearest-shore distances with the actual local channel width. Terrain,
 material moisture, water rendering, and plants all query this same course.
 `ComposedTerrain` excavates a shallow bed, grades raised masses toward the channel,
 and rounds cliff remnants into banks so water does not cut through vertical walls.
-Larger cliffs remain away from the immediate bank. Crossings retain shared actor
-and deck registration.
+Larger cliffs remain away from the immediate bank. Bridge decks retain shared actor
+registration.
 
 `waterGeometry.ts` builds cross-channel strips with depth measured against the
 actual ground. `Water3D.ts` uses that depth to reveal the existing gravel painting
@@ -91,7 +92,7 @@ depths, chunk-independent ecology, exclusion areas, cliff relief seams and windi
 fixed cliff anchors, exact terrain queries, and connected caravan ground.
 Browser tests exercise every destination, debug/terrain-only modes, elevated
 movement and combat, pooled render budgets, and frozen water in menus. The native
-art-review test fixes Golden Pasture at (2600,2600), zoom 1, and saves both normal
+art-review test fixes Orkhon Valley at (2600,2600), zoom 1, and saves both normal
 and terrain-only views before measuring 350 pooled enemies. It holds full render
 scale with the adaptive scaler frozen through spawning, a one-second warm-up,
 and a three-second frame-rate sample. The sample also logs mean and 90th-percentile
@@ -99,7 +100,7 @@ main-thread frame times. Budget assertions remain in
 `tests/desktop/environment-quality.spec.ts`. Production Electron checks cover
 offline launch, migration, and both desktop window sizes.
 
-The final isolated native 350-enemy Golden Pasture sample measured about 60 FPS
+The last isolated native 350-enemy sample, taken at the retired Golden Pasture, measured about 60 FPS
 on Intel Iris Xe at 1280×800, full render scale, and secondary texture sampling,
 with 30 draw calls, 18 resident textures, and unchanged terrain geometry. This is a local sample rather than a hardware certification. Richer
 terrain and soft shadows cost more fragment work. The existing adaptive pixel

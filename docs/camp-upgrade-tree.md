@@ -106,11 +106,11 @@ Wind shamans and Ancestral ward are exclusive. The sanctuary's attacks are fanta
 | ------------------------------------------- | ------- | -------------- | ---------------------------------------------------------------------------------- |
 | Wind shamans · `wind-shamans`               | 30 +18S | Established    | Lightning interval becomes 1.8 seconds; combines with Fire arrows.                 |
 | Ancestral ward · `ancestral-ward`           | 30 +18S | Established    | Shared damage ×1.5 in a minimum radius of 125 every 1.2 seconds; clan damage ×0.8. |
-| Remembered ovoos · `ovoo-remembrance`       | 24 +8S  | Established    | Completed crossings restore 6 additional clan resolve.                             |
+| Remembered ovoos · `ovoo-remembrance`       | 24 +8S  | Established    | Completed migrations restore 6 additional clan resolve.                            |
 | Keepers of the storm watch · `storm-watch`  | 40 +18S | Wind shamans   | Lightning interval ×0.85: 1.8 → 1.53 seconds.                                      |
 | Names beside the hearth · `ancestral-tales` | 38 +16S | Ancestral ward | Khan recovery +0.15/active second; stationary clan resolve recovery +0.1/second.   |
 
-Red Eclipse still multiplies lightning intervals by 1.5, giving 2.295 seconds with Storm watch. Ward timers are independent. The sanctuary and Guardian wards each have a minimum radius of 125; both expand to reach 5 units beyond the barricade's melee attack range around larger camps. The Khan's recovery continues while travelling; resolve recovery waits for a stationary camp. Golomt's regeneration adds to the Khan recovery. Sanctuary and Guardian wards remain separate systems.
+Storm watch gives a 1.53-second lightning interval. Ward timers are independent. The sanctuary and Guardian wards each have a minimum radius of 125; both expand to reach 5 units beyond the barricade's melee attack range around larger camps. The Khan's recovery continues while travelling; resolve recovery waits for a stationary camp. Golomt's regeneration adds to the Khan recovery. Sanctuary and Guardian wards remain separate systems.
 
 ## Wagon circle · portable defenses
 
@@ -179,7 +179,7 @@ All four developments can be learned together.
 | Development / ID                                     | Cost | Requirement                       | Effect                                                                    |
 | ---------------------------------------------------- | ---- | --------------------------------- | ------------------------------------------------------------------------- |
 | Aaruul drying racks · `aaruul-drying`                | 26   | Established                       | +20 food immediately; food consumption ×0.9.                              |
-| Borts travel stores · `borts-stores`                 | 28   | Established                       | +15 food on each successful crossing.                                     |
+| Borts travel stores · `borts-stores`                 | 28   | Established                       | +15 food on each completed migration.                                     |
 | Airag hospitality · `airag-hospitality`              | 24   | Established                       | Welcome 4 people and restore 10 resolve immediately, respecting caps.     |
 | Provisions for every household · `shared-provisions` | 42   | Aaruul racks **and** Borts stores | Arrivals heal 10 additional Khan health and restore 6 additional resolve. |
 
@@ -200,14 +200,14 @@ flowchart TD
 
 All four developments can be learned together. This is the fictional clan's courier network, represented by a portable camp dispatch point; it does not imply that historical relay stations moved with a single household camp.
 
-| Development / ID                                       | Cost | Requirement                     | Effect                                                                    |
-| ------------------------------------------------------ | ---- | ------------------------------- | ------------------------------------------------------------------------- |
-| Pasture scouts · `pasture-scouts`                      | 28   | Established                     | Pasture depletion ×0.9.                                                   |
-| Supplies along the road · `supply-caches`              | 32   | Established                     | Each completed crossing grants +10 materials and +8 food.                 |
-| Messengers to scattered families · `family-messengers` | 30   | Established                     | Blue-banner rescue arrivals welcome 3 additional people, capped at 120.   |
-| Fresh horses on the road · `horse-relays`              | 44   | Pasture scouts **and** Supplies | Each completed crossing grants +1 horse, capped at forty, and +4 resolve. |
+| Development / ID                                       | Cost | Requirement                     | Effect                                                                     |
+| ------------------------------------------------------ | ---- | ------------------------------- | -------------------------------------------------------------------------- |
+| Pasture scouts · `pasture-scouts`                      | 28   | Established                     | Pasture depletion ×0.9.                                                    |
+| Supplies along the road · `supply-caches`              | 32   | Established                     | Each completed migration grants +10 materials and +8 food.                 |
+| Messengers to scattered families · `family-messengers` | 30   | Established                     | Blue-banner rescue arrivals welcome 3 additional people, capped at 120.    |
+| Fresh horses on the road · `horse-relays`              | 44   | Pasture scouts **and** Supplies | Each completed migration grants +1 horse, capped at forty, and +4 resolve. |
 
-With Borts stores, crossing supply rewards add **23 food and 10 materials** before route rewards. These supplies are paid only when a crossing completes, including the third crossing; opening menus or setting off never pays them again. Failed crossings grant no arrival reward. Family messengers adds people only on the blue-banner route, without adding extra rescued riders. Arrival bonuses do not repeat during the final stand.
+With Borts stores, migration supply rewards add **23 food and 10 materials** before route rewards. These supplies are paid only when the caravan arrives; opening menus or setting off never pays them again. A clan lost on the road receives no arrival reward. Family messengers adds people only on the blue-banner route, without adding extra rescued riders.
 
 ## Legacy implementation
 
