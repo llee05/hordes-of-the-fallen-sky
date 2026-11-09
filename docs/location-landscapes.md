@@ -56,6 +56,29 @@ they remain 2D interface illustrations. Battlefield geometry and depth-tested
 scenery use the shared angled renderer. Returning to a checkpoint reproduces its
 seeded composition, and arrival disposes the previous world before rebuilding.
 
+## Orkhon Valley manuscript pack (Prototype v0.1)
+
+Orkhon Valley integrates the antique illuminated-manuscript environment prototype pack
+(`public/art/orkhon-valley/`), cut from AI-generated illustrated sheets based on Ulaan Tsutgalan
+(Orkhon Falls) basalt cliffs, river, and steppe grassland:
+
+- **Ground materials**: Seamless stitched 512×512 tiles (`meadow.png`, `worn-grass.png`,
+  `packed-earth.png`, `gravel.png`, `riverbed.png`) composed from the pack's 18 base 128×128
+  ground tiles (steppe grass, tall grass, white/yellow flowers, worn grass, dry dirt, packed earth,
+  riverbank, shallow shore) and their mirrored variants with cosine cross-fade blending.
+- **Water**: The river channel blends `river-water.png` (from the pack's `river_flow_a`, `river_flow_b`,
+  and `river_eddy` surface textures) with active-time UV flow, over the shallow shore `riverbed.png`.
+- **Basalt cliffs & stone**: Raised shelves and vertical cliff faces use `basalt-cliff.png`
+  (columnar basalt cliff wall textures from `cliffs/vertical/straight_*`) and `basalt-stone.png`
+  for exposed rocky terrain.
+- **Scenery dressing**: 39 cleaned props are packed into `public/art/orkhon-valley/orkhon-scenery.png`
+  and `orkhon-scenery.json`, including birch and larch groves, dead trees, flowering scrub,
+  basalt boulders, rock piles, ruin arches and pillars, ovoo shrines, steles, and ritual props.
+  Alpha channels have been trimmed to remove residual parchment halos and crop lines.
+- **Unused pack assets**: `transitions/`, `paths_and_bridges/`, `vfx/`, `minimap/`, and static
+  `waterfalls/` are omitted as the 2.5D world uses Three.js procedural shaders, instanced 3D bridges,
+  and vector graphics. The pack remains prototype-grade for visual testing.
+
 ## Rivers and shores
 
 `assets/riverGeometry.ts` samples authored watercourses into smooth channels with
