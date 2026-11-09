@@ -12,6 +12,7 @@ export class Water3D {
     readonly river: WorldRiver,
     terrain: MountainHeightfield,
     bedTexture: THREE.Texture,
+    waterTexture?: THREE.Texture,
   ) {
     this.group.name = 'world-river';
     const data = waterGeometry(river, terrain);
@@ -32,6 +33,8 @@ export class Water3D {
       shader.uniforms.motionAmount = this.motion;
       shader.uniforms.frozen = { value: frozen ? 1 : 0 };
       shader.uniforms.bedTexture = { value: bedTexture };
+      shader.uniforms.hasWaterTexture = { value: waterTexture ? 1 : 0 };
+      shader.uniforms.waterTexture = { value: waterTexture ?? bedTexture };
       shader.uniforms.deepWater = {
         value: new THREE.Color(river.definition.color).multiplyScalar(0.65),
       };
@@ -44,7 +47,8 @@ export class Water3D {
       shader.fragmentShader =
         `varying float waterDepth; varying vec2 riverUv; varying vec2 riverWorld;
         uniform float flowTime;uniform float motionAmount;uniform int frozen;
-        uniform vec3 shallowWater;uniform vec3 deepWater;uniform sampler2D bedTexture;\n${shader.fragmentShader}`.replace(
+        uniform vec3 shallowWater;uniform vec3 deepWater;uniform sampler2D bedTexture;
+        uniform int hasWaterTexture;uniform sampler2D waterTexture;\n${shader.fragmentShader}`.replace(
           '#include <color_fragment>',
           `#include <color_fragment>
         float deep=smoothstep(0.4,8.0,waterDepth);
@@ -56,6 +60,11 @@ export class Water3D {
         float edge=1.0-smoothstep(0.0,2.2,waterDepth);
         float broken=0.35+0.65*smoothstep(0.15,0.8,sin(riverUv.y*.4+sin(riverUv.y*.11)));
         water=mix(water,vec3(.59,.68,.56),edge*broken*.25)+stroke;
+        if(hasWaterTexture==1 && frozen==0) {
+          vec2 flowUv = vec2(riverUv.x * 2.0, riverUv.y * 0.4 - time * 0.12);
+          vec3 riverTex = texture2D(waterTexture, flowUv).rgb;
+          water = mix(water, riverTex * vec3(0.9, 1.05, 1.02), 0.52);
+        }
         if(frozen==1)water=mix(water,vec3(.54,.68,.7),.65);
         diffuseColor.rgb*=water;
         diffuseColor.a*=smoothstep(0.0,0.75,waterDepth);

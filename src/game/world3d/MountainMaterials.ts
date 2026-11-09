@@ -6,6 +6,7 @@ import type { TerrainNavigation } from '../terrain/TerrainNavigation';
 import { WORLD_DEBUG_MODES, type WorldDebugMode } from './worldProjection';
 import { TERRAIN_COLOR, TERRAIN_SAMPLING } from './terrainShader';
 import type { ScenePalette } from '../data/worldRegions';
+import type { LocationId } from '../types';
 export { WORLD_DEBUG_MODES, type WorldDebugMode } from './worldProjection';
 
 /** Reuses painted textures; all elevation, walls, lighting and shadows come from geometry. */
@@ -13,11 +14,17 @@ export class MountainMaterials {
   readonly surface: THREE.MeshLambertMaterial;
   readonly wall: THREE.MeshLambertMaterial;
   readonly bedTexture: THREE.Texture;
+  readonly waterTexture?: THREE.Texture;
   readonly debug = { value: 0 };
   readonly samplingDetail = { value: 1 };
   private readonly textures: THREE.Texture[] = [];
 
-  constructor(scene: Phaser.Scene, palette?: ScenePalette, anisotropy = 1) {
+  constructor(
+    scene: Phaser.Scene,
+    palette?: ScenePalette,
+    anisotropy = 1,
+    locationId?: LocationId,
+  ) {
     const texture = (key: string): THREE.Texture => {
       const image = scene.textures.get(key).getSourceImage() as HTMLImageElement;
       const map = new THREE.Texture(image);
@@ -40,18 +47,30 @@ export class MountainMaterials {
         Math.max(0.7, Math.min(1.3, ratio.b)),
       );
     };
+    const isOrkhon = locationId === 'orkhon-valley';
+    const meadowTex = isOrkhon
+      ? texture('orkhon-meadow')
+      : texture(palette ? 'tapestry-meadow' : MOUNTAIN_TERRAIN_ART.materials.grassland.texture!);
+    const dryMeadowTex = isOrkhon ? texture('orkhon-worn-grass') : texture('ground');
+    const soilTex = isOrkhon
+      ? texture('orkhon-packed-earth')
+      : texture(MOUNTAIN_TERRAIN_ART.materials['rocky-soil'].texture!);
+    const stoneTex = isOrkhon
+      ? texture('orkhon-basalt-stone')
+      : texture(palette ? 'tapestry-stone' : MOUNTAIN_TERRAIN_ART.materials.stone.texture!);
+    const wallStoneTex = isOrkhon ? texture('orkhon-basalt-cliff') : stoneTex;
+    const gravelTex = isOrkhon ? texture('orkhon-gravel') : soilTex;
+    const snowTex = texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!);
+    this.bedTexture = isOrkhon ? texture('orkhon-riverbed') : soilTex;
+    this.waterTexture = isOrkhon ? texture('orkhon-river-water') : undefined;
+
     const maps = {
-      meadow: {
-        value: texture(
-          palette ? 'tapestry-meadow' : MOUNTAIN_TERRAIN_ART.materials.grassland.texture!,
-        ),
-      },
-      dryMeadow: { value: texture('ground') },
-      soil: { value: texture(MOUNTAIN_TERRAIN_ART.materials['rocky-soil'].texture!) },
-      stone: {
-        value: texture(palette ? 'tapestry-stone' : MOUNTAIN_TERRAIN_ART.materials.stone.texture!),
-      },
-      snow: { value: texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!) },
+      meadow: { value: meadowTex },
+      dryMeadow: { value: dryMeadowTex },
+      soil: { value: soilTex },
+      gravelMap: { value: gravelTex },
+      stone: { value: stoneTex },
+      snow: { value: snowTex },
       worldDebug: this.debug,
       samplingDetail: this.samplingDetail,
       grassTint: { value: tint(palette?.grass, 0xa3ad69) },
@@ -59,11 +78,11 @@ export class MountainMaterials {
       rockTint: { value: tint(palette?.rock, 0x8d8f85) },
       snowTint: { value: tint(palette?.snow, 0xe4e9df) },
     };
-    this.bedTexture = maps.soil.value;
     const make = (wall: boolean): THREE.MeshLambertMaterial => {
       const material = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
       material.onBeforeCompile = (shader) => {
         Object.assign(shader.uniforms, maps);
+        if (wall) shader.uniforms.stone = { value: wallStoneTex };
         shader.uniforms.isWall = { value: wall ? 1 : 0 };
         shader.vertexShader =
           `attribute vec4 weightsA; attribute vec3 weightsB; attribute float contact; attribute float blocked; varying float traversal;

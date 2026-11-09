@@ -41,4 +41,19 @@ describe('clustered landscape ecology', () => {
     for (const p of sceneDressing(high, { x: 1024, y: 1024, width: 3072, height: 3072 }))
       expect(high.snowAt(high.height(p.x, p.z) * 1000, 1)).toBeLessThanOrEqual(0.65);
   });
+  it('dresses Orkhon Valley using the manuscript pack atlas frames and preserves chunk streaming', () => {
+    const terrain = new ComposedTerrain(
+      composedRegion('orkhon-valley'),
+      LANDSCAPES['orkhon-valley'].water,
+    );
+    const whole = sceneDressing(terrain, { x: 1536, y: 1536, width: 1024, height: 1024 });
+    const parts = [1536, 2048].flatMap((x) =>
+      [1536, 2048].flatMap((y) => sceneDressing(terrain, { x, y, width: 512, height: 512 })),
+    );
+    const sort = (items: typeof whole) => items.map((p) => JSON.stringify(p)).sort();
+    expect(sort(parts)).toEqual(sort(whole));
+    expect(whole.every((p) => p.texture === 'orkhon-scenery')).toBe(true);
+    const frames = new Set(whole.map((p) => p.frame));
+    expect(frames.size).toBeGreaterThan(4);
+  });
 });
