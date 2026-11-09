@@ -364,7 +364,7 @@ describe('full expedition snapshots', () => {
     }
   });
 
-  it('maps an expedition saved with journey chapters, crossings and the final stand to real places', () => {
+  it('maps a retired journey to real places and clears its Chronicle history', () => {
     const run = createRun();
     run.phase = 'playing';
     run.legacy.memories.push({
@@ -394,12 +394,22 @@ describe('full expedition snapshots', () => {
     retired.run.safety.protectedCrossings = 2;
     retired.run.safety.lastDamage = { cause: 'eruption', at: 1, amount: 3, people: 0 };
     retired.run.guidance.completed = ['ride', 'crossing'];
-    retired.run.metrics.stages = [{ ...retired.run.metrics.stages[0], stage: 'final' }].filter(
-      (stage) => stage.key,
-    );
+    retired.run.metrics.stages = [
+      {
+        ...retired.run.metrics.stages[0],
+        key: '0:final:golden-pasture',
+        location: 'The Golden Pasture',
+        stage: 'final',
+      },
+    ];
     Object.assign(retired.run.legacy.khans[0], { region: 0, fallenAt: 5, fallenRegion: 2 });
     delete retired.run.legacy.khans[0].locationId;
-    Object.assign(retired.run.legacy.memories[0], { region: 1 });
+    Object.assign(retired.run.legacy.memories[0], {
+      region: 1,
+      locationId: 'golden-pasture',
+      title: 'The Broken Pass',
+      detail: 'The clan set out for The Silent River and The Heart of the Steppe.',
+    });
     delete retired.run.legacy.memories[0].locationId;
     Object.assign(retired.run.legacy.crossings[0], { region: 1, locationId: 'silent-river' });
     retired.world.timers.hazardTimer = 3;
@@ -426,10 +436,24 @@ describe('full expedition snapshots', () => {
       locationId: 'otgontenger',
       fallenLocationId: 'altai-tavan-bogd',
     });
-    expect(restored.legacy.memories[0]!.locationId).toBe('orkhon-valley');
+    expect(restored.metrics?.stages).toEqual([]);
+    expect(restored.legacy.memories).toEqual([]);
+    expect(restored.legacy.totalMemories).toBe(0);
     expect(restored.legacy.crossings).toEqual([
       { route: 'river', population: 8, locationId: 'orkhon-valley' },
     ]);
+    const restoredText = JSON.stringify(restored);
+    for (const retiredLocation of [
+      'The Golden Pasture',
+      'The Silent River',
+      'The Broken Pass',
+      'The Heart of the Steppe',
+      'golden-pasture',
+      'silent-river',
+      'broken-pass',
+      'heart-of-the-steppe',
+    ])
+      expect(restoredText).not.toContain(retiredLocation);
     expect('hazardTimer' in restoredWorld.timers).toBe(false);
     expect(restoredWorld.enemies.map((enemy) => enemy.definition)).toEqual([
       retired.world.enemies[0].definition,
@@ -464,13 +488,16 @@ describe('full expedition snapshots', () => {
     });
   });
 
-  it('captures unbounded run time with a bounded listing duration', () => {
+  it('captures unbounded run progress with bounded listing values', () => {
     const run = createRun();
     run.elapsed = 90_000;
+    run.level = 10_001;
     const save = captureExpedition(run, world());
     expect(save.summary.elapsed).toBe(86_400);
+    expect(save.summary.level).toBe(10_000);
     expect(save.run.elapsed).toBe(90_000);
-    expect(decodeExpedition(save).run.elapsed).toBe(90_000);
+    expect(save.run.level).toBe(10_001);
+    expect(decodeExpedition(save).run).toMatchObject({ elapsed: 90_000, level: 10_001 });
   });
   it('round-trips every starting tradition without reapplying supplies or movement bonuses', () => {
     for (const entry of STARTING_TRADITIONS) {

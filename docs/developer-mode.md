@@ -106,7 +106,7 @@ Guidance is off for the test expedition. Normal new games retain their
 usual state and preferences. Test provisions are configured in `GAME.developer`.
 
 Both the menu and scene actions are guarded by `import.meta.env.DEV`; production
-and packaged builds have no selector or F8 binding. Developer victories and defeats
+and packaged builds have no selector or F8 binding. Developer defeats
 leave the saved longest journey unchanged. Settings still save normally.
 
 `npm run check` covers checkpoint state and the production build. Browser regression

@@ -5,6 +5,7 @@ import {
   isExpeditionSave,
   isRecord,
   MAX_EXPEDITION_SUMMARY_ELAPSED,
+  MAX_EXPEDITION_SUMMARY_LEVEL,
   type ExpeditionSave,
 } from '../../shared/expeditionSave';
 import { isNomadicCamp } from '../../shared/nomadicCamp.js';
@@ -401,7 +402,7 @@ export function captureExpedition(
         location: currentLocation(run).name,
         elapsed: Math.min(run.elapsed, MAX_EXPEDITION_SUMMARY_ELAPSED),
         population: run.clan.population,
-        level: run.level,
+        level: Math.min(run.level, MAX_EXPEDITION_SUMMARY_LEVEL),
         stage: run.clan.stage,
       },
       run: { ...run, phase: 'paused' },

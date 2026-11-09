@@ -70,10 +70,10 @@ export function migrateRetiredJourney(save: Record<string, unknown>): boolean {
     run.guidance.completed = run.guidance.completed.map((step) =>
       step === 'crossing' ? 'journey' : step,
     );
-  if (isRecord(run.metrics))
-    for (const stage of records(run.metrics.stages))
-      if (stage.stage === 'final') stage.stage = 'camp';
+  if (isRecord(run.metrics)) run.metrics.stages = [];
   if (isRecord(run.legacy)) {
+    run.legacy.memories = [];
+    run.legacy.totalMemories = 0;
     for (const khan of records(run.legacy.khans)) {
       khan.locationId = realPlace(khan.locationId, khan.region);
       if (khan.fallenAt !== undefined)
@@ -81,7 +81,7 @@ export function migrateRetiredJourney(save: Record<string, unknown>): boolean {
       delete khan.region;
       delete khan.fallenRegion;
     }
-    for (const entry of [...records(run.legacy.memories), ...records(run.legacy.crossings)]) {
+    for (const entry of records(run.legacy.crossings)) {
       entry.locationId = realPlace(entry.locationId, entry.region);
       delete entry.region;
     }
