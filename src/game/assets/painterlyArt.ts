@@ -77,6 +77,16 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
     `${root}tapestry-scenery-v3.png`,
     `${root}tapestry-scenery-v3.json`,
   );
+  const orkhon = `${root}orkhon-valley/`;
+  scene.load.image('orkhon-meadow', `${orkhon}meadow.png`);
+  scene.load.image('orkhon-worn-grass', `${orkhon}worn-grass.png`);
+  scene.load.image('orkhon-packed-earth', `${orkhon}packed-earth.png`);
+  scene.load.image('orkhon-gravel', `${orkhon}gravel.png`);
+  scene.load.image('orkhon-basalt-stone', `${orkhon}basalt-stone.png`);
+  scene.load.image('orkhon-basalt-cliff', `${orkhon}basalt-cliff.png`);
+  scene.load.image('orkhon-riverbed', `${orkhon}riverbed.png`);
+  scene.load.image('orkhon-river-water', `${orkhon}river-water.png`);
+  scene.load.atlas('orkhon-scenery', `${orkhon}orkhon-scenery.png`, `${orkhon}orkhon-scenery.json`);
 }
 
 export function sceneryImage(

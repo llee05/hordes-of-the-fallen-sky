@@ -107,6 +107,7 @@ export class World3DRenderer {
       scene,
       palette,
       Math.min(4, this.renderer.capabilities.getMaxAnisotropy()),
+      terrain instanceof ComposedTerrain ? terrain.region.scene.id : undefined,
     );
     for (const material of [this.materials.surface, this.materials.wall]) {
       const mesh = new THREE.Mesh(new THREE.BufferGeometry(), material);
@@ -118,7 +119,12 @@ export class World3DRenderer {
     this.sprites = new SpriteBridge(scene, this.actors, terrain);
     this.effects = new GraphicsBridge(scene, this.actors, terrain);
     if (terrain instanceof ComposedTerrain && terrain.river) {
-      this.water = new Water3D(terrain.river, terrain, this.materials.bedTexture);
+      this.water = new Water3D(
+        terrain.river,
+        terrain,
+        this.materials.bedTexture,
+        this.materials.waterTexture,
+      );
       this.world.add(this.water.group);
     }
     this.label = document.createElement('div');

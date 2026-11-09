@@ -1,7 +1,7 @@
 /** World-space texture sampling; noise chooses material coverage, never substitutes painted color. */
 export const TERRAIN_SAMPLING = `
   uniform sampler2D meadow; uniform sampler2D dryMeadow; uniform sampler2D soil;
-  uniform sampler2D stone; uniform sampler2D snow;
+  uniform sampler2D stone; uniform sampler2D snow; uniform sampler2D gravelMap;
   uniform int worldDebug; uniform int isWall;
   uniform float samplingDetail;
   uniform vec3 grassTint; uniform vec3 soilTint; uniform vec3 rockTint; uniform vec3 snowTint;
@@ -26,7 +26,7 @@ export const TERRAIN_COLOR = `
     if(materialA.x>0.005) grass=painted(meadow,worldPoint.xz/390.0)*vec3(0.8,1.02,0.86)*grassTint;
     if(materialA.w>0.005) dryGrass=painted(dryMeadow,worldPoint.xz/470.0)*vec3(0.92,0.96,0.89)*grassTint;
     if(materialA.y>0.005) dirt=painted(soil,worldPoint.xz/420.0)*soilTint;
-    if(materialB.z>0.005) gravel=painted(soil,worldPoint.xz/170.0)*vec3(0.84,0.88,0.87)*soilTint;
+    if(materialB.z>0.005) gravel=painted(gravelMap,worldPoint.xz/170.0)*vec3(0.84,0.88,0.87)*soilTint;
     if(materialB.x+materialB.y>0.005) white=painted(snow,worldPoint.xz/520.0)*snowTint*0.82;
   }
   if(materialA.z>0.005 || isWall==1) {
