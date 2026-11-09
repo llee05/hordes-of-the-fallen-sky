@@ -10,7 +10,7 @@ export async function command(page: Page, text: string): Promise<void> {
 export async function checkpoint(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
-  await page.locator('[data-developer-level="chapter:broken-pass"]').click();
+  await page.locator('[data-developer-level="place:altai-tavan-bogd"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.evaluate(() => {
     window.__gloam.hooks.quietBattlefield();

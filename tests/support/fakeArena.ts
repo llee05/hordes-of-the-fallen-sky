@@ -77,7 +77,6 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
     supportTimer: 0,
     wagonTimer: 0,
     wardTimer: 0,
-    hazardTimer: 0,
   };
 
   const enemies = new MockGroup<Enemy>(() => new Enemy({} as any, 0, 0, 'wolf'));

@@ -24,7 +24,6 @@ export function migrationMobility(run: RunState): number {
   return (
     (1 + run.clan.herd * 0.012) *
     (hasDevelopment(run, 'herd', 'remount-herds') ? 1.2 : 1) *
-    (run.clan.region === 1 ? 0.8 : 1) *
     run.clan.campEffects.multipliers.mobility *
     currentLocation(run).balance.mobility *
     startingTradition(run.startingTradition).balance.mobility
@@ -45,7 +44,6 @@ export function economyRates(run: RunState, pasture = run.clan.pasture): Economy
   const foodProduction =
     (0.65 + (clan.buildings.herd ? 0.65 : 0)) *
     grazing *
-    (clan.region === 1 ? 0.7 : 1) *
     multipliers.foodProduction *
     location.food;
   return {
@@ -60,24 +58,24 @@ export function economyRates(run: RunState, pasture = run.clan.pasture): Economy
   };
 }
 
-/** No losses or purchases are assumed; arrival gifts cannot feed people during the crossing. */
-export function crossingDuration(
+/** No losses or purchases are assumed; arrival gifts cannot feed people during the journey. */
+export function travelDuration(
   run: RunState,
   route: (typeof ROUTES)[number],
   destination: MigrationLocation = arrivalLocation(run),
 ): number {
   return (
-    (GAME.clan.migrationDuration * route.duration * destination.balance.crossing) /
+    (GAME.clan.migrationDuration * route.duration * destination.balance.travel) /
     migrationMobility(run)
   );
 }
 
-export function crossingForecast(
+export function travelForecast(
   run: RunState,
   route: (typeof ROUTES)[number],
   destination: MigrationLocation = arrivalLocation(run),
 ) {
-  const duration = crossingDuration(run, route, destination);
+  const duration = travelDuration(run, route, destination);
   const remaining = Math.max(
     0,
     duration -
@@ -135,22 +133,14 @@ function projectFood(run: RunState, duration = Infinity) {
   return { foodChange, foodSeconds };
 }
 
-/** Forecasts use active seconds and hold population, improvements, and regional conditions fixed. */
+/** Forecasts use active seconds and hold population, improvements, and location conditions fixed. */
 export function economyForecast(run: RunState): EconomyForecast {
   const rates = economyRates(run);
   let foodSeconds: number | undefined;
   if (run.clan.stage === 'migration') {
     const route = ROUTES.find((entry) => entry.id === run.clan.routeId);
-    const remaining = route ? crossingForecast(run, route).remaining : 0;
+    const remaining = route ? travelForecast(run, route).remaining : 0;
     foodSeconds = projectFood(run, remaining).foodSeconds;
-  } else {
-    foodSeconds = projectFood(run).foodSeconds;
-    if (
-      run.clan.stage === 'final' &&
-      foodSeconds !== undefined &&
-      foodSeconds > Math.max(0, GAME.clan.finalDuration - run.clan.stageTime)
-    )
-      foodSeconds = undefined;
-  }
+  } else foodSeconds = projectFood(run).foodSeconds;
   return { ...rates, foodSeconds };
 }

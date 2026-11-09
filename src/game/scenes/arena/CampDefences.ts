@@ -53,7 +53,6 @@ export class CampDefences extends ArenaSystem {
       }
       this.timers.supportTimer =
         (hasDevelopment(this.run, 'sanctuary', 'wind-shamans') ? 1.8 : 3.5) *
-        (clan.region === 3 ? 1.5 : 1) *
         clan.campEffects.multipliers.sanctuaryInterval;
     }
     const wagonResearch = wagonDefence(this.run);

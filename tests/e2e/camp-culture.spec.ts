@@ -68,7 +68,7 @@ test('healer recovery respects paused gameplay and never advances a fallen Khan 
   ).toEqual([0, 7]);
 });
 
-test('hunting and trading arrival benefits travel with the camp and pay only at crossing completion', async ({
+test('hunting and trading arrival benefits travel with the camp and pay only at migration arrival', async ({
   page,
 }) => {
   test.setTimeout(60000);
@@ -92,7 +92,7 @@ test('hunting and trading arrival benefits travel with the camp and pay only at 
     (window as any).__gloam.scene.run.clan.stageTime = 70;
   });
   await expect
-    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.region))
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.legacy.crossings.length))
     .toBe(1);
   await page.keyboard.press('b');
   const arrived = await page.evaluate(() => {
@@ -109,10 +109,7 @@ test('hunting and trading arrival benefits travel with the camp and pay only at 
   expect(arrived.food).toBeCloseTo(135 + before.bonus.arrivalFood, 0);
   expect(arrived.materials).toBeCloseTo(before.materials + before.bonus.arrivalMaterials, 0);
   expect(arrived.herd).toBe(5);
-  expect(arrived.resolve).toBeCloseTo(
-    50 + GAME.crossings.safeResolve + GAME.clan.arrival.resolve,
-    0,
-  );
+  expect(arrived.resolve).toBeCloseTo(50 + GAME.clan.arrival.resolve, 0);
   expect(arrived.health).toBeCloseTo(40 + GAME.clan.arrival.health, 0);
   expect(arrived.camp).toEqual(before.camp);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('gloam-profile')!).camp);

@@ -60,24 +60,22 @@ test('destination previews retain landscape descriptions, river channels, threat
   }
 
   await expect(page.locator('#timer')).toHaveText(frozen!);
-  expect(
-    await page.evaluate(
-      () => (window as any).__gloam.scene.run.clan.locationId ?? 'golden-pasture',
-    ),
-  ).toBe('golden-pasture');
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.locationId)).toBe(
+    'otgontenger',
+  );
   await page.keyboard.press('Escape');
   await page.locator('#journal').click();
-  await expect(page.locator('[data-area-intel="golden-pasture"]')).toContainText('Thistle prowler');
+  await expect(page.locator('[data-area-intel="otgontenger"]')).toContainText('Snowline hunter');
   await expect(page.locator('[data-area-intel="belukha"]')).toHaveCount(0);
 });
 
-// A later-chapter map is built from the current destination rather than the starting pasture.
+// A map is built from the current camp rather than the starting one.
 test('a map opened from Eej Khairkhan previews Orkhon Valley’s landscape', async ({ page }) => {
   // A cold start plus a streamed 3D destination exceeds 30 s under software rendering.
   test.setTimeout(60000);
   await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
-  await page.locator('[data-developer-level="destination:2:eej-khairkhan"]').click();
+  await page.locator('[data-developer-level="place:eej-khairkhan"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#location')).toHaveText('EEJ KHAIRKHAN');
   await page.keyboard.press('m');

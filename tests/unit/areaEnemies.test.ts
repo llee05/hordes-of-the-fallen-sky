@@ -35,7 +35,7 @@ describe('local and shared enemy rosters', () => {
       const r = createRun();
       r.phase = 'playing';
       r.clan.locationId = location;
-      r.clan.region = 1;
+      r.legacy.crossings.push({ route: 'river', population: 8, locationId: 'otgontenger' });
       r.clan.stageTime = 40;
       r.elapsed = 300;
       const random = randomSequence(),
@@ -64,7 +64,7 @@ describe('local and shared enemy rosters', () => {
     r.elapsed = 1000;
     r.clan.stageTime = 1;
     for (let i = 0; i < 20; i++) expect(encounterEnemy(r, () => 0).definition.id).toBe('wisp');
-    r.clan.region = 1;
+    r.legacy.crossings.push({ route: 'river', population: 8, locationId: 'otgontenger' });
     r.clan.locationId = 'bogd-khan-uul';
     expect(
       areaRoster('bogd-khan-uul', 1000, 1)

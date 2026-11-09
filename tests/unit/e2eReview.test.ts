@@ -32,10 +32,10 @@ describe('browser review selection', () => {
         'src/tapestry.css',
         'public/credits.md',
         'README.md',
-        'docs/final-stand.md',
+        'docs/nomadic-camp.md',
         'desktop/main.ts',
         'tests/unit/clan.test.ts',
-        'tests/e2e/final-stand.spec.ts',
+        'tests/e2e/destinations.spec.ts',
         'tests/e2e/helpers.ts',
       ]),
     ).toBe(false);

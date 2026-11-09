@@ -52,17 +52,11 @@ test(
   },
 );
 
-test('switching checkpoints clears old actors, hazards, boss state, and succession', async ({
-  page,
-}) => {
+test('switching checkpoints clears old actors, hazards, and succession', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
-  await page.locator('[data-developer-level="chapter:heart-of-the-steppe"]').click();
+  await page.locator('[data-developer-level="place:khan-tengri"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.clan.stageTime = 20;
-  });
-  await expect(page.locator('#boss-bar')).toBeVisible();
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     const warning = scene.add.graphics();
@@ -73,7 +67,7 @@ test('switching checkpoints clears old actors, hazards, boss state, and successi
     scene.run.xp = 3;
     window.__gloam.hooks.setTimers({ invulnerable: 0 });
     scene.takeDamage(1000);
-    (window as any).oldDeveloperWorld = { boss: scene.boss, gem, warning, enemies: scene.enemies };
+    (window as any).oldDeveloperWorld = { gem, warning, enemies: scene.enemies };
   });
   await expect(page.locator('#khan-succession')).toBeVisible();
   await page.keyboard.press('F8');
@@ -90,17 +84,16 @@ test('switching checkpoints clears old actors, hazards, boss state, and successi
       }),
     13,
   );
-  await page.locator('[data-developer-level="chapter:golden-pasture"]').click();
+  await page.locator('[data-developer-level="place:otgontenger"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   expect(
     await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       const old = (window as any).oldDeveloperWorld;
       return {
-        destroyed: [old.boss, old.gem, old.warning].every((actor) => !actor.scene),
+        destroyed: [old.gem, old.warning].every((actor) => !actor.scene),
         newPool: scene.enemies !== old.enemies,
         hazards: scene.hazards.length,
-        boss: !!scene.boss,
         succession: scene.run.khan.successionRemaining,
         bodyEnabled: scene.player.body.enable,
         generation: scene.run.khan.generation,
@@ -110,12 +103,10 @@ test('switching checkpoints clears old actors, hazards, boss state, and successi
     destroyed: true,
     newPool: true,
     hazards: 0,
-    boss: false,
     succession: 0,
     bodyEnabled: true,
     generation: 1,
   });
-  await expect(page.locator('#boss-bar')).toBeHidden();
 });
 
 test('developer outcomes leave saved records intact and a normal new game clears developer mode', async ({
@@ -127,22 +118,15 @@ test('developer outcomes leave saved records intact and a normal new game clears
     best: localStorage.getItem('gloam-best'),
   }));
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
-  await page.locator('[data-developer-level="chapter:heart-of-the-steppe"]').click();
-  await expect(page.getByRole('dialog')).toBeHidden();
-  await page.evaluate(() => {
-    (window as any).__gloam.scene.run.clan.stageTime = 180;
-  });
-  await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
-  await expect(page.locator('#best')).toHaveText('— — : — —');
-  await page.keyboard.press('F8');
-  await closeOverlayOrPause(page);
-  await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
-  await page.keyboard.press('F8');
-  await page.locator('[data-developer-level="chapter:broken-pass"]').click();
+  await page.locator('[data-developer-level="place:altai-tavan-bogd"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.evaluate(() => {
     (window as any).__gloam.scene.run.clan.integrity = 0;
   });
+  await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
+  await expect(page.locator('#best')).toHaveText('— — : — —');
+  await page.keyboard.press('F8');
+  await closeOverlayOrPause(page);
   await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
   expect(
     await page.evaluate(() => ({
@@ -161,10 +145,10 @@ test('developer outcomes leave saved records intact and a normal new game clears
       return {
         developer: scene.developerRun,
         population: scene.run.clan.population,
-        region: scene.run.clan.region,
+        locationId: scene.run.clan.locationId,
       };
     }),
-  ).toEqual({ developer: false, population: 8, region: 0 });
+  ).toEqual({ developer: false, population: 8, locationId: 'otgontenger' });
 });
 
 test('developer choices and Back stay usable in a narrow viewport', async ({ page }) => {
@@ -177,11 +161,9 @@ test('developer choices and Back stay usable in a narrow viewport', async ({ pag
       .locator('.developer-panel')
       .evaluate((panel) => panel.scrollWidth <= panel.clientWidth),
   ).toBe(true);
-  await page
-    .locator('[data-developer-level="destination:3:orkhon-valley"]')
-    .scrollIntoViewIfNeeded();
+  await page.locator('[data-developer-level="place:orkhon-valley"]').scrollIntoViewIfNeeded();
   await page.screenshot({ path: 'test-results/developer-mobile.png' });
-  await page.locator('[data-developer-level="destination:3:orkhon-valley"]').click();
+  await page.locator('[data-developer-level="place:orkhon-valley"]').click();
   await expect(page.locator('#location')).toHaveText('ORKHON VALLEY');
 });
 

@@ -42,7 +42,7 @@ describe('the clan’s lived history', () => {
     expect(createRun().legacy.khans).toHaveLength(1);
   });
 
-  it('remembers validated crafts, actual crossings, and losses without replaying rewards', () => {
+  it('remembers validated crafts, actual migrations, and losses without replaying rewards', () => {
     const run = createRun();
     run.phase = 'building';
     buildStructure(run, 'archery');
@@ -73,44 +73,38 @@ describe('the clan’s lived history', () => {
     }
     expect(run.legacy.memories).toHaveLength(GAME.legacy.memoryLimit);
     expect(run.legacy.totalMemories).toBe(GAME.legacy.memoryLimit + 10);
-    run.legacy.outcome = 'won';
-    run.phase = 'won';
-    expect(khanRecords(run)).toContain('Carried the banner to refuge');
+    run.legacy.outcome = 'dead';
+    run.phase = 'dead';
+    expect(khanRecords(run)).toContain('With the clan at the journey’s end');
   });
 
-  it('reports factual journey results for refuge and defeat', () => {
+  it('reports factual journey results for a lost clan', () => {
     const run = createRun();
     run.elapsed = 215;
-    run.clan.population = 14;
+    run.clan.population = 0;
     run.clan.herd = 6;
-    run.clan.region = 3;
-    run.clan.stage = 'final';
-    run.clan.locationId = 'heart-of-the-steppe';
-    run.clan.finalBossSpawned = true;
-    run.clan.finalBossDefeated = true;
+    run.clan.stage = 'migration';
+    run.clan.locationId = 'belukha';
     run.legacy.crossings = [
-      { route: 'river', region: 1, population: 10, locationId: 'orkhon-valley' },
-      { route: 'pass', region: 2, population: 12, locationId: 'otgontenger' },
-      { route: 'refuge', region: 3, population: 14, locationId: 'heart-of-the-steppe' },
+      { route: 'river', population: 10, locationId: 'orkhon-valley' },
+      { route: 'ridge', population: 12, locationId: 'belukha' },
     ];
     run.legacy.peopleLost = 2;
     run.legacy.khans[0]!.fallenAt = 90;
-    run.legacy.khans[0]!.fallenRegion = 1;
-    run.legacy.outcome = 'won';
-    run.phase = 'won';
+    run.legacy.khans[0]!.fallenLocationId = 'orkhon-valley';
+    run.legacy.outcome = 'dead';
+    run.phase = 'dead';
 
     expect(journeyResults(run)).toEqual({
-      outcome: 'Refuge reached',
-      location: 'The Heart of the Steppe',
-      stage: 'Final stand',
+      location: 'Mount Belukha (Üch-Sümer)',
+      stage: 'Migration',
       elapsed: 215,
-      survivors: 14,
+      survivors: 0,
       herd: 6,
-      pastures: '4/4',
-      crossings: 3,
+      pastures: 3,
+      crossings: 2,
       peopleLost: 2,
       fallenKhans: 1,
-      skybreaker: 'Defeated',
     });
 
     const defeated = createRun();
@@ -120,14 +114,12 @@ describe('the clan’s lived history', () => {
     defeated.legacy.outcome = 'dead';
     defeated.phase = 'dead';
     expect(journeyResults(defeated)).toMatchObject({
-      outcome: 'Clan lost',
-      location: 'The Golden Pasture',
+      location: 'Mount Otgontenger',
       stage: 'Encampment',
       survivors: 0,
       herd: 1,
-      pastures: '1/4',
+      pastures: 1,
       fallenKhans: 0,
-      skybreaker: 'Not reached',
     });
   });
 });

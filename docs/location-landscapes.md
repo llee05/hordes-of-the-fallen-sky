@@ -1,25 +1,20 @@
 # Location landscapes
 
 Every camp has its own composition in `src/game/data/landscapes.ts`. Location IDs
-select terrain, vegetation, landforms, water, and ambient particles independently
-of the journey chapter. These are stylized surroundings, not accurate geographical
+select terrain, vegetation, landforms, water, and ambient particles. These are stylized surroundings, not accurate geographical
 models. Existing cultural context remains in `data/clan.ts` and
 [migration destinations](migration-locations.md).
 
-| Location            | Landscape and scenery                                                 |
-| ------------------- | --------------------------------------------------------------------- |
-| Golden Pasture      | Golden flowering meadow, low sage outcrops, narrow winding stream     |
-| Silent River        | Frosted gravel bars, broad steel-blue water, ice shelves, dry reeds   |
-| Broken Pass         | Dry fractured slate corridor, ochre scree, dark rock shoulders        |
-| Heart of the Steppe | Ash-sage basin, indigo mountain shoulders, blue banners, red eclipse  |
-| Otgontenger         | Seeded ranges and plateaus, winding grass passes, rocky slopes, snow  |
-| Bogd Khan Uul       | Sheltered green foothills with golden larch and deep sage pine groves |
-| Altai Tavan Bogd    | Five snowy crests, turquoise glacier seams, silver-green gravel       |
-| Khan Tengri         | Single sharp white pyramid, lavender scree, angular blue-grey crags   |
-| Belukha             | Paired white heights, milky glacial water, cool meadow and conifers   |
-| Altan Ovoo          | Flat-topped extinct cone, amber grass, charcoal basalt; no lava       |
-| Eej Khairkhan       | Sculpted peach granite, pale sand ribbons, sparse dry grasses         |
-| Orkhon Valley       | Braided blue-green river, reed beds, willows and lush sage pasture    |
+| Location         | Landscape and scenery                                                 |
+| ---------------- | --------------------------------------------------------------------- |
+| Otgontenger      | Seeded ranges and plateaus, winding grass passes, rocky slopes, snow  |
+| Bogd Khan Uul    | Sheltered green foothills with golden larch and deep sage pine groves |
+| Altai Tavan Bogd | Five snowy crests, turquoise glacier seams, silver-green gravel       |
+| Khan Tengri      | Single sharp white pyramid, lavender scree, angular blue-grey crags   |
+| Belukha          | Paired white heights, milky glacial water, cool meadow and conifers   |
+| Altan Ovoo       | Flat-topped extinct cone, amber grass, charcoal basalt; no lava       |
+| Eej Khairkhan    | Sculpted peach granite, pale sand ribbons, sparse dry grasses         |
+| Orkhon Valley    | Braided blue-green river, reed beds, willows and lush sage pasture    |
 
 The shared cutouts are bundled in `public/art/steppe-scenery-v2.png` and its atlas JSON.
 The atlas retains transparent gutters and a common ground registration; it adds no
@@ -39,7 +34,7 @@ Eight user-supplied 1254 × 1254 terrain PNGs are bundled unchanged in `public/a
 | Mount Belukha     | `mount-belukha.png`     | Dark woodland soil, moss, ferns, roots, and stones   |
 | Eej Khairkhan     | `eej-khairkhan.png`     | Warm granite slabs, sandy gravel, sparse dry grass   |
 
-All twelve destinations support the [angled scene renderer](world-3d.md).
+All eight destinations support the [angled scene renderer](world-3d.md).
 Their geometry, palettes, vegetation, and snow lines live in
 `src/game/data/worldRegions.ts`; `ComposedTerrain` combines their masses with seeded
 relief and broad traversable approaches. The [new quiet paintings](angled-scene-art.md)
@@ -83,7 +78,7 @@ Orkhon Valley integrates the antique illuminated-manuscript environment prototyp
 
 `assets/riverGeometry.ts` samples authored watercourses into smooth channels with
 separately varying banks. Orkhon's narrower branch splits and rejoins the main
-river. Destination vignettes retain those channel outlines and Silent River ice.
+river. Destination vignettes retain those channel outlines.
 The angled world uses `WorldRiver` and `Water3D` for carved riverbeds, banks,
 water, and crossings; see [the scene guide](world-3d.md). Water animation follows
 active gameplay seconds and freezes in menus. All art is bundled locally.

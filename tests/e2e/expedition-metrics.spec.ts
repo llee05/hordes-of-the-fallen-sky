@@ -39,5 +39,5 @@ test('a real opening fight records active time and the chronicle exposes its mil
   await page.keyboard.press('F10');
   await page.locator('[data-developer-command-input]').fill('metrics');
   await page.locator('[data-developer-command-input]').press('Enter');
-  await expect(page.getByRole('log')).toContainText('Golden Pasture');
+  await expect(page.getByRole('log')).toContainText('Mount Otgontenger');
 });

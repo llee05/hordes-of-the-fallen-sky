@@ -1,24 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration, buildStructure } from '../../src/game/state/clan';
-import { crossingForecast, economyForecast, economyRates } from '../../src/game/state/economy';
+import { travelForecast, economyForecast, economyRates } from '../../src/game/state/economy';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 describe('economy forecasts', () => {
-  it('uses the simulation rates with regional, pasture, and camp modifiers', () => {
+  it('uses the simulation rates with location, pasture, and camp modifiers', () => {
     const run = createRun();
     run.phase = 'building';
     run.clan.materials = 500;
     buildStructure(run, 'herd');
     buildStructure(run, 'herd', 'winter-stores');
     buildStructure(run, 'herd', 'dairy-reserves');
-    run.clan.region = 1;
     run.clan.pasture = 60;
     run.clan.campEffects.multipliers.consumption = 0.9;
     const rates = economyRates(run);
-    expect(rates.foodProduction).toBeCloseTo(1.3 * 0.6 * 0.7 * 1.2);
+    expect(rates.foodProduction).toBeCloseTo(1.3 * 0.6 * 0.85 * 1.2);
     expect(rates.foodConsumption).toBeCloseTo(8 * 0.025 * 0.5 * 0.9);
-    expect(rates.materials).toBeCloseTo((0.28 + 8 * 0.018) * 0.6);
+    // The starting camp, Mount Otgontenger, gathers 0.85 food and 1.25 materials.
+    expect(rates.materials).toBeCloseTo((0.28 + 8 * 0.018) * 0.6 * 1.25);
     run.phase = 'playing';
     run.clan.campEffects.multipliers.pastureUse = 0;
     const before = structuredClone(run);
@@ -30,8 +30,8 @@ describe('economy forecasts', () => {
   it('predicts eventual depletion even while food currently increases', () => {
     const run = createRun();
     const forecast = economyForecast(run);
-    expect(forecast.foodNet).toBeCloseTo(0.45);
-    expect(forecast.foodSeconds).toBeCloseTo(691.25);
+    expect(forecast.foodNet).toBeCloseTo(0.65 * 0.85 - 0.2);
+    expect(forecast.foodSeconds).toBeCloseTo(640.0625);
     run.phase = 'playing';
     let elapsed = 0;
     while (run.clan.food > 0 && elapsed < 800) {
@@ -46,8 +46,8 @@ describe('economy forecasts', () => {
     run.clan.population = 40;
     run.clan.food = 5;
     const seconds = economyForecast(run).foodSeconds!;
-    expect(seconds).toBeGreaterThan(13);
-    expect(seconds).toBeLessThan(15);
+    expect(seconds).toBeGreaterThan(10);
+    expect(seconds).toBeLessThan(12);
     run.phase = 'playing';
     for (let elapsed = 0; elapsed < seconds - 0.1; elapsed += 0.02) advanceClan(run, 0.02);
     expect(run.clan.food).toBeGreaterThan(0);
@@ -63,22 +63,21 @@ describe('economy forecasts', () => {
     run.clan.campEffects.multipliers.pastureUse = 0;
     expect(economyForecast(run).foodSeconds).toBeUndefined();
     run.clan.population = 40;
-    expect(economyForecast(run).foodSeconds).toBeCloseTo(200);
+    expect(economyForecast(run).foodSeconds).toBeCloseTo(70 / (40 * 0.025 - 0.65 * 0.85));
     run.clan.population = 0;
     expect(economyForecast(run).foodSeconds).toBeUndefined();
     run.clan.food = 0;
     expect(economyForecast(run).foodSeconds).toBe(0);
   });
 
-  it('estimates each crossing using current mobility and pays rewards only at arrival', () => {
+  it('estimates each migration using current mobility and pays rewards only at arrival', () => {
     for (const route of ROUTES) {
       const run = createRun();
-      run.clan.region = 1;
       run.clan.herd = 10;
       run.clan.campEffects.multipliers.mobility = 1.1;
       run.clan.campEffects.bonuses.arrivalFood = 15;
-      const forecast = crossingForecast(run, route);
-      expect(forecast.duration).toBeCloseTo((60 * route.duration) / (1.12 * 0.8 * 1.1));
+      const forecast = travelForecast(run, route);
+      expect(forecast.duration).toBeCloseTo((60 * route.duration) / (1.12 * 0.9 * 1.1));
       expect(forecast.foodNeeded).toBeCloseTo(forecast.duration * 0.2);
       expect(forecast.foodAfterArrival).toBeCloseTo(70 - forecast.foodNeeded + route.food + 15);
       run.phase = 'route';
@@ -95,7 +94,7 @@ describe('economy forecasts', () => {
   it('warns about shortages even when an arrival reward would refill stores', () => {
     const run = createRun();
     run.clan.food = 1;
-    const forecast = crossingForecast(run, ROUTES[0]);
+    const forecast = travelForecast(run, ROUTES[0]);
     expect(forecast.shortfall).toBeGreaterThan(0);
     expect(forecast.foodBeforeArrival).toBe(0);
     expect(forecast.foodAfterArrival).toBe(35);
@@ -104,7 +103,7 @@ describe('economy forecasts', () => {
     expect(economyForecast(run).foodSeconds).toBe(5);
   });
 
-  it('forecasts only the remaining crossing and includes camp consumption and remounts', () => {
+  it('forecasts only the remaining journey and includes camp consumption and remounts', () => {
     const run = createRun();
     run.phase = 'building';
     run.clan.materials = 500;
@@ -114,8 +113,8 @@ describe('economy forecasts', () => {
     run.clan.stage = 'migration';
     run.clan.routeId = 'ridge';
     run.clan.stageTime = 10;
-    const forecast = crossingForecast(run, ROUTES[1]);
-    expect(forecast.remaining).toBeCloseTo(48 / (1.084 * 1.2) - 10);
+    const forecast = travelForecast(run, ROUTES[1]);
+    expect(forecast.remaining).toBeCloseTo((48 * 1.15) / (1.084 * 1.2 * 0.9) - 10);
     expect(forecast.foodNeeded).toBeCloseTo(forecast.remaining * 0.1);
     expect(economyForecast(run).foodSeconds).toBeUndefined();
     run.clan.food = 0.5;
@@ -127,7 +126,7 @@ describe('economy forecasts', () => {
     run.phase = 'building';
     const before = structuredClone(run);
     const forecast = economyForecast(run);
-    crossingForecast(run, ROUTES[0]);
+    travelForecast(run, ROUTES[0]);
     expect(run).toEqual(before);
     for (const phase of ['playing', 'paused', 'route', 'journal'] as const) {
       run.phase = phase;

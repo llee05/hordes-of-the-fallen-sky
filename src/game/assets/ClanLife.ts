@@ -21,7 +21,7 @@ interface CampActor {
 export class ClanLife {
   readonly workers: CampActor[];
   readonly horses: CampActor[];
-  private region = -1;
+  private stop = -1;
   private stage = '';
   private packing = 0;
 
@@ -45,8 +45,8 @@ export class ClanLife {
 
   update(run: RunState, dt: number, anchor: { x: number; y: number }): void {
     if (run.phase !== 'playing' || dt <= 0) return;
-    const relocated = this.region !== run.clan.region;
-    this.region = run.clan.region;
+    const relocated = this.stop !== run.legacy.crossings.length;
+    this.stop = run.legacy.crossings.length;
     if (this.stage !== run.clan.stage) {
       this.packing = run.clan.stage === 'migration' ? 2.4 : 0;
       this.stage = run.clan.stage;
@@ -111,6 +111,6 @@ export class ClanLife {
   }
 
   relocate(): void {
-    this.region = -1;
+    this.stop = -1;
   }
 }

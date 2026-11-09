@@ -7,7 +7,7 @@ test.use({ viewport: { width: 1280, height: 800 }, trace: 'off' });
 async function open(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
-  await page.locator('[data-developer-level="destination:2:otgontenger"]').click();
+  await page.locator('[data-developer-level="place:otgontenger"]').click();
   // The title already has a 3D canvas. Wait for the queued scene restart to rebuild its pools.
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
@@ -101,7 +101,7 @@ test(
       .poll(() => page.evaluate(() => (window as any).__gloam.scene.landscape.world3d.angle))
       .toBe(60);
     await page.keyboard.press('F8');
-    await page.locator('[data-developer-level="destination:2:orkhon-valley"]').click();
+    await page.locator('[data-developer-level="place:orkhon-valley"]').click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await expect(page.locator('#location')).toHaveText('ORKHON VALLEY');
     await expect(page.locator('canvas[data-world-renderer="3d"]')).toHaveCount(1);

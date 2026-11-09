@@ -95,12 +95,12 @@ test('mounted gaits and bow release animate without changing collision geometry'
 
 test('all creature clips advance and freeze with camp planning', async ({ page }) => {
   const initialBodies = await page.evaluate(async () => {
-    const { ENEMIES, SKYBREAKER } = (await import(
+    const { ENEMIES } = (await import(
       // @ts-expect-error -- served by Vite inside page.evaluate, not resolved by Node.
       '/src/game/data/enemies.ts'
     )) as typeof import('../../src/game/data/enemies');
     const scene = (window as any).__gloam.scene;
-    const definitions = [...ENEMIES.slice(0, 5), SKYBREAKER];
+    const definitions = ENEMIES.slice(0, 5);
     for (const [index, definition] of definitions.entries()) {
       const before = new Set(scene.enemies.getChildren().filter((enemy: any) => enemy.active));
       for (
@@ -109,7 +109,7 @@ test('all creature clips advance and freeze with camp planning', async ({ page }
         attempt++
       )
         scene.spawnEnemy({ ...definition, health: 100000, damage: 0 });
-      // f780c79 reserves scene.boss for boss behavior; ordinary clips use the newly activated pool member.
+      // Each clip uses the newly activated pool member.
       const enemy = scene.enemies
         .getChildren()
         .find((enemy: any) => enemy.active && !before.has(enemy));
@@ -126,7 +126,7 @@ test('all creature clips advance and freeze with camp planning', async ({ page }
         expected: enemy.definition.scale * 10,
       }));
   });
-  expect(initialBodies).toHaveLength(6);
+  expect(initialBodies).toHaveLength(5);
   for (const body of initialBodies) expect(body.width).toBeCloseTo(body.expected, 8);
   const frames = new Map<string, Set<string>>();
   await expect
@@ -142,12 +142,12 @@ test('all creature clips advance and freeze with camp planning', async ({ page }
           if (!frames.has(kind)) frames.set(kind, new Set());
           frames.get(kind)!.add(frame);
         }
-        return frames.size === 6 && [...frames.values()].every((seen) => seen.size >= 2);
+        return frames.size === 5 && [...frames.values()].every((seen) => seen.size >= 2);
       },
       { timeout: 10000, intervals: [90, 120, 180] },
     )
     .toBe(true);
-  expect(frames.size).toBe(6);
+  expect(frames.size).toBe(5);
   for (const seen of frames.values()) expect(seen.size).toBeGreaterThanOrEqual(2);
   await page.keyboard.press('b');
   await expectFrozen(

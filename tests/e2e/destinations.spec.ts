@@ -33,12 +33,12 @@ test('arrives at Altai Tavan Bogd and records its real destination', async ({ pa
   expect(await page.evaluate(() => JSON.stringify((window as any).__gloam.scene.run))).toBe(before);
   await page.locator('[data-route="river"]').click();
   await expect(page.locator('#objective')).toContainText('Altai Tavan Bogd');
-  // The departure camp keeps its terrain until crossing completion.
+  // The departure camp keeps its terrain until the caravan arrives.
   expect(
     await page.evaluate(
       () => (window as any).__gloam.scene.landscape.world3d.terrain.region.scene.id,
     ),
-  ).toBe('golden-pasture');
+  ).toBe('otgontenger');
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.legacy.crossings)).toEqual([]);
   await page.evaluate(() => {
     (window as any).__gloam.scene.run.clan.stageTime = 200;
@@ -137,11 +137,11 @@ test('keyboard and controller select a destination before confirming the journey
     (window as any).__gloam.scene.run.clan.stageTime = 45;
   });
   await tapController(page, 3);
-  await expect(page.locator('[data-destination="silent-river"]')).toBeFocused();
+  await expect(page.locator('[data-destination="bogd-khan-uul"]')).toBeFocused();
   await page.keyboard.press('ArrowRight');
-  await expect(page.locator('[data-destination="otgontenger"]')).toBeFocused();
+  await expect(page.locator('[data-destination="altai-tavan-bogd"]')).toBeFocused();
   await tapController(page, 0);
-  await expect(page.locator('[data-destination="otgontenger"]')).toHaveAttribute(
+  await expect(page.locator('[data-destination="altai-tavan-bogd"]')).toHaveAttribute(
     'aria-pressed',
     'true',
   );
@@ -150,26 +150,25 @@ test('keyboard and controller select a destination before confirming the journey
   await tapController(page, 0);
   await expect(page.getByRole('dialog')).toBeHidden();
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.destinationId)).toBe(
-    'otgontenger',
+    'altai-tavan-bogd',
   );
 });
 
 test(
-  'two named camps still lead to the fictional final refuge and clan-survival victory',
+  'migration moves between real places, including back to the first camp, with no final stand',
   { tag: '@core' },
   async ({ page }) => {
     test.setTimeout(process.env.CI ? 90000 : 60000);
     await openTitle(page);
     await startExpedition(page);
-    for (const destination of ['orkhon-valley', 'altai-tavan-bogd', 'heart-of-the-steppe']) {
+    for (const destination of ['orkhon-valley', 'altai-tavan-bogd', 'otgontenger']) {
       await page.evaluate(() => {
         const scene = (window as any).__gloam.scene;
         scene.run.clan.food = 500;
         scene.run.clan.stageTime = 45;
         scene.openRoutes();
       });
-      if (destination === 'heart-of-the-steppe')
-        await expect(page.locator('[data-destination]')).toHaveCount(1);
+      await expect(page.locator('[data-destination]')).toHaveCount(7);
       await page.locator(`[data-destination="${destination}"]`).click();
       await page.locator('[data-route="river"]').click();
       await page.evaluate(() => {
@@ -179,18 +178,8 @@ test(
         .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.locationId))
         .toBe(destination);
     }
-    await expect(page.locator('#location')).toHaveText('SACRED MOUNTAIN');
-    await expect(page.locator('#stage-label')).toHaveText('THE LAST STAND');
-    await page.evaluate(() => {
-      (window as any).__gloam.scene.run.clan.stageTime = 20;
-    });
-    await expect(page.locator('#boss-bar')).toBeVisible();
-    await page.evaluate(() => {
-      (window as any).__gloam.scene.run.clan.stageTime = 180;
-    });
-    await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
-    expect(
-      await page.evaluate(() => (window as any).__gloam.scene.run.clan.finalBossDefeated),
-    ).toBe(false);
+    await expect(page.locator('#location')).toHaveText('OTGONTENGER');
+    await expect(page.locator('#stage-label')).toHaveText('ENCAMPMENT');
+    await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   },
 );

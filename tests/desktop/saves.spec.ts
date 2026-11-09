@@ -67,7 +67,7 @@ test('native expeditions survive a real window close, relaunch paused, and keep 
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
     const frozen = await page.locator('#timer').textContent();
     await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
-    await expect(page.locator('[data-save-slot="auto"]')).toContainText('The Golden Pasture');
+    await expect(page.locator('[data-save-slot="auto"]')).toContainText('Mount Otgontenger');
     await page.getByRole('button', { name: 'Back', exact: true }).click();
     await expect(page.locator('#timer')).toHaveText(frozen!);
     expect(await page.evaluate(() => typeof (window as any).__gloam)).toBe('undefined');

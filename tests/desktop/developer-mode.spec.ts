@@ -45,13 +45,11 @@ test('desktop developer selector fits native windows and launches clean test exp
               panel.getBoundingClientRect().bottom <= innerHeight,
           ),
       ).toBe(true);
-      await page
-        .locator('[data-developer-level="destination:3:orkhon-valley"]')
-        .scrollIntoViewIfNeeded();
+      await page.locator('[data-developer-level="place:orkhon-valley"]').scrollIntoViewIfNeeded();
       await page.screenshot({ path: `test-results/native-developer-${size.width}.png` });
       await expect(page.getByRole('button', { name: 'Back ESC / F8' })).toBeVisible();
     }
-    await page.locator('[data-developer-level="destination:3:orkhon-valley"]').click();
+    await page.locator('[data-developer-level="place:orkhon-valley"]').click();
     await expect(page.locator('#location')).toHaveText('ORKHON VALLEY');
     await expect(page.locator('#developer-run')).toBeVisible();
     await page.keyboard.press('Backquote');
@@ -109,12 +107,13 @@ test('desktop developer selector fits native windows and launches clean test exp
     const frozen = await page.locator('#timer').textContent();
     await page.waitForTimeout(200);
     await expect(page.locator('#timer')).toHaveText(frozen!);
-    await page.locator('[data-developer-level="chapter:heart-of-the-steppe"]').click();
-    await expect(page.locator('#stage-label')).toHaveText('THE LAST STAND');
+    await page.locator('[data-developer-level="place:khan-tengri"]').click();
+    await expect(page.locator('#location')).toHaveText('KHAN TENGRI');
+    await expect(page.locator('#stage-label')).toHaveText('ENCAMPMENT');
     await page.evaluate(() => {
-      (window as any).__gloam.scene.run.clan.stageTime = 180;
+      (window as any).__gloam.scene.run.clan.integrity = 0;
     });
-    await expect(page.getByRole('heading', { name: 'A sky worth saving.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'The banners fall.' })).toBeVisible();
     await expect(page.locator('#best')).toHaveText('— — : — —');
     expect(errors).toEqual([]);
   } finally {

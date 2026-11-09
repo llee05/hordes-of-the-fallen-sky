@@ -2,6 +2,8 @@
 export const SAVE_SLOTS = ['auto', 'slot-1', 'slot-2', 'slot-3'] as const;
 export type SaveSlot = (typeof SAVE_SLOTS)[number];
 export const MAX_SAVE_BYTES = 2_000_000;
+export const MAX_EXPEDITION_SUMMARY_ELAPSED = 86_400;
+export const MAX_EXPEDITION_SUMMARY_LEVEL = 10_000;
 export interface ExpeditionSave {
   version: 1;
   savedAt: number;
@@ -64,13 +66,14 @@ export function isExpeditionSave(value: unknown): value is ExpeditionSave {
     summary.location.length <= 80 &&
     typeof summary.elapsed === 'number' &&
     summary.elapsed >= 0 &&
-    summary.elapsed <= 86400 &&
+    summary.elapsed <= MAX_EXPEDITION_SUMMARY_ELAPSED &&
     typeof summary.population === 'number' &&
     summary.population >= 0 &&
     summary.population <= 10000 &&
     typeof summary.level === 'number' &&
     summary.level >= 1 &&
-    summary.level <= 10000 &&
+    summary.level <= MAX_EXPEDITION_SUMMARY_LEVEL &&
+    // `final` remains listable: those retired final-stand saves load as camps.
     ['camp', 'migration', 'final'].includes(summary.stage as string) &&
     isRecord(run) &&
     isRecord(world)

@@ -182,8 +182,6 @@ test('the journey and successive Khans have distinct cues, with one audio contex
   });
   expect(await heard(page)).toContain('fall');
   await expect.poll(async () => (await heard(page)).includes('succession')).toBe(true);
-  await page.evaluate(() => (window as any).__gloam.scene.finish('won'));
-  expect(await heard(page)).toContain('victory');
   await page.evaluate(() => (window as any).__gloam.scene.restart());
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
   expect(
@@ -209,7 +207,7 @@ test('muting cancels a playing cue, persists, and unmuting restores audio withou
 }) => {
   await closeOverlayOrPause(page);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  expect(await page.evaluate(() => (window as any).__gloam.scene.audio.play('victory'))).toBe(true);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.audio.play('loss'))).toBe(true);
   await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.audio.voices.size))

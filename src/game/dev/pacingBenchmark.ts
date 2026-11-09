@@ -31,7 +31,7 @@ export function pacingBenchmark(
   metricStage(run);
   let nextKill: number = config.firstContact,
     nextContact: number = config.contactEvery;
-  let outcome: 'saved' | 'lost' | undefined;
+  let outcome: 'lost' | undefined;
   const buy = (id: NomadicBuildingId) => {
     run.phase = 'building';
     purchaseNomadicBuilding(run, id);
@@ -63,12 +63,7 @@ export function pacingBenchmark(
       nextKill += plan.killEvery;
     }
     if (run.elapsed >= nextContact) {
-      const exposure =
-        run.clan.stage === 'migration'
-          ? config.crossingExposure
-          : run.clan.stage === 'final'
-            ? config.finalExposure
-            : plan.exposure;
+      const exposure = run.clan.stage === 'migration' ? config.journeyExposure : plan.exposure;
       damageClan(run, 10 * GAME.camp.enemyAttack.damageMultiplier * exposure);
       nextContact += config.contactEvery;
     }
@@ -76,7 +71,7 @@ export function pacingBenchmark(
     observeExpedition(run, config.sampleStep, riding, !riding);
     run.elapsed += config.sampleStep;
     const result = advanceClan(run, config.sampleStep);
-    if (result === 'saved' || result === 'lost') outcome = result;
+    if (result === 'lost') outcome = result;
   }
   return { run, outcome };
 }
@@ -84,7 +79,7 @@ export function pacingBenchmarkLines(): string[] {
   return PACING_PLAYSTYLES.flatMap((style) =>
     STARTING_TRADITIONS.map(({ id }) => {
       const { run, outcome } = pacingBenchmark(style, id);
-      return `${style}/${id}: ${outcome ?? 'timeout'}, ${run.elapsed.toFixed(0)}s, ${run.clan.population} people, ${run.clan.integrity.toFixed(0)} resolve, ${run.clan.food.toFixed(0)} food, ${run.level - 1} levels earned.`;
+      return `${style}/${id}: ${outcome ?? 'survived'}, ${run.elapsed.toFixed(0)}s, ${run.clan.population} people, ${run.clan.integrity.toFixed(0)} resolve, ${run.clan.food.toFixed(0)} food, ${run.level - 1} levels earned.`;
     }),
   );
 }

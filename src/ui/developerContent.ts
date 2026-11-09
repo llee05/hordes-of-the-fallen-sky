@@ -30,7 +30,7 @@ export function developerMenu(tools?: DeveloperConsoleSnapshot): string {
   return `<section class="game-panel developer-panel">
     <header class="panel-heading"><div><p class="eyebrow">LEVEL SELECTOR · F8</p><h2 id="overlay-title">Developer mode</h2></div><button class="panel-close" data-action="back" aria-label="Close developer mode">×</button></header>
     <div class="panel-body">
-      <p class="panel-intro">Jump straight into any chapter, crossing or named camp. Each choice replaces the current expedition with a fresh developer run.</p>
+      <p class="panel-intro">Jump straight into any real place. Each choice replaces the current expedition with a fresh developer run.</p>
       <p class="developer-kit">${GAME.developer.population} people · stocked supplies.<br>Developer runs do not change your longest journey.</p>
       <h3>Command console <kbd>&#96;</kbd></h3>
       ${commandContent(tools)}
@@ -41,25 +41,10 @@ export function developerMenu(tools?: DeveloperConsoleSnapshot): string {
             `<button class="developer-level" data-developer-class="${cls.id}"><strong>${cls.title}</strong><span>${cls.subtitle} · ${cls.weapon.hudLabel} ${cls.stats.damage} · ${cls.stats.maxHealth} HP</span></button>`,
         ).join('')}</div>
       </section>
-      ${(
-        [
-          ['chapters', 'Chapters & final stand'],
-          ['crossings', 'Crossings · every approach'],
-          ['destinations', 'Named camps · chapters 2 & 3'],
-        ] as const
-      )
-        .map(
-          ([group, title]) =>
-            `<section class="developer-group" aria-label="${title}"><h3>${title}</h3><div class="developer-levels">${DEVELOPER_LEVELS.filter(
-              (level) => level.group === group,
-            )
-              .map(
-                (level) =>
-                  `<button class="developer-level" data-developer-level="${level.id}"><strong>${level.title}</strong><span>${level.description}</span></button>`,
-              )
-              .join('')}</div></section>`,
-        )
-        .join('')}
+      <section class="developer-group" aria-label="Real places"><h3>Real places</h3><div class="developer-levels">${DEVELOPER_LEVELS.map(
+        (level) =>
+          `<button class="developer-level" data-developer-level="${level.id}"><strong>${level.title}</strong><span>${level.description}</span></button>`,
+      ).join('')}</div></section>
     </div>
     <footer class="panel-footer"><span class="paused-note">EXPEDITION PAUSED</span><button class="secondary-button" data-action="back" data-primary>Back <kbd>ESC / F8</kbd></button></footer>
   </section>`;

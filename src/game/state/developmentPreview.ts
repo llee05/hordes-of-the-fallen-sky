@@ -1,6 +1,6 @@
 import type { BuildingId, RunState } from '../types';
 import { buildingBlocker, buildingCost, buildStructure } from './clan';
-import { crossingForecast, economyForecast } from './economy';
+import { travelForecast, economyForecast } from './economy';
 import { ROUTES } from '../data/clan';
 import { availableDestinations } from './journey';
 
@@ -19,14 +19,14 @@ export function developmentPreview(run: RunState, id: BuildingId, path?: string)
     before: economyForecast(run),
     after: economyForecast(preview),
     foodGift: preview.clan.food - run.clan.food,
-    crossingFood:
-      run.clan.stage === 'camp' && run.clan.region < 3
+    travelFood:
+      run.clan.stage === 'camp'
         ? {
             before: availableDestinations(run).flatMap((destination) =>
-              ROUTES.map((route) => crossingForecast(run, route, destination).foodNeeded),
+              ROUTES.map((route) => travelForecast(run, route, destination).foodNeeded),
             ),
             after: availableDestinations(preview).flatMap((destination) =>
-              ROUTES.map((route) => crossingForecast(preview, route, destination).foodNeeded),
+              ROUTES.map((route) => travelForecast(preview, route, destination).foodNeeded),
             ),
           }
         : undefined,

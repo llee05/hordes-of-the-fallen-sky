@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SuccessorTrait } from '../../src/game/data/successors';
-import { advanceClan, beginMigration, damageClan } from '../../src/game/state/clan';
+import { advanceClan, damageClan } from '../../src/game/state/clan';
 import {
   advanceSuccession,
   chooseSuccessor,
@@ -10,15 +10,15 @@ import {
 import { createRun } from '../../src/game/state/run';
 
 describe('readable clan survival', () => {
-  it('distinguishes combat, eruptions and starvation without changing protection or counting invincible losses', () => {
+  it('distinguishes combat, seer marks and starvation without changing protection or counting invincible losses', () => {
     const r = createRun();
     r.phase = 'playing';
     r.clan.formation = 'encircle';
     damageClan(r, 25);
     expect(r.safety.combatLosses).toBe(1);
     expect(r.safety.lastDamage).toMatchObject({ cause: 'attack', people: 1, amount: 25 });
-    damageClan(r, 25, undefined, 'eruption');
-    expect(r.safety.lastDamage?.cause).toBe('eruption');
+    damageClan(r, 25, undefined, 'seer');
+    expect(r.safety.lastDamage?.cause).toBe('seer');
     expect(r.safety.combatLosses).toBe(2);
     const before = structuredClone(r);
     damageClan(r, 1000, { invincible: true }, 'seer');
@@ -30,22 +30,6 @@ describe('readable clan survival', () => {
     expect(r.safety.starvationLosses).toBeGreaterThanOrEqual(1);
     expect(r.safety.lastDamage?.cause).toBe('starvation');
     expect(r.safety.combatLosses + r.safety.starvationLosses).toBe(r.legacy.peopleLost);
-  });
-  it('remembers casualty-free crossings without mistaking refugee growth for protection', () => {
-    for (const casualty of [false, true]) {
-      const r = createRun();
-      r.phase = 'route';
-      r.clan.stageTime = 45;
-      beginMigration(r, 'refuge');
-      r.phase = 'playing';
-      if (casualty) {
-        r.legacy.peopleLost++;
-        r.clan.population--;
-      }
-      advanceClan(r, 100);
-      expect(r.safety.protectedCrossings).toBe(casualty ? 0 : 1);
-      expect(r.legacy.memories.some((m) => m.title === 'Every household arrived')).toBe(!casualty);
-    }
   });
 });
 describe('optional successor choices', () => {

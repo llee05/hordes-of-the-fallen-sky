@@ -17,7 +17,7 @@ export function needsFullSuite(files) {
     if (
       /^src\/game\/(terrain|world3d)\//.test(file) ||
       /^src\/game\/assets\/(SteppeLandscape|landscapeLayout|riverGeometry)\.ts$/.test(file) ||
-      /^src\/game\/data\/(landscapes|terrainBiomes|crossingLandscapes)\.ts$/.test(file) ||
+      /^src\/game\/data\/(landscapes|terrainBiomes)\.ts$/.test(file) ||
       /^src\/game\/systems\/(CameraView|AreaHabitat)\.ts$/.test(file)
     ) {
       return true;
@@ -109,18 +109,13 @@ export const AREA_SPEC_MAPPINGS = [
     specs: ['tests/e2e/patron-removal.spec.ts', 'tests/e2e/nomadic-camp.spec.ts'],
   },
   {
-    pattern: /(crossing|destination|journey|migration|fieldObjectives|FieldMarkers|worldRegions)/i,
+    pattern: /(destination|journey|migration|fieldObjectives|FieldMarkers|worldRegions)/i,
     specs: [
       'tests/e2e/game-camp-journey.spec.ts',
-      'tests/e2e/crossing-encounters.spec.ts',
       'tests/e2e/destinations.spec.ts',
       'tests/e2e/destination-previews.spec.ts',
       'tests/e2e/field-gameplay.spec.ts',
     ],
-  },
-  {
-    pattern: /finalStand/i,
-    specs: ['tests/e2e/final-stand.spec.ts'],
   },
   {
     pattern: /(clan|khan|tradition|economy|guidance|legacy|metrics)/i,
@@ -286,7 +281,7 @@ export function main(args = process.argv.slice(2)) {
     return;
   }
 
-  // Default: core 29 tests + area-mapped specs + any changed test files + smoke tests
+  // Default: core 27 tests + area-mapped specs + any changed test files + smoke tests
   const mapped = areaSpecs(files);
   const selected = new Set(smokeTests);
 
@@ -306,7 +301,7 @@ export function main(args = process.argv.slice(2)) {
 
   const tests = [...selected];
   console.log(
-    `Browser review: ${tests.length} selected tests (29-test @core subset + ${mapped.length} area-mapped spec files).`,
+    `Browser review: ${tests.length} selected tests (27-test @core subset + ${mapped.length} area-mapped spec files).`,
   );
   executeTestList(tests, args);
 }

@@ -12,7 +12,7 @@ Every building has Basic, Established and Advanced levels. Each level has author
 | Horse Lines     | Migration mobility                                                                                   | Mount speed and effectiveness              |
 | Herding Grounds | Passive food production, existing grazing and retreat formation support                              | Leather and wool                           |
 | Communal Hearth | Food efficiency, active-time Khan recovery and stationary resolve recovery                           | —                                          |
-| Wagon Yard      | Existing defensive-cart support, migration mobility and materials after a completed crossing         | Storage capacity and relocation efficiency |
+| Wagon Yard      | Existing defensive-cart support, migration mobility and materials after a completed migration        | Storage capacity and relocation efficiency |
 
 All five cores start at level 1. They cannot be removed or exchanged, reserve no additional workers, and take no optional location. Each optional building reserves one worker on construction, retained through its upgrades. Casualties do not destroy workplaces or prevent upgrades that reserve no new workers.
 
@@ -21,12 +21,12 @@ All five cores start at level 1. They cannot be removed or exchanged, reserve no
 | Archery Range             | Military             | Existing mounted archers and combat formations; damage, firing cadence and piercing | —                                                                         |
 | Smith's Forge             | Military             | Weapon damage and clan protection                                                   | Equipment crafting and armour effectiveness                               |
 | Warrior's Training Ground | Military             | Existing escort damage                                                              | Companion capacity, strength and abilities                                |
-| Scout's Watchpost         | Military             | Collection radius and materials after crossings                                     | Exploration radius, hidden discoveries and expedition reward improvements |
+| Scout's Watchpost         | Military             | Collection radius and materials after migrations                                    | Exploration radius, hidden discoveries and expedition reward improvements |
 | Fletcher's Workshop       | Military             | Additional projectile, firing cadence, piercing and fire-arrow unlock               | —                                                                         |
 | Palisade & Watchfires     | Military             | Clan protection                                                                     | Guard strength                                                            |
-| Hunting Lodge             | Economy & survival   | Food production and food after crossings                                            | Rare animal resources and hunting expeditions                             |
+| Hunting Lodge             | Economy & survival   | Food production and food after migrations                                           | Rare animal resources and hunting expeditions                             |
 | Artisan's Ger             | Economy & survival   | Material gathering and food efficiency                                              | Crafting and equipment systems                                            |
-| Trading Post              | Economy & survival   | Materials after crossings                                                           | Trade rates, merchant stock and rare trade goods                          |
+| Trading Post              | Economy & survival   | Materials after migrations                                                          | Trade rates, merchant stock and rare trade goods                          |
 | Healer's Ger              | Economy & survival   | Maximum health and active-time recovery                                             | Healing-effectiveness modifiers                                           |
 | Sacred Ovoo               | Spiritual & cultural | Existing sanctuary lightning, Spirit gain and protection                            |                                                                           |
 | Shaman's Ger              | Spiritual & cultural | Burn damage and the story world's fictional wind-magic unlock                       | Spiritual abilities, rituals and corruption cleansing                     |

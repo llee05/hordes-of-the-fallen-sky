@@ -1,4 +1,4 @@
-import { ALL_ENEMIES, SKYBREAKER } from '../../data/enemies';
+import { ALL_ENEMIES } from '../../data/enemies';
 import type { Enemy } from '../../entities/actors';
 import { encounterEnemy } from '../../state/encounters';
 import type { ArenaScene } from '../ArenaScene';
@@ -65,10 +65,7 @@ export function createTestHooks(
   };
   return {
     setTimers,
-    quietBattlefield({
-      timers = ['spawnTimer', 'attackTimer', 'hazardTimer'],
-      clearEnemies = true,
-    } = {}) {
+    quietBattlefield({ timers = ['spawnTimer', 'attackTimer'], clearEnemies = true } = {}) {
       setTimers(Object.fromEntries(timers.map((key) => [key, 999])));
       if (clearEnemies)
         for (const enemy of arena.enemies.getChildren()) (enemy as Enemy).disableBody(true, true);
@@ -79,7 +76,7 @@ export function createTestHooks(
           ? health === undefined
             ? undefined
             : encounterEnemy(arena.run).definition
-          : [...ALL_ENEMIES, SKYBREAKER].find((enemy) => enemy.id === id);
+          : ALL_ENEMIES.find((enemy) => enemy.id === id);
       if (id !== undefined && !definition) throw new Error(`Unknown enemy: ${id}`);
       return scene.spawnEnemy(
         definition && health !== undefined ? { ...definition, health } : definition,

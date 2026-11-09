@@ -104,7 +104,7 @@ test('packing begins immediately, pauses with the world, and arrival relocates t
     (window as any).__gloam.scene.run.clan.stageTime = 100;
   });
   await expect
-    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.region))
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.legacy.crossings.length))
     .toBe(1);
   await expect
     .poll(() =>

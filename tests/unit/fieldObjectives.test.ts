@@ -73,7 +73,7 @@ describe('optional field objectives', () => {
     expect(r.field.objective).toBeUndefined();
     expect(fieldObjectiveDue(r)).toBe(false);
     expect(r.clan.food).toBe(before);
-    r.clan.region = 1;
+    r.legacy.crossings.push({ route: 'river', population: 8, locationId: 'otgontenger' });
     r.clan.stage = 'camp';
     syncFieldState(r);
     expect(r.field.issued).toBe(0);

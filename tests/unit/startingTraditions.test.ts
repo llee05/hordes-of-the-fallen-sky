@@ -36,7 +36,6 @@ it('stacks camp improvements, and does not grant extra building plots', () => {
     run.clan.materials = 100;
     expect(purchaseNomadicBuilding(run, 'archery-range')).toBe(true);
     expect(riderCount(run)).toBe(initial + 3);
-    run.clan.region = 2;
     run.khan.generation = 3;
     expect(run.startingTradition).toBe(entry.id);
     expect(run.clan.nomadicCamp!.slots).toHaveLength(5);

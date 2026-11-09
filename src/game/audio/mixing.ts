@@ -55,7 +55,6 @@ export type AudioEnvironment = 'steppe' | 'river' | 'mountain' | 'forest' | 'des
 export function environmentForLocation(
   location: Pick<MigrationLocation, 'id' | 'terrain'>,
 ): AudioEnvironment {
-  if (location.id === 'silent-river') return 'mountain'; // frozen river: no running water bed
   if (location.id === 'belukha' || location.id === 'bogd-khan-uul') return 'forest';
   return location.terrain === 'peaks'
     ? 'mountain'

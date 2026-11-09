@@ -113,7 +113,7 @@ describe('local rules follow the physical landscape', () => {
   it('teaches once, respects recovery, never banks bursts, and resets on actual migration/arrival', () => {
     const r = createRun();
     r.phase = 'playing';
-    r.clan.region = 1;
+    r.legacy.crossings.push({ route: 'river', population: 8, locationId: 'otgontenger' });
     r.clan.locationId = 'orkhon-valley';
     const state = createAreaEncounter();
     expect(advanceAreaEncounter(state, r, 2)).toBe('lesson');
@@ -141,7 +141,7 @@ describe('local rules follow the physical landscape', () => {
       state = createAreaEncounter();
     state.arrivals = 0;
     expect(areaArrivalAngle(state, r, 0)).toBe(0);
-    r.clan.region = 1;
+    r.legacy.crossings.push({ route: 'river', population: 8, locationId: 'otgontenger' });
     r.clan.locationId = 'orkhon-valley';
     expect(areaArrivalAngle(state, r, 0)).toBe(-Math.PI / 2);
     state.arrivals = 1;

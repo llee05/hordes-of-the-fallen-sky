@@ -1,7 +1,7 @@
 import { GAME } from '../config';
 import { AREA_ENCOUNTERS } from '../data/areaEncounters';
 import type { RunState } from '../types';
-import { currentLocation } from './journey';
+import { completedMigrations, currentLocation } from './journey';
 import { encounterPlan } from './encounters';
 export interface AreaEncounterState {
   key: string;
@@ -22,7 +22,7 @@ export function createAreaEncounter(): AreaEncounterState {
   };
 }
 export function syncAreaEncounter(state: AreaEncounterState, run: RunState): boolean {
-  const key = `${run.clan.region}:${run.clan.stage}:${currentLocation(run).id}`;
+  const key = `${completedMigrations(run)}:${run.clan.stage}:${currentLocation(run).id}`;
   if (state.key === key) return false;
   Object.assign(state, createAreaEncounter(), { key });
   return true;
@@ -55,7 +55,8 @@ export function advanceAreaEncounter(
 }
 export function areaArrivalAngle(state: AreaEncounterState, run: RunState, base: number): number {
   const area = AREA_ENCOUNTERS[currentLocation(run).id];
-  if (run.clan.region === 0 && run.clan.stageTime < GAME.spawning.openingDuration) return base;
+  if (completedMigrations(run) === 0 && run.clan.stageTime < GAME.spawning.openingDuration)
+    return base;
   const side = state.arrivals % 2 ? 1 : -1;
   if (area.pattern === 'banks') return base + (side * Math.PI) / 2;
   if (area.pattern === 'flanks') return base + (side * Math.PI) / 3;

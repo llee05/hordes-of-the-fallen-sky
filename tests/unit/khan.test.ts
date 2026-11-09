@@ -62,7 +62,6 @@ describe('choosing a new Khan', () => {
       'settings',
       'help',
       'dead',
-      'won',
     ];
     for (const phase of phases) {
       const run = expedition();
@@ -78,7 +77,7 @@ describe('choosing a new Khan', () => {
     expect(run.khan.successionRemaining).toBe(10);
   });
 
-  it('keeps the countdown and zero health through a crossing arrival despite recovery bonuses', () => {
+  it('keeps the countdown and zero health through a migration arrival despite recovery bonuses', () => {
     const run = expedition();
     damageKhan(run, 1000);
     run.clan.campEffects.bonuses.arrivalHealth = 100;
@@ -89,12 +88,12 @@ describe('choosing a new Khan', () => {
     expect(advanceClan(run, 100)).toBe('arrived');
     expect(run.health).toBe(0);
     expect(run.khan.successionRemaining).toBe(10);
-    expect(run.clan.region).toBe(1);
+    expect(run.legacy.crossings).toHaveLength(1);
     advanceSuccession(run, 10);
     expect(run.health).toBe(100);
   });
 
-  it('cannot choose a successor after the clan is lost and allows the clan to win during succession', () => {
+  it('cannot choose a successor after the clan is lost', () => {
     for (const loss of ['population', 'integrity'] as const) {
       const run = expedition();
       damageKhan(run, 1000);
@@ -103,11 +102,5 @@ describe('choosing a new Khan', () => {
       expect(run.health).toBe(0);
       expect(advanceClan(run, 0.05)).toBe('lost');
     }
-    const saved = expedition();
-    damageKhan(saved, 1000);
-    saved.clan.stage = 'final';
-    saved.clan.stageTime = 180;
-    expect(advanceClan(saved, 0.05)).toBe('saved');
-    expect(saved.health).toBe(0);
   });
 });

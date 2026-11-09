@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
-import { advanceClan, damageClan } from '../../src/game/state/clan';
+import { advanceClan, beginMigration, damageClan } from '../../src/game/state/clan';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 import { createDeveloperRun } from '../../src/game/dev/levels';
 
@@ -36,10 +36,13 @@ describe('transient clan protection', () => {
     expect(run.clan.herd).toBeLessThan(before.clan.herd);
   });
 
-  it('allows crossings to arrive and refuses to resurrect an already lost clan', () => {
-    const run = createDeveloperRun('crossing:golden-pasture:river')!;
+  it('allows migrations to arrive and refuses to resurrect an already lost clan', () => {
+    const run = createDeveloperRun('place:otgontenger')!;
+    run.phase = 'route';
+    expect(beginMigration(run, 'river', 'orkhon-valley')).toBe(true);
+    run.phase = 'playing';
     expect(advanceClan(run, 1000, { invincible: true })).toBe('arrived');
-    expect(run.clan.region).toBe(1);
+    expect(run.clan.locationId).toBe('orkhon-valley');
     run.clan.integrity = 0;
     expect(advanceClan(run, 0.1, { invincible: true })).toBe('lost');
   });

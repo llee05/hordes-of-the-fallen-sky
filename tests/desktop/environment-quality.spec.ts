@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { createServer } from 'vite';
 
 test.use({ trace: 'off' });
-test('@perf Golden Pasture art review, water pause, and pooled combat retain native resource budgets', async () => {
+test('@perf Orkhon Valley art review, water pause, and pooled combat retain native resource budgets', async () => {
   test.setTimeout(120000);
   const directory = await mkdtemp('/tmp/steppe-art-review-');
   const server = await createServer({ server: { host: '127.0.0.1', port: 0 } });
@@ -29,7 +29,7 @@ test('@perf Golden Pasture art review, water pause, and pooled combat retain nat
         errors.push(message.text());
     });
     await page.getByRole('button', { name: 'Developer mode F8' }).click();
-    await page.locator('[data-developer-level="chapter:golden-pasture"]').click();
+    await page.locator('[data-developer-level="place:orkhon-valley"]').click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await app.evaluate(({ BrowserWindow }) =>
       BrowserWindow.getAllWindows()[0]!.setContentSize(1280, 800),
@@ -37,7 +37,7 @@ test('@perf Golden Pasture art review, water pause, and pooled combat retain nat
     await expect.poll(() => page.evaluate(() => innerWidth)).toBe(1280);
     await page.evaluate(() => {
       const s = (window as any).__gloam.scene;
-      s.spawnTimer = s.attackTimer = s.hazardTimer = 999;
+      s.spawnTimer = s.attackTimer = 999;
       s.developerTools.invincible = s.developerTools.clanInvincible = true;
       for (const e of s.enemies.getChildren()) e.disableBody(true, true);
       s.player.body.reset(2600, 2700);
@@ -61,7 +61,7 @@ test('@perf Golden Pasture art review, water pause, and pooled combat retain nat
       w.qualityTime = performance.now() + 60000;
       w.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
     });
-    await page.screenshot({ path: 'test-results/environment/after-golden-wide.png' });
+    await page.screenshot({ path: 'test-results/environment/after-orkhon-wide.png' });
     await page.evaluate(() => (window as any).__gloam.scene.landscape.world3d.setTerrainOnly(true));
     await expect(page.locator('#game-hud')).toBeHidden();
     await page.screenshot({ path: 'test-results/environment/after-terrain-wide.png' });
@@ -188,7 +188,7 @@ test('@perf Golden Pasture art review, water pause, and pooled combat retain nat
         sprites: w.sprites.positions.size,
       };
     });
-    console.log('Golden Pasture native combat', metrics);
+    console.log('Orkhon Valley native combat', metrics);
     expect(metrics.enemies).toBe(350);
     expect(metrics.sameTerrain).toBe(true);
     expect(metrics.draws).toBeLessThan(45);

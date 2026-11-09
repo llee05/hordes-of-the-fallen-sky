@@ -68,7 +68,7 @@ absent from production and packaged play.
 
 Open **Developer mode** with F8 or from the title or pause menu, then select a
 button under **Playable classes · start fresh expedition**. The selection
-immediately replaces the current run with a fresh expedition at Golden Pasture,
+immediately replaces the current run with a fresh expedition at Mount Otgontenger,
 using the selected starting tradition and class. Unlike stocked level checkpoints,
 class runs use normal opening supplies plus character loadout bonuses. The saved
 character profile supplies background, oath, and appearance when present;
@@ -89,27 +89,24 @@ original screen, retaining its paused or ended-run state.
 
 Selecting a checkpoint replaces the current expedition immediately
 and rebuilds the scene. Enemies, projectiles, shards, hazards, defeat
-effects, camp packing, succession, and boss state start fresh. The HUD identifies
+effects, camp packing, and succession start fresh. The HUD identifies
 the expedition as **DEVELOPER RUN**. Start a new run from Pause or an outcome menu
 to return to the title and begin a normal expedition with the original preferences.
 
-The checkpoint catalog in `src/game/dev/levels.ts` covers all four journey chapters,
-all three approaches to each of the three crossings, and all eight named camps in
-both chapters 2 and 3. IDs derive from the existing chapter, route, and location data.
+The checkpoint catalog in `src/game/dev/levels.ts` lists exactly one entry per real
+place, in `LOCATIONS` order, under **Real places**. IDs are `place:<location id>`,
+for example `place:orkhon-valley`. There are no chapter or crossing checkpoints.
 
-`createDeveloperRun(id)` returns a fresh, renderer-independent test expedition or
-`undefined` for an unknown ID. It uses the normal migration and arrival rules to
-establish earlier crossings and their remembered destinations. The selected crossing
-begins at zero progress; its rewards still require arrival. Camp checkpoints have
-routes available immediately, and the final stand starts with its full timer and
-the Skybreaker still to come.
+`createDeveloperRun(id)` returns a fresh, renderer-independent test expedition camped
+at the chosen place, or `undefined` for an unknown or retired ID. Routes are
+available immediately; migrations use the normal route and arrival rules.
 
 Test expeditions have a healthy Khan, 24 people and generous supplies. No camp developments are selected automatically.
 Guidance is off for the test expedition. Normal new games retain their
 usual state and preferences. Test provisions are configured in `GAME.developer`.
 
 Both the menu and scene actions are guarded by `import.meta.env.DEV`; production
-and packaged builds have no selector or F8 binding. Developer victories and defeats
+and packaged builds have no selector or F8 binding. Developer defeats
 leave the saved longest journey unchanged. Settings still save normally.
 
 `npm run check` covers checkpoint state and the production build. Browser regression

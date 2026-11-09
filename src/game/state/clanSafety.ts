@@ -1,6 +1,6 @@
 import type { RunState } from '../types';
 import { markExpedition, metricCasualties, metricStage } from './expeditionMetrics';
-export type ClanDamageCause = 'attack' | 'starvation' | 'eruption' | 'seer' | 'area';
+export type ClanDamageCause = 'attack' | 'starvation' | 'seer' | 'area';
 export interface ClanDamageObservation {
   cause: ClanDamageCause;
   at: number;
@@ -11,12 +11,11 @@ export interface ClanDamageObservation {
 export interface ClanSafety {
   combatLosses: number;
   starvationLosses: number;
-  protectedCrossings: number;
   lastDamage?: ClanDamageObservation;
   lastMajorLoss?: ClanDamageObservation;
 }
 export function createClanSafety(): ClanSafety {
-  return { combatLosses: 0, starvationLosses: 0, protectedCrossings: 0 };
+  return { combatLosses: 0, starvationLosses: 0 };
 }
 export function recordClanDamage(
   run: RunState,

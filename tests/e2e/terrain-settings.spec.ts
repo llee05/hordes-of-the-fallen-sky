@@ -63,8 +63,8 @@ test('legacy 2d and 3d profiles always load the angled world', async ({ browser 
 });
 
 for (const scenario of [
-  { location: 'golden-pasture', level: 'chapter:golden-pasture' },
-  { location: 'otgontenger', level: 'destination:2:otgontenger' },
+  { location: 'otgontenger', level: 'place:otgontenger' },
+  { location: 'orkhon-valley', level: 'place:orkhon-valley' },
 ]) {
   test(`${scenario.location} preserves actors and XP on blocked ground when restoring`, async ({
     page,

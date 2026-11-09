@@ -21,7 +21,7 @@ describe('composed angled landscapes', () => {
   });
 
   it('joins positions and normals across a chunk seam through stacked cliffs', () => {
-    const terrain = new ComposedTerrain(composedRegion('golden-pasture'));
+    const terrain = new ComposedTerrain(composedRegion('altan-ovoo'));
     const a = sceneGeometry(terrain, { x: 2048, y: 1536, width: 512, height: 512 });
     const b = sceneGeometry(terrain, { x: 2560, y: 1536, width: 512, height: 512 });
     const seam = (data: typeof a) =>
@@ -79,7 +79,7 @@ describe('composed angled landscapes', () => {
   });
 
   it('connects a raised shelf to open combat space and keeps grouped dressing out of the camp', () => {
-    const terrain = new ComposedTerrain(composedRegion('golden-pasture'));
+    const terrain = new ComposedTerrain(composedRegion('altan-ovoo'));
     const nav = new TerrainNavigation(terrain);
     expect(nav.isWalkable(2600, 2600, 120, true)).toBe(true);
     for (let x = 2600; x <= 4100; x += 32) expect(nav.isWalkable(x, 2600, 12, true)).toBe(true);
@@ -88,9 +88,7 @@ describe('composed angled landscapes', () => {
     expect(terrain.height(safe!.x, safe!.y) * 1000).toBeGreaterThan(150);
     const bounds = { x: 2048, y: 1536, width: 512, height: 512 };
     const props = sceneDressing(terrain, bounds);
-    expect(props).toEqual(
-      sceneDressing(new ComposedTerrain(composedRegion('golden-pasture')), bounds),
-    );
+    expect(props).toEqual(sceneDressing(new ComposedTerrain(composedRegion('altan-ovoo')), bounds));
     for (const prop of props) expect(terrain.protection(prop.x, prop.z)).toBeLessThanOrEqual(0.15);
     expect(
       sceneDressing(terrain, { x: 2560, y: 2560, width: 512, height: 512 }).every(
@@ -114,10 +112,10 @@ describe('composed angled landscapes', () => {
         river.bridgeHeight(bridge.x + bridge.nz * 100, bridge.z - bridge.nx * 100),
       ).toBeUndefined();
     }
-    const frozen = new ComposedTerrain(
-      composedRegion('silent-river'),
-      LANDSCAPES['silent-river'].water,
-    );
+    const frozen = new ComposedTerrain(composedRegion('orkhon-valley'), {
+      ...LANDSCAPES['orkhon-valley'].water!,
+      kind: 'frozen',
+    });
     expect(frozen.river!.bridges).toHaveLength(0);
   });
 });

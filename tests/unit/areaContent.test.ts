@@ -29,7 +29,7 @@ describe('local threat planning', () => {
       preview = routeMenu(r, 'belukha');
     expect(preview).toContain('Frostwood prowler');
     expect(preview).toContain('Meltwater caller');
-    expect(journalMenu(r, 'journey')).toContain('Thistle prowler');
+    expect(journalMenu(r, 'journey')).toContain('Snowline hunter');
     expect(journalMenu(r, 'journey')).not.toContain('Frostwood prowler');
     expect(r).toEqual(before);
   });

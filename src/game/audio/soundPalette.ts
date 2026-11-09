@@ -144,15 +144,6 @@ export const SOUND_CUES = {
     5,
   ),
   succession: signal(0.29, [layer(DRUM, 0.36), layer(['woodChime'], 0.43, { delay: 0.22 })], 5),
-  victory: signal(
-    0.32,
-    [
-      layer(DRUM, 0.32),
-      layer(['woodChime'], 0.43, { delay: 0.25 }),
-      layer(PAPER, 0.15, { delay: 0.55 }),
-    ],
-    5,
-  ),
   loss: signal(0.27, [layer(LEATHER, 0.45), layer(DRUM, 0.4, { delay: 0.24, lowpass: 950 })], 5),
 } satisfies Record<string, SoundCue>;
 export type SoundKind = keyof typeof SOUND_CUES;

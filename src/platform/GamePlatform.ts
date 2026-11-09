@@ -18,12 +18,11 @@ import {
   type SaveListing,
 } from '../shared/expeditionSave';
 
-function isCompatibleExpedition(value: unknown): value is ExpeditionSave {
+function decodeCompatibleExpedition(value: unknown) {
   try {
-    decodeExpedition(value);
-    return true;
+    return decodeExpedition(value);
   } catch {
-    return false;
+    return undefined;
   }
 }
 
@@ -81,7 +80,10 @@ export class GamePlatform {
         const save = this.desktop
           ? await this.desktop.loadExpedition(entry.slot)
           : this.readBrowserSave(entry.slot).save;
-        return isCompatibleExpedition(save) ? entry : { slot: entry.slot, status: 'incompatible' };
+        const decoded = decodeCompatibleExpedition(save);
+        return decoded
+          ? { ...entry, summary: decoded.summary }
+          : { slot: entry.slot, status: 'incompatible' };
       }),
     );
     this.saveStorageError = false;
@@ -94,7 +96,7 @@ export class GamePlatform {
       ? await this.desktop.loadExpedition(slot)
       : this.readBrowserSave(slot).save;
     if (!isExpeditionSave(save)) throw new Error('This save could not be loaded');
-    if (!isCompatibleExpedition(save)) {
+    if (!decodeCompatibleExpedition(save)) {
       this.saves = [
         ...this.saves.filter((entry) => entry.slot !== slot),
         { slot, status: 'incompatible' },

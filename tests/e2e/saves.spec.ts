@@ -122,7 +122,7 @@ test('save and return to title preserves a normal expedition and developer runs 
   await expect(page.getByRole('button', { name: /CONTINUE EXPEDITION/ })).toBeVisible();
   const before = await page.evaluate(() => localStorage.getItem('gloam-expedition-auto'));
   await page.keyboard.press('F8');
-  await page.locator('[data-developer-level="destination:2:otgontenger"]').click();
+  await page.locator('[data-developer-level="place:otgontenger"]').click();
   await expect(page.getByRole('dialog')).toBeHidden();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
@@ -130,7 +130,7 @@ test('save and return to title preserves a normal expedition and developer runs 
   expect(await page.evaluate(() => localStorage.getItem('gloam-expedition-auto'))).toBe(before);
 });
 
-test('a carved 2.5D migration route and crossing resume with the same terrain and progress', async ({
+test('a carved 2.5D migration route resumes with the same terrain and progress', async ({
   page,
 }) => {
   test.setTimeout(90000);
@@ -140,14 +140,21 @@ test('a carved 2.5D migration route and crossing resume with the same terrain an
     const s = (window as any).__gloam.scene;
     s.run.clan.stageTime = 45;
     s.openRoutes();
-    s.chooseRoute('river', 'otgontenger');
+    s.chooseRoute('river', 'orkhon-valley');
     s.run.clan.migrationProgress = 0.43;
     s.run.clan.stageTime = 22;
-    s.run.crossing.phase = 'assault';
-    s.run.crossing.spawned = 3;
-    s.run.crossing.defeated = 1;
     s.updateCamp(0);
     s.setPhase('paused');
+  });
+  expect(
+    await page.evaluate(() => {
+      const { stage, destinationId, migrationProgress } = (window as any).__gloam.scene.run.clan;
+      return { stage, destinationId, migrationProgress };
+    }),
+  ).toEqual({
+    stage: 'migration',
+    destinationId: 'orkhon-valley',
+    migrationProgress: 0.43,
   });
   await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Save to Slot 2' })).toBeEnabled();
@@ -156,7 +163,6 @@ test('a carved 2.5D migration route and crossing resume with the same terrain an
   const before = await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
     return {
-      crossing: s.run.crossing,
       clan: s.run.clan,
       camp: { x: s.camp.x, y: s.camp.y },
       terrain: s.landscape.world3d.terrain.region.scene,
@@ -171,7 +177,6 @@ test('a carved 2.5D migration route and crossing resume with the same terrain an
   const after = await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
     return {
-      crossing: s.run.crossing,
       clan: s.run.clan,
       camp: { x: s.camp.x, y: s.camp.y },
       terrain: s.landscape.world3d.terrain.region.scene,
@@ -181,6 +186,11 @@ test('a carved 2.5D migration route and crossing resume with the same terrain an
     };
   });
   expect(after).toEqual(before);
+  expect(after.clan).toMatchObject({
+    stage: 'migration',
+    destinationId: 'orkhon-valley',
+    migrationProgress: 0.43,
+  });
   expect(after.walk.every(Boolean)).toBe(true);
 });
 

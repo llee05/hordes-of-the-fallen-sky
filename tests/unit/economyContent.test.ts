@@ -38,7 +38,7 @@ describe('economy planning interfaces', () => {
     run.phase = 'building';
     run.clan.materials = 0;
     const before = structuredClone(run);
-    expect(developmentPreview(run, 'herd')?.after.foodNet).toBeCloseTo(1.1);
+    expect(developmentPreview(run, 'herd')?.after.foodNet).toBeCloseTo(0.905);
     expect(run).toEqual(before);
     expect(buildStructure(run, 'herd')).toBe(false);
     expect(developmentPreview(run, 'herd', 'winter-stores')).toBeUndefined();
@@ -48,7 +48,7 @@ describe('economy planning interfaces', () => {
     run.clan.materials = 500;
     buildStructure(run, 'herd');
     expect(developmentOutlook(run, 'herd', 'remount-herds')).toContain(
-      'Crossing food (route range)',
+      'Journey food (route range)',
     );
     buildStructure(run, 'herd', 'winter-stores');
     expect(developmentPreview(run, 'herd', 'remount-herds')).toBeUndefined();
@@ -58,19 +58,19 @@ describe('economy planning interfaces', () => {
 
   it('shows both helpful production and the extra mouths welcomed by households', () => {
     const run = createRun();
-    expect(developmentOutlook(run, 'herd')).toContain('Food net +0.45/s → +1.10/s');
-    expect(developmentOutlook(run, 'ger', 'hearthkeepers')).toContain('Food net +0.45/s → +0.30/s');
+    expect(developmentOutlook(run, 'herd')).toContain('Food net +0.35/s → +0.91/s');
+    expect(developmentOutlook(run, 'ger', 'hearthkeepers')).toContain('Food net +0.35/s → +0.20/s');
     expect(developmentOutlook(run, 'ger', 'hearthkeepers')).toContain(
-      'Materials +0.42/s → +0.53/s',
+      'Materials +0.53/s → +0.67/s',
     );
     run.phase = 'building';
     buildStructure(run, 'herd');
     expect(developmentOutlook(run, 'herd', 'winter-stores')).toContain('+45 food now');
     expect(developmentOutlook(run, 'herd', 'winter-stores')).toContain(
-      'Food net +1.10/s → +1.20/s',
+      'Food net +0.91/s → +1.00/s',
     );
     expect(developmentOutlook(run, 'herd', 'winter-stores')).toContain(
-      'Crossing food (route range)',
+      'Journey food (route range)',
     );
     const before = structuredClone(run);
     const html = buildingMenu(
@@ -85,12 +85,12 @@ describe('economy planning interfaces', () => {
     expect(run).toEqual(before);
   });
 
-  it('separates crossing provisions from arrival rewards and keeps risky routes selectable', () => {
+  it('separates journey provisions from arrival rewards and keeps risky routes selectable', () => {
     const run = createRun();
     run.clan.food = 1;
     const before = structuredClone(run);
     const html = routeMenu(run);
-    expect(html).toContain('Food needed en route ~13.9');
+    expect(html).toContain('Food needed en route ~15.4');
     expect(html).toContain('Food after arrival ~35.0');
     expect(html.match(/Food runs out before arrival/g)).toHaveLength(3);
     expect(html).not.toContain('disabled');
@@ -99,9 +99,7 @@ describe('economy planning interfaces', () => {
 
   it('describes each stage, empty stores, sustained grazing, and rounded rates', () => {
     const run = createRun();
-    expect(foodOutlook(run)).toContain('~11:32');
-    run.clan.stage = 'final';
-    expect(foodOutlook(run)).toBe('Food lasts to passage');
+    expect(foodOutlook(run)).toContain('~10:41');
     run.clan.stage = 'migration';
     run.clan.routeId = 'river';
     expect(foodOutlook(run)).toBe('Food lasts to arrival');
@@ -122,8 +120,6 @@ describe('economy planning interfaces', () => {
     run.clan.stage = 'migration';
     run.clan.routeId = 'river';
     expect(clanWarning(run)).toContain('before arrival');
-    run.clan.stage = 'final';
-    expect(clanWarning(run)).toContain('before the passage');
     run.clan.integrity = 20;
     expect(clanWarning(run)).toContain('resolve is critical');
   });
