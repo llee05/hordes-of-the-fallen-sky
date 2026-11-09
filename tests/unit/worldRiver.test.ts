@@ -7,6 +7,7 @@ import { composedRegion } from '../../src/game/data/worldRegions';
 import { riverPoint } from '../../src/game/assets/riverGeometry';
 import * as THREE from 'three';
 import { MEADOW_STREAM } from './fixtures/stream';
+import { LANDSCAPES } from '../../src/game/data/landscapes';
 
 describe('integrated organic rivers', () => {
   it('shares repeatable variable-width shores with carving and moisture queries', () => {
@@ -48,5 +49,44 @@ describe('integrated organic rivers', () => {
     expect(water.time.value).toBe(11);
     water.destroy();
     bed.dispose();
+  });
+
+  it('answers bucketed shore queries exactly as a scan of every segment', () => {
+    for (const water of [
+      MEADOW_STREAM,
+      ...Object.values(LANDSCAPES).flatMap((landscape) =>
+        landscape.water ? [landscape.water] : [],
+      ),
+    ]) {
+      const river = new WorldRiver(water, 2600, 60);
+      const segments = river['segments'];
+      for (let i = 0; i < 1500; i++) {
+        const x = ((i * 7919) % 5300) - 50 + (i % 7) * 0.37,
+          z = ((i * 104729) % 5300) - 50 + (i % 11) * 0.53;
+        let best = Infinity,
+          halfWidth = 1;
+        for (const s of segments) {
+          const px = x - 2600,
+            pz = z - 2600;
+          const t = Math.max(
+            0,
+            Math.min(1, ((px - s.a.x) * s.dx + (pz - s.a.y) * s.dz) / (s.lengthSquared || 1)),
+          );
+          const dx = px - s.a.x - s.dx * t,
+            dz = pz - s.a.y - s.dz * t;
+          if (dx * dx + dz * dz >= best) continue;
+          best = dx * dx + dz * dz;
+          halfWidth =
+            dx * s.a.nx + dz * s.a.ny < 0
+              ? s.a.left + (s.b.left - s.a.left) * t
+              : s.a.right + (s.b.right - s.a.right) * t;
+        }
+        expect(river.sample(x, z)).toEqual({
+          distance: Math.sqrt(best),
+          halfWidth,
+          shoreDistance: Math.sqrt(best) - halfWidth,
+        });
+      }
+    }
   });
 });

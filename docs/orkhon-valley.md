@@ -135,3 +135,10 @@ meet hidden walls), `ramp_ascending` and `ramp_corner` (`ramp_wide` and
 `ramp_descending` cover both ramp directions), `riverbank_grass` and `riverbank_rock`
 (their painted water does not register with the river tile), and `bridge_vertical` and
 `bridge_end_ramp` (one level bridge).
+
+## Performance
+
+Navigation cells, collision walls and flow fields are built once when the level loads;
+play only reads the resident grid. River shore queries use an exact spatial index (per
+128-unit bucket, only segments that can be nearest), and cells clear of the gorge skip the
+water probe grid. The authored ground shader fetches only the tiles present at each point.

@@ -148,6 +148,8 @@ export class ComposedTerrain extends MountainHeightfield {
       if (Math.hypot(cx - center - obstacle.x, cz - center - obstacle.y) < obstacle.radius + 12)
         return { ...cell, blocked: true };
     if (!this.river?.definition.gorge) return cell;
+    // A cell whose centre is well clear of the water has no wet probes; skip the probe grid.
+    if (this.river.sample(cx, cz).shoreDistance > Math.hypot(cell.width, cell.height)) return cell;
     let wet = 0,
       probes = 0;
     for (let j = 0; j <= cell.height; j += 16)

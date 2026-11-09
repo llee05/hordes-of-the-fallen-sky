@@ -21,10 +21,15 @@ export const TERRAIN_SAMPLING = `
   vec3 authoredGround(vec2 p) {
     vec2 uv=p/tileSize;
     float swap=smoothstep(0.3,0.7,0.5+0.3*sin(p.x/610.0+sin(p.y/470.0)*1.7)+0.2*sin(p.y/830.0-p.x/1270.0));
-    vec3 grass=mix(texture2D(meadow,uv).rgb,texture2D(meadowAlt,vec2(-uv.y,uv.x)).rgb,swap);
-    vec3 sum=grass*materialA.x+texture2D(soil,uv).rgb*materialA.y+texture2D(stone,uv).rgb*materialA.z+
-      texture2D(dryMeadow,uv).rgb*materialA.w+texture2D(snow,uv).rgb*materialB.x+
-      texture2D(patchMap,uv).rgb*materialB.y+texture2D(gravelMap,uv).rgb*materialB.z;
+    // Fetch only channels present at this point, as the generic path does.
+    vec3 sum=vec3(0.0);
+    if(materialA.x>0.005) sum+=mix(texture2D(meadow,uv).rgb,texture2D(meadowAlt,vec2(-uv.y,uv.x)).rgb,swap)*materialA.x;
+    if(materialA.y>0.005) sum+=texture2D(soil,uv).rgb*materialA.y;
+    if(materialA.z>0.005) sum+=texture2D(stone,uv).rgb*materialA.z;
+    if(materialA.w>0.005) sum+=texture2D(dryMeadow,uv).rgb*materialA.w;
+    if(materialB.x>0.005) sum+=texture2D(snow,uv).rgb*materialB.x;
+    if(materialB.y>0.005) sum+=texture2D(patchMap,uv).rgb*materialB.y;
+    if(materialB.z>0.005) sum+=texture2D(gravelMap,uv).rgb*materialB.z;
     return sum/max(0.001,dot(materialA,vec4(1.0))+dot(materialB,vec3(1.0)));
   }
 `;
