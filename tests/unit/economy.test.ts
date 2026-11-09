@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration, buildStructure } from '../../src/game/state/clan';
-import { crossingForecast, economyForecast, economyRates } from '../../src/game/state/economy';
+import { travelForecast, economyForecast, economyRates } from '../../src/game/state/economy';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 describe('economy forecasts', () => {
@@ -77,7 +77,7 @@ describe('economy forecasts', () => {
       run.clan.herd = 10;
       run.clan.campEffects.multipliers.mobility = 1.1;
       run.clan.campEffects.bonuses.arrivalFood = 15;
-      const forecast = crossingForecast(run, route);
+      const forecast = travelForecast(run, route);
       expect(forecast.duration).toBeCloseTo((60 * route.duration) / (1.12 * 0.8 * 1.1));
       expect(forecast.foodNeeded).toBeCloseTo(forecast.duration * 0.2);
       expect(forecast.foodAfterArrival).toBeCloseTo(70 - forecast.foodNeeded + route.food + 15);
@@ -95,7 +95,7 @@ describe('economy forecasts', () => {
   it('warns about shortages even when an arrival reward would refill stores', () => {
     const run = createRun();
     run.clan.food = 1;
-    const forecast = crossingForecast(run, ROUTES[0]);
+    const forecast = travelForecast(run, ROUTES[0]);
     expect(forecast.shortfall).toBeGreaterThan(0);
     expect(forecast.foodBeforeArrival).toBe(0);
     expect(forecast.foodAfterArrival).toBe(35);
@@ -114,7 +114,7 @@ describe('economy forecasts', () => {
     run.clan.stage = 'migration';
     run.clan.routeId = 'ridge';
     run.clan.stageTime = 10;
-    const forecast = crossingForecast(run, ROUTES[1]);
+    const forecast = travelForecast(run, ROUTES[1]);
     expect(forecast.remaining).toBeCloseTo(48 / (1.084 * 1.2) - 10);
     expect(forecast.foodNeeded).toBeCloseTo(forecast.remaining * 0.1);
     expect(economyForecast(run).foodSeconds).toBeUndefined();
@@ -127,7 +127,7 @@ describe('economy forecasts', () => {
     run.phase = 'building';
     const before = structuredClone(run);
     const forecast = economyForecast(run);
-    crossingForecast(run, ROUTES[0]);
+    travelForecast(run, ROUTES[0]);
     expect(run).toEqual(before);
     for (const phase of ['playing', 'paused', 'route', 'journal'] as const) {
       run.phase = phase;

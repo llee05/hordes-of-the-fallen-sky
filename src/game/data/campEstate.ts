@@ -124,7 +124,7 @@ export const INTERNAL_DEVELOPMENTS: readonly InternalDevelopment[] = [
   internal(
     'supply-organisation',
     'Supply Organisation',
-    'Each completed crossing brings 8 more food per rank.',
+    'Each completed migration brings 8 more food per rank.',
     'grain',
     { bonuses: { arrivalFood: C.arrivalFood } },
     2,
@@ -132,7 +132,7 @@ export const INTERNAL_DEVELOPMENTS: readonly InternalDevelopment[] = [
   internal(
     'travelling-merchants',
     'Travelling Merchants',
-    'Trade along the road brings 6 more materials after each crossing, per rank.',
+    'Trade along the road brings 6 more materials after each migration, per rank.',
     'wagon',
     { bonuses: { arrivalMaterials: C.arrivalMaterials } },
     3,

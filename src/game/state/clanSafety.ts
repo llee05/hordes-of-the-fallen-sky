@@ -11,12 +11,11 @@ export interface ClanDamageObservation {
 export interface ClanSafety {
   combatLosses: number;
   starvationLosses: number;
-  protectedCrossings: number;
   lastDamage?: ClanDamageObservation;
   lastMajorLoss?: ClanDamageObservation;
 }
 export function createClanSafety(): ClanSafety {
-  return { combatLosses: 0, starvationLosses: 0, protectedCrossings: 0 };
+  return { combatLosses: 0, starvationLosses: 0 };
 }
 export function recordClanDamage(
   run: RunState,

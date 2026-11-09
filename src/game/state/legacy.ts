@@ -1,6 +1,6 @@
 import { GAME } from '../config';
 import { REGIONS } from '../data/clan';
-import type { CrossingRoute } from '../data/crossings';
+import type { ROUTES } from '../data/clan';
 import type { FieldObjectiveKind } from '../data/fieldObjectives';
 import { currentLocation } from './journey';
 import type { CrossingRecord, LocationId, RunState } from '../types';
@@ -12,20 +12,16 @@ const STAGE_NAMES: Record<RunState['clan']['stage'], string> = {
 };
 
 /** How the caravan travelled each approach, for departure and arrival memories. */
-export const ROUTE_ACCOUNTS: Record<CrossingRoute, { departed: string; arrived: string }> = {
+export const ROUTE_ACCOUNTS: Record<
+  (typeof ROUTES)[number]['id'],
+  { departed: string; arrived: string }
+> = {
   river: { departed: 'They followed the river.', arrived: 'by the river road' },
   ridge: { departed: 'They took the high ridge.', arrived: 'over the high ridge' },
   refuge: {
     departed: 'They rode out to answer the blue banners.',
     arrived: 'after answering the blue banners',
   },
-};
-
-/** What a completed crossing objective accomplished, before its reward is listed. */
-export const CROSSING_OBJECTIVE_ACCOUNTS: Record<CrossingRoute, string> = {
-  river: 'The ford held against the attackers on both banks.',
-  ridge: 'The ridge attackers were defeated.',
-  refuge: 'The households under the blue banners were brought safely into the column.',
 };
 
 /** What a completed field objective accomplished, before its reward is listed. */

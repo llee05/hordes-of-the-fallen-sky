@@ -10,8 +10,7 @@ import {
   reserveBuildingSlot,
 } from './campEstate';
 import { recordClanDamage, type ClanDamageCause } from './clanSafety';
-import { beginCrossingEncounter, settleCrossingEncounter } from './crossingEncounters';
-import { crossingDuration, economyRates, pastureDepletion } from './economy';
+import { travelDuration, economyRates, pastureDepletion } from './economy';
 import { markExpedition, metricCasualties, metricStage } from './expeditionMetrics';
 import { passageProgress } from './finalStand';
 import { completeGuidance } from './guidance';
@@ -230,7 +229,6 @@ export function beginMigration(
   clan.routeId = route.id;
   clan.destinationId = destination.id;
   clan.migrationProgress = 0;
-  beginCrossingEncounter(run);
   clan.identity[route.doctrine] += 2;
   clan.message = `The gers are packed for ${destination.name}. Stay close to the caravan and bring your people through.`;
   rememberClan(
@@ -325,7 +323,7 @@ export function advanceClan(
     clan.food += dt * rates.foodNet;
     clan.materials += dt * rates.materials;
     const route = ROUTES.find((r) => r.id === clan.routeId)!;
-    clan.migrationProgress = Math.min(1, clan.stageTime / crossingDuration(run, route));
+    clan.migrationProgress = Math.min(1, clan.stageTime / travelDuration(run, route));
   }
   clan.food = Math.max(0, clan.food);
   clan.threat = Math.min(
@@ -358,7 +356,6 @@ export function advanceClan(
   }
   if (clan.population === 0 || clan.integrity === 0) return 'lost';
   if (clan.stage === 'migration' && clan.migrationProgress >= 1) {
-    settleCrossingEncounter(run);
     const route = ROUTES.find((r) => r.id === clan.routeId)!;
     const destination = arrivalLocation(run);
     clan.food = Math.max(0, clan.food + route.food + bonuses.arrivalFood);
@@ -372,7 +369,7 @@ export function advanceClan(
     clan.population += arrivedPeople;
     if (route.id === 'refuge') clan.rescuedRiders += GAME.clan.arrival.refugeRiders;
     clan.herd = Math.min(GAME.clan.maxHerd, clan.herd + route.herd + bonuses.arrivalHerd);
-    completeGuidance(run, 'crossing');
+    completeGuidance(run, 'journey');
     clan.region += 1;
     clan.locationId = destination.id;
     clan.destinationId = undefined;

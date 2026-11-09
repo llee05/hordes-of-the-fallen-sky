@@ -420,8 +420,6 @@ export class CombatSystem extends ArenaSystem {
     this.audio.play('defeat', { x, y });
     this.enemyDirector.shadows.get(enemy)?.setVisible(false);
     this.run.kills += 1;
-    if (this.run.crossing && enemy.crossingId === this.run.crossing.key)
-      this.run.crossing.defeated++;
     const objective = this.run.field.objective;
     if (
       objective?.status === 'available' &&

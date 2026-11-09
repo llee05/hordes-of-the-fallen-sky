@@ -65,7 +65,7 @@ export function pacingBenchmark(
     if (run.elapsed >= nextContact) {
       const exposure =
         run.clan.stage === 'migration'
-          ? config.crossingExposure
+          ? config.journeyExposure
           : run.clan.stage === 'final'
             ? config.finalExposure
             : plan.exposure;

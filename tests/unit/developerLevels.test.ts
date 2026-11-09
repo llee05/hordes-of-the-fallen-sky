@@ -3,7 +3,7 @@ import { GAME } from '../../src/game/config';
 import { LOCATIONS, REGIONS, ROUTES } from '../../src/game/data/clan';
 import { DEVELOPER_LEVELS, createDeveloperRun } from '../../src/game/dev/levels';
 import { advanceClan, beginMigration, canMigrate } from '../../src/game/state/clan';
-import { crossingDuration } from '../../src/game/state/economy';
+import { travelDuration } from '../../src/game/state/economy';
 import {
   arrivalLocation,
   availableDestinations,
@@ -51,7 +51,7 @@ describe('developer level checkpoints', () => {
         expect(run.clan.migrationProgress).toBe(0);
         const route = ROUTES.find((entry) => entry.id === level.routeId)!;
         const destination = arrivalLocation(run).id;
-        expect(advanceClan(run, crossingDuration(run, route))).toBe('arrived');
+        expect(advanceClan(run, travelDuration(run, route))).toBe('arrived');
         expect(run.legacy.crossings).toHaveLength(level.region + 1);
         expect(currentLocation(run).id).toBe(destination);
         expect(advanceClan(run, 0.01)).not.toBe('arrived');
@@ -66,7 +66,7 @@ describe('developer level checkpoints', () => {
         run.phase = 'route';
         expect(beginMigration(run, 'river', next.id)).toBe(true);
         run.phase = 'playing';
-        expect(advanceClan(run, crossingDuration(run, ROUTES[0]))).toBe('arrived');
+        expect(advanceClan(run, travelDuration(run, ROUTES[0]))).toBe('arrived');
         expect(currentLocation(run).id).toBe(next.id);
       }
       expect(createDeveloperRun(level.id)).not.toEqual(run);

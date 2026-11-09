@@ -84,7 +84,6 @@ const METHODS = [
   'updateAreaCombat',
   'updateFinalStand',
   'updateFieldObjectives',
-  'updateCrossing',
   'updateCharacterAnimations',
   'hideFallenKhan',
   'burst',

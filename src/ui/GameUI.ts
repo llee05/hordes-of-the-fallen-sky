@@ -4,7 +4,6 @@ import { GAME } from '../game/config';
 import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
 import { classDefinition } from '../game/data/classes';
 import { FORMATIONS, startingTradition } from '../game/data/clan';
-import { CROSSING_ENCOUNTERS } from '../game/data/crossings';
 import { AREA_ENEMIES } from '../game/data/enemies';
 import { FIELD_OBJECTIVES } from '../game/data/fieldObjectives';
 import { NOMADIC_BUILDINGS } from '../game/data/nomadicCamp';
@@ -114,7 +113,7 @@ export class GameUI {
           </section>
           <div class="expedition-clock"><strong id="timer">00:00</strong><span id="stage-label">ENCAMPMENT</span>${import.meta.env.DEV ? '<span id="developer-run" hidden>DEVELOPER RUN · F8</span>' : ''}</div>
           <nav class="hud-menu" aria-label="Game menus"><button id="journal" class="hud-menu-button" title="Clan chronicle (Tab / J)" aria-label="Open clan chronicle" aria-keyshortcuts="Tab J"><span>${clanMark('journal')}</span><kbd>TAB</kbd></button><button id="pause" class="hud-menu-button" aria-label="Pause" title="Pause (Escape)"><span>${clanMark('pause')}</span><kbd>ESC</kbd></button></nav>
-          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p id="objective">Grow the camp. Keep your people alive.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Crossing</span><b id="crossing">0%</b></div><div class="track"><div id="crossing-fill"></div></div></div><p class="objective-hint" id="migration-hint">Routes open in 45s.</p><p id="camp-pressure" class="field-status" role="status"></p><p id="clan-losses" class="field-status"></p><p id="major-loss" class="major-loss" role="status" hidden></p><p id="encounter-status" class="field-status" role="status"></p><p id="field-objective" class="field-status"></p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
+          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><span id="region-count">01 / 04</span><strong id="location">GOLDEN PASTURE</strong><span id="camp-age">DAY 1</span></div><p id="objective">Grow the camp. Keep your people alive.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Journey</span><b id="migration-percent">0%</b></div><div class="track"><div id="migration-fill"></div></div></div><p class="objective-hint" id="migration-hint">Routes open in 45s.</p><p id="camp-pressure" class="field-status" role="status"></p><p id="clan-losses" class="field-status"></p><p id="major-loss" class="major-loss" role="status" hidden></p><p id="encounter-status" class="field-status" role="status"></p><p id="field-objective" class="field-status"></p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
           <aside id="field-guide" class="field-guide hud-surface" aria-label="Expedition guidance" hidden></aside>
           <div class="zoom-controls hud-surface" role="group" aria-label="Battlefield zoom"><button id="zoom-out" aria-label="Zoom out" aria-keyshortcuts="-" title="Zoom out (− / LT)">−</button><button id="zoom-reset" aria-label="Reset battlefield zoom to 100%" aria-keyshortcuts="0" title="Reset zoom (0 / Right stick click)"><span id="zoom-level">100%</span></button><button id="zoom-in" aria-label="Zoom in" aria-keyshortcuts="+" title="Zoom in (+ / RT)">+</button></div>
           <div id="danger-warnings" class="danger-warnings" aria-label="Offscreen danger warnings" role="list"></div><div id="elite-markers" class="elite-markers" aria-label="Elite and armoured enemies" role="list"></div><div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
@@ -374,14 +373,6 @@ export class GameUI {
       'encounter-status',
       `${encounter.title}${['warning', 'assault', 'elite'].includes(encounter.phase) ? ` · ${approach}` : ''} · ${Math.ceil(encounter.remaining)}s`,
     );
-    const crossing = run.clan.stage === 'migration' ? run.crossing : undefined;
-    if (crossing) {
-      const c = CROSSING_ENCOUNTERS[crossing.route];
-      this.text(
-        'encounter-status',
-        `${c.title} · ${crossing.phase === 'waiting' ? 'Watch the approaches' : crossing.phase === 'warning' ? 'Attack approaching' : crossing.route === 'refuge' ? (crossing.escort?.joined ? 'Households secured' : crossing.escort?.lost ? 'Households scattered' : c.task) : `${crossing.defeated}/${c.guards} raiders defeated`} · ${c.reward}`,
-      );
-    }
     const objective = run.field.objective;
     const visibleObjective = !!objective && ['available', 'returning'].includes(objective.status);
     this.get('field-objective').hidden = !visibleObjective;
@@ -496,9 +487,9 @@ export class GameUI {
     );
     this.get('migration-progress').hidden = clan.stage === 'camp';
     const progress = clan.stage === 'final' ? passageProgress(run) : clan.migrationProgress;
-    this.text('progress-label', clan.stage === 'final' ? 'Passage opens' : 'Crossing');
-    this.text('crossing', `${Math.min(Math.round(progress * 100), 100)}%`);
-    this.meter('crossing-fill', progress * 100);
+    this.text('progress-label', clan.stage === 'final' ? 'Passage opens' : 'Journey');
+    this.text('migration-percent', `${Math.min(Math.round(progress * 100), 100)}%`);
+    this.meter('migration-fill', progress * 100);
     this.text(
       'migration-hint',
       clan.stage === 'migration'

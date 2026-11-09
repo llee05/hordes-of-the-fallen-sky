@@ -101,7 +101,7 @@ describe('legacy checkpoint compatibility: Mongolian-inspired camp branches', ()
     expect(run).toEqual(before);
   });
 
-  it('carries all learned crafts and relay rewards through a crossing without creating a new free payment', () => {
+  it('carries all learned crafts and relay rewards through a migration without creating a new free payment', () => {
     const run = builder();
     buildStructure(run, 'provisions');
     for (const path of ['aaruul-drying', 'borts-stores', 'shared-provisions'])
@@ -126,7 +126,7 @@ describe('legacy checkpoint compatibility: Mongolian-inspired camp branches', ()
     expect(run.clan.population).toBe(41);
     expect(run.clan.herd).toBe(40);
     expect(run.health).toBe(45);
-    expect(run.clan.integrity).toBe(76);
+    expect(run.clan.integrity).toBe(72);
     expect(run.clan.campEffects).toEqual(effects);
     expect(run.clan.paths).toEqual(paths);
     expect(createRun().clan.paths).toEqual({});

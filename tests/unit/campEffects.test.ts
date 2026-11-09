@@ -94,7 +94,7 @@ describe('legacy checkpoint compatibility: portable camp development effects', (
     expect(improved).toEqual(paused);
   });
 
-  it('grants supplies and refugee bonuses only once at a completed crossing', () => {
+  it('grants supplies and refugee bonuses only once at a completed migration', () => {
     const run = createRun();
     run.phase = 'route';
     run.clan.stageTime = 45;
@@ -122,7 +122,7 @@ describe('legacy checkpoint compatibility: portable camp development effects', (
       population: 19,
       herd: 4,
       materials: 60,
-      integrity: 74,
+      integrity: 70,
       food: 77,
     });
     expect(run.health).toBe(55);

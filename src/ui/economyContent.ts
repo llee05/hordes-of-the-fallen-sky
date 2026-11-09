@@ -35,7 +35,7 @@ export function developmentOutlook(
 ): string | undefined {
   const preview = developmentPreview(run, id, path);
   if (!preview) return undefined;
-  const { before, after, foodGift, crossingFood } = preview;
+  const { before, after, foodGift, travelFood } = preview;
   const changes: string[] = [];
   const rateChange = (label: string, key: 'foodNet' | 'materials'): void => {
     if (Math.abs(before[key] - after[key]) > 0.000001)
@@ -55,13 +55,13 @@ export function developmentOutlook(
     changes.push(`${foodOutlook(run, before)} → ${afterLabel}`);
   }
   if (
-    crossingFood &&
-    crossingFood.before.some((food, index) => Math.abs(food - crossingFood.after[index]!) > 0.01)
+    travelFood &&
+    travelFood.before.some((food, index) => Math.abs(food - travelFood.after[index]!) > 0.01)
   ) {
     const range = (food: number[]): string =>
       `~${Math.min(...food).toFixed(1)}–${Math.max(...food).toFixed(1)}`;
     changes.push(
-      `Crossing food (route range) ${range(crossingFood.before)} → ${range(crossingFood.after)}`,
+      `Journey food (route range) ${range(travelFood.before)} → ${range(travelFood.after)}`,
     );
   }
   return changes.length ? changes.join(' · ') : undefined;

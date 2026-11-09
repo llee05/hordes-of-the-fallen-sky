@@ -3,7 +3,7 @@ import type { RunState } from '../types';
 import { availableFormations, canMigrate } from './clan';
 import { economyForecast, type EconomyForecast } from './economy';
 
-export type GuidanceStep = 'ride' | 'build' | 'shards' | 'formation' | 'depart' | 'crossing';
+export type GuidanceStep = 'ride' | 'build' | 'shards' | 'formation' | 'depart' | 'journey';
 export interface GuidanceState {
   enabled: boolean;
   completed: GuidanceStep[];
@@ -22,7 +22,7 @@ export function completeGuidance(run: RunState, step: GuidanceStep): void {
 
 /** A single suggestion follows real actions; reading it never pauses or changes the expedition. */
 export function currentGuidance(run: RunState): Guidance | undefined {
-  if (!run.guidance.enabled || run.clan.region > 0 || run.guidance.completed.includes('crossing'))
+  if (!run.guidance.enabled || run.clan.region > 0 || run.guidance.completed.includes('journey'))
     return;
   const done = (step: GuidanceStep) => run.guidance.completed.includes(step);
   if (run.khan.successionRemaining > 0)
@@ -33,8 +33,8 @@ export function currentGuidance(run: RunState): Guidance | undefined {
     };
   if (run.clan.stage === 'migration')
     return {
-      id: 'crossing',
-      title: 'Bring everyone across',
+      id: 'journey',
+      title: 'Stay with the caravan',
       text: 'Follow the clan arrow and keep beside the wagons. The road eats into the food; route rewards wait on the far side.',
     };
   if (canMigrate(run))

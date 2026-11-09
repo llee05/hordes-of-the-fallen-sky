@@ -97,16 +97,13 @@ export class EnemyBehaviour extends ArenaSystem {
     }
   }
 
-  /** Rings guards of the current gathering or crossing. */
+  /** Rings guards of the current gathering. */
   private markObjectiveGuard(enemy: Enemy, warnings: Phaser.GameObjects.Graphics): void {
     const objective = this.run.field.objective;
     if (
-      (objective?.kind === 'gathering' &&
-        objective.status === 'available' &&
-        enemy.objectiveId === objective.id) ||
-      (this.run.clan.stage === 'migration' &&
-        this.run.crossing &&
-        enemy.crossingId === this.run.crossing.key)
+      objective?.kind === 'gathering' &&
+      objective.status === 'available' &&
+      enemy.objectiveId === objective.id
     )
       warnings.lineStyle(2, 0xdfbc74, 0.8).strokeCircle(enemy.x, enemy.y, 22);
   }

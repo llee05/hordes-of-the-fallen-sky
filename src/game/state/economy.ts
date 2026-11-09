@@ -60,24 +60,24 @@ export function economyRates(run: RunState, pasture = run.clan.pasture): Economy
   };
 }
 
-/** No losses or purchases are assumed; arrival gifts cannot feed people during the crossing. */
-export function crossingDuration(
+/** No losses or purchases are assumed; arrival gifts cannot feed people during the journey. */
+export function travelDuration(
   run: RunState,
   route: (typeof ROUTES)[number],
   destination: MigrationLocation = arrivalLocation(run),
 ): number {
   return (
-    (GAME.clan.migrationDuration * route.duration * destination.balance.crossing) /
+    (GAME.clan.migrationDuration * route.duration * destination.balance.travel) /
     migrationMobility(run)
   );
 }
 
-export function crossingForecast(
+export function travelForecast(
   run: RunState,
   route: (typeof ROUTES)[number],
   destination: MigrationLocation = arrivalLocation(run),
 ) {
-  const duration = crossingDuration(run, route, destination);
+  const duration = travelDuration(run, route, destination);
   const remaining = Math.max(
     0,
     duration -
@@ -141,7 +141,7 @@ export function economyForecast(run: RunState): EconomyForecast {
   let foodSeconds: number | undefined;
   if (run.clan.stage === 'migration') {
     const route = ROUTES.find((entry) => entry.id === run.clan.routeId);
-    const remaining = route ? crossingForecast(run, route).remaining : 0;
+    const remaining = route ? travelForecast(run, route).remaining : 0;
     foodSeconds = projectFood(run, remaining).foodSeconds;
   } else {
     foodSeconds = projectFood(run).foodSeconds;

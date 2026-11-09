@@ -1,9 +1,8 @@
 import { areaIntel } from './areaContent';
-import { CROSSING_ENCOUNTERS } from '../game/data/crossings';
 import { ROUTES, type MigrationLocation } from '../game/data/clan';
 import type { RunState } from '../game/types';
 import { arrivalLocation, availableDestinations, currentLocation } from '../game/state/journey';
-import { crossingForecast } from '../game/state/economy';
+import { travelForecast } from '../game/state/economy';
 import { formatTime } from '../game/state/run';
 import { destinationIllustration, routeIllustration } from './artwork';
 import { LANDSCAPES } from '../game/data/landscapes';
@@ -15,7 +14,7 @@ export function destinationEffects(location: MigrationLocation): string {
     food: 'Camp food',
     materials: 'Material gathering',
     mobility: 'Onward caravan speed',
-    crossing: 'Approach time',
+    travel: 'Approach time',
   };
   const changes = (Object.keys(labels) as (keyof typeof labels)[]).flatMap((key) => {
     const change = Math.round((location.balance[key] - 1) * 100);
@@ -35,8 +34,8 @@ export function routeMenu(run: RunState, selectedId: string = arrivalLocation(ru
     <section class="destination-detail" id="destination-detail" aria-label="Selected destination">${destinationIllustration(destination.id)}<p class="eyebrow">${escapeHtml(currentLocation(run).name)} → ${escapeHtml(destination.name)}</p><h3>${escapeHtml(destination.name)}</h3><p>${escapeHtml(destination.description)}</p><p class="destination-scenery">${escapeHtml(LANDSCAPES[destination.id].description)}</p>${destination.context ? `<p class="destination-context">${escapeHtml(destination.context)}</p>` : ''}<p class="destination-effects">${destinationEffects(destination)}</p>${areaIntel(destination.id)}</section>
     <section class="migration-approaches" aria-label="Routes to selected destination"><h3>2. Choose a route to ${escapeHtml(destination.name)}</h3><p class="forecast-note">Estimates assume today’s households, horses and improvements; losses will change them. Arrival supplies wait at the far end.</p><div class="upgrade-cards">${ROUTES.map(
       (route) => {
-        const forecast = crossingForecast(run, route, destination);
-        return `<button class="upgrade-card route-card" data-route="${route.id}" data-focus-key="route-${route.id}">${routeIllustration(route.id)}<span class="upgrade-subtitle">${route.subtitle}</span><h3>${route.title}</h3><p>${route.description}</p><p class="crossing-encounter">${CROSSING_ENCOUNTERS[route.id].title}: ${CROSSING_ENCOUNTERS[route.id].task}. Optional: ${CROSSING_ENCOUNTERS[route.id].reward}.</p><span class="route-forecast"><span>Travel ~${formatTime(Math.ceil(forecast.duration))}</span><span>Food needed en route ~${forecast.foodNeeded.toFixed(1)}</span><span>Food after arrival ~${forecast.foodAfterArrival.toFixed(1)}</span>${forecast.shortfall > 0 ? `<strong class="forecast-shortfall">Food runs out before arrival · short ~${forecast.shortfall.toFixed(1)}</strong>` : '<span>Supplied for the crossing</span>'}</span><span class="card-bottom">PACK & DEPART <span>→</span></span></button>`;
+        const forecast = travelForecast(run, route, destination);
+        return `<button class="upgrade-card route-card" data-route="${route.id}" data-focus-key="route-${route.id}">${routeIllustration(route.id)}<span class="upgrade-subtitle">${route.subtitle}</span><h3>${route.title}</h3><p>${route.description}</p><span class="route-forecast"><span>Travel ~${formatTime(Math.ceil(forecast.duration))}</span><span>Food needed en route ~${forecast.foodNeeded.toFixed(1)}</span><span>Food after arrival ~${forecast.foodAfterArrival.toFixed(1)}</span>${forecast.shortfall > 0 ? `<strong class="forecast-shortfall">Food runs out before arrival · short ~${forecast.shortfall.toFixed(1)}</strong>` : '<span>Supplied for the journey</span>'}</span><span class="card-bottom">PACK & DEPART <span>→</span></span></button>`;
       },
     ).join('')}</div></section>
   </div>${footer('Stay a little longer')}</section>`;

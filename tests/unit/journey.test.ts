@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
 import { LOCATIONS, ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration } from '../../src/game/state/clan';
-import { crossingForecast, economyRates } from '../../src/game/state/economy';
+import { travelForecast, economyRates } from '../../src/game/state/economy';
 import { availableDestinations, currentLocation, locationById } from '../../src/game/state/journey';
 import { advanceSuccession, damageKhan } from '../../src/game/state/khan';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
@@ -60,7 +60,7 @@ describe('named migration destinations', () => {
         run.phase = 'route';
         run.clan.stageTime = 45;
         const before = structuredClone(run);
-        const forecast = crossingForecast(run, route, place);
+        const forecast = travelForecast(run, route, place);
         expect(beginMigration(run, route.id, place.id)).toBe(true);
         expect(currentLocation(run).id).toBe('golden-pasture');
         expect(currentLocation(run).short).toBe('GOLDEN PASTURE');
@@ -99,7 +99,7 @@ describe('named migration destinations', () => {
     expect(economyRates(run).foodProduction).toBeCloseTo(neutral.foodProduction * 1.25 * 1.2);
     expect(economyRates(run).materials).toBeCloseTo(neutral.materials * 1.05);
     const destination = locationById('khan-tengri')!;
-    expect(crossingForecast(run, ROUTES[0], destination).duration).toBeCloseTo(
+    expect(travelForecast(run, ROUTES[0], destination).duration).toBeCloseTo(
       (72 * 1.25) / (1.036 * 1.05),
     );
     run.clan.stage = 'migration';

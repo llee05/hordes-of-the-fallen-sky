@@ -9,7 +9,7 @@ import { classDefinition } from '../data/classes';
 import { LOCATIONS, REGIONS, ROUTES, type StartingTraditionId } from '../data/clan';
 import type { LocationId, RunState } from '../types';
 import { advanceClan, beginMigration } from '../state/clan';
-import { crossingDuration } from '../state/economy';
+import { travelDuration } from '../state/economy';
 import { chapterLocation } from '../state/journey';
 import { createRun, gainExperience } from '../state/run';
 
@@ -83,7 +83,7 @@ export function createDeveloperRun(id: string): RunState | undefined {
       region + 1 === level.region ? level.locationId : chapterLocation(region + 1).id;
     if (!beginMigration(run, 'river', destination)) return undefined;
     run.phase = 'playing';
-    const duration = crossingDuration(run, ROUTES[0]);
+    const duration = travelDuration(run, ROUTES[0]);
     run.elapsed += duration;
     if (advanceClan(run, duration) !== 'arrived') return undefined;
   }

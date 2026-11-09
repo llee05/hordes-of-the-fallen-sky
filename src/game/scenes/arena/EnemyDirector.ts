@@ -25,7 +25,6 @@ export interface SpawnDirective {
   point?: { x: number; y: number };
   angle?: number;
   objectiveId?: number;
-  crossingId?: string;
   campOnly?: boolean;
 }
 
@@ -146,7 +145,6 @@ export class EnemyDirector {
     this.initialize(enemy, definition, x, y);
     enemy.elite ||= !forced && !!selection.elite;
     enemy.objectiveId = directive?.objectiveId;
-    enemy.crossingId = directive?.crossingId;
     if (isBoss)
       run.clan.message = 'THE SKYBREAKER — hold the line. Your people are the victory condition.';
     if (!forced && selection.elite) run.encounters.eliteSpawned = true;
@@ -184,7 +182,6 @@ export class EnemyDirector {
       ? GAME.areaCombat.abilityEvery + (enemy.tacticalSlot % 7) * 0.15
       : GAME.tactics.seerEvery;
     enemy.objectiveId = undefined;
-    enemy.crossingId = undefined;
     if (isBoss) this.boss = enemy;
     if (!isCharacterKind(definition.texture))
       throw new Error(`Missing character animation: ${definition.texture}`);
@@ -248,7 +245,6 @@ export class EnemyDirector {
                   dangerTimer: e.dangerTimer,
                   tacticalSlot: e.tacticalSlot,
                   objectiveId: e.objectiveId,
-                  crossingId: e.crossingId,
                   preparingAttack: e.preparingAttack,
                   tactics: e.tactics,
                 },

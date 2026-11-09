@@ -63,7 +63,6 @@ export interface EnemyArchive extends BodyArchive {
     | 'dangerTimer'
     | 'tacticalSlot'
     | 'objectiveId'
-    | 'crossingId'
     | 'preparingAttack'
     | 'tactics'
   > & { elite?: boolean };
@@ -234,29 +233,6 @@ const optional: Record<string, Record<string, Rule>> = {
     }),
     startingTradition: oneOf(STARTING_TRADITIONS.map((entry) => entry.id)),
     character: isCharacterProfile,
-    crossing: object(
-      {
-        key: string,
-        route: oneOf(['river', 'ridge', 'refuge']),
-        phase: oneOf(['waiting', 'warning', 'assault', 'cleared', 'ended']),
-        remaining: number,
-        spawnDelay: number,
-        spawned: integer,
-        defeated: integer,
-        paid: boolean,
-        lossesAtDeparture: number,
-      },
-      {
-        escort: object({
-          x: number,
-          y: number,
-          progress: number,
-          exposure: number,
-          joined: boolean,
-          lost: boolean,
-        }),
-      },
-    ),
   },
   clan: { locationId: location, destinationId: location },
   khan: { candidate: trait, trait },
@@ -334,7 +310,7 @@ const enemyState = object(
       { aim: point, direction: point },
     ),
   },
-  { objectiveId: integer, crossingId: string, elite: boolean },
+  { objectiveId: integer, elite: boolean },
 );
 const projectile = object(
   {

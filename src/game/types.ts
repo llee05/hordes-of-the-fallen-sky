@@ -137,7 +137,6 @@ export interface RunState {
   /** Missing only in expeditions saved before character creation was introduced. */
   character?: CharacterProfile;
   safety: import('./state/clanSafety').ClanSafety;
-  crossing?: import('./state/crossingEncounters').CrossingEncounter;
   combat: import('./state/mountedCombat').MountedCombatState;
   encounters: import('./state/encounters').EncounterState;
   field: import('./state/fieldObjectives').FieldState;

@@ -25,7 +25,7 @@ describe('first-crossing guidance', () => {
     expect(currentGuidance(run)?.id).toBe('depart');
     run.phase = 'route';
     expect(beginMigration(run, 'river')).toBe(true);
-    expect(currentGuidance(run)?.id).toBe('crossing');
+    expect(currentGuidance(run)?.id).toBe('journey');
     run.phase = 'playing';
     expect(advanceClan(run, 100)).toBe('arrived');
     expect(currentGuidance(run)).toBeUndefined();

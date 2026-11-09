@@ -439,7 +439,6 @@ describe('full expedition snapshots', () => {
     run.khan.candidate = 'hearthguard';
     const restored = decodeExpedition(captureExpedition(run, world())).run;
     expect(restored.clan).toEqual(run.clan);
-    expect(restored.crossing).toEqual(run.crossing);
     expect(restored.khan).toEqual(run.khan);
     expect(restored.health).toBe(0);
   });

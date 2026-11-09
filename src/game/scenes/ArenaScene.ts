@@ -75,7 +75,6 @@ import { CampPresenter } from './arena/CampPresenter';
 import { CharacterAnimator } from './arena/CharacterAnimator';
 import { ClanDamage } from './arena/ClanDamage';
 import { CombatSystem, type HostileShooter } from './arena/CombatSystem';
-import { CrossingDirector } from './arena/CrossingDirector';
 import { EnemyBehaviour } from './arena/EnemyBehaviour';
 import { EnemyDirector, type SpawnDirective } from './arena/EnemyDirector';
 import { FieldObjectiveDirector } from './arena/FieldObjectiveDirector';
@@ -133,7 +132,6 @@ export class ArenaScene extends Phaser.Scene {
   private readonly animator = new CharacterAnimator(this.arena, this.khan, this.riderHost);
   private readonly campDefences = new CampDefences(this.arena, this.combat);
   private readonly fieldObjectives = new FieldObjectiveDirector(this.arena, this.enemyDirector);
-  private readonly crossing = new CrossingDirector(this.arena, this.enemyDirector);
   private readonly finalStand = this.createFinalStand();
   private readonly enemyBehaviour = this.createEnemyBehaviour();
   /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
@@ -356,7 +354,6 @@ export class ArenaScene extends Phaser.Scene {
     this.animator.create();
     this.fieldObjectives.create();
     this.finalStand.reset();
-    this.crossing.create(this.fieldMarkers.warnings);
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.landscape = new SteppeLandscape(this);
     const center = GAME.worldSize / 2;
@@ -530,11 +527,7 @@ export class ArenaScene extends Phaser.Scene {
     this.guidanceEnabled = run.guidance.enabled;
     Object.assign(this.timers, { closeDefenseTimer: 0 }, world.timers);
     this.areaCombat.restore(world);
-    this.landscape.setRegion(
-      run.clan.region,
-      currentLocation(run),
-      run.clan.stage === 'migration' ? run.clan.routeId : undefined,
-    );
+    this.landscape.setRegion(run.clan.region, currentLocation(run));
     this.campPresenter.restore(world.camp);
     this.khan.restore(world);
     if (!isKhanActive(run)) this.khan.hideFallenKhan();
@@ -557,7 +550,6 @@ export class ArenaScene extends Phaser.Scene {
     this.areaCombat.update(0);
     this.finalStand.update(0);
     this.fieldObjectives.refreshMarkers();
-    this.crossing.refreshMarkers();
     this.setPhase('paused');
   }
 
@@ -815,8 +807,6 @@ export class ArenaScene extends Phaser.Scene {
     this.persistence.requestCheckpoint();
     this.campPresenter.beginPacking();
     this.areaCombat.reset();
-    this.landscape.setRegion(this.run.clan.region, currentLocation(this.run), id);
-    this.reconcileTerrain();
     this.campPresenter.refresh();
     this.setPhase('playing');
     this.audio.play('depart');
@@ -995,7 +985,6 @@ export class ArenaScene extends Phaser.Scene {
     )
       this.audio.play('encounter');
     this.fieldObjectives.update(dt);
-    this.crossing.update(dt);
     this.finalStand.update(dt);
     this.enemyBehaviour.update(dt);
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
@@ -1103,7 +1092,7 @@ export class ArenaScene extends Phaser.Scene {
   private arrive(): void {
     this.persistence.saveCamp();
     const center = GAME.worldSize / 2;
-    // Each crossing leads to a new handcrafted arena; structures travel with the clan.
+    // Each migration leads to a new handcrafted arena; structures travel with the clan.
     this.campPresenter.relocate();
     this.camp.setPosition(center, center);
     this.player.setPosition(center, center + 100).setVelocity(0, 0);
@@ -1178,9 +1167,6 @@ export class ArenaScene extends Phaser.Scene {
   }
   updateFieldObjectives(dt: number): void {
     this.fieldObjectives.update(dt);
-  }
-  updateCrossing(dt: number): void {
-    this.crossing.update(dt);
   }
   updateFinalStand(dt: number): void {
     this.finalStand.update(dt);

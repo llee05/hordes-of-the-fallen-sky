@@ -26,7 +26,7 @@ export const STARTING_TRADITIONS = [
     icon: 'bow',
     description:
       'One more rider takes the field, but horsing the escort costs provisions and tools.',
-    role: 'Fight early, and win back supplies before the crossing.',
+    role: 'Fight early, and win back supplies before the journey.',
   },
   {
     id: 'hearthkeepers',
@@ -476,7 +476,8 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'borts-stores',
         title: 'Borts travel stores',
         materials: C.provisions.borts.materials,
-        description: 'Dried meat put by for the road brings 15 food after each completed crossing.',
+        description:
+          'Dried meat put by for the road brings 15 food after each completed migration.',
         effects: { bonuses: { arrivalFood: C.provisions.borts.arrivalFood } },
       },
       {
@@ -531,7 +532,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'supply-caches',
         title: 'Supplies along the road',
         materials: C.relay.caches.materials,
-        description: 'Each successful crossing brings 10 more materials and 8 more food.',
+        description: 'Each completed migration brings 10 more materials and 8 more food.',
         effects: {
           bonuses: {
             arrivalMaterials: C.relay.caches.arrivalMaterials,
@@ -551,7 +552,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         title: 'Fresh horses on the road',
         requires: ['pasture-scouts', 'supply-caches'],
         materials: C.relay.horses.materials,
-        description: 'Each successful crossing brings 1 more horse and 4 more clan resolve.',
+        description: 'Each completed migration brings 1 more horse and 4 more clan resolve.',
         effects: {
           bonuses: {
             arrivalHerd: C.relay.horses.arrivalHerd,
@@ -610,10 +611,10 @@ export interface MigrationLocation {
   terrain: 'river' | 'foothills' | 'peaks' | 'volcanic' | 'desert';
   peaks: number;
   color: number;
-  balance: { food: number; materials: number; mobility: number; crossing: number };
+  balance: { food: number; materials: number; mobility: number; travel: number };
 }
 
-const neutralLocation = { food: 1, materials: 1, mobility: 1, crossing: 1 };
+const neutralLocation = { food: 1, materials: 1, mobility: 1, travel: 1 };
 
 /** Real place context is separate from the game's invented weather, combat, and balance. */
 export const LOCATIONS: readonly MigrationLocation[] = [
@@ -741,8 +742,8 @@ export const ROUTES = [
     id: 'river',
     title: 'Follow the river',
     icon: '≈',
-    subtitle: 'PROVISIONS / LONG CROSSING',
-    description: '+35 food, +2 horses. A longer crossing that keeps to the water.',
+    subtitle: 'PROVISIONS / LONG JOURNEY',
+    description: '+35 food, +2 horses. A longer journey that keeps to the water.',
     food: 35,
     materials: 0,
     population: 0,
@@ -756,7 +757,7 @@ export const ROUTES = [
     title: 'Ride the high ridge',
     icon: '△',
     subtitle: 'MATERIALS / EXPOSED',
-    description: '+28 materials, +10 spirit. A short crossing, exposed on the mountain.',
+    description: '+28 materials, +10 spirit. A short journey, exposed on the mountain.',
     food: 0,
     materials: 28,
     population: 0,

@@ -48,7 +48,7 @@ describe('economy planning interfaces', () => {
     run.clan.materials = 500;
     buildStructure(run, 'herd');
     expect(developmentOutlook(run, 'herd', 'remount-herds')).toContain(
-      'Crossing food (route range)',
+      'Journey food (route range)',
     );
     buildStructure(run, 'herd', 'winter-stores');
     expect(developmentPreview(run, 'herd', 'remount-herds')).toBeUndefined();
@@ -70,7 +70,7 @@ describe('economy planning interfaces', () => {
       'Food net +1.10/s → +1.20/s',
     );
     expect(developmentOutlook(run, 'herd', 'winter-stores')).toContain(
-      'Crossing food (route range)',
+      'Journey food (route range)',
     );
     const before = structuredClone(run);
     const html = buildingMenu(

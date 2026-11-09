@@ -130,7 +130,7 @@ test('save and return to title preserves a normal expedition and developer runs 
   expect(await page.evaluate(() => localStorage.getItem('gloam-expedition-auto'))).toBe(before);
 });
 
-test('a carved 2.5D migration route and crossing resume with the same terrain and progress', async ({
+test('a carved 2.5D migration route resumes with the same terrain and progress', async ({
   page,
 }) => {
   test.setTimeout(90000);
@@ -143,9 +143,6 @@ test('a carved 2.5D migration route and crossing resume with the same terrain an
     s.chooseRoute('river', 'otgontenger');
     s.run.clan.migrationProgress = 0.43;
     s.run.clan.stageTime = 22;
-    s.run.crossing.phase = 'assault';
-    s.run.crossing.spawned = 3;
-    s.run.crossing.defeated = 1;
     s.updateCamp(0);
     s.setPhase('paused');
   });
@@ -156,7 +153,6 @@ test('a carved 2.5D migration route and crossing resume with the same terrain an
   const before = await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
     return {
-      crossing: s.run.crossing,
       clan: s.run.clan,
       camp: { x: s.camp.x, y: s.camp.y },
       terrain: s.landscape.world3d.terrain.region.scene,
@@ -171,7 +167,6 @@ test('a carved 2.5D migration route and crossing resume with the same terrain an
   const after = await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
     return {
-      crossing: s.run.crossing,
       clan: s.run.clan,
       camp: { x: s.camp.x, y: s.camp.y },
       terrain: s.landscape.world3d.terrain.region.scene,
