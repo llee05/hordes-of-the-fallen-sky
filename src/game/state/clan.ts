@@ -369,6 +369,7 @@ export function advanceClan(
       population: clan.population,
       locationId: destination.id,
     });
+    if (run.legacy.crossings.length > 100) run.legacy.crossings.shift();
     clan.stage = 'camp';
     clan.stageTime = 0;
     clan.pasture = 100;

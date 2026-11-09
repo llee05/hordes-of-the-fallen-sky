@@ -440,6 +440,38 @@ describe('full expedition snapshots', () => {
     const current = captureExpedition(restored, restoredWorld);
     expect(decodeExpedition(current).run.clan.locationId).toBe('khan-tengri');
   });
+
+  it('lists retired saves at their mapped real place', async () => {
+    const save = captureExpedition(createRun(), world()) as Record<string, any>;
+    save.run.clan.region = 3;
+    save.run.clan.stage = 'final';
+    save.run.clan.locationId = 'heart-of-the-steppe';
+    save.summary.location = 'The Heart of the Steppe';
+    save.summary.stage = 'final';
+    const values = new Map([['gloam-expedition-slot-1', JSON.stringify(save)]]);
+    vi.stubGlobal('window', {});
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    });
+
+    const platform = await GamePlatform.create();
+
+    expect(platform.saves[0]?.summary).toMatchObject({
+      location: 'Khan Tengri Peak',
+      stage: 'camp',
+    });
+  });
+
+  it('captures unbounded run time with a bounded listing duration', () => {
+    const run = createRun();
+    run.elapsed = 90_000;
+    const save = captureExpedition(run, world());
+    expect(save.summary.elapsed).toBe(86_400);
+    expect(save.run.elapsed).toBe(90_000);
+    expect(decodeExpedition(save).run.elapsed).toBe(90_000);
+  });
   it('round-trips every starting tradition without reapplying supplies or movement bonuses', () => {
     for (const entry of STARTING_TRADITIONS) {
       const run = createRun(entry.id);

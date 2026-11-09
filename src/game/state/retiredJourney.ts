@@ -56,7 +56,10 @@ export function migrateRetiredJourney(save: Record<string, unknown>): boolean {
   delete clan.finalBossDefeated;
   delete run.crossing;
   delete run.finalStand;
-  if (isRecord(save.summary) && save.summary.stage === 'final') save.summary.stage = 'camp';
+  if (isRecord(save.summary)) {
+    save.summary.location = LOCATIONS.find((location) => location.id === clan.locationId)!.name;
+    save.summary.stage = clan.stage;
+  }
 
   if (isRecord(run.safety)) {
     delete run.safety.protectedCrossings;

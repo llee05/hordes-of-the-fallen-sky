@@ -1,7 +1,12 @@
 import { availableFormations } from './clan';
 import { applyCampEffects } from './camp';
 import { isCharacterProfile, normalizeCharacterProfile } from '../../shared/characterProfile';
-import { isExpeditionSave, isRecord, type ExpeditionSave } from '../../shared/expeditionSave';
+import {
+  isExpeditionSave,
+  isRecord,
+  MAX_EXPEDITION_SUMMARY_ELAPSED,
+  type ExpeditionSave,
+} from '../../shared/expeditionSave';
 import { isNomadicCamp } from '../../shared/nomadicCamp.js';
 import type { MotionArchive } from '../animation/CharacterMotion';
 import { GAME } from '../config';
@@ -394,7 +399,7 @@ export function captureExpedition(
       savedAt,
       summary: {
         location: currentLocation(run).name,
-        elapsed: run.elapsed,
+        elapsed: Math.min(run.elapsed, MAX_EXPEDITION_SUMMARY_ELAPSED),
         population: run.clan.population,
         level: run.level,
         stage: run.clan.stage,
@@ -408,7 +413,9 @@ export function captureExpedition(
 }
 
 /** No purchase, arrival, healing, or active-time simulation runs during loading. */
-export function decodeExpedition(value: unknown): { run: RunState; world: WorldArchive } {
+export function decodeExpedition(
+  value: unknown,
+): { summary: ExpeditionSave['summary']; run: RunState; world: WorldArchive } {
   // Retired research and story fields are deliberately ignored, including IDs and runtime fields
   // no longer known to this build. Validate the retained expedition below.
   value = structuredClone(value);
@@ -497,7 +504,6 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
   if (
     !referencesValid ||
     run.elapsed < 0 ||
-    run.elapsed > 86400 ||
     run.health < 0 ||
     run.health > run.stats.maxHealth ||
     run.stats.maxHealth <= 0 ||
@@ -513,7 +519,7 @@ export function decodeExpedition(value: unknown): { run: RunState; world: WorldA
     run.nextLevelXp <= 0
   )
     throw new Error('This expedition contains invalid progression or actor references.');
-  const restored = structuredClone({ run, world });
+  const restored = structuredClone({ summary: value.summary, run, world });
   restored.run.character = normalizeCharacterProfile(restored.run.character);
   migrateLegacyNomadicCamp(restored.run);
   syncNomadicBuildings(restored.run);

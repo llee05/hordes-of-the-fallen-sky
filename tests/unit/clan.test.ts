@@ -308,4 +308,22 @@ describe('a civilization that moves', () => {
     run.clan.integrity = 0;
     expect(advanceClan(run, 1)).toBe('lost');
   });
+
+  it('retains only the latest 100 completed migrations', () => {
+    const run = createRun();
+    run.legacy.crossings = Array.from({ length: 100 }, (_, index) => ({
+      route: 'river',
+      population: 8,
+      locationId: index === 0 ? ('otgontenger' as const) : ('orkhon-valley' as const),
+    }));
+    run.clan.food = 1000;
+    run.clan.stageTime = GAME.clan.minimumCamp;
+    run.phase = 'route';
+    expect(beginMigration(run, 'ridge', 'belukha')).toBe(true);
+    run.phase = 'playing';
+    expect(advanceClan(run, 200)).toBe('arrived');
+    expect(run.legacy.crossings).toHaveLength(100);
+    expect(run.legacy.crossings[0]?.locationId).toBe('orkhon-valley');
+    expect(run.legacy.crossings.at(-1)).toMatchObject({ route: 'ridge', locationId: 'belukha' });
+  });
 });
