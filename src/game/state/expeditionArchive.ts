@@ -414,9 +414,11 @@ export function captureExpedition(
 }
 
 /** No purchase, arrival, healing, or active-time simulation runs during loading. */
-export function decodeExpedition(
-  value: unknown,
-): { summary: ExpeditionSave['summary']; run: RunState; world: WorldArchive } {
+export function decodeExpedition(value: unknown): {
+  summary: ExpeditionSave['summary'];
+  run: RunState;
+  world: WorldArchive;
+} {
   // Retired research and story fields are deliberately ignored, including IDs and runtime fields
   // no longer known to this build. Validate the retained expedition below.
   value = structuredClone(value);
