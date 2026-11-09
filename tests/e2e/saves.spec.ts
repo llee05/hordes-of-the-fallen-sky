@@ -140,11 +140,21 @@ test('a carved 2.5D migration route resumes with the same terrain and progress',
     const s = (window as any).__gloam.scene;
     s.run.clan.stageTime = 45;
     s.openRoutes();
-    s.chooseRoute('river', 'otgontenger');
+    s.chooseRoute('river', 'orkhon-valley');
     s.run.clan.migrationProgress = 0.43;
     s.run.clan.stageTime = 22;
     s.updateCamp(0);
     s.setPhase('paused');
+  });
+  expect(
+    await page.evaluate(() => {
+      const { stage, destinationId, migrationProgress } = (window as any).__gloam.scene.run.clan;
+      return { stage, destinationId, migrationProgress };
+    }),
+  ).toEqual({
+    stage: 'migration',
+    destinationId: 'orkhon-valley',
+    migrationProgress: 0.43,
   });
   await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Save to Slot 2' })).toBeEnabled();
@@ -176,6 +186,11 @@ test('a carved 2.5D migration route resumes with the same terrain and progress',
     };
   });
   expect(after).toEqual(before);
+  expect(after.clan).toMatchObject({
+    stage: 'migration',
+    destinationId: 'orkhon-valley',
+    migrationProgress: 0.43,
+  });
   expect(after.walk.every(Boolean)).toBe(true);
 });
 
