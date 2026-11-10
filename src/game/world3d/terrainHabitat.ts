@@ -52,7 +52,7 @@ export function terrainHabitat(
   const ground = scene.ground;
   const road = ground
     ? Math.max(
-        1 - smoothstep(ground.width * 0.3, ground.width * 1.1, pathDistance(ground.paths, cx, cz)),
+        1 - smoothstep(ground.width * 0.2, ground.width * 0.8, pathDistance(ground.paths, cx, cz)),
         rampWear(ground.ramps ?? [], cx, cz),
       )
     : (1 - smoothstep(14, 48 + patch * 35, Math.abs(cz))) *

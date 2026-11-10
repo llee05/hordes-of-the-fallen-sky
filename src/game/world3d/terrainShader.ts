@@ -45,7 +45,7 @@ export const TERRAIN_SAMPLING = `
   }
   vec3 authoredGround(vec2 p) {
     vec2 uv=p/tileSize;
-    float swap=0.5+0.3*sin(p.x/610.0+sin(p.y/470.0)*1.7)+0.2*sin(p.y/830.0-p.x/1270.0);
+    float swap=0.5+0.3*sin(p.x/290.0+sin(p.y/230.0)*1.7)+0.2*sin(p.y/410.0-p.x/630.0);
     vec3 colour[7]; float height[7];
     for(int i=0;i<7;i++){ colour[i]=vec3(0.0); height[i]=-9.0; }
     // Valley: calm grass in broad regions of two orientations, so its tile grid never lines up.

@@ -137,10 +137,11 @@ lists the tiles, the sprite sizes and anchors from `manifest.json`, and the clif
 | `structures/`          | The bridge deck                                                     |
 | `landmarks/`, `camps/` | Raider camps, ruins, ovoo, shrines, banners, racks, camp outskirts  |
 
-Ground channels: the calm `plateau_grass` painting is the base everywhere, in broad
-regions sampled at two orientations so the tile grid never lines up. Plateau tops add
+Ground channels: the calm `plateau_grass` painting is the base everywhere, in regions
+about 300 units across sampled at two orientations, so its painted stripes change
+direction and the tile grid never lines up. Plateau tops add
 regions of the tufted `steppe_grass_var`. A few broad, rare regions are `dry_grass` or
-`patchy_grass` flowers. `dry_dirt` covers the hearth, paths and ramps; `rocky_ground` a
+`patchy_grass` flowers. `dry_dirt` covers the hearth, narrow worn trails and ramps; `rocky_ground` a
 narrow scree band at cliff feet and the shore. Plateau rims catch the light as a band of
 `dry_grass` behind the painted cliff lip, so plateau edges read from a distance. Materials meet by height blending: each
 painting's own light and dark strokes decide where it shows through, so edges follow
