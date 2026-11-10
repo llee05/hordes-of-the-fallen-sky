@@ -1,3 +1,4 @@
+import type { EnemyRoute } from '../systems/enemyRoutes';
 import { createEnemyTactics } from '../systems/enemyTactics';
 import Phaser from 'phaser';
 import type { EnemyDefinition } from '../types';
@@ -21,6 +22,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   lastGallop = -1;
   dangerTimer = 3;
   tacticalSlot = 0;
+  /** Last planned waypoint; transient, never saved. See `systems/enemyRoutes.ts`. */
+  route?: EnemyRoute;
 }
 
 export class Projectile extends Phaser.Physics.Arcade.Image {

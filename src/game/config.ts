@@ -55,6 +55,18 @@ export const GAME = {
     experienceLevels: 40,
   },
   maxEnemies: 350,
+  /**
+   * Route-planning cadence (frames). Enemies closer than `nearRange` to the Khan or
+   * their target re-plan every frame; farther ones keep their waypoint for a few
+   * frames. Attacks, contact and shots are checked every frame regardless.
+   */
+  enemyRoutes: {
+    nearRange: 480,
+    farRange: 1000,
+    midInterval: 3,
+    farInterval: 6,
+    arrival: 16,
+  },
   spawning: {
     openingDuration: 18,
     openingInterval: 2,

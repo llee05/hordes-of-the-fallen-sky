@@ -170,6 +170,7 @@ export class EnemyDirector {
     enemy.burning = 0;
     enemy.tactics = createEnemyTactics();
     enemy.tacticalSlot = enemies.getChildren().indexOf(enemy);
+    enemy.route = undefined;
     enemy.pinned = 0;
     enemy.lastGallop = -1;
     enemy.dangerTimer = definition.ability

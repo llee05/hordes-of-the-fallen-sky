@@ -8,6 +8,7 @@ import { barrierContact, campBoundary } from '../../state/campBarrier';
 import { currentLocation } from '../../state/journey';
 import { isKhanActive } from '../../state/khan';
 import { areaSurface, habitatPreference } from '../../systems/AreaHabitat';
+import { routeDue } from '../../systems/enemyRoutes';
 import { advanceCharge, createEnemyTactics, tacticalGoal } from '../../systems/enemyTactics';
 import type { FieldMarkers } from '../../systems/FieldMarkers';
 import type { EnemyDefinition } from '../../types';
@@ -47,6 +48,9 @@ interface EnemyAim {
  * steps share one `EnemyAim`, and reordering them changes play.
  */
 export class EnemyBehaviour extends ArenaSystem {
+  /** Counts updates; staggers route refreshes across the crowd. */
+  private frame = 0;
+
   constructor(
     arena: ArenaContext,
     private readonly host: EnemyBehaviourHost,
@@ -59,6 +63,7 @@ export class EnemyBehaviour extends ArenaSystem {
 
   /** Runs every active enemy's steps in order; the order is behaviour. */
   update(dt: number): void {
+    this.frame += 1;
     const boundary = campBoundary(this.run);
     const khanActive = isKhanActive(this.run);
     const warnings = this.host.fieldMarkers.warnings.clear();
@@ -249,10 +254,10 @@ export class EnemyBehaviour extends ArenaSystem {
       );
       if (behavior === 'charger') {
         const state = enemy.tactics;
-        const aim = state.aim ?? target;
+        const facing = state.aim ?? target;
         const angle = state.direction
           ? Math.atan2(state.direction.y, state.direction.x)
-          : Math.atan2(aim.y - enemy.y, aim.x - enemy.x);
+          : Math.atan2(facing.y - enemy.y, facing.x - enemy.x);
         const ahead = { x: enemy.x + Math.cos(angle) * 90, y: enemy.y + Math.sin(angle) * 90 };
         const blocked =
           !!this.landscape.navigation && !this.landscape.navigation.lineClear(enemy, ahead);
@@ -276,9 +281,13 @@ export class EnemyBehaviour extends ArenaSystem {
             Math.sin(chargeAngle) * speed * 2.2,
           );
         } else {
-          const waypoint =
-            this.landscape.navigation?.waypoint(enemy, target, enemy.definition.navigation) ??
-            target;
+          const waypoint = this.routeTo(
+            enemy,
+            aim,
+            () =>
+              this.landscape.navigation?.waypoint(enemy, target, enemy.definition.navigation) ??
+              target,
+          );
           this.physics.moveTo(
             enemy,
             waypoint.x,
@@ -288,15 +297,44 @@ export class EnemyBehaviour extends ArenaSystem {
         }
       } else {
         const navigation = this.landscape.navigation;
-        const waypoint =
+        const waypoint = this.routeTo(enemy, aim, () =>
           tactical !== target && (!navigation || navigation.lineClear(enemy, tactical))
             ? tactical
-            : (navigation?.waypoint(enemy, target, enemy.definition.navigation) ?? target);
+            : (navigation?.waypoint(enemy, target, enemy.definition.navigation) ?? target),
+        );
         const hold = ranged && clearShot && Math.abs(distance - GAME.tactics.seerRange) < 55;
         if (hold || speed === 0) enemy.setVelocity(0, 0);
         else this.physics.moveTo(enemy, waypoint.x, waypoint.y, speed);
       }
     }
+  }
+
+  /**
+   * The waypoint the enemy steers toward. Terrain routes are re-planned when
+   * `routeDue` says so; between refreshes the enemy keeps heading for the last one.
+   */
+  private routeTo(
+    enemy: Enemy,
+    aim: EnemyAim,
+    plan: () => { x: number; y: number },
+  ): { x: number; y: number } {
+    const { target, distance, playerDistance } = aim;
+    if (
+      !this.landscape.navigation ||
+      routeDue(
+        enemy.route,
+        this.frame,
+        enemy.tacticalSlot,
+        Math.min(distance, playerDistance),
+        target,
+        enemy,
+      )
+    ) {
+      const point = plan();
+      enemy.route = { x: point.x, y: point.y, target };
+      return point;
+    }
+    return enemy.route!;
   }
 
   /** Faces the target and shows an attack wind-up. */
