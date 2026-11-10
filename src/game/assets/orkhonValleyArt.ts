@@ -44,8 +44,8 @@ export const ORKHON_LANDMARK_SCALE: Partial<Record<OrkhonSprite, number>> = {
   blue_camp_banner: 0.7,
   spear_rack: 0.8,
   wooden_rack: 0.8,
-  standing_stone: 0.8,
-  relic_fire: 0.85,
+  standing_stone: 0.6,
+  relic_fire: 0.7,
   sacred_ovoo: 0.85,
 };
 
