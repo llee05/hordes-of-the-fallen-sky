@@ -1,4 +1,5 @@
 import type { OrkhonSprite } from '../assets/orkhonValleyArt';
+import { ART_SPEC } from './artSpec';
 import { terrainSeed } from '../terrain/noise';
 import type { TerrainPoint } from '../terrain/types';
 
@@ -70,8 +71,11 @@ export interface OrkhonValleyLayout {
   groves: readonly OrkhonGrove[];
 }
 
-/** Height of every plateau above the valley floor: about four mounted riders. */
-const RISE = 240;
+/**
+ * Height of every plateau above the valley floor: about four mounted riders in world units. Walls
+ * are foreshortened by the camera, so on screen a cliff stands about two and a half riders tall.
+ */
+const RISE = ART_SPEC.orkhon.plateauRise;
 /**
  * A ramp crossing the cliff at `at`. North ramps climb 30° east of north and west ramps climb
  * slightly north of west.

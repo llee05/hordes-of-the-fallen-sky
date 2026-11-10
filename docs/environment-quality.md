@@ -4,6 +4,8 @@ The environment quality pass keeps Phaser simulation, Three.js terrain, existing
 actors/buildings, and the 48° orthographic camera. Orkhon Valley is the reference
 scene: seed `living-steppe-scenes-v3:orkhon-valley`, camera target (2600,2600), zoom 1.
 Earlier passes used the retired Golden Pasture camp, so the measurements below came from it.
+[The art specification](art-spec.md) records the scale, texture and palette rules measured from
+Orkhon Valley and where the other places' materials and scenery differ.
 Before/after captures live under `test-results/environment/`.
 
 ## Material inspection and changes

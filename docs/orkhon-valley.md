@@ -14,7 +14,8 @@ Run `npm run dev` (or `npm run dev:web`), press **F8**, and choose **Orkhon Vall
   reach the north and west edges.
 - **Plateaus (level 1):** six basalt shelves around the valley — the shrine heights (NW),
   the falls plateau (N and NE, wrapping the east bank), the western, south-western,
-  southern and gorge shelves. All share one rise of 240 units, about four mounted riders.
+  southern and gorge shelves. All share one rise of 240 units: about four mounted riders in
+  world units, and about two and a half on screen, where the camera foreshortens the walls.
   Their authored outlines are broken into irregular basalt jogs (`plateau()` steps a point
   up to 48 units in or out every ~210 units), except within 330 units of a ramp crossing
   or the falls, which keep their authored edge.
@@ -67,11 +68,14 @@ Every other location keeps the uniform arrival bearing and the field objective r
 ## Scenery scale and dressing
 
 The pack's sprites were painted at unrelated sizes, so `assets/orkhonValleyArt.ts` sets
-one miniature scale against a mounted rider (about 60 units tall) and the 240-unit cliffs:
-`ORKHON_PROP_SCALE` draws trees about twice a rider, shrubs and flowers below a horse's
-back and rocks knee to shoulder high; `ORKHON_LANDMARK_SCALE` shrinks banners, racks,
-standing stones, relic fires and the ovoo. Raider camps, ruins and gers keep their
-painted scale, which already matches their solid footprints.
+one miniature scale against the Khan's mounted billboard (about 63 units tall) and the
+240-unit cliffs: `ORKHON_PROP_SCALE` draws trees about twice a rider, shrubs and flowers
+below a horse's back and single rocks knee to shoulder high (large rock clusters, whose
+paintings include the pile's ground depth, reach about 1.4 riders); `ORKHON_LANDMARK_SCALE`
+shrinks banners, racks, standing stones, relic fires and the ovoo. Raider camps, ruins and
+gers keep their painted scale, which already matches their solid footprints. The factors
+live in [the art specification](art-spec.md) (`data/artSpec.ts`), which lists the size band
+every prop and landmark falls in.
 
 `world3d/orkhonDressing.ts` places, deterministically and once per terrain: landmarks,
 authored groves, rubble and the odd shrub along the foot of every camera-facing cliff,
@@ -138,7 +142,7 @@ lists the tiles, the sprite sizes and anchors from `manifest.json`, and the clif
 | `landmarks/`, `camps/` | Raider camps, ruins, ovoo, shrines, banners, racks, camp outskirts  |
 
 Ground channels: the calm `plateau_grass` painting is the base everywhere, in regions
-about 300 units across sampled at two orientations, so its painted stripes change
+roughly 400–1,100 units across sampled at two orientations, so its painted stripes change
 direction and the tile grid never lines up. Plateau tops add
 regions of the tufted `steppe_grass_var`. A few broad, rare regions are `dry_grass` or
 `patchy_grass` flowers. `dry_dirt` covers the hearth, narrow worn trails and ramps; `rocky_ground` a

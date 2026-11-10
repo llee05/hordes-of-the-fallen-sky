@@ -11,7 +11,9 @@ The source alpha is transparent in empty gutters. Atlas metadata crops the upper
 row at Y0–490 and lower row at Y490–960; it registers their ground contact near Y540
 of a 512×600 logical canvas. No source pixels were repainted or procedurally created.
 Existing trees and actor/building artwork are retained. This pass requires no
-additional bitmap art; additional plant species remain optional variety.
+additional bitmap art; additional plant species remain optional variety. Their sizes
+in the shared scenery are compared with the size bands in
+[the art specification](art-spec.md#places-that-deviate-follow-ups).
 
 ## Final generation prompt
 

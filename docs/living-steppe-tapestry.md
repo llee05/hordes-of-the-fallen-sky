@@ -41,6 +41,8 @@ The original world-art PNGs, two character animation sheets, and the UI felt tex
 | Camp and terrain props    | `public/art/steppe-props.png`                                   | Ger, cart, two-color banners, sheep, stone outcrop, ribbon cairn              |
 | Atlas metadata            | `public/art/steppe-actors.json`, `public/art/steppe-props.json` | Named frames tightly bounded from the generated alpha                         |
 
+[The art specification](art-spec.md) holds the measured numbers behind this direction: camera, size bands, tile repetition, edges, shadows and palette ranges.
+
 `src/game/assets/painterlyArt.ts` loads the shared character, civilian, camp prop, and scenery atlases, defines visual sizes, and configures collision circles in world units independently of image resolution. It also creates small deterministic brush, arrow, shard, dust, and shadow textures. See [the scene guide](world-3d.md) for terrain rendering and simulation ownership. The Phaser renderer uses antialiasing and linear texture filtering. Painted sprites use fractional coordinates; the game does not round them into a pixel grid.
 
 Characters have four painted locomotion frames and two attack poses each, with left-facing mirroring and frame registration that keeps ground anchors stable. Gameplay time drives every character frame and defeat copy, so menus freeze their playback.

@@ -6,6 +6,7 @@ import {
   ORKHON_SPRITES,
   type OrkhonSprite,
 } from '../assets/orkhonValleyArt';
+import { ART_SPEC } from '../data/artSpec';
 import { ORKHON_VALLEY } from '../data/orkhonValley';
 import { outlineField } from './ComposedTerrain';
 import type { ComposedTerrain } from './ComposedTerrain';
@@ -34,6 +35,11 @@ const SCATTER: readonly OrkhonSprite[] = [
   'loose_pebbles',
   'small_boulder',
 ];
+
+const JITTER = ART_SPEC.orkhon.jitter;
+/** A size factor within `[min, max]` for a random value in [0, 1). */
+const spread = ([min, max]: readonly [number, number], random: number) =>
+  min + random * (max - min);
 
 const RIM_TREES: readonly OrkhonSprite[] = ['pine_tree', 'autumn_yellow_tree', 'olive_tree'];
 const RIM_SCRUB: readonly OrkhonSprite[] = ['shrub_olive', 'shrub_gold', 'shrub_green'];
@@ -155,7 +161,7 @@ function buildDressing(terrain: ComposedTerrain): SceneDressing[] {
         continue;
       const sprite = grove.sprites[Math.floor(r(3) * grove.sprites.length)]!;
       place(sprite, x, y, 'larch', {
-        scale: ORKHON_PROP_SCALE.tree * (0.92 + r(4) * 0.18),
+        scale: ORKHON_PROP_SCALE.tree * spread(JITTER.groveTree, r(4)),
         flip: r(5) > 0.5,
       });
       placed++;
@@ -199,7 +205,7 @@ function buildDressing(terrain: ComposedTerrain): SceneDressing[] {
                   flip: r(5) > 0.5,
                 })
               : place(FOOT_ROCKS[rocks++ % FOOT_ROCKS.length]!, fx, fy, 'boulders', {
-                  scale: ORKHON_PROP_SCALE.rock * (0.85 + r(7) * 0.3),
+                  scale: ORKHON_PROP_SCALE.rock * spread(JITTER.footRock, r(7)),
                   flip: r(5) > 0.5,
                 });
         }
@@ -212,7 +218,7 @@ function buildDressing(terrain: ComposedTerrain): SceneDressing[] {
         if (local.habitat.wear > 0.2 || local.slope > 0.35 || local.shore < 40) continue;
         if (r(10) < 0.55)
           place(RIM_TREES[Math.floor(r(11) * RIM_TREES.length)]!, tx, ty, 'larch', {
-            scale: ORKHON_PROP_SCALE.tree * (0.9 + r(12) * 0.2),
+            scale: ORKHON_PROP_SCALE.tree * spread(JITTER.rimTree, r(12)),
             flip: r(5) > 0.5,
           });
         else
