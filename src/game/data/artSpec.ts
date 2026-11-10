@@ -140,6 +140,45 @@ export const ART_SPEC = {
     /** Pack sprites whose paint touches their frame edge (cropped overlays excepted). */
     packTouchingFrame: 0,
   },
+
+  /**
+   * Manuscript style contract for future painted terrain and scenery.
+   * Establishes concrete, testable targets that supersede the legacy measured ground palette.
+   */
+  manuscript: {
+    /** CIELAB chroma limits for new ground artwork (supersedes legacy saturated mustard median C* 50). */
+    groundChromaMax: 35,
+    groundChromaMedianTarget: [22, 28],
+    /** CIELAB lightness ranges for valley floor and elevated plateau tops. */
+    groundLightnessValley: [58, 64],
+    groundLightnessPlateau: [46, 52],
+    /** Minimum luminance drop (L*) from valley floor to plateau top for elevation readability. */
+    minElevationLightnessDrop: 10,
+    /** Ink line weight range at source texel density (pixels). */
+    inkLineWidth: [1.0, 2.0],
+    /** Directional hatching line spacing for shade and rock relief (pixels). */
+    hatchingSpacing: [2, 5],
+    /** Named mineral pigment swatches (hex) matching approved character and camp art. */
+    swatches: {
+      parchmentBase: 0xe5cca8,
+      valleyGrassCalm: 0x9c9261,
+      valleyGrassStraw: 0xb59d68,
+      valleyGrassOlive: 0x85865c,
+      plateauGrassMoss: 0x737a54,
+      plateauGrassUpland: 0x656c49,
+      dirtTrail: 0xa6835c,
+      scree: 0x8c8273,
+      basaltFace: 0x5e5245,
+      basaltCrevice: 0x433930,
+      inkContour: 0x2b221a,
+      riverVerdigris: 0x4e6f77,
+      riverChannel: 0x395c67,
+      foamChalk: 0xd8e2df,
+      lapisAccent: 0x2d4a68,
+      vermilionAccent: 0x9c3d28,
+      brassAccent: 0xc89e4b,
+    },
+  },
 } as const;
 
 export type ArtBand = keyof typeof ART_SPEC.bands;
