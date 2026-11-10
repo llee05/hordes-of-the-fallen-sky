@@ -186,3 +186,26 @@ deterministically. The camera keeps easing toward its follow target while frozen
 
 Not built yet: terrain editing (`setTerrain`) and a headless balance simulation
 (`runSimulation`).
+
+## Reference scenes
+
+`tests/e2e/reference-scenes.spec.ts` compares fixed scenes with committed baseline
+screenshots at 1280×800, so a change's effect on the look can be checked reliably.
+Each scene is loaded with `loadScenario`, `setCamera` and `freezeVisuals`, then
+`captureScene` before `toHaveScreenshot`. Scenes: each of the eight real places near
+camp, an Orkhon Valley plateau edge with a ramp, a seeded 200-enemy fight, and the
+title, character creation, saves and camp screens.
+
+It is excluded from `npm run test:e2e` and runs only with its own script, which takes
+the shared browser lock:
+
+```sh
+npm run test:reference                       # compare with the baselines
+npm run test:reference -- --update-snapshots # write new baselines after an intended change
+```
+
+Baselines live in `tests/e2e/reference-scenes.spec.ts-snapshots/` and depend on the
+GPU and browser that drew them, so create and compare them on the same machine.
+Update them only for intended visual changes, inspect each new image, and commit
+them with the change. A scene may differ by up to 1% of its pixels (per-pixel colour
+threshold 0.2) to absorb antialiasing noise.

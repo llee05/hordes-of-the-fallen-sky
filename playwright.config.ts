@@ -12,6 +12,8 @@ const origin = `http://127.0.0.1:${port}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // Screenshot baselines run only through playwright.reference.config.ts.
+  testIgnore: '**/reference-scenes.spec.ts',
   grep: process.env.BH_PERF_TESTS === '1' ? /@perf/ : undefined,
   grepInvert: process.env.BH_PERF_TESTS === '1' ? undefined : /@perf/,
   fullyParallel: false,
