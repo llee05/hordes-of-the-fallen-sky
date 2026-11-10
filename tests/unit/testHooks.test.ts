@@ -3,6 +3,7 @@ import type { ArenaScene } from '../../src/game/scenes/ArenaScene';
 import type { ArenaContext } from '../../src/game/scenes/arena/ArenaContext';
 import { createArenaTimers } from '../../src/game/scenes/arena/ArenaTimers';
 import { createTestHooks } from '../../src/game/scenes/arena/testHooks';
+import { createRun } from '../../src/game/state/run';
 
 function fixture() {
   const timers = createArenaTimers();
@@ -97,5 +98,43 @@ describe('development arena hooks', () => {
       true,
       undefined,
     );
+  });
+
+  it('places a seeded crowd in a ring around the Khan, retrying unwalkable points', () => {
+    const place = (seed: number, accept: (calls: number) => boolean) => {
+      const points: { x: number; y: number }[] = [];
+      const scene = {
+        spawnEnemy: vi.fn((definition: { health: number }, { point }) => {
+          expect(definition.health).toBe(5000);
+          if (!accept(points.length)) return false;
+          points.push(point);
+          return true;
+        }),
+      };
+      const hooks = createTestHooks(
+        scene as unknown as ArenaScene,
+        { player: { x: 1000, y: 2000 }, run: createRun() } as unknown as ArenaContext,
+      );
+      const placed = hooks.crowd({ count: 40, seed, minRadius: 100, maxRadius: 300, health: 5000 });
+      return { placed, points, attempts: scene.spawnEnemy.mock.calls.length };
+    };
+    const first = place(3, () => true);
+    expect(first.placed).toBe(40);
+    expect(first.attempts).toBe(40);
+    for (const { x, y } of first.points) {
+      const distance = Math.hypot(x - 1000, y - 2000);
+      expect(distance).toBeGreaterThanOrEqual(100);
+      expect(distance).toBeLessThanOrEqual(300);
+    }
+    expect(place(3, () => true).points).toEqual(first.points);
+    expect(place(4, () => true).points).not.toEqual(first.points);
+    let attempt = 0;
+    const picky = place(3, () => attempt++ % 2 === 0);
+    expect(picky.placed).toBe(40);
+    expect(picky.attempts).toBe(79);
+    expect(place(3, () => false)).toMatchObject({ placed: 0, attempts: 480 });
+    const hooks = createTestHooks({} as ArenaScene, {} as ArenaContext);
+    expect(() => hooks.crowd({ count: -1 })).toThrow('whole number');
+    expect(() => hooks.crowd({ count: 1.5 })).toThrow('whole number');
   });
 });
