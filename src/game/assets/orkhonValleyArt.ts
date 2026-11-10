@@ -2,6 +2,8 @@
  * Orkhon Valley texture pack v2, imported unchanged by `scripts/pack-orkhon-valley.mjs`.
  * Ground and water tiles stay separate repeatable images; transparent sprites share one atlas.
  */
+import { ART_SPEC } from '../data/artSpec';
+
 export const ORKHON_ATLAS = 'orkhon-valley-sprites';
 
 /** Repeatable 128 × 128 tiles, keyed by their texture-pack folder and file name. */
@@ -19,35 +21,23 @@ export type OrkhonTile = keyof typeof ORKHON_TILES;
 
 export const orkhonTileKey = (tile: OrkhonTile): string => `orkhon-${ORKHON_TILES[tile]}`;
 
-/** World units covered by one repeat of a 128-pixel ground or water tile. */
-export const ORKHON_TILE_WORLD_SIZE = 200;
+/** World units covered by one repeat of a 128-pixel ground or water tile (`docs/art-spec.md`). */
+export const ORKHON_TILE_WORLD_SIZE = ART_SPEC.orkhon.tileWorldSize;
 
 /** World units per sprite pixel for scenery at its painted scale. */
-export const ORKHON_SPRITE_SCALE = 1.7;
+export const ORKHON_SPRITE_SCALE = ART_SPEC.orkhon.spriteScale;
 
 /**
  * The pack's sprites were painted at unrelated sizes. These factors, relative to the shared
- * sprite scale, set one miniature scale against a mounted rider (about 60 units tall) and the
- * 240-unit cliffs: trees about twice a rider, shrubs and flowers below a horse's back, rocks
- * knee to shoulder high.
+ * sprite scale, set one miniature scale against the Khan's mounted billboard (about 63 units
+ * tall) and the 240-unit cliffs: trees about twice a rider, shrubs and flowers below a horse's
+ * back, single rocks knee to shoulder high. `docs/art-spec.md` lists the resulting size bands.
  */
-export const ORKHON_PROP_SCALE = {
-  tree: 0.66,
-  scrub: 0.5,
-  rock: 0.7,
-  reed: 0.6,
-} as const;
+export const ORKHON_PROP_SCALE = ART_SPEC.orkhon.propScale;
 
-/** Landmark sprites drawn larger than that miniature scale, relative to the shared scale. */
-export const ORKHON_LANDMARK_SCALE: Partial<Record<OrkhonSprite, number>> = {
-  red_enemy_banner: 0.7,
-  blue_camp_banner: 0.7,
-  spear_rack: 0.8,
-  wooden_rack: 0.8,
-  standing_stone: 0.6,
-  relic_fire: 0.7,
-  sacred_ovoo: 0.85,
-};
+/** Landmark sprites drawn smaller than their painted scale, relative to the shared scale. */
+export const ORKHON_LANDMARK_SCALE: Partial<Record<OrkhonSprite, number>> =
+  ART_SPEC.orkhon.landmarkScale;
 
 /**
  * Painted geometry measured from the pack sprites at their source size. `lip` is the row where the

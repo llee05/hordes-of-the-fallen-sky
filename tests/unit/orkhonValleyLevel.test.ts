@@ -407,7 +407,7 @@ describe('Orkhon Valley painted scene', () => {
       const expected = landmark.scale ?? ORKHON_LANDMARK_SCALE[landmark.sprite] ?? 1;
       expect(prop.width).toBeCloseTo(ORKHON_SPRITES[landmark.sprite].width * 1.7 * expected);
     }
-    // A mounted rider is about 60 units tall: trees stand about twice that.
+    // The Khan on horseback is about 63 units tall: trees stand about twice that.
     for (const prop of all.filter((p) => p.kind === 'larch')) {
       const metrics = ORKHON_SPRITES[prop.frame as keyof typeof ORKHON_SPRITES];
       const tall = (prop.width / metrics.width) * metrics.height;
