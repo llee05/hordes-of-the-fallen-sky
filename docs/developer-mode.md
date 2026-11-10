@@ -137,3 +137,75 @@ overhead to enemy behaviour, so compare such runs only with each other.
 Frame rate depends on the GPU. On a software rasterizer such as SwiftShader the GPU
 wait hides CPU changes, so compare simulation and render milliseconds there.
 The profiler only wraps methods during the sample and lives in `src/game/dev/frameProfile.ts`.
+
+## Game-control hooks
+
+Development builds expose typed controls on `window.__gloam.hooks` for agents,
+scripts and browser tests (`ArenaTestHooks` in `src/game/scenes/arena/testHooks.ts`).
+Validation and the state snapshot live in the renderer-independent
+`src/game/dev/gameControls.ts`. Like the other hooks they are imported only under
+`import.meta.env.DEV`; production and packaged builds contain none of them.
+All options are checked before anything changes; an unknown option name throws.
+
+| Control                   | What it does                                                                                                        |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `getState()`              | Plain JSON: phase, place, elapsed, Khan, clan resources and camp, level and stats, enemies by type, shots, camera.  |
+| `loadScenario(options)`   | Restarts at a real place with seeded randomness, an optional crowd, then (by default) freezes. Resolves with state. |
+| `setCamera(options)`      | Centres on `{ x, y }` and stops following, sets `zoom`, or `{ follow: true }` follows the Khan again.               |
+| `freezeVisuals(on)`       | Stops every scene step while rendering continues; pins the 3D render scale to 100%.                                 |
+| `captureScene(options?)`  | Resolves once the view is unchanged for `frames` (default 3) rendered frames with no terrain pending.               |
+| `exportMetrics(options?)` | Samples `seconds` (default 2) of frames: fps, frame times, per-system profile, counts, three.js `renderer.info`.    |
+
+```js
+const h = window.__gloam.hooks;
+await h.loadScenario({ place: 'orkhon-valley', seed: 7, elapsed: 600, enemies: 200 });
+h.setCamera({ x: 2600, y: 2400, zoom: 1 });
+await h.captureScene(); // now take the screenshot
+h.getState().enemies.byType; // { [enemyId]: { count, elites, positions } }
+h.freezeVisuals(false);
+await h.exportMetrics({ seconds: 3 });
+```
+
+`loadScenario` options: `place` (a `LOCATIONS` ID, as in the `place:<id>` checkpoints),
+`seed` (default 1), `elapsed` (sets active seconds, which scale enemy health and
+unlocks; omitted keeps the checkpoint's), `enemies` (seeded crowd, the same one
+`hooks.crowd` places, default 0), `minRadius`/`maxRadius` (crowd ring, default
+240–1400), `arrivals` (default false holds new arrivals), `protect` (Khan and clan
+invincibility, default true), `settle` (fixed 60Hz simulated seconds before freezing,
+default 0) and `freeze` (default true). It seeds `Math.random` when the restarted
+scene starts and applies every option before the first scene step, so the same
+options give the same scene. `Math.random` stays seeded afterwards so `advance`
+repeats; reload the page to restore the browser's generator.
+
+`freezeVisuals(true)` shadows Phaser's scene step, so simulation, physics, tweens,
+particles and the gameplay-time animation clocks (characters, water) all hold still
+while frames keep drawing. `advance(seconds)` still steps a frozen scene
+deterministically. The camera keeps easing toward its follow target while frozen;
+`captureScene` waits for that and for terrain chunks to finish loading.
+`exportMetrics` counts frozen frames too; unfreeze first to measure simulation.
+
+Not built yet: terrain editing (`setTerrain`) and a headless balance simulation
+(`runSimulation`).
+
+## Reference scenes
+
+`tests/e2e/reference-scenes.spec.ts` compares fixed scenes with committed baseline
+screenshots at 1280×800, so a change's effect on the look can be checked reliably.
+Each scene is loaded with `loadScenario`, `setCamera` and `freezeVisuals`, then
+`captureScene` before `toHaveScreenshot`. Scenes: each of the eight real places near
+camp, an Orkhon Valley plateau edge with a ramp, a seeded 200-enemy fight, and the
+title, character creation, saves and camp screens.
+
+It is excluded from `npm run test:e2e` and runs only with its own script, which takes
+the shared browser lock:
+
+```sh
+npm run test:reference                       # compare with the baselines
+npm run test:reference -- --update-snapshots # write new baselines after an intended change
+```
+
+Baselines live in `tests/e2e/reference-scenes.spec.ts-snapshots/` and depend on the
+GPU and browser that drew them, so create and compare them on the same machine.
+Update them only for intended visual changes, inspect each new image, and commit
+them with the change. A scene may differ by up to 1% of its pixels (per-pixel colour
+threshold 0.2) to absorb antialiasing noise.
