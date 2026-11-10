@@ -15,6 +15,7 @@ import { isKhanActive } from '../../state/khan';
 import { areaRiverTangent, areaSurface, habitatPreference } from '../../systems/AreaHabitat';
 import { enemySpawnPosition } from '../../systems/CameraView';
 import { projectedEnemySpawnPosition } from '../../systems/EnemySpawning';
+import { ambientArrivalAngle } from '../../systems/authoredSites';
 import { createEnemyTactics } from '../../systems/enemyTactics';
 import type { EnemyDefinition } from '../../types';
 import type { ArenaContext } from './ArenaContext';
@@ -77,7 +78,7 @@ export class EnemyDirector {
       (['warning', 'assault', 'elite'].includes(plan.phase)
         ? areaArrivalAngle(this.host.areaEncounter, run, base) +
           Phaser.Math.FloatBetween(-0.35, 0.35)
-        : Phaser.Math.FloatBetween(0, Math.PI * 2));
+        : ambientArrivalAngle(currentLocation(run).id, anchor));
     const viewWidth = camera.width / camera.zoom;
     const viewHeight = camera.height / camera.zoom;
     const view = {

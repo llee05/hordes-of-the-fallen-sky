@@ -49,10 +49,13 @@ export function terrainHabitat(
   const cx = x - terrain.worldSize / 2,
     cz = z - terrain.worldSize / 2;
   const hearth = (1 - smoothstep(60, 180, Math.hypot(cx, cz))) * 0.7;
-  const road =
-    (1 - smoothstep(14, 48 + patch * 35, Math.abs(cz))) *
-    smoothstep(-150, 150, cx) *
-    (1 - smoothstep(1450, 1600, cx));
+  const ground = scene.ground;
+  const road = ground
+    ? 1 -
+      smoothstep(ground.width * 0.35, ground.width + patch * 22, pathDistance(ground.paths, cx, cz))
+    : (1 - smoothstep(14, 48 + patch * 35, Math.abs(cz))) *
+      smoothstep(-150, 150, cx) *
+      (1 - smoothstep(1450, 1600, cx));
   return {
     moisture,
     exposure,
@@ -60,9 +63,55 @@ export function terrainHabitat(
     shore,
     cliffFoot,
     cliffTop,
-    wear: Math.max(hearth, road * 0.65),
+    wear: Math.max(hearth, road * (ground ? 0.9 : 0.65)),
     patch,
   };
+}
+
+function pathDistance(
+  paths: readonly (readonly { x: number; y: number }[])[],
+  x: number,
+  z: number,
+): number {
+  let best = Infinity;
+  for (const path of paths)
+    for (let i = 1; i < path.length; i++) {
+      const a = path[i - 1]!,
+        b = path[i]!;
+      const dx = b.x - a.x,
+        dz = b.y - a.y;
+      const t = clamp01(((x - a.x) * dx + (z - a.y) * dz) / (dx * dx + dz * dz || 1));
+      best = Math.min(best, Math.hypot(x - a.x - dx * t, z - a.y - dz * t));
+    }
+  return best;
+}
+
+/**
+ * Authored ground uses the same seven channels for supplied tiles: steppe grass, trampled earth,
+ * rocky ground, dry grass, plateau grass, patchy grass and dry dirt.
+ */
+function authoredMaterialWeights(
+  terrain: ComposedTerrain,
+  height: number,
+  normalY: number,
+  habitat: TerrainHabitat,
+): readonly number[] {
+  const scene = terrain.region.scene;
+  const rise = Math.max(1, ...scene.shelves.map((shelf) => shelf.rise));
+  const top = smoothstep(rise * 0.55, rise * 0.85, height - scene.floor);
+  const stone = clamp01(
+    smoothstep(0.3, 0.62, 1 - normalY) +
+      habitat.cliffFoot * (1 - top) * 0.55 +
+      habitat.cliffTop * top * 0.3,
+  );
+  const gravel = (1 - stone) * habitat.shore * 0.85;
+  const soil = (1 - stone) * (1 - gravel) * habitat.wear;
+  const cover = (1 - stone) * (1 - gravel) * (1 - habitat.wear);
+  const dry = smoothstep(0.7, 0.82, habitat.patch);
+  const flowers = smoothstep(0.7, 0.8, habitat.grove) * (1 - top);
+  const patchy = (1 - dry) * flowers;
+  const grass = cover * (1 - dry) * (1 - flowers);
+  return [grass * (1 - top), soil, stone, cover * dry, grass * top, cover * patchy, gravel];
 }
 
 /** Seven existing channels: healthy grass, soil, stone, dry grass, snow, ice, gravel. */
@@ -72,6 +121,8 @@ export function terrainMaterialWeights(
   normalY: number,
   habitat: TerrainHabitat,
 ): readonly number[] {
+  if (terrain.region.scene.ground)
+    return authoredMaterialWeights(terrain, height, normalY, habitat);
   const snow = terrain.snowAt(height, normalY);
   const arid = terrain.region.scene.vegetation === 'desert';
   const rock = clamp01(

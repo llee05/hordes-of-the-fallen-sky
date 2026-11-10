@@ -29,11 +29,24 @@ interface Segment {
   lengthSquared: number;
 }
 
+const RIVER_BUCKET = 128;
+
+function segmentDistance(s: Segment, x: number, z: number): number {
+  const t = Math.max(
+    0,
+    Math.min(1, ((x - s.a.x) * s.dx + (z - s.a.y) * s.dz) / (s.lengthSquared || 1)),
+  );
+  return Math.hypot(x - s.a.x - s.dx * t, z - s.a.y - s.dz * t);
+}
+
 /** The rendered channel, riverbed, moisture, and bank vegetation share this exact sampled course. */
 export class WorldRiver {
   readonly channels: readonly RiverChannel[];
   readonly bridges: readonly WorldBridge[];
   private readonly segments: Segment[] = [];
+  /** Per-bucket segments that can be nearest to some point in the bucket, in original order. */
+  private readonly buckets: Segment[][] = [];
+  private readonly bucketColumns: number;
   private readonly samples = new Map<string, RiverSample>();
   constructor(
     readonly definition: RiverDefinition,
@@ -43,6 +56,8 @@ export class WorldRiver {
   ) {
     this.channels = riverChannels(definition).map((channel, channelIndex) => {
       const points = channel.sections.map((section) => {
+        // An authored gorge keeps its exact course so cliffs, bridges and falls stay registered.
+        if (definition.gorge) return { x: section.x, y: section.y };
         const envelope = Math.sin((section.distance / channel.length) * Math.PI);
         const bend =
           (Math.sin(section.distance / 420 + (seed % 31)) * 45 +
@@ -85,18 +100,54 @@ export class WorldRiver {
           dz = b.y - a.y;
         this.segments.push({ a, b, dx, dz, lengthSquared: dx * dx + dz * dz });
       }
-    this.bridges = (definition.kind === 'frozen' ? [] : [0.32, 0.68]).map((t) => {
-      const section = riverSectionAt(this.channels[0]!, this.channels[0]!.length * t);
-      return {
-        x: center + section.x,
-        z: center + section.y,
-        nx: section.nx,
-        nz: section.ny,
-        length: section.left + section.right + 36,
-        width: 46,
-        height: floor + 8,
-      };
-    });
+    // Exact acceleration: a segment can only be nearest to a point in a bucket if its lower
+    // bound (centre distance minus the half diagonal) is within the best corner upper bound.
+    this.bucketColumns = Math.ceil((center * 2) / RIVER_BUCKET);
+    const half = (RIVER_BUCKET * Math.SQRT2) / 2;
+    for (let row = 0; row < this.bucketColumns; row++)
+      for (let column = 0; column < this.bucketColumns; column++) {
+        const x0 = column * RIVER_BUCKET - center,
+          z0 = row * RIVER_BUCKET - center;
+        const lower = this.segments.map(
+          (segment) =>
+            segmentDistance(segment, x0 + RIVER_BUCKET / 2, z0 + RIVER_BUCKET / 2) - half,
+        );
+        // Distance to a segment is convex, so its worst case over the bucket is at a corner.
+        const reach = Math.min(
+          ...this.segments.map((segment) =>
+            Math.max(
+              segmentDistance(segment, x0, z0),
+              segmentDistance(segment, x0 + RIVER_BUCKET, z0),
+              segmentDistance(segment, x0, z0 + RIVER_BUCKET),
+              segmentDistance(segment, x0 + RIVER_BUCKET, z0 + RIVER_BUCKET),
+            ),
+          ),
+        );
+        this.buckets.push(this.segments.filter((_, i) => lower[i]! <= reach + 1));
+      }
+    const authored = definition.gorge?.bridges.map((bridge) => ({
+      x: center + bridge.x,
+      z: center + bridge.y,
+      nx: Math.cos(bridge.angle),
+      nz: Math.sin(bridge.angle),
+      length: bridge.length,
+      width: bridge.width,
+      height: floor + 8,
+    }));
+    this.bridges =
+      authored ??
+      (definition.kind === 'frozen' ? [] : [0.32, 0.68]).map((t) => {
+        const section = riverSectionAt(this.channels[0]!, this.channels[0]!.length * t);
+        return {
+          x: center + section.x,
+          z: center + section.y,
+          nx: section.nx,
+          nz: section.ny,
+          length: section.left + section.right + 36,
+          width: 46,
+          height: floor + 8,
+        };
+      });
   }
   sample(x: number, z: number): RiverSample {
     const key = `${x},${z}`,
@@ -106,7 +157,13 @@ export class WorldRiver {
       pz = z - this.center;
     let best = Infinity,
       halfWidth = 1;
-    for (const s of this.segments) {
+    const column = Math.floor((px + this.center) / RIVER_BUCKET),
+      row = Math.floor((pz + this.center) / RIVER_BUCKET);
+    const candidates =
+      column >= 0 && row >= 0 && column < this.bucketColumns && row < this.bucketColumns
+        ? this.buckets[row * this.bucketColumns + column]!
+        : this.segments;
+    for (const s of candidates) {
       const t = Math.max(
         0,
         Math.min(1, ((px - s.a.x) * s.dx + (pz - s.a.y) * s.dz) / (s.lengthSquared || 1)),

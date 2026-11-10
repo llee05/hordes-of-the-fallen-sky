@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { MountainHeightfield } from './MountainHeightfield';
 import { projectGround, WORLD_3D } from './worldProjection';
 import { KhanOcclusion } from './KhanOcclusion';
+import { ORKHON_ATLAS } from '../assets/orkhonValleyArt';
 
 type Painted = Phaser.GameObjects.Image | Phaser.GameObjects.Sprite | Phaser.GameObjects.Text;
 
@@ -153,7 +154,11 @@ export class SpriteBridge {
     const text = object instanceof Phaser.GameObjects.Text;
     const source = (text ? object.canvas : frame.source.image) as TexImageSource;
     const batch = this.batch(source);
-    if (['steppe-props', 'steppe-scenery', 'tapestry-scenery'].includes(object.texture.key))
+    if (
+      ['steppe-props', 'steppe-scenery', 'tapestry-scenery', ORKHON_ATLAS].includes(
+        object.texture.key,
+      )
+    )
       batch.mesh.castShadow = true;
     const i = batch.count++ * 4;
     const geometry = batch.mesh.geometry;

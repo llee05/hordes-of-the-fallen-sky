@@ -44,7 +44,8 @@ schedules at most one pending terrain event during assault/featured-enemy phases
 Recovery windows and migration do not launch environmental volleys. The first
 camp's opening stays gentle. Grove hunts split their approaches; river
 areas alternate banks using the local tangent of the actual rendered watercourse; exposed shelves use crossfire. Connected, offscreen spawn
-candidates prefer the native habitat, with a valid open-ground fallback.
+candidates prefer the native habitat, with a valid open-ground fallback. In Orkhon Valley,
+ordinary arrivals approach from the direction of an authored raider camp.
 
 `systems/AreaHabitat.ts` caches the same moisture, grove, shore, snow and cliff masks
 used by the rendered terrain. Stalkers remain visible as muted silhouettes in

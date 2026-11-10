@@ -1,6 +1,7 @@
 import type { LocationId } from '../types';
 import type { MountainRegion, TerrainPoint } from '../terrain/types';
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
+import { ORKHON_FOOTPRINTS, ORKHON_VALLEY, type OrkhonPlateau } from './orkhonValley';
 
 export interface SceneShelf {
   id: string;
@@ -15,6 +16,11 @@ export interface SceneShelf {
   camp?: boolean;
   ramp?: { start: TerrainPoint; end: TerrainPoint; halfWidth: number; shoulder: number };
   approaches?: readonly NonNullable<SceneShelf['ramp']>[];
+  /**
+   * Authored camp-relative polygon. When present it replaces the chamfered rectangle; x, z,
+   * width and depth then describe its bounding box for culling.
+   */
+  outline?: readonly TerrainPoint[];
 }
 
 export interface ScenePalette {
@@ -32,6 +38,14 @@ export interface RegionComposition {
   vegetation: 'meadow' | 'woodland' | 'alpine' | 'desert' | 'river';
   palette: ScenePalette;
   shelves: readonly SceneShelf[];
+  /** Authored levels keep the camp on the valley floor instead of a raised camp shelf. */
+  campShelf?: boolean;
+  /** Scale of the gentle valley-floor undulation; authored two-level maps keep it low. */
+  relief?: number;
+  /** Authored ground: worn paths replace the generic caravan lane in the material masks. */
+  ground?: { paths: readonly (readonly TerrainPoint[])[]; width: number };
+  /** Camp-relative solid footprints, such as authored landmarks, blocked for movement. */
+  obstacles?: readonly { x: number; y: number; radius: number }[];
 }
 
 export interface ComposedRegion extends MountainRegion {
@@ -88,6 +102,31 @@ const desert: ScenePalette = {
   snow: 0xeee5ce,
   fog: 0xcebc9f,
 };
+
+/** One authored level-1 plateau, sharing the ramp mechanics of the composed shelves. */
+function plateau(source: OrkhonPlateau, rise: number): SceneShelf {
+  const xs = source.outline.map((point) => point.x);
+  const ys = source.outline.map((point) => point.y);
+  const [first, ...rest] = source.ramps.map((ramp) => ({
+    start: ramp.foot,
+    end: ramp.top,
+    halfWidth: ramp.halfWidth,
+    shoulder: ramp.shoulder,
+  }));
+  return {
+    id: source.id,
+    x: (Math.min(...xs) + Math.max(...xs)) / 2,
+    z: (Math.min(...ys) + Math.max(...ys)) / 2,
+    width: (Math.max(...xs) - Math.min(...xs)) / 2,
+    depth: (Math.max(...ys) - Math.min(...ys)) / 2,
+    rise,
+    turn: 0,
+    fracture: 0,
+    outline: source.outline,
+    ramp: first,
+    approaches: rest,
+  };
+}
 
 /** Hand-composed terrain masses surround an open, continuous combat and caravan floor. */
 export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
@@ -187,13 +226,20 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
     floor: 60,
     snowLine: 10000,
     vegetation: 'river',
-    palette: { ...meadow, grass: 0x92aa73, rock: 0x929784 },
-    shelves: [
-      shelf('river-terrace', -180, -820, 1240, 430, 150, -8),
-      shelf('upper-grazing', -540, -1190, 680, 410, 165, 10),
-      shelf('eastern-bank', 980, 670, 460, 390, 130, -20),
-      shelf('distant-ridge', 0, -2180, 2440, 660, 290, 0, 110),
-    ],
+    palette: { ...meadow, grass: 0x92aa73, rock: 0x929784, fog: 0xc9c2a2 },
+    campShelf: false,
+    relief: 0.35,
+    ground: {
+      paths: [
+        ...ORKHON_VALLEY.paths,
+        ...ORKHON_VALLEY.plateaus.flatMap((source) =>
+          source.ramps.map((ramp) => [ramp.foot, ramp.top]),
+        ),
+      ],
+      width: ORKHON_VALLEY.pathWidth,
+    },
+    obstacles: ORKHON_FOOTPRINTS.map(({ x, y, footprint }) => ({ x, y, radius: footprint })),
+    shelves: ORKHON_VALLEY.plateaus.map((source) => plateau(source, ORKHON_VALLEY.rise)),
   },
 };
 
@@ -210,29 +256,31 @@ export function composedRegion(id: LocationId): ComposedRegion {
     scene: {
       ...WORLD_REGIONS[id],
       shelves: [
-        {
-          id: 'camp-shelf',
-          x: 0,
-          z: -30,
-          width: 660,
-          depth: 430,
-          rise: 150,
-          turn: 0,
-          fracture: 45,
-          camp: true,
-          ramp: { start: { x: 950, y: 0 }, end: { x: 260, y: 0 }, halfWidth: 260, shoulder: 380 },
-          approaches: [
-            {
-              start: { x: -980, y: -170 },
-              end: { x: -300, y: -170 },
-              halfWidth: 200,
-              shoulder: 300,
-            },
-            { start: { x: 0, y: -760 }, end: { x: 0, y: -160 }, halfWidth: 200, shoulder: 290 },
-          ],
-        },
+        ...(WORLD_REGIONS[id].campShelf === false ? [] : [CAMP_SHELF]),
         ...WORLD_REGIONS[id].shelves,
       ],
     },
   };
 }
+
+const CAMP_SHELF: SceneShelf = {
+  id: 'camp-shelf',
+  x: 0,
+  z: -30,
+  width: 660,
+  depth: 430,
+  rise: 150,
+  turn: 0,
+  fracture: 45,
+  camp: true,
+  ramp: { start: { x: 950, y: 0 }, end: { x: 260, y: 0 }, halfWidth: 260, shoulder: 380 },
+  approaches: [
+    {
+      start: { x: -980, y: -170 },
+      end: { x: -300, y: -170 },
+      halfWidth: 200,
+      shoulder: 300,
+    },
+    { start: { x: 0, y: -760 }, end: { x: 0, y: -160 }, halfWidth: 200, shoulder: 290 },
+  ],
+};

@@ -1,6 +1,7 @@
 import type { TerrainBounds } from '../terrain/types';
 import { terrainSeed } from '../terrain/noise';
 import { terrainHabitat } from './terrainHabitat';
+import { orkhonDressing } from './orkhonDressing';
 import type { ComposedTerrain } from './ComposedTerrain';
 
 export type SceneProp =
@@ -15,7 +16,8 @@ export type SceneProp =
   | 'flowers'
   | 'reeds'
   | 'branch'
-  | 'pebbles';
+  | 'pebbles'
+  | 'landmark';
 export interface SceneDressing {
   x: number;
   z: number;
@@ -27,6 +29,8 @@ export interface SceneDressing {
   texture: string;
   frame: string;
   shadow: boolean;
+  /** Vertical anchor of the painted ground contact; defaults to 0.9. */
+  originY?: number;
 }
 interface Candidate {
   x: number;
@@ -36,71 +40,11 @@ interface Candidate {
 }
 const DETAILS = new Set<SceneProp>(['grass', 'dry-grass', 'flowers', 'reeds', 'branch', 'pebbles']);
 
-function orkhonFrame(kind: SceneProp, random: (offset: number) => number): string {
-  switch (kind) {
-    case 'willow': {
-      const options = ['birch_white', 'birch_gold_a', 'young_tree_a'];
-      return options[Math.floor(random(14) * options.length)]!;
-    }
-    case 'larch': {
-      const options = ['larch_green_a', 'larch_green_b', 'birch_gold_b'];
-      return options[Math.floor(random(14) * options.length)]!;
-    }
-    case 'pine': {
-      const options = ['dead_tree', 'birch_orange', 'young_tree_b'];
-      return options[Math.floor(random(14) * options.length)]!;
-    }
-    case 'scrub': {
-      const options = ['green_bush', 'red_bush', 'mixed_bush'];
-      return options[Math.floor(random(14) * options.length)]!;
-    }
-    case 'boulders': {
-      const options = [
-        'large_boulder',
-        'small_boulder_a',
-        'small_boulder_b',
-        'stone_cluster_a',
-        'stone_cluster_b',
-        'rock_pile_a',
-      ];
-      return options[Math.floor(random(14) * options.length)]!;
-    }
-    case 'crag': {
-      const options = ['ruin_arch', 'ruin_pillars', 'ovoo_shrine', 'stele', 'ruin_blocks_a'];
-      return options[Math.floor(random(14) * options.length)]!;
-    }
-    case 'grass':
-    case 'dry-grass':
-    case 'reeds':
-      return 'long_grass_clump';
-    case 'flowers': {
-      const options = ['meadow_flower_clump', 'yellow_wildflowers', 'wildflower_spray'];
-      return options[Math.floor(random(14) * options.length)]!;
-    }
-    case 'pebbles': {
-      const options = [
-        'cliff_rock_a',
-        'cliff_rock_b',
-        'cliff_rock_c',
-        'cliff_rock_d',
-        'cliff_rock_e',
-        'cliff_rock_f',
-        'ruin_rubble',
-      ];
-      return options[Math.floor(random(14) * options.length)]!;
-    }
-    case 'branch': {
-      const options = ['antlers', 'bone', 'stone_wheel'];
-      return options[Math.floor(random(14) * options.length)]!;
-    }
-  }
-}
-
 /** Global cluster parents generate whole neighborhoods before clipping into resident chunks. */
 export function sceneDressing(terrain: ComposedTerrain, bounds: TerrainBounds): SceneDressing[] {
   const result: { id: string; prop: SceneDressing }[] = [];
+  if (terrain.region.scene.id === 'orkhon-valley') return orkhonDressing(terrain, bounds);
   const vegetation = terrain.region.scene.vegetation;
-  const isOrkhon = terrain.region.scene.id === 'orkhon-valley';
   const within = (x: number, z: number) =>
     x >= bounds.x && z >= bounds.y && x < bounds.x + bounds.width && z < bounds.y + bounds.height;
   const randomFor = (key: string) => (offset: number) =>
@@ -121,12 +65,8 @@ export function sceneDressing(terrain: ComposedTerrain, bounds: TerrainBounds): 
     if (sample.slope > (tree ? 0.38 : 0.62) || terrain.snowAt(height, 1) > 0.65) return;
     if (terrain.river && terrain.river.sample(x, z).shoreDistance < (tree ? 20 : 5)) return;
     const detail = DETAILS.has(kind);
-    const texture = isOrkhon
-      ? 'orkhon-scenery'
-      : detail
-        ? 'steppe-ground-details'
-        : 'tapestry-scenery';
-    const frame = isOrkhon ? orkhonFrame(kind, random) : kind === 'boulders' ? 'boulder' : kind;
+    const texture = detail ? 'steppe-ground-details' : 'tapestry-scenery';
+    const frame = kind === 'boulders' ? 'boulder' : kind;
     result.push({
       id: c.id,
       prop: {

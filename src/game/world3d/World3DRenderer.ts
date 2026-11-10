@@ -17,6 +17,7 @@ import { ComposedTerrain } from './ComposedTerrain';
 import { sceneGeometry } from './sceneGeometry';
 import { sceneDressing } from './sceneDressing';
 import { Water3D } from './Water3D';
+import { OrkhonOverlay } from './orkhonOverlay';
 
 interface RenderChunk {
   group: THREE.Group;
@@ -35,6 +36,7 @@ export class World3DRenderer {
   readonly materials: MountainMaterials;
   readonly effects: GraphicsBridge;
   readonly water?: Water3D;
+  readonly overlay?: OrkhonOverlay;
   viewBounds?: TerrainBounds;
   spawnView?: ProjectedGroundView;
   angle: number = WORLD_3D.angle;
@@ -123,9 +125,13 @@ export class World3DRenderer {
         terrain.river,
         terrain,
         this.materials.bedTexture,
-        this.materials.waterTexture,
+        this.materials.waterTextures,
       );
       this.world.add(this.water.group);
+    }
+    if (terrain instanceof ComposedTerrain && terrain.region.scene.id === 'orkhon-valley') {
+      this.overlay = new OrkhonOverlay(scene, terrain);
+      this.world.add(this.overlay.group);
     }
     this.label = document.createElement('div');
     this.label.dataset.worldDebug = '';
@@ -442,7 +448,7 @@ export class World3DRenderer {
       for (const prop of sceneDressing(this.terrain, bounds)) {
         const image = this.scene.add
           .image(prop.x, prop.z, prop.texture, prop.frame)
-          .setOrigin(0.5, 0.9)
+          .setOrigin(0.5, prop.originY ?? 0.9)
           .setDepth(100 + prop.z)
           .setName(`scene-prop-${prop.kind}`)
           .setFlipX(prop.flip)
@@ -533,6 +539,7 @@ export class World3DRenderer {
     this.sprites.destroy();
     this.effects.destroy();
     this.water?.destroy();
+    this.overlay?.destroy();
     for (const mesh of this.merged) mesh.geometry.dispose();
     this.collisionMaterial.dispose();
     this.materials.destroy();

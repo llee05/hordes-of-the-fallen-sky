@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { MountainHeightfield } from './MountainHeightfield';
 import { waterGeometry } from './waterGeometry';
+import { ORKHON_TILE_WORLD_SIZE } from '../assets/orkhonValleyArt';
 import type { WorldRiver } from './WorldRiver';
 
 /** Turquoise channels and timber crossings occupy the same elevated world as the terrain. */
@@ -12,7 +13,8 @@ export class Water3D {
     readonly river: WorldRiver,
     terrain: MountainHeightfield,
     bedTexture: THREE.Texture,
-    waterTexture?: THREE.Texture,
+    /** Supplied flow and rapids tiles. Authored rivers show them directly and draw no plank decks. */
+    waterTextures?: readonly [THREE.Texture, THREE.Texture],
   ) {
     this.group.name = 'world-river';
     const data = waterGeometry(river, terrain);
@@ -33,8 +35,11 @@ export class Water3D {
       shader.uniforms.motionAmount = this.motion;
       shader.uniforms.frozen = { value: frozen ? 1 : 0 };
       shader.uniforms.bedTexture = { value: bedTexture };
-      shader.uniforms.hasWaterTexture = { value: waterTexture ? 1 : 0 };
-      shader.uniforms.waterTexture = { value: waterTexture ?? bedTexture };
+      shader.uniforms.authored = { value: waterTextures ? 1 : 0 };
+      shader.uniforms.flowTexture = { value: waterTextures?.[0] ?? bedTexture };
+      shader.uniforms.rapidsTexture = { value: waterTextures?.[1] ?? bedTexture };
+      shader.uniforms.tileSize = { value: ORKHON_TILE_WORLD_SIZE };
+      shader.uniforms.rapidsLength = { value: river.definition.gorge?.rapids ?? 0 };
       shader.uniforms.deepWater = {
         value: new THREE.Color(river.definition.color).multiplyScalar(0.65),
       };
@@ -48,7 +53,8 @@ export class Water3D {
         `varying float waterDepth; varying vec2 riverUv; varying vec2 riverWorld;
         uniform float flowTime;uniform float motionAmount;uniform int frozen;
         uniform vec3 shallowWater;uniform vec3 deepWater;uniform sampler2D bedTexture;
-        uniform int hasWaterTexture;uniform sampler2D waterTexture;\n${shader.fragmentShader}`.replace(
+        uniform int authored;uniform sampler2D flowTexture;uniform sampler2D rapidsTexture;
+        uniform float tileSize;uniform float rapidsLength;\n${shader.fragmentShader}`.replace(
           '#include <color_fragment>',
           `#include <color_fragment>
         float deep=smoothstep(0.4,8.0,waterDepth);
@@ -60,10 +66,13 @@ export class Water3D {
         float edge=1.0-smoothstep(0.0,2.2,waterDepth);
         float broken=0.35+0.65*smoothstep(0.15,0.8,sin(riverUv.y*.4+sin(riverUv.y*.11)));
         water=mix(water,vec3(.59,.68,.56),edge*broken*.25)+stroke;
-        if(hasWaterTexture==1 && frozen==0) {
-          vec2 flowUv = vec2(riverUv.x * 2.0, riverUv.y * 0.4 - time * 0.12);
-          vec3 riverTex = texture2D(waterTexture, flowUv).rgb;
-          water = mix(water, riverTex * vec3(0.9, 1.05, 1.02), 0.52);
+        if(authored==1) {
+          // One tile spans bank to bank: the supplied tiles' light edge columns fall on the
+          // faded shoreline, and their seamless rows repeat along the current.
+          float along=riverUv.y*36.0;
+          vec2 flowUv=vec2(riverUv.x,(along-time*38.0)/tileSize);
+          water=mix(texture2D(rapidsTexture,flowUv).rgb,texture2D(flowTexture,flowUv).rgb,
+            smoothstep(rapidsLength*0.6,rapidsLength,along));
         }
         if(frozen==1)water=mix(water,vec3(.54,.68,.7),.65);
         diffuseColor.rgb*=water;
@@ -78,7 +87,7 @@ export class Water3D {
     const matrices: THREE.Matrix4[] = [];
     const colors: THREE.Color[] = [];
     const dummy = new THREE.Object3D();
-    for (const bridge of river.bridges) {
+    for (const bridge of waterTextures ? [] : river.bridges) {
       const planks = Math.ceil(bridge.length / 10);
       for (let i = 0; i < planks; i++) {
         const distance = ((i + 0.5) / planks) * bridge.length - bridge.length / 2;

@@ -2,7 +2,8 @@
 export const TERRAIN_SAMPLING = `
   uniform sampler2D meadow; uniform sampler2D dryMeadow; uniform sampler2D soil;
   uniform sampler2D stone; uniform sampler2D snow; uniform sampler2D gravelMap;
-  uniform int worldDebug; uniform int isWall;
+  uniform sampler2D meadowAlt; uniform sampler2D patchMap;
+  uniform int worldDebug; uniform int isWall; uniform int authored; uniform float tileSize;
   uniform float samplingDetail;
   uniform vec3 grassTint; uniform vec3 soilTint; uniform vec3 rockTint; uniform vec3 snowTint;
   varying float traversal; varying vec3 worldPoint; varying vec3 worldNormal;
@@ -15,11 +16,34 @@ export const TERRAIN_SAMPLING = `
     float blend=0.32+0.12*sin(uv.x*0.73+sin(uv.y*0.57));
     return mix(a,b,blend);
   }
+  // Authored locations sample supplied tiles exactly once at their painted scale. The two
+  // seamless grass paintings alternate in broad soft regions instead of tinting either one.
+  vec3 authoredGround(vec2 p) {
+    vec2 uv=p/tileSize;
+    float swap=smoothstep(0.3,0.7,0.5+0.3*sin(p.x/610.0+sin(p.y/470.0)*1.7)+0.2*sin(p.y/830.0-p.x/1270.0));
+    // Fetch only channels present at this point, as the generic path does.
+    vec3 sum=vec3(0.0);
+    if(materialA.x>0.005) sum+=mix(texture2D(meadow,uv).rgb,texture2D(meadowAlt,vec2(-uv.y,uv.x)).rgb,swap)*materialA.x;
+    if(materialA.y>0.005) sum+=texture2D(soil,uv).rgb*materialA.y;
+    if(materialA.z>0.005) sum+=texture2D(stone,uv).rgb*materialA.z;
+    if(materialA.w>0.005) sum+=texture2D(dryMeadow,uv).rgb*materialA.w;
+    if(materialB.x>0.005) sum+=texture2D(snow,uv).rgb*materialB.x;
+    if(materialB.y>0.005) sum+=texture2D(patchMap,uv).rgb*materialB.y;
+    if(materialB.z>0.005) sum+=texture2D(gravelMap,uv).rgb*materialB.z;
+    return sum/max(0.001,dot(materialA,vec4(1.0))+dot(materialB,vec3(1.0)));
+  }
 `;
 
 export const TERRAIN_COLOR = `
   vec3 n=normalize(worldNormal);
-  if(worldDebug<=1) {
+  if(worldDebug<=1 && authored==1) {
+    vec3 tri=pow(abs(n),vec3(5.0)); tri/=max(0.001,tri.x+tri.y+tri.z);
+    vec3 surface=isWall==1
+      ? texture2D(stone,worldPoint.zy/tileSize).rgb*tri.x+texture2D(stone,worldPoint.xz/tileSize).rgb*tri.y+
+        texture2D(stone,worldPoint.xy/tileSize).rgb*tri.z
+      : authoredGround(worldPoint.xz);
+    diffuseColor.rgb*=surface*occlusion;
+  } else if(worldDebug<=1) {
   vec3 tri=pow(abs(n),vec3(5.0)); tri/=max(0.001,tri.x+tri.y+tri.z);
   vec3 grass=vec3(0.0), dryGrass=vec3(0.0), dirt=vec3(0.0), rock=vec3(0.0), gravel=vec3(0.0), white=vec3(0.0);
   if(isWall==0) {

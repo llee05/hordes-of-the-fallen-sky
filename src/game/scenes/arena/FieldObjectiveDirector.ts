@@ -7,6 +7,8 @@ import {
   startFieldObjective,
 } from '../../state/fieldObjectives';
 import { isKhanActive } from '../../state/khan';
+import { currentLocation } from '../../state/journey';
+import { authoredFieldSite } from '../../systems/authoredSites';
 import { FieldMarkers } from '../../systems/FieldMarkers';
 import type { ArenaContext } from './ArenaContext';
 import { ArenaSystem } from './ArenaSystem';
@@ -40,7 +42,14 @@ export class FieldObjectiveDirector extends ArenaSystem {
     const run = this.run,
       nav = this.landscape.navigation;
     if (fieldObjectiveDue(run)) {
-      for (let i = 0; i < 12; i++) {
+      // Authored levels host objectives beside landmarks such as ruins and shrines.
+      const site = authoredFieldSite(currentLocation(run).id, run.field.issued);
+      const near = site && (nav ? nav.nearestWalkable(site) : site);
+      const placed =
+        !!near &&
+        Math.hypot(near.x - site.x, near.y - site.y) < 220 &&
+        startFieldObjective(run, near);
+      for (let i = 0; !placed && i < 12; i++) {
         const angle = run.field.issued * 1.7 + (i * Math.PI) / 6;
         const desired = {
           x: this.camp.x + Math.cos(angle) * GAME.field.radius,

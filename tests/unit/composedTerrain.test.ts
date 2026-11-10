@@ -4,6 +4,7 @@ import { ComposedTerrain } from '../../src/game/world3d/ComposedTerrain';
 import { sceneGeometry } from '../../src/game/world3d/sceneGeometry';
 import { sceneDressing } from '../../src/game/world3d/sceneDressing';
 import { TerrainNavigation } from '../../src/game/terrain/TerrainNavigation';
+import { ORKHON_VALLEY } from '../../src/game/data/orkhonValley';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
 
 describe('composed angled landscapes', () => {
@@ -12,7 +13,10 @@ describe('composed angled landscapes', () => {
       const terrain = new ComposedTerrain(composedRegion(id));
       for (let x = 2400; x <= 2850; x += 100)
         for (const z of [2480, 2600, 2720])
-          expect(terrain.height(x, z) * 1000).toBeCloseTo(terrain.region.scene.floor + 150, 6);
+          expect(terrain.height(x, z) * 1000).toBeCloseTo(
+            terrain.region.scene.floor + (terrain.region.scene.campShelf === false ? 0 : 150),
+            6,
+          );
       const high = terrain.region.scene.shelves[0]!;
       expect(terrain.height(2600 + high.x, 2600 + high.z) * 1000).toBeGreaterThan(
         terrain.region.scene.floor + 90,
@@ -103,7 +107,7 @@ describe('composed angled landscapes', () => {
       LANDSCAPES['orkhon-valley'].water,
     );
     const river = terrain.river!;
-    expect(river.bridges).toHaveLength(2);
+    expect(river.bridges).toHaveLength(ORKHON_VALLEY.river.bridges.length);
     for (const bridge of river.bridges) {
       expect(river.distance(bridge.x, bridge.z)).toBeLessThan(8);
       expect(terrain.height(bridge.x, bridge.z) * 1000).toBeLessThan(river.floor - 1.5);
@@ -112,8 +116,14 @@ describe('composed angled landscapes', () => {
         river.bridgeHeight(bridge.x + bridge.nz * 100, bridge.z - bridge.nx * 100),
       ).toBeUndefined();
     }
+    const meandering = new ComposedTerrain(composedRegion('orkhon-valley'), {
+      ...LANDSCAPES['orkhon-valley'].water!,
+      gorge: undefined,
+    });
+    expect(meandering.river!.bridges).toHaveLength(2);
     const frozen = new ComposedTerrain(composedRegion('orkhon-valley'), {
       ...LANDSCAPES['orkhon-valley'].water!,
+      gorge: undefined,
       kind: 'frozen',
     });
     expect(frozen.river!.bridges).toHaveLength(0);

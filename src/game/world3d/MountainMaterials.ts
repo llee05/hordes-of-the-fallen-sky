@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import * as THREE from 'three';
 import { MOUNTAIN_TERRAIN_ART } from '../assets/painterlyArt';
+import { ORKHON_TILE_WORLD_SIZE, orkhonTileKey, type OrkhonTile } from '../assets/orkhonValleyArt';
 import type { WorldGeometry } from './mountainGeometry';
 import type { TerrainNavigation } from '../terrain/TerrainNavigation';
 import { WORLD_DEBUG_MODES, type WorldDebugMode } from './worldProjection';
@@ -14,7 +15,8 @@ export class MountainMaterials {
   readonly surface: THREE.MeshLambertMaterial;
   readonly wall: THREE.MeshLambertMaterial;
   readonly bedTexture: THREE.Texture;
-  readonly waterTexture?: THREE.Texture;
+  /** Supplied calm-flow and rapids tiles for authored rivers. */
+  readonly waterTextures?: readonly [THREE.Texture, THREE.Texture];
   readonly debug = { value: 0 };
   readonly samplingDetail = { value: 1 };
   private readonly textures: THREE.Texture[] = [];
@@ -47,22 +49,28 @@ export class MountainMaterials {
         Math.max(0.7, Math.min(1.3, ratio.b)),
       );
     };
-    const isOrkhon = locationId === 'orkhon-valley';
-    const meadowTex = isOrkhon
-      ? texture('orkhon-meadow')
+    // Orkhon Valley uses the supplied texture-pack tiles untinted, at one shared painted scale.
+    const authored = locationId === 'orkhon-valley';
+    const tile = (name: OrkhonTile) => texture(orkhonTileKey(name));
+    const meadowTex = authored
+      ? tile('steppeGrass')
       : texture(palette ? 'tapestry-meadow' : MOUNTAIN_TERRAIN_ART.materials.grassland.texture!);
-    const dryMeadowTex = isOrkhon ? texture('orkhon-worn-grass') : texture('ground');
-    const soilTex = isOrkhon
-      ? texture('orkhon-packed-earth')
+    const dryMeadowTex = authored ? tile('dryGrass') : texture('ground');
+    const soilTex = authored
+      ? tile('trampledEarth')
       : texture(MOUNTAIN_TERRAIN_ART.materials['rocky-soil'].texture!);
-    const stoneTex = isOrkhon
-      ? texture('orkhon-basalt-stone')
+    const stoneTex = authored
+      ? tile('rockyGround')
       : texture(palette ? 'tapestry-stone' : MOUNTAIN_TERRAIN_ART.materials.stone.texture!);
-    const wallStoneTex = isOrkhon ? texture('orkhon-basalt-cliff') : stoneTex;
-    const gravelTex = isOrkhon ? texture('orkhon-gravel') : soilTex;
-    const snowTex = texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!);
-    this.bedTexture = isOrkhon ? texture('orkhon-riverbed') : soilTex;
-    this.waterTexture = isOrkhon ? texture('orkhon-river-water') : undefined;
+    const gravelTex = authored ? tile('rockyGround') : soilTex;
+    // Authored channel 4 is plateau grass and channel 5 patchy grass; neither location has snow.
+    const snowTex = authored
+      ? tile('plateauGrass')
+      : texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!);
+    const meadowAltTex = authored ? tile('steppeGrassVariant') : meadowTex;
+    const patchTex = authored ? tile('patchyGrass') : snowTex;
+    this.bedTexture = authored ? gravelTex : soilTex;
+    this.waterTextures = authored ? [tile('riverFlow'), tile('riverRapids')] : undefined;
 
     const maps = {
       meadow: { value: meadowTex },
@@ -71,6 +79,10 @@ export class MountainMaterials {
       gravelMap: { value: gravelTex },
       stone: { value: stoneTex },
       snow: { value: snowTex },
+      meadowAlt: { value: meadowAltTex },
+      patchMap: { value: patchTex },
+      authored: { value: authored ? 1 : 0 },
+      tileSize: { value: ORKHON_TILE_WORLD_SIZE },
       worldDebug: this.debug,
       samplingDetail: this.samplingDetail,
       grassTint: { value: tint(palette?.grass, 0xa3ad69) },
@@ -82,7 +94,6 @@ export class MountainMaterials {
       const material = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
       material.onBeforeCompile = (shader) => {
         Object.assign(shader.uniforms, maps);
-        if (wall) shader.uniforms.stone = { value: wallStoneTex };
         shader.uniforms.isWall = { value: wall ? 1 : 0 };
         shader.vertexShader =
           `attribute vec4 weightsA; attribute vec3 weightsB; attribute float contact; attribute float blocked; varying float traversal;
@@ -96,7 +107,7 @@ export class MountainMaterials {
           `#include <color_fragment>\n${TERRAIN_COLOR}`,
         );
       };
-      material.customProgramCacheKey = () => `living-steppe-materials-v4-${wall}`;
+      material.customProgramCacheKey = () => `living-steppe-materials-v5-${wall}`;
       return material;
     };
     this.surface = make(false);
