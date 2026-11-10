@@ -14,8 +14,6 @@ export interface OrkhonRamp {
   /** Fully graded half width; the flanks between this and `shoulder` are steep and blocked. */
   halfWidth: number;
   shoulder: number;
-  /** Supplied ramp painting draped over the graded ground. */
-  sprite: 'ramp_wide' | 'ramp_descending';
 }
 
 export interface OrkhonPlateau {
@@ -71,25 +69,28 @@ export interface OrkhonValleyLayout {
   groves: readonly OrkhonGrove[];
 }
 
+/** Height of every plateau above the valley floor: about four mounted riders. */
+const RISE = 240;
 /**
  * A ramp crossing the cliff at `at`. North ramps climb 30° east of north and west ramps climb
- * slightly north of west, matching the painted climb of the supplied ramp sprites on screen.
+ * slightly north of west.
  */
 const ramp = (at: TerrainPoint, direction: 'north' | 'west'): OrkhonRamp => {
   const d = direction === 'north' ? { x: 0.5, y: -0.866 } : { x: -0.99, y: -0.14 };
-  const half = 115;
+  // Ramps keep a constant walkable grade, so their length follows the rise.
+  const half = Math.round((115 * RISE) / 160);
   return {
     foot: { x: Math.round(at.x - d.x * half), y: Math.round(at.y - d.y * half) },
     top: { x: Math.round(at.x + d.x * half), y: Math.round(at.y + d.y * half) },
     halfWidth: 112,
-    shoulder: 140,
-    sprite: direction === 'north' ? 'ramp_wide' : 'ramp_descending',
+    // Steep basalt flanks span several terrain mesh cells, so the cliff tapers without teeth.
+    shoulder: 212,
   };
 };
 const p = (x: number, y: number): TerrainPoint => ({ x, y });
 
 export const ORKHON_VALLEY: OrkhonValleyLayout = {
-  rise: 160,
+  rise: RISE,
   plateaus: [
     {
       id: 'shrine-heights',
@@ -121,7 +122,7 @@ export const ORKHON_VALLEY: OrkhonValleyLayout = {
         p(-100, -1300),
         p(-450, -1600),
       ],
-      ramps: [ramp(p(250, -1275), 'north'), ramp(p(2500, -300), 'north')],
+      ramps: [ramp(p(250, -1275), 'north'), ramp(p(2420, -300), 'north')],
     },
     {
       id: 'western-shelf',
@@ -169,7 +170,7 @@ export const ORKHON_VALLEY: OrkhonValleyLayout = {
         p(1200, 1250),
         p(750, 1050),
       ],
-      ramps: [ramp(p(1400, 1206), 'north')],
+      ramps: [ramp(p(1300, 1228), 'north')],
     },
   ],
   river: {
@@ -185,12 +186,12 @@ export const ORKHON_VALLEY: OrkhonValleyLayout = {
   waterfall: p(1620, -1478),
   paths: [
     [p(0, 0), p(1450, 0), p(1640, 105)],
-    [p(1950, -75), p(2200, -90), p(2442, -200)],
-    [p(-150, -120), p(-900, -650), p(-1358, -1204)],
-    [p(0, -250), p(192, -1175)],
-    [p(-250, -60), p(-1656, -154)],
-    [p(-200, 220), p(-600, 640), p(-1000, 1060), p(-1283, 2166)],
-    [p(220, 220), p(1342, 1306), p(1150, 1700), p(1081, 2216)],
+    [p(1950, -75), p(2200, -90), p(2334, -150)],
+    [p(-150, -120), p(-900, -650), p(-1386, -1154)],
+    [p(0, -250), p(164, -1125)],
+    [p(-250, -60), p(-1599, -146)],
+    [p(-200, 220), p(-600, 640), p(-1000, 1060), p(-1226, 2174)],
+    [p(220, 220), p(1214, 1378), p(1150, 1700), p(1138, 2224)],
   ],
   pathWidth: 46,
   landmarks: [

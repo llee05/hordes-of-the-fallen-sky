@@ -6,12 +6,11 @@ export const ORKHON_ATLAS = 'orkhon-valley-sprites';
 
 /** Repeatable 128 × 128 tiles, keyed by their texture-pack folder and file name. */
 export const ORKHON_TILES = {
-  steppeGrass: 'ground/steppe_grass',
   steppeGrassVariant: 'ground/steppe_grass_var',
   dryGrass: 'ground/dry_grass',
   patchyGrass: 'ground/patchy_grass',
   plateauGrass: 'ground/plateau_grass',
-  trampledEarth: 'ground/trampled_earth',
+  dryDirt: 'ground/dry_dirt',
   rockyGround: 'ground/rocky_ground',
   riverFlow: 'water/river_flow',
   riverRapids: 'water/river_rapids',
@@ -27,43 +26,22 @@ export const ORKHON_TILE_WORLD_SIZE = 200;
 export const ORKHON_SPRITE_SCALE = 1.7;
 
 /**
- * Painted geometry measured from the pack sprites at their source size. `lip` is the row where a
- * cliff's top rim meets its vertical face; anchors come from manifest.json.
+ * Painted geometry measured from the pack sprites at their source size. `lip` is the row where the
+ * waterfall's top rim meets its drop; anchors come from manifest.json.
  */
 export interface OrkhonSpriteMetrics {
   width: number;
   height: number;
   anchorY: number;
   lip?: number;
-  /** Painted foot and top of a ramp's path, in source pixels. */
-  climb?: readonly [readonly [number, number], readonly [number, number]];
 }
 
 export const ORKHON_SPRITES = {
-  cliff_face_tall: { width: 84, height: 80, anchorY: 1, lip: 9 },
-  cliff_straight: { width: 85, height: 109, anchorY: 1, lip: 44 },
-  cliff_cave_nook: { width: 85, height: 86, anchorY: 1, lip: 22 },
-  cliff_corner_outer: { width: 84, height: 106, anchorY: 1, lip: 40 },
-  cliff_end_cap: { width: 81, height: 109, anchorY: 1, lip: 38 },
+  cliff_face_tall: { width: 84, height: 80, anchorY: 1 },
+  cliff_face_medium: { width: 86, height: 71, anchorY: 1 },
+  cliff_face_short: { width: 87, height: 60, anchorY: 1 },
+  cliff_end_cap: { width: 81, height: 109, anchorY: 1 },
   cliff_isolated: { width: 85, height: 103, anchorY: 1 },
-  ramp_wide: {
-    width: 126,
-    height: 82,
-    anchorY: 1,
-    climb: [
-      [35, 72],
-      [95, 10],
-    ],
-  },
-  ramp_descending: {
-    width: 101,
-    height: 79,
-    anchorY: 1,
-    climb: [
-      [75, 72],
-      [28, 14],
-    ],
-  },
   waterfall_top: { width: 73, height: 93, anchorY: 1, lip: 6 },
   waterfall_base: { width: 79, height: 90, anchorY: 1 },
   bridge_horizontal: { width: 131, height: 63, anchorY: 1 },
@@ -105,3 +83,27 @@ export const ORKHON_SPRITES = {
   enemy_camp_tents: { width: 152, height: 119, anchorY: 1 },
 } as const satisfies Record<string, OrkhonSpriteMetrics>;
 export type OrkhonSprite = keyof typeof ORKHON_SPRITES;
+
+/** An opaque basalt band cropped from a supplied cliff sprite, with its painted grass lip on top. */
+export interface OrkhonCliffFace {
+  sprite: OrkhonSprite;
+  /** Source pixel of the band's top-left corner. */
+  x: number;
+  y: number;
+  /** Source rows from the grass lip to the cliff foot. */
+  height: number;
+}
+
+/** Source columns used from every band; each repeat along a cliff picks one band. */
+export const ORKHON_CLIFF_FACE_WIDTH = 66;
+
+/**
+ * Cliff walls are textured with these bands, repeated along the plateau outline so faces and
+ * corners stay continuous. Every band is fully opaque in the supplied art.
+ */
+export const ORKHON_CLIFF_FACES: readonly OrkhonCliffFace[] = [
+  { sprite: 'cliff_face_tall', x: 6, y: 6, height: 69 },
+  { sprite: 'cliff_face_medium', x: 8, y: 14, height: 53 },
+  { sprite: 'cliff_end_cap', x: 6, y: 34, height: 48 },
+  { sprite: 'cliff_face_short', x: 6, y: 12, height: 44 },
+];

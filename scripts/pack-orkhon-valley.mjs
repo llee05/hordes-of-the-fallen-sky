@@ -19,12 +19,11 @@ const sizes = new Map(manifest.assets.map((asset) => [asset.path, asset.size_px]
 
 /** Repeatable ground and water materials used by the terrain and river shaders. */
 export const TILES = [
-  'ground/steppe_grass.png',
   'ground/steppe_grass_var.png',
   'ground/dry_grass.png',
   'ground/patchy_grass.png',
   'ground/plateau_grass.png',
-  'ground/trampled_earth.png',
+  'ground/dry_dirt.png',
   'ground/rocky_ground.png',
   'water/river_flow.png',
   'water/river_rapids.png',
@@ -33,13 +32,10 @@ export const TILES = [
 /** Transparent sprites placed by the authored level. */
 export const SPRITES = [
   'elevation/cliff_face_tall.png',
-  'elevation/cliff_straight.png',
-  'elevation/cliff_cave_nook.png',
-  'elevation/cliff_corner_outer.png',
+  'elevation/cliff_face_medium.png',
+  'elevation/cliff_face_short.png',
   'elevation/cliff_end_cap.png',
   'elevation/cliff_isolated.png',
-  'elevation/ramp_wide.png',
-  'elevation/ramp_descending.png',
   'water/waterfall_top.png',
   'water/waterfall_base.png',
   'structures/bridge_horizontal.png',

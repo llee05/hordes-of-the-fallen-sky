@@ -104,9 +104,12 @@ export class ComposedTerrain extends MountainHeightfield {
         (shelf.peak ?? 0) *
         (0.55 + ridge * 0.45) *
         Math.pow(Math.max(0, Math.min(1, field / Math.min(shelf.width, shelf.depth))), 1.3);
+      // Authored plateaus are one level: their weathering stays within a fixed height band.
       const weathering = shelf.camp
         ? 1
-        : 1 + (coherentNoise(x / 240, z / 270, this.seed + 719) - 0.5) * 0.07;
+        : 1 +
+          (coherentNoise(x / 240, z / 270, this.seed + 719) - 0.5) *
+            (shelf.outline ? Math.min(0.07, 11 / shelf.rise) : 0.07);
       const height = shelf.rise * weathering + peak;
       const bankGrade =
         river && !gorge
@@ -261,4 +264,44 @@ export function outlineField(outline: readonly TerrainPoint[], x: number, z: num
     if (a.y > z !== b.y > z && x < a.x + ((z - a.y) * dx) / dz) inside = !inside;
   }
   return inside ? distance : -distance;
+}
+
+const outlineLengths = new WeakMap<readonly TerrainPoint[], readonly number[]>();
+
+/**
+ * Distance along a closed outline, from its first vertex, to the point on it nearest (x, z).
+ * The last entry of the returned pair is the outline's total length.
+ */
+export function outlineArc(
+  outline: readonly TerrainPoint[],
+  x: number,
+  z: number,
+): { along: number; length: number } {
+  let starts = outlineLengths.get(outline);
+  if (!starts) {
+    const sums = [0];
+    for (let i = 0; i < outline.length; i++) {
+      const a = outline[i]!,
+        b = outline[(i + 1) % outline.length]!;
+      sums.push(sums[i]! + Math.hypot(b.x - a.x, b.y - a.y));
+    }
+    starts = sums;
+    outlineLengths.set(outline, starts);
+  }
+  let best = Infinity,
+    along = 0;
+  for (let i = 0; i < outline.length; i++) {
+    const a = outline[i]!,
+      b = outline[(i + 1) % outline.length]!;
+    const dx = b.x - a.x,
+      dz = b.y - a.y;
+    const span = dx * dx + dz * dz || 1;
+    const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.y) * dz) / span));
+    const distance = Math.hypot(x - a.x - dx * t, z - a.y - dz * t);
+    if (distance < best) {
+      best = distance;
+      along = starts[i]! + t * Math.sqrt(span);
+    }
+  }
+  return { along, length: starts[outline.length]! };
 }

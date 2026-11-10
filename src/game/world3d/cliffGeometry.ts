@@ -11,13 +11,18 @@ export interface CliffAnchor {
 export const CLIFF_RELIEF = 8;
 const BANDS = [0, 0.24, 0.5, 0.76, 1] as const;
 
-/** A shallow broken face stays inside the conservative collision clearance. Top and foot never move. */
+/**
+ * A shallow broken face stays inside the conservative collision clearance. Top and foot never move.
+ * With `along` (each anchor's distance along an authored outline) the face carries painted-face
+ * coordinates in its last three weights: distance along the cliff, depth below its top, and 1.
+ */
 export function appendCliffFace(
   geometry: WorldGeometry,
   terrain: ComposedTerrain,
   a: CliffAnchor,
   b: CliffAnchor,
   layer: number,
+  along?: readonly [number, number],
 ): void {
   const point = (anchor: CliffAnchor, t: number) => {
     const normal = terrain.cliffNormal(anchor.x, anchor.z, layer);
@@ -66,7 +71,12 @@ export function appendCliffFace(
         [b, low],
       ],
     ] as const) {
-      const points = triangle.map(([anchor, t]) => ({ ...point(anchor, t), t }));
+      const points = triangle.map(([anchor, t]) => ({
+        ...point(anchor, t),
+        t,
+        along: anchor === a ? along?.[0] : along?.[1],
+        depth: (anchor.top - anchor.bottom) * (1 - t),
+      }));
       const [p, q, r] = points;
       const u = q!.position.map((n, i) => n - p!.position[i]!);
       const v = r!.position.map((n, i) => n - p!.position[i]!);
@@ -81,7 +91,8 @@ export function appendCliffFace(
       for (const p of points) {
         geometry.positions.push(...p.position);
         geometry.normals.push(...p.normal);
-        geometry.weights.push(0, 0, 1, 0, 0, 0, 0);
+        if (p.along === undefined) geometry.weights.push(0, 0, 1, 0, 0, 0, 0);
+        else geometry.weights.push(0, 0, 1, 0, p.along, p.depth, 1);
         geometry.occlusion.push(0.86 + Math.min(1, p.t * 3) * 0.14);
       }
     }

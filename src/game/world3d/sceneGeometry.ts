@@ -1,7 +1,7 @@
 import { appendCliffFace } from './cliffGeometry';
 import type { TerrainBounds } from '../terrain/types';
 import { terrainHabitat, terrainMaterialWeights } from './terrainHabitat';
-import { ComposedTerrain } from './ComposedTerrain';
+import { ComposedTerrain, outlineArc } from './ComposedTerrain';
 import type { HeightNode } from './MountainHeightfield';
 import type { MountainGeometry, WorldGeometry } from './mountainGeometry';
 import { WORLD_3D } from './worldProjection';
@@ -42,6 +42,27 @@ function clip(polygon: LayerNode[], layer: number, upper: boolean): LayerNode[] 
     if (inside !== next) result.push(intersection(a, b, layer));
   }
   return result;
+}
+
+/**
+ * Authored scenes paint their outline cliffs with continuous face bands: each wall end gets its
+ * distance along the plateau outline, unwrapped so one wall never spans the outline's start.
+ */
+function faceAlong(
+  terrain: ComposedTerrain,
+  layer: number,
+  a: LayerNode,
+  b: LayerNode,
+): readonly [number, number] | undefined {
+  const outline = terrain.region.scene.ground && terrain.region.scene.shelves[layer]?.outline;
+  if (!outline) return undefined;
+  const center = terrain.worldSize / 2;
+  const p = outlineArc(outline, a.x - center, a.z - center);
+  const q = outlineArc(outline, b.x - center, b.z - center);
+  let along = q.along;
+  if (along - p.along > p.length / 2) along -= p.length;
+  else if (p.along - along > p.length / 2) along += p.length;
+  return [p.along, along];
 }
 
 /** Split the same world triangles at every geological layer, then join their exposed vertical sides. */
@@ -128,7 +149,14 @@ export function sceneGeometry(terrain: ComposedTerrain, bounds: TerrainBounds): 
                   );
                 return { x: node.x, z: node.z, bottom, top: bottom + node.layers[layer]!.rise };
               };
-              appendCliffFace(walls, terrain, anchor(a), anchor(b), layer);
+              appendCliffFace(
+                walls,
+                terrain,
+                anchor(a),
+                anchor(b),
+                layer,
+                faceAlong(terrain, layer, a, b),
+              );
             }
           }
         }

@@ -51,8 +51,10 @@ export function terrainHabitat(
   const hearth = (1 - smoothstep(60, 180, Math.hypot(cx, cz))) * 0.7;
   const ground = scene.ground;
   const road = ground
-    ? 1 -
-      smoothstep(ground.width * 0.35, ground.width + patch * 22, pathDistance(ground.paths, cx, cz))
+    ? Math.max(
+        1 - smoothstep(ground.width * 0.3, ground.width * 1.1, pathDistance(ground.paths, cx, cz)),
+        rampWear(ground.ramps ?? [], cx, cz),
+      )
     : (1 - smoothstep(14, 48 + patch * 35, Math.abs(cz))) *
       smoothstep(-150, 150, cx) *
       (1 - smoothstep(1450, 1600, cx));
@@ -66,6 +68,32 @@ export function terrainHabitat(
     wear: Math.max(hearth, road * (ground ? 0.9 : 0.65)),
     patch,
   };
+}
+
+/** Graded ramps are worn bare across their whole walkable width. */
+function rampWear(
+  ramps: readonly {
+    foot: { x: number; y: number };
+    top: { x: number; y: number };
+    halfWidth: number;
+  }[],
+  x: number,
+  z: number,
+): number {
+  let wear = 0;
+  for (const ramp of ramps) {
+    const dx = ramp.top.x - ramp.foot.x,
+      dz = ramp.top.y - ramp.foot.y;
+    const t = ((x - ramp.foot.x) * dx + (z - ramp.foot.y) * dz) / (dx * dx + dz * dz || 1);
+    const distance = pathDistance([[ramp.foot, ramp.top]], x, z);
+    wear = Math.max(
+      wear,
+      (1 - smoothstep(ramp.halfWidth * 0.6, ramp.halfWidth * 0.95, distance)) *
+        smoothstep(-0.2, 0.05, t) *
+        (1 - smoothstep(0.95, 1.2, t)),
+    );
+  }
+  return wear;
 }
 
 function pathDistance(
@@ -87,8 +115,9 @@ function pathDistance(
 }
 
 /**
- * Authored ground uses the same seven channels for supplied tiles: steppe grass, trampled earth,
- * rocky ground, dry grass, plateau grass, patchy grass and dry dirt.
+ * Authored ground uses the same seven channels for supplied tiles: calm valley grass, dry dirt,
+ * rocky ground, dry grass, plateau-top grass, patchy grass and riverbank gravel. Most of the
+ * valley is calm grass; dry grass and flowers form a few broad, rare regions.
  */
 function authoredMaterialWeights(
   terrain: ComposedTerrain,
@@ -99,19 +128,25 @@ function authoredMaterialWeights(
   const scene = terrain.region.scene;
   const rise = Math.max(1, ...scene.shelves.map((shelf) => shelf.rise));
   const top = smoothstep(rise * 0.55, rise * 0.85, height - scene.floor);
+  // Scree gathers below the cliffs; plateau rims stay grassy beneath the painted lip.
   const stone = clamp01(
-    smoothstep(0.3, 0.62, 1 - normalY) +
-      habitat.cliffFoot * (1 - top) * 0.55 +
-      habitat.cliffTop * top * 0.3,
+    smoothstep(0.3, 0.62, 1 - normalY) + Math.pow(habitat.cliffFoot, 4) * (1 - top) * 0.6,
   );
   const gravel = (1 - stone) * habitat.shore * 0.85;
   const soil = (1 - stone) * (1 - gravel) * habitat.wear;
   const cover = (1 - stone) * (1 - gravel) * (1 - habitat.wear);
-  const dry = smoothstep(0.7, 0.82, habitat.patch);
-  const flowers = smoothstep(0.7, 0.8, habitat.grove) * (1 - top);
-  const patchy = (1 - dry) * flowers;
+  const dry = 1 - smoothstep(0.24, 0.3, habitat.moisture);
+  const flowers = smoothstep(0.88, 0.93, habitat.grove) * (1 - top);
   const grass = cover * (1 - dry) * (1 - flowers);
-  return [grass * (1 - top), soil, stone, cover * dry, grass * top, cover * patchy, gravel];
+  return [
+    grass * (1 - top),
+    soil,
+    stone,
+    cover * dry,
+    grass * top,
+    cover * (1 - dry) * flowers,
+    gravel,
+  ];
 }
 
 /** Seven existing channels: healthy grass, soil, stone, dry grass, snow, ice, gravel. */

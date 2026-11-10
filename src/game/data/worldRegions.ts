@@ -43,7 +43,12 @@ export interface RegionComposition {
   /** Scale of the gentle valley-floor undulation; authored two-level maps keep it low. */
   relief?: number;
   /** Authored ground: worn paths replace the generic caravan lane in the material masks. */
-  ground?: { paths: readonly (readonly TerrainPoint[])[]; width: number };
+  ground?: {
+    paths: readonly (readonly TerrainPoint[])[];
+    width: number;
+    /** Graded ramps worn bare across their walkable width. */
+    ramps?: readonly { foot: TerrainPoint; top: TerrainPoint; halfWidth: number }[];
+  };
   /** Camp-relative solid footprints, such as authored landmarks, blocked for movement. */
   obstacles?: readonly { x: number; y: number; radius: number }[];
 }
@@ -237,6 +242,7 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
         ),
       ],
       width: ORKHON_VALLEY.pathWidth,
+      ramps: ORKHON_VALLEY.plateaus.flatMap((source) => source.ramps),
     },
     obstacles: ORKHON_FOOTPRINTS.map(({ x, y, footprint }) => ({ x, y, radius: footprint })),
     shelves: ORKHON_VALLEY.plateaus.map((source) => plateau(source, ORKHON_VALLEY.rise)),
