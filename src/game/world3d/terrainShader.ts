@@ -38,7 +38,7 @@ export const TERRAIN_SAMPLING = `
   float authoredHeight(vec3 c, float weight) {
     return weight + (dot(c, vec3(0.299, 0.587, 0.114)) - 0.45) * 0.7;
   }
-  // Two grass paintings alternate in broad regions, meeting along their own strokes.
+  // Two grass paintings alternate in regions, meeting along their own strokes.
   vec3 grassRegions(vec3 calm, vec3 other, float swap) {
     float w=smoothstep(0.35,0.65,swap);
     return authoredHeight(other,w)>authoredHeight(calm,1.0-w)?other:calm;
@@ -46,43 +46,48 @@ export const TERRAIN_SAMPLING = `
   vec3 authoredGround(vec2 p) {
     vec2 uv=p/tileSize;
     float swap=0.5+0.3*sin(p.x/290.0+sin(p.y/230.0)*1.7)+0.2*sin(p.y/410.0-p.x/630.0);
-    vec3 colour[7]; float height[7];
-    for(int i=0;i<7;i++){ colour[i]=vec3(0.0); height[i]=-9.0; }
-    // Valley: calm grass in broad regions of two orientations, so its tile grid never lines up.
+    vec3 c0=vec3(0.0),c1=c0,c2=c0,c3=c0,c4=c0,c5=c0,c6=c0;
+    float h0=-9.0,h1=-9.0,h2=-9.0,h3=-9.0,h4=-9.0,h5=-9.0,h6=-9.0;
+    // Valley: calm grass in regions of two orientations, so its tile grid never lines up.
     if(materialA.x>0.005) {
-      colour[0]=grassRegions(texture2D(meadow,uv).rgb,texture2D(meadow,vec2(-uv.y,uv.x)).rgb,swap);
-      height[0]=authoredHeight(colour[0],materialA.x);
+      c0=grassRegions(texture2D(meadow,uv).rgb,texture2D(meadow,vec2(-uv.y,uv.x)).rgb,swap);
+      if(materialA.x>0.995) return c0;
+      h0=authoredHeight(c0,materialA.x);
     }
-    if(materialA.y>0.005) { colour[1]=texture2D(soil,uv).rgb; height[1]=authoredHeight(colour[1],materialA.y); }
-    if(materialA.z>0.005) { colour[2]=texture2D(stone,uv).rgb; height[2]=authoredHeight(colour[2],materialA.z); }
-    if(materialA.w>0.005) { colour[3]=texture2D(dryMeadow,uv).rgb; height[3]=authoredHeight(colour[3],materialA.w); }
     // Plateau tops: the same calm grass with a minority of tufted steppe-grass regions.
     if(materialB.x>0.005) {
-      colour[4]=grassRegions(texture2D(meadow,vec2(uv.y,-uv.x)).rgb,texture2D(snow,uv).rgb,0.8-swap);
-      height[4]=authoredHeight(colour[4],materialB.x);
+      c4=grassRegions(texture2D(meadow,vec2(uv.y,-uv.x)).rgb,texture2D(snow,uv).rgb,0.8-swap);
+      if(materialB.x>0.995) return c4;
+      h4=authoredHeight(c4,materialB.x);
     }
-    if(materialB.y>0.005) { colour[5]=texture2D(patchMap,uv).rgb; height[5]=authoredHeight(colour[5],materialB.y); }
-    if(materialB.z>0.005) { colour[6]=texture2D(gravelMap,uv).rgb; height[6]=authoredHeight(colour[6],materialB.z); }
-    float top=-9.0;
-    for(int i=0;i<7;i++) top=max(top,height[i]);
-    vec3 sum=vec3(0.0); float total=0.0;
-    for(int i=0;i<7;i++) { float w=max(0.0,height[i]-top+0.12); sum+=colour[i]*w; total+=w; }
-    return sum/max(total,0.0001);
+    if(materialA.y>0.005) { c1=texture2D(soil,uv).rgb; h1=authoredHeight(c1,materialA.y); }
+    if(materialA.z>0.005) { c2=texture2D(stone,uv).rgb; h2=authoredHeight(c2,materialA.z); }
+    if(materialA.w>0.005) { c3=texture2D(dryMeadow,uv).rgb; h3=authoredHeight(c3,materialA.w); }
+    if(materialB.y>0.005) { c5=texture2D(patchMap,uv).rgb; h5=authoredHeight(c5,materialB.y); }
+    if(materialB.z>0.005) { c6=texture2D(gravelMap,uv).rgb; h6=authoredHeight(c6,materialB.z); }
+    float top=max(max(max(h0,h1),max(h2,h3)),max(max(h4,h5),h6))-0.12;
+    float w0=max(0.0,h0-top),w1=max(0.0,h1-top),w2=max(0.0,h2-top),w3=max(0.0,h3-top),
+      w4=max(0.0,h4-top),w5=max(0.0,h5-top),w6=max(0.0,h6-top);
+    return (c0*w0+c1*w1+c2*w2+c3*w3+c4*w4+c5*w5+c6*w6)/max(w0+w1+w2+w3+w4+w5+w6,0.0001);
   }
 `;
 
 export const TERRAIN_COLOR = `
   vec3 n=normalize(worldNormal);
   if(worldDebug<=1 && authored==1) {
-    vec3 tri=pow(abs(n),vec3(5.0)); tri/=max(0.001,tri.x+tri.y+tri.z);
-    vec3 surface=isWall==0 ? authoredGround(worldPoint.xz)
-      : materialB.z>0.5 ? cliffFace(materialB.x,materialB.y)
-      : texture2D(stone,worldPoint.zy/tileSize).rgb*tri.x+texture2D(stone,worldPoint.xz/tileSize).rgb*tri.y+
+    vec3 surface;
+    if(isWall==0) {
+      surface=authoredGround(worldPoint.xz);
+      // Steep graded ground (ramp flanks) shows the same basalt bands as the plateau walls.
+      if(n.y<0.75) {
+        float along=mix(worldPoint.x,worldPoint.z,step(abs(n.z),abs(n.x)));
+        surface=mix(surface,cliffFace(along,cliffTop-worldPoint.y),smoothstep(0.75,0.5,n.y));
+      }
+    } else if(materialB.z>0.5) surface=cliffFace(materialB.x,materialB.y);
+    else {
+      vec3 tri=pow(abs(n),vec3(5.0)); tri/=max(0.001,tri.x+tri.y+tri.z);
+      surface=texture2D(stone,worldPoint.zy/tileSize).rgb*tri.x+texture2D(stone,worldPoint.xz/tileSize).rgb*tri.y+
         texture2D(stone,worldPoint.xy/tileSize).rgb*tri.z;
-    // Steep graded ground (ramp flanks) shows the same basalt bands as the plateau walls.
-    if(isWall==0 && n.y<0.75) {
-      float along=mix(worldPoint.x,worldPoint.z,step(abs(n.z),abs(n.x)));
-      surface=mix(surface,cliffFace(along,cliffTop-worldPoint.y),smoothstep(0.75,0.5,n.y));
     }
     diffuseColor.rgb*=surface*occlusion;
   } else if(worldDebug<=1) {

@@ -168,4 +168,8 @@ are far steeper than a walkable ramp, so fitting them doubled their scale), `riv
 Navigation cells, collision walls and flow fields are built once when the level loads;
 play only reads the resident grid. River shore queries use an exact spatial index (per
 128-unit bucket, only segments that can be nearest), and cells clear of the gorge skip the
-water probe grid. The authored ground shader fetches only the tiles present at each point.
+water probe grid. The authored ground shader fetches only the tiles present at each point
+and returns single-channel grass, most of the ground, without blending; cliff walls fetch
+one band texel. Height blending still costs more per pixel than a cross-fade: on a
+software GPU (SwiftShader) a 350-enemy `profileCrowd` frame is roughly a tenth slower than
+before the cliff and ground pass, with CPU simulation and render time unchanged.
