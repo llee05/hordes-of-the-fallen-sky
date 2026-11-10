@@ -53,8 +53,12 @@ export class TerrainNavigation {
   readonly rows: number;
   readonly blocked: Uint8Array;
   readonly reachable: Uint8Array;
+  /** Cells an actor can stand in: unblocked and wide enough for its clearance. */
+  private readonly passable: Uint8Array;
   private readonly flows = new Map<string, Float64Array>();
   private readonly costs: Record<NavigationProfile, Float32Array>;
+  /** Recent exact `waypoint` targets and their walkable snap, newest first. */
+  private readonly safeTargets: { x: number; y: number; safe: TerrainPoint | undefined }[] = [];
 
   constructor(readonly terrain: MountainTerrain) {
     this.columns = this.rows = Math.ceil(terrain.worldSize / terrain.cellSize);
@@ -78,6 +82,16 @@ export class TerrainNavigation {
             water * weights.water;
         }
       }
+    // Built once: every sight sweep and route step asks this per sample.
+    const size = terrain.cellSize;
+    this.passable = new Uint8Array(this.blocked.length);
+    for (let row = 0; row < this.rows; row++)
+      for (let column = 0; column < this.columns; column++)
+        this.passable[this.index(column, row)] = Number(
+          Math.min(size, terrain.worldSize - column * size) >= GAME.terrain.actorClearance * 2 &&
+            Math.min(size, terrain.worldSize - row * size) >= GAME.terrain.actorClearance * 2 &&
+            !this.blocked[this.index(column, row)],
+        );
     const camp = this.index(
       Math.floor(terrain.worldSize / 2 / terrain.cellSize),
       Math.floor(terrain.worldSize / 2 / terrain.cellSize),
@@ -94,15 +108,12 @@ export class TerrainNavigation {
     return row * this.columns + column;
   }
   private open(column: number, row: number): boolean {
-    const size = this.terrain.cellSize;
     return (
       column >= 0 &&
       row >= 0 &&
       column < this.columns &&
       row < this.rows &&
-      Math.min(size, this.terrain.worldSize - column * size) >= GAME.terrain.actorClearance * 2 &&
-      Math.min(size, this.terrain.worldSize - row * size) >= GAME.terrain.actorClearance * 2 &&
-      !this.blocked[this.index(column, row)]
+      this.passable[this.index(column, row)] === 1
     );
   }
   private center(index: number): TerrainPoint {
@@ -206,14 +217,34 @@ export class TerrainNavigation {
     return (this.costs[profile][a]! + this.costs[profile][b]!) * 0.5 * (diagonal ? Math.SQRT2 : 1);
   }
 
+  /**
+   * The walkable point `waypoint` heads for. A crowd shares a few targets (the
+   * Khan, the camp), and the grid never changes, so recent exact coordinates
+   * reuse their answer; a moved target is a new query.
+   */
+  private safeTarget(target: TerrainPoint): TerrainPoint | undefined {
+    const memo = this.safeTargets;
+    for (const entry of memo) if (entry.x === target.x && entry.y === target.y) return entry.safe;
+    const safe = this.nearestWalkable(target);
+    memo.unshift({ x: target.x, y: target.y, safe });
+    if (memo.length > GAME.terrain.safeTargetMemo) memo.pop();
+    return safe;
+  }
+
+  get rememberedTargets(): number {
+    return this.safeTargets.length;
+  }
+
   /** Terrain-weighted shared destination fields; actor-sized local sweeps prevent corner snagging. */
   waypoint(
     from: TerrainPoint,
     target: TerrainPoint,
     profile: NavigationProfile = 'ground',
   ): TerrainPoint {
-    const safe = this.nearestWalkable(target);
-    if (!safe) return from;
+    const snapped = this.safeTarget(target);
+    if (!snapped) return from;
+    // Callers own the returned point; never hand out the remembered one.
+    const safe = { x: snapped.x, y: snapped.y };
     if (Math.hypot(safe.x - from.x, safe.y - from.y) < 96 && this.lineClear(from, safe))
       return safe;
     const size = this.terrain.cellSize;

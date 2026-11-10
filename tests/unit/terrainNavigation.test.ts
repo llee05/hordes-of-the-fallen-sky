@@ -6,9 +6,13 @@ import { ComposedTerrain } from '../../src/game/world3d/ComposedTerrain';
 import { composedRegion, WORLD_REGIONS } from '../../src/game/data/worldRegions';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
 
-function grid(blocked: (x: number, y: number) => boolean, water = (_x: number, _y: number) => 0) {
+function grid(
+  blocked: (x: number, y: number) => boolean,
+  water = (_x: number, _y: number) => 0,
+  worldSize = 768,
+) {
   return new TerrainNavigation({
-    worldSize: 768,
+    worldSize,
     cellSize: 64,
     cell: (x: number, y: number) => ({
       blocked: blocked(x, y),
@@ -73,4 +77,43 @@ describe('terrain-aware enemy navigation', () => {
         expect(terrain.waterDepth(bridge.x, bridge.z)).toBe(0);
     },
   );
+  it('treats a world-edge cell narrower than actor clearance as closed', () => {
+    // 740 units leave a 36-unit last column, below twice the actor clearance.
+    const nav = grid(() => false, undefined, 740);
+    expect(nav.isWalkable(700, 300)).toBe(true);
+    expect(nav.isWalkable(720, 300)).toBe(false);
+    expect(nav.travelCost({ x: 730, y: 300 })).toBe(Infinity);
+    expect(nav.lineClear({ x: 600, y: 300 }, { x: 730, y: 300 }, 0)).toBe(false);
+  });
+  it('reuses recent target snaps with unchanged routes, and re-queries moved targets', () => {
+    const terrain = new ComposedTerrain(
+      composedRegion('orkhon-valley'),
+      LANDSCAPES['orkhon-valley'].water,
+    );
+    const nav = new TerrainNavigation(terrain);
+    const fresh = new TerrainNavigation(terrain);
+    let seed = 5;
+    const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    // Rich targets like the Khan's sprite: only x and y may reach the route.
+    const khan = { x: 2600, y: 2700, name: 'khan', body: {} };
+    const targets = [khan, { x: 2600, y: 2600 }, { x: 1800, y: 3300 }];
+    for (let i = 0; i < 300; i++) {
+      const from = nav.nearestWalkable({
+        x: 1600 + random() * 2000,
+        y: 1600 + random() * 2000,
+      })!;
+      const target = targets[i % targets.length]!;
+      if (i % 50 === 0) khan.x += 37;
+      fresh['safeTargets'].length = 0;
+      expect(nav.waypoint(from, target, 'pack')).toEqual(fresh.waypoint(from, target, 'pack'));
+    }
+    expect(nav.rememberedTargets).toBeLessThanOrEqual(GAME.terrain.safeTargetMemo);
+    const near = nav.nearestWalkable({ x: 2640, y: 2700 })!;
+    const step = nav.waypoint(near, khan);
+    expect(Object.keys(step).sort()).toEqual(['x', 'y']);
+    step.x = -1;
+    expect(nav.waypoint(near, khan).x).not.toBe(-1);
+    for (let i = 0; i < 10; i++) nav.waypoint(near, { x: 2000 + i * 40, y: 2000 });
+    expect(nav.rememberedTargets).toBe(GAME.terrain.safeTargetMemo);
+  });
 });

@@ -63,6 +63,11 @@ The scene calls `FieldObjectiveDirector` before `EnemyBehaviour`. Its markers sh
 field warning surface.
 `EnemyBehaviour` decides when a seer casts and asks `Hazards.addSeer` to mark the
 circle; `Hazards.update` still runs inside `updateCamp`, after riders and terrain.
+`EnemyBehaviour` re-plans terrain routes on a staggered cadence
+(`systems/enemyRoutes.ts`, `GAME.enemyRoutes`): enemies within `nearRange` of the
+Khan or their target plan every frame, farther ones every few frames by pool slot,
+and every enemy still steers, attacks, shoots and checks contact each frame. The
+kept waypoint (`Enemy.route`) is transient, reset on spawn, and never saved.
 `CampDefences` uses the rebuilt spatial index and shared saved timers for lightning,
 wagon fire and wards. `CharacterAnimator` runs after combat and the final clan
 integrity check, dispatches Khan and rider poses, then updates enemies and defeat

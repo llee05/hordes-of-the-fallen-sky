@@ -116,15 +116,21 @@ export class HudPresenter {
     }
     for (const enemy of this.arena.enemies.getChildren() as Enemy[]) {
       if (!enemy.active) continue;
+      const marked = enemy.elite || enemy.definition.tacticalRole === 'bulwark';
+      const winding = enemy.tactics.phase === 'windup';
+      const aiming =
+        enemy.definition.behavior === 'ranged' &&
+        enemy.attackTimer > 0 &&
+        enemy.attackTimer < 0.8 &&
+        Math.min(
+          Math.hypot(enemy.x - player.x, enemy.y - player.y),
+          Math.hypot(enemy.x - camp.x, enemy.y - camp.y),
+        ) < 650;
+      // Projecting the whole crowd each HUD tick is wasted; most enemies show no marker.
+      if (!marked && !winding && !aiming) continue;
       const p = this.screenPoint(enemy),
         key = `${enemy.tacticalSlot}:${enemy.spawnId}`;
-      if (
-        (enemy.elite || enemy.definition.tacticalRole === 'bulwark') &&
-        p.x > 30 &&
-        p.x < width - 30 &&
-        p.y > 70 &&
-        p.y < height - 60
-      )
+      if (marked && p.x > 30 && p.x < width - 30 && p.y > 70 && p.y < height - 60)
         elites.push({
           id: key,
           x: p.x / width,
@@ -135,17 +141,9 @@ export class HudPresenter {
           label: enemy.elite ? 'ELITE' : 'ARMOURED',
           health: enemy.health / enemy.maxHealth,
         });
-      if (enemy.tactics.phase === 'windup')
+      if (winding)
         threats.push({ id: key, label: 'Charging enemy', ...p, eta: enemy.tactics.remaining });
-      else if (
-        enemy.definition.behavior === 'ranged' &&
-        enemy.attackTimer > 0 &&
-        enemy.attackTimer < 0.8 &&
-        Math.min(
-          Math.hypot(enemy.x - player.x, enemy.y - player.y),
-          Math.hypot(enemy.x - camp.x, enemy.y - camp.y),
-        ) < 650
-      )
+      else if (aiming)
         threats.push({ id: key, label: 'Ranged attack', ...p, eta: enemy.attackTimer });
     }
     return { warnings: edgeWarnings(threats, width, height), elites: elites.slice(0, 6) };

@@ -114,3 +114,26 @@ tests in `tests/e2e/developer-mode.spec.ts` launch every checkpoint and cover fr
 menus, input, scene cleanup, records, normal restarts, and narrow layouts.
 `npm run test:desktop` also checks the selector at native window sizes using an
 isolated profile and a local Vite server, and checks its absence in the offline build.
+
+## Crowd frame profile
+
+`window.__gloam.hooks.profileCrowd(options)` measures a repeatable heavy fight in a
+development build. Start a level checkpoint, then call it from the browser console:
+
+```js
+await window.__gloam.hooks.profileCrowd({ count: 350, seed: 1 });
+```
+
+It seeds `Math.random`, stops new arrivals, protects the Khan and clan, and spawns
+`count` of the current place's enemies in a 240–1400 unit ring around the Khan, with
+1e6 base health so the crowd survives. It pins the 3D render scale to 100%, waits
+`warmup` seconds (default 2), then samples real frames for `seconds` (default 4).
+The result gives fps, frame-time percentiles, simulation, render and idle time, and
+mean milliseconds and calls per frame for each scene system and 3D render stage.
+`navigation: true` also times terrain route and sight queries; those wrappers add
+overhead to enemy behaviour, so compare such runs only with each other.
+`hooks.crowd(options)` spawns the same seeded crowd without measuring.
+
+Frame rate depends on the GPU. On a software rasterizer such as SwiftShader the GPU
+wait hides CPU changes, so compare simulation and render milliseconds there.
+The profiler only wraps methods during the sample and lives in `src/game/dev/frameProfile.ts`.

@@ -8,6 +8,13 @@ import { ORKHON_ATLAS } from '../assets/orkhonValleyArt';
 
 type Painted = Phaser.GameObjects.Image | Phaser.GameObjects.Sprite | Phaser.GameObjects.Text;
 
+const SHADOW_CASTING = new Set([
+  'steppe-props',
+  'steppe-scenery',
+  'tapestry-scenery',
+  ORKHON_ATLAS,
+]);
+
 interface Batch {
   mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>;
   capacity: number;
@@ -19,6 +26,8 @@ export class SpriteBridge {
   private readonly batches = new Map<TexImageSource, Batch>();
   private readonly textures = new Map<TexImageSource, THREE.Texture>();
   private readonly color = new THREE.Color();
+  /** Hex currently converted into `color`; most sprites share untinted white. */
+  private colorHex = -1;
   private readonly occludedKhan: KhanOcclusion;
   private readonly matrix = new Phaser.GameObjects.Components.TransformMatrix();
   private readonly parent = new Phaser.GameObjects.Components.TransformMatrix();
@@ -49,6 +58,11 @@ export class SpriteBridge {
     for (const batch of this.batches.values()) batch.count = 0;
     this.occludedKhan.mesh.visible = false;
     this.positions.clear();
+    const outside = (x: number, z: number): boolean =>
+      x < view.x - 200 ||
+      z < view.y - 300 ||
+      x > view.x + view.width + 200 ||
+      z > view.y + view.height + 300;
     const visit = (objects: Phaser.GameObjects.GameObject[], alpha: number): void => {
       for (const object of objects) {
         if (!('visible' in object) || !object.visible) continue;
@@ -63,16 +77,12 @@ export class SpriteBridge {
           // explicitly project despite their negative local camp sort depth.
           if ((object.depth < 0 && !object.getData('projectInWorld')) || object.scrollFactorX === 0)
             continue;
+          // A top-level object's world translation is its own position; skip the matrix off view.
+          if (!object.parentContainer && outside(object.x, object.y)) continue;
           object.getWorldTransformMatrix(this.matrix, this.parent);
           const x = this.matrix.tx;
           const z = this.matrix.ty;
-          if (
-            x < view.x - 200 ||
-            z < view.y - 300 ||
-            x > view.x + view.width + 200 ||
-            z > view.y + view.height + 300
-          )
-            continue;
+          if (outside(x, z)) continue;
           this.add(object, x, z, alpha * object.alpha, camera);
         }
       }
@@ -154,12 +164,7 @@ export class SpriteBridge {
     const text = object instanceof Phaser.GameObjects.Text;
     const source = (text ? object.canvas : frame.source.image) as TexImageSource;
     const batch = this.batch(source);
-    if (
-      ['steppe-props', 'steppe-scenery', 'tapestry-scenery', ORKHON_ATLAS].includes(
-        object.texture.key,
-      )
-    )
-      batch.mesh.castShadow = true;
+    if (SHADOW_CASTING.has(object.texture.key)) batch.mesh.castShadow = true;
     const i = batch.count++ * 4;
     const geometry = batch.mesh.geometry;
     const positions = geometry.getAttribute('position');
@@ -181,17 +186,16 @@ export class SpriteBridge {
     const top = (text ? 0 : frame.y) - object.displayOriginY;
     const width = text ? object.width : frame.cutWidth;
     const heightPixels = text ? object.height : frame.cutHeight;
-    const points = [
-      [left, top],
-      [left + width, top],
-      [left + width, top + heightPixels],
-      [left, top + heightPixels],
-    ];
     const tint = object instanceof Phaser.GameObjects.Text ? 0xffffff : object.tintTopLeft;
-    this.color.setHex(tint);
+    if (tint !== this.colorHex) {
+      this.color.setHex(tint);
+      this.colorHex = tint;
+    }
     const basis = camera.matrixWorld.elements;
     for (let j = 0; j < 4; j++) {
-      let [px, py] = points[j]! as [number, number];
+      // Corners run clockwise from the top left.
+      let px = j === 1 || j === 2 ? left + width : left;
+      let py = j < 2 ? top : top + heightPixels;
       if (!(object instanceof Phaser.GameObjects.Text)) {
         if (object.flipX) px = -(px + (object.displayOriginX * 2 - frame.realWidth));
         if (object.flipY) py = -(py + (object.displayOriginY * 2 - frame.realHeight));

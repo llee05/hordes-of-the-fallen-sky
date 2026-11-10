@@ -11,6 +11,8 @@ export const GAME = {
     actorClearance: 24,
     cliffSlope: 1.6,
     flowCacheSize: 12,
+    // Exact recent waypoint targets whose walkable snap is reused (Khan, camp, objectives).
+    safeTargetMemo: 4,
     // Presentation resolution and ledges are independent of the traversal grid.
     surfaceStep: 32,
     materialStep: 64,
@@ -53,6 +55,18 @@ export const GAME = {
     experienceLevels: 40,
   },
   maxEnemies: 350,
+  /**
+   * Route-planning cadence (frames). Enemies closer than `nearRange` to the Khan or
+   * their target re-plan every frame; farther ones keep their waypoint for a few
+   * frames. Attacks, contact and shots are checked every frame regardless.
+   */
+  enemyRoutes: {
+    nearRange: 480,
+    farRange: 1000,
+    midInterval: 3,
+    farInterval: 6,
+    arrival: 16,
+  },
   spawning: {
     openingDuration: 18,
     openingInterval: 2,

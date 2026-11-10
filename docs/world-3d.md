@@ -58,6 +58,11 @@ outlines; [Orkhon Valley](orkhon-valley.md) uses them for its two-level plateaus
 horizontal range and stop at vertical discontinuities. No ballistic or elevation
 damage rules are introduced.
 
+`TerrainNavigation` precomputes which cells an actor fits in. `waypoint` reuses
+the walkable snap of the last `GAME.terrain.safeTargetMemo` exact target
+coordinates (a crowd mostly chases the Khan or the camp), and returns a fresh
+`{ x, y }` point that callers may keep.
+
 ## Tools and limits
 
 In development, F8 chooses any destination. Backtick opens the console directly.
