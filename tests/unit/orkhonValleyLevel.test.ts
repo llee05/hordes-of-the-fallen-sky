@@ -5,6 +5,8 @@ import {
   ORKHON_ATLAS,
   ORKHON_CLIFF_FACE_WIDTH,
   ORKHON_CLIFF_FACES,
+  ORKHON_LANDMARK_SCALE,
+  ORKHON_PROP_SCALE,
   ORKHON_SPRITES,
   ORKHON_TILES,
 } from '../../src/game/assets/orkhonValleyArt';
@@ -310,6 +312,73 @@ describe('Orkhon Valley painted scene', () => {
       expect(all.some((prop) => prop.frame === landmark.sprite && prop.x === C + landmark.x)).toBe(
         true,
       );
+  });
+
+  it('draws trees, scrub, rocks and landmarks at one miniature scale', () => {
+    const all = sceneDressing(terrain, {
+      x: 0,
+      y: 0,
+      width: GAME.worldSize,
+      height: GAME.worldSize,
+    });
+    const scale = (kind: string) =>
+      ({
+        larch: [ORKHON_PROP_SCALE.tree * 0.9, ORKHON_PROP_SCALE.tree * 1.1],
+        scrub: [ORKHON_PROP_SCALE.scrub, ORKHON_PROP_SCALE.scrub],
+        reeds: [ORKHON_PROP_SCALE.reed, ORKHON_PROP_SCALE.reed],
+        boulders: [ORKHON_PROP_SCALE.rock * 0.85, ORKHON_PROP_SCALE.rock * 1.15],
+      })[kind];
+    for (const prop of all) {
+      const painted = ORKHON_SPRITES[prop.frame as keyof typeof ORKHON_SPRITES].width * 1.7;
+      const range = scale(prop.kind);
+      if (!range) continue;
+      expect(prop.width / painted, prop.frame).toBeGreaterThanOrEqual(range[0]! - 1e-9);
+      expect(prop.width / painted, prop.frame).toBeLessThanOrEqual(range[1]! + 1e-9);
+    }
+    for (const landmark of ORKHON_VALLEY.landmarks) {
+      const prop = all.find(
+        (p) =>
+          p.kind === 'landmark' &&
+          p.frame === landmark.sprite &&
+          p.x === C + landmark.x &&
+          p.z === C + landmark.y,
+      )!;
+      const expected = landmark.scale ?? ORKHON_LANDMARK_SCALE[landmark.sprite] ?? 1;
+      expect(prop.width).toBeCloseTo(ORKHON_SPRITES[landmark.sprite].width * 1.7 * expected);
+    }
+    // A mounted rider is about 60 units tall: trees stand about twice that.
+    for (const prop of all.filter((p) => p.kind === 'larch')) {
+      const metrics = ORKHON_SPRITES[prop.frame as keyof typeof ORKHON_SPRITES];
+      const tall = (prop.width / metrics.width) * metrics.height;
+      expect(tall).toBeGreaterThan(90);
+      expect(tall).toBeLessThan(150);
+    }
+  });
+
+  it('gathers rubble below camera-facing cliffs and trees behind plateau rims', () => {
+    const all = sceneDressing(terrain, {
+      x: 0,
+      y: 0,
+      width: GAME.worldSize,
+      height: GAME.worldSize,
+    });
+    const field = (prop: { x: number; z: number }) =>
+      Math.max(
+        ...ORKHON_VALLEY.plateaus.map((p) => outlineField(p.outline, prop.x - C, prop.z - C)),
+      );
+    const foot = all.filter(
+      (prop) => prop.kind === 'boulders' && field(prop) < -20 && field(prop) > -80,
+    );
+    const rim = all.filter(
+      (prop) => prop.kind === 'larch' && field(prop) > 60 && field(prop) < 190,
+    );
+    expect(foot.length).toBeGreaterThan(20);
+    expect(rim.length).toBeGreaterThan(15);
+    // Ramps and paths stay clear for movement and combat.
+    for (const prop of all.filter((p) => p.kind !== 'landmark')) {
+      const height = terrain.height(prop.x, prop.z) * 1000;
+      expect(terrainHabitat(terrain, prop.x, prop.z, height, 1).wear).toBeLessThan(0.3);
+    }
   });
 
   it('paints every plateau wall with continuous cliff-face bands and leaves ramps open', () => {

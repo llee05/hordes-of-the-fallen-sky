@@ -61,6 +61,21 @@ raider camp. Warning and assault waves keep their river-bank pattern. There is n
 loot or shrine system to attach the ovoo, ruins or shrines to, so they add no new rules.
 Every other location keeps the uniform arrival bearing and the field objective ring.
 
+## Scenery scale and dressing
+
+The pack's sprites were painted at unrelated sizes, so `assets/orkhonValleyArt.ts` sets
+one miniature scale against a mounted rider (about 60 units tall) and the 240-unit cliffs:
+`ORKHON_PROP_SCALE` draws trees about twice a rider, shrubs and flowers below a horse's
+back and rocks knee to shoulder high; `ORKHON_LANDMARK_SCALE` shrinks banners, racks,
+standing stones, relic fires and the ovoo. Raider camps, ruins and gers keep their
+painted scale, which already matches their solid footprints.
+
+`world3d/orkhonDressing.ts` places, deterministically and once per terrain: landmarks,
+authored groves, rubble and the odd shrub along the foot of every camera-facing cliff,
+a few trees and shrubs set back from every plateau rim (framing the edges, as in the
+reference), and sparse scatter in the open. Nothing is placed on paths, ramps or the
+camp's worn ground, so combat space stays clear. Dressing is visual only.
+
 ## Cliffs, ramps, falls and bridge
 
 - **Cliffs:** plateau walls are real terrain geometry, so faces and corners stay
@@ -106,15 +121,15 @@ only pixel change is alpha-edge cleanup: fully transparent texels take the colou
 painted texels so linear filtering does not darken cutouts. `assets/orkhonValleyArt.ts`
 lists the tiles, the sprite sizes and anchors from `manifest.json`, and the cliff bands.
 
-| Pack folder            | Used for                                                           |
-| ---------------------- | ------------------------------------------------------------------ |
-| `ground/`              | Untinted terrain channels at one scale (200 units per 128 px tile) |
-| `water/` tiles         | River surface: flow, with rapids below the falls                   |
-| `props/`               | Groves, cliff-foot rocks, sparse shrubs, flowers and reeds         |
-| `elevation/`           | Basalt bands for cliff walls and ramp flanks; basalt pillars       |
-| `water/` sprites       | The falls and their foam                                           |
-| `structures/`          | The bridge deck                                                    |
-| `landmarks/`, `camps/` | Raider camps, ruins, ovoo, shrines, banners, racks, camp outskirts |
+| Pack folder            | Used for                                                            |
+| ---------------------- | ------------------------------------------------------------------- |
+| `ground/`              | Untinted terrain channels at one scale (200 units per 128 px tile)  |
+| `water/` tiles         | River surface: flow, with rapids below the falls                    |
+| `props/`               | Groves, rim trees, cliff-foot rubble, sparse shrubs, flowers, reeds |
+| `elevation/`           | Basalt bands for cliff walls and ramp flanks; basalt pillars        |
+| `water/` sprites       | The falls and their foam                                            |
+| `structures/`          | The bridge deck                                                     |
+| `landmarks/`, `camps/` | Raider camps, ruins, ovoo, shrines, banners, racks, camp outskirts  |
 
 Ground channels: the calm `plateau_grass` painting is the base everywhere, in broad
 regions sampled at two orientations so the tile grid never lines up. Plateau tops add

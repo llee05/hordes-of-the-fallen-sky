@@ -26,6 +26,30 @@ export const ORKHON_TILE_WORLD_SIZE = 200;
 export const ORKHON_SPRITE_SCALE = 1.7;
 
 /**
+ * The pack's sprites were painted at unrelated sizes. These factors, relative to the shared
+ * sprite scale, set one miniature scale against a mounted rider (about 60 units tall) and the
+ * 240-unit cliffs: trees about twice a rider, shrubs and flowers below a horse's back, rocks
+ * knee to shoulder high.
+ */
+export const ORKHON_PROP_SCALE = {
+  tree: 0.66,
+  scrub: 0.5,
+  rock: 0.7,
+  reed: 0.6,
+} as const;
+
+/** Landmark sprites drawn larger than that miniature scale, relative to the shared scale. */
+export const ORKHON_LANDMARK_SCALE: Partial<Record<OrkhonSprite, number>> = {
+  red_enemy_banner: 0.7,
+  blue_camp_banner: 0.7,
+  spear_rack: 0.8,
+  wooden_rack: 0.8,
+  standing_stone: 0.8,
+  relic_fire: 0.85,
+  sacred_ovoo: 0.85,
+};
+
+/**
  * Painted geometry measured from the pack sprites at their source size. `lip` is the row where the
  * waterfall's top rim meets its drop; anchors come from manifest.json.
  */
