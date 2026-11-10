@@ -12,9 +12,24 @@ export interface HeightNode {
   layers?: readonly { field: number; rise: number }[];
 }
 
+const NODE_KEY_LIMIT = 2 ** 24;
+
+/**
+ * A distinct cache key for a height node. Whole coordinates (every mesh node)
+ * pack into one exact number; anything else keeps the original string key.
+ */
+export function heightNodeKey(x: number, z: number): number | string {
+  return Number.isInteger(x) &&
+    Number.isInteger(z) &&
+    Math.abs(x) < NODE_KEY_LIMIT &&
+    Math.abs(z) < NODE_KEY_LIMIT
+    ? (x + NODE_KEY_LIMIT) * (NODE_KEY_LIMIT * 2) + (z + NODE_KEY_LIMIT)
+    : `${x},${z}`;
+}
+
 /** A continuous mountain field with one fractured shelf, rather than repeated elevation rings. */
 export class MountainHeightfield extends MountainTerrain {
-  private readonly nodes = new Map<string, HeightNode>();
+  private readonly nodes = new Map<number | string, HeightNode>();
   private readonly normals = new Map<string, readonly [number, number, number]>();
 
   constructor(region: MountainRegion, worldSize?: number) {
@@ -78,7 +93,7 @@ export class MountainHeightfield extends MountainTerrain {
   }
 
   node(x: number, z: number): HeightNode {
-    const key = `${x},${z}`;
+    const key = heightNodeKey(x, z);
     let node = this.nodes.get(key);
     if (!node) {
       node = this.nodeValue(x, z);
@@ -104,32 +119,46 @@ export class MountainHeightfield extends MountainTerrain {
     return [this.node(x0, z0), this.node(x1, z0), this.node(x1, z1), this.node(x0, z1)];
   }
 
-  /** Exact piecewise-linear surface used by the mesh, including its clipped cliff boundary. */
+  /**
+   * Exact piecewise-linear surface used by the mesh, including its clipped cliff
+   * boundary. Sprites sample it several times per actor each frame, so it avoids
+   * allocation; sums keep the original vertex order so results are unchanged.
+   */
   override height(x: number, z: number): number {
-    const [a, b, c, d] = this.cellNodes(x, z);
+    const step = WORLD_3D.meshStep;
+    const x0 = Math.floor(x / step) * step;
+    const z0 = Math.floor(z / step) * step;
+    const x1 = x0 < this.worldSize ? Math.min(this.worldSize, x0 + step) : x0 + step;
+    const z1 = z0 < this.worldSize ? Math.min(this.worldSize, z0 + step) : z0 + step;
+    const a = this.node(x0, z0);
+    const b = this.node(x1, z0);
+    const c = this.node(x1, z1);
+    const d = this.node(x0, z1);
     const u = (x - a.x) / (b.x - a.x);
     const v = (z - a.z) / (d.z - a.z);
-    const vertices = v <= u ? [a, b, c] : [a, c, d];
-    const weights = v <= u ? [1 - u, u - v, v] : [1 - v, u, v - u];
-    const interpolate = (key: 'base' | 'rise' | 'field'): number =>
-      vertices.reduce((sum, node, i) => sum + node[key] * weights[i]!, 0);
+    const lower = v <= u;
+    const p = lower ? b : c;
+    const q = lower ? c : d;
+    const wa = lower ? 1 - u : 1 - v;
+    const wp = lower ? u - v : u;
+    const wq = lower ? v : v - u;
     if (a.layers) {
-      let height = interpolate('base');
+      let height = a.base * wa + p.base * wp + q.base * wq;
       for (let layer = 0; layer < a.layers.length; layer++) {
-        const field = vertices.reduce(
-          (sum, node, i) => sum + node.layers![layer]!.field * weights[i]!,
-          0,
-        );
-        if (field >= 0)
-          height += vertices.reduce(
-            (sum, node, i) => sum + node.layers![layer]!.rise * weights[i]!,
-            0,
-          );
+        const la = a.layers[layer]!,
+          lp = p.layers![layer]!,
+          lq = q.layers![layer]!;
+        if (la.field * wa + lp.field * wp + lq.field * wq >= 0)
+          height += la.rise * wa + lp.rise * wp + lq.rise * wq;
       }
       return height / this.region.biome.heightScale;
     }
+    const field = a.field * wa + p.field * wp + q.field * wq;
     return (
-      (interpolate('base') + (interpolate('field') >= 0 ? interpolate('rise') : 0)) /
+      (a.base * wa +
+        p.base * wp +
+        q.base * wq +
+        (field >= 0 ? a.rise * wa + p.rise * wp + q.rise * wq : 0)) /
       this.region.biome.heightScale
     );
   }
