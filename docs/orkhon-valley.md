@@ -93,8 +93,10 @@ camp's worn ground, so combat space stays clear. Dressing is visual only.
 - **Ramps:** each ramp is graded ground worn bare across its walkable width (dry dirt),
   rising through a trench of steep flanks. Steep graded ground uses the same basalt bands
   as the walls, so ramp flanks read as cut cliff.
-- **Falls:** three `waterfall_top` drops on the plateau edge, with `waterfall_base` foam
-  laid on the river head (`world3d/orkhonOverlay.ts`, one unlit, depth-tested mesh).
+- **Falls:** three `waterfall_top` drops across the plateau edge, cropped to their water
+  columns so the basalt walls either side frame them. Each overlaps the next and stands
+  slightly nearer the camera, so the curtain reads as one. Overlapping `waterfall_base`
+  foam lies on the river head (`world3d/orkhonOverlay.ts`, one unlit, depth-tested mesh).
 - **Bridge:** `bridge_horizontal` is draped over the deck; the deck runs 30° north of east
   so the painting stays level on screen and its plank rows match the walkable width.
 
@@ -112,8 +114,9 @@ The pack is not an autotile set, and its pieces do not join seamlessly:
 - Where two band projections meet on a ramp flank (the flank turns between facing east
   and facing south), the columns change direction.
 - Walls facing away from the camera are hidden behind their plateau and not painted.
-- The falls and foam are opaque rectangles in the pack; their edges are broken up but
-  still visible against the river and the plateau rim.
+- The falls show a straight foam line where the drops meet the foam pools, and the pools'
+  far corners are visible against the river banks. Faint vertical joins remain where the
+  cropped drops overlap.
 - Painted perspective only matches the default camera. Other F6 camera angles show the
   bands at a different slant.
 

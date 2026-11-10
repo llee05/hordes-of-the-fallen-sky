@@ -25,6 +25,8 @@ export interface OverlayPiece {
   vertices: readonly OverlayVertex[];
 }
 
+/** Source columns of `waterfall_top` holding water; rock is painted either side of them. */
+const FALLS_WATER = [13, 55] as const;
 const radians = (degrees: number) => (degrees * Math.PI) / 180;
 const metricsOf = (sprite: OrkhonSprite): OrkhonSpriteMetrics => ORKHON_SPRITES[sprite];
 const YAW = radians(WORLD_3D.yaw);
@@ -58,20 +60,23 @@ export function cliffSpriteScale(sprite: OrkhonSprite, rise: number): number {
   return (rise * Math.cos(PITCH)) / (metrics.height - (metrics.lip ?? 0));
 }
 
-/** Corners run top-left, top-right, bottom-right, bottom-left over source rows `rows`. */
+/**
+ * Corners run top-left, top-right, bottom-right, bottom-left over source rows `rows` and
+ * columns `columns` (the whole width by default).
+ */
 function quad(
   sprite: OrkhonSprite,
   part: OverlayPiece['part'],
   flip: boolean,
   corners: readonly [Vec3, Vec3, Vec3, Vec3],
   rows: readonly [number, number],
+  columns: readonly [number, number] = [0, metricsOf(sprite).width],
 ): OverlayPiece {
-  const width = metricsOf(sprite).width;
   const pixels: [number, number][] = [
-    [0, rows[0]],
-    [width, rows[0]],
-    [width, rows[1]],
-    [0, rows[1]],
+    [columns[0], rows[0]],
+    [columns[1], rows[0]],
+    [columns[1], rows[1]],
+    [columns[0], rows[1]],
   ];
   return {
     sprite,
@@ -160,26 +165,28 @@ export function orkhonOverlay(terrain: ComposedTerrain): OverlayPiece[] {
   const height = (x: number, y: number) => terrain.actorHeight(center + x, center + y) * scale;
   const falls = ORKHON_VALLEY.waterfall;
 
-  // The falls: three painted drops side by side on the plateau edge, foam pools on the river.
+  // The falls: three painted drops across the plateau edge, cropped to their water columns so
+  // the basalt walls either side frame them; each overlaps the next and stands slightly nearer
+  // the camera. Foam pools overlap the same way on the river head.
   const edge = { x: 0.98, y: -0.2 };
   const out = { x: -edge.y, y: edge.x };
-  for (const [side, flip] of [
-    [-1, false],
-    [0, true],
-    [1, false],
+  for (const [side, flip, lift] of [
+    [-0.85, false, 3],
+    [0, true, 6],
+    [0.85, false, 9],
   ] as const) {
     const metrics = metricsOf('waterfall_top');
     const s = cliffSpriteScale('waterfall_top', rise);
-    const width = metrics.width * s;
+    const width = (FALLS_WATER[1] - FALLS_WATER[0]) * s;
     const c = {
-      x: falls.x + edge.x * side * width * 0.8,
-      y: falls.y + edge.y * side * width * 0.8,
+      x: falls.x + edge.x * side * width,
+      y: falls.y + edge.y * side * width,
     };
     const top = height(c.x - out.x * 40, c.y - out.y * 40);
     const foot = terrain.region.scene.floor - 1;
     const corner = (dir: number): TerrainPoint => ({
-      x: center + c.x + edge.x * dir * (width / 2) + out.x * 3,
-      y: center + c.y + edge.y * dir * (width / 2) + out.y * 3,
+      x: center + c.x + edge.x * dir * (width / 2) + out.x * lift,
+      y: center + c.y + edge.y * dir * (width / 2) + out.y * lift,
     });
     const left = corner(-1),
       right = corner(1);
@@ -195,11 +202,12 @@ export function orkhonOverlay(terrain: ComposedTerrain): OverlayPiece[] {
           [left.x, foot, left.y],
         ],
         [metrics.lip ?? 0, metrics.height],
+        flip ? [metrics.width - FALLS_WATER[1], metrics.width - FALLS_WATER[0]] : FALLS_WATER,
       ),
     );
     const pool = metricsOf('waterfall_base');
-    const depth = (pool.height * s) / sin;
-    const surface = terrain.region.scene.floor + 0.5;
+    const depth = (pool.height * s * 0.7) / sin;
+    const surface = terrain.region.scene.floor + 0.5 + lift * 0.04;
     const near = (p: TerrainPoint): Vec3 => [
       p.x + camera.x * depth,
       surface,

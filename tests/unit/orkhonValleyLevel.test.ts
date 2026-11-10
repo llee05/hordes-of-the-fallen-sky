@@ -542,7 +542,28 @@ describe('Orkhon Valley painted scene', () => {
     expect(pieces.filter((piece) => piece.part === 'deck')).toHaveLength(
       ORKHON_VALLEY.river.bridges.length,
     );
-    expect(pieces.some((piece) => piece.part === 'falls')).toBe(true);
+    const falls = pieces.filter((piece) => piece.part === 'falls');
+    expect(falls).toHaveLength(3);
+    // Drops show only their painted water; the basalt walls frame them.
+    for (const drop of falls) {
+      const columns = drop.vertices.map((v) =>
+        drop.flip ? ORKHON_SPRITES.waterfall_top.width - v.pixel[0] : v.pixel[0],
+      );
+      expect(Math.min(...columns)).toBeGreaterThanOrEqual(13);
+      expect(Math.max(...columns)).toBeLessThanOrEqual(55);
+    }
+    // Neighbouring drops overlap, so no rock shows between them.
+    const centres = falls.map((drop) => {
+      const xs = drop.vertices.map((v) => v.position[0]);
+      return {
+        middle: (Math.min(...xs) + Math.max(...xs)) / 2,
+        half: (Math.max(...xs) - Math.min(...xs)) / 2,
+      };
+    });
+    for (let i = 1; i < centres.length; i++)
+      expect(centres[i]!.middle - centres[i - 1]!.middle).toBeLessThan(
+        centres[i]!.half + centres[i - 1]!.half,
+      );
   });
 });
 
