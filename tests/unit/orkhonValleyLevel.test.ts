@@ -3,9 +3,12 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
   ORKHON_ATLAS,
+  ORKHON_CLIFF_FACE_WIDTH,
+  ORKHON_CLIFF_FACES,
+  ORKHON_LANDMARK_SCALE,
+  ORKHON_PROP_SCALE,
   ORKHON_SPRITES,
   ORKHON_TILES,
-  type OrkhonSpriteMetrics,
 } from '../../src/game/assets/orkhonValleyArt';
 import { GAME } from '../../src/game/config';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
@@ -20,8 +23,11 @@ import { ambientArrivalAngle, authoredFieldSite } from '../../src/game/systems/a
 import { TerrainNavigation } from '../../src/game/terrain/TerrainNavigation';
 import type { TerrainPoint } from '../../src/game/terrain/types';
 import { ComposedTerrain, outlineField } from '../../src/game/world3d/ComposedTerrain';
-import { CAMERA_DIRECTION, orkhonOverlay } from '../../src/game/world3d/orkhonOverlay';
+import { orkhonOverlay } from '../../src/game/world3d/orkhonOverlay';
 import { sceneDressing } from '../../src/game/world3d/sceneDressing';
+import { sceneGeometry } from '../../src/game/world3d/sceneGeometry';
+import { terrainHabitat, terrainMaterialWeights } from '../../src/game/world3d/terrainHabitat';
+import { WORLD_3D } from '../../src/game/world3d/worldProjection';
 
 const art = resolve('public/art/orkhon-valley');
 const C = GAME.worldSize / 2;
@@ -113,6 +119,67 @@ describe('Orkhon Valley two-level terrain', () => {
       { x: 2300, y: 400 },
     ])
       expect(Math.abs(elevation(world(point)))).toBeLessThan(15);
+  });
+
+  it('breaks long cliff lines into irregular jogs but keeps ramps and the falls on their edge', () => {
+    for (const plateau of ORKHON_VALLEY.plateaus) {
+      const outline = plateau.outline;
+      let turns = 0;
+      for (let i = 0; i < outline.length; i++) {
+        const a = outline[i]!,
+          b = outline[(i + 1) % outline.length]!,
+          c = outline[(i + 2) % outline.length]!;
+        if (Math.max(Math.abs(b.x), Math.abs(b.y)) > 2550) continue;
+        // No straight run inside the world is longer than about two jogs.
+        if (Math.max(Math.abs(a.x), Math.abs(a.y), Math.abs(b.x), Math.abs(b.y)) < 2550)
+          expect(Math.hypot(b.x - a.x, b.y - a.y), plateau.id).toBeLessThan(560);
+        const cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+        if (Math.abs(cross) > 1) turns++;
+      }
+      expect(turns, plateau.id).toBeGreaterThan(5);
+      for (const ramp of plateau.ramps) {
+        const crossing = { x: (ramp.foot.x + ramp.top.x) / 2, y: (ramp.foot.y + ramp.top.y) / 2 };
+        expect(Math.abs(outlineField(outline, crossing.x, crossing.y)), plateau.id).toBeLessThan(2);
+      }
+    }
+    const falls = ORKHON_VALLEY.plateaus.find((p) => p.id === 'falls-plateau')!;
+    expect(
+      Math.abs(outlineField(falls.outline, ORKHON_VALLEY.waterfall.x, ORKHON_VALLEY.waterfall.y)),
+    ).toBeLessThan(60);
+  });
+
+  it('lights every plateau rim with a band of dry grass', () => {
+    let rims = 0;
+    for (const plateau of ORKHON_VALLEY.plateaus)
+      for (let i = 0; i < plateau.outline.length; i += 3) {
+        const a = plateau.outline[i]!,
+          b = plateau.outline[(i + 1) % plateau.outline.length]!;
+        const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        if (Math.abs(mid.x) > 2400 || Math.abs(mid.y) > 2400) continue;
+        if (plateau.ramps.some((r) => segmentDistance(mid, r.foot, r.top) < 320)) continue;
+        const length = Math.hypot(b.x - a.x, b.y - a.y);
+        let n = { x: (b.y - a.y) / length, y: -(b.x - a.x) / length };
+        if (outlineField(plateau.outline, mid.x + n.x * 20, mid.y + n.y * 20) < 0)
+          n = { x: -n.x, y: -n.y };
+        const rim = world({ x: mid.x + n.x * 20, y: mid.y + n.y * 20 });
+        const inner = world({ x: mid.x + n.x * 220, y: mid.y + n.y * 220 });
+        if (outlineField(plateau.outline, inner.x - C, inner.y - C) < 180) continue;
+        // The river's gravel banks replace the rim beside the gorge.
+        if (terrain.river!.sample(rim.x, rim.y).shoreDistance < 150) continue;
+        const weights = (p: TerrainPoint) => {
+          const height = terrain.height(p.x, p.y) * 1000;
+          return terrainMaterialWeights(
+            terrain,
+            height,
+            1,
+            terrainHabitat(terrain, p.x, p.y, height, 1),
+          );
+        };
+        // Channel 3 is dry grass.
+        expect(weights(rim)[3], plateau.id).toBeGreaterThan(0.5);
+        rims++;
+      }
+    expect(rims).toBeGreaterThan(10);
   });
 
   it('blocks a unit from crossing any cliff edge away from its ramps', () => {
@@ -308,76 +375,148 @@ describe('Orkhon Valley painted scene', () => {
       );
   });
 
-  it('folds painted cliffs onto every camera-facing wall and leaves ramps open', () => {
-    const pieces = orkhonOverlay(terrain);
-    const valid = frames();
-    for (const piece of pieces) {
-      expect(valid.has(piece.sprite), piece.sprite).toBe(true);
-      expect(piece.vertices.length % 3).toBe(0);
-      expect(piece.vertices.every((v) => v.position.every(Number.isFinite))).toBe(true);
+  it('draws trees, scrub, rocks and landmarks at one miniature scale', () => {
+    const all = sceneDressing(terrain, {
+      x: 0,
+      y: 0,
+      width: GAME.worldSize,
+      height: GAME.worldSize,
+    });
+    const scale = (kind: string) =>
+      ({
+        larch: [ORKHON_PROP_SCALE.tree * 0.9, ORKHON_PROP_SCALE.tree * 1.1],
+        scrub: [ORKHON_PROP_SCALE.scrub, ORKHON_PROP_SCALE.scrub],
+        reeds: [ORKHON_PROP_SCALE.reed, ORKHON_PROP_SCALE.reed],
+        boulders: [ORKHON_PROP_SCALE.rock * 0.85, ORKHON_PROP_SCALE.rock * 1.15],
+      })[kind];
+    for (const prop of all) {
+      const painted = ORKHON_SPRITES[prop.frame as keyof typeof ORKHON_SPRITES].width * 1.7;
+      const range = scale(prop.kind);
+      if (!range) continue;
+      expect(prop.width / painted, prop.frame).toBeGreaterThanOrEqual(range[0]! - 1e-9);
+      expect(prop.width / painted, prop.frame).toBeLessThanOrEqual(range[1]! + 1e-9);
     }
-    const faces = pieces.filter((piece) => piece.part === 'face');
-    expect(faces.length).toBeGreaterThan(40);
-    for (const face of faces) {
-      const [topLeft, , , bottomLeft] = [0, 1, 2, 5].map((i) => face.vertices[i]!.position);
-      // Each face stands vertically on its wall and spans the full level change.
-      expect(topLeft![0]).toBeCloseTo(bottomLeft![0]);
-      expect(topLeft![2]).toBeCloseTo(bottomLeft![2]);
-      expect(topLeft![1] - bottomLeft![1]).toBeGreaterThan(ORKHON_VALLEY.rise * 0.75);
-      const center = { x: topLeft![0] - C, y: topLeft![2] - C };
-      const plateau = ORKHON_VALLEY.plateaus.find(
-        (p) => Math.abs(outlineField(p.outline, center.x, center.y)) < 160,
-      );
-      expect(plateau).toBeDefined();
+    for (const landmark of ORKHON_VALLEY.landmarks) {
+      const prop = all.find(
+        (p) =>
+          p.kind === 'landmark' &&
+          p.frame === landmark.sprite &&
+          p.x === C + landmark.x &&
+          p.z === C + landmark.y,
+      )!;
+      const expected = landmark.scale ?? ORKHON_LANDMARK_SCALE[landmark.sprite] ?? 1;
+      expect(prop.width).toBeCloseTo(ORKHON_SPRITES[landmark.sprite].width * 1.7 * expected);
     }
-    for (const plateau of ORKHON_VALLEY.plateaus)
-      for (const ramp of plateau.ramps) {
-        expect(pieces.some((piece) => piece.part === 'ramp' && piece.sprite === ramp.sprite)).toBe(
-          true,
-        );
-        const crossing = {
-          x: (ramp.foot.x + ramp.top.x) / 2,
-          y: (ramp.foot.y + ramp.top.y) / 2,
-        };
-        for (const face of faces) {
-          const p = face.vertices[0]!.position,
-            q = face.vertices[1]!.position;
-          const middle = { x: (p[0] + q[0]) / 2 - C, y: (p[2] + q[2]) / 2 - C };
-          expect(Math.hypot(middle.x - crossing.x, middle.y - crossing.y)).toBeGreaterThan(
-            ramp.halfWidth,
-          );
-        }
-      }
-    expect(pieces.filter((piece) => piece.part === 'deck')).toHaveLength(
-      ORKHON_VALLEY.river.bridges.length,
-    );
-    expect(pieces.some((piece) => piece.part === 'falls')).toBe(true);
+    // A mounted rider is about 60 units tall: trees stand about twice that.
+    for (const prop of all.filter((p) => p.kind === 'larch')) {
+      const metrics = ORKHON_SPRITES[prop.frame as keyof typeof ORKHON_SPRITES];
+      const tall = (prop.width / metrics.width) * metrics.height;
+      expect(tall).toBeGreaterThan(90);
+      expect(tall).toBeLessThan(150);
+    }
   });
 
-  it('drapes ramp paintings so their painted foot and crest land on the graded ramp', () => {
+  it('gathers rubble below camera-facing cliffs and trees behind plateau rims', () => {
+    const all = sceneDressing(terrain, {
+      x: 0,
+      y: 0,
+      width: GAME.worldSize,
+      height: GAME.worldSize,
+    });
+    const field = (prop: { x: number; z: number }) =>
+      Math.max(
+        ...ORKHON_VALLEY.plateaus.map((p) => outlineField(p.outline, prop.x - C, prop.z - C)),
+      );
+    const foot = all.filter(
+      (prop) => prop.kind === 'boulders' && field(prop) < -20 && field(prop) > -80,
+    );
+    const rim = all.filter(
+      (prop) => prop.kind === 'larch' && field(prop) > 60 && field(prop) < 190,
+    );
+    expect(foot.length).toBeGreaterThan(20);
+    expect(rim.length).toBeGreaterThan(15);
+    // Ramps and paths stay clear for movement and combat.
+    for (const prop of all.filter((p) => p.kind !== 'landmark')) {
+      const height = terrain.height(prop.x, prop.z) * 1000;
+      expect(terrainHabitat(terrain, prop.x, prop.z, height, 1).wear).toBeLessThan(0.3);
+    }
+  });
+
+  it('paints every plateau wall with continuous cliff-face bands and leaves ramps open', () => {
+    let checked = 0;
     for (const plateau of ORKHON_VALLEY.plateaus)
       for (const ramp of plateau.ramps) {
-        const metrics: OrkhonSpriteMetrics = ORKHON_SPRITES[ramp.sprite];
-        const climb = metrics.climb!;
-        const piece = orkhonOverlay(terrain).find(
-          (p) =>
-            p.part === 'ramp' &&
-            p.vertices.some(
-              (v) =>
-                Math.hypot(v.position[0] - C - ramp.foot.x, v.position[2] - C - ramp.foot.y) < 8,
-            ),
-        )!;
-        const nearest = (point: TerrainPoint) =>
-          piece.vertices.reduce((a, b) =>
-            Math.hypot(b.position[0] - C - point.x, b.position[2] - C - point.y) <
-            Math.hypot(a.position[0] - C - point.x, a.position[2] - C - point.y)
-              ? b
-              : a,
-          );
-        const foot = nearest(ramp.foot).pixel,
-          top = nearest(ramp.top).pixel;
-        expect(Math.hypot(foot[0] - climb[0][0], foot[1] - climb[0][1])).toBeLessThan(6);
-        expect(Math.hypot(top[0] - climb[1][0], top[1] - climb[1][1])).toBeLessThan(6);
+        const middle = world({
+          x: (ramp.foot.x + ramp.top.x) / 2,
+          y: (ramp.foot.y + ramp.top.y) / 2,
+        });
+        const { walls } = sceneGeometry(terrain, {
+          x: Math.floor((middle.x - 512) / 32) * 32,
+          y: Math.floor((middle.y - 512) / 32) * 32,
+          width: 1024,
+          height: 1024,
+        });
+        expect(walls.positions.length, plateau.id).toBeGreaterThan(0);
+        for (let i = 0; i < walls.positions.length / 3; i++) {
+          const weights = walls.weights.slice(i * 7, i * 7 + 7);
+          // Painted-face flag, distance along the outline, and depth below the cliff top.
+          expect(weights[6]).toBe(1);
+          expect(Number.isFinite(weights[4])).toBe(true);
+          expect(weights[5]).toBeGreaterThanOrEqual(-1e-6);
+          expect(weights[5]).toBeLessThan(ORKHON_VALLEY.rise * 1.06);
+          const point = { x: walls.positions[i * 3]! - C, y: walls.positions[i * 3 + 2]! - C };
+          // Wall ends snap to the 32-unit terrain mesh around each ramp's open width.
+          for (const other of ORKHON_VALLEY.plateaus.flatMap((p) => p.ramps))
+            expect(segmentDistance(point, other.foot, other.top)).toBeGreaterThan(
+              other.halfWidth - WORLD_3D.meshStep,
+            );
+          checked++;
+        }
+        // Each wall triangle samples one stretch of the outline, never across its start.
+        for (let i = 0; i < walls.positions.length / 9; i++) {
+          const along = [0, 1, 2].map((v) => walls.weights[(i * 3 + v) * 7 + 4]!);
+          expect(Math.max(...along) - Math.min(...along)).toBeLessThan(80);
+        }
+      }
+    expect(checked).toBeGreaterThan(500);
+    // Other places keep their plain rock walls.
+    const other = new ComposedTerrain(composedRegion('otgontenger'));
+    const { walls } = sceneGeometry(other, { x: 2048, y: 1536, width: 1024, height: 1024 });
+    expect(walls.weights.length).toBeGreaterThan(0);
+    for (let i = 6; i < walls.weights.length; i += 7) expect(walls.weights[i]).toBe(0);
+  });
+
+  it('crops every cliff-face band from inside its supplied sprite', () => {
+    const atlas = JSON.parse(readFileSync(join(art, `${ORKHON_ATLAS}.json`), 'utf8'));
+    for (const face of ORKHON_CLIFF_FACES) {
+      const { frame } = atlas.frames[face.sprite];
+      expect(face.x).toBeGreaterThanOrEqual(0);
+      expect(face.y).toBeGreaterThanOrEqual(0);
+      expect(face.x + ORKHON_CLIFF_FACE_WIDTH, face.sprite).toBeLessThanOrEqual(frame.w);
+      expect(face.y + face.height, face.sprite).toBeLessThanOrEqual(frame.h);
+    }
+  });
+
+  it('wears every ramp bare across its walkable width', () => {
+    for (const plateau of ORKHON_VALLEY.plateaus)
+      for (const ramp of plateau.ramps) {
+        const length = Math.hypot(ramp.top.x - ramp.foot.x, ramp.top.y - ramp.foot.y);
+        const side = {
+          x: -(ramp.top.y - ramp.foot.y) / length,
+          y: (ramp.top.x - ramp.foot.x) / length,
+        };
+        for (const t of [0.25, 0.5, 0.75])
+          for (const offset of [-0.5, 0, 0.5]) {
+            const x =
+              ramp.foot.x + (ramp.top.x - ramp.foot.x) * t + side.x * ramp.halfWidth * offset;
+            const y =
+              ramp.foot.y + (ramp.top.y - ramp.foot.y) * t + side.y * ramp.halfWidth * offset;
+            const height = terrain.height(C + x, C + y) * 1000;
+            expect(
+              terrainHabitat(terrain, C + x, C + y, height, 1).wear,
+              plateau.id,
+            ).toBeGreaterThan(0.85);
+          }
       }
   });
 
@@ -387,27 +526,44 @@ describe('Orkhon Valley painted scene', () => {
         (prop) => prop.frame,
       ),
       ...orkhonOverlay(terrain).map((piece) => piece.sprite),
+      ...ORKHON_CLIFF_FACES.map((face) => face.sprite),
     ]);
     expect([...used].sort()).toEqual([...frames()].sort());
   });
 
-  it('only paints walls whose outward side faces the fixed camera', () => {
-    for (const face of orkhonOverlay(terrain).filter((piece) => piece.part === 'face')) {
-      const [left, right] = [face.vertices[0]!.position, face.vertices[1]!.position];
-      const along = { x: right[0] - left[0], y: right[2] - left[2] };
-      const length = Math.hypot(along.x, along.y);
-      const middle = { x: (left[0] + right[0]) / 2 - C, y: (left[2] + right[2]) / 2 - C };
-      const plateau = ORKHON_VALLEY.plateaus.reduce((a, b) =>
-        Math.abs(outlineField(b.outline, middle.x, middle.y)) <
-        Math.abs(outlineField(a.outline, middle.x, middle.y))
-          ? b
-          : a,
-      );
-      let n = { x: along.y / length, y: -along.x / length };
-      if (outlineField(plateau.outline, middle.x + n.x * 40, middle.y + n.y * 40) > 0)
-        n = { x: -n.x, y: -n.y };
-      expect(n.x * CAMERA_DIRECTION.x + n.y * CAMERA_DIRECTION.y).toBeGreaterThan(0);
+  it('keeps the falls and the bridge deck painted over the river', () => {
+    const pieces = orkhonOverlay(terrain);
+    const valid = frames();
+    for (const piece of pieces) {
+      expect(valid.has(piece.sprite), piece.sprite).toBe(true);
+      expect(piece.vertices.length % 3).toBe(0);
+      expect(piece.vertices.every((v) => v.position.every(Number.isFinite))).toBe(true);
     }
+    expect(pieces.filter((piece) => piece.part === 'deck')).toHaveLength(
+      ORKHON_VALLEY.river.bridges.length,
+    );
+    const falls = pieces.filter((piece) => piece.part === 'falls');
+    expect(falls).toHaveLength(3);
+    // Drops show only their painted water; the basalt walls frame them.
+    for (const drop of falls) {
+      const columns = drop.vertices.map((v) =>
+        drop.flip ? ORKHON_SPRITES.waterfall_top.width - v.pixel[0] : v.pixel[0],
+      );
+      expect(Math.min(...columns)).toBeGreaterThanOrEqual(13);
+      expect(Math.max(...columns)).toBeLessThanOrEqual(55);
+    }
+    // Neighbouring drops overlap, so no rock shows between them.
+    const centres = falls.map((drop) => {
+      const xs = drop.vertices.map((v) => v.position[0]);
+      return {
+        middle: (Math.min(...xs) + Math.max(...xs)) / 2,
+        half: (Math.max(...xs) - Math.min(...xs)) / 2,
+      };
+    });
+    for (let i = 1; i < centres.length; i++)
+      expect(centres[i]!.middle - centres[i - 1]!.middle).toBeLessThan(
+        centres[i]!.half + centres[i - 1]!.half,
+      );
   });
 });
 
