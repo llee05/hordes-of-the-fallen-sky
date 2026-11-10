@@ -11,6 +11,8 @@ The selected PNGs are copied unchanged from Codex's generated image library into
 resizing, or painting them. Top-row ground contact is at source Y≈534 and bottom-row
 contact at Y≈980; metadata aligns both to Y540 of a shared 512×600 logical canvas.
 All sprites use origin (0.5, 0.9), linear filtering, and fractional world positions.
+[The art specification](art-spec.md) gives the camera, size bands and palette ranges new
+paintings must match; these prompts asked for a 45° view, while the game camera is 48°.
 
 | Saved asset                           | Usage                                                  |
 | ------------------------------------- | ------------------------------------------------------ |

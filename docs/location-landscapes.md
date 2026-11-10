@@ -56,7 +56,9 @@ seeded composition, and arrival disposes the previous world before rebuilding.
 Orkhon Valley is hand-authored from the Orkhon Valley texture pack v2: an open valley
 floor around the camp, basalt plateaus joined by ramps, and an eastern gorge river below
 the falls. See [the level guide](orkhon-valley.md) for its layout, traversal rules and
-which pack assets are used where.
+which pack assets are used where. Its scale is the reference for
+[the art specification](art-spec.md); the other locations' scenery, ground and shelf
+heights still differ from it.
 
 ## Rivers and shores
 
