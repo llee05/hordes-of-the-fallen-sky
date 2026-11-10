@@ -171,6 +171,79 @@ Individual ground tiles: `plateau_grass` L\* 43/57/67, `steppe_grass_var` 39/56/
   rings and offscreen warnings are described in [combat readability](combat-readability.md);
   quiet ground and desaturated enemies are what let them stand out.
 
+## Manuscript style
+
+All new terrain, environment props and level kits follow an **antique, hand-painted manuscript
+illustration style** (2D/2.5D), evocative of 13th–14th century Central Asian and Persian-Mongolian
+chronicle miniatures (such as the _Jami al-Tawarikh_) combined with the readable miniature scale of
+_Thronefall_ and _The Banner Saga_.
+
+### Concrete rules
+
+- **Ink outlines:** Crisp hand-drawn ink contours (**1.0–2.0 px** at source texel density) define
+  ground edges, cliff rims, rock facets, riverbanks and structure silhouettes. Lines carry subtle
+  natural calligraphic weight variation without digital airbrush blur, mechanical vector smoothing or
+  pixel-art jaggies. Outlines and pen strokes use warm iron-gall/carbon-umber ink (**`#2b221a`**,
+  L\* 16, C\* 8, hue 56°), never digital pure black (`#000000`).
+- **Parchment ground tone:** The ground is conceived as aged vellum or unbleached linen manuscript
+  paper stained with translucent mineral washes. The warm, faded paper base (**`#e5cca8`** /
+  **`#dfc79b`**, L\* ~78–82, C\* ~18–24) provides the underlying warmth and negative space, ensuring
+  the battlefield reads as an illuminated chronicle page rather than synthetic video-game turf.
+- **Hatching for shade and form:** Shading, depth, cliff relief and recesses are rendered through
+  hand-drawn directional parallel or cross-hatched pen lines (**2–5 px** stroke spacing at source
+  resolution), reflecting medieval manuscript engraving and woodcut techniques. Never use smooth
+  digital airbrush gradients, radial drop-shadow fades or 3D CG ambient occlusion.
+- **Muted mineral pigment palette:** Natural ground earth pigments, mineral washes and plant dyes
+  matching the approved character and camp art rather than the legacy Orkhon pack:
+
+| Swatch               | Name                             | Hex       | L\* / C\* / Hue | Role                                              |
+| -------------------- | -------------------------------- | --------- | --------------- | ------------------------------------------------- |
+| `parchmentBase`      | Parchment ground base            | `#e5cca8` | 82 / 22 / 73°   | Unpainted vellum / linen paper base               |
+| `valleyGrassCalm`    | Valley grass (calm sage-ochre)   | `#9c9261` | 59 / 24 / 94°   | Quiet base grassland across valley floor          |
+| `valleyGrassStraw`   | Valley grass (sun-cured straw)   | `#b59d68` | 65 / 30 / 80°   | Warm dry grass variation                          |
+| `valleyGrassOlive`   | Valley grass (subdued olive)     | `#85865c` | 54 / 19 / 99°   | Low-contrast cool grassland variation             |
+| `plateauGrassMoss`   | Plateau-top grass (sage-moss)    | `#737a54` | 49 / 20 / 105°  | Elevated alpine steppe, visibly darker and cooler |
+| `plateauGrassUpland` | Plateau-top grass (upland olive) | `#656c49` | 44 / 18 / 101°  | Deep upland shelf grass variation                 |
+| `dirtTrail`          | Worn trail / hearth earth        | `#a6835c` | 56 / 28 / 68°   | Dry packed dirt paths and ramp surfaces           |
+| `scree`              | Scree / river cobbles            | `#8c8273` | 54 / 9 / 75°    | Weathered slate-silt gravel and cliff-foot talus  |
+| `basaltFace`         | Basalt cliff face (weathered)    | `#5e5245` | 35 / 10 / 68°   | Exposed vertical basalt column facets             |
+| `basaltCrevice`      | Basalt crevice / shaded rock     | `#433930` | 25 / 8 / 64°    | Deep joint cracks and shaded ledge undercuts      |
+| `inkContour`         | Carbon-umber ink                 | `#2b221a` | 16 / 8 / 56°    | All pen contours, column joints and hatching      |
+| `riverVerdigris`     | River water (verdigris wash)     | `#4e6f77` | 44 / 15 / 205°  | Mineral turquoise-slate water surface             |
+| `riverChannel`       | Deep channel slate               | `#395c67` | 37 / 13 / 219°  | Deep water flow channels                          |
+| `foamChalk`          | Rapids and waterfall foam        | `#d8e2df` | 89 / 4 / 170°   | Bone-white mineral chalk wash for turbulent water |
+| `lapisAccent`        | Lapis lazuli                     | `#2d4a68` | 31 / 23 / 252°  | Clan banners, Spirit Caller trim, camp cloth      |
+| `vermilionAccent`    | Cinnabar vermilion               | `#9c3d28` | 38 / 48 / 38°   | War banners, archer deel trim, camp embroidery    |
+| `brassAccent`        | Warm brass                       | `#c89e4b` | 68 / 48 / 81°   | Metal finials, armor plaques, decorative insignia |
+
+- **Ground palette limits (target supersedes measured legacy range):**
+  - **Chroma:** Maximum C\* ≤ 35; median target 22–28; 95th percentile ≤ 38 across all ground tiles.
+  - **Lightness:** Valley floor median L\* 58–64; Plateau tops median L\* 46–52 (at least 10–14 L\*
+    lower than the valley floor). 90% of ground texels stay between L\* 38 and 76.
+  - _Superseded record:_ The legacy measured ground median chroma of C\* 50 (with individual tiles
+    reaching C\* 64 and median `#b1832d`) was an oversaturated mustard hue from the initial Orkhon
+    import that read as modern video-game turf rather than manuscript parchment. This target
+    supersedes those values for all new artwork; the table under `## Palette` remains as the historical
+    record of the initial import.
+- **How elevation is shown:**
+  1. _Tone and hue shift:_ Plateau tops are painted in cooler, darker alpine sage-moss washes
+     (median L\* 46–52, hue 101–105°) distinctly separated from the warmer, lighter parchment-gold
+     valley floor (median L\* 58–64, hue 80–94°), providing instant top-down elevation readability.
+  2. _Ink cliff rims:_ Plateau perimeters carry a defined ink contour along the edge lip.
+  3. _Basalt columnar hatching:_ Vertical cliff faces feature downward vertical and diagonal hatched
+     pen strokes depicting columnar basalt joints.
+  4. _Ramps:_ Walkable corridors cut through the cliffs as worn raw umber earth paths with flanking
+     hatched basalt wall edges.
+- **What to avoid:**
+  - Saturated mustard or electric yellow-green ground (e.g. `#b1832d`, `#d59a31`).
+  - Photographic textures, surface scans or 3D CG rendering (specular highlights, normal map bumps,
+    plastic sheen).
+  - Soft Gaussian blur, airbrush fades or feathered alpha resulting in muddy grey halos.
+  - Mixed texel densities (all terrain elements must match the spec's ~1.56 world units per pixel
+    density, 128 px covering 200 units).
+  - Pasted white rectangular blocks for waterfalls (cascades must feature calligraphic wave strokes
+    and soft mineral chalk washes).
+
 ## Disagreements found
 
 | Topic                   | Places                                                                                                                                          | Spec adopts                                                               |

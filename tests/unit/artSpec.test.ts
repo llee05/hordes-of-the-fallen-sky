@@ -128,6 +128,28 @@ describe('art spec companion', () => {
     const art = source('src/game/assets/painterlyArt.ts');
     expect(art).toContain(`'#${light.contactShadowColor.toString(16)}55'`);
   });
+
+  it('defines a manuscript style contract superseding legacy ground chroma', () => {
+    const { manuscript, palette } = ART_SPEC;
+    expect(manuscript.groundChromaMax).toBeLessThan(palette.ground.chroma[1]);
+    expect(manuscript.groundChromaMedianTarget[0]).toBeGreaterThanOrEqual(20);
+    expect(manuscript.groundChromaMedianTarget[1]).toBeLessThanOrEqual(30);
+    const valleyMid =
+      (manuscript.groundLightnessValley[0] + manuscript.groundLightnessValley[1]) / 2;
+    const plateauMid =
+      (manuscript.groundLightnessPlateau[0] + manuscript.groundLightnessPlateau[1]) / 2;
+    expect(valleyMid - plateauMid).toBeGreaterThanOrEqual(manuscript.minElevationLightnessDrop);
+    for (const [name, color] of Object.entries(manuscript.swatches)) {
+      expect(Number.isInteger(color), name).toBe(true);
+      expect(color, name).toBeGreaterThanOrEqual(0);
+      expect(color, name).toBeLessThanOrEqual(0xffffff);
+    }
+    expect(manuscript.swatches.inkContour).toBe(0x2b221a);
+    expect(manuscript.inkLineWidth[0]).toBeGreaterThan(0);
+    expect(manuscript.inkLineWidth[1]).toBeGreaterThanOrEqual(manuscript.inkLineWidth[0]);
+    expect(manuscript.hatchingSpacing[0]).toBeGreaterThan(0);
+    expect(manuscript.hatchingSpacing[1]).toBeGreaterThanOrEqual(manuscript.hatchingSpacing[0]);
+  });
 });
 
 describe('Orkhon Valley scenery inside the art spec bands', () => {
