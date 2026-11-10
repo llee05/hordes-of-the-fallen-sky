@@ -26,7 +26,7 @@ import { ComposedTerrain, outlineField } from '../../src/game/world3d/ComposedTe
 import { orkhonOverlay } from '../../src/game/world3d/orkhonOverlay';
 import { sceneDressing } from '../../src/game/world3d/sceneDressing';
 import { sceneGeometry } from '../../src/game/world3d/sceneGeometry';
-import { terrainHabitat } from '../../src/game/world3d/terrainHabitat';
+import { terrainHabitat, terrainMaterialWeights } from '../../src/game/world3d/terrainHabitat';
 import { WORLD_3D } from '../../src/game/world3d/worldProjection';
 
 const art = resolve('public/art/orkhon-valley');
@@ -119,6 +119,67 @@ describe('Orkhon Valley two-level terrain', () => {
       { x: 2300, y: 400 },
     ])
       expect(Math.abs(elevation(world(point)))).toBeLessThan(15);
+  });
+
+  it('breaks long cliff lines into irregular jogs but keeps ramps and the falls on their edge', () => {
+    for (const plateau of ORKHON_VALLEY.plateaus) {
+      const outline = plateau.outline;
+      let turns = 0;
+      for (let i = 0; i < outline.length; i++) {
+        const a = outline[i]!,
+          b = outline[(i + 1) % outline.length]!,
+          c = outline[(i + 2) % outline.length]!;
+        if (Math.max(Math.abs(b.x), Math.abs(b.y)) > 2550) continue;
+        // No straight run inside the world is longer than about two jogs.
+        if (Math.max(Math.abs(a.x), Math.abs(a.y), Math.abs(b.x), Math.abs(b.y)) < 2550)
+          expect(Math.hypot(b.x - a.x, b.y - a.y), plateau.id).toBeLessThan(560);
+        const cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+        if (Math.abs(cross) > 1) turns++;
+      }
+      expect(turns, plateau.id).toBeGreaterThan(5);
+      for (const ramp of plateau.ramps) {
+        const crossing = { x: (ramp.foot.x + ramp.top.x) / 2, y: (ramp.foot.y + ramp.top.y) / 2 };
+        expect(Math.abs(outlineField(outline, crossing.x, crossing.y)), plateau.id).toBeLessThan(2);
+      }
+    }
+    const falls = ORKHON_VALLEY.plateaus.find((p) => p.id === 'falls-plateau')!;
+    expect(
+      Math.abs(outlineField(falls.outline, ORKHON_VALLEY.waterfall.x, ORKHON_VALLEY.waterfall.y)),
+    ).toBeLessThan(60);
+  });
+
+  it('lights every plateau rim with a band of dry grass', () => {
+    let rims = 0;
+    for (const plateau of ORKHON_VALLEY.plateaus)
+      for (let i = 0; i < plateau.outline.length; i += 3) {
+        const a = plateau.outline[i]!,
+          b = plateau.outline[(i + 1) % plateau.outline.length]!;
+        const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        if (Math.abs(mid.x) > 2400 || Math.abs(mid.y) > 2400) continue;
+        if (plateau.ramps.some((r) => segmentDistance(mid, r.foot, r.top) < 320)) continue;
+        const length = Math.hypot(b.x - a.x, b.y - a.y);
+        let n = { x: (b.y - a.y) / length, y: -(b.x - a.x) / length };
+        if (outlineField(plateau.outline, mid.x + n.x * 20, mid.y + n.y * 20) < 0)
+          n = { x: -n.x, y: -n.y };
+        const rim = world({ x: mid.x + n.x * 20, y: mid.y + n.y * 20 });
+        const inner = world({ x: mid.x + n.x * 220, y: mid.y + n.y * 220 });
+        if (outlineField(plateau.outline, inner.x - C, inner.y - C) < 180) continue;
+        // The river's gravel banks replace the rim beside the gorge.
+        if (terrain.river!.sample(rim.x, rim.y).shoreDistance < 150) continue;
+        const weights = (p: TerrainPoint) => {
+          const height = terrain.height(p.x, p.y) * 1000;
+          return terrainMaterialWeights(
+            terrain,
+            height,
+            1,
+            terrainHabitat(terrain, p.x, p.y, height, 1),
+          );
+        };
+        // Channel 3 is dry grass.
+        expect(weights(rim)[3], plateau.id).toBeGreaterThan(0.5);
+        rims++;
+      }
+    expect(rims).toBeGreaterThan(10);
   });
 
   it('blocks a unit from crossing any cliff edge away from its ramps', () => {

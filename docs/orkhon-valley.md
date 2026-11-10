@@ -15,6 +15,9 @@ Run `npm run dev` (or `npm run dev:web`), press **F8**, and choose **Orkhon Vall
 - **Plateaus (level 1):** six basalt shelves around the valley — the shrine heights (NW),
   the falls plateau (N and NE, wrapping the east bank), the western, south-western,
   southern and gorge shelves. All share one rise of 240 units, about four mounted riders.
+  Their authored outlines are broken into irregular basalt jogs (`plateau()` steps a point
+  up to 48 units in or out every ~210 units), except within 330 units of a ramp crossing
+  or the falls, which keep their authored edge.
 - **Ramps:** each plateau has one ramp (the falls plateau has two). North ramps climb
   30° east of north and west ramps climb slightly north of west. A ramp's length follows
   the rise so its grade stays walkable; its 112-unit walkable half width is flanked by
@@ -135,7 +138,8 @@ Ground channels: the calm `plateau_grass` painting is the base everywhere, in br
 regions sampled at two orientations so the tile grid never lines up. Plateau tops add
 regions of the tufted `steppe_grass_var`. A few broad, rare regions are `dry_grass` or
 `patchy_grass` flowers. `dry_dirt` covers the hearth, paths and ramps; `rocky_ground` a
-narrow scree band at cliff feet and the shore. Materials meet by height blending: each
+narrow scree band at cliff feet and the shore. Plateau rims catch the light as a band of
+`dry_grass` behind the painted cliff lip, so plateau edges read from a distance. Materials meet by height blending: each
 painting's own light and dark strokes decide where it shows through, so edges follow
 tufts, stones and ruts rather than cross-fading two paintings into mush. The river tile spans bank to bank so
 the tiles' light edge columns fall on the faded shoreline. Scenery uses supplied colours

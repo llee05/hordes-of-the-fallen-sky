@@ -135,7 +135,8 @@ function authoredMaterialWeights(
   const gravel = (1 - stone) * habitat.shore * 0.85;
   const soil = (1 - stone) * (1 - gravel) * habitat.wear;
   const cover = (1 - stone) * (1 - gravel) * (1 - habitat.wear);
-  const dry = 1 - smoothstep(0.24, 0.3, habitat.moisture);
+  // Plateau rims catch the light as a band of dry grass behind the painted cliff lip.
+  const dry = Math.max(1 - smoothstep(0.24, 0.3, habitat.moisture), habitat.cliffTop * top * 0.9);
   const flowers = smoothstep(0.88, 0.93, habitat.grove) * (1 - top);
   const grass = cover * (1 - dry) * (1 - flowers);
   return [
