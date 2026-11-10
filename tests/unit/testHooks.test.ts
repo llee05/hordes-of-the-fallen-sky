@@ -137,4 +137,214 @@ describe('development arena hooks', () => {
     expect(() => hooks.crowd({ count: -1 })).toThrow('whole number');
     expect(() => hooks.crowd({ count: 1.5 })).toThrow('whole number');
   });
+
+  it('freezes scene steps without stopping rendering and restores Phaser stepping', () => {
+    class Systems {
+      steps = 0;
+      step(): void {
+        this.steps += 1;
+      }
+    }
+    const sys = new Systems();
+    const world = { setRenderScale: vi.fn(), qualityTime: 0, renderScale: 0.7 };
+    const hooks = createTestHooks(
+      { sys } as unknown as ArenaScene,
+      { landscape: { world3d: world } } as unknown as ArenaContext,
+    );
+    hooks.freezeVisuals(true);
+    sys.step();
+    expect(sys.steps).toBe(0);
+    expect(world.setRenderScale).toHaveBeenCalledWith(1);
+    expect(world.qualityTime).toBe(Infinity);
+    hooks.freezeVisuals(true);
+    hooks.freezeVisuals(false);
+    expect(Object.prototype.hasOwnProperty.call(sys, 'step')).toBe(false);
+    sys.step();
+    expect(sys.steps).toBe(1);
+    expect(world.qualityTime).toBeLessThan(Infinity);
+    expect(() => hooks.freezeVisuals('on' as never)).toThrow('true or false');
+  });
+
+  describe('scenarios and camera', () => {
+    function arenaFixture() {
+      const listeners = new Map<string, (() => void)[]>();
+      const events = {
+        once: (name: string, listener: () => void) =>
+          listeners.set(name, [...(listeners.get(name) ?? []), listener]),
+        emit: (name: string) => {
+          const queued = listeners.get(name) ?? [];
+          listeners.delete(name);
+          for (const listener of queued) listener();
+        },
+      };
+      const run = createRun();
+      run.phase = 'playing';
+      const timers = createArenaTimers();
+      const tools = { invincible: false, clanInvincible: false };
+      const enemies: {
+        active: boolean;
+        x: number;
+        y: number;
+        elite: boolean;
+        definition: { id: string };
+      }[] = [];
+      const group = (items: object[]) => ({
+        getChildren: () => items,
+        countActive: () => items.length,
+      });
+      const camera = {
+        midPoint: { x: 2600, y: 2700 },
+        zoom: 1,
+        _follow: {} as object | null,
+        stopFollow: vi.fn(function (this: { _follow: unknown }) {
+          this._follow = null;
+        }),
+        centerOn: vi.fn(function (
+          this: { midPoint: { x: number; y: number } },
+          x: number,
+          y: number,
+        ) {
+          this.midPoint = { x, y };
+        }),
+        startFollow: vi.fn(function (this: { _follow: unknown }, target: unknown) {
+          this._follow = target;
+          return this;
+        }),
+        setFollowOffset: vi.fn(),
+      };
+      const randoms: number[] = [];
+      const scene = {
+        sys: { step: vi.fn() },
+        events,
+        cameras: { main: camera },
+        update: vi.fn(),
+        applyCameraZoom: vi.fn((zoom: number) => (camera.zoom = Math.min(zoom, 1.6))),
+        spawnEnemy: vi.fn(
+          (definition: { id: string }, { point }: { point: { x: number; y: number } }) => {
+            enemies.push({ active: true, ...point, elite: false, definition });
+            return true;
+          },
+        ),
+        scene: {
+          restart: vi.fn(() => {
+            events.emit('start');
+            randoms.push(Math.random());
+            events.emit('create');
+          }),
+        },
+      };
+      const player = { active: true, x: 2600, y: 2700 };
+      const hooks = createTestHooks(
+        scene as unknown as ArenaScene,
+        {
+          run,
+          timers,
+          developerTools: tools,
+          player,
+          enemies: group(enemies),
+          projectiles: group([]),
+          hostileShots: group([]),
+          gems: group([]),
+          landscape: {},
+        } as unknown as ArenaContext,
+      );
+      return { hooks, scene, run, timers, tools, camera, randoms, player };
+    }
+
+    it('restarts at the place, seeds the start and applies options before resolving', async () => {
+      const random = Math.random;
+      try {
+        const options = {
+          place: 'orkhon-valley',
+          seed: 5,
+          elapsed: 600,
+          enemies: 12,
+          settle: 0.05,
+        } as const;
+        const first = arenaFixture();
+        const state = await first.hooks.loadScenario(options);
+        expect(first.scene.scene.restart).toHaveBeenCalledWith({
+          developerLevel: 'place:orkhon-valley',
+        });
+        expect(first.run.elapsed).toBe(600);
+        expect(first.timers.spawnTimer).toBe(999);
+        expect(first.tools).toEqual({ invincible: true, clanInvincible: true });
+        expect(first.scene.update).toHaveBeenCalledTimes(3);
+        expect(state).toMatchObject({ frozen: true, elapsed: 600, enemies: { total: 12 } });
+        // The fixture step stands in for Phaser's prototype step; freezing shadows it.
+        expect(Object.prototype.hasOwnProperty.call(first.scene.sys, 'step')).toBe(true);
+        const second = arenaFixture();
+        await second.hooks.loadScenario(options);
+        expect(second.randoms).toEqual(first.randoms);
+        expect(second.hooks.getState().enemies).toEqual(first.hooks.getState().enemies);
+        const other = arenaFixture();
+        await other.hooks.loadScenario({ ...options, seed: 6 });
+        expect(other.randoms).not.toEqual(first.randoms);
+      } finally {
+        Math.random = random;
+      }
+    });
+
+    it('validates a scenario before restarting the scene', () => {
+      const { hooks, scene } = arenaFixture();
+      expect(() => hooks.loadScenario({ place: 'nowhere' as never })).toThrow('Unknown place');
+      expect(scene.scene.restart).not.toHaveBeenCalled();
+    });
+
+    it('centres, zooms and re-follows the main camera', () => {
+      const { hooks, camera, player } = arenaFixture();
+      expect(hooks.setCamera({ x: 4000, y: 3800, zoom: 2 })).toEqual({
+        x: 4000,
+        y: 3800,
+        zoom: 1.6,
+        following: false,
+      });
+      expect(camera.stopFollow).toHaveBeenCalled();
+      expect(hooks.setCamera({ follow: true })).toMatchObject({ following: true });
+      expect(camera.startFollow).toHaveBeenCalledWith(player, true, 0.09, 0.09);
+      expect(() => hooks.setCamera({ x: 1 })).toThrow('together');
+    });
+  });
+
+  it('resolves a capture after unchanged frames and rejects one that never settles', async () => {
+    vi.useFakeTimers();
+    try {
+      const listeners = new Set<() => void>();
+      const camera = { midPoint: { x: 0, y: 0 }, zoom: 1, _follow: null };
+      const world = { pendingChunks: 2, renderScale: 1, focusHeight: 10 };
+      const hooks = createTestHooks(
+        {
+          cameras: { main: camera },
+          game: {
+            events: {
+              on: (_: string, listener: () => void) => listeners.add(listener),
+              off: (_: string, listener: () => void) => listeners.delete(listener),
+            },
+          },
+        } as unknown as ArenaScene,
+        { landscape: { world3d: world } } as unknown as ArenaContext,
+      );
+      const render = async (count: number) => {
+        await Promise.resolve();
+        for (let frame = 0; frame < count; frame++)
+          for (const listener of [...listeners]) listener();
+      };
+      const capture = hooks.captureScene({ frames: 2 });
+      await render(3);
+      world.pendingChunks = 0;
+      await render(3);
+      await expect(capture).resolves.toMatchObject({ frames: 6, camera: { x: 0, zoom: 1 } });
+      expect(listeners.size).toBe(0);
+      const moving = hooks.captureScene({ timeout: 50 });
+      const rejected = expect(moving).rejects.toThrow('did not settle');
+      await render(1);
+      camera.midPoint.x = 5;
+      await render(1);
+      await vi.advanceTimersByTimeAsync(60);
+      await rejected;
+      expect(listeners.size).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
