@@ -11,6 +11,8 @@ export const GAME = {
     actorClearance: 24,
     cliffSlope: 1.6,
     flowCacheSize: 12,
+    // Exact recent waypoint targets whose walkable snap is reused (Khan, camp, objectives).
+    safeTargetMemo: 4,
     // Presentation resolution and ledges are independent of the traversal grid.
     surfaceStep: 32,
     materialStep: 64,
