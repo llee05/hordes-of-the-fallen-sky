@@ -56,8 +56,11 @@ export const ART_SPEC = {
   orkhon: {
     /** Height of every plateau above the valley floor, in world units. */
     plateauRise: 240,
-    /** Pixels along each side of a terrain kit ground or water tile. */
-    tilePixels: 128,
+    /**
+     * Pixels along each side of a terrain kit ground or water tile: the sheet's full cell, 0.78
+     * world units per texel, about one screen pixel at the default zoom (`docs/art-spec.md`).
+     */
+    tilePixels: 256,
     /** World units covered by one repeat of a terrain kit tile. */
     tileWorldSize: 200,
     /** World units per sprite pixel before the factors below. */

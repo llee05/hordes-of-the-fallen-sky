@@ -7,7 +7,7 @@
 // - Ground and water tiles are made seamless by offset-and-heal: each axis is blended with a copy
 //   rolled by half a tile, so the wrap edges come from neighbouring painted texels. The blend follows
 //   each painting's own light and dark strokes (as the terrain shader does) instead of a soft fade.
-//   Tiles are then downsampled 50% (Lanczos3) to 128 pixels, 200 world units per repeat.
+//   Tiles keep the sheet's full 256-pixel resolution: 200 world units per repeat (0.78 per pixel).
 // - The dirt trail runs through grass, so the plain dirt tile is quilted from dirt-only patches of
 //   the trail painting and healed the same way.
 // - River tiles are turned a quarter so the current runs along the tile's rows (the river shader's
@@ -25,9 +25,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sheetPath = resolve(process.argv[2] ?? join(root, 'art-source/orkhon-terrain-kit.png'));
 const output = join(root, 'public/art/orkhon-valley');
 const CELL = 256;
-const TILE = 128;
 
-/** Seamless 128-pixel tiles: output path, sheet cell (column, row from 0), and processing. */
+/** Seamless 256-pixel tiles: output path, sheet cell (column, row from 0), and processing. */
 const TILES = [
   { path: 'ground/valley_calm', cell: [0, 0] },
   { path: 'ground/valley_straw', cell: [1, 0] },
@@ -248,19 +247,10 @@ function quiltDirt(trail) {
   return out;
 }
 
-async function writeTile(img, file, size = [TILE, Math.round((TILE * img.h) / img.w)]) {
-  // Resize a 3 x 3 repeat and keep its centre, so the filter wraps across the tile edges.
-  const tiled = image(img.w * 3, img.h * 3, 3);
-  for (let y = 0; y < tiled.h; y++)
-    for (let x = 0; x < tiled.w; x++)
-      tiled.data.set(
-        img.data.subarray(at(img, x % img.w, y % img.h), at(img, x % img.w, y % img.h) + 3),
-        at(tiled, x, y),
-      );
-  const big = Buffer.from(tiled.data.map((v) => Math.max(0, Math.min(255, Math.round(v)))));
-  await sharp(big, { raw: { width: tiled.w, height: tiled.h, channels: 3 } })
-    .resize(size[0] * 3, size[1] * 3, { kernel: sharp.kernel.lanczos3 })
-    .extract({ left: size[0], top: size[1], width: size[0], height: size[1] })
+/** Tiles keep the sheet's full 256-pixel resolution: 200 world units per repeat. */
+async function writeTile(img, file) {
+  const bytes = Buffer.from(img.data.map((v) => Math.max(0, Math.min(255, Math.round(v)))));
+  await sharp(bytes, { raw: { width: img.w, height: img.h, channels: 3 } })
     .png({ compressionLevel: 9 })
     .toFile(join(output, `${file}.png`));
 }

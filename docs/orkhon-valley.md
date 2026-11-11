@@ -96,8 +96,8 @@ repainting, recolouring or tinting:
 
 - **Seamless tiles:** each ground and water cell is healed on both axes by offset-and-heal:
   near the wrap edges a copy rolled by half a tile shows instead, meeting the original along
-  its own light and dark strokes. Tiles are then downsampled 50% (Lanczos3, filtered across
-  the wrap) to 128 pixels, 200 world units per repeat.
+  its own light and dark strokes. Tiles keep the sheet's full 256 pixels, 200 world units per
+  repeat (see [the art specification](art-spec.md#texture-tiles-and-repetition) for why).
 - **Trail dirt:** the trail painting runs through grass, so the plain dirt tile is quilted
   from dirt-only 56-pixel windows of it on a 5 × 5 wrapping grid, joined the same way.
 - **River:** the channel and rapids cells are turned a quarter so the current runs along the
@@ -105,7 +105,9 @@ repainting, recolouring or tinting:
 - **Cutouts:** the white backing is keyed out where it connects to the cell border; partly
   white edge texels get partial alpha and are un-mixed from white, so no white fringe remains
   around the ink. Specks of grid antialiasing are dropped, transparent texels take nearby
-  paint, and cutouts keep full sheet resolution in `orkhon-terrain-kit.png`.
+  paint, and cutouts keep full sheet resolution in `orkhon-terrain-kit.png`. Because kit art
+  is often drawn smaller than painted, the kit atlas, bank bands and ground tiles are
+  mipmapped (ground and banks also anisotropically filtered), so they stay clean, not shimmering.
 
 | Sheet cell                         | Used for                                                   |
 | ---------------------------------- | ---------------------------------------------------------- |
@@ -220,6 +222,8 @@ one band texel. Height blending still costs more per pixel than a cross-fade: on
 software GPU (SwiftShader) a 350-enemy `profileCrowd` frame is roughly a tenth slower than
 before the cliff and ground pass, with CPU simulation and render time unchanged.
 
-The terrain kit adds one 1024 × 512 atlas and two small bank textures; the pack atlas lost
-the retired sprites. The overlay draws one mesh per atlas plus one per bank painting, all built
-once when the level loads; bank bands discard texels along their edges rather than blending.
+The terrain kit adds one 1024 × 512 atlas and two bank textures; the pack atlas lost the
+retired sprites. Full-resolution 256-pixel tiles hold four times the texels of the pack's
+128-pixel ones (about 3 MB of GPU memory for all ten with mipmaps); the Orkhon art files total
+about 2.2 MB. The overlay draws one mesh per atlas plus one per bank painting, all built once
+when the level loads; bank bands discard texels along their edges rather than blending.

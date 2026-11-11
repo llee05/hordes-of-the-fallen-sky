@@ -13,6 +13,7 @@ import {
   type OrkhonSprite,
   type OrkhonSpriteMetrics,
 } from '../assets/orkhonValleyArt';
+import { ART_SPEC } from '../data/artSpec';
 import { ORKHON_VALLEY } from '../data/orkhonValley';
 import type { TerrainPoint } from '../terrain/types';
 import type { ComposedTerrain } from './ComposedTerrain';
@@ -34,8 +35,8 @@ export interface OverlayPiece {
 
 /** Row of `waterfall_foam_pool` where the falling curtains meet its churning water. */
 const POOL_FOOT_ROW = 105;
-/** Bank band depth in world units: the 46-pixel band at the shared tile scale. */
-export const BANK_ACROSS = (46 / 128) * ORKHON_TILE_WORLD_SIZE;
+/** Bank band depth in world units: the 92-pixel band at the shared tile scale. */
+export const BANK_ACROSS = (92 / ART_SPEC.orkhon.tilePixels) * ORKHON_TILE_WORLD_SIZE;
 const radians = (degrees: number) => (degrees * Math.PI) / 180;
 const metricsOf = (sprite: OrkhonSprite): OrkhonSpriteMetrics => ORKHON_SPRITES[sprite];
 const YAW = radians(WORLD_3D.yaw);
@@ -331,13 +332,17 @@ export function orkhonBanks(terrain: ComposedTerrain): BankStrip[] {
   return Object.values(strips);
 }
 
-/** Texture from a loaded Phaser image, filtered like the rest of the painted art. */
-function paintedTexture(scene: Phaser.Scene, key: string): THREE.Texture {
+/**
+ * Texture from a loaded Phaser image. Terrain kit art keeps full sheet resolution, so it is
+ * often drawn smaller than painted: it is mipmapped (and bank bands, which lie on the slanted
+ * ground, anisotropically filtered) so it stays clean instead of shimmering.
+ */
+function paintedTexture(scene: Phaser.Scene, key: string, mipmaps: boolean): THREE.Texture {
   const texture = new THREE.Texture(scene.textures.get(key).getSourceImage() as HTMLImageElement);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.minFilter = THREE.LinearFilter;
+  texture.minFilter = mipmaps ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = false;
+  texture.generateMipmaps = mipmaps;
   texture.needsUpdate = true;
   return texture;
 }
@@ -365,7 +370,7 @@ export class OrkhonOverlay {
 
   private addSprites(scene: Phaser.Scene, atlasKey: string, pieces: OverlayPiece[]): void {
     const atlas = scene.textures.get(atlasKey);
-    const texture = paintedTexture(scene, atlasKey);
+    const texture = paintedTexture(scene, atlasKey, atlasKey === ORKHON_KIT_ATLAS);
     const material = new THREE.MeshBasicMaterial({
       map: texture,
       alphaTest: 0.5,
@@ -431,7 +436,8 @@ export class OrkhonOverlay {
   }
 
   private addBank(scene: Phaser.Scene, strip: BankStrip): void {
-    const texture = paintedTexture(scene, orkhonTileKey(strip.bank));
+    const texture = paintedTexture(scene, orkhonTileKey(strip.bank), true);
+    texture.anisotropy = WORLD_3D.anisotropy;
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
     const material = new THREE.MeshLambertMaterial({

@@ -11,6 +11,8 @@ export const WORLD_3D = {
   chunkBudget: 2,
   pixelRatio: 1.5,
   shadowSize: 1024,
+  /** Anisotropic filtering for ground and bank textures, clamped to what the GPU supports. */
+  anisotropy: 8,
   minRenderScale: 0.5,
 } as const;
 

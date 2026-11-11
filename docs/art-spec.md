@@ -81,17 +81,23 @@ on the ground; single stones and boulders stay between knee and shoulder of a ri
 
 - Orkhon plateaus rise **240 units** above the valley floor: 3.8 riders in world units, about
   **2.5 riders on screen** once the wall is foreshortened.
-- Cliff walls are geometry painted with opaque basalt bands from the pack
-  (`ORKHON_CLIFF_FACES`); a band's 44–69 source rows span the full rise, and its 66-pixel
-  columns keep that texel size on screen. Painted grass lips stay on top.
+- Cliff walls are geometry painted with opaque basalt bands from the terrain kit's straight
+  cliff run (`ORKHON_CLIFF_FACES`); a band's 117 source rows span the full rise, and its
+  100-pixel columns keep that texel size (about 1.4 units) on screen. The grass lip and inked
+  column tops stay on top.
 - Plateau tops weather by at most ±11 units, so each stays one level; the valley's relief is
   0.35 of the composed default.
 
 ## Texture tiles and repetition
 
-- **Pack tiles** are 128 × 128 px and cover **200 × 200 units** (1.56 units per texel). Each
-  tile's last column and row repeat its first, so the tile wraps without a seam step (measured
-  wrap-to-interior colour step 0.48–0.85).
+- **Terrain kit tiles** keep the sheet's full **256 × 256 px** and cover **200 × 200 units**
+  (0.78 units per texel). The default camera draws a world unit at about 0.8 CSS pixels, so on
+  displays of pixel ratio 1–2 a texel spans 0.6–1.25 device pixels: never visibly magnified.
+  (The first cut downsampled them to 128 px, 1.56 units per texel, which magnified every texel
+  1.25–2.5 times and looked soft.) Tiles are healed to wrap seamlessly (measured wrap-to-interior
+  colour step 0.82–1.06, where 1 is seamless).
+- Ground and water tiles are mipmapped with trilinear filtering and up to 8× anisotropic
+  filtering, so ground seen at the 48° slant stays sharp instead of shimmering or smearing.
 - Sample each ground painting **once, at its painted scale**, in world space. Break the grid by
   alternating the calm base painting at two orientations in regions roughly 400–1,100 units
   across, never by tinting or scaling it.
@@ -164,13 +170,13 @@ The Orkhon terrain kit that replaced them (`art-source/orkhon-terrain-kit.png`, 
 
 | Kit tile or cutout       | L\*          | C\*          | Hue  | Median    |
 | ------------------------ | ------------ | ------------ | ---- | --------- |
-| `valley_calm`            | 50 / 64 / 71 | 38 / 47 / 51 | 85°  | `#bb9543` |
-| `valley_olive`           | 47 / 62 / 71 | 34 / 42 / 46 | 91°  | `#ac9449` |
-| `valley_straw`           | 52 / 68 / 76 | 41 / 49 / 54 | 76°  | `#d39b4c` |
-| `plateau_moss`           | 30 / 43 / 54 | 16 / 25 / 33 | 103° | `#6a683e` |
-| `trail_dirt`             | 61 / 72 / 77 | 35 / 42 / 46 | 72°  | `#dea666` |
-| `scree_gravel`           | 36 / 61 / 72 | 11 / 28 / 37 | 72°  | `#b18c63` |
-| River channel and rapids | 35 / 50 / 86 | 9 / 12 / 24  | 116° | `#70796b` |
+| `valley_calm`            | 48 / 64 / 73 | 37 / 47 / 52 | 85°  | `#bb9643` |
+| `valley_olive`           | 45 / 62 / 72 | 33 / 42 / 47 | 91°  | `#ad9549` |
+| `valley_straw`           | 49 / 68 / 77 | 41 / 49 / 54 | 76°  | `#d39c4c` |
+| `plateau_moss`           | 29 / 43 / 56 | 15 / 25 / 34 | 103° | `#6a683e` |
+| `trail_dirt`             | 58 / 72 / 78 | 35 / 42 / 46 | 72°  | `#dfa767` |
+| `scree_gravel`           | 33 / 62 / 74 | 11 / 28 / 38 | 71°  | `#b48d64` |
+| River channel and rapids | 34 / 48 / 88 | 8 / 12 / 25  | 116° | `#6b7669` |
 | Cliff straight run       | 28 / 51 / 78 | 10 / 26 / 50 | 75°  | `#967449` |
 | Pillar, scree and islet  | 28 / 54 / 81 | 8 / 23 / 47  | 75°  | `#9b7c54` |
 
@@ -261,8 +267,8 @@ _Thronefall_ and _The Banner Saga_.
   - Photographic textures, surface scans or 3D CG rendering (specular highlights, normal map bumps,
     plastic sheen).
   - Soft Gaussian blur, airbrush fades or feathered alpha resulting in muddy grey halos.
-  - Mixed texel densities (all terrain elements must match the spec's ~1.56 world units per pixel
-    density, 128 px covering 200 units).
+  - Mixed texel densities (all terrain tiles match the spec's 0.78 world units per pixel, 256 px
+    covering 200 units).
   - Pasted white rectangular blocks for waterfalls (cascades must feature calligraphic wave strokes
     and soft mineral chalk washes).
 
@@ -276,7 +282,7 @@ _Thronefall_ and _The Banner Saga_.
 | Ground regions          | Level guide: grass regions "about 300 units across"; the shader's region field (`sin(x/290…)`) gives runs of about 400–1,100 units (median 890) | Measured 400–1,100; the guide is corrected                                |
 | Camera angle in prompts | Tapestry style and scenery prompts ask for 45°; detail-atlas prompt and the game use 48°                                                        | 48° (the game camera)                                                     |
 | Ger scale in one level  | Orkhon outskirts gers are 122–146 units; the live camp's gers are 66–83 units (front pair 83) at `GAME.camp.visualScale` 0.75                   | `structures` 75–150 from the pack; the live camp is listed as a follow-up |
-| Texel density           | Orkhon ground 1.56 units per texel, props 0.85–1.7, cliff bands about 2.3 on screen                                                             | Recorded, not unified: each is the pack's painted scale                   |
+| Texel density           | Orkhon ground 0.78 units per texel (kit, full resolution), props 0.85–1.7, cliff bands about 1.4                                                | Recorded, not unified: each is its art's painted scale                    |
 
 ## Places that deviate (follow-ups)
 
@@ -287,8 +293,8 @@ Only Orkhon Valley follows this spec today. These were measured, not changed:
   flower and pebble accents 9–31 (partly below `shrubs`). Regional palettes tint the paintings,
   which this spec's no-filter rule excludes.
 - **Ground density in the other places:** materials repeat every 170–520 units on 1,254-px
-  paintings (about 0.14–0.41 units per texel), up to about eleven times finer than Orkhon's
-  1.56.
+  paintings (about 0.14–0.41 units per texel), up to about five times finer than Orkhon's
+  0.78.
 - **Plateau heights in the other places:** shelves rise 155–450 units with peaks up to 300 more,
   and they keep the raised 150-unit camp shelf; Orkhon has one 240-unit level and no camp shelf.
 - **The live camp:** gers 66–83 units and migration carts 43–54 units, against 100–146 for the

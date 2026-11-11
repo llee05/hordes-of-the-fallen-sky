@@ -11,7 +11,7 @@ export const ORKHON_ATLAS = 'orkhon-valley-sprites';
 /** Terrain kit cutouts: the cliff wall, the falls, the basalt pillar, cliff-foot scree, islets. */
 export const ORKHON_KIT_ATLAS = 'orkhon-terrain-kit';
 
-/** Repeatable 128 × 128 terrain kit tiles, keyed by folder and file name. */
+/** Repeatable 256 × 256 terrain kit tiles at full sheet resolution, keyed by folder and file name. */
 export const ORKHON_TILES = {
   valleyCalm: 'ground/valley_calm',
   valleyStraw: 'ground/valley_straw',
@@ -25,7 +25,7 @@ export const ORKHON_TILES = {
 export type OrkhonTile = keyof typeof ORKHON_TILES;
 
 /**
- * Riverbank bands (128 × 46), repeated along each shore with the land at the top of the image.
+ * Riverbank bands (256 × 92), repeated along each shore with the land at the top of the image.
  * `bankFar` shows the clay lip from the front, for shores whose land lies away from the camera;
  * `bankNear` shows it from above. The painted water edge sits `ORKHON_BANK_SHORE` down the band.
  */
@@ -39,7 +39,7 @@ export const ORKHON_BANK_SHORE = 0.73;
 export const orkhonTileKey = (tile: OrkhonTile | OrkhonBank): string =>
   `orkhon-${tile in ORKHON_TILES ? ORKHON_TILES[tile as OrkhonTile] : ORKHON_BANKS[tile as OrkhonBank]}`;
 
-/** World units covered by one repeat of a 128-pixel ground or water tile (`docs/art-spec.md`). */
+/** World units covered by one repeat of a ground or water tile (`docs/art-spec.md`). */
 export const ORKHON_TILE_WORLD_SIZE = ART_SPEC.orkhon.tileWorldSize;
 
 /** World units per sprite pixel for scenery at its painted scale. */

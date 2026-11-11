@@ -108,7 +108,7 @@ export class World3DRenderer {
     this.materials = new MountainMaterials(
       scene,
       palette,
-      Math.min(4, this.renderer.capabilities.getMaxAnisotropy()),
+      Math.min(WORLD_3D.anisotropy, this.renderer.capabilities.getMaxAnisotropy()),
       terrain instanceof ComposedTerrain ? terrain.region.scene.id : undefined,
     );
     for (const material of [this.materials.surface, this.materials.wall]) {
