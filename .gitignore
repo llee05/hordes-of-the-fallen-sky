@@ -10,3 +10,6 @@ test-results/
 playwright-report/
 *.local
 .DS_Store
+
+# Playwright MCP screenshots and snapshots (docs/visual-workflow.md)
+.playwright-mcp/

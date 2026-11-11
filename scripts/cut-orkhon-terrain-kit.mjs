@@ -16,10 +16,25 @@
 //   border becomes transparent, partly white edge texels are un-mixed from white so no white fringe
 //   remains, and transparent texels take nearby painted colour so linear filtering stays clean.
 //   Cutouts keep their full sheet resolution and are packed into one atlas with JSON frames.
+// Generic image helpers (healing, trimming, bleeding, packing) live in scripts/atlas/image.mjs.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import {
+  at,
+  bleed,
+  compose,
+  flipRows,
+  frameMap,
+  heal,
+  image,
+  shelfPack,
+  smoothstep,
+  trim,
+  turn,
+} from './atlas/image.mjs';
+import { writeImage } from './atlas/io.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sheetPath = resolve(process.argv[2] ?? join(root, 'art-source/orkhon-terrain-kit.png'));
@@ -60,35 +75,6 @@ const ATLAS_WIDTH = 1024;
 const GUTTER = 4;
 
 // ---------------------------------------------------------------------------------------------
-// Float RGB(A) images: { w, h, c, data: Float32Array } with values 0..255.
-
-const image = (w, h, c) => ({ w, h, c, data: new Float32Array(w * h * c) });
-const at = (img, x, y) => ((y * img.w + x) * img.c) | 0;
-const luma = (img, x, y) => {
-  const i = at(img, x, y);
-  return (img.data[i] * 0.299 + img.data[i + 1] * 0.587 + img.data[i + 2] * 0.114) / 255;
-};
-const smoothstep = (a, b, v) => {
-  const t = Math.max(0, Math.min(1, (v - a) / (b - a)));
-  return t * t * (3 - 2 * t);
-};
-/** Deterministic smooth value noise in [0, 1). */
-function noise(x, y, seed) {
-  const hash = (i, j) => {
-    let h = Math.imul(i, 374761393) + Math.imul(j, 668265263) + Math.imul(seed, 2147483647);
-    h = Math.imul(h ^ (h >>> 13), 1274126177);
-    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
-  };
-  const i = Math.floor(x),
-    j = Math.floor(y);
-  const fx = x - i,
-    fy = y - j;
-  const sx = fx * fx * (3 - 2 * fx),
-    sy = fy * fy * (3 - 2 * fy);
-  const top = hash(i, j) + (hash(i + 1, j) - hash(i, j)) * sx;
-  const bottom = hash(i, j + 1) + (hash(i + 1, j + 1) - hash(i, j + 1)) * sx;
-  return top + (bottom - top) * sy;
-}
 
 async function cell(sheet, [column, row], rows = [0, CELL]) {
   const { data, info } = await sheet
@@ -106,70 +92,6 @@ async function cell(sheet, [column, row], rows = [0, CELL]) {
   img.data.set(data);
   return img;
 }
-
-function roll(img, dx, dy) {
-  const out = image(img.w, img.h, img.c);
-  for (let y = 0; y < img.h; y++)
-    for (let x = 0; x < img.w; x++) {
-      const from = at(img, (x - dx + img.w) % img.w, (y - dy + img.h) % img.h);
-      out.data.set(img.data.subarray(from, from + img.c), at(out, x, y));
-    }
-  return out;
-}
-
-function turn(img) {
-  const out = image(img.h, img.w, img.c);
-  for (let y = 0; y < img.h; y++)
-    for (let x = 0; x < img.w; x++) {
-      const from = at(img, x, y);
-      out.data.set(img.data.subarray(from, from + img.c), at(out, img.h - 1 - y, x));
-    }
-  return out;
-}
-
-function flipRows(img) {
-  const out = image(img.w, img.h, img.c);
-  for (let y = 0; y < img.h; y++)
-    out.data.set(
-      img.data.subarray(at(img, 0, y), at(img, 0, y) + img.w * img.c),
-      at(out, 0, img.h - 1 - y),
-    );
-  return out;
-}
-
-/**
- * Offset-and-heal along one axis. Near the wrap edges the copy rolled by half a tile shows instead,
- * so the wrap joins painted neighbours; the copy's own join, in the middle, is never shown. Where
- * the two meet, the lighter or darker stroke wins (height blending), along an irregular line.
- */
-function healAxis(img, axis, seed) {
-  const size = axis === 'x' ? img.w : img.h;
-  const half = size >> 1;
-  const rolled = axis === 'x' ? roll(img, half, 0) : roll(img, 0, half);
-  const out = image(img.w, img.h, img.c);
-  const reach = size * 0.22;
-  for (let y = 0; y < img.h; y++)
-    for (let x = 0; x < img.w; x++) {
-      const p = axis === 'x' ? x : y;
-      const q = axis === 'x' ? y : x;
-      const edge = Math.min(p, size - 1 - p);
-      const wobble = noise(q / 23, edge / 31, seed) * reach * 0.6;
-      const weight = 1 - smoothstep(reach * 0.35, reach, edge + wobble);
-      const v = weight + (luma(rolled, x, y) - luma(img, x, y)) * 0.7;
-      const mix = edge < 2 ? 1 : smoothstep(0.44, 0.56, v);
-      const i = at(img, x, y);
-      for (let k = 0; k < img.c; k++)
-        out.data[i + k] = img.data[i + k] * (1 - mix) + rolled.data[i + k] * mix;
-    }
-  return out;
-}
-
-const heal = (img, seed, axes = 'xy') => {
-  let out = img;
-  if (axes.includes('x')) out = healAxis(out, 'x', seed);
-  if (axes.includes('y')) out = healAxis(out, 'y', seed + 1);
-  return out;
-};
 
 /**
  * Plain dirt quilted from the trail painting: square windows that hold only dirt, laid on a 5 x 5
@@ -249,10 +171,7 @@ function quiltDirt(trail) {
 
 /** Tiles keep the sheet's full 256-pixel resolution: 200 world units per repeat. */
 async function writeTile(img, file) {
-  const bytes = Buffer.from(img.data.map((v) => Math.max(0, Math.min(255, Math.round(v)))));
-  await sharp(bytes, { raw: { width: img.w, height: img.h, channels: 3 } })
-    .png({ compressionLevel: 9 })
-    .toFile(join(output, `${file}.png`));
+  await writeImage(img, join(output, `${file}.png`));
 }
 
 /**
@@ -322,68 +241,6 @@ function keyWhite(img) {
   return out;
 }
 
-function trim(img) {
-  let minX = img.w,
-    minY = img.h,
-    maxX = -1,
-    maxY = -1;
-  for (let y = 0; y < img.h; y++)
-    for (let x = 0; x < img.w; x++)
-      if (img.data[at(img, x, y) + 3] > 0) {
-        minX = Math.min(minX, x);
-        maxX = Math.max(maxX, x);
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y);
-      }
-  const out = image(maxX - minX + 1, maxY - minY + 1, 4);
-  for (let y = 0; y < out.h; y++)
-    out.data.set(
-      img.data.subarray(at(img, minX, minY + y), at(img, minX, minY + y) + out.w * 4),
-      at(out, 0, y),
-    );
-  return { img: out, offset: [minX, minY] };
-}
-
-/** Fill transparent texels with the colour of nearby painted texels (alpha unchanged). */
-function bleed(img) {
-  const filled = new Uint8Array(img.w * img.h);
-  for (let p = 0; p < img.w * img.h; p++) filled[p] = img.data[p * 4 + 3] > 0 ? 1 : 0;
-  for (let pass = 0; pass < 6; pass++) {
-    const next = filled.slice();
-    for (let y = 0; y < img.h; y++)
-      for (let x = 0; x < img.w; x++) {
-        if (filled[y * img.w + x]) continue;
-        let r = 0,
-          g = 0,
-          b = 0,
-          n = 0;
-        for (const [dx, dy] of [
-          [1, 0],
-          [-1, 0],
-          [0, 1],
-          [0, -1],
-        ]) {
-          const nx = x + dx,
-            ny = y + dy;
-          if (nx < 0 || ny < 0 || nx >= img.w || ny >= img.h || !filled[ny * img.w + nx]) continue;
-          const i = at(img, nx, ny);
-          r += img.data[i];
-          g += img.data[i + 1];
-          b += img.data[i + 2];
-          n++;
-        }
-        if (!n) continue;
-        const i = at(img, x, y);
-        img.data[i] = r / n;
-        img.data[i + 1] = g / n;
-        img.data[i + 2] = b / n;
-        next[y * img.w + x] = 1;
-      }
-    filled.set(next);
-  }
-  return img;
-}
-
 // ---------------------------------------------------------------------------------------------
 
 const sheet = sharp(sheetPath);
@@ -416,64 +273,24 @@ for (const cutout of CUTOUTS) {
   });
 }
 // Shelf packing, tallest first, with transparent gutters between frames.
-const order = [...pieces].sort((a, b) => b.img.h - a.img.h || b.img.w - a.img.w);
-let x = GUTTER,
-  y = GUTTER,
-  shelf = 0;
-for (const piece of order) {
-  if (x + piece.img.w + GUTTER > ATLAS_WIDTH) {
-    x = GUTTER;
-    y += shelf + GUTTER;
-    shelf = 0;
-  }
-  piece.x = x;
-  piece.y = y;
-  x += piece.img.w + GUTTER;
-  shelf = Math.max(shelf, piece.img.h);
-}
-const height = 2 ** Math.ceil(Math.log2(y + shelf + GUTTER));
-const atlas = Buffer.alloc(ATLAS_WIDTH * height * 4);
-for (const piece of pieces)
-  for (let row = 0; row < piece.img.h; row++)
-    for (let column = 0; column < piece.img.w; column++) {
-      const from = at(piece.img, column, row);
-      const to = ((piece.y + row) * ATLAS_WIDTH + piece.x + column) * 4;
-      for (let k = 0; k < 4; k++)
-        atlas[to + k] = Math.max(0, Math.min(255, Math.round(piece.img.data[from + k])));
-    }
-await sharp(atlas, { raw: { width: ATLAS_WIDTH, height, channels: 4 } })
-  .png({ compressionLevel: 9 })
-  .toFile(join(output, `${ATLAS}.png`));
-const frames = Object.fromEntries(
-  pieces.map((piece) => [
-    piece.name,
-    {
-      frame: { x: piece.x, y: piece.y, w: piece.img.w, h: piece.img.h },
-      rotated: false,
-      trimmed: false,
-      spriteSourceSize: { x: 0, y: 0, w: piece.img.w, h: piece.img.h },
-      sourceSize: { w: piece.img.w, h: piece.img.h },
-    },
-  ]),
+const packed = shelfPack(
+  pieces.map((piece) => piece.img),
+  { width: ATLAS_WIDTH, gutter: GUTTER },
 );
-writeFileSync(
-  join(output, `${ATLAS}.json`),
-  `${JSON.stringify(
-    {
-      frames,
-      meta: {
-        app: 'scripts/cut-orkhon-terrain-kit.mjs',
-        source: 'art-source/orkhon-terrain-kit.png',
-        image: `${ATLAS}.png`,
-        format: 'RGBA8888',
-        size: { w: ATLAS_WIDTH, h: height },
-        scale: '1',
-      },
-    },
-    null,
-    2,
-  )}\n`,
+for (const [index, piece] of pieces.entries()) Object.assign(piece, packed.positions[index]);
+await writeImage(compose(pieces, ATLAS_WIDTH, packed.height), join(output, `${ATLAS}.png`));
+const map = frameMap(
+  pieces.map((piece) => [piece.name, { x: piece.x, y: piece.y, w: piece.img.w, h: piece.img.h }]),
+  {
+    app: 'scripts/cut-orkhon-terrain-kit.mjs',
+    source: 'art-source/orkhon-terrain-kit.png',
+    image: `${ATLAS}.png`,
+    format: 'RGBA8888',
+    size: { w: ATLAS_WIDTH, h: packed.height },
+    scale: '1',
+  },
 );
+writeFileSync(join(output, `${ATLAS}.json`), `${JSON.stringify(map, null, 2)}\n`);
 for (const piece of pieces)
   console.log(
     `${piece.name}: ${piece.img.w}x${piece.img.h}, sheet cell ${piece.source.join(',')} offset ${piece.offset.join(',')}`,

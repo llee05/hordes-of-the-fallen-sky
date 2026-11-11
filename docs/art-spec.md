@@ -11,8 +11,8 @@ places onto the same scale.
 - **Tests:** `tests/unit/artSpec.test.ts` checks that the companion matches the camera, actor
   sizes, Orkhon constants, light and shadows the code uses, and that every Orkhon prop and
   landmark falls inside its size band.
-- **Palette and edge measurements:** `node scripts/measure-art.mjs` (development only, needs
-  ImageMagick) prints the palette and edge figures below from the bundled PNGs. Rerun it after an
+- **Palette and edge measurements:** `node scripts/measure-art.mjs` (development only, uses the
+  `sharp` dev dependency) prints the palette and edge figures below from the bundled PNGs. Rerun it after an
   art change and update `ART_SPEC.palette` and `ART_SPEC.edges` if the approved art moves.
 
 The broader direction, materials and prompts stay in [the Living Steppe Tapestry](living-steppe-tapestry.md)
