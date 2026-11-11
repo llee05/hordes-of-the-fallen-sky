@@ -84,7 +84,10 @@ export function sceneGeometry(terrain: ComposedTerrain, bounds: TerrainBounds): 
     geometry.normals.push(...n);
     geometry.occlusion.push(ao);
     const habitat = terrainHabitat(terrain, node.x, node.z, y, n[1]);
-    geometry.weights.push(...terrainMaterialWeights(terrain, y, n[1], habitat));
+    // Authored ground evaluates its masks per pixel (`orkhonGround.ts`); its vertices carry only
+    // cliff-foot nearness, which changes slowly.
+    if (terrain.region.scene.ground) geometry.weights.push(habitat.cliffFoot, 0, 0, 0, 0, 0, 0);
+    else geometry.weights.push(...terrainMaterialWeights(terrain, y, n[1], habitat));
   };
   for (let z = bounds.y; z < bounds.y + bounds.height; z += WORLD_3D.meshStep)
     for (let x = bounds.x; x < bounds.x + bounds.width; x += WORLD_3D.meshStep) {

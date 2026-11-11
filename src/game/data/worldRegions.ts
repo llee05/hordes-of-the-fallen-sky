@@ -47,7 +47,13 @@ export interface RegionComposition {
     paths: readonly (readonly TerrainPoint[])[];
     width: number;
     /** Graded ramps worn bare across their walkable width. */
-    ramps?: readonly { foot: TerrainPoint; top: TerrainPoint; halfWidth: number }[];
+    ramps?: readonly {
+      foot: TerrainPoint;
+      top: TerrainPoint;
+      halfWidth: number;
+      /** Outer edge of the steep flanks beside the graded width. */
+      shoulder?: number;
+    }[];
   };
   /** Camp-relative solid footprints, such as authored landmarks, blocked for movement. */
   obstacles?: readonly { x: number; y: number; radius: number }[];

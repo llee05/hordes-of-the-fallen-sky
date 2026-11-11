@@ -113,7 +113,9 @@ export class World3DRenderer {
       scene,
       palette,
       Math.min(WORLD_3D.anisotropy, this.renderer.capabilities.getMaxAnisotropy()),
-      terrain instanceof ComposedTerrain ? terrain.region.scene.id : undefined,
+      terrain instanceof ComposedTerrain && terrain.region.scene.id === 'orkhon-valley'
+        ? terrain
+        : undefined,
     );
     for (const material of [this.materials.surface, this.materials.wall]) {
       const mesh = new THREE.Mesh(new THREE.BufferGeometry(), material);

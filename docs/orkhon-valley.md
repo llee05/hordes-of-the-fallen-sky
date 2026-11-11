@@ -208,6 +208,17 @@ meet by height blending: each painting's own light and dark strokes decide where
 through, so edges follow tufts, stones and ruts rather than cross-fading two paintings into
 mush. The river tile spans bank to bank. Scenery uses supplied colours with no tint variation.
 
+Ground masks are evaluated per pixel, not per vertex of the 32-unit terrain mesh, whose cells
+are wider than a trail's worn edge (`world3d/orkhonGround.ts`). The level bakes its smooth mask
+inputs once into a 1024² world-space texture (about 5 units per texel): distance to the nearest
+trail, the broad moisture noise and river nearness. The Orkhon terrain program filters them
+linearly and applies every threshold per pixel, together with height above the floor (plateau
+tops), the surface slope (scree) and the ramps, which it reads from uniforms; mesh vertices
+carry only cliff-foot nearness. `orkhonGroundWeights` mirrors the shader, and its tests check
+that it reproduces the per-vertex rule (`authoredMaterialWeights`) at any point. Orkhon's
+terrain code is a separate shader program (`terrainShaderSource`), so other places draw exactly
+as before.
+
 The pack's ground and water tiles, cliff and waterfall sprites, `cliff_isolated` and rock
 sprites (other than the small boulder and pebbles) are retired: the kit replaces them.
 
