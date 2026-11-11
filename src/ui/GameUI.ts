@@ -29,7 +29,7 @@ import type { GamePlatform } from '../platform/GamePlatform';
 import { AUDIO_CHANNELS, normalizeAudioMix, type AudioChannel } from '../shared/audioSettings';
 import { isSaveSlot } from '../shared/expeditionSave';
 import type { NomadicBuildingId } from '../shared/nomadicCamp.js';
-import { normalizeVisualSettings } from '../shared/visualSettings';
+import { normalizeVisualSettings, resolutionLabel } from '../shared/visualSettings';
 import { clanMark } from './artwork';
 import {
   dangerWarningsContent,
@@ -973,7 +973,8 @@ export class GameUI {
       this.updateSettingsControls();
     } else if (
       button.dataset.visualSetting === 'projectileContrast' ||
-      button.dataset.visualSetting === 'effectDensity'
+      button.dataset.visualSetting === 'effectDensity' ||
+      button.dataset.visualSetting === 'renderResolution'
     ) {
       this.scene.setVisualSetting(button.dataset.visualSetting);
       this.updateSettingsControls();
@@ -1009,6 +1010,13 @@ export class GameUI {
       '[data-visual-setting="effectDensity"]',
     );
     if (density) density.textContent = visuals.effectDensity;
+    const resolution = this.overlay.querySelector<HTMLButtonElement>(
+      '[data-visual-setting="renderResolution"]',
+    );
+    if (resolution) {
+      resolution.textContent = resolutionLabel(visuals.renderResolution);
+      resolution.setAttribute('aria-pressed', String(visuals.renderResolution === 'full'));
+    }
 
     const sound = this.overlay.querySelector<HTMLButtonElement>('[data-action="sound"]');
     if (sound) {

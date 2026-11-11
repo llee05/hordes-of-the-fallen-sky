@@ -91,7 +91,7 @@ The Khan, allied archers, and all six creature designs have painted sprite anima
 
 Choose **Starting tradition** at the title to compare Shared hearth, Outrider circle, Hearthkeepers, and Pathfinders. Their riders, protection, movement, and starting-store tradeoffs change the opening while every facility remains available. The chosen preparation persists through the expedition and full saves. See [starting clan traditions](docs/starting-traditions.md).
 
-Brass elite/armour labels, directional offscreen danger warnings, and brief named-cause clan-loss messages make crowded combat easier to read. Settings offers saved **Projectile contrast** and **Effect density** controls; Minimal keeps combat warnings visible while removing decorative bursts and dust. See [combat readability](docs/combat-readability.md).
+Brass elite/armour labels, directional offscreen danger warnings, and brief named-cause clan-loss messages make crowded combat easier to read. Settings offers saved **Projectile contrast**, **Effect density** and **3D resolution** (Automatic or 100%) controls; Minimal keeps combat warnings visible while removing decorative bursts and dust. See [combat readability](docs/combat-readability.md).
 
 Per-stage expedition milestones appear in the chronicle and results. In development, `metrics` prints observations and `benchmark` compares all four starting arrangements under riding, guarding and early-migration schedules. The twelve fixed-length pressure checks exercise real economy and progression with modelled combat exposure. See [pacing and balance checks](docs/expedition-pacing.md).
 

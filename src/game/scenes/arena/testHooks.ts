@@ -247,10 +247,7 @@ export function createTestHooks(
     frozen = on;
     const world = arena.landscape.world3d;
     if (!world) return;
-    if (on) {
-      world.setRenderScale(1);
-      world['qualityTime'] = Infinity;
-    } else world['qualityTime'] = performance.now();
+    world.holdRenderScale(on);
   };
   const cameraState = (): CameraState => {
     const camera = scene.cameras.main;
@@ -334,11 +331,8 @@ export function createTestHooks(
         for (const enemy of arena.enemies.getChildren()) (enemy as Enemy).disableBody(true, true);
         invincible({ khan: true, clan: true });
         crowd(options);
-        if (world) {
-          world.setRenderScale(1);
-          // Hold quality steady so before/after samples draw the same pixels.
-          world['qualityTime'] = Infinity;
-        }
+        // Hold quality steady so before/after samples draw the same pixels.
+        world?.holdRenderScale(true);
         await new Promise((resolve) => setTimeout(resolve, warmup * 1000));
         const profile = await profileFrames(scene.game.events, profileTargets(navigation), seconds);
         return {
@@ -350,7 +344,7 @@ export function createTestHooks(
         };
       } finally {
         Math.random = random;
-        if (world) world['qualityTime'] = performance.now();
+        world?.holdRenderScale(false);
       }
     },
     getState,

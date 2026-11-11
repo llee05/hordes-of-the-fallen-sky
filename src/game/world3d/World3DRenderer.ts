@@ -18,6 +18,7 @@ import { sceneGeometry } from './sceneGeometry';
 import { sceneDressing } from './sceneDressing';
 import { Water3D } from './Water3D';
 import { OrkhonOverlay } from './orkhonOverlay';
+import { initialRenderScale, stepRenderScale, type RenderResolution } from './renderScale';
 
 interface RenderChunk {
   group: THREE.Group;
@@ -55,7 +56,10 @@ export class World3DRenderer {
   private shadowZ = -Infinity;
   private focusHeight?: number;
   private shadowTime = 0;
-  private qualityTime = performance.now();
+  private scaleState = initialRenderScale();
+  private resolution: RenderResolution = 'auto';
+  private scaleHeld = false;
+  private lastFrame = performance.now();
   private readonly collisionMaterial = new THREE.LineBasicMaterial({
     color: 0xff6655,
     depthTest: false,
@@ -157,6 +161,26 @@ export class World3DRenderer {
     if (Number.isFinite(angle))
       this.angle = Math.max(WORLD_3D.minAngle, Math.min(WORLD_3D.maxAngle, angle));
   }
+  /**
+   * `full` always draws every pixel; `auto` lets `renderScale.ts` trade pixels for frame rate
+   * after sustained slow frames.
+   */
+  setResolution(mode: RenderResolution): void {
+    this.resolution = mode;
+    this.scaleState = initialRenderScale(mode === 'full' ? 1 : this.renderScale);
+    if (mode === 'full') this.setRenderScale(1);
+  }
+
+  /**
+   * Hold every pixel while held (repeatable captures and profiles); automatic scaling starts
+   * afresh, with its load settle time, when released.
+   */
+  holdRenderScale(on: boolean): void {
+    this.scaleHeld = on;
+    if (on) this.setRenderScale(1);
+    this.scaleState = initialRenderScale(this.renderScale);
+  }
+
   /** Match fragment cost to the existing adaptive pixel scale without changing world or camera units. */
   setRenderScale(scale: number): void {
     if (!Number.isFinite(scale)) return;
@@ -365,19 +389,15 @@ export class World3DRenderer {
     this.timings.draw = performance.now() - mark;
     // Bound fragment load on integrated/software GPUs without resizing the HUD or world units.
     const now = performance.now();
-    if (this.pendingChunks === 0 && this.debugMode === 'off' && now - this.qualityTime > 2000) {
-      const fps = this.scene.game.loop.actualFps;
-      const scale =
-        fps > 0 && fps < 28
-          ? Math.max(WORLD_3D.minRenderScale, this.renderScale - 0.15)
-          : fps > 57 && now - this.qualityTime > 10000
-            ? Math.min(1, this.renderScale + 0.1)
-            : this.renderScale;
-      if (scale !== this.renderScale) {
-        this.setRenderScale(scale);
-        this.qualityTime = now;
-      }
-    }
+    this.scaleState = stepRenderScale(this.scaleState, {
+      dt: (now - this.lastFrame) / 1000,
+      fps: this.scene.game.loop.actualFps,
+      mode: this.resolution,
+      busy: this.scaleHeld || this.pendingChunks > 0 || this.debugMode !== 'off',
+    });
+    this.lastFrame = now;
+    if (!this.scaleHeld && this.scaleState.scale !== this.renderScale)
+      this.setRenderScale(this.scaleState.scale);
     this.label.style.display = this.debugMode === 'off' && !this.terrainOnly ? 'none' : 'block';
     this.label.textContent = `3D · ${this.debugMode.toUpperCase()} · ${this.angle}° · F9 debug\n${this.chunks.size} chunks · ${this.pendingChunks} pending · ${this.renderer.info.render.calls} draws · ${Math.round(this.renderScale * 100)}% pixels`;
   }

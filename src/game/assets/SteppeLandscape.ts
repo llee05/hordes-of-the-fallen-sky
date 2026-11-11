@@ -5,11 +5,13 @@ import { World3DRenderer } from '../world3d/World3DRenderer';
 import { ComposedTerrain } from '../world3d/ComposedTerrain';
 import { LANDSCAPES } from '../data/landscapes';
 import { composedRegion } from '../data/worldRegions';
+import type { RenderResolution } from '../world3d/renderScale';
 
 /** The angled world owns presentation; ArenaScene owns simulation and collisions. */
 export class SteppeLandscape {
   world3d?: World3DRenderer;
   navigation?: TerrainNavigation;
+  private resolution: RenderResolution = 'auto';
 
   constructor(private readonly scene: Phaser.Scene) {
     this.setLocation(LOCATIONS[0]!);
@@ -24,7 +26,14 @@ export class SteppeLandscape {
     const terrain = new ComposedTerrain(composedRegion(id), LANDSCAPES[id].water);
     this.navigation = new TerrainNavigation(terrain);
     this.world3d = new World3DRenderer(this.scene, terrain, this.navigation);
+    this.world3d.setResolution(this.resolution);
     this.scene.cameras.main.setAlpha(0);
+  }
+
+  /** The player's 3D resolution setting, kept across location changes. */
+  setResolution(mode: RenderResolution): void {
+    this.resolution = mode;
+    this.world3d?.setResolution(mode);
   }
 
   cycleTerrainDebug(): void {

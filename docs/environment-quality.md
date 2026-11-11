@@ -111,6 +111,15 @@ filtering below 70% resolution; full quality retains rotated secondary samples a
 soft PCF shadows. Camera projection, world dimensions, collision, and HUD layout
 stay constant during these transitions. Debug overlays skip material sampling.
 
+The scaler (`world3d/renderScale.ts`) draws up to a device pixel ratio of 2 and reacts only
+to sustained slow frames. It ignores the first six seconds after a level loads (texture
+uploads and shader compiles stall there) and any time terrain is still streaming. Below
+28 FPS for three seconds it steps down by 12.5%, to no lower than 75%; it goes below 75%,
+to 50%, only after eight seconds under 20 FPS. Above 45 FPS for four seconds it steps
+back up, and a raise that bounces straight back down doubles the wait before the next.
+Settings → **3D resolution** chooses Automatic (the default) or 100%, which always draws
+every pixel; the choice is saved with the other visual settings.
+
 Review captures: `test-results/environment/before-golden.png` and
 `after-golden.png` use the same seed, target, zoom, and 941×1030 viewport. The paired
 `before-terrain.png` / `after-terrain.png` isolate materials and geology.
