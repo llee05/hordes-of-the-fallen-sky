@@ -156,34 +156,60 @@ export function mipSeams(img, minSize = 16, axes = 'xy') {
 }
 
 /**
- * Tiling period: the mean colour of each quarter of the tile. A strong difference between
- * quarters (a lighter or warmer corner) is what makes the repeat visible from afar.
+ * Tiling period: the mean CIELAB lightness of each quarter of the tile (or, for a band that wraps
+ * only along x, of its left and right halves). A strong difference between them (a lighter or
+ * darker corner) is what makes the repeat visible from afar.
  */
-export function quarterContrast(img) {
-  const quarters = [];
-  for (const [qx, qy] of [
-    [0, 0],
-    [1, 0],
-    [0, 1],
-    [1, 1],
-  ]) {
-    const q = crop(img, {
-      x: (qx * img.w) >> 1,
-      y: (qy * img.h) >> 1,
-      w: img.w >> 1,
-      h: img.h >> 1,
-    });
+export function quarterContrast(img, axes = 'xy') {
+  const cells =
+    axes === 'x'
+      ? [
+          { x: 0, y: 0, w: img.w >> 1, h: img.h },
+          { x: img.w >> 1, y: 0, w: img.w >> 1, h: img.h },
+        ]
+      : [
+          [0, 0],
+          [1, 0],
+          [0, 1],
+          [1, 1],
+        ].map(([qx, qy]) => ({
+          x: (qx * img.w) >> 1,
+          y: (qy * img.h) >> 1,
+          w: img.w >> 1,
+          h: img.h >> 1,
+        }));
+  const quarters = cells.map((rect) => {
+    const q = crop(img, rect);
     let sum = 0;
     for (let i = 0; i < q.w * q.h; i++) {
       const [l] = lab(q.data[i * q.c], q.data[i * q.c + 1], q.data[i * q.c + 2]);
       sum += l;
     }
-    quarters.push(sum / (q.w * q.h));
-  }
+    return sum / (q.w * q.h);
+  });
   return {
     quarterLightness: quarters.map((v) => Math.round(v * 10) / 10),
     spread: Math.round((Math.max(...quarters) - Math.min(...quarters)) * 10) / 10,
   };
+}
+
+/**
+ * Sides of `rect` cut straight through paint: at least `share` of the side's texels are mostly
+ * opaque (alpha >= 128). Trimmed cutouts touch their frame only with a few soft texels.
+ */
+export function croppedSides(img, rect, share = 0.25) {
+  const alpha = (x, y) => alphaOf(img, at(img, rect.x + x, rect.y + y));
+  const sides = {
+    left: Array.from({ length: rect.h }, (_, y) => [0, y]),
+    top: Array.from({ length: rect.w }, (_, x) => [x, 0]),
+    right: Array.from({ length: rect.h }, (_, y) => [rect.w - 1, y]),
+    bottom: Array.from({ length: rect.w }, (_, x) => [x, rect.h - 1]),
+  };
+  return Object.entries(sides)
+    .filter(
+      ([, points]) => points.filter(([x, y]) => alpha(x, y) >= 128).length >= share * points.length,
+    )
+    .map(([side]) => side);
 }
 
 /** Shares of transparent (alpha 0), partial and opaque (255) texels. */

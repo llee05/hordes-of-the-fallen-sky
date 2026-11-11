@@ -20,7 +20,10 @@ export function mipSeams(
   minSize?: number,
   axes?: string,
 ): { size: [number, number]; seam: number }[];
-export function quarterContrast(img: Img): { quarterLightness: number[]; spread: number };
+export function quarterContrast(
+  img: Img,
+  axes?: string,
+): { quarterLightness: number[]; spread: number };
 export function alphaCoverage(img: Img): { transparent: number; partial: number; opaque: number };
 export function paintBounds(
   img: Img,
@@ -46,3 +49,4 @@ export function edgeFringe(
   rect?: Rect,
 ): { outline: number; lightOutline: number; transparentWhite: number; transparentBlack: number };
 export function unitsPerTexel(worldSize: number, pixels: number): number;
+export function croppedSides(img: Img, rect: Rect, share?: number): string[];

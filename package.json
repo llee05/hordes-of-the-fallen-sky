@@ -32,7 +32,11 @@
     "package:win": "npm run package -- --platform=win32 --arch=x64",
     "steam:prepare": "node scripts/prepare-steam.mjs",
     "test:desktop": "node scripts/local-tests.mjs desktop",
-    "test:perf": "node scripts/local-tests.mjs perf"
+    "test:perf": "node scripts/local-tests.mjs perf",
+    "atlas:inspect": "node scripts/atlas/inspect.mjs",
+    "atlas:validate": "node scripts/atlas/validate.mjs",
+    "atlas:assemble": "node scripts/atlas/assemble.mjs",
+    "atlas:orkhon": "node scripts/atlas/validate.mjs --orkhon"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",
