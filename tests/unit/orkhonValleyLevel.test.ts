@@ -28,6 +28,7 @@ import { ambientArrivalAngle, authoredFieldSite } from '../../src/game/systems/a
 import { TerrainNavigation } from '../../src/game/terrain/TerrainNavigation';
 import type { TerrainPoint } from '../../src/game/terrain/types';
 import { ComposedTerrain, outlineField } from '../../src/game/world3d/ComposedTerrain';
+import { ORKHON_PAINTED_GROUND } from '../../src/game/world3d/orkhonPaintedGround';
 import {
   BANK_ACROSS,
   CAMERA_DIRECTION,
@@ -90,6 +91,7 @@ describe('Orkhon Valley terrain kit and pack assets', () => {
       .sort();
     expect(files).toEqual(
       [
+        ORKHON_PAINTED_GROUND.file,
         ...Object.values(ORKHON_TILES).map((tile) => `${tile}.png`),
         ...Object.values(ORKHON_BANKS).map((bank) => `${bank}.png`),
         ...[ORKHON_ATLAS, ORKHON_KIT_ATLAS].flatMap((atlas) => [`${atlas}.json`, `${atlas}.png`]),

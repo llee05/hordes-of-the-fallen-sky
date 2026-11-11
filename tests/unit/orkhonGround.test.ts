@@ -21,6 +21,7 @@ import {
 } from '../../src/game/world3d/terrainHabitat';
 import {
   ORKHON_COLOR,
+  ORKHON_PAINTED_GROUND_SAMPLING,
   ORKHON_SAMPLING,
   TERRAIN_COLOR,
   TERRAIN_SAMPLING,
@@ -253,6 +254,13 @@ describe('terrain shader programs', () => {
     expect(authored.sampling).not.toContain(TERRAIN_SAMPLING);
     expect(authored.color).toBe(ORKHON_COLOR);
     expect(terrainShaderSource({ ramps: 0 }).sampling).toContain('#define ORKHON_RAMPS 1');
+    const painted = terrainShaderSource({ ramps: 8, paintedGround: true });
+    expect(painted.sampling).toContain(ORKHON_PAINTED_GROUND_SAMPLING);
+    expect(painted.sampling).toContain('paintedGroundBounds');
+    expect(painted.color).toContain('paintedGroundBlend(worldPoint.xz,n.y)');
+    expect(painted.color).toContain('mix(surface,paintedGroundColor(worldPoint.xz),paintedBlend)');
+    expect(authored.sampling).not.toContain('paintedGroundMap');
+    expect(authored.color).not.toContain('paintedGroundBlend');
   });
 
   it('gives only Orkhon a scene ground plan', () => {

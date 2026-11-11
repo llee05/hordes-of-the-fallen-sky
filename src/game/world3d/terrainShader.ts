@@ -282,6 +282,33 @@ export const ORKHON_SAMPLING = `
   }
 `;
 
+/** Optional world-space painting for the reversible Orkhon prototype. */
+export const ORKHON_PAINTED_GROUND_SAMPLING = `
+  uniform sampler2D paintedGroundMap;
+  // minimum world x/z, followed by painted width/depth
+  uniform vec4 paintedGroundBounds;
+  float paintedGroundBlend(vec2 p, float normalY) {
+    vec2 uv=(p-paintedGroundBounds.xy)/paintedGroundBounds.zw;
+    float inside=step(0.0,uv.x)*step(0.0,uv.y)*step(uv.x,1.0)*step(uv.y,1.0);
+    vec2 edge2=min(uv,1.0-uv);
+    float edge=min(edge2.x,edge2.y);
+    // About 320–480 world units of irregular feather. It always reaches zero before the
+    // rectangle boundary, so the clamped texture can never expose a straight edge.
+    float variation=0.5+0.25*sin(p.x/91.0+sin(p.y/127.0)*1.7)+0.25*sin(p.y/73.0-p.x/149.0);
+    float start=mix(0.02,0.05,variation);
+    float finish=mix(0.2,0.3,variation);
+    float edgeBlend=smoothstep(start,finish,edge);
+    // Keep cliff walls and steep ramp flanks on their existing materials; the walkable ramp
+    // surface remains shallow enough to receive the painting.
+    return inside*edgeBlend*smoothstep(0.64,0.78,normalY);
+  }
+  vec3 paintedGroundColor(vec2 p) {
+    vec2 uv=(p-paintedGroundBounds.xy)/paintedGroundBounds.zw;
+    // World z grows south/down the source painting; Three's image texture has a bottom-left UV.
+    return texture2D(paintedGroundMap,vec2(uv.x,1.0-uv.y)).rgb;
+  }
+`;
+
 export const ORKHON_COLOR = `
   vec3 n=normalize(worldNormal);
   // Derivatives for the painted cliff bands, taken where every pixel of a quad runs them.
@@ -340,13 +367,24 @@ export const ORKHON_COLOR = `
  * Fragment additions for a terrain program: the sampling functions to prepend and the colour step
  * that follows `#include <color_fragment>`. Only Orkhon programs carry the Orkhon code.
  */
-export function terrainShaderSource(orkhon: { ramps: number } | undefined): {
+export function terrainShaderSource(
+  orkhon: { ramps: number; paintedGround?: boolean } | undefined,
+): {
   sampling: string;
   color: string;
 } {
   if (!orkhon) return { sampling: TERRAIN_SAMPLING, color: TERRAIN_COLOR };
+  const paintedGround = orkhon.paintedGround === true;
+  const color = paintedGround
+    ? ORKHON_COLOR.replace(
+        '    } else if(materialB.z>0.5)',
+        `      float paintedBlend=paintedGroundBlend(worldPoint.xz,n.y);
+      surface=mix(surface,paintedGroundColor(worldPoint.xz),paintedBlend);
+    } else if(materialB.z>0.5)`,
+      )
+    : ORKHON_COLOR;
   return {
-    sampling: `#define ORKHON_RAMPS ${Math.max(1, orkhon.ramps)}\n${ORKHON_SAMPLING}`,
-    color: ORKHON_COLOR,
+    sampling: `#define ORKHON_RAMPS ${Math.max(1, orkhon.ramps)}\n${ORKHON_SAMPLING}${paintedGround ? ORKHON_PAINTED_GROUND_SAMPLING : ''}`,
+    color,
   };
 }

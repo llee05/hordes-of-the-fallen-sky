@@ -13,6 +13,7 @@ import {
   type OrkhonBank,
   type OrkhonTile,
 } from './orkhonValleyArt';
+import { ORKHON_PAINTED_GROUND, orkhonPaintedGroundEnabled } from '../world3d/orkhonPaintedGround';
 
 export { playerVisualConfig };
 
@@ -87,6 +88,8 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
     `${root}tapestry-scenery-v3.json`,
   );
   const orkhon = `${root}orkhon-valley/`;
+  if (orkhonPaintedGroundEnabled(globalThis.location?.search ?? '', import.meta.env.DEV))
+    scene.load.image(ORKHON_PAINTED_GROUND.texture, `${orkhon}${ORKHON_PAINTED_GROUND.file}`);
   for (const tile of Object.keys(ORKHON_TILES) as OrkhonTile[])
     scene.load.image(orkhonTileKey(tile), `${orkhon}${ORKHON_TILES[tile]}.png`);
   for (const bank of Object.keys(ORKHON_BANKS) as OrkhonBank[])

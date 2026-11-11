@@ -41,6 +41,7 @@ interface World3D {
 }
 
 const OUTPUT = process.env.VISUAL_OUTPUT_DIR || join('test-results', 'visual', 'orkhon');
+const PAINTED_GROUND = process.env.ORKHON_PAINTED_GROUND === '1';
 
 test.setTimeout(120_000);
 
@@ -51,7 +52,7 @@ test.beforeEach(async ({ page }) => {
     // A focus change must not open the pause menu mid-capture.
     window.addEventListener('blur', (event) => event.stopImmediatePropagation(), true);
   });
-  await page.goto('/');
+  await page.goto(PAINTED_GROUND ? '/?orkhonPaintedGround=1' : '/');
   await expect(page.locator('canvas[data-world-renderer="3d"]')).toBeVisible();
   await page.waitForFunction(() => !!window.__gloam?.hooks);
 });

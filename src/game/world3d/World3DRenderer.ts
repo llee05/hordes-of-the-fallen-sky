@@ -19,6 +19,7 @@ import { sceneDressing } from './sceneDressing';
 import { Water3D } from './Water3D';
 import { OrkhonOverlay } from './orkhonOverlay';
 import { initialRenderScale, stepRenderScale, type RenderResolution } from './renderScale';
+import { orkhonPaintedGroundEnabled } from './orkhonPaintedGround';
 
 interface RenderChunk {
   group: THREE.Group;
@@ -109,13 +110,17 @@ export class World3DRenderer {
     this.sun.shadow.radius = 1.6;
     this.sun.shadow.intensity = 0.72;
     this.world.add(this.sun, this.sun.target, this.actors);
+    const orkhon =
+      terrain instanceof ComposedTerrain && terrain.region.scene.id === 'orkhon-valley'
+        ? terrain
+        : undefined;
     this.materials = new MountainMaterials(
       scene,
       palette,
       Math.min(WORLD_3D.anisotropy, this.renderer.capabilities.getMaxAnisotropy()),
-      terrain instanceof ComposedTerrain && terrain.region.scene.id === 'orkhon-valley'
-        ? terrain
-        : undefined,
+      orkhon,
+      orkhon !== undefined &&
+        orkhonPaintedGroundEnabled(globalThis.location?.search ?? '', import.meta.env.DEV),
     );
     for (const material of [this.materials.surface, this.materials.wall]) {
       const mesh = new THREE.Mesh(new THREE.BufferGeometry(), material);
