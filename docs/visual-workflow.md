@@ -103,3 +103,30 @@ everything over the game canvas:
 Verified on 2026-11-11 with a minimal stdio MCP client that started the server exactly as
 `.mcp.json` describes, listed its tools, ran steps 2–6 against `npm run dev:web` and received a
 1280×800 PNG of Orkhon Valley; the console log showed the NVIDIA GL driver (hardware WebGL).
+
+## Repeatable Orkhon Valley captures
+
+`npm run visual:orkhon` draws seven fixed Orkhon Valley terrain views at 1280×800 and saves them
+as PNGs in the gitignored `test-results/visual/orkhon/` (or `VISUAL_OUTPUT_DIR`). It is a capture,
+not a regression test: nothing is compared, and it is excluded from `npm run test:e2e` and
+`npm run test:reference`. Like the reference scenes it takes the shared browser lock, starts its
+own dev server (`E2E_PORT` moves the port) and uses the local GPU policy in
+`playwright.graphics.ts`.
+
+Each view (`tests/visual/orkhon-capture.spec.ts`, config `playwright.visual.config.ts`) loads the
+seeded Orkhon checkpoint with `loadScenario`, sets the 3D resolution to 100% (the Settings
+option) and, for the grazing view, the camera elevation (the console's `camera-angle`), then
+`freezeVisuals`, `setCamera` and `captureScene`, and hides the HUD.
+
+| File                       | View                                                             |
+| -------------------------- | ---------------------------------------------------------------- |
+| `01-valley-ground.png`     | Open valley floor south-west of camp: tiles, regions and trails  |
+| `02-plateau-edge-ramp.png` | The falls-plateau ramp nearest camp with its cliffs and rim      |
+| `03-ramp-closeup.png`      | The same ramp at the closest zoom (1.6)                          |
+| `04-river-bank-bridge.png` | The bridge, river tiles and bank bands                           |
+| `05-falls.png`             | The falls, plunge pool and the head of the river                 |
+| `06-overview-zoom60.png`   | The widest zoom the game allows (0.6) around camp                |
+| `07-grazing-angle.png`     | Camera elevation 35° (the debug minimum) across the valley floor |
+
+Compare captures from before and after a change on the same machine: they depend on the GPU and
+browser that drew them.
