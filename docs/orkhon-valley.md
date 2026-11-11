@@ -114,7 +114,7 @@ repainting, recolouring or tinting:
 | (1,1) valley grass, calm           | Valley floor base                                          |
 | (1,2) valley grass, sun-cured      | A few broad, rare regions away from the camp clearing      |
 | (1,3) valley grass, olive          | Valley regions alternating with the calm grass             |
-| (1,4) plateau grass                | Every plateau top, in regions of two orientations          |
+| (1,4) plateau grass                | Every plateau top                                          |
 | (1,5) dirt trail                   | Quilted plain dirt: hearth, worn paths and ramps           |
 | (1,6) scree and gravel             | Cliff-foot scree band, steep ground and the riverbed       |
 | (2,1) cliff straight run           | Four opaque bands painting every cliff wall and ramp flank |
@@ -198,15 +198,21 @@ and anchors, and the cliff bands.
 | `structures/`          | The bridge deck                                                    |
 | `landmarks/`, `camps/` | Raider camps, ruins, ovoo, shrines, banners, racks, camp outskirts |
 
-Ground channels: valley grass is the calm painting with regions of the olive variant turned a
-quarter, roughly 400–1,100 units across, so the tile grids never line up. Plateau tops are the
-darker plateau moss right up to the cliff lip, in regions of two orientations; elevation reads
+Ground channels: valley grass is the calm painting with regions of the olive variant, roughly
+400–1,100 units across. Plateau tops are the darker plateau moss right up to the cliff lip; elevation reads
 from that tone and the cliff's inked lip, not from a lighter rim band or tint. A few broad,
 rare valley regions away from the camp are sun-cured straw. Trail dirt covers the hearth,
 narrow worn trails and ramps; scree a narrow band at cliff feet; the bank bands line the shore. Materials
 meet by height blending: each painting's own light and dark strokes decide where it shows
 through, so edges follow tufts, stones and ruts rather than cross-fading two paintings into
 mush. The river tile spans bank to bank. Scenery uses supplied colours with no tint variation.
+Every ground painting is hex-tile sampled (`hexPainting` in `terrainShader.ts`): three copies,
+each translated by a random offset per vertex of a triangle grid about 100 units apart, blend
+by distance and by their own luminance, so the 200-unit repeat no longer shows as rows of
+flowers and tufts. Copies are never rotated, so the painted light stays upper left. Each copy
+belongs to one of the grid's three vertex classes, so its offset changes only where its weight
+is zero and ordinary anisotropic sampling picks the right mip level. Below 70% render scale
+(`samplingDetail`) each painting is sampled once.
 
 Ground masks are evaluated per pixel, not per vertex of the 32-unit terrain mesh, whose cells
 are wider than a trail's worn edge (`world3d/orkhonGround.ts`). The level bakes its smooth mask

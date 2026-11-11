@@ -8,6 +8,7 @@ import {
   ORKHON_GROUND_MASK,
   orkhonGroundWeights,
   orkhonRampUniforms,
+  orkhonRampWear,
   sampleGroundMask,
   trailSegments,
 } from '../../src/game/world3d/orkhonGround';
@@ -101,6 +102,21 @@ describe('Orkhon per-pixel ground masks', () => {
     expect(worst.trail).toBeLessThan(2);
     expect(worst.broad).toBeLessThan(0.01);
     expect(worst.shore).toBeLessThan(0.05);
+  });
+
+  it('marks every place a ramp can wear the ground, and little else', () => {
+    let inside = 0;
+    for (let x = 13; x < orkhon.worldSize; x += 29)
+      for (let z = 7; z < orkhon.worldSize; z += 31) {
+        const [, , , near] = sampleGroundMask(mask, orkhon.worldSize, x, z);
+        const { wear } = orkhonRampWear(ground.ramps!, x - C, z - C);
+        if (wear > 0) expect(near, `${x},${z}`).toBe(1);
+        inside += near > 0 ? 1 : 0;
+      }
+    // Eight ramps' neighbourhoods are under a tenth of the battlefield.
+    expect(
+      inside / (Math.ceil(orkhon.worldSize / 29) * Math.ceil(orkhon.worldSize / 31)),
+    ).toBeLessThan(0.1);
   });
 
   it('draws trail edges that change within a mesh cell instead of along its triangles', () => {

@@ -177,13 +177,16 @@ export const ORKHON_SAMPLING = `
     vec2 c=p.xz-vec2(worldSize*0.5);
     float elevation=p.y-floorHeight;
     float top=smoothstep(plateauRise*0.55,plateauRise*0.85,elevation);
-    float stone=clamp(smoothstep(0.3,0.62,1.0-normalY)+pow(cliffFoot,4.0)*(1.0-top)*0.6,0.0,1.0);
+    float foot=cliffFoot*cliffFoot;
+    float stone=clamp(smoothstep(0.3,0.62,1.0-normalY)+foot*foot*(1.0-top)*0.6,0.0,1.0);
     float radius=length(c);
     float hearth=(1.0-smoothstep(60.0,180.0,radius))*0.7;
     float clearing=1.0-smoothstep(750.0,1000.0,radius);
-    vec3 mask=texture2D(groundMask,p.xz/worldSize).rgb;
+    vec4 mask=texture2D(groundMask,p.xz/worldSize);
     float trail=1.0-smoothstep(trailWidth*0.2,trailWidth*0.8,mask.r*trailRange);
-    float wear=max(hearth,max(trail,orkhonRampWear(p.xz))*0.9);
+    // Only pixels near a ramp (mask alpha) walk the ramp list.
+    float ramp=mask.a>0.0?orkhonRampWear(p.xz):0.0;
+    float wear=max(hearth,max(trail,ramp)*0.9);
     float exposure=clamp(smoothstep(120.0,650.0,elevation)*0.55+(1.0-normalY)*0.8+(1.0-mask.g)*0.25,0.0,1.0);
     float moisture=clamp(0.18+mask.g*0.48+mask.b*0.64-exposure*0.26,0.0,1.0);
     float soil=(1.0-stone)*wear, cover=(1.0-stone)*(1.0-wear);
@@ -191,38 +194,81 @@ export const ORKHON_SAMPLING = `
     float grass=cover*(1.0-dry);
     wA=vec4(grass*(1.0-top),soil,stone,cover*dry); wMoss=grass*top;
   }
-  // Authored locations sample supplied tiles exactly once at their painted scale. Materials meet
-  // by height blending: each painting's own light and dark strokes decide where it shows through,
-  // so edges follow tufts, stones and ruts instead of a soft cross-fade. Colours are untouched.
-  float authoredHeight(vec3 c, float weight) {
-    return weight + (dot(c, vec3(0.299, 0.587, 0.114)) - 0.45) * 0.7;
+  // Hex-tile sampling (Mikkelsen, "Practical Real-Time Hex-Tiling", 2022): three copies of the
+  // painting, each translated by a random offset per vertex of a triangle grid about 100 units
+  // apart, blended by distance and by each copy's own luminance, so copies meet along painted
+  // strokes and the 200-unit repeat disappears. Copies are never rotated, mirrored, scaled or
+  // tinted, so the painted light stays upper left. Each copy belongs to one of the grid's three
+  // vertex classes, so its offset only changes where its weight is zero and ordinary sampling
+  // (with anisotropic filtering) picks the right mip level. Below 70% render scale: one sample.
+  const vec3 LUMA=vec3(0.299,0.587,0.114);
+  struct Hex { vec2 cell0; vec2 cell1; vec2 cell2; vec3 weight; };
+  Hex hexGrid(vec2 uv) {
+    vec2 st=uv*2.0;
+    vec2 skew=vec2(st.x-0.57735027*st.y,1.15470054*st.y);
+    vec2 base=floor(skew), f=fract(skew);
+    float fz=1.0-f.x-f.y, s=step(0.0,-fz), s2=2.0*s-1.0;
+    vec2 v1=base+vec2(s), v2=base+vec2(s,1.0-s), v3=base+vec2(1.0-s,s);
+    vec3 w=pow(max(vec3(-fz*s2,s-f.y*s2,s-f.x*s2),0.0),vec3(7.0));
+    // Vertex class (a + 2b) mod 3: every triangle holds one vertex of each class.
+    vec3 k=mod(vec3(v1.x+2.0*v1.y,v2.x+2.0*v2.y,v3.x+2.0*v3.y),3.0);
+    Hex h;
+    h.cell0=k.x<0.5?v1:(k.y<0.5?v2:v3); h.cell1=abs(k.x-1.0)<0.5?v1:(abs(k.y-1.0)<0.5?v2:v3);
+    h.cell2=k.x>1.5?v1:(k.y>1.5?v2:v3);
+    h.weight=vec3(k.x<0.5?w.x:(k.y<0.5?w.y:w.z),abs(k.x-1.0)<0.5?w.x:(abs(k.y-1.0)<0.5?w.y:w.z),
+      k.x>1.5?w.x:(k.y>1.5?w.y:w.z));
+    h.weight*=step(max(h.weight.x,max(h.weight.y,h.weight.z))*0.02,h.weight);
+    return h;
   }
-  // Two grass paintings alternate in regions, meeting along their own strokes.
-  vec3 grassRegions(vec3 calm, vec3 other, float swap) {
-    float w=smoothstep(0.35,0.65,swap);
-    return authoredHeight(other,w)>authoredHeight(calm,1.0-w)?other:calm;
+  vec2 hexOffset(vec2 cell, float seed) {
+    return fract(sin(vec2(dot(cell,vec2(127.1,311.7)),dot(cell,vec2(269.5,183.3)))+seed)*43758.5453);
+  }
+  vec3 hexPainting(sampler2D map, vec2 uv, Hex h, float seed) {
+    if(samplingDetail<0.5) return texture2D(map,uv).rgb;
+    vec2 u0=uv+hexOffset(h.cell0,seed), u1=uv+hexOffset(h.cell1,seed), u2=uv+hexOffset(h.cell2,seed);
+    vec3 w=h.weight, c0=vec3(0.0), c1=c0, c2=c0;
+    if(w.x>0.0) c0=texture2D(map,u0).rgb;
+    if(w.y>0.0) c1=texture2D(map,u1).rgb;
+    if(w.z>0.0) c2=texture2D(map,u2).rgb;
+    w*=mix(vec3(1.0),vec3(dot(c0,LUMA),dot(c1,LUMA),dot(c2,LUMA)),0.6);
+    return (c0*w.x+c1*w.y+c2*w.z)/max(w.x+w.y+w.z,1e-5);
+  }
+  // Materials meet by height blending: each painting's own light and dark strokes decide where it
+  // shows through, so edges follow tufts, stones and ruts instead of a soft cross-fade. Colours
+  // are untouched.
+  float authoredHeight(vec3 c, float weight) {
+    return weight + (dot(c, LUMA) - 0.45) * 0.7;
+  }
+  // The calm and olive grass paintings alternate in broad regions, both unrotated, meeting along
+  // their own strokes over a few tens of units.
+  vec3 grassRegions(vec2 p, vec2 uv, Hex h) {
+    float swap=0.5+0.3*sin(p.x/290.0+sin(p.y/230.0)*1.7)+0.2*sin(p.y/410.0-p.x/630.0);
+    float w=smoothstep(0.3,0.7,swap);
+    if(w<0.01) return hexPainting(meadow,uv,h,0.0);
+    if(w>0.99) return hexPainting(meadowAlt,uv,h,17.3);
+    vec3 calm=hexPainting(meadow,uv,h,0.0), olive=hexPainting(meadowAlt,uv,h,17.3);
+    float hc=authoredHeight(calm,1.0-w), ho=authoredHeight(olive,w), top=max(hc,ho)-0.12;
+    float wc=max(0.0,hc-top), wo=max(0.0,ho-top);
+    return (calm*wc+olive*wo)/max(wc+wo,0.0001);
   }
   vec3 authoredGround(vec2 p, vec4 wA, float wMoss) {
-    vec2 uv=p/tileSize;
-    float swap=0.5+0.3*sin(p.x/290.0+sin(p.y/230.0)*1.7)+0.2*sin(p.y/410.0-p.x/630.0);
+    vec2 uv=p/tileSize; Hex h=hexGrid(uv);
     vec3 c0=vec3(0.0),c1=c0,c2=c0,c3=c0,c4=c0;
     float h0=-9.0,h1=-9.0,h2=-9.0,h3=-9.0,h4=-9.0;
-    // Valley: calm grass with regions of the olive variant, turned a quarter so the two tile grids
-    // never line up.
     if(wA.x>0.005) {
-      c0=grassRegions(texture2D(meadow,uv).rgb,texture2D(meadowAlt,vec2(-uv.y,uv.x)).rgb,swap);
+      c0=grassRegions(p,uv,h);
       if(wA.x>0.995) return c0;
       h0=authoredHeight(c0,wA.x);
     }
-    // Plateau tops: the darker plateau moss in regions of two orientations.
+    // Plateau tops: the darker plateau moss.
     if(wMoss>0.005) {
-      c4=grassRegions(texture2D(snow,uv).rgb,texture2D(snow,vec2(uv.y,-uv.x)).rgb,0.8-swap);
+      c4=hexPainting(snow,uv,h,31.7);
       if(wMoss>0.995) return c4;
       h4=authoredHeight(c4,wMoss);
     }
-    if(wA.y>0.005) { c1=texture2D(soil,uv).rgb; h1=authoredHeight(c1,wA.y); }
-    if(wA.z>0.005) { c2=texture2D(stone,uv).rgb; h2=authoredHeight(c2,wA.z); }
-    if(wA.w>0.005) { c3=texture2D(dryMeadow,uv).rgb; h3=authoredHeight(c3,wA.w); }
+    if(wA.y>0.005) { c1=hexPainting(soil,uv,h,43.1); h1=authoredHeight(c1,wA.y); }
+    if(wA.z>0.005) { c2=hexPainting(stone,uv,h,59.9); h2=authoredHeight(c2,wA.z); }
+    if(wA.w>0.005) { c3=hexPainting(dryMeadow,uv,h,71.3); h3=authoredHeight(c3,wA.w); }
     float top=max(max(max(h0,h1),max(h2,h3)),h4)-0.12;
     float w0=max(0.0,h0-top),w1=max(0.0,h1-top),w2=max(0.0,h2-top),w3=max(0.0,h3-top),w4=max(0.0,h4-top);
     return (c0*w0+c1*w1+c2*w2+c3*w3+c4*w4)/max(w0+w1+w2+w3+w4,0.0001);

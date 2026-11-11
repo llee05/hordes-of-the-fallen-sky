@@ -98,9 +98,13 @@ on the ground; single stones and boulders stay between knee and shoulder of a ri
   colour step 0.82–1.06, where 1 is seamless).
 - Ground and water tiles are mipmapped with trilinear filtering and up to 8× anisotropic
   filtering, so ground seen at the 48° slant stays sharp instead of shimmering or smearing.
-- Sample each ground painting **once, at its painted scale**, in world space. Break the grid by
-  alternating the calm base painting at two orientations in regions roughly 400–1,100 units
-  across, never by tinting or scaling it.
+- Sample each ground painting **at its painted scale**, in world space, with **hex-tile
+  sampling**: three copies of the same painting, each translated by a random offset per vertex
+  of a triangle grid about 100 units apart, blended by distance and by each copy's own
+  luminance so they meet along painted strokes. This hides the 200-unit repeat. **Never rotate,
+  mirror, scale or tint** a painting to break the grid: a turned painting turns its painted
+  light. The calm and olive valley grass alternate, both unrotated, in regions roughly
+  400–1,100 units across that meet along their strokes over a few tens of units.
 - Materials meet by **height blending** (`authoredHeight` in `terrainShader.ts`): each
   painting's own light and dark strokes decide where it shows through. Do not cross-fade, add
   transition decals or colour filters.

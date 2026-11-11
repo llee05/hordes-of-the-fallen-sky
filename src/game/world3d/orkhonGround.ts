@@ -48,8 +48,9 @@ function segmentDistance([a, b]: Segment, x: number, z: number): number {
 
 /**
  * RGBA mask over world coordinates [0, worldSize]²: R distance to the nearest trail (0 to
- * `trailRange`), G broad moisture noise, B river nearness, A unused (opaque). Row j, column i is
- * the texel centred on world point ((i + 0.5)·cell, (j + 0.5)·cell).
+ * `trailRange`), G broad moisture noise, B river nearness, A 1 near a ramp (where the shader runs
+ * its ramp loop; 0 elsewhere). Row j, column i is the texel centred on world point
+ * ((i + 0.5)·cell, (j + 0.5)·cell).
  */
 export function bakeOrkhonGroundMask(
   terrain: ComposedTerrain,
@@ -73,6 +74,32 @@ export function bakeOrkhonGroundMask(
         const d = segmentDistance(segment, (i + 0.5) * cell - center, (j + 0.5) * cell - center);
         const k = j * size + i;
         if (d < distance[k]!) distance[k] = d;
+      }
+  }
+  // Ramp neighbourhoods: everywhere `orkhonRampWear` looks at a ramp, plus two texels.
+  const near = new Uint8Array(size * size);
+  const ramps: readonly GroundRamp[] = terrain.region.scene.ground?.ramps ?? [];
+  for (const ramp of ramps) {
+    const dx = ramp.top.x - ramp.foot.x,
+      dz = ramp.top.y - ramp.foot.y;
+    const length = Math.hypot(dx, dz) || 1;
+    const reach = (ramp.shoulder ?? ramp.halfWidth) + 40 + 2 * cell;
+    const index = (world: number) => Math.floor((world + center) / cell);
+    const extent = 0.8 * length + reach + 2 * cell;
+    const mx = (ramp.foot.x + ramp.top.x) / 2,
+      mz = (ramp.foot.y + ramp.top.y) / 2;
+    for (let j = Math.max(0, index(mz - extent)); j <= Math.min(size - 1, index(mz + extent)); j++)
+      for (
+        let i = Math.max(0, index(mx - extent));
+        i <= Math.min(size - 1, index(mx + extent));
+        i++
+      ) {
+        const x = (i + 0.5) * cell - center - ramp.foot.x,
+          z = (j + 0.5) * cell - center - ramp.foot.y;
+        const s = (x * dx + z * dz) / length;
+        const lateral = Math.abs((x * -dz + z * dx) / length);
+        if (lateral <= reach && s >= -0.3 * length - 2 * cell && s <= 1.3 * length + 2 * cell)
+          near[j * size + i] = 1;
       }
   }
   // Broad noise and shore on a coarse lattice, interpolated to every texel.
@@ -104,7 +131,7 @@ export function bakeOrkhonGroundMask(
       data[k * 4] = byte(distance[k]! / trailRange);
       data[k * 4 + 1] = byte(lerp(broad, i, j));
       data[k * 4 + 2] = byte(lerp(shore, i, j));
-      data[k * 4 + 3] = 255;
+      data[k * 4 + 3] = near[k]! * 255;
     }
   return data;
 }
@@ -116,7 +143,7 @@ export function sampleGroundMask(
   x: number,
   z: number,
   size: number = ORKHON_GROUND_MASK.size,
-): [number, number, number] {
+): [number, number, number, number] {
   const u = Math.max(0, Math.min(size - 1, (x / worldSize) * size - 0.5));
   const v = Math.max(0, Math.min(size - 1, (z / worldSize) * size - 0.5));
   const i = Math.min(size - 2, Math.floor(u)),
@@ -127,7 +154,7 @@ export function sampleGroundMask(
   const channel = (c: number) =>
     (at(i, j, c) * (1 - fu) + at(i + 1, j, c) * fu) * (1 - fv) +
     (at(i, j + 1, c) * (1 - fu) + at(i + 1, j + 1, c) * fu) * fv;
-  return [channel(0), channel(1), channel(2)];
+  return [channel(0), channel(1), channel(2), channel(3)];
 }
 
 /**
