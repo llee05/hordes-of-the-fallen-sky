@@ -18,9 +18,34 @@ export function cliffFacePixel(rise = ORKHON_VALLEY.rise): number {
   return (rise * Math.cos((WORLD_3D.angle * Math.PI) / 180)) / tallest;
 }
 
+const kitTextures = new WeakMap<object, THREE.Texture>();
+
 /**
- * Shader inputs for the painted Orkhon cliff walls: the terrain kit atlas and each face band's source
- * rectangle in atlas pixels. Without a scene the uniforms are inert placeholders.
+ * The terrain kit atlas as one texture shared by the cliff walls and the overlay cutouts, so it is
+ * uploaded once. It is mipmapped and anisotropically filtered: walls and cutouts are often drawn
+ * smaller than painted, and their texels are then averaged instead of skipped (shimmer). Frames
+ * have 16 padding texels with 4 extruded (`scripts/cut-orkhon-terrain-kit.mjs`), so filtering
+ * stays inside each frame down to mip level 3.
+ */
+export function orkhonKitTexture(scene: Phaser.Scene): THREE.Texture {
+  const image = scene.textures.get(ORKHON_KIT_ATLAS).getSourceImage() as HTMLImageElement;
+  let texture = kitTextures.get(image);
+  if (!texture) {
+    texture = new THREE.Texture(image);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = true;
+    texture.anisotropy = WORLD_3D.anisotropy;
+    texture.needsUpdate = true;
+    kitTextures.set(image, texture);
+  }
+  return texture;
+}
+
+/**
+ * Shader inputs for the painted Orkhon cliff walls: the shared kit texture and each face band's
+ * source rectangle in atlas pixels. Without a scene the uniforms are inert placeholders.
  */
 export function cliffFaceUniforms(scene?: Phaser.Scene) {
   const faces = ORKHON_CLIFF_FACES.map(() => new THREE.Vector4());
@@ -29,12 +54,7 @@ export function cliffFaceUniforms(scene?: Phaser.Scene) {
   if (scene) {
     const source = scene.textures.get(ORKHON_KIT_ATLAS);
     const image = source.getSourceImage() as HTMLImageElement;
-    atlas = new THREE.Texture(image);
-    atlas.colorSpace = THREE.SRGBColorSpace;
-    atlas.minFilter = THREE.LinearFilter;
-    atlas.magFilter = THREE.LinearFilter;
-    atlas.generateMipmaps = false;
-    atlas.needsUpdate = true;
+    atlas = orkhonKitTexture(scene);
     size.set(image.width, image.height);
     ORKHON_CLIFF_FACES.forEach((face, i) => {
       const frame = source.get(face.sprite);

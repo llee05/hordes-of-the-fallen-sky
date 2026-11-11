@@ -105,9 +105,12 @@ repainting, recolouring or tinting:
 - **Cutouts:** the white backing is keyed out where it connects to the cell border; partly
   white edge texels get partial alpha and are un-mixed from white, so no white fringe remains
   around the ink. Specks of grid antialiasing are dropped, transparent texels take nearby
-  paint, and cutouts keep full sheet resolution in `orkhon-terrain-kit.png`. Because kit art
-  is often drawn smaller than painted, the kit atlas, bank bands and ground tiles are
-  mipmapped (ground and banks also anisotropically filtered), so they stay clean, not shimmering.
+  paint, and cutouts keep full sheet resolution in `orkhon-terrain-kit.png`, packed with 16
+  padding texels and 4 extruded around each frame. Because kit art is often drawn smaller than
+  painted, the kit atlas, bank bands and ground tiles are mipmapped and anisotropically
+  filtered, so they stay clean, not shimmering. Cliff walls and kit cutouts share one kit
+  texture (`orkhonKitTexture`); cutouts use alpha to coverage, with their alpha raised a quarter
+  per mip level so thin parts do not erode at distance.
 
 | Sheet cell                         | Used for                                                   |
 | ---------------------------------- | ---------------------------------------------------------- |
@@ -145,7 +148,9 @@ waterfall top lip (a self-contained miniature fall about half the plateau rise).
   picks one band, never mirrored, so painted light stays from the upper left. A band's rows
   span the full 240-unit rise, which also fits the painting's near-isometric wall to the 48°
   camera; its columns keep that pixel size (about 1.4 units) on screen for walls facing the
-  camera. Walls are lit like the rest of the terrain.
+  camera. Walls sample the shared, mipmapped kit texture with gradients taken from the
+  continuous distance along the outline, so a band restart does not fall to a blurred mip
+  level. Walls are lit like the rest of the terrain.
 - **Ramps:** each ramp is graded ground worn bare across its walkable width (trail dirt),
   rising through a trench of steep flanks. Trails end at the ramp feet; the ramp's own wear
   (`rampWear`) ends at the head of the cut, where the ramp meets the plateau top, so no worn
@@ -245,7 +250,9 @@ water probe grid. The authored ground shader fetches only the tiles present at e
 and returns single-channel grass, most of the ground, without blending; cliff walls fetch
 one band texel. Height blending still costs more per pixel than a cross-fade: on a
 software GPU (SwiftShader) a 350-enemy `profileCrowd` frame is roughly a tenth slower than
-before the cliff and ground pass, with CPU simulation and render time unchanged.
+before the cliff and ground pass, with CPU simulation and render time unchanged. Per-pixel
+masks, hex-tile sampling, ramp flanks and mipmapped cliffs cost about 3–5% of that frame at
+pixel ratio 2 on an Intel Iris Xe (ANGLE/Vulkan), and about 1 ms in terrain-only views.
 
 The terrain kit adds one 1024 × 512 atlas and two bank textures; the pack atlas lost the
 retired sprites. Full-resolution 256-pixel tiles hold four times the texels of the pack's

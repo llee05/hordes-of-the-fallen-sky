@@ -144,8 +144,10 @@ export const ORKHON_SAMPLING = `
   uniform vec4 rampAxis[ORKHON_RAMPS]; uniform vec4 rampSize[ORKHON_RAMPS];
   // Authored cliffs repeat opaque basalt bands cut from the terrain kit's straight cliff run along
   // their outline. Each repeat picks a band, never mirrored, so the painted light stays upper left;
-  // the grass lip and inked column tops stay on top.
-  vec3 cliffFace(float along, float depth) {
+  // the grass lip and inked column tops stay on top. The kit texture is mipmapped; its sampling
+  // gradients come from the continuous along and depth (their screen derivatives, taken outside
+  // any branch), so a band restart does not drop to a blurred mip level.
+  vec3 cliffFace(float along, float depth, vec2 dAlong, vec2 dDepth) {
     float u=along/cliffPixel;
     float k=floor(u/cliffFaceWidth);
     float pick=fract(sin(k*12.9898+4.1)*43758.5453);
@@ -154,7 +156,9 @@ export const ORKHON_SAMPLING = `
     float x=u-k*cliffFaceWidth;
     float y=clamp(depth/cliffRise,0.0,1.0)*face.z;
     vec2 px=face.xy+vec2(clamp(x,0.5,cliffFaceWidth-0.5),clamp(y,0.5,face.z-0.5));
-    return texture2D(cliffAtlas,vec2(px.x/cliffAtlasSize.x,1.0-px.y/cliffAtlasSize.y)).rgb;
+    vec2 scale=vec2(1.0/cliffPixel,-face.z/cliffRise)/cliffAtlasSize;
+    return textureGrad(cliffAtlas,vec2(px.x/cliffAtlasSize.x,1.0-px.y/cliffAtlasSize.y),
+      vec2(dAlong.x,dDepth.x)*scale,vec2(dAlong.y,dDepth.y)*scale).rgb;
   }
   // Ramp flanks run their bands along the nearest ramp's own arc length (orkhonFlankAlong), so
   // the bands keep their painted width instead of shearing where the normal's dominant axis
@@ -169,6 +173,21 @@ export const ORKHON_SAMPLING = `
       along=(dot(vec2(-n.z,n.x),d)>=0.0?s:-s)+float(i)*397.0;
     }
     return along;
+  }
+  // Screen derivatives of a flank's along (orkhonFlankAlong): ± the ramp direction, or x or z.
+  vec2 orkhonFlankGradient(vec2 p, vec3 n, vec3 dx, vec3 dy, bool ramp) {
+    vec2 axis=step(abs(n.z),abs(n.x))>0.5?vec2(0.0,1.0):vec2(1.0,0.0);
+    if(ramp) {
+      float best=1e9;
+      for(int i=0;i<ORKHON_RAMPS;i++) {
+        vec2 q=p-rampAxis[i].xy; vec2 d=rampAxis[i].zw; float len=rampSize[i].x;
+        float s=dot(q,d), lateral=abs(dot(q,vec2(-d.y,d.x)));
+        if(lateral>rampSize[i].z+40.0 || s<-0.3*len || s>1.3*len || lateral>=best) continue;
+        best=lateral;
+        axis=dot(vec2(-n.z,n.x),d)>=0.0?d:-d;
+      }
+    }
+    return vec2(dot(dx.xz,axis),dot(dy.xz,axis));
   }
   // Per-pixel weights of valley grass, trail dirt, scree and straw (wA) and plateau moss (wMoss):
   // worn earth and dry-grass potential come from the baked ground mask; plateau tops from
@@ -265,6 +284,9 @@ export const ORKHON_SAMPLING = `
 
 export const ORKHON_COLOR = `
   vec3 n=normalize(worldNormal);
+  // Derivatives for the painted cliff bands, taken where every pixel of a quad runs them.
+  vec3 pointDx=dFdx(worldPoint), pointDy=dFdy(worldPoint);
+  vec2 faceDx=dFdx(materialB.xy), faceDy=dFdy(materialB.xy);
   if(worldDebug<=1) {
     vec3 surface;
     if(isWall==0) {
@@ -293,10 +315,13 @@ export const ORKHON_COLOR = `
       // Steep graded ground (ramp flanks) shows the same basalt bands as the plateau walls.
       if(n.y<0.75) {
         float along=mix(worldPoint.x,worldPoint.z,step(abs(n.z),abs(n.x)));
-        if(texture2D(groundMask,worldPoint.xz/worldSize).b>0.5) along=orkhonFlankAlong(worldPoint.xz,n,along);
-        surface=mix(surface,cliffFace(along,cliffTop-worldPoint.y),smoothstep(0.75,0.5,n.y));
+        bool ramp=texture2D(groundMask,worldPoint.xz/worldSize).b>0.5;
+        if(ramp) along=orkhonFlankAlong(worldPoint.xz,n,along);
+        vec2 dAlong=orkhonFlankGradient(worldPoint.xz,n,pointDx,pointDy,ramp);
+        surface=mix(surface,cliffFace(along,cliffTop-worldPoint.y,dAlong,-vec2(pointDx.y,pointDy.y)),
+          smoothstep(0.75,0.5,n.y));
       }
-    } else if(materialB.z>0.5) surface=cliffFace(materialB.x,materialB.y);
+    } else if(materialB.z>0.5) surface=cliffFace(materialB.x,materialB.y,vec2(faceDx.x,faceDy.x),vec2(faceDx.y,faceDy.y));
     else {
       vec3 tri=pow(abs(n),vec3(5.0)); tri/=max(0.001,tri.x+tri.y+tri.z);
       surface=texture2D(stone,worldPoint.zy/tileSize).rgb*tri.x+texture2D(stone,worldPoint.xz/tileSize).rgb*tri.y+

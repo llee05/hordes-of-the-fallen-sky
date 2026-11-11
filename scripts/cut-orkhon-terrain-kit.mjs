@@ -25,6 +25,7 @@ import {
   at,
   bleed,
   compose,
+  extrude,
   flipRows,
   frameMap,
   heal,
@@ -72,7 +73,12 @@ const CUTOUTS = [
 ];
 const ATLAS = 'orkhon-terrain-kit';
 const ATLAS_WIDTH = 1024;
-const GUTTER = 4;
+// Mipmapped: 16 empty texels between frames and to the atlas edge, the frame's edge texels
+// extruded 4 into them, so sampling stays inside each frame down to mip level 3
+// (`npm run atlas:orkhon`, mip-bleed). Same layout as `npm run atlas:assemble -- --padding 16
+// --extrude 4`.
+const PADDING = 16;
+const EXTRUDE = 4;
 
 // ---------------------------------------------------------------------------------------------
 
@@ -272,13 +278,21 @@ for (const cutout of CUTOUTS) {
     offset: keyed.offset,
   });
 }
-// Shelf packing, tallest first, with transparent gutters between frames.
-const packed = shelfPack(
-  pieces.map((piece) => piece.img),
-  { width: ATLAS_WIDTH, gutter: GUTTER },
+// Shelf packing, tallest first, with extruded edges and transparent gutters between frames.
+const grown = pieces.map((piece) => extrude(piece.img, EXTRUDE));
+const packed = shelfPack(grown, { width: ATLAS_WIDTH, gutter: PADDING - EXTRUDE });
+await writeImage(
+  compose(
+    grown.map((img, index) => ({ img, ...packed.positions[index] })),
+    ATLAS_WIDTH,
+    packed.height,
+  ),
+  join(output, `${ATLAS}.png`),
 );
-for (const [index, piece] of pieces.entries()) Object.assign(piece, packed.positions[index]);
-await writeImage(compose(pieces, ATLAS_WIDTH, packed.height), join(output, `${ATLAS}.png`));
+for (const [index, piece] of pieces.entries()) {
+  piece.x = packed.positions[index].x + EXTRUDE;
+  piece.y = packed.positions[index].y + EXTRUDE;
+}
 const map = frameMap(
   pieces.map((piece) => [piece.name, { x: piece.x, y: piece.y, w: piece.img.w, h: piece.img.h }]),
   {
@@ -288,6 +302,8 @@ const map = frameMap(
     format: 'RGBA8888',
     size: { w: ATLAS_WIDTH, h: packed.height },
     scale: '1',
+    padding: PADDING,
+    extrude: EXTRUDE,
   },
 );
 writeFileSync(join(output, `${ATLAS}.json`), `${JSON.stringify(map, null, 2)}\n`);
