@@ -99,16 +99,21 @@ on the ground; single stones and boulders stay between knee and shoulder of a ri
   painting's own light and dark strokes decide where it shows through. Do not cross-fade, add
   transition decals or colour filters.
 - Water tiles span the river bank to bank; their light edge columns fall on the faded shoreline.
-- Sprite texel density in Orkhon: trees 1.0–1.2 units per pack pixel, shrubs 0.85, rocks
-  1.0–1.4, reeds 1.0, landmarks 1.0–1.7. The Khan's sheet is far finer (0.24 units per pixel),
-  which suits the actors the eye follows.
+- Sprite texel density in Orkhon: trees 1.0–1.2 units per pack pixel, shrubs 0.85, pebbles
+  and boulders 0.85, reeds 1.0, landmarks 1.0–1.7. Terrain kit cutouts keep full sheet
+  resolution and are finer: cliff bands about 1.4 units per pixel, waterfall curtains 0.73,
+  the plunge pool 0.9, pillars 0.88, cliff-foot scree 0.42–0.57 and islets 0.37. The Khan's
+  sheet is far finer (0.24 units per pixel), which suits the actors the eye follows.
 
 ## Edges
 
 - Cutouts are real alpha on transparent gutters. Orkhon pack sprites carry a **2.3–2.8 px**
   soft edge (partially transparent texels per outline texel) and no paint touches the frame edge.
-- Fully transparent texels take the colour of nearby paint (`scripts/pack-orkhon-valley.mjs`), so
-  linear filtering does not darken cutouts.
+- Terrain kit cutouts were painted on white: `scripts/cut-orkhon-terrain-kit.mjs` keys out only
+  white connected to the cell border and un-mixes partly white edge texels from white, so no
+  white fringe remains around the ink (0.25–0.4 px of partial alpha per outline texel).
+- Fully transparent texels take the colour of nearby paint (`scripts/pack-orkhon-valley.mjs`,
+  `scripts/cut-orkhon-terrain-kit.mjs`), so linear filtering does not darken cutouts.
 - Overlay crops that were cut with paint up to their frame discard a narrow, irregular band at
   each frame edge (`orkhonOverlay.ts`) so no straight crop line shows. Colours are never changed.
 - Character sheets are trimmed atlases on a shared logical canvas (256 × 360 for mounted and
@@ -151,9 +156,26 @@ and chroma C\* are given as 5th / 50th / 95th percentiles; hue is the chroma-wei
 | Clan riders and camp life | 7 / 30 / 78  | 4 / 24 / 56  | 52°  | `#673a26` |
 | Enemies                   | 16 / 36 / 74 | 3 / 14 / 36  | 111° | `#4a5655` |
 
-Individual ground tiles: `plateau_grass` L\* 43/57/67, `steppe_grass_var` 39/56/68,
-`dry_grass` 45/61/72, `patchy_grass` 36/53/67, `dry_dirt` 47/63/71, `rocky_ground` 27/58/76
-(the only low-chroma ground, C\* 14/28/44).
+Individual ground tiles of the initial import (since retired): `plateau_grass` L\* 43/57/67,
+`steppe_grass_var` 39/56/68, `dry_grass` 45/61/72, `patchy_grass` 36/53/67, `dry_dirt` 47/63/71,
+`rocky_ground` 27/58/76 (the only low-chroma ground, C\* 14/28/44).
+
+The Orkhon terrain kit that replaced them (`art-source/orkhon-terrain-kit.png`, as cut):
+
+| Kit tile or cutout       | L\*          | C\*          | Hue  | Median    |
+| ------------------------ | ------------ | ------------ | ---- | --------- |
+| `valley_calm`            | 50 / 64 / 71 | 38 / 47 / 51 | 85°  | `#bb9543` |
+| `valley_olive`           | 47 / 62 / 71 | 34 / 42 / 46 | 91°  | `#ac9449` |
+| `valley_straw`           | 52 / 68 / 76 | 41 / 49 / 54 | 76°  | `#d39b4c` |
+| `plateau_moss`           | 30 / 43 / 54 | 16 / 25 / 33 | 103° | `#6a683e` |
+| `trail_dirt`             | 61 / 72 / 77 | 35 / 42 / 46 | 72°  | `#dea666` |
+| `scree_gravel`           | 36 / 61 / 72 | 11 / 28 / 37 | 72°  | `#b18c63` |
+| River channel and rapids | 35 / 50 / 86 | 9 / 12 / 24  | 116° | `#70796b` |
+| Cliff straight run       | 28 / 51 / 78 | 10 / 26 / 50 | 75°  | `#967449` |
+| Pillar, scree and islet  | 28 / 54 / 81 | 8 / 23 / 47  | 75°  | `#9b7c54` |
+
+The valley floor (calm and olive) has median L\* 63, inside the manuscript target, but median
+C\* 44, above it; plateau moss sits 20 L\* below the valley, more than the 10–14 the target asks.
 
 ## Readability
 

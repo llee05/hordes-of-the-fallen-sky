@@ -1,9 +1,9 @@
 import {
-  ORKHON_ATLAS,
   ORKHON_LANDMARK_SCALE,
   ORKHON_PROP_SCALE,
   ORKHON_SPRITE_SCALE,
   ORKHON_SPRITES,
+  orkhonAtlasOf,
   type OrkhonSprite,
 } from '../assets/orkhonValleyArt';
 import { ART_SPEC } from '../data/artSpec';
@@ -16,15 +16,8 @@ import type { TerrainBounds, TerrainPoint } from '../terrain/types';
 import { CAMERA_DIRECTION } from './orkhonOverlay';
 import { terrainHabitat } from './terrainHabitat';
 
-const FOOT_ROCKS: readonly OrkhonSprite[] = [
-  'rock_single',
-  'rock_pair',
-  'small_stones',
-  'fallen_rocks',
-  'small_boulder',
-  'rock_cluster_large',
-  'rock_cluster_round',
-];
+/** Cliff-foot rubble is the terrain kit's scree cluster, flipped and sized at random. */
+const FOOT_SCREE: OrkhonSprite = 'prop_cliff_scree';
 const SCATTER: readonly OrkhonSprite[] = [
   'shrub_olive',
   'shrub_gold',
@@ -64,8 +57,8 @@ function cliffDistance(x: number, y: number): number {
 }
 
 /**
- * The complete authored Orkhon scene: landmarks, groves and sparse scatter, all supplied pack
- * sprites at their painted colours. It is built once per terrain and clipped into chunks.
+ * The complete authored Orkhon scene: landmarks, groves, cliff-foot scree and sparse scatter, all
+ * supplied sprites at their painted colours. It is built once per terrain and clipped into chunks.
  */
 export function orkhonDressing(terrain: ComposedTerrain, bounds: TerrainBounds): SceneDressing[] {
   let all = cache.get(terrain);
@@ -110,7 +103,7 @@ function buildDressing(terrain: ComposedTerrain): SceneDressing[] {
       flip: options.flip ?? false,
       tint: 0xffffff,
       heightScale: 1,
-      texture: ORKHON_ATLAS,
+      texture: orkhonAtlasOf(sprite),
       frame: sprite,
       shadow: kind === 'larch' || kind === 'landmark',
       originY: metrics.anchorY,
@@ -168,9 +161,8 @@ function buildDressing(terrain: ComposedTerrain): SceneDressing[] {
     }
   }
 
-  let rocks = 0,
-    scatter = 0;
-  // Rubble and the odd shrub gather at the foot of camera-facing cliffs; a few trees and shrubs
+  let scatter = 0;
+  // Scree and the odd shrub gather at the foot of camera-facing cliffs; a few trees and shrubs
   // stand back from every plateau rim, framing the edges as in the reference layout.
   for (const [index, plateau] of ORKHON_VALLEY.plateaus.entries()) {
     const outline = plateau.outline;
@@ -204,8 +196,8 @@ function buildDressing(terrain: ComposedTerrain): SceneDressing[] {
                   scale: ORKHON_PROP_SCALE.scrub,
                   flip: r(5) > 0.5,
                 })
-              : place(FOOT_ROCKS[rocks++ % FOOT_ROCKS.length]!, fx, fy, 'boulders', {
-                  scale: ORKHON_PROP_SCALE.rock * spread(JITTER.footRock, r(7)),
+              : place(FOOT_SCREE, fx, fy, 'boulders', {
+                  scale: ORKHON_PROP_SCALE.scree * spread(JITTER.footRock, r(7)),
                   flip: r(5) > 0.5,
                 });
         }
@@ -230,7 +222,7 @@ function buildDressing(terrain: ComposedTerrain): SceneDressing[] {
     }
   }
 
-  // Sparse scatter: rocks below cliffs, shrubs and flowers in the open, reeds on river banks.
+  // Sparse scatter: scree below cliffs, shrubs and flowers in the open, reeds on river banks.
   // Cycle the supplied sprites so every scatter painting appears across the level.
   const step = 230;
   for (let y = -center + step / 2; y < center; y += step)
@@ -243,8 +235,8 @@ function buildDressing(terrain: ComposedTerrain): SceneDressing[] {
       if (local.shore < 12 || local.slope > 0.5 || local.habitat.wear > 0.25) continue;
       const cliff = cliffDistance(px, py);
       if (local.habitat.cliffFoot > 0.35 && cliff > 45 && cliff < 120 && r(3) < 0.55) {
-        place(FOOT_ROCKS[rocks++ % FOOT_ROCKS.length]!, px, py, 'boulders', {
-          scale: ORKHON_PROP_SCALE.rock,
+        place(FOOT_SCREE, px, py, 'boulders', {
+          scale: ORKHON_PROP_SCALE.scree * spread(JITTER.footRock, r(7)),
           flip: r(5) > 0.5,
         });
         continue;

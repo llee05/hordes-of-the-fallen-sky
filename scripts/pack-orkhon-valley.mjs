@@ -1,11 +1,14 @@
-// Development-only import of the Orkhon Valley texture pack v2. Requires ImageMagick; never runs in the game.
+// Development-only import of the Orkhon Valley texture pack v2 scenery. Requires ImageMagick; never
+// runs in the game.
 // Usage: node scripts/pack-orkhon-valley.mjs <path to extracted orkhon_valley_texture_pack_v2>
 //
-// Ground and water tiles are copied unchanged. Transparent sprites are packed unscaled into one atlas.
-// The only pixel change is alpha-edge cleanup: fully transparent texels receive the colour of nearby
-// painted texels so linear filtering does not darken cutout edges. Alpha and every visible texel are kept.
+// Terrain (ground, water, cliffs, falls, pillars, scree) comes from the terrain kit instead
+// (scripts/cut-orkhon-terrain-kit.mjs). The pack's scenery sprites the kit does not replace are packed
+// unscaled into one atlas. The only pixel change is alpha-edge cleanup: fully transparent texels
+// receive the colour of nearby painted texels so linear filtering does not darken cutout edges.
+// Alpha and every visible texel are kept.
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,27 +20,8 @@ const output = join(root, 'public/art/orkhon-valley');
 const manifest = JSON.parse(readFileSync(join(pack, 'manifest.json'), 'utf8'));
 const sizes = new Map(manifest.assets.map((asset) => [asset.path, asset.size_px]));
 
-/** Repeatable ground and water materials used by the terrain and river shaders. */
-export const TILES = [
-  'ground/steppe_grass_var.png',
-  'ground/dry_grass.png',
-  'ground/patchy_grass.png',
-  'ground/plateau_grass.png',
-  'ground/dry_dirt.png',
-  'ground/rocky_ground.png',
-  'water/river_flow.png',
-  'water/river_rapids.png',
-];
-
-/** Transparent sprites placed by the authored level. */
+/** Transparent scenery sprites placed by the authored level that the terrain kit does not replace. */
 export const SPRITES = [
-  'elevation/cliff_face_tall.png',
-  'elevation/cliff_face_medium.png',
-  'elevation/cliff_face_short.png',
-  'elevation/cliff_end_cap.png',
-  'elevation/cliff_isolated.png',
-  'water/waterfall_top.png',
-  'water/waterfall_base.png',
   'structures/bridge_horizontal.png',
   'props/trees/autumn_yellow_tree.png',
   'props/trees/olive_tree.png',
@@ -53,12 +37,6 @@ export const SPRITES = [
   'props/decor/small_boulder.png',
   'props/decor/loose_pebbles.png',
   'props/decor/reed_clump.png',
-  'props/rocks/rock_cluster_large.png',
-  'props/rocks/rock_cluster_round.png',
-  'props/rocks/rock_single.png',
-  'props/rocks/rock_pair.png',
-  'props/rocks/fallen_rocks.png',
-  'props/rocks/small_stones.png',
   'landmarks/sacred_ovoo.png',
   'landmarks/stone_ruins.png',
   'landmarks/red_enemy_banner.png',
@@ -88,15 +66,7 @@ const frameName = (path) => basename(path, '.png');
 
 const temporary = mkdtempSync(join(tmpdir(), 'orkhon-valley-'));
 try {
-  mkdirSync(join(output, 'ground'), { recursive: true });
-  mkdirSync(join(output, 'water'), { recursive: true });
-  for (const tile of TILES) {
-    const [w, h] = magick(join(pack, tile), '-format', '%w %h', 'info:').split(' ').map(Number);
-    const expected = sizes.get(tile);
-    if (!expected || expected[0] !== w || expected[1] !== h)
-      throw new Error(`${tile} does not match manifest.json`);
-    copyFileSync(join(pack, tile), join(output, tile));
-  }
+  mkdirSync(output, { recursive: true });
 
   const pieces = SPRITES.map((path) => {
     const [w, h] = magick(join(pack, path), '-format', '%w %h', 'info:').split(' ').map(Number);
@@ -199,9 +169,7 @@ try {
       2,
     )}\n`,
   );
-  console.log(
-    `Packed ${pieces.length} sprites into ${ATLAS_WIDTH}x${height}; copied ${TILES.length} tiles.`,
-  );
+  console.log(`Packed ${pieces.length} sprites into ${ATLAS_WIDTH}x${height}.`);
 } finally {
   rmSync(temporary, { recursive: true, force: true });
 }

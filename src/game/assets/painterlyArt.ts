@@ -4,7 +4,15 @@ import { characterTexture, isCharacterKind, MOTION_SHEETS } from '../animation/C
 import { playerVisualConfig } from '../data/classes';
 import { LANDSCAPES, type SceneryProp } from '../data/landscapes';
 import type { TerrainArt } from '../terrain/types';
-import { ORKHON_ATLAS, ORKHON_TILES, orkhonTileKey, type OrkhonTile } from './orkhonValleyArt';
+import {
+  ORKHON_ATLAS,
+  ORKHON_BANKS,
+  ORKHON_KIT_ATLAS,
+  ORKHON_TILES,
+  orkhonTileKey,
+  type OrkhonBank,
+  type OrkhonTile,
+} from './orkhonValleyArt';
 
 export { playerVisualConfig };
 
@@ -81,7 +89,10 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
   const orkhon = `${root}orkhon-valley/`;
   for (const tile of Object.keys(ORKHON_TILES) as OrkhonTile[])
     scene.load.image(orkhonTileKey(tile), `${orkhon}${ORKHON_TILES[tile]}.png`);
-  scene.load.atlas(ORKHON_ATLAS, `${orkhon}${ORKHON_ATLAS}.png`, `${orkhon}${ORKHON_ATLAS}.json`);
+  for (const bank of Object.keys(ORKHON_BANKS) as OrkhonBank[])
+    scene.load.image(orkhonTileKey(bank), `${orkhon}${ORKHON_BANKS[bank]}.png`);
+  for (const atlas of [ORKHON_ATLAS, ORKHON_KIT_ATLAS])
+    scene.load.atlas(atlas, `${orkhon}${atlas}.png`, `${orkhon}${atlas}.json`);
 }
 
 export function sceneryImage(

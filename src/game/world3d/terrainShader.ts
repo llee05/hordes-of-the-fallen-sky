@@ -18,8 +18,9 @@ export const TERRAIN_SAMPLING = `
     float blend=0.32+0.12*sin(uv.x*0.73+sin(uv.y*0.57));
     return mix(a,b,blend);
   }
-  // Authored cliffs repeat opaque basalt bands cut from the supplied cliff sprites along their
-  // outline. Each repeat picks a band and may mirror it; the painted grass lip stays on top.
+  // Authored cliffs repeat opaque basalt bands cut from the terrain kit's straight cliff run along
+  // their outline. Each repeat picks a band, never mirrored, so the painted light stays upper left;
+  // the grass lip and inked column tops stay on top.
   vec3 cliffFace(float along, float depth) {
     float u=along/cliffPixel;
     float k=floor(u/cliffFaceWidth);
@@ -27,7 +28,6 @@ export const TERRAIN_SAMPLING = `
     vec4 face=cliffFaces[0];
     if(pick>0.75) face=cliffFaces[3]; else if(pick>0.5) face=cliffFaces[2]; else if(pick>0.25) face=cliffFaces[1];
     float x=u-k*cliffFaceWidth;
-    if(fract(pick*7.0)>0.5) x=cliffFaceWidth-x;
     float y=clamp(depth/cliffRise,0.0,1.0)*face.z;
     vec2 px=face.xy+vec2(clamp(x,0.5,cliffFaceWidth-0.5),clamp(y,0.5,face.z-0.5));
     return texture2D(cliffAtlas,vec2(px.x/cliffAtlasSize.x,1.0-px.y/cliffAtlasSize.y)).rgb;
@@ -48,15 +48,16 @@ export const TERRAIN_SAMPLING = `
     float swap=0.5+0.3*sin(p.x/290.0+sin(p.y/230.0)*1.7)+0.2*sin(p.y/410.0-p.x/630.0);
     vec3 c0=vec3(0.0),c1=c0,c2=c0,c3=c0,c4=c0,c5=c0,c6=c0;
     float h0=-9.0,h1=-9.0,h2=-9.0,h3=-9.0,h4=-9.0,h5=-9.0,h6=-9.0;
-    // Valley: calm grass in regions of two orientations, so its tile grid never lines up.
+    // Valley: calm grass with regions of the olive variant, turned a quarter so the two tile grids
+    // never line up.
     if(materialA.x>0.005) {
-      c0=grassRegions(texture2D(meadow,uv).rgb,texture2D(meadow,vec2(-uv.y,uv.x)).rgb,swap);
+      c0=grassRegions(texture2D(meadow,uv).rgb,texture2D(meadowAlt,vec2(-uv.y,uv.x)).rgb,swap);
       if(materialA.x>0.995) return c0;
       h0=authoredHeight(c0,materialA.x);
     }
-    // Plateau tops: the same calm grass with a minority of tufted steppe-grass regions.
+    // Plateau tops: the darker plateau moss in regions of two orientations.
     if(materialB.x>0.005) {
-      c4=grassRegions(texture2D(meadow,vec2(uv.y,-uv.x)).rgb,texture2D(snow,uv).rgb,0.8-swap);
+      c4=grassRegions(texture2D(snow,uv).rgb,texture2D(snow,vec2(uv.y,-uv.x)).rgb,0.8-swap);
       if(materialB.x>0.995) return c4;
       h4=authoredHeight(c4,materialB.x);
     }

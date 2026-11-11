@@ -136,36 +136,45 @@ const orkhon = (names) =>
     'orkhon-valley/orkhon-valley-sprites.json',
     (name) => names.includes(name),
   );
+const kit = (names) =>
+  atlasFrames(
+    'orkhon-valley/orkhon-terrain-kit.png',
+    'orkhon-valley/orkhon-terrain-kit.json',
+    (name) => names.includes(name),
+  );
 const motion = (sheet, kinds) =>
   atlasFrames(`steppe-${sheet}-motion.png`, `steppe-${sheet}-motion.json`, (name) =>
     kinds.some((kind) => name.startsWith(`${kind}-`)),
   );
 
 const TILES = [
-  'plateau_grass',
-  'steppe_grass_var',
-  'dry_grass',
-  'patchy_grass',
-  'dry_dirt',
-  'rocky_ground',
+  'valley_calm',
+  'valley_straw',
+  'valley_olive',
+  'plateau_moss',
+  'trail_dirt',
+  'scree_gravel',
 ];
+const WATER = ['river_channel', 'river_rapids', 'bank_far', 'bank_near'];
 const report = { tiles: {}, sprites: {} };
 for (const tile of TILES) {
   const image = pixels(`orkhon-valley/ground/${tile}.png`);
   report.tiles[tile] = { ...measure([image]), ...seam(image) };
 }
-for (const tile of ['river_flow', 'river_rapids']) {
+for (const tile of WATER) {
   const image = pixels(`orkhon-valley/water/${tile}.png`);
   report.tiles[tile] = { ...measure([image]), ...seam(image) };
 }
 report.tiles['all ground'] = measure(
   TILES.map((tile) => pixels(`orkhon-valley/ground/${tile}.png`)),
 );
+report.tiles['valley floor'] = measure(
+  ['valley_calm', 'valley_olive'].map((tile) => pixels(`orkhon-valley/ground/${tile}.png`)),
+);
 report.tiles['all water'] = measure(
-  ['river_flow', 'river_rapids'].map((tile) => pixels(`orkhon-valley/water/${tile}.png`)),
+  ['river_channel', 'river_rapids'].map((tile) => pixels(`orkhon-valley/water/${tile}.png`)),
 );
 const GROUPS = {
-  'cliff bands': ['cliff_face_tall', 'cliff_face_medium', 'cliff_face_short', 'cliff_end_cap'],
   trees: ['autumn_yellow_tree', 'olive_tree', 'autumn_red_tree', 'pine_tree', 'bare_tree'],
   'shrubs and flowers': [
     'shrub_olive',
@@ -176,16 +185,7 @@ const GROUPS = {
     'red_wildflowers',
     'reed_clump',
   ],
-  rocks: [
-    'small_boulder',
-    'loose_pebbles',
-    'rock_cluster_large',
-    'rock_cluster_round',
-    'rock_single',
-    'rock_pair',
-    'fallen_rocks',
-    'small_stones',
-  ],
+  rocks: ['small_boulder', 'loose_pebbles'],
   landmarks: [
     'sacred_ovoo',
     'stone_ruins',
@@ -207,6 +207,11 @@ const GROUPS = {
   ],
 };
 for (const [group, names] of Object.entries(GROUPS)) report.sprites[group] = measure(orkhon(names));
+report.sprites['kit cliff run'] = measure(kit(['cliff_straight_run']));
+report.sprites['kit falls'] = measure(kit(['waterfall_curtain', 'waterfall_foam_pool']));
+report.sprites['kit rocks'] = measure(
+  kit(['landmark_basalt_pillar', 'prop_cliff_scree', 'prop_river_islet']),
+);
 report.sprites['Khan (player frames)'] = measure(motion('mounted', ['player']), true);
 report.sprites['clan riders, workers, packhorses'] = measure(
   [...motion('mounted', ['rider']), ...motion('clan', ['worker', 'packhorse'])],

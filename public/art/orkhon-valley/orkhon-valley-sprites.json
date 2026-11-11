@@ -1,149 +1,9 @@
 {
   "frames": {
-    "cliff_face_tall": {
-      "frame": {
-        "x": 867,
-        "y": 159,
-        "w": 84,
-        "h": 80
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 84,
-        "h": 80
-      },
-      "sourceSize": {
-        "w": 84,
-        "h": 80
-      }
-    },
-    "cliff_face_medium": {
-      "frame": {
-        "x": 169,
-        "y": 272,
-        "w": 86,
-        "h": 71
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 86,
-        "h": 71
-      },
-      "sourceSize": {
-        "w": 86,
-        "h": 71
-      }
-    },
-    "cliff_face_short": {
-      "frame": {
-        "x": 618,
-        "y": 272,
-        "w": 87,
-        "h": 60
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 87,
-        "h": 60
-      },
-      "sourceSize": {
-        "w": 87,
-        "h": 60
-      }
-    },
-    "cliff_end_cap": {
-      "frame": {
-        "x": 4,
-        "y": 159,
-        "w": 81,
-        "h": 109
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 81,
-        "h": 109
-      },
-      "sourceSize": {
-        "w": 81,
-        "h": 109
-      }
-    },
-    "cliff_isolated": {
-      "frame": {
-        "x": 183,
-        "y": 159,
-        "w": 85,
-        "h": 103
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 85,
-        "h": 103
-      },
-      "sourceSize": {
-        "w": 85,
-        "h": 103
-      }
-    },
-    "waterfall_top": {
-      "frame": {
-        "x": 592,
-        "y": 159,
-        "w": 73,
-        "h": 93
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 73,
-        "h": 93
-      },
-      "sourceSize": {
-        "w": 73,
-        "h": 93
-      }
-    },
-    "waterfall_base": {
-      "frame": {
-        "x": 669,
-        "y": 159,
-        "w": 79,
-        "h": 90
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 79,
-        "h": 90
-      },
-      "sourceSize": {
-        "w": 79,
-        "h": 90
-      }
-    },
     "bridge_horizontal": {
       "frame": {
-        "x": 259,
-        "y": 272,
+        "x": 752,
+        "y": 159,
         "w": 131,
         "h": 63
       },
@@ -162,7 +22,7 @@
     },
     "autumn_yellow_tree": {
       "frame": {
-        "x": 89,
+        "x": 4,
         "y": 159,
         "w": 90,
         "h": 105
@@ -182,7 +42,7 @@
     },
     "olive_tree": {
       "frame": {
-        "x": 272,
+        "x": 98,
         "y": 159,
         "w": 76,
         "h": 103
@@ -202,7 +62,7 @@
     },
     "autumn_red_tree": {
       "frame": {
-        "x": 513,
+        "x": 339,
         "y": 159,
         "w": 75,
         "h": 94
@@ -242,7 +102,7 @@
     },
     "bare_tree": {
       "frame": {
-        "x": 352,
+        "x": 178,
         "y": 159,
         "w": 43,
         "h": 99
@@ -262,8 +122,8 @@
     },
     "shrub_olive": {
       "frame": {
-        "x": 124,
-        "y": 348,
+        "x": 291,
+        "y": 268,
         "w": 58,
         "h": 48
       },
@@ -282,8 +142,8 @@
     },
     "shrub_gold": {
       "frame": {
-        "x": 4,
-        "y": 348,
+        "x": 171,
+        "y": 268,
         "w": 59,
         "h": 53
       },
@@ -302,8 +162,8 @@
     },
     "shrub_green": {
       "frame": {
-        "x": 505,
-        "y": 348,
+        "x": 672,
+        "y": 268,
         "w": 65,
         "h": 37
       },
@@ -322,8 +182,8 @@
     },
     "shrub_mix": {
       "frame": {
-        "x": 441,
-        "y": 348,
+        "x": 608,
+        "y": 268,
         "w": 60,
         "h": 38
       },
@@ -342,8 +202,8 @@
     },
     "white_wildflowers": {
       "frame": {
-        "x": 67,
-        "y": 348,
+        "x": 234,
+        "y": 268,
         "w": 53,
         "h": 50
       },
@@ -362,8 +222,8 @@
     },
     "red_wildflowers": {
       "frame": {
-        "x": 259,
-        "y": 348,
+        "x": 426,
+        "y": 268,
         "w": 55,
         "h": 44
       },
@@ -382,8 +242,8 @@
     },
     "small_boulder": {
       "frame": {
-        "x": 397,
-        "y": 348,
+        "x": 564,
+        "y": 268,
         "w": 40,
         "h": 41
       },
@@ -402,8 +262,8 @@
     },
     "loose_pebbles": {
       "frame": {
-        "x": 839,
-        "y": 348,
+        "x": 778,
+        "y": 268,
         "w": 32,
         "h": 20
       },
@@ -422,8 +282,8 @@
     },
     "reed_clump": {
       "frame": {
-        "x": 677,
-        "y": 348,
+        "x": 741,
+        "y": 268,
         "w": 33,
         "h": 33
       },
@@ -438,126 +298,6 @@
       "sourceSize": {
         "w": 33,
         "h": 33
-      }
-    },
-    "rock_cluster_large": {
-      "frame": {
-        "x": 516,
-        "y": 272,
-        "w": 98,
-        "h": 61
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 98,
-        "h": 61
-      },
-      "sourceSize": {
-        "w": 98,
-        "h": 61
-      }
-    },
-    "rock_cluster_round": {
-      "frame": {
-        "x": 394,
-        "y": 272,
-        "w": 118,
-        "h": 63
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 118,
-        "h": 63
-      },
-      "sourceSize": {
-        "w": 118,
-        "h": 63
-      }
-    },
-    "rock_single": {
-      "frame": {
-        "x": 574,
-        "y": 348,
-        "w": 53,
-        "h": 36
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 53,
-        "h": 36
-      },
-      "sourceSize": {
-        "w": 53,
-        "h": 36
-      }
-    },
-    "rock_pair": {
-      "frame": {
-        "x": 631,
-        "y": 348,
-        "w": 42,
-        "h": 34
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 42,
-        "h": 34
-      },
-      "sourceSize": {
-        "w": 42,
-        "h": 34
-      }
-    },
-    "fallen_rocks": {
-      "frame": {
-        "x": 714,
-        "y": 348,
-        "w": 67,
-        "h": 32
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 67,
-        "h": 32
-      },
-      "sourceSize": {
-        "w": 67,
-        "h": 32
-      }
-    },
-    "small_stones": {
-      "frame": {
-        "x": 785,
-        "y": 348,
-        "w": 50,
-        "h": 31
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 50,
-        "h": 31
-      },
-      "sourceSize": {
-        "w": 50,
-        "h": 31
       }
     },
     "sacred_ovoo": {
@@ -602,7 +342,7 @@
     },
     "red_enemy_banner": {
       "frame": {
-        "x": 466,
+        "x": 292,
         "y": 159,
         "w": 43,
         "h": 97
@@ -622,7 +362,7 @@
     },
     "blue_camp_banner": {
       "frame": {
-        "x": 399,
+        "x": 225,
         "y": 159,
         "w": 63,
         "h": 98
@@ -642,7 +382,7 @@
     },
     "spear_rack": {
       "frame": {
-        "x": 955,
+        "x": 533,
         "y": 159,
         "w": 50,
         "h": 75
@@ -662,8 +402,8 @@
     },
     "wooden_rack": {
       "frame": {
-        "x": 318,
-        "y": 348,
+        "x": 485,
+        "y": 268,
         "w": 75,
         "h": 43
       },
@@ -682,8 +422,8 @@
     },
     "relic_fire": {
       "frame": {
-        "x": 890,
-        "y": 272,
+        "x": 94,
+        "y": 268,
         "w": 73,
         "h": 56
       },
@@ -702,8 +442,8 @@
     },
     "standing_stone": {
       "frame": {
-        "x": 100,
-        "y": 272,
+        "x": 683,
+        "y": 159,
         "w": 65,
         "h": 72
       },
@@ -722,7 +462,7 @@
     },
     "player_ger_small": {
       "frame": {
-        "x": 752,
+        "x": 418,
         "y": 159,
         "w": 111,
         "h": 86
@@ -742,8 +482,8 @@
     },
     "player_ger_medium": {
       "frame": {
-        "x": 4,
-        "y": 272,
+        "x": 587,
+        "y": 159,
         "w": 92,
         "h": 72
       },
@@ -762,8 +502,8 @@
     },
     "camp_supply_cart": {
       "frame": {
-        "x": 709,
-        "y": 272,
+        "x": 887,
+        "y": 159,
         "w": 87,
         "h": 59
       },
@@ -782,8 +522,8 @@
     },
     "camp_fire": {
       "frame": {
-        "x": 186,
-        "y": 348,
+        "x": 353,
+        "y": 268,
         "w": 69,
         "h": 45
       },
@@ -802,8 +542,8 @@
     },
     "camp_canopy": {
       "frame": {
-        "x": 800,
-        "y": 272,
+        "x": 4,
+        "y": 268,
         "w": 86,
         "h": 56
       },

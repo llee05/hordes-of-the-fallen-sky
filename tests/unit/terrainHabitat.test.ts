@@ -19,7 +19,7 @@ describe('shared material and ecology masks', () => {
           }
     }
   });
-  it('creates coherent patches, damp river margins, and exposed rocky shelves without changing geometry', () => {
+  it('creates coherent patches, detects damp river margins, and keeps geometry unchanged', () => {
     const dry = new ComposedTerrain(composedRegion('orkhon-valley'));
     const wet = new ComposedTerrain(composedRegion('orkhon-valley'), MEADOW_STREAM);
     const p = wet.river!.channels[0]!.sections[100]!;
@@ -29,9 +29,11 @@ describe('shared material and ecology masks', () => {
       b = terrainHabitat(wet, x, z, 65, 1);
     expect(b.moisture).toBeGreaterThan(a.moisture);
     expect(b.shore).toBeGreaterThan(0.9);
-    expect(terrainMaterialWeights(wet, 65, 1, b)[6]).toBeGreaterThan(
-      terrainMaterialWeights(dry, 65, 1, a)[6]!,
-    );
+    // Orkhon's river margins are painted by the terrain kit's bank bands (`orkhonBanks`), not a
+    // gravel channel; the margin is still detected, and its ground stays on the grass channels.
+    const margin = terrainMaterialWeights(wet, 65, 1, b);
+    expect(margin[6]).toBe(0);
+    expect(margin[0]! + margin[3]!).toBeGreaterThan(0.5);
     const nearby = terrainHabitat(dry, x + 1, z + 1, 65, 1);
     expect(Math.abs(a.patch - nearby.patch)).toBeLessThan(0.02);
     const before = dry.height(x, z);

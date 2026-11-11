@@ -1,25 +1,43 @@
 /**
- * Orkhon Valley texture pack v2, imported unchanged by `scripts/pack-orkhon-valley.mjs`.
- * Ground and water tiles stay separate repeatable images; transparent sprites share one atlas.
+ * Orkhon Valley art. Terrain comes from the manuscript terrain kit sheet
+ * (`art-source/orkhon-terrain-kit.png`), cut by `scripts/cut-orkhon-terrain-kit.mjs` into
+ * repeatable tiles, bank bands and the kit atlas. Scenery the kit does not replace (trees, shrubs,
+ * landmarks, camps, the bridge deck) comes from texture pack v2 (`scripts/pack-orkhon-valley.mjs`).
  */
 import { ART_SPEC } from '../data/artSpec';
 
+/** Texture pack v2 scenery sprites. */
 export const ORKHON_ATLAS = 'orkhon-valley-sprites';
+/** Terrain kit cutouts: the cliff wall, the falls, the basalt pillar, cliff-foot scree, islets. */
+export const ORKHON_KIT_ATLAS = 'orkhon-terrain-kit';
 
-/** Repeatable 128 × 128 tiles, keyed by their texture-pack folder and file name. */
+/** Repeatable 128 × 128 terrain kit tiles, keyed by folder and file name. */
 export const ORKHON_TILES = {
-  steppeGrassVariant: 'ground/steppe_grass_var',
-  dryGrass: 'ground/dry_grass',
-  patchyGrass: 'ground/patchy_grass',
-  plateauGrass: 'ground/plateau_grass',
-  dryDirt: 'ground/dry_dirt',
-  rockyGround: 'ground/rocky_ground',
-  riverFlow: 'water/river_flow',
+  valleyCalm: 'ground/valley_calm',
+  valleyStraw: 'ground/valley_straw',
+  valleyOlive: 'ground/valley_olive',
+  plateauMoss: 'ground/plateau_moss',
+  trailDirt: 'ground/trail_dirt',
+  screeGravel: 'ground/scree_gravel',
+  riverChannel: 'water/river_channel',
   riverRapids: 'water/river_rapids',
 } as const;
 export type OrkhonTile = keyof typeof ORKHON_TILES;
 
-export const orkhonTileKey = (tile: OrkhonTile): string => `orkhon-${ORKHON_TILES[tile]}`;
+/**
+ * Riverbank bands (128 × 46), repeated along each shore with the land at the top of the image.
+ * `bankFar` shows the clay lip from the front, for shores whose land lies away from the camera;
+ * `bankNear` shows it from above. The painted water edge sits `ORKHON_BANK_SHORE` down the band.
+ */
+export const ORKHON_BANKS = {
+  bankFar: 'water/bank_far',
+  bankNear: 'water/bank_near',
+} as const;
+export type OrkhonBank = keyof typeof ORKHON_BANKS;
+export const ORKHON_BANK_SHORE = 0.73;
+
+export const orkhonTileKey = (tile: OrkhonTile | OrkhonBank): string =>
+  `orkhon-${tile in ORKHON_TILES ? ORKHON_TILES[tile as OrkhonTile] : ORKHON_BANKS[tile as OrkhonBank]}`;
 
 /** World units covered by one repeat of a 128-pixel ground or water tile (`docs/art-spec.md`). */
 export const ORKHON_TILE_WORLD_SIZE = ART_SPEC.orkhon.tileWorldSize;
@@ -40,24 +58,27 @@ export const ORKHON_LANDMARK_SCALE: Partial<Record<OrkhonSprite, number>> =
   ART_SPEC.orkhon.landmarkScale;
 
 /**
- * Painted geometry measured from the pack sprites at their source size. `lip` is the row where the
- * waterfall's top rim meets its drop; anchors come from manifest.json.
+ * Painted geometry measured from the sprites at their source size. Pack anchors come from its
+ * manifest.json; kit anchors sit where each painting's ground meets its base.
  */
 export interface OrkhonSpriteMetrics {
   width: number;
   height: number;
   anchorY: number;
-  lip?: number;
 }
 
+/** Terrain kit cutouts, trimmed from their sheet cells at full sheet resolution. */
+export const ORKHON_KIT_SPRITES = {
+  cliff_straight_run: { width: 238, height: 146, anchorY: 1 },
+  waterfall_curtain: { width: 143, height: 221, anchorY: 1 },
+  waterfall_foam_pool: { width: 241, height: 171, anchorY: 1 },
+  landmark_basalt_pillar: { width: 211, height: 217, anchorY: 0.92 },
+  prop_cliff_scree: { width: 243, height: 143, anchorY: 0.86 },
+  prop_river_islet: { width: 218, height: 155, anchorY: 0.84 },
+} as const satisfies Record<string, OrkhonSpriteMetrics>;
+
 export const ORKHON_SPRITES = {
-  cliff_face_tall: { width: 84, height: 80, anchorY: 1 },
-  cliff_face_medium: { width: 86, height: 71, anchorY: 1 },
-  cliff_face_short: { width: 87, height: 60, anchorY: 1 },
-  cliff_end_cap: { width: 81, height: 109, anchorY: 1 },
-  cliff_isolated: { width: 85, height: 103, anchorY: 1 },
-  waterfall_top: { width: 73, height: 93, anchorY: 1, lip: 6 },
-  waterfall_base: { width: 79, height: 90, anchorY: 1 },
+  ...ORKHON_KIT_SPRITES,
   bridge_horizontal: { width: 131, height: 63, anchorY: 1 },
   autumn_yellow_tree: { width: 90, height: 105, anchorY: 0.96 },
   olive_tree: { width: 76, height: 103, anchorY: 0.96 },
@@ -73,12 +94,6 @@ export const ORKHON_SPRITES = {
   small_boulder: { width: 40, height: 41, anchorY: 1 },
   loose_pebbles: { width: 32, height: 20, anchorY: 1 },
   reed_clump: { width: 33, height: 33, anchorY: 1 },
-  rock_cluster_large: { width: 98, height: 61, anchorY: 1 },
-  rock_cluster_round: { width: 118, height: 63, anchorY: 1 },
-  rock_single: { width: 53, height: 36, anchorY: 1 },
-  rock_pair: { width: 42, height: 34, anchorY: 1 },
-  fallen_rocks: { width: 67, height: 32, anchorY: 1 },
-  small_stones: { width: 50, height: 31, anchorY: 1 },
   sacred_ovoo: { width: 215, height: 151, anchorY: 1 },
   stone_ruins: { width: 178, height: 111, anchorY: 1 },
   red_enemy_banner: { width: 43, height: 97, anchorY: 1 },
@@ -98,7 +113,11 @@ export const ORKHON_SPRITES = {
 } as const satisfies Record<string, OrkhonSpriteMetrics>;
 export type OrkhonSprite = keyof typeof ORKHON_SPRITES;
 
-/** An opaque basalt band cropped from a supplied cliff sprite, with its painted grass lip on top. */
+/** The atlas texture holding a sprite. */
+export const orkhonAtlasOf = (sprite: OrkhonSprite): string =>
+  Object.hasOwn(ORKHON_KIT_SPRITES, sprite) ? ORKHON_KIT_ATLAS : ORKHON_ATLAS;
+
+/** An opaque basalt band cropped from the kit's straight cliff run, with its grass lip on top. */
 export interface OrkhonCliffFace {
   sprite: OrkhonSprite;
   /** Source pixel of the band's top-left corner. */
@@ -109,15 +128,16 @@ export interface OrkhonCliffFace {
 }
 
 /** Source columns used from every band; each repeat along a cliff picks one band. */
-export const ORKHON_CLIFF_FACE_WIDTH = 66;
+export const ORKHON_CLIFF_FACE_WIDTH = 100;
 
 /**
  * Cliff walls are textured with these bands, repeated along the plateau outline so faces and
- * corners stay continuous. Every band is fully opaque in the supplied art.
+ * corners stay continuous. Each is a fully opaque window of `cliff_straight_run`: its rows run
+ * from the grass lip and the inked column tops to the scree at the cliff foot.
  */
 export const ORKHON_CLIFF_FACES: readonly OrkhonCliffFace[] = [
-  { sprite: 'cliff_face_tall', x: 6, y: 6, height: 69 },
-  { sprite: 'cliff_face_medium', x: 8, y: 14, height: 53 },
-  { sprite: 'cliff_end_cap', x: 6, y: 34, height: 48 },
-  { sprite: 'cliff_face_short', x: 6, y: 12, height: 44 },
+  { sprite: 'cliff_straight_run', x: 16, y: 16, height: 117 },
+  { sprite: 'cliff_straight_run', x: 56, y: 16, height: 117 },
+  { sprite: 'cliff_straight_run', x: 92, y: 16, height: 117 },
+  { sprite: 'cliff_straight_run', x: 128, y: 16, height: 117 },
 ];

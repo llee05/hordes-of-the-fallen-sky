@@ -186,7 +186,7 @@ describe('Orkhon Valley scenery inside the art spec bands', () => {
       larch: [propScale.tree * jitter.rimTree[0], propScale.tree * jitter.rimTree[1]],
       scrub: [propScale.scrub],
       reeds: [propScale.reed],
-      boulders: [propScale.rock * jitter.footRock[0], propScale.rock * jitter.footRock[1]],
+      boulders: [propScale.scree * jitter.footRock[0], propScale.scree * jitter.footRock[1]],
     };
     expect(jitter.groveTree[0]).toBeGreaterThanOrEqual(jitter.rimTree[0]);
     expect(jitter.groveTree[1]).toBeLessThanOrEqual(jitter.rimTree[1]);

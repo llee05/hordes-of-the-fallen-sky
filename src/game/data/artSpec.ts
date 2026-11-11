@@ -56,14 +56,14 @@ export const ART_SPEC = {
   orkhon: {
     /** Height of every plateau above the valley floor, in world units. */
     plateauRise: 240,
-    /** Pixels along each side of a pack ground or water tile. */
+    /** Pixels along each side of a terrain kit ground or water tile. */
     tilePixels: 128,
-    /** World units covered by one repeat of a pack tile. */
+    /** World units covered by one repeat of a terrain kit tile. */
     tileWorldSize: 200,
     /** World units per sprite pixel before the factors below. */
     spriteScale: 1.7,
     /** Prop factors relative to `spriteScale`. */
-    propScale: { tree: 0.66, scrub: 0.5, rock: 0.7, reed: 0.6 },
+    propScale: { tree: 0.66, scrub: 0.5, scree: 0.29, reed: 0.6 },
     /** Random size spread around each prop factor. */
     jitter: {
       groveTree: [0.92, 1.1],
@@ -79,6 +79,8 @@ export const ART_SPEC = {
       standing_stone: 0.6,
       relic_fire: 0.7,
       sacred_ovoo: 0.85,
+      landmark_basalt_pillar: 0.52,
+      prop_river_islet: 0.22,
     },
     /** The band each landmark sprite belongs to. */
     landmarkBands: {
@@ -88,6 +90,7 @@ export const ART_SPEC = {
       wooden_rack: 'smallLandmarks',
       standing_stone: 'smallLandmarks',
       relic_fire: 'smallLandmarks',
+      prop_river_islet: 'rocks',
       player_ger_small: 'structures',
       player_ger_medium: 'structures',
       camp_supply_cart: 'structures',
@@ -95,7 +98,7 @@ export const ART_SPEC = {
       camp_fire: 'structures',
       sacred_ovoo: 'largeLandmarks',
       stone_ruins: 'largeLandmarks',
-      cliff_isolated: 'largeLandmarks',
+      landmark_basalt_pillar: 'largeLandmarks',
       enemy_camp_palisade: 'largeLandmarks',
       enemy_camp_ger: 'largeLandmarks',
       enemy_camp_tents: 'largeLandmarks',
