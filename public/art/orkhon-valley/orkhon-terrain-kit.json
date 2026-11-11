@@ -1,0 +1,135 @@
+{
+  "frames": {
+    "cliff_straight_run": {
+      "frame": {
+        "x": 4,
+        "y": 229,
+        "w": 238,
+        "h": 146
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 238,
+        "h": 146
+      },
+      "sourceSize": {
+        "w": 238,
+        "h": 146
+      }
+    },
+    "waterfall_curtain": {
+      "frame": {
+        "x": 4,
+        "y": 4,
+        "w": 143,
+        "h": 221
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 143,
+        "h": 221
+      },
+      "sourceSize": {
+        "w": 143,
+        "h": 221
+      }
+    },
+    "waterfall_foam_pool": {
+      "frame": {
+        "x": 366,
+        "y": 4,
+        "w": 241,
+        "h": 171
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 241,
+        "h": 171
+      },
+      "sourceSize": {
+        "w": 241,
+        "h": 171
+      }
+    },
+    "landmark_basalt_pillar": {
+      "frame": {
+        "x": 151,
+        "y": 4,
+        "w": 211,
+        "h": 217
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 211,
+        "h": 217
+      },
+      "sourceSize": {
+        "w": 211,
+        "h": 217
+      }
+    },
+    "prop_cliff_scree": {
+      "frame": {
+        "x": 246,
+        "y": 229,
+        "w": 243,
+        "h": 143
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 243,
+        "h": 143
+      },
+      "sourceSize": {
+        "w": 243,
+        "h": 143
+      }
+    },
+    "prop_river_islet": {
+      "frame": {
+        "x": 611,
+        "y": 4,
+        "w": 218,
+        "h": 155
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 218,
+        "h": 155
+      },
+      "sourceSize": {
+        "w": 218,
+        "h": 155
+      }
+    }
+  },
+  "meta": {
+    "app": "scripts/cut-orkhon-terrain-kit.mjs",
+    "source": "art-source/orkhon-terrain-kit.png",
+    "image": "orkhon-terrain-kit.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1024,
+      "h": 512
+    },
+    "scale": "1"
+  }
+}

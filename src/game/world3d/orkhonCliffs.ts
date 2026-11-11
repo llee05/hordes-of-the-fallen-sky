@@ -1,9 +1,9 @@
 import type Phaser from 'phaser';
 import * as THREE from 'three';
 import {
-  ORKHON_ATLAS,
   ORKHON_CLIFF_FACE_WIDTH,
   ORKHON_CLIFF_FACES,
+  ORKHON_KIT_ATLAS,
 } from '../assets/orkhonValleyArt';
 import { ORKHON_VALLEY } from '../data/orkhonValley';
 import { WORLD_REGIONS } from '../data/worldRegions';
@@ -19,7 +19,7 @@ export function cliffFacePixel(rise = ORKHON_VALLEY.rise): number {
 }
 
 /**
- * Shader inputs for the painted Orkhon cliff walls: the sprite atlas and each face band's source
+ * Shader inputs for the painted Orkhon cliff walls: the terrain kit atlas and each face band's source
  * rectangle in atlas pixels. Without a scene the uniforms are inert placeholders.
  */
 export function cliffFaceUniforms(scene?: Phaser.Scene) {
@@ -27,7 +27,7 @@ export function cliffFaceUniforms(scene?: Phaser.Scene) {
   let atlas = new THREE.Texture();
   const size = new THREE.Vector2(1, 1);
   if (scene) {
-    const source = scene.textures.get(ORKHON_ATLAS);
+    const source = scene.textures.get(ORKHON_KIT_ATLAS);
     const image = source.getSourceImage() as HTMLImageElement;
     atlas = new THREE.Texture(image);
     atlas.colorSpace = THREE.SRGBColorSpace;

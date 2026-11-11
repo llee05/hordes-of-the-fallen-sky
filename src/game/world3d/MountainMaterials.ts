@@ -50,30 +50,30 @@ export class MountainMaterials {
         Math.max(0.7, Math.min(1.3, ratio.b)),
       );
     };
-    // Orkhon Valley uses the supplied texture-pack tiles untinted, at one shared painted scale.
+    // Orkhon Valley uses the terrain kit tiles untinted, at one shared painted scale.
     const authored = locationId === 'orkhon-valley';
     const tile = (name: OrkhonTile) => texture(orkhonTileKey(name));
-    // Authored channels: calm plateau grass is the ground base everywhere, with broad regions of
-    // the tufted steppe variant on plateau tops; paths are dry dirt.
+    // Authored channels: calm valley grass with regions of the olive variant, rare sun-cured
+    // straw, the darker plateau moss on top, trail dirt on paths and ramps, scree at cliff feet.
     const meadowTex = authored
-      ? tile('plateauGrass')
+      ? tile('valleyCalm')
       : texture(palette ? 'tapestry-meadow' : MOUNTAIN_TERRAIN_ART.materials.grassland.texture!);
-    const dryMeadowTex = authored ? tile('dryGrass') : texture('ground');
+    const dryMeadowTex = authored ? tile('valleyStraw') : texture('ground');
     const soilTex = authored
-      ? tile('dryDirt')
+      ? tile('trailDirt')
       : texture(MOUNTAIN_TERRAIN_ART.materials['rocky-soil'].texture!);
     const stoneTex = authored
-      ? tile('rockyGround')
+      ? tile('screeGravel')
       : texture(palette ? 'tapestry-stone' : MOUNTAIN_TERRAIN_ART.materials.stone.texture!);
     const gravelTex = authored ? stoneTex : soilTex;
-    // Authored channel 4 is plateau-top grass and channel 5 patchy grass; neither has snow.
+    // Authored channel 4 is plateau-top moss; channel 5 is unused there. Neither has snow.
     const snowTex = authored
-      ? tile('steppeGrassVariant')
+      ? tile('plateauMoss')
       : texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!);
-    const meadowAltTex = meadowTex;
-    const patchTex = authored ? tile('patchyGrass') : snowTex;
+    const meadowAltTex = authored ? tile('valleyOlive') : meadowTex;
+    const patchTex = authored ? meadowAltTex : snowTex;
     this.bedTexture = authored ? gravelTex : soilTex;
-    this.waterTextures = authored ? [tile('riverFlow'), tile('riverRapids')] : undefined;
+    this.waterTextures = authored ? [tile('riverChannel'), tile('riverRapids')] : undefined;
     const cliffs = authored ? cliffFaceUniforms(scene) : undefined;
     if (cliffs) this.textures.push(cliffs.cliffAtlas.value);
 
@@ -113,7 +113,7 @@ export class MountainMaterials {
           `#include <color_fragment>\n${TERRAIN_COLOR}`,
         );
       };
-      material.customProgramCacheKey = () => `living-steppe-materials-v6-${wall}`;
+      material.customProgramCacheKey = () => `living-steppe-materials-v7-${wall}`;
       return material;
     };
     this.surface = make(false);

@@ -9,8 +9,11 @@ export const WORLD_3D = {
   maxAngle: 70,
   meshStep: 32,
   chunkBudget: 2,
-  pixelRatio: 1.5,
+  /** Highest device pixel ratio drawn; 2 keeps HiDPI displays sharp. */
+  pixelRatio: 2,
   shadowSize: 1024,
+  /** Anisotropic filtering for ground and bank textures, clamped to what the GPU supports. */
+  anisotropy: 8,
   minRenderScale: 0.5,
 } as const;
 

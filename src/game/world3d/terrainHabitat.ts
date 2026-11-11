@@ -10,6 +10,8 @@ export interface TerrainHabitat {
   cliffTop: number;
   wear: number;
   patch: number;
+  /** 1 across the open ground around the camp, fading to 0 by 1000 units out. */
+  clearing: number;
 }
 
 /** Global ecology masks: materials and vegetation describe the same landscape across chunk edges. */
@@ -49,6 +51,7 @@ export function terrainHabitat(
   const cx = x - terrain.worldSize / 2,
     cz = z - terrain.worldSize / 2;
   const hearth = (1 - smoothstep(60, 180, Math.hypot(cx, cz))) * 0.7;
+  const clearing = 1 - smoothstep(750, 1000, Math.hypot(cx, cz));
   const ground = scene.ground;
   const road = ground
     ? Math.max(
@@ -67,6 +70,7 @@ export function terrainHabitat(
     cliffTop,
     wear: Math.max(hearth, road * (ground ? 0.9 : 0.65)),
     patch,
+    clearing,
   };
 }
 
@@ -115,9 +119,11 @@ function pathDistance(
 }
 
 /**
- * Authored ground uses the same seven channels for supplied tiles: calm valley grass, dry dirt,
- * rocky ground, dry grass, plateau-top grass, patchy grass and riverbank gravel. Most of the
- * valley is calm grass; dry grass and flowers form a few broad, rare regions.
+ * Authored ground uses the same seven channels for the terrain kit tiles: valley grass (calm with
+ * olive regions), trail dirt, scree, sun-cured straw and plateau moss; the last two channels are
+ * unused because the kit's painted bank bands line the river (`orkhonBanks`). Most of the valley is calm grass; straw forms a few broad, rare
+ * regions on the valley floor, away from the camp. Elevation reads from tone alone: plateau tops are the darker moss
+ * right up to the cliff's inked lip.
  */
 function authoredMaterialWeights(
   terrain: ComposedTerrain,
@@ -128,26 +134,16 @@ function authoredMaterialWeights(
   const scene = terrain.region.scene;
   const rise = Math.max(1, ...scene.shelves.map((shelf) => shelf.rise));
   const top = smoothstep(rise * 0.55, rise * 0.85, height - scene.floor);
-  // Scree gathers below the cliffs; plateau rims stay grassy beneath the painted lip.
+  // Scree gathers below the cliffs; plateau tops stay grassy up to the painted lip.
   const stone = clamp01(
     smoothstep(0.3, 0.62, 1 - normalY) + Math.pow(habitat.cliffFoot, 4) * (1 - top) * 0.6,
   );
-  const gravel = (1 - stone) * habitat.shore * 0.85;
-  const soil = (1 - stone) * (1 - gravel) * habitat.wear;
-  const cover = (1 - stone) * (1 - gravel) * (1 - habitat.wear);
-  // Plateau rims catch the light as a band of dry grass behind the painted cliff lip.
-  const dry = Math.max(1 - smoothstep(0.24, 0.3, habitat.moisture), habitat.cliffTop * top * 0.9);
-  const flowers = smoothstep(0.88, 0.93, habitat.grove) * (1 - top);
-  const grass = cover * (1 - dry) * (1 - flowers);
-  return [
-    grass * (1 - top),
-    soil,
-    stone,
-    cover * dry,
-    grass * top,
-    cover * (1 - dry) * flowers,
-    gravel,
-  ];
+  const soil = (1 - stone) * habitat.wear;
+  const cover = (1 - stone) * (1 - habitat.wear);
+  // Straw is warmer and busier than the calm grass, so the camp's open fighting ground keeps none.
+  const dry = (1 - smoothstep(0.24, 0.3, habitat.moisture)) * (1 - top) * (1 - habitat.clearing);
+  const grass = cover * (1 - dry);
+  return [grass * (1 - top), soil, stone, cover * dry, grass * top, 0, 0];
 }
 
 /** Seven existing channels: healthy grass, soil, stone, dry grass, snow, ice, gravel. */

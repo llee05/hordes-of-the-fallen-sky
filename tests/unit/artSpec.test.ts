@@ -90,6 +90,21 @@ describe('art spec companion', () => {
     }
   });
 
+  it('keeps Orkhon ground at about one texel per screen pixel, mipmapped and anisotropic', () => {
+    // At the default zoom a world unit is WORLD_3D.worldScale CSS pixels; full-resolution kit
+    // tiles give 1.6 texels per CSS pixel, so ground is not magnified up to a pixel ratio of 1.6.
+    const texelsPerPixel =
+      ART_SPEC.orkhon.tilePixels / ART_SPEC.orkhon.tileWorldSize / WORLD_3D.worldScale;
+    expect(texelsPerPixel).toBeGreaterThanOrEqual(1.5);
+    expect(WORLD_3D.anisotropy).toBeGreaterThanOrEqual(8);
+    const materials = source('src/game/world3d/MountainMaterials.ts');
+    expect(materials).toContain('map.minFilter = THREE.LinearMipmapLinearFilter');
+    expect(materials).toContain('map.anisotropy = anisotropy');
+    expect(source('src/game/world3d/World3DRenderer.ts')).toContain(
+      'Math.min(WORLD_3D.anisotropy, this.renderer.capabilities.getMaxAnisotropy())',
+    );
+  });
+
   it('measures the Khan, riders and camp life from their painted frames', () => {
     expect(ART_WIDTH.player).toBe(ART_SPEC.reference.khanWidth);
     const [low, high] = actorHeights('mounted', 'player', ART_WIDTH.player!);
@@ -186,7 +201,7 @@ describe('Orkhon Valley scenery inside the art spec bands', () => {
       larch: [propScale.tree * jitter.rimTree[0], propScale.tree * jitter.rimTree[1]],
       scrub: [propScale.scrub],
       reeds: [propScale.reed],
-      boulders: [propScale.rock * jitter.footRock[0], propScale.rock * jitter.footRock[1]],
+      boulders: [propScale.scree * jitter.footRock[0], propScale.scree * jitter.footRock[1]],
     };
     expect(jitter.groveTree[0]).toBeGreaterThanOrEqual(jitter.rimTree[0]);
     expect(jitter.groveTree[1]).toBeLessThanOrEqual(jitter.rimTree[1]);

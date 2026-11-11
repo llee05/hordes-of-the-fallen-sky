@@ -146,7 +146,7 @@ describe('development arena hooks', () => {
       }
     }
     const sys = new Systems();
-    const world = { setRenderScale: vi.fn(), qualityTime: 0, renderScale: 0.7 };
+    const world = { holdRenderScale: vi.fn(), renderScale: 0.7 };
     const hooks = createTestHooks(
       { sys } as unknown as ArenaScene,
       { landscape: { world3d: world } } as unknown as ArenaContext,
@@ -154,14 +154,14 @@ describe('development arena hooks', () => {
     hooks.freezeVisuals(true);
     sys.step();
     expect(sys.steps).toBe(0);
-    expect(world.setRenderScale).toHaveBeenCalledWith(1);
-    expect(world.qualityTime).toBe(Infinity);
+    // Freezing holds every pixel; unfreezing hands the scale back to automatic scaling.
+    expect(world.holdRenderScale).toHaveBeenLastCalledWith(true);
     hooks.freezeVisuals(true);
     hooks.freezeVisuals(false);
     expect(Object.prototype.hasOwnProperty.call(sys, 'step')).toBe(false);
     sys.step();
     expect(sys.steps).toBe(1);
-    expect(world.qualityTime).toBeLessThan(Infinity);
+    expect(world.holdRenderScale).toHaveBeenLastCalledWith(false);
     expect(() => hooks.freezeVisuals('on' as never)).toThrow('true or false');
   });
 

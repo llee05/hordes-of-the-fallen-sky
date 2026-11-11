@@ -3,12 +3,17 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
   ORKHON_ATLAS,
+  ORKHON_BANKS,
+  ORKHON_BANK_SHORE,
   ORKHON_CLIFF_FACE_WIDTH,
   ORKHON_CLIFF_FACES,
+  ORKHON_KIT_ATLAS,
+  ORKHON_KIT_SPRITES,
   ORKHON_LANDMARK_SCALE,
   ORKHON_PROP_SCALE,
   ORKHON_SPRITES,
   ORKHON_TILES,
+  orkhonAtlasOf,
 } from '../../src/game/assets/orkhonValleyArt';
 import { GAME } from '../../src/game/config';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
@@ -23,7 +28,12 @@ import { ambientArrivalAngle, authoredFieldSite } from '../../src/game/systems/a
 import { TerrainNavigation } from '../../src/game/terrain/TerrainNavigation';
 import type { TerrainPoint } from '../../src/game/terrain/types';
 import { ComposedTerrain, outlineField } from '../../src/game/world3d/ComposedTerrain';
-import { orkhonOverlay } from '../../src/game/world3d/orkhonOverlay';
+import {
+  BANK_ACROSS,
+  CAMERA_DIRECTION,
+  orkhonBanks,
+  orkhonOverlay,
+} from '../../src/game/world3d/orkhonOverlay';
 import { sceneDressing } from '../../src/game/world3d/sceneDressing';
 import { sceneGeometry } from '../../src/game/world3d/sceneGeometry';
 import { terrainHabitat, terrainMaterialWeights } from '../../src/game/world3d/terrainHabitat';
@@ -66,8 +76,14 @@ function route(from: TerrainPoint, to: TerrainPoint): TerrainPoint[] {
 const elevation = (p: TerrainPoint) =>
   terrain.actorHeight(p.x, p.y) * 1000 - terrain.region.scene.floor;
 
-describe('Orkhon Valley texture pack v2 assets', () => {
-  it('bundles exactly the used supplied tiles and one sprite atlas, with no v1 files', () => {
+const atlasJson = (atlas: string) =>
+  JSON.parse(readFileSync(join(art, `${atlas}.json`), 'utf8')) as {
+    frames: Record<string, { frame: { x: number; y: number; w: number; h: number } }>;
+    meta: { size: { w: number; h: number } };
+  };
+
+describe('Orkhon Valley terrain kit and pack assets', () => {
+  it('bundles exactly the used kit tiles, bank bands and the two sprite atlases', () => {
     const files = readdirSync(art, { recursive: true, withFileTypes: true })
       .filter((entry) => entry.isFile())
       .map((entry) => join(entry.parentPath, entry.name).slice(art.length + 1))
@@ -75,22 +91,29 @@ describe('Orkhon Valley texture pack v2 assets', () => {
     expect(files).toEqual(
       [
         ...Object.values(ORKHON_TILES).map((tile) => `${tile}.png`),
-        `${ORKHON_ATLAS}.json`,
-        `${ORKHON_ATLAS}.png`,
+        ...Object.values(ORKHON_BANKS).map((bank) => `${bank}.png`),
+        ...[ORKHON_ATLAS, ORKHON_KIT_ATLAS].flatMap((atlas) => [`${atlas}.json`, `${atlas}.png`]),
       ].sort(),
     );
   });
 
-  it('registers every sprite at its supplied size inside the atlas', () => {
-    const atlas = JSON.parse(readFileSync(join(art, `${ORKHON_ATLAS}.json`), 'utf8'));
-    expect(Object.keys(atlas.frames).sort()).toEqual(Object.keys(ORKHON_SPRITES).sort());
+  it('registers every sprite at its supplied size inside its atlas', () => {
+    const pack = atlasJson(ORKHON_ATLAS),
+      kit = atlasJson(ORKHON_KIT_ATLAS);
+    expect(Object.keys(kit.frames).sort()).toEqual(Object.keys(ORKHON_KIT_SPRITES).sort());
+    expect([...Object.keys(pack.frames), ...Object.keys(kit.frames)].sort()).toEqual(
+      Object.keys(ORKHON_SPRITES).sort(),
+    );
     for (const [name, metrics] of Object.entries(ORKHON_SPRITES)) {
-      const { frame } = atlas.frames[name];
+      const atlas =
+        orkhonAtlasOf(name as keyof typeof ORKHON_SPRITES) === ORKHON_KIT_ATLAS ? kit : pack;
+      const { frame } = atlas.frames[name]!;
       expect([frame.w, frame.h], name).toEqual([metrics.width, metrics.height]);
       expect(frame.x + frame.w).toBeLessThanOrEqual(atlas.meta.size.w);
       expect(frame.y + frame.h).toBeLessThanOrEqual(atlas.meta.size.h);
     }
-    expect(existsSync(join(art, `${ORKHON_ATLAS}.png`))).toBe(true);
+    for (const atlas of [ORKHON_ATLAS, ORKHON_KIT_ATLAS])
+      expect(existsSync(join(art, `${atlas}.png`))).toBe(true);
   });
 });
 
@@ -148,7 +171,7 @@ describe('Orkhon Valley two-level terrain', () => {
     ).toBeLessThan(60);
   });
 
-  it('lights every plateau rim with a band of dry grass', () => {
+  it('keeps every plateau top on the darker moss right up to its rim', () => {
     let rims = 0;
     for (const plateau of ORKHON_VALLEY.plateaus)
       for (let i = 0; i < plateau.outline.length; i += 3) {
@@ -164,8 +187,9 @@ describe('Orkhon Valley two-level terrain', () => {
         const rim = world({ x: mid.x + n.x * 20, y: mid.y + n.y * 20 });
         const inner = world({ x: mid.x + n.x * 220, y: mid.y + n.y * 220 });
         if (outlineField(plateau.outline, inner.x - C, inner.y - C) < 180) continue;
-        // The river's gravel banks replace the rim beside the gorge.
+        // The river's banks replace the rim beside the gorge.
         if (terrain.river!.sample(rim.x, rim.y).shoreDistance < 150) continue;
+        const valley = world({ x: mid.x - n.x * 260, y: mid.y - n.y * 260 });
         const weights = (p: TerrainPoint) => {
           const height = terrain.height(p.x, p.y) * 1000;
           return terrainMaterialWeights(
@@ -175,8 +199,17 @@ describe('Orkhon Valley two-level terrain', () => {
             terrainHabitat(terrain, p.x, p.y, height, 1),
           );
         };
-        // Channel 3 is dry grass.
-        expect(weights(rim)[3], plateau.id).toBeGreaterThan(0.5);
+        // Channel 4 is plateau moss and channel 3 sun-cured straw: elevation reads from tone, so
+        // the rim is moss with no lighter band, and the valley below has none of it.
+        expect(weights(rim)[4], plateau.id).toBeGreaterThan(0.6);
+        expect(weights(rim)[3], plateau.id).toBe(0);
+        expect(weights(inner)[4], plateau.id).toBeGreaterThan(0.6);
+        if (
+          ORKHON_VALLEY.plateaus.every(
+            (p) => outlineField(p.outline, valley.x - C, valley.y - C) < -60,
+          )
+        )
+          expect(weights(valley)[4], plateau.id).toBe(0);
         rims++;
       }
     expect(rims).toBeGreaterThan(10);
@@ -345,7 +378,7 @@ describe('Orkhon Valley two-level terrain', () => {
 describe('Orkhon Valley painted scene', () => {
   const frames = (): Set<string> =>
     new Set(
-      Object.keys(JSON.parse(readFileSync(join(art, `${ORKHON_ATLAS}.json`), 'utf8')).frames),
+      [ORKHON_ATLAS, ORKHON_KIT_ATLAS].flatMap((atlas) => Object.keys(atlasJson(atlas).frames)),
     );
 
   it('dresses the level from supplied atlas frames, untinted, and stable across chunks', () => {
@@ -364,11 +397,15 @@ describe('Orkhon Valley painted scene', () => {
     });
     expect(all.length).toBeGreaterThan(150);
     for (const prop of all) {
-      expect(prop.texture).toBe(ORKHON_ATLAS);
+      expect(prop.texture).toBe(orkhonAtlasOf(prop.frame as keyof typeof ORKHON_SPRITES));
       expect(valid.has(prop.frame), prop.frame).toBe(true);
       expect(prop.tint).toBe(0xffffff);
-      expect(terrain.river!.sample(prop.x, prop.z).shoreDistance).toBeGreaterThan(0);
+      // Everything stands on land except the sacred islets, which stand in the river.
+      const shore = terrain.river!.sample(prop.x, prop.z).shoreDistance;
+      if (prop.frame === 'prop_river_islet') expect(shore).toBeLessThan(-30);
+      else expect(shore).toBeGreaterThan(0);
     }
+    expect(all.filter((prop) => prop.frame === 'prop_river_islet')).toHaveLength(2);
     for (const landmark of ORKHON_VALLEY.landmarks)
       expect(all.some((prop) => prop.frame === landmark.sprite && prop.x === C + landmark.x)).toBe(
         true,
@@ -387,7 +424,7 @@ describe('Orkhon Valley painted scene', () => {
         larch: [ORKHON_PROP_SCALE.tree * 0.9, ORKHON_PROP_SCALE.tree * 1.1],
         scrub: [ORKHON_PROP_SCALE.scrub, ORKHON_PROP_SCALE.scrub],
         reeds: [ORKHON_PROP_SCALE.reed, ORKHON_PROP_SCALE.reed],
-        boulders: [ORKHON_PROP_SCALE.rock * 0.85, ORKHON_PROP_SCALE.rock * 1.15],
+        boulders: [ORKHON_PROP_SCALE.scree * 0.85, ORKHON_PROP_SCALE.scree * 1.15],
       })[kind];
     for (const prop of all) {
       const painted = ORKHON_SPRITES[prop.frame as keyof typeof ORKHON_SPRITES].width * 1.7;
@@ -486,10 +523,12 @@ describe('Orkhon Valley painted scene', () => {
     for (let i = 6; i < walls.weights.length; i += 7) expect(walls.weights[i]).toBe(0);
   });
 
-  it('crops every cliff-face band from inside its supplied sprite', () => {
-    const atlas = JSON.parse(readFileSync(join(art, `${ORKHON_ATLAS}.json`), 'utf8'));
+  it('crops every cliff-face band from inside the kit cliff run', () => {
+    const atlas = atlasJson(ORKHON_KIT_ATLAS);
     for (const face of ORKHON_CLIFF_FACES) {
-      const { frame } = atlas.frames[face.sprite];
+      expect(face.sprite).toBe('cliff_straight_run');
+      expect(orkhonAtlasOf(face.sprite)).toBe(ORKHON_KIT_ATLAS);
+      const { frame } = atlas.frames[face.sprite]!;
       expect(face.x).toBeGreaterThanOrEqual(0);
       expect(face.y).toBeGreaterThanOrEqual(0);
       expect(face.x + ORKHON_CLIFF_FACE_WIDTH, face.sprite).toBeLessThanOrEqual(frame.w);
@@ -544,15 +583,18 @@ describe('Orkhon Valley painted scene', () => {
     );
     const falls = pieces.filter((piece) => piece.part === 'falls');
     expect(falls).toHaveLength(3);
-    // Drops show only their painted water; the basalt walls frame them.
+    const floor = terrain.region.scene.floor;
     for (const drop of falls) {
-      const columns = drop.vertices.map((v) =>
-        drop.flip ? ORKHON_SPRITES.waterfall_top.width - v.pixel[0] : v.pixel[0],
-      );
-      expect(Math.min(...columns)).toBeGreaterThanOrEqual(13);
-      expect(Math.max(...columns)).toBeLessThanOrEqual(55);
+      expect(drop.sprite).toBe('waterfall_curtain');
+      // Each curtain shows its whole keyed painting, from the plateau top down to the river.
+      const columns = drop.vertices.map((v) => v.pixel[0]);
+      expect(Math.min(...columns)).toBe(0);
+      expect(Math.max(...columns)).toBe(ORKHON_SPRITES.waterfall_curtain.width);
+      const heights = drop.vertices.map((v) => v.position[1]);
+      expect(Math.min(...heights)).toBeLessThan(floor);
+      expect(Math.max(...heights)).toBeGreaterThan(floor + ORKHON_VALLEY.rise * 0.9);
     }
-    // Neighbouring drops overlap, so no rock shows between them.
+    // Neighbouring curtains overlap, so no rock shows between them.
     const centres = falls.map((drop) => {
       const xs = drop.vertices.map((v) => v.position[0]);
       return {
@@ -564,6 +606,67 @@ describe('Orkhon Valley painted scene', () => {
       expect(centres[i]!.middle - centres[i - 1]!.middle).toBeLessThan(
         centres[i]!.half + centres[i - 1]!.half,
       );
+    // One plunge pool stands in front of the curtains' foot, on the river head.
+    const pools = pieces.filter((piece) => piece.part === 'pool');
+    expect(pools).toHaveLength(1);
+    const pool = pools[0]!;
+    expect(pool.sprite).toBe('waterfall_foam_pool');
+    const base = pool.vertices.filter((v) => v.position[1] < floor + 1);
+    const foot = {
+      x: base.reduce((sum, v) => sum + v.position[0], 0) / base.length,
+      y: base.reduce((sum, v) => sum + v.position[2], 0) / base.length,
+    };
+    expect(terrain.river!.sample(foot.x, foot.y).shoreDistance).toBeLessThan(0);
+    const towardCamera =
+      (foot.x - C - ORKHON_VALLEY.waterfall.x) * CAMERA_DIRECTION.x +
+      (foot.y - C - ORKHON_VALLEY.waterfall.y) * CAMERA_DIRECTION.y;
+    expect(towardCamera).toBeGreaterThan(20);
+  });
+
+  it('lines both riverbanks with the kit bank bands, but not along cliffs or under the bridge', () => {
+    const strips = orkhonBanks(terrain);
+    expect(strips.map((strip) => strip.bank).sort()).toEqual(Object.keys(ORKHON_BANKS).sort());
+    const floor = terrain.region.scene.floor;
+    let checked = 0;
+    for (const strip of strips) {
+      expect(strip.positions.length).toBeGreaterThan(300);
+      expect(strip.positions.length % 9).toBe(0);
+      expect(strip.uv.length / 2).toBe(strip.positions.length / 3);
+      for (let i = 0; i < strip.positions.length / 3; i++) {
+        const x = strip.positions[i * 3]!,
+          y = strip.positions[i * 3 + 1]!,
+          z = strip.positions[i * 3 + 2]!;
+        const v = strip.uv[i * 2 + 1]!;
+        // The painted water edge lies on the shoreline: land above it, water below it.
+        const shore = terrain.river!.sample(x, z).shoreDistance;
+        const expected = (ORKHON_BANK_SHORE - v) * BANK_ACROSS;
+        expect(Math.abs(shore - expected), `${strip.bank} ${v}`).toBeLessThan(BANK_ACROSS * 0.35);
+        // Bands lie on the valley floor and the water surface, never up a cliff.
+        expect(y).toBeLessThan(floor + 30);
+        expect(terrain.river!.bridgeHeight(x, z)).toBeUndefined();
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(500);
+    // The far band covers shores whose land lies away from the camera, the near band the others.
+    for (const strip of strips) {
+      let agree = 0,
+        total = 0;
+      for (let i = 0; i < strip.positions.length / 3; i++) {
+        if (strip.uv[i * 2 + 1] !== 0) continue;
+        const x = strip.positions[i * 3]!,
+          z = strip.positions[i * 3 + 2]!;
+        // At the river's head the nearest shore is its end, so the side is ambiguous there.
+        const falls = ORKHON_VALLEY.waterfall;
+        if (Math.hypot(x - C - falls.x, z - C - falls.y) < 300) continue;
+        const shore = (px: number, pz: number) => terrain.river!.sample(px, pz).shoreDistance;
+        const land = { x: shore(x + 4, z) - shore(x - 4, z), y: shore(x, z + 4) - shore(x, z - 4) };
+        const toward = land.x * CAMERA_DIRECTION.x + land.y * CAMERA_DIRECTION.y > 0;
+        if (toward === (strip.bank === 'bankNear')) agree++;
+        total++;
+      }
+      expect(agree / total, strip.bank).toBeGreaterThan(0.9);
+    }
   });
 });
 

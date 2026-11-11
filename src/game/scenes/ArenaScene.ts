@@ -339,6 +339,7 @@ export class ArenaScene extends Phaser.Scene {
     this.fieldObjectives.create();
     this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.landscape = new SteppeLandscape(this);
+    this.landscape.setResolution(this.visualSettings.renderResolution);
     const center = GAME.worldSize / 2;
     this.camp = this.add
       .container(center, center)
@@ -836,6 +837,11 @@ export class ArenaScene extends Phaser.Scene {
           : this.visualSettings.effectDensity === 'reduced'
             ? 'minimal'
             : 'full';
+    else if (key === 'renderResolution') {
+      this.visualSettings.renderResolution =
+        this.visualSettings.renderResolution === 'auto' ? 'full' : 'auto';
+      this.landscape.setResolution(this.visualSettings.renderResolution);
+    }
     this.combat.restyleHostileShots();
     this.areaCombat.update(0);
     void this.platform

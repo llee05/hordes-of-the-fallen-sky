@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import type { MountainHeightfield } from './MountainHeightfield';
 import { projectGround, WORLD_3D } from './worldProjection';
 import { KhanOcclusion } from './KhanOcclusion';
-import { ORKHON_ATLAS } from '../assets/orkhonValleyArt';
+import { ORKHON_ATLAS, ORKHON_KIT_ATLAS } from '../assets/orkhonValleyArt';
 
 type Painted = Phaser.GameObjects.Image | Phaser.GameObjects.Sprite | Phaser.GameObjects.Text;
 
@@ -13,6 +13,7 @@ const SHADOW_CASTING = new Set([
   'steppe-scenery',
   'tapestry-scenery',
   ORKHON_ATLAS,
+  ORKHON_KIT_ATLAS,
 ]);
 
 interface Batch {
@@ -37,12 +38,17 @@ export class SpriteBridge {
     { x: number; y: number; z: number }
   >();
 
+  private readonly kitAtlas?: TexImageSource;
+
   constructor(
     private readonly scene: Phaser.Scene,
     private readonly root: THREE.Group,
     private readonly terrain: MountainHeightfield,
   ) {
     this.occludedKhan = new KhanOcclusion(root);
+    this.kitAtlas = scene.textures.exists(ORKHON_KIT_ATLAS)
+      ? (scene.textures.get(ORKHON_KIT_ATLAS).getSourceImage() as TexImageSource)
+      : undefined;
     scene.events.on(PAINTED_ATLAS_CHANGED, this.refreshAtlas, this);
   }
 
@@ -101,9 +107,12 @@ export class SpriteBridge {
     if (!batch) {
       const texture = new THREE.Texture(source);
       texture.colorSpace = THREE.SRGBColorSpace;
-      texture.minFilter = THREE.LinearFilter;
+      // Terrain kit cutouts keep full sheet resolution and are drawn at about half size; mipmaps
+      // keep them clean. Other sprite sheets are drawn near their painted size.
+      const mipmaps = source === this.kitAtlas;
+      texture.minFilter = mipmaps ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
       texture.magFilter = THREE.LinearFilter;
-      texture.generateMipmaps = false;
+      texture.generateMipmaps = mipmaps;
       texture.needsUpdate = true;
       this.textures.set(source, texture);
       const mesh = new THREE.Mesh(

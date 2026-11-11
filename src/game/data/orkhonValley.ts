@@ -298,7 +298,7 @@ export const ORKHON_VALLEY: OrkhonValleyLayout = {
     { id: 'south-rack', sprite: 'wooden_rack', x: 1480, y: 1910, role: 'scenery' },
     {
       id: 'west-pillar',
-      sprite: 'cliff_isolated',
+      sprite: 'landmark_basalt_pillar',
       x: -1980,
       y: 880,
       role: 'scenery',
@@ -306,21 +306,23 @@ export const ORKHON_VALLEY: OrkhonValleyLayout = {
     },
     {
       id: 'gorge-pillar',
-      sprite: 'cliff_isolated',
+      sprite: 'landmark_basalt_pillar',
       x: 1450,
       y: -760,
       role: 'scenery',
       footprint: 50,
-      flip: true,
     },
     {
       id: 'east-pillar',
-      sprite: 'cliff_isolated',
+      sprite: 'landmark_basalt_pillar',
       x: 2300,
       y: 1250,
       role: 'scenery',
       footprint: 50,
     },
+    // Sacred stones on gravel islets in the river, on its course; the water is already impassable.
+    { id: 'river-islet-north', sprite: 'prop_river_islet', x: 1890, y: 700, role: 'scenery' },
+    { id: 'river-islet-south', sprite: 'prop_river_islet', x: 2060, y: 1550, role: 'scenery' },
     {
       id: 'outskirts-ger',
       sprite: 'player_ger_small',
