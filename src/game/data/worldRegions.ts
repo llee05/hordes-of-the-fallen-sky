@@ -241,12 +241,8 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
     campShelf: false,
     relief: 0.35,
     ground: {
-      paths: [
-        ...ORKHON_VALLEY.paths,
-        ...ORKHON_VALLEY.plateaus.flatMap((source) =>
-          source.ramps.map((ramp) => [ramp.foot, ramp.top]),
-        ),
-      ],
+      // Trails end at the ramp feet; each ramp wears its own graded width (`rampWear`).
+      paths: ORKHON_VALLEY.paths,
       width: ORKHON_VALLEY.pathWidth,
       ramps: ORKHON_VALLEY.plateaus.flatMap((source) => source.ramps),
     },

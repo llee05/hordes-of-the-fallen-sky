@@ -147,8 +147,15 @@ waterfall top lip (a self-contained miniature fall about half the plateau rise).
   camera; its columns keep that pixel size (about 1.4 units) on screen for walls facing the
   camera. Walls are lit like the rest of the terrain.
 - **Ramps:** each ramp is graded ground worn bare across its walkable width (trail dirt),
-  rising through a trench of steep flanks. Steep graded ground uses the same basalt bands
-  as the walls, so ramp flanks read as cut cliff.
+  rising through a trench of steep flanks. Trails end at the ramp feet; the ramp's own wear
+  (`rampWear`) ends at the head of the cut, where the ramp meets the plateau top, so no worn
+  earth runs onto the plateau, and coarse noise frays its sides and ends. Steep graded ground
+  uses the same basalt bands as the walls, so ramp flanks read as cut cliff: the bands run
+  along the nearest ramp's own length (`orkhonFlankAlong`), keeping their painted width and
+  advancing the same way as plateau walls, so they are never mirrored. On shoulders steeper
+  than about 32° the ground paintings add side projections (`orkhonSideProjection`) instead of
+  stretching downhill; each advances uphill like the top projection, and they meet by height
+  blending.
 - **Banks:** `orkhonBanks` lays a 72-unit band along each shore with the painted water edge on
   the shoreline: shores whose land lies away from the camera use the south-bank painting (its
   clay lip seen from the front), the others the north-bank painting (seen from above). The
@@ -171,8 +178,8 @@ The kit is not an autotile set and its pieces were never tested together in the 
 
 - Cliff bands restart every 100 source pixels (about 140 units). Basalt column joints hide
   most restarts, but the grass lip and column tops can step where neighbouring bands differ.
-- Where two band projections meet on a ramp flank (the flank turns between facing east
-  and facing south), the columns change direction.
+- Where a ramp flank meets the plateau wall, the flank's bands (measured along the ramp)
+  and the wall's (measured along the outline) restart at different points.
 - Walls facing away from the camera are hidden behind their plateau and not painted, so
   far plateau edges show only the change from valley grass to the darker moss.
 - The valley tiles are warmer and more saturated than the art spec's manuscript target

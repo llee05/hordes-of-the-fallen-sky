@@ -121,7 +121,7 @@ export class MountainMaterials {
       };
       // Generated places keep their program; Orkhon's carries its own code.
       material.customProgramCacheKey = () =>
-        authored ? `orkhon-terrain-v4-${wall}` : `living-steppe-materials-v7-${wall}`;
+        authored ? `orkhon-terrain-v5-${wall}` : `living-steppe-materials-v7-${wall}`;
       return material;
     };
     this.surface = make(false);

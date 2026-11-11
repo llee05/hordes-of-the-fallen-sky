@@ -1,7 +1,7 @@
 import { clamp01, smoothstep } from '../terrain/noise';
 import type { TerrainPoint } from '../terrain/types';
 import type { ComposedTerrain } from './ComposedTerrain';
-import { habitatFields, habitatMoisture, shoreNearness } from './terrainHabitat';
+import { habitatFields, habitatMoisture, rampWear, shoreNearness } from './terrainHabitat';
 
 /**
  * Orkhon Valley material masks, evaluated per pixel instead of per mesh vertex.
@@ -57,7 +57,7 @@ function rampFrame(ramp: GroundRamp, x: number, z: number) {
   };
 }
 
-/** Whether a camp-relative point lies where a ramp's wear or flanks can reach. */
+/** Whether a camp-relative point lies where a ramp's wear (`rampWear`) or flanks can reach. */
 function nearRamp(ramp: GroundRamp, x: number, z: number, margin = 0): boolean {
   const { length, s, lateral } = rampFrame(ramp, x, z);
   return (
@@ -65,32 +65,6 @@ function nearRamp(ramp: GroundRamp, x: number, z: number, margin = 0): boolean {
     s >= -0.3 * length - margin &&
     s <= 1.3 * length + margin
   );
-}
-
-/**
- * Worn earth on a ramp: full across the graded width, from just below the foot to just past the
- * top. `along` is the distance from the foot along the nearest ramp.
- */
-export function orkhonRampWear(
-  ramps: readonly GroundRamp[],
-  x: number,
-  z: number,
-): { wear: number; along: number } {
-  let wear = 0,
-    along = 0;
-  for (const ramp of ramps) {
-    if (!nearRamp(ramp, x, z)) continue;
-    const { length, s } = rampFrame(ramp, x, z);
-    const t = s / length;
-    const distance = segmentDistance([ramp.foot, ramp.top], x, z);
-    const own =
-      (1 - smoothstep(ramp.halfWidth * 0.6, ramp.halfWidth * 0.95, distance)) *
-      smoothstep(-0.2, 0.05, t) *
-      (1 - smoothstep(0.95, 1.2, t));
-    wear = Math.max(wear, own);
-    along = s;
-  }
-  return { wear, along };
 }
 
 /** Ground-position masks as the bake stores them, for a world point. */
@@ -106,7 +80,7 @@ function wearAt(terrain: ComposedTerrain, cx: number, cz: number, trail: number)
   const ground = terrain.region.scene.ground!;
   const hearth = (1 - smoothstep(60, 180, Math.hypot(cx, cz))) * 0.7;
   const worn = 1 - smoothstep(ground.width * 0.2, ground.width * 0.8, trail);
-  const ramp = orkhonRampWear(ground.ramps ?? [], cx, cz).wear;
+  const ramp = rampWear(ground.ramps ?? [], cx, cz);
   return Math.max(hearth, Math.max(worn, ramp) * 0.9);
 }
 
@@ -224,7 +198,7 @@ export function bakeOrkhonGroundMask(
       box(mx - extent, mz - extent, mx + extent, mz + extent, (k, x, z) => {
         if (!nearRamp(ramp, x, z, 2 * cell)) return;
         near[k] = 1;
-        wear[k] = Math.max(wear[k]!, orkhonRampWear([ramp], x, z).wear * 0.9);
+        wear[k] = Math.max(wear[k]!, rampWear([ramp], x, z) * 0.9);
       });
     }
     box(-180, -180, 180, 180, (k, x, z) => {
@@ -377,4 +351,52 @@ export function orkhonRampUniforms(terrain: ComposedTerrain): {
       0,
     ]),
   };
+}
+
+/** Band offset between ramps, so neighbouring ramps start their flanks on different bands. */
+export const ORKHON_FLANK_OFFSET = 397;
+
+/**
+ * Distance along a ramp flank for its painted basalt bands, mirroring the shader's
+ * `orkhonFlankAlong`: the nearest ramp's own arc length from its foot, so bands keep their
+ * painted width along the whole flank. It increases along (−n.z, n.x) of the flank's outward
+ * normal, as plateau walls do along their outline, so the painting is never mirrored. World
+ * coordinates; `undefined` away from every ramp.
+ */
+export function orkhonFlankAlong(
+  terrain: ComposedTerrain,
+  x: number,
+  z: number,
+  nx: number,
+  nz: number,
+): number | undefined {
+  const { axis, size } = orkhonRampUniforms(terrain);
+  let best = Infinity,
+    along: number | undefined;
+  axis.forEach(([fx, fz, dx, dz], i) => {
+    const [length, , shoulder] = size[i]!;
+    const qx = x - fx,
+      qz = z - fz;
+    const s = qx * dx + qz * dz;
+    const lateral = Math.abs(-qx * dz + qz * dx);
+    if (lateral > shoulder + 40 || s < -0.3 * length || s > 1.3 * length || lateral >= best) return;
+    best = lateral;
+    along = (-nz * dx + nx * dz >= 0 ? s : -s) + i * ORKHON_FLANK_OFFSET;
+  });
+  return along;
+}
+
+/**
+ * Painting coordinates of a steep pixel's side projections, mirroring the shader: x-facing
+ * slopes use (∓height, z) and z-facing slopes (x, ∓height), signed so that each advances uphill
+ * in the same direction as the top projection (x, z). The paintings are therefore never turned
+ * or mirrored on the shoulders, and the painted light stays upper left. `n` is the unit normal.
+ */
+export function orkhonSideProjection(
+  x: number,
+  y: number,
+  z: number,
+  n: readonly [number, number, number],
+): { x: [number, number]; z: [number, number] } {
+  return { x: [(n[0] < 0 ? 1 : -1) * y, z], z: [x, (n[2] < 0 ? 1 : -1) * y] };
 }

@@ -7,13 +7,18 @@ import {
   bakeOrkhonGroundMask,
   groundSurface,
   orkhonGroundFields,
+  orkhonFlankAlong,
   orkhonGroundWeights,
   orkhonRampUniforms,
-  orkhonRampWear,
+  orkhonSideProjection,
   sampleGroundMask,
   trailSegments,
 } from '../../src/game/world3d/orkhonGround';
-import { authoredMaterialWeights, terrainHabitat } from '../../src/game/world3d/terrainHabitat';
+import {
+  authoredMaterialWeights,
+  rampWear,
+  terrainHabitat,
+} from '../../src/game/world3d/terrainHabitat';
 import {
   ORKHON_COLOR,
   ORKHON_SAMPLING,
@@ -54,9 +59,14 @@ describe('Orkhon per-pixel ground masks', () => {
     expect(checked).toBeGreaterThan(2000);
   });
 
-  it('covers every trail, ramp centre line and ramp', () => {
+  it('covers every trail and ramp; trails stop at the ramp feet', () => {
     const paths = ground.paths.reduce((sum, path) => sum + path.length - 1, 0);
     expect(trailSegments(orkhon)).toHaveLength(paths);
+    const points = ground.paths.flat();
+    for (const ramp of ground.ramps!) {
+      expect(points).toContainEqual(ramp.foot);
+      expect(points).not.toContainEqual(ramp.top);
+    }
     const ramps = orkhonRampUniforms(orkhon);
     expect(ramps.axis).toHaveLength(ground.ramps!.length);
     for (const [i, [, , dx, dz]] of ramps.axis.entries()) {
@@ -98,7 +108,7 @@ describe('Orkhon per-pixel ground masks', () => {
     for (let x = 13; x < orkhon.worldSize; x += 29)
       for (let z = 7; z < orkhon.worldSize; z += 31) {
         const near = sampleGroundMask(mask, orkhon.worldSize, x, z)[2];
-        if (orkhonRampWear(ground.ramps!, x - C, z - C).wear > 0) expect(near, `${x},${z}`).toBe(1);
+        if (rampWear(ground.ramps!, x - C, z - C) > 0) expect(near, `${x},${z}`).toBe(1);
         inside += near > 0 ? 1 : 0;
         count++;
       }
@@ -119,6 +129,105 @@ describe('Orkhon per-pixel ground masks', () => {
     expect(partial.length).toBeGreaterThanOrEqual(5);
     for (let i = 1; i < profile.length; i++)
       expect(profile[i]!).toBeLessThanOrEqual(profile[i - 1]! + 1e-9);
+  });
+});
+
+describe('Orkhon ramps', () => {
+  const frame = (ramp: NonNullable<typeof ground.ramps>[number]) => {
+    const length = Math.hypot(ramp.top.x - ramp.foot.x, ramp.top.y - ramp.foot.y);
+    const d = { x: (ramp.top.x - ramp.foot.x) / length, z: (ramp.top.y - ramp.foot.y) / length };
+    /** Camp-relative point at fraction t of the ramp and lateral offset u (units). */
+    const at = (t: number, u: number) => ({
+      x: ramp.foot.x + d.x * t * length - d.z * u,
+      z: ramp.foot.y + d.z * t * length + d.x * u,
+    });
+    return { length, d, at };
+  };
+
+  it('wears the ramp up to the head of the cut and not onto the plateau', () => {
+    for (const ramp of ground.ramps!) {
+      const { at } = frame(ramp);
+      for (let t = 0.15; t <= 0.75; t += 0.05) {
+        const p = at(t, 0);
+        expect(rampWear([ramp], p.x, p.z)).toBe(1);
+      }
+      // The top (t = 1) is where the cut meets the plateau: nothing worn there or beyond, from
+      // the ramp or a trail, across the ramp and its flanks.
+      for (let t = 1; t <= 1.3; t += 0.02)
+        for (let u = -(ramp.shoulder ?? ramp.halfWidth); u <= (ramp.shoulder ?? 0); u += 8) {
+          const p = at(t, u);
+          expect(rampWear([ramp], p.x, p.z), `${t},${u}`).toBe(0);
+          const [wear] = sampleGroundMask(mask, orkhon.worldSize, p.x + C, p.z + C);
+          expect(wear, `${t},${u}`).toBeLessThan(0.02);
+        }
+    }
+  });
+
+  it('frays the worn edges instead of ruling them straight', () => {
+    for (const ramp of ground.ramps!) {
+      const { at, length } = frame(ramp);
+      // Where the wear crosses one half, on each side and at the head.
+      const crossing = (point: (v: number) => { x: number; z: number }, from: number) => {
+        let v = from;
+        while (rampWear([ramp], point(v).x, point(v).z) >= 0.5) v += 1;
+        return v;
+      };
+      const sides: number[] = [];
+      for (let t = 0.2; t <= 0.7; t += 0.02)
+        for (const sign of [-1, 1]) sides.push(crossing((v) => at(t, sign * v), 0));
+      expect(Math.max(...sides) - Math.min(...sides)).toBeGreaterThan(12);
+      const head: number[] = [];
+      for (let u = -60; u <= 60; u += 6) head.push(crossing((v) => at(0.5 + v / length, u), 0));
+      // A ruled end would cross within a unit everywhere.
+      expect(Math.max(...head) - Math.min(...head)).toBeGreaterThan(4);
+    }
+  });
+
+  it('runs flank bands along the ramp at their painted width, never mirrored', () => {
+    for (const ramp of ground.ramps!) {
+      const { at, d } = frame(ramp);
+      const lateral = ((ramp.shoulder ?? ramp.halfWidth) + ramp.halfWidth) / 2;
+      for (const sign of [-1, 1]) {
+        // Outward normal of the flank on this side (embankment flanks face away from the ramp).
+        const n = { x: -d.z * sign, z: d.x * sign };
+        const values: number[] = [];
+        for (let t = 0.05; t <= 0.95; t += 0.05) {
+          const p = at(t, sign * lateral);
+          values.push(orkhonFlankAlong(orkhon, p.x + C, p.z + C, n.x * 0.8, n.z * 0.8)!);
+        }
+        const step = 0.05 * frame(ramp).length;
+        // The direction that plateau walls advance along, for this normal.
+        const forward = -n.z * d.x + n.x * d.z >= 0 ? 1 : -1;
+        for (let i = 1; i < values.length; i++)
+          expect(values[i]! - values[i - 1]!).toBeCloseTo(forward * step, 6);
+      }
+    }
+    expect(orkhonFlankAlong(orkhon, C, C, 0.6, 0)).toBeUndefined();
+  });
+
+  it('orients steep side projections like the top projection, never turned or mirrored', () => {
+    for (const azimuth of [0.2, 1.4, 2.9, 3.8, 5.1])
+      for (const degrees of [40, 60, 75]) {
+        const slope = Math.tan((degrees * Math.PI) / 180);
+        const uphill = [Math.cos(azimuth), Math.sin(azimuth)] as const;
+        const scale = Math.hypot(slope, 1);
+        const n = [(-slope * uphill[0]) / scale, 1 / scale, (-slope * uphill[1]) / scale] as const;
+        const project = (dx: number, dz: number) => {
+          const y = 150 + slope * (dx * uphill[0] + dz * uphill[1]);
+          return orkhonSideProjection(400 + dx, y, 300 + dz, n);
+        };
+        const origin = project(0, 0);
+        // Uphill: wherever a side projection carries weight, its height axis advances the same
+        // way as the top projection's matching axis (x for x-facing, z for z-facing slopes).
+        const up = project(uphill[0], uphill[1]);
+        if (Math.abs(n[0]) > 0.3)
+          expect(Math.sign(up.x[0] - origin.x[0])).toBe(Math.sign(uphill[0]));
+        if (Math.abs(n[2]) > 0.3)
+          expect(Math.sign(up.z[1] - origin.z[1])).toBe(Math.sign(uphill[1]));
+        // The axis each shares with the top projection is copied unchanged.
+        expect(up.x[1] - origin.x[1]).toBeCloseTo(uphill[1], 9);
+        expect(up.z[0] - origin.z[0]).toBeCloseTo(uphill[0], 9);
+      }
   });
 });
 

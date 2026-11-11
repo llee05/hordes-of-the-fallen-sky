@@ -156,6 +156,20 @@ export const ORKHON_SAMPLING = `
     vec2 px=face.xy+vec2(clamp(x,0.5,cliffFaceWidth-0.5),clamp(y,0.5,face.z-0.5));
     return texture2D(cliffAtlas,vec2(px.x/cliffAtlasSize.x,1.0-px.y/cliffAtlasSize.y)).rgb;
   }
+  // Ramp flanks run their bands along the nearest ramp's own arc length (orkhonFlankAlong), so
+  // the bands keep their painted width instead of shearing where the normal's dominant axis
+  // switches; they advance along (-n.z, n.x) as plateau walls do, so they are never mirrored.
+  float orkhonFlankAlong(vec2 p, vec3 n, float along) {
+    float best=1e9;
+    for(int i=0;i<ORKHON_RAMPS;i++) {
+      vec2 q=p-rampAxis[i].xy; vec2 d=rampAxis[i].zw; float len=rampSize[i].x;
+      float s=dot(q,d), lateral=abs(dot(q,vec2(-d.y,d.x)));
+      if(lateral>rampSize[i].z+40.0 || s<-0.3*len || s>1.3*len || lateral>=best) continue;
+      best=lateral;
+      along=(dot(vec2(-n.z,n.x),d)>=0.0?s:-s)+float(i)*397.0;
+    }
+    return along;
+  }
   // Per-pixel weights of valley grass, trail dirt, scree and straw (wA) and plateau moss (wMoss):
   // worn earth and dry-grass potential come from the baked ground mask; plateau tops from
   // height, scree from slope and cliff-foot nearness.
@@ -257,9 +271,29 @@ export const ORKHON_COLOR = `
       vec4 wA; float wMoss;
       orkhonWeights(worldPoint,n.y,materialA.x,wA,wMoss);
       surface=authoredGround(worldPoint.xz,wA,wMoss);
+      // Steep shoulders add side projections (orkhonSideProjection), so the paintings do not
+      // stretch downhill. Each advances uphill the same way as the top projection, so no painting
+      // turns or mirrors, and projections meet by height blending along their own strokes.
+      if(n.y<0.85) {
+        vec3 tri=pow(abs(n),vec3(8.0)); tri/=tri.x+tri.y+tri.z;
+        vec3 sx=surface, sz=surface;
+        float hy=authoredHeight(surface,tri.y), hx=-9.0, hz=-9.0;
+        if(tri.x>0.02) {
+          sx=authoredGround(vec2((n.x<0.0?1.0:-1.0)*worldPoint.y,worldPoint.z),wA,wMoss);
+          hx=authoredHeight(sx,tri.x);
+        }
+        if(tri.z>0.02) {
+          sz=authoredGround(vec2(worldPoint.x,(n.z<0.0?1.0:-1.0)*worldPoint.y),wA,wMoss);
+          hz=authoredHeight(sz,tri.z);
+        }
+        float top=max(hy,max(hx,hz))-0.12;
+        vec3 w=max(vec3(0.0),vec3(hx,hy,hz)-top);
+        surface=(sx*w.x+surface*w.y+sz*w.z)/max(w.x+w.y+w.z,0.0001);
+      }
       // Steep graded ground (ramp flanks) shows the same basalt bands as the plateau walls.
       if(n.y<0.75) {
         float along=mix(worldPoint.x,worldPoint.z,step(abs(n.z),abs(n.x)));
+        if(texture2D(groundMask,worldPoint.xz/worldSize).b>0.5) along=orkhonFlankAlong(worldPoint.xz,n,along);
         surface=mix(surface,cliffFace(along,cliffTop-worldPoint.y),smoothstep(0.75,0.5,n.y));
       }
     } else if(materialB.z>0.5) surface=cliffFace(materialB.x,materialB.y);

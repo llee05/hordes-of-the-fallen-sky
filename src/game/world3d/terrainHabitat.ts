@@ -106,7 +106,15 @@ export function terrainHabitat(
   };
 }
 
-/** Graded ramps are worn bare across their whole walkable width. */
+const RAMP_FRAY_SEED = 4241;
+
+/**
+ * Graded ramps are worn bare across their walkable width, from just below the foot to the head of
+ * the cut, where the ramp meets the plateau top (`top`, t = 1): the wear ends there instead of
+ * running onto the plateau. Coarse noise frays the sides by up to 18 units and finer noise the
+ * ends by up to 20, so they do not read as a ruled rectangle; the shader's height blend then
+ * follows the painted strokes.
+ */
 export function rampWear(
   ramps: readonly {
     foot: { x: number; y: number };
@@ -122,11 +130,14 @@ export function rampWear(
       dz = ramp.top.y - ramp.foot.y;
     const t = ((x - ramp.foot.x) * dx + (z - ramp.foot.y) * dz) / (dx * dx + dz * dz || 1);
     const distance = pathDistance([[ramp.foot, ramp.top]], x, z);
+    const fray = coherentNoise(x / 42, z / 42, RAMP_FRAY_SEED) - 0.5;
+    const end = coherentNoise(x / 24, z / 24, RAMP_FRAY_SEED + 1) - 0.5;
+    const along = t + (end * 40) / (Math.hypot(dx, dz) || 1);
     wear = Math.max(
       wear,
-      (1 - smoothstep(ramp.halfWidth * 0.6, ramp.halfWidth * 0.95, distance)) *
-        smoothstep(-0.2, 0.05, t) *
-        (1 - smoothstep(0.95, 1.2, t)),
+      (1 - smoothstep(ramp.halfWidth * 0.6, ramp.halfWidth * 0.95, distance + fray * 36)) *
+        smoothstep(-0.2, 0.05, along) *
+        (1 - smoothstep(0.84, 0.94, along)),
     );
   }
   return wear;
