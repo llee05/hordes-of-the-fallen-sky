@@ -59,3 +59,47 @@ without their extrusion). `--padding` empty texels separate pieces; `--extrude` 
 piece's edge texels into that padding so sampling at a frame edge reads its own colour.
 `--trim` crops transparent margins and `--bleed` fills transparent texels with nearby paint. Pass
 an output directory outside `public/art/` while experimenting.
+
+## Looking at the game through Playwright MCP
+
+The project's `.mcp.json` registers a `playwright` MCP server for Claude Code and any other MCP
+client that reads a project file. It runs `@playwright/mcp` at the pinned version `0.0.83`
+(through `npx`, so the first start downloads it) with this machine's Chromium at
+`/usr/bin/chromium` (Google Chrome is not installed), headless, at a 1280×800 viewport, with a
+fresh in-memory profile (`--isolated`, so parallel worktrees do not share one). Screenshots,
+page snapshots and console logs land in the gitignored `.playwright-mcp/` folder. On another
+machine, change `--executable-path` locally rather than committing it. Headless Chromium uses
+the GPU here, so WebGL renders as in the desktop game.
+
+An agent session:
+
+1. Start the browser build on a port no other worktree uses and leave it running:
+   `npm run dev:web -- --port 5191 --strictPort`.
+2. `browser_navigate` to `http://127.0.0.1:5191/`.
+3. Wait for the development hooks with `browser_evaluate`:
+   `async () => { while (!window.__gloam?.hooks) await new Promise((r) => setTimeout(r, 100)); }`.
+4. Load a fixed scene with the [game-control hooks](developer-mode.md#game-control-hooks), then
+   wait for it to settle:
+
+   ```js
+   async () => {
+     const h = window.__gloam.hooks;
+     await h.loadScenario({ place: 'orkhon-valley', seed: 1 });
+     h.setCamera({ x: 2850, y: 1325, zoom: 1 });
+     await h.captureScene({ timeout: 60000 });
+     return h.getState().camera;
+   };
+   ```
+
+5. `browser_take_screenshot` (type `png`). The image comes back to the agent to inspect and is
+   saved under `.playwright-mcp/`; `browser_console_messages` shows renderer warnings.
+6. `browser_close` when done, and stop the dev server.
+
+`loadScenario` freezes the scene and `freezeVisuals` pins the 3D render scale at 100%, so the
+same calls give the same picture. To hide the HUD and menus before a terrain screenshot, hide
+everything over the game canvas:
+`() => document.head.insertAdjacentHTML('beforeend', '<style>#arena-wrap > :not(#game-canvas) { visibility: hidden !important }</style>')`.
+
+Verified on 2026-11-11 with a minimal stdio MCP client that started the server exactly as
+`.mcp.json` describes, listed its tools, ran steps 2–6 against `npm run dev:web` and received a
+1280×800 PNG of Orkhon Valley; the console log showed the NVIDIA GL driver (hardware WebGL).

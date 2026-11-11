@@ -12,3 +12,4 @@ package-lock.json
 .claude/
 .codex/
 .opencode/
+.playwright-mcp/
