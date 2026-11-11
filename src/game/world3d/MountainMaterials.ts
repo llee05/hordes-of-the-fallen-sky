@@ -84,7 +84,14 @@ export class MountainMaterials {
       gravelMap: { value: gravelTex },
       stone: { value: stoneTex },
       snow: { value: snowTex },
-      ...orkhonMaps,
+      // Generated places keep the inert uniforms their unchanged program declares.
+      ...(orkhonMaps ?? {
+        meadowAlt: { value: meadowAltTex },
+        patchMap: { value: snowTex },
+        authored: { value: 0 },
+        tileSize: { value: ORKHON_TILE_WORLD_SIZE },
+        ...cliffFaceUniforms(),
+      }),
       worldDebug: this.debug,
       samplingDetail: this.samplingDetail,
       grassTint: { value: tint(palette?.grass, 0xa3ad69) },

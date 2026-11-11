@@ -128,35 +128,25 @@ describe('Orkhon per-pixel ground masks', () => {
 });
 
 describe('terrain shader programs', () => {
-  const normal = (text: string) => text.replace(/\s+/g, ' ').trim();
-  const hash = (text: string) =>
-    createHash('sha256').update(normal(text)).digest('hex').slice(0, 16);
-
-  it('leaves the generated places’ sampling and colour code as it was', () => {
-    // Hashes of the generated-place code before Orkhon's per-pixel masks (whitespace collapsed).
-    // Changing them changes how every other place is drawn: do it only on purpose.
-    const painted = 'return mix(a,b,blend);\n  }';
+  it('leaves the generated places’ program text exactly as it was', () => {
+    // SHA-256 of the generated-place code before Orkhon moved to its own program. Even dead-code
+    // edits change how the GPU compiler rounds a few pixels: change it only on purpose.
     expect(
-      hash(
-        TERRAIN_SAMPLING.slice(
-          TERRAIN_SAMPLING.indexOf('vec3 painted('),
-          TERRAIN_SAMPLING.indexOf(painted) + painted.length,
-        ),
-      ),
-    ).toBe('0982234384eabaff');
-    expect(hash(TERRAIN_COLOR.slice(TERRAIN_COLOR.lastIndexOf('vec3 tri=pow')))).toBe(
-      '3b4b46de4be114a6',
-    );
+      createHash('sha256')
+        .update(TERRAIN_SAMPLING + '\u0000' + TERRAIN_COLOR)
+        .digest('hex'),
+    ).toBe('db735031322cf636704e396a2b0d182822959348e0b4043064038d75d032e82c');
   });
 
   it('adds Orkhon code only to Orkhon programs', () => {
     const generated = terrainShaderSource(undefined);
     expect(generated).toEqual({ sampling: TERRAIN_SAMPLING, color: TERRAIN_COLOR });
-    for (const name of ['ORKHON_RAMPS', 'groundMask', 'cliffFace', 'authoredGround'])
+    for (const name of ['ORKHON_RAMPS', 'groundMask', 'orkhonWeights'])
       expect(generated.sampling + generated.color).not.toContain(name);
     const authored = terrainShaderSource({ ramps: 8 });
     expect(authored.sampling).toContain('#define ORKHON_RAMPS 8');
     expect(authored.sampling).toContain(ORKHON_SAMPLING);
+    expect(authored.sampling).not.toContain(TERRAIN_SAMPLING);
     expect(authored.color).toBe(ORKHON_COLOR);
     expect(terrainShaderSource({ ramps: 0 }).sampling).toContain('#define ORKHON_RAMPS 1');
   });
