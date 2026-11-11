@@ -121,7 +121,7 @@ export class MountainMaterials {
       };
       // Generated places keep their program; Orkhon's carries its own code.
       material.customProgramCacheKey = () =>
-        authored ? `orkhon-terrain-v3-${wall}` : `living-steppe-materials-v7-${wall}`;
+        authored ? `orkhon-terrain-v4-${wall}` : `living-steppe-materials-v7-${wall}`;
       return material;
     };
     this.surface = make(false);
@@ -130,7 +130,7 @@ export class MountainMaterials {
 
   /**
    * Orkhon-only uniforms: the olive grass variant, the painted cliff bands, the baked ground mask
-   * (trail distance, broad moisture noise, river nearness) and the graded ramps.
+   * (worn earth, dry-grass potential, ramp neighbourhoods) and the graded ramps.
    */
   private orkhonUniforms(scene: Phaser.Scene, terrain: ComposedTerrain, meadowAlt: THREE.Texture) {
     const ground = terrain.region.scene;
@@ -153,8 +153,6 @@ export class MountainMaterials {
       worldSize: { value: terrain.worldSize },
       floorHeight: { value: ground.floor },
       plateauRise: { value: Math.max(1, ...ground.shelves.map((shelf) => shelf.rise)) },
-      trailWidth: { value: ground.ground?.width ?? 1 },
-      trailRange: { value: ORKHON_GROUND_MASK.trailRange },
       rampAxis: { value: vectors(ramps.axis) },
       rampSize: { value: vectors(ramps.size.length ? ramps.size : [[1, 0, 0, 0]]) },
     };

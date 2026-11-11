@@ -15,20 +15,25 @@ export interface TerrainHabitat {
 }
 
 /**
- * The two smooth inputs of moisture that depend only on ground position: broad coherent noise
- * and nearness to the river. Orkhon bakes them into its ground mask (`orkhonGround.ts`).
+ * The inputs of moisture that depend only on ground position: broad coherent noise and nearness
+ * to the river (with the shore distance it comes from). Orkhon bakes them (`orkhonGround.ts`).
  */
 export function habitatFields(
   terrain: ComposedTerrain,
   x: number,
   z: number,
-): { broad: number; shore: number } {
+): { broad: number; shore: number; shoreDistance: number } {
   const bank = terrain.river?.sample(x, z);
   return {
     broad: coherentNoise(x / 870, z / 870, terrain.seed + 307),
-    shore: bank ? 1 - smoothstep(10, 110, bank.shoreDistance) : 0,
+    shore: bank ? shoreNearness(bank.shoreDistance) : 0,
+    shoreDistance: bank?.shoreDistance ?? Infinity,
   };
 }
+
+/** River nearness from the distance to the shore (negative in the water). */
+export const shoreNearness = (shoreDistance: number): number =>
+  1 - smoothstep(10, 110, shoreDistance);
 
 /** Moisture from the position fields, height above the scene floor and the surface normal. */
 export function habitatMoisture(

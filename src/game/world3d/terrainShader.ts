@@ -129,8 +129,8 @@ export const TERRAIN_COLOR = `
 /**
  * Orkhon Valley: the terrain kit's paintings, untinted. Ground surfaces carry only cliff-foot
  * nearness per vertex (`materialA.x`); every other mask is evaluated per pixel from the baked
- * ground mask and the ramp uniforms (`orkhonGround.ts`, whose `orkhonGroundWeights` mirrors
- * `orkhonWeights`). Wall vertices carry painted-face coordinates in `materialB`.
+ * ground mask (`orkhonGround.ts`, whose `orkhonGroundWeights` mirrors `orkhonWeights`). Wall
+ * vertices carry painted-face coordinates in `materialB`.
  */
 export const ORKHON_SAMPLING = `
   uniform sampler2D meadow; uniform sampler2D dryMeadow; uniform sampler2D soil;
@@ -141,7 +141,6 @@ export const ORKHON_SAMPLING = `
   uniform sampler2D cliffAtlas; uniform vec2 cliffAtlasSize; uniform vec4 cliffFaces[4];
   uniform float cliffFaceWidth; uniform float cliffPixel; uniform float cliffRise; uniform float cliffTop;
   uniform sampler2D groundMask; uniform float worldSize; uniform float floorHeight; uniform float plateauRise;
-  uniform float trailWidth; uniform float trailRange;
   uniform vec4 rampAxis[ORKHON_RAMPS]; uniform vec4 rampSize[ORKHON_RAMPS];
   // Authored cliffs repeat opaque basalt bands cut from the terrain kit's straight cliff run along
   // their outline. Each repeat picks a band, never mirrored, so the painted light stays upper left;
@@ -157,41 +156,16 @@ export const ORKHON_SAMPLING = `
     vec2 px=face.xy+vec2(clamp(x,0.5,cliffFaceWidth-0.5),clamp(y,0.5,face.z-0.5));
     return texture2D(cliffAtlas,vec2(px.x/cliffAtlasSize.x,1.0-px.y/cliffAtlasSize.y)).rgb;
   }
-  // Worn earth on the graded ramps (orkhonRampWear): full across the graded width, from just
-  // below the foot to just past the top. Ramp feet and directions are in world units.
-  float orkhonRampWear(vec2 p) {
-    float wear=0.0;
-    for(int i=0;i<ORKHON_RAMPS;i++) {
-      vec2 q=p-rampAxis[i].xy; vec2 d=rampAxis[i].zw; float len=rampSize[i].x;
-      float s=dot(q,d); float lateral=abs(dot(q,vec2(-d.y,d.x)));
-      if(lateral>rampSize[i].z+40.0 || s<-0.3*len || s>1.3*len) continue;
-      float t=s/len;
-      float dist=length(q-d*clamp(s,0.0,len));
-      wear=max(wear,(1.0-smoothstep(rampSize[i].y*0.6,rampSize[i].y*0.95,dist))*
-        smoothstep(-0.2,0.05,t)*(1.0-smoothstep(0.95,1.2,t)));
-    }
-    return wear;
-  }
-  // Per-pixel weights of valley grass, trail dirt, scree and straw (wA) and plateau moss (wMoss).
+  // Per-pixel weights of valley grass, trail dirt, scree and straw (wA) and plateau moss (wMoss):
+  // worn earth and dry-grass potential come from the baked ground mask; plateau tops from
+  // height, scree from slope and cliff-foot nearness.
   void orkhonWeights(vec3 p, float normalY, float cliffFoot, out vec4 wA, out float wMoss) {
-    vec2 c=p.xz-vec2(worldSize*0.5);
-    float elevation=p.y-floorHeight;
-    float top=smoothstep(plateauRise*0.55,plateauRise*0.85,elevation);
+    vec2 mask=texture2D(groundMask,p.xz/worldSize).rg;
+    float top=smoothstep(plateauRise*0.55,plateauRise*0.85,p.y-floorHeight);
     float foot=cliffFoot*cliffFoot;
     float stone=clamp(smoothstep(0.3,0.62,1.0-normalY)+foot*foot*(1.0-top)*0.6,0.0,1.0);
-    float radius=length(c);
-    float hearth=(1.0-smoothstep(60.0,180.0,radius))*0.7;
-    float clearing=1.0-smoothstep(750.0,1000.0,radius);
-    vec4 mask=texture2D(groundMask,p.xz/worldSize);
-    float trail=1.0-smoothstep(trailWidth*0.2,trailWidth*0.8,mask.r*trailRange);
-    // Only pixels near a ramp (mask alpha) walk the ramp list.
-    float ramp=mask.a>0.0?orkhonRampWear(p.xz):0.0;
-    float wear=max(hearth,max(trail,ramp)*0.9);
-    float exposure=clamp(smoothstep(120.0,650.0,elevation)*0.55+(1.0-normalY)*0.8+(1.0-mask.g)*0.25,0.0,1.0);
-    float moisture=clamp(0.18+mask.g*0.48+mask.b*0.64-exposure*0.26,0.0,1.0);
-    float soil=(1.0-stone)*wear, cover=(1.0-stone)*(1.0-wear);
-    float dry=(1.0-smoothstep(0.24,0.3,moisture))*(1.0-top)*(1.0-clearing);
-    float grass=cover*(1.0-dry);
+    float soil=(1.0-stone)*mask.r, cover=(1.0-stone)*(1.0-mask.r);
+    float dry=mask.g*(1.0-top), grass=cover*(1.0-dry);
     wA=vec4(grass*(1.0-top),soil,stone,cover*dry); wMoss=grass*top;
   }
   // Hex-tile sampling (Mikkelsen, "Practical Real-Time Hex-Tiling", 2022): three copies of the
