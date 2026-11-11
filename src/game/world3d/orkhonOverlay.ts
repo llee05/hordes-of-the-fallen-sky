@@ -17,6 +17,7 @@ import { ART_SPEC } from '../data/artSpec';
 import { ORKHON_VALLEY } from '../data/orkhonValley';
 import type { TerrainPoint } from '../terrain/types';
 import type { ComposedTerrain } from './ComposedTerrain';
+import { orkhonKitTexture } from './orkhonCliffs';
 import { WORLD_3D } from './worldProjection';
 
 type Vec3 = readonly [number, number, number];
@@ -333,9 +334,9 @@ export function orkhonBanks(terrain: ComposedTerrain): BankStrip[] {
 }
 
 /**
- * Texture from a loaded Phaser image. Terrain kit art keeps full sheet resolution, so it is
- * often drawn smaller than painted: it is mipmapped (and bank bands, which lie on the slanted
- * ground, anisotropically filtered) so it stays clean instead of shimmering.
+ * Texture from a loaded Phaser image. Bank bands keep full sheet resolution and lie on the slanted
+ * ground, so they are mipmapped (and anisotropically filtered) to stay clean instead of
+ * shimmering. The terrain kit atlas is shared with the cliff walls (`orkhonKitTexture`).
  */
 function paintedTexture(scene: Phaser.Scene, key: string, mipmaps: boolean): THREE.Texture {
   const texture = new THREE.Texture(scene.textures.get(key).getSourceImage() as HTMLImageElement);
@@ -370,10 +371,13 @@ export class OrkhonOverlay {
 
   private addSprites(scene: Phaser.Scene, atlasKey: string, pieces: OverlayPiece[]): void {
     const atlas = scene.textures.get(atlasKey);
-    const texture = paintedTexture(scene, atlasKey, atlasKey === ORKHON_KIT_ATLAS);
+    const kit = atlasKey === ORKHON_KIT_ATLAS;
+    const texture = kit ? orkhonKitTexture(scene) : paintedTexture(scene, atlasKey, false);
     const material = new THREE.MeshBasicMaterial({
       map: texture,
       alphaTest: 0.5,
+      // Kit cutouts are mipmapped: alpha to coverage antialiases their keyed outline.
+      alphaToCoverage: kit,
       side: THREE.DoubleSide,
       polygonOffset: true,
       polygonOffsetFactor: -2,
@@ -391,7 +395,17 @@ export class OrkhonOverlay {
         );
       shader.fragmentShader = `varying vec2 vSpriteUv;\n${shader.fragmentShader}`.replace(
         '#include <map_fragment>',
-        `if (any(lessThan(vSpriteUv, vec2(0.0))) || any(greaterThan(vSpriteUv, vec2(1.0)))) discard;
+        `${
+          kit
+            ? `// Mip levels average a cutout's alpha down, so thin parts would fall below the
+        // alpha test and vanish at distance: scale alpha up a quarter per level (computed before
+        // any discard, while derivatives are defined).
+        vec2 texel = vMapUv * vec2(textureSize(map, 0));
+        float mipScale = 1.0 + 0.25 * max(0.0, 0.5 * log2(max(dot(dFdx(texel), dFdx(texel)),
+          dot(dFdy(texel), dFdy(texel)))));`
+            : ''
+        }
+        if (any(lessThan(vSpriteUv, vec2(0.0))) || any(greaterThan(vSpriteUv, vec2(1.0)))) discard;
         ${
           jagged
             ? `vec2 g = vSpriteUv * 9.0, i = floor(g), f = fract(g);
@@ -403,10 +417,11 @@ export class OrkhonOverlay {
         if (min(edge.x, edge.y) < 0.015 + 0.11 * jag) discard;`
             : ''
         }
-        #include <map_fragment>`,
+        #include <map_fragment>
+        ${kit ? 'diffuseColor.a = min(1.0, diffuseColor.a * mipScale);' : ''}`,
       );
     };
-    material.customProgramCacheKey = () => `orkhon-overlay-v4-${jagged}`;
+    material.customProgramCacheKey = () => `orkhon-overlay-v5-${jagged}`;
     const positions: number[] = [],
       uvs: number[] = [],
       local: number[] = [];

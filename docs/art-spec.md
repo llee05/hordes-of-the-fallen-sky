@@ -84,7 +84,11 @@ on the ground; single stones and boulders stay between knee and shoulder of a ri
 - Cliff walls are geometry painted with opaque basalt bands from the terrain kit's straight
   cliff run (`ORKHON_CLIFF_FACES`); a band's 117 source rows span the full rise, and its
   100-pixel columns keep that texel size (about 1.4 units) on screen. The grass lip and inked
-  column tops stay on top.
+  column tops stay on top. Walls and ramp flanks sample the kit atlas mipmapped and
+  anisotropically filtered (one texture shared with the kit cutouts), so distant walls average
+  their texels instead of shimmering. At 1.4 units per texel the bands are still about 1.8 times
+  coarser than the ground tiles beside them; new cliff art should be painted nearer 0.8 units
+  per texel.
 - Plateau tops weather by at most ±11 units, so each stays one level; the valley's relief is
   0.35 of the composed default.
 
@@ -98,9 +102,13 @@ on the ground; single stones and boulders stay between knee and shoulder of a ri
   colour step 0.82–1.06, where 1 is seamless).
 - Ground and water tiles are mipmapped with trilinear filtering and up to 8× anisotropic
   filtering, so ground seen at the 48° slant stays sharp instead of shimmering or smearing.
-- Sample each ground painting **once, at its painted scale**, in world space. Break the grid by
-  alternating the calm base painting at two orientations in regions roughly 400–1,100 units
-  across, never by tinting or scaling it.
+- Sample each ground painting **at its painted scale**, in world space, with **hex-tile
+  sampling**: three copies of the same painting, each translated by a random offset per vertex
+  of a triangle grid about 100 units apart, blended by distance and by each copy's own
+  luminance so they meet along painted strokes. This hides the 200-unit repeat. **Never rotate,
+  mirror, scale or tint** a painting to break the grid: a turned painting turns its painted
+  light. The calm and olive valley grass alternate, both unrotated, in regions roughly
+  400–1,100 units across that meet along their strokes over a few tens of units.
 - Materials meet by **height blending** (`authoredHeight` in `terrainShader.ts`): each
   painting's own light and dark strokes decide where it shows through. Do not cross-fade, add
   transition decals or colour filters.
@@ -115,6 +123,11 @@ on the ground; single stones and boulders stay between knee and shoulder of a ri
 
 - Cutouts are real alpha on transparent gutters. Orkhon pack sprites carry a **2.3–2.8 px**
   soft edge (partially transparent texels per outline texel) and no paint touches the frame edge.
+- Mipmapped atlases (the terrain kit) keep **16 transparent texels** between frames and to the
+  atlas edge, with each frame's edge texels extruded 4 into them, so filtering stays inside a
+  frame down to mip level 3 (`npm run atlas:orkhon`, mip-bleed). Kit cutouts are drawn with
+  alpha to coverage, their alpha raised a quarter per mip level so thin parts keep their
+  coverage at distance.
 - Terrain kit cutouts were painted on white: `scripts/cut-orkhon-terrain-kit.mjs` keys out only
   white connected to the cell border and un-mixes partly white edge texels from white, so no
   white fringe remains around the ink (0.25–0.4 px of partial alpha per outline texel).

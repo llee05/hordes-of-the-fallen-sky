@@ -14,6 +14,44 @@ export interface TerrainHabitat {
   clearing: number;
 }
 
+/**
+ * The inputs of moisture that depend only on ground position: broad coherent noise and nearness
+ * to the river (with the shore distance it comes from). Orkhon bakes them (`orkhonGround.ts`).
+ */
+export function habitatFields(
+  terrain: ComposedTerrain,
+  x: number,
+  z: number,
+): { broad: number; shore: number; shoreDistance: number } {
+  const bank = terrain.river?.sample(x, z);
+  return {
+    broad: coherentNoise(x / 870, z / 870, terrain.seed + 307),
+    shore: bank ? shoreNearness(bank.shoreDistance) : 0,
+    shoreDistance: bank?.shoreDistance ?? Infinity,
+  };
+}
+
+/** River nearness from the distance to the shore (negative in the water). */
+export const shoreNearness = (shoreDistance: number): number =>
+  1 - smoothstep(10, 110, shoreDistance);
+
+/** Moisture from the position fields, height above the scene floor and the surface normal. */
+export function habitatMoisture(
+  broad: number,
+  shore: number,
+  elevation: number,
+  normalY: number,
+  desert: boolean,
+): { moisture: number; exposure: number } {
+  const exposure = clamp01(
+    smoothstep(120, 650, elevation) * 0.55 + (1 - normalY) * 0.8 + (1 - broad) * 0.25,
+  );
+  const moisture = clamp01(
+    0.18 + broad * 0.48 + shore * 0.64 - exposure * 0.26 - (desert ? 0.42 : 0),
+  );
+  return { moisture, exposure };
+}
+
 /** Global ecology masks: materials and vegetation describe the same landscape across chunk edges. */
 export function terrainHabitat(
   terrain: ComposedTerrain,
@@ -24,22 +62,16 @@ export function terrainHabitat(
 ): TerrainHabitat {
   const seed = terrain.seed;
   const scene = terrain.region.scene;
-  const broad = coherentNoise(x / 870, z / 870, seed + 307);
+  const { broad, shore } = habitatFields(terrain, x, z);
   const wx = x + (broad - 0.5) * 180;
   const patch = coherentNoise(wx / 170, z / 210, seed + 311);
   const grove = coherentNoise(wx / 390, z / 440, seed + 313);
-  const bank = terrain.river?.sample(x, z);
-  const shore = bank ? 1 - smoothstep(10, 110, bank.shoreDistance) : 0;
-  const elevation = height - scene.floor;
-  const exposure = clamp01(
-    smoothstep(120, 650, elevation) * 0.55 + (1 - normalY) * 0.8 + (1 - broad) * 0.25,
-  );
-  const moisture = clamp01(
-    0.18 +
-      broad * 0.48 +
-      shore * 0.64 -
-      exposure * 0.26 -
-      (scene.vegetation === 'desert' ? 0.42 : 0),
+  const { moisture, exposure } = habitatMoisture(
+    broad,
+    shore,
+    height - scene.floor,
+    normalY,
+    scene.vegetation === 'desert',
   );
   let cliffFoot = 0,
     cliffTop = 0;
@@ -74,8 +106,16 @@ export function terrainHabitat(
   };
 }
 
-/** Graded ramps are worn bare across their whole walkable width. */
-function rampWear(
+const RAMP_FRAY_SEED = 4241;
+
+/**
+ * Graded ramps are worn bare across their walkable width, from just below the foot to the head of
+ * the cut, where the ramp meets the plateau top (`top`, t = 1): the wear ends there instead of
+ * running onto the plateau. Coarse noise frays the sides by up to 18 units and finer noise the
+ * ends by up to 20, so they do not read as a ruled rectangle; the shader's height blend then
+ * follows the painted strokes.
+ */
+export function rampWear(
   ramps: readonly {
     foot: { x: number; y: number };
     top: { x: number; y: number };
@@ -90,17 +130,20 @@ function rampWear(
       dz = ramp.top.y - ramp.foot.y;
     const t = ((x - ramp.foot.x) * dx + (z - ramp.foot.y) * dz) / (dx * dx + dz * dz || 1);
     const distance = pathDistance([[ramp.foot, ramp.top]], x, z);
+    const fray = coherentNoise(x / 42, z / 42, RAMP_FRAY_SEED) - 0.5;
+    const end = coherentNoise(x / 24, z / 24, RAMP_FRAY_SEED + 1) - 0.5;
+    const along = t + (end * 40) / (Math.hypot(dx, dz) || 1);
     wear = Math.max(
       wear,
-      (1 - smoothstep(ramp.halfWidth * 0.6, ramp.halfWidth * 0.95, distance)) *
-        smoothstep(-0.2, 0.05, t) *
-        (1 - smoothstep(0.95, 1.2, t)),
+      (1 - smoothstep(ramp.halfWidth * 0.6, ramp.halfWidth * 0.95, distance + fray * 36)) *
+        smoothstep(-0.2, 0.05, along) *
+        (1 - smoothstep(0.84, 0.94, along)),
     );
   }
   return wear;
 }
 
-function pathDistance(
+export function pathDistance(
   paths: readonly (readonly { x: number; y: number }[])[],
   x: number,
   z: number,
@@ -125,7 +168,7 @@ function pathDistance(
  * regions on the valley floor, away from the camp. Elevation reads from tone alone: plateau tops are the darker moss
  * right up to the cliff's inked lip.
  */
-function authoredMaterialWeights(
+export function authoredMaterialWeights(
   terrain: ComposedTerrain,
   height: number,
   normalY: number,

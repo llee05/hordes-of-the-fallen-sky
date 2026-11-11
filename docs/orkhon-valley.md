@@ -105,16 +105,19 @@ repainting, recolouring or tinting:
 - **Cutouts:** the white backing is keyed out where it connects to the cell border; partly
   white edge texels get partial alpha and are un-mixed from white, so no white fringe remains
   around the ink. Specks of grid antialiasing are dropped, transparent texels take nearby
-  paint, and cutouts keep full sheet resolution in `orkhon-terrain-kit.png`. Because kit art
-  is often drawn smaller than painted, the kit atlas, bank bands and ground tiles are
-  mipmapped (ground and banks also anisotropically filtered), so they stay clean, not shimmering.
+  paint, and cutouts keep full sheet resolution in `orkhon-terrain-kit.png`, packed with 16
+  padding texels and 4 extruded around each frame. Because kit art is often drawn smaller than
+  painted, the kit atlas, bank bands and ground tiles are mipmapped and anisotropically
+  filtered, so they stay clean, not shimmering. Cliff walls and kit cutouts share one kit
+  texture (`orkhonKitTexture`); cutouts use alpha to coverage, with their alpha raised a quarter
+  per mip level so thin parts do not erode at distance.
 
 | Sheet cell                         | Used for                                                   |
 | ---------------------------------- | ---------------------------------------------------------- |
 | (1,1) valley grass, calm           | Valley floor base                                          |
 | (1,2) valley grass, sun-cured      | A few broad, rare regions away from the camp clearing      |
 | (1,3) valley grass, olive          | Valley regions alternating with the calm grass             |
-| (1,4) plateau grass                | Every plateau top, in regions of two orientations          |
+| (1,4) plateau grass                | Every plateau top                                          |
 | (1,5) dirt trail                   | Quilted plain dirt: hearth, worn paths and ramps           |
 | (1,6) scree and gravel             | Cliff-foot scree band, steep ground and the riverbed       |
 | (2,1) cliff straight run           | Four opaque bands painting every cliff wall and ramp flank |
@@ -145,10 +148,19 @@ waterfall top lip (a self-contained miniature fall about half the plateau rise).
   picks one band, never mirrored, so painted light stays from the upper left. A band's rows
   span the full 240-unit rise, which also fits the painting's near-isometric wall to the 48°
   camera; its columns keep that pixel size (about 1.4 units) on screen for walls facing the
-  camera. Walls are lit like the rest of the terrain.
+  camera. Walls sample the shared, mipmapped kit texture with gradients taken from the
+  continuous distance along the outline, so a band restart does not fall to a blurred mip
+  level. Walls are lit like the rest of the terrain.
 - **Ramps:** each ramp is graded ground worn bare across its walkable width (trail dirt),
-  rising through a trench of steep flanks. Steep graded ground uses the same basalt bands
-  as the walls, so ramp flanks read as cut cliff.
+  rising through a trench of steep flanks. Trails end at the ramp feet; the ramp's own wear
+  (`rampWear`) ends at the head of the cut, where the ramp meets the plateau top, so no worn
+  earth runs onto the plateau, and coarse noise frays its sides and ends. Steep graded ground
+  uses the same basalt bands as the walls, so ramp flanks read as cut cliff: the bands run
+  along the nearest ramp's own length (`orkhonFlankAlong`), keeping their painted width and
+  advancing the same way as plateau walls, so they are never mirrored. On shoulders steeper
+  than about 32° the ground paintings add side projections (`orkhonSideProjection`) instead of
+  stretching downhill; each advances uphill like the top projection, and they meet by height
+  blending.
 - **Banks:** `orkhonBanks` lays a 72-unit band along each shore with the painted water edge on
   the shoreline: shores whose land lies away from the camera use the south-bank painting (its
   clay lip seen from the front), the others the north-bank painting (seen from above). The
@@ -171,8 +183,8 @@ The kit is not an autotile set and its pieces were never tested together in the 
 
 - Cliff bands restart every 100 source pixels (about 140 units). Basalt column joints hide
   most restarts, but the grass lip and column tops can step where neighbouring bands differ.
-- Where two band projections meet on a ramp flank (the flank turns between facing east
-  and facing south), the columns change direction.
+- Where a ramp flank meets the plateau wall, the flank's bands (measured along the ramp)
+  and the wall's (measured along the outline) restart at different points.
 - Walls facing away from the camera are hidden behind their plateau and not painted, so
   far plateau edges show only the change from valley grass to the darker moss.
 - The valley tiles are warmer and more saturated than the art spec's manuscript target
@@ -198,15 +210,33 @@ and anchors, and the cliff bands.
 | `structures/`          | The bridge deck                                                    |
 | `landmarks/`, `camps/` | Raider camps, ruins, ovoo, shrines, banners, racks, camp outskirts |
 
-Ground channels: valley grass is the calm painting with regions of the olive variant turned a
-quarter, roughly 400–1,100 units across, so the tile grids never line up. Plateau tops are the
-darker plateau moss right up to the cliff lip, in regions of two orientations; elevation reads
+Ground channels: valley grass is the calm painting with regions of the olive variant, roughly
+400–1,100 units across. Plateau tops are the darker plateau moss right up to the cliff lip; elevation reads
 from that tone and the cliff's inked lip, not from a lighter rim band or tint. A few broad,
 rare valley regions away from the camp are sun-cured straw. Trail dirt covers the hearth,
 narrow worn trails and ramps; scree a narrow band at cliff feet; the bank bands line the shore. Materials
 meet by height blending: each painting's own light and dark strokes decide where it shows
 through, so edges follow tufts, stones and ruts rather than cross-fading two paintings into
 mush. The river tile spans bank to bank. Scenery uses supplied colours with no tint variation.
+Every ground painting is hex-tile sampled (`hexPainting` in `terrainShader.ts`): three copies,
+each translated by a random offset per vertex of a triangle grid about 100 units apart, blend
+by distance and by their own luminance, so the 200-unit repeat no longer shows as rows of
+flowers and tufts. Copies are never rotated, so the painted light stays upper left. Each copy
+belongs to one of the grid's three vertex classes, so its offset changes only where its weight
+is zero and ordinary anisotropic sampling picks the right mip level. Below 70% render scale
+(`samplingDetail`) each painting is sampled once.
+
+Ground masks are evaluated per pixel, not per vertex of the 32-unit terrain mesh, whose cells
+are wider than a trail's worn edge (`world3d/orkhonGround.ts`). The masks that depend only on
+ground position are baked once, when the level loads (about 0.2 s), into a 1024² world-space
+texture (about 5 units per texel, finer than any of their edges): worn earth on trails, ramps
+and the hearth, and dry-grass potential from moisture on the visible level's height and slope.
+The Orkhon terrain program filters it linearly and adds what depends on the drawn surface:
+plateau tops from height, scree from slope and cliff-foot nearness, the only mask mesh vertices
+carry. `orkhonGroundWeights` mirrors the shader, and its tests check that it reproduces the
+per-vertex rule (`authoredMaterialWeights`) at any point and that the baked fields draw the same
+ground as exact ones. Orkhon's terrain code is a separate shader program
+(`terrainShaderSource`), so other places draw exactly as before.
 
 The pack's ground and water tiles, cliff and waterfall sprites, `cliff_isolated` and rock
 sprites (other than the small boulder and pebbles) are retired: the kit replaces them.
@@ -220,7 +250,9 @@ water probe grid. The authored ground shader fetches only the tiles present at e
 and returns single-channel grass, most of the ground, without blending; cliff walls fetch
 one band texel. Height blending still costs more per pixel than a cross-fade: on a
 software GPU (SwiftShader) a 350-enemy `profileCrowd` frame is roughly a tenth slower than
-before the cliff and ground pass, with CPU simulation and render time unchanged.
+before the cliff and ground pass, with CPU simulation and render time unchanged. Per-pixel
+masks, hex-tile sampling, ramp flanks and mipmapped cliffs cost about 3–5% of that frame at
+pixel ratio 2 on an Intel Iris Xe (ANGLE/Vulkan), and about 1 ms in terrain-only views.
 
 The terrain kit adds one 1024 × 512 atlas and two bank textures; the pack atlas lost the
 retired sprites. Full-resolution 256-pixel tiles hold four times the texels of the pack's

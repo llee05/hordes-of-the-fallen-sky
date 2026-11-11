@@ -47,7 +47,13 @@ export interface RegionComposition {
     paths: readonly (readonly TerrainPoint[])[];
     width: number;
     /** Graded ramps worn bare across their walkable width. */
-    ramps?: readonly { foot: TerrainPoint; top: TerrainPoint; halfWidth: number }[];
+    ramps?: readonly {
+      foot: TerrainPoint;
+      top: TerrainPoint;
+      halfWidth: number;
+      /** Outer edge of the steep flanks beside the graded width. */
+      shoulder?: number;
+    }[];
   };
   /** Camp-relative solid footprints, such as authored landmarks, blocked for movement. */
   obstacles?: readonly { x: number; y: number; radius: number }[];
@@ -235,12 +241,8 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
     campShelf: false,
     relief: 0.35,
     ground: {
-      paths: [
-        ...ORKHON_VALLEY.paths,
-        ...ORKHON_VALLEY.plateaus.flatMap((source) =>
-          source.ramps.map((ramp) => [ramp.foot, ramp.top]),
-        ),
-      ],
+      // Trails end at the ramp feet; each ramp wears its own graded width (`rampWear`).
+      paths: ORKHON_VALLEY.paths,
       width: ORKHON_VALLEY.pathWidth,
       ramps: ORKHON_VALLEY.plateaus.flatMap((source) => source.ramps),
     },

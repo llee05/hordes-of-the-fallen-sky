@@ -536,6 +536,20 @@ describe('Orkhon Valley painted scene', () => {
     }
   });
 
+  it('packs the mipmapped kit atlas with 16 clear texels around every frame', () => {
+    const atlas = atlasJson(ORKHON_KIT_ATLAS);
+    const frames = Object.values(atlas.frames).map(({ frame }) => frame);
+    const { w, h } = atlas.meta.size;
+    for (const a of frames) {
+      expect(Math.min(a.x, a.y, w - a.x - a.w, h - a.y - a.h)).toBeGreaterThanOrEqual(16);
+      for (const b of frames)
+        if (a !== b) {
+          const gap = Math.max(b.x - a.x - a.w, a.x - b.x - b.w, b.y - a.y - a.h, a.y - b.y - b.h);
+          expect(gap).toBeGreaterThanOrEqual(16);
+        }
+    }
+  });
+
   it('wears every ramp bare across its walkable width', () => {
     for (const plateau of ORKHON_VALLEY.plateaus)
       for (const ramp of plateau.ramps) {
