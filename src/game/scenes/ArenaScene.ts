@@ -1000,7 +1000,12 @@ export class ArenaScene extends Phaser.Scene {
     }
     this.spatial.rebuild(this.enemies.getChildren() as Enemy[]);
     this.campDefences.update(dt);
-    this.combat.tickKhanCombat(dt, this.controls.attackHeld(), aim);
+    this.combat.tickKhanCombat(
+      dt,
+      this.controls.lightAttackHeld(),
+      this.controls.heavyAttackHeld(),
+      aim,
+    );
     this.riderHost.fire();
     this.enemyDirector.tickSpawns(dt);
     this.combat.updateProjectiles(dt);

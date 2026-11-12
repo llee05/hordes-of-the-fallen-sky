@@ -97,7 +97,7 @@ describe('character classes and character profile', () => {
     ['iron-pagoda', 215, 410, 0, 'arc', 118, 570, 6],
     ['spirit-caller', 380, 390, 0.45, 'projectile', 440, 570, 5],
   ] as const)(
-    '%s weapon, manual basic, gallop, and Q cooldown match the class table',
+    '%s weapon, manual attacks, gallop, and ability 1 cooldown match the class table',
     (classId, range, projectileSpeed, homing, basicShape, basicRange, gallopSpeed, qCooldown) => {
       const cls = classDefinition(classId);
       const run = createRun('shared-hearth', { ...defaultCharacterProfile(), classId });
@@ -106,6 +106,10 @@ describe('character classes and character profile', () => {
       expect(cls.weapon.homingTurnRate).toBe(homing);
       expect(cls.basicAttack.shape).toBe(basicShape);
       expect(cls.basicAttack.range).toBe(basicRange);
+      expect(cls.heavyAttack.range).toBeGreaterThan(cls.basicAttack.range);
+      expect(cls.heavyAttack.damage).toBeGreaterThan(cls.basicAttack.damage);
+      expect(cls.heavyAttack.windup).toBeGreaterThan(0.25);
+      expect(cls.abilities.map((ability) => ability.slotLabel)).toEqual(['1', '2', '3', '4']);
       expect(khanGallopSpeed(run)).toBeCloseTo(gallopSpeed);
       expect(cls.abilities[0].cooldown).toBe(qCooldown);
     },

@@ -83,6 +83,38 @@ describe('playable class combat', () => {
     expect(bolt.body!.velocity.y).toBeGreaterThan(0);
   });
 
+  it('fires the Mounted Archer heavy as a harder-hitting drawn power shot', () => {
+    const arena = setup('mounted-archer');
+    expect(arena.combat.fireHeavy({ x: 1600, y: 1000 })).toBe(true);
+    const arrow = arena.projectiles.getFirstAlive()!;
+    expect(arrow.damage).toBeCloseTo(
+      arena.context.run.stats.damage * classDefinition('mounted-archer').heavyAttack.damage,
+    );
+  });
+
+  it('fires the Lancer heavy through its longer charging-thrust lane', () => {
+    const arena = setup('lancer');
+    const distant = arena.spawn(270, 20);
+    arena.combat.fireHeavy({ x: 1600, y: 1000 });
+    expect(distant.health).toBeLessThan(10000);
+  });
+
+  it('fires the Iron Pagoda heavy through a larger overhead-cleave arc', () => {
+    const arena = setup('iron-pagoda');
+    const distant = arena.spawn(130, 80);
+    arena.combat.fireHeavy({ x: 1600, y: 1000 });
+    expect(distant.health).toBeLessThan(10000);
+  });
+
+  it('fires the Spirit Caller heavy as a large ancestral bolt', () => {
+    const arena = setup('spirit-caller');
+    expect(arena.combat.fireHeavy({ x: 1600, y: 1000 })).toBe(true);
+    const bolt = arena.projectiles.getFirstAlive()!;
+    expect(bolt.damage).toBeCloseTo(
+      arena.context.run.stats.damage * classDefinition('spirit-caller').heavyAttack.damage,
+    );
+  });
+
   it.each(CHARACTER_CLASSES)(
     '%s applies its gallop effect once per enemy per gallop',
     (classId) => {
@@ -204,12 +236,12 @@ describe('playable class combat', () => {
   it.each(CHARACTER_CLASSES)('%s never attacks without manual input', (classId) => {
     const arena = setup(classId);
     const enemy = arena.spawn(20, 0);
-    arena.combat.tickKhanCombat(10, false, { x: 1400, y: 1000 });
+    arena.combat.tickKhanCombat(10, false, false, { x: 1400, y: 1000 });
     expect(enemy.health).toBe(10000);
     expect(arena.projectiles.countActive()).toBe(0);
   });
 
-  it.each(CHARACTER_CLASSES)('%s gates Q by its active-time cooldown', (classId) => {
+  it.each(CHARACTER_CLASSES)('%s gates ability 1 by its active-time cooldown', (classId) => {
     const arena = setup(classId);
     const q = classDefinition(classId).abilities[0];
     arena.spawn(50, 0);
@@ -217,24 +249,38 @@ describe('playable class combat', () => {
     expect(arena.combat.useAbility('q', { x: 1400, y: 1000 })).toBe(false);
     expect(arena.combat.abilityStates()[0]!.remaining).toBe(q.cooldown);
     arena.context.run.phase = 'paused';
-    arena.combat.tickKhanCombat(q.cooldown, false, { x: 1400, y: 1000 });
+    arena.combat.tickKhanCombat(q.cooldown, false, false, { x: 1400, y: 1000 });
     expect(arena.combat.abilityStates()[0]!.remaining).toBe(q.cooldown);
     arena.context.run.phase = 'playing';
-    arena.combat.tickKhanCombat(q.cooldown, false, { x: 1400, y: 1000 });
+    arena.combat.tickKhanCombat(q.cooldown, false, false, { x: 1400, y: 1000 });
     expect(arena.combat.useAbility('q', { x: 1400, y: 1000 })).toBe(true);
   });
 
   it('repeats a held basic only after windup and its class attack interval', () => {
     const arena = setup('mounted-archer');
     const aim = { x: 1400, y: 1000 };
-    arena.combat.tickKhanCombat(0.01, true, aim);
+    arena.combat.tickKhanCombat(0.01, true, false, aim);
     expect(arena.projectiles.countActive()).toBe(0);
-    arena.combat.tickKhanCombat(0.12, true, aim);
+    arena.combat.tickKhanCombat(0.12, true, false, aim);
     expect(arena.projectiles.countActive()).toBe(1);
-    arena.combat.tickKhanCombat(arena.context.run.stats.attackInterval - 0.01, true, aim);
+    arena.combat.tickKhanCombat(arena.context.run.stats.attackInterval - 0.01, true, false, aim);
     expect(arena.projectiles.countActive()).toBe(1);
-    arena.combat.tickKhanCombat(0.02, true, aim);
-    arena.combat.tickKhanCombat(0.12, true, aim);
+    arena.combat.tickKhanCombat(0.02, true, false, aim);
+    arena.combat.tickKhanCombat(0.12, true, false, aim);
+    expect(arena.projectiles.countActive()).toBe(2);
+  });
+
+  it('holds a heavy through its longer windup and repeats at its own cooldown', () => {
+    const arena = setup('mounted-archer');
+    const aim = { x: 1600, y: 1000 };
+    const heavy = classDefinition('mounted-archer').heavyAttack;
+    arena.combat.tickKhanCombat(0.01, false, true, aim);
+    arena.combat.tickKhanCombat(heavy.windup - 0.01, false, true, aim);
+    expect(arena.projectiles.countActive()).toBe(0);
+    arena.combat.tickKhanCombat(0.02, false, true, aim);
+    expect(arena.projectiles.countActive()).toBe(1);
+    arena.combat.tickKhanCombat(heavy.cooldown, false, true, aim);
+    arena.combat.tickKhanCombat(heavy.windup, false, true, aim);
     expect(arena.projectiles.countActive()).toBe(2);
   });
 });

@@ -241,14 +241,6 @@ export class World3DRenderer {
   movement(x: number, y: number): { x: number; y: number } {
     return screenMovement(x, y, this.yaw);
   }
-  /** Converts a world-space steering direction back to the screen-relative input convention. */
-  movementInput(x: number, y: number): { x: number; y: number } {
-    const radians = (this.yaw * Math.PI) / 180;
-    return {
-      x: x * Math.cos(radians) - y * Math.sin(radians),
-      y: x * Math.sin(radians) + y * Math.cos(radians),
-    };
-  }
   screenX(x: number, y: number): number {
     return projectGround(x, y, 0, this.angle, this.yaw).x;
   }
@@ -263,7 +255,7 @@ export class World3DRenderer {
       y: ((1 - p.y) * this.scene.scale.height) / 2,
     };
   }
-  /** Converts a canvas pointer into the visible terrain position used by mouse steering and aim. */
+  /** Converts a canvas pointer into the visible terrain position used by manual aim. */
   groundPoint(screenX: number, screenY: number): { x: number; y: number } | undefined {
     const width = this.width || this.scene.scale.width;
     const height = this.height || this.scene.scale.height;

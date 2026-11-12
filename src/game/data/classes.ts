@@ -87,6 +87,11 @@ export interface ClassBasicAttackDefinition {
   projectiles: number;
 }
 
+export interface ClassHeavyAttackDefinition extends ClassBasicAttackDefinition {
+  cooldown: number;
+  windup: number;
+}
+
 export interface ClassProgressionNode {
   level: number;
   id: string;
@@ -129,6 +134,7 @@ export interface ClassDefinition {
   };
   weapon: ClassWeaponDefinition;
   basicAttack: ClassBasicAttackDefinition;
+  heavyAttack: ClassHeavyAttackDefinition;
   abilities: readonly [
     ClassAbilityDefinition,
     ClassAbilityDefinition,
@@ -265,11 +271,16 @@ export const CLASSES: readonly ClassDefinition[] = [
       description: 'A fast composite-bow shot loosed directly toward the cursor.',
       ...GAME.classes['mounted-archer'].basic,
     },
+    heavyAttack: {
+      name: 'Drawn Power Shot',
+      description: 'A fully drawn arrow that flies farther and strikes with crushing force.',
+      ...GAME.classes['mounted-archer'].heavy,
+    },
     abilities: [
       {
         id: 'flurry-arrow-volley',
         slot: 'q',
-        slotLabel: 'Q',
+        slotLabel: '1',
         name: 'Flurry Arrow Volley',
         description: 'Fans seven quick arrows toward the cursor.',
         ...GAME.classes['mounted-archer'].abilities.q,
@@ -277,7 +288,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       {
         id: 'saber-slash',
         slot: 'w',
-        slotLabel: 'W',
+        slotLabel: '2',
         name: 'Saber Close Slash',
         description: 'Sweeps a curved saber through a broad close arc.',
         ...GAME.classes['mounted-archer'].abilities.w,
@@ -285,7 +296,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       {
         id: 'circling-shot',
         slot: 'e',
-        slotLabel: 'E',
+        slotLabel: '3',
         name: 'Circling Shot',
         description: 'Looses an eleven-arrow fan to open an escape route.',
         ...GAME.classes['mounted-archer'].abilities.e,
@@ -293,7 +304,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       {
         id: 'windrunner',
         slot: 'r',
-        slotLabel: 'R',
+        slotLabel: '4',
         name: 'Windrunner',
         description: 'Bursts forward and cuts a damaging lane through the horde.',
         ...GAME.classes['mounted-archer'].abilities.r,
@@ -372,11 +383,16 @@ export const CLASSES: readonly ClassDefinition[] = [
       description: 'A short, forceful lance thrust through enemies in a narrow line.',
       ...GAME.classes.lancer.basic,
     },
+    heavyAttack: {
+      name: 'Charging Thrust',
+      description: 'A braced forward thrust that punches through a longer, broader lane.',
+      ...GAME.classes.lancer.heavy,
+    },
     abilities: [
       {
         id: 'sweeping-strike',
         slot: 'q',
-        slotLabel: 'Q',
+        slotLabel: '1',
         name: 'Sweeping Strike',
         description: 'Cleaves a wide haft-and-blade arc ahead of the mount.',
         ...GAME.classes.lancer.abilities.q,
@@ -384,7 +400,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       {
         id: 'devastating-charge',
         slot: 'w',
-        slotLabel: 'W',
+        slotLabel: '2',
         name: 'Devastating Charge',
         description: 'Surges forward behind a crushing, deep-piercing thrust.',
         ...GAME.classes.lancer.abilities.w,
@@ -392,7 +408,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       {
         id: 'line-breaker',
         slot: 'e',
-        slotLabel: 'E',
+        slotLabel: '3',
         name: 'Line Breaker',
         description: 'Drives a braced lance through a long, broad enemy line.',
         ...GAME.classes.lancer.abilities.e,
@@ -400,7 +416,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       {
         id: 'shock-lance',
         slot: 'r',
-        slotLabel: 'R',
+        slotLabel: '4',
         name: 'Shock Lance',
         description: 'Gallops through a long breakthrough lane with the lance locked low.',
         ...GAME.classes.lancer.abilities.r,
@@ -480,11 +496,16 @@ export const CLASSES: readonly ClassDefinition[] = [
       description: 'A wide close cavalry-saber cut aimed toward the cursor.',
       ...GAME.classes['iron-pagoda'].basic,
     },
+    heavyAttack: {
+      name: 'Overhead Cleave',
+      description: 'A deliberate overhead blow that crushes a larger close arc.',
+      ...GAME.classes['iron-pagoda'].heavy,
+    },
     abilities: [
       {
         id: 'crushing-aura',
         slot: 'q',
-        slotLabel: 'Q',
+        slotLabel: '1',
         name: 'Crushing Aura',
         description: 'Crushes every enemy pressing close to the armored mount.',
         ...GAME.classes['iron-pagoda'].abilities.q,
@@ -492,7 +513,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       {
         id: 'unbreakable-stance',
         slot: 'w',
-        slotLabel: 'W',
+        slotLabel: '2',
         name: 'Unbreakable Stance',
         description: 'Locks the lamellar guard, briefly preventing harm and mending wounds.',
         ...GAME.classes['iron-pagoda'].abilities.w,
@@ -500,7 +521,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       {
         id: 'shield-bash',
         slot: 'e',
-        slotLabel: 'E',
+        slotLabel: '3',
         name: 'Shield Bash',
         description: 'Smashes a broad lane ahead with shield and armored horse.',
         ...GAME.classes['iron-pagoda'].abilities.e,
@@ -508,7 +529,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       {
         id: 'shielded-advance',
         slot: 'r',
-        slotLabel: 'R',
+        slotLabel: '4',
         name: 'Shielded Advance',
         description: 'Surges forward behind the shield through a broad enemy lane.',
         ...GAME.classes['iron-pagoda'].abilities.r,
@@ -589,11 +610,16 @@ export const CLASSES: readonly ClassDefinition[] = [
       description: 'A deliberate turquoise bolt that bends toward nearby foes.',
       ...GAME.classes['spirit-caller'].basic,
     },
+    heavyAttack: {
+      name: 'Ancestral Bolt',
+      description: 'A large, slow-cast spirit bolt that seeks foes across a greater distance.',
+      ...GAME.classes['spirit-caller'].heavy,
+    },
     abilities: [
       {
         id: 'drum-pulse',
         slot: 'q',
-        slotLabel: 'Q',
+        slotLabel: '1',
         name: 'Drum Pulse',
         description: 'Sounds the sacred drum to damage and pin nearby enemies.',
         ...GAME.classes['spirit-caller'].abilities.q,
@@ -601,7 +627,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       {
         id: 'summon-ancestor',
         slot: 'w',
-        slotLabel: 'W',
+        slotLabel: '2',
         name: 'Summon Ancestor',
         description: 'Calls ancestral echoes to loose five spectral bolts toward the cursor.',
         ...GAME.classes['spirit-caller'].abilities.w,
@@ -609,7 +635,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       {
         id: 'spirit-ward',
         slot: 'e',
-        slotLabel: 'E',
+        slotLabel: '3',
         name: 'Spirit Ward',
         description: 'Raises a brief ward that restores Khan vitality and clan resolve.',
         ...GAME.classes['spirit-caller'].abilities.e,
@@ -617,7 +643,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       {
         id: 'ancestral-chorus',
         slot: 'r',
-        slotLabel: 'R',
+        slotLabel: '4',
         name: 'Ancestral Chorus',
         description: 'Releases a wide chorus of nine homing spirit bolts.',
         ...GAME.classes['spirit-caller'].abilities.r,
@@ -1015,6 +1041,12 @@ export function playerVisualConfig(character?: CharacterProfile): {
 export function khanBasicRange(run: Pick<RunState, 'character' | 'clan'>): number {
   return (
     classDefinition(run.character?.classId).basicAttack.range + run.clan.campEffects.bonuses.range
+  );
+}
+
+export function khanHeavyRange(run: Pick<RunState, 'character' | 'clan'>): number {
+  return (
+    classDefinition(run.character?.classId).heavyAttack.range + run.clan.campEffects.bonuses.range
   );
 }
 

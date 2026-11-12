@@ -3,18 +3,33 @@ export interface GroundPoint {
   y: number;
 }
 
-/** Unit movement toward a held cursor target, settling instead of orbiting at close range. */
-export function movementTowardCursor(
-  rider: GroundPoint,
-  target: GroundPoint | undefined,
-  settleRadius = 18,
-): GroundPoint {
-  if (!target) return { x: 0, y: 0 };
-  const dx = target.x - rider.x;
-  const dy = target.y - rider.y;
-  const distance = Math.hypot(dx, dy);
-  if (!Number.isFinite(distance) || distance <= settleRadius) return { x: 0, y: 0 };
-  return { x: dx / distance, y: dy / distance };
+export type CombatNumberAction =
+  | { kind: 'ability'; slot: 'q' | 'w' | 'e' | 'r' }
+  | { kind: 'successor'; trait: 'outrider' | 'hearthguard' };
+
+/** Number keys cast abilities while the Khan lives, and only 1/2 choose a successor while down. */
+export function combatNumberAction(
+  key: 1 | 2 | 3 | 4,
+  khanActive: boolean,
+): CombatNumberAction | undefined {
+  const abilitySlots = ['q', 'w', 'e', 'r'] as const;
+  if (khanActive) return { kind: 'ability', slot: abilitySlots[key - 1]! };
+  if (key === 1) return { kind: 'successor', trait: 'outrider' };
+  if (key === 2) return { kind: 'successor', trait: 'hearthguard' };
+  return undefined;
+}
+
+/** Normalized digital movement shared by WASD and arrow-key input. */
+export function digitalMovement(keys: {
+  up: boolean;
+  down: boolean;
+  left: boolean;
+  right: boolean;
+}): GroundPoint {
+  const x = Number(keys.right) - Number(keys.left);
+  const y = Number(keys.down) - Number(keys.up);
+  const length = Math.hypot(x, y);
+  return length > 0 ? { x: x / length, y: y / length } : { x: 0, y: 0 };
 }
 
 /** A stable aim direction; a zero-length cursor offset keeps the prior facing. */

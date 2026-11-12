@@ -33,19 +33,21 @@ describe('controller input', () => {
     expect(Math.hypot(frame.x, frame.y)).toBeCloseTo(1);
   });
 
-  it('aims with the right stick, holds the trigger basic, and taps four abilities', () => {
+  it('aims with the right stick, holds separate light/heavy triggers, and taps four abilities', () => {
     const input = new GamepadInput();
-    const frame = input.poll([pad(0, 0, [0, 1, 2, 3, 7], 1, 1)]);
+    const frame = input.poll([pad(0, 0, [0, 1, 2, 3, 6, 7], 1, 1)]);
     expect(Math.hypot(frame.aimX, frame.aimY)).toBeCloseTo(1);
     expect(frame).toMatchObject({
-      basicAttack: true,
+      lightAttack: true,
+      heavyAttack: true,
       abilityQ: true,
       abilityW: true,
       abilityE: true,
       abilityR: true,
     });
-    expect(input.poll([pad(0, 0, [0, 1, 2, 3, 7])])).toMatchObject({
-      basicAttack: true,
+    expect(input.poll([pad(0, 0, [0, 1, 2, 3, 6, 7])])).toMatchObject({
+      lightAttack: true,
+      heavyAttack: true,
       abilityQ: false,
       abilityW: false,
       abilityE: false,

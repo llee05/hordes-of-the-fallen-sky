@@ -7,8 +7,10 @@ import { GAME } from '../../config';
 import {
   classDefinition,
   khanBasicRange,
+  khanHeavyRange,
   type ClassAbilityDefinition,
   type ClassAbilitySlot,
+  type ClassBasicAttackDefinition,
 } from '../../data/classes';
 import { Enemy, Gem, Projectile } from '../../entities/actors';
 import { campBoundary } from '../../state/campBarrier';
@@ -52,7 +54,7 @@ export interface CombatHost {
  * private methods, which browser tests still call through scene forwarders.
  */
 export class CombatSystem extends ArenaSystem {
-  private basicWindup = 0;
+  private attackWindup?: { kind: 'light' | 'heavy'; remaining: number };
 
   constructor(
     arena: ArenaContext,
@@ -87,67 +89,93 @@ export class CombatSystem extends ArenaSystem {
   }
 
   reset(): void {
-    this.basicWindup = 0;
+    this.attackWindup = undefined;
     this.timers.abilityCooldowns = { q: 0, w: 0, e: 0, r: 0 };
   }
 
-  /** Advances manual Khan combat. No attack occurs unless basic attack is held. */
-  tickKhanCombat(dt: number, basicHeld: boolean, aim: { x: number; y: number }): void {
+  /** Advances manual Khan combat. No attack occurs unless a mouse button or trigger is held. */
+  tickKhanCombat(
+    dt: number,
+    lightHeld: boolean,
+    heavyHeld: boolean,
+    aim: { x: number; y: number },
+  ): void {
     if (this.run.phase !== 'playing') return;
     this.timers.attackTimer = Math.max(0, this.timers.attackTimer - dt);
     const cooldowns = this.cooldowns();
     for (const slot of Object.keys(cooldowns) as ClassAbilitySlot[])
       cooldowns[slot] = Math.max(0, cooldowns[slot] - dt);
-    if (this.basicWindup > 0) {
-      if (!basicHeld || !isKhanActive(this.run)) {
-        this.basicWindup = 0;
+    if (this.attackWindup) {
+      const held = this.attackWindup.kind === 'light' ? lightHeld : heavyHeld;
+      if (!held || !isKhanActive(this.run)) {
+        this.attackWindup = undefined;
         return;
       }
       this.faceAim(aim, false);
-      this.basicWindup = Math.max(0, this.basicWindup - dt);
-      if (this.basicWindup <= 0) this.fireBasic(aim);
-    } else if (basicHeld && this.timers.attackTimer <= 0 && isKhanActive(this.run)) {
-      this.basicWindup = 0.12;
+      this.attackWindup.remaining = Math.max(0, this.attackWindup.remaining - dt);
+      if (this.attackWindup.remaining <= 0) {
+        const kind = this.attackWindup.kind;
+        this.attackWindup = undefined;
+        this.fireAttack(kind, aim);
+      }
+    } else if ((lightHeld || heavyHeld) && this.timers.attackTimer <= 0 && isKhanActive(this.run)) {
+      const kind = heavyHeld ? 'heavy' : 'light';
+      const cls = classDefinition(this.run.character?.classId);
+      this.attackWindup = {
+        kind,
+        remaining: kind === 'heavy' ? cls.heavyAttack.windup : 0.12,
+      };
       this.faceAim(aim, false);
     }
   }
 
   isWindingUp(): boolean {
-    return this.basicWindup > 0;
+    return !!this.attackWindup;
   }
 
   fireBasic(aim: { x: number; y: number }): boolean {
+    return this.fireAttack('light', aim);
+  }
+
+  fireHeavy(aim: { x: number; y: number }): boolean {
+    return this.fireAttack('heavy', aim);
+  }
+
+  private fireAttack(kind: 'light' | 'heavy', aim: { x: number; y: number }): boolean {
     if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.timers.attackTimer > 0)
       return false;
     const cls = classDefinition(this.run.character?.classId);
-    const basicRange = khanBasicRange(this.run);
+    const attack: ClassBasicAttackDefinition = kind === 'heavy' ? cls.heavyAttack : cls.basicAttack;
+    const range = kind === 'heavy' ? khanHeavyRange(this.run) : khanBasicRange(this.run);
     const direction = this.faceAim(aim);
     const extraProjectiles = Math.max(0, this.run.stats.projectiles - cls.stats.projectiles);
-    const scaledDamage = cls.basicAttack.damage * (1 + extraProjectiles * 0.3);
+    const scaledDamage = attack.damage * (1 + extraProjectiles * 0.3);
     let released = false;
-    if (cls.basicAttack.shape === 'projectile') {
-      const count = cls.basicAttack.projectiles + extraProjectiles;
+    if (attack.shape === 'projectile') {
+      const count = attack.projectiles + extraProjectiles;
       released = this.shootVolley(
         this.player.x,
         this.player.y,
         aim,
         count,
-        cls.basicAttack.damage,
+        attack.damage,
         false,
         false,
         'khan',
         undefined,
         false,
         undefined,
-        basicRange,
+        range,
+        attack.width,
       );
-    } else if (cls.basicAttack.shape === 'line') {
-      released = this.strikeLine(direction, basicRange, cls.basicAttack.width, scaledDamage);
+    } else if (attack.shape === 'line') {
+      released = this.strikeLine(direction, range, attack.width, scaledDamage);
     } else {
-      released = this.strikeArc(direction, basicRange, cls.basicAttack.width, scaledDamage);
+      released = this.strikeArc(direction, range, attack.width, scaledDamage);
     }
     this.timers.attackTimer =
-      this.run.stats.attackInterval * this.run.clan.campEffects.multipliers.hostInterval;
+      (kind === 'heavy' ? cls.heavyAttack.cooldown : this.run.stats.attackInterval) *
+      this.run.clan.campEffects.multipliers.hostInterval;
     if (released) this.run.combat.volleys++;
     return released;
   }
@@ -166,7 +194,7 @@ export class CombatSystem extends ArenaSystem {
       return false;
     const cls = classDefinition(this.run.character?.classId);
     const ability = cls.abilities.find((entry) => entry.slot === slot)!;
-    this.basicWindup = 0;
+    this.attackWindup = undefined;
     const direction = this.faceAim(aim);
     const effect = ability;
     let released = true;
@@ -318,6 +346,7 @@ export class CombatSystem extends ArenaSystem {
     ghost = false,
     origin?: Enemy,
     range?: number,
+    collisionWidth?: number,
   ): boolean {
     const cls = classDefinition(this.run.character?.classId);
     const volley =
@@ -348,15 +377,15 @@ export class CombatSystem extends ArenaSystem {
       bolt.source =
         owner === 'khan' || owner === 'wagon' || owner === 'wagon-ricochet' ? owner : undefined;
       bolt.setData('terrain-previous', { x, y });
+      const radius = (collisionWidth ?? 9) / 2;
       bolt
         .setTexture('bolt')
-        .setScale(1)
+        .setScale(Math.min(1.6, Math.max(1, radius / 4.5)))
         .setDepth(9200)
         .setRotation(angle + Math.PI / 4)
         .setAlpha(1)
         .clearTint();
-      // Preserve the original 4.5-world-unit arrow radius at the new texture scale.
-      bolt.setCircle(4.5, bolt.width / 2 - 4.5, bolt.height / 2 - 4.5);
+      bolt.setCircle(radius, bolt.width / 2 - radius, bolt.height / 2 - radius);
       bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
       bolt.tempest = tempest;
       bolt.pierces = basePierces;

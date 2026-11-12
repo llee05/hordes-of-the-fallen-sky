@@ -5,7 +5,7 @@ import { openTitle, startExpedition } from './helpers';
 test.describe.configure({ mode: 'parallel' });
 
 test(
-  'right-click attacks defeat enemies and collected XP raises levels without interrupting combat',
+  'left-click light attacks defeat enemies and collected XP raises levels without interrupting combat',
   { tag: '@core' },
   async ({ page }) => {
     await openTitle(page);
@@ -23,9 +23,9 @@ test(
     const canvas = await page.locator('canvas').first().boundingBox();
     if (!canvas) throw new Error('Game canvas is unavailable');
     await page.mouse.move(canvas.x + canvas.width / 2 + 140, canvas.y + canvas.height / 2);
-    await page.mouse.down({ button: 'right' });
+    await page.mouse.down({ button: 'left' });
     await expect(page.locator('#kills')).not.toHaveText('0', { timeout: 15000 });
-    await page.mouse.up({ button: 'right' });
+    await page.mouse.up({ button: 'left' });
     // Place a shard at the player to exercise actual pickup and level-up integration.
     await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
@@ -41,6 +41,30 @@ test(
     await expect(page.locator('#level')).toHaveText('02');
   },
 );
+
+test('right-click heavy attacks wind up and number keys trigger abilities while Q stays unbound', async ({
+  page,
+}) => {
+  await openTitle(page);
+  await startExpedition(page);
+  const canvas = await page.locator('canvas').first().boundingBox();
+  if (!canvas) throw new Error('Game canvas is unavailable');
+  const volleys = await page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys);
+  await page.mouse.move(canvas.x + canvas.width / 2 + 180, canvas.y + canvas.height / 2);
+  await page.mouse.down({ button: 'right' });
+  await page.waitForTimeout(150);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys)).toBe(volleys);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys))
+    .toBeGreaterThan(volleys);
+  await page.mouse.up({ button: 'right' });
+
+  await expect(page.locator('#ability-q')).toContainText('READY');
+  await page.keyboard.press('KeyQ');
+  await expect(page.locator('#ability-q')).toContainText('READY');
+  await page.keyboard.press('Digit1');
+  await expect(page.locator('#ability-q')).not.toContainText('READY');
+});
 
 test('guard riders fire at camp threats while the commander scouts away', async ({ page }) => {
   await openTitle(page);

@@ -3,7 +3,8 @@ export interface ControllerFrame {
   y: number;
   aimX: number;
   aimY: number;
-  basicAttack: boolean;
+  lightAttack: boolean;
+  heavyAttack: boolean;
   abilityQ: boolean;
   abilityW: boolean;
   abilityE: boolean;
@@ -41,7 +42,8 @@ export class GamepadInput {
       y: 0,
       aimX: 0,
       aimY: 0,
-      basicAttack: false,
+      lightAttack: false,
+      heavyAttack: false,
       abilityQ: false,
       abilityW: false,
       abilityE: false,
@@ -80,7 +82,8 @@ export class GamepadInput {
     frame.abilityE = (tapped & (1 << 2)) !== 0;
     frame.abilityR = (tapped & (1 << 3)) !== 0;
     frame.gallop = (tapped & (1 << 4)) !== 0;
-    frame.basicAttack = pressed(7);
+    frame.lightAttack = pressed(7);
+    frame.heavyAttack = pressed(6);
     frame.build = (tapped & (1 << 12)) !== 0;
     frame.migrate = (tapped & (1 << 13)) !== 0;
     frame.formation = (tapped & (1 << 5)) !== 0;

@@ -237,6 +237,15 @@ export const GAME = {
       gallopSpeedMultiplier: 1,
       clanProtectionMultiplier: 1,
       basic: { shape: 'projectile', range: 500, damage: 1, width: 9, projectiles: 1 },
+      heavy: {
+        shape: 'projectile',
+        range: 650,
+        damage: 2.4,
+        width: 15,
+        projectiles: 1,
+        cooldown: 1.45,
+        windup: 0.36,
+      },
       abilities: {
         q: { cooldown: 6, kind: 'volley', projectiles: 7, damage: 0.72 },
         w: { cooldown: 5, kind: 'arc', range: 96, angle: 2.35, damage: 1.35 },
@@ -262,6 +271,15 @@ export const GAME = {
       gallopSpeedMultiplier: 1.12,
       clanProtectionMultiplier: 1,
       basic: { shape: 'line', range: 178, damage: 1.3, width: 34, projectiles: 1 },
+      heavy: {
+        shape: 'line',
+        range: 300,
+        damage: 2.3,
+        width: 56,
+        projectiles: 1,
+        cooldown: 1.3,
+        windup: 0.3,
+      },
       abilities: {
         q: { cooldown: 5, kind: 'arc', range: 112, angle: 2.7, damage: 1.2 },
         w: { cooldown: 9, kind: 'charge', range: 235, width: 46, damage: 2.1 },
@@ -287,6 +305,15 @@ export const GAME = {
       gallopSpeedMultiplier: 1,
       clanProtectionMultiplier: 0.88,
       basic: { shape: 'arc', range: 118, damage: 1.18, width: 2.55, projectiles: 1 },
+      heavy: {
+        shape: 'arc',
+        range: 165,
+        damage: 2.15,
+        width: 3.05,
+        projectiles: 1,
+        cooldown: 1.4,
+        windup: 0.34,
+      },
       abilities: {
         q: { cooldown: 6, kind: 'pulse', range: 145, width: 0, damage: 1.25 },
         w: { cooldown: 12, kind: 'guard', duration: 2.5, heal: 12 },
@@ -312,6 +339,15 @@ export const GAME = {
       gallopSpeedMultiplier: 1,
       clanProtectionMultiplier: 0.95,
       basic: { shape: 'projectile', range: 440, damage: 1.35, width: 11, projectiles: 1 },
+      heavy: {
+        shape: 'projectile',
+        range: 570,
+        damage: 2.55,
+        width: 18,
+        projectiles: 1,
+        cooldown: 1.6,
+        windup: 0.42,
+      },
       abilities: {
         q: { cooldown: 5, kind: 'pulse', range: 135, width: 0, damage: 1.05 },
         w: { cooldown: 8, kind: 'volley', projectiles: 5, damage: 0.9 },

@@ -98,9 +98,9 @@ See [the nomadic camp guide](nomadic-camp.md) for the current building catalog, 
 
 ### Khan, riders, and arrows
 
-Without a supplied character profile, the Khan uses the legacy Mounted Archer opening stats in `GAME.player`. Supplied profiles use `GAME.classes` through the class catalog, with starting-tradition, background, and oath modifiers applied at initialization. Attacks automatically choose the nearest available enemy within targeting range; there is no manual aim or attack input.
+Without a supplied character profile, the Khan uses the legacy Mounted Archer opening stats in `GAME.player`. Supplied profiles use `GAME.classes` through the class catalog, with starting-tradition, background, and oath modifiers applied at initialization. The Khan aims manually toward the mouse cursor or controller right stick. Light and heavy attacks use each class's authored range, damage, interval, windup and hit shape; only allied riders and camp defenses choose targets automatically.
 
-Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Khan targeting range is `classDefinition(run.character?.classId).stats.range + campEffects.bonuses.range + 120 × momentum` (class weapon range is Khan-specific and does not change accompanying riders); personal arrow damage is multiplied by `1 + 0.3 × momentum`. Thus full momentum adds 120 targeting range and +30% personal damage.
+Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Momentum remains a formation tactic for accompanying riders and no longer charges or extends a Khan attack.
 
 Accompanying riders use per-rider active-time release clocks and each fire one
 arrow per successful release, at 60% of the shared damage stat before camp modifiers. Each rider has an active-time release clock using the shared attack interval and camp host-interval modifier. Their targeting range starts at 440. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
@@ -218,9 +218,10 @@ The Last Court, Iron Vow, Sundering, creatures, and refuge are original fantasy;
 
 | Action                         | Keyboard / mouse                     | Standard controller |
 | ------------------------------ | ------------------------------------ | ------------------- |
-| Ride                           | Hold left click / arrow keys         | Left stick          |
-| Basic attack                   | Hold right click                     | Right trigger       |
-| Class abilities                | Q / W / E / R                        | A / B / X / Y       |
+| Ride                           | WASD / arrow keys                    | Left stick          |
+| Light attack                   | Hold left click                      | Right trigger       |
+| Heavy attack                   | Hold right click                     | Left trigger        |
+| Class abilities                | 1 / 2 / 3 / 4                        | A / B / X / Y       |
 | Gallop                         | Space / HUD button                   | Left bumper         |
 | Develop camp                   | B / HUD button                       | D-pad up            |
 | Choose migration route         | M / HUD button                       | D-pad down          |
@@ -357,8 +358,9 @@ Combat adds bounded elite/armour markers, grouped offscreen warnings and retaine
 ## Playable classes
 
 The four playable classes share formations, gallop and succession, but the Khan no
-longer attacks automatically. Hold right click to attack toward the cursor; controller
-aim uses the right stick and attacks with the right trigger. The class atlas supplies
+longer attacks automatically. Hold left click for a quick light attack or right click
+for a slower, stronger heavy attack toward the cursor. Controller aim uses the right
+stick, with right trigger for light and left trigger for heavy. The class atlas supplies
 the weapon-specific windup and release poses. Allied riders and camp defenses keep
 their automatic targeting.
 
@@ -383,19 +385,19 @@ its class loadout. Successors retain the expedition's class and progression.
 
 ### Manual attacks and placeholder abilities
 
-| Class          | Right-click basic   | Q                   | W                  | E             | R                |
-| -------------- | ------------------- | ------------------- | ------------------ | ------------- | ---------------- |
-| Mounted Archer | Aimed Arrow         | Flurry Arrow Volley | Saber Close Slash  | Circling Shot | Windrunner       |
-| Lancer         | Couched Thrust      | Sweeping Strike     | Devastating Charge | Line Breaker  | Shock Lance      |
-| Iron Pagoda    | Heavy Saber Arc     | Crushing Aura       | Unbreakable Stance | Shield Bash   | Shielded Advance |
-| Spirit Caller  | Seeking Spirit Bolt | Drum Pulse          | Summon Ancestor    | Spirit Ward   | Ancestral Chorus |
+| Class          | Left-click light    | Right-click heavy | 1                   | 2                  | 3             | 4                |
+| -------------- | ------------------- | ----------------- | ------------------- | ------------------ | ------------- | ---------------- |
+| Mounted Archer | Aimed Arrow         | Drawn Power Shot  | Flurry Arrow Volley | Saber Close Slash  | Circling Shot | Windrunner       |
+| Lancer         | Couched Thrust      | Charging Thrust   | Sweeping Strike     | Devastating Charge | Line Breaker  | Shock Lance      |
+| Iron Pagoda    | Heavy Saber Arc     | Overhead Cleave   | Crushing Aura       | Unbreakable Stance | Shield Bash   | Shielded Advance |
+| Spirit Caller  | Seeking Spirit Bolt | Ancestral Bolt    | Drum Pulse          | Summon Ancestor    | Spirit Ward   | Ancestral Chorus |
 
-Basic range, rate, damage and hit shape, plus every ability cooldown and effect, are
+Light and heavy range, rate, damage and hit shape, plus every ability cooldown and effect, are
 authored in `GAME.classes` and surfaced through `src/game/data/classes.ts`. Ability
 cooldowns advance only during active play, appear in the battlefield HUD and persist
 in full expedition saves; older saves load the four abilities ready. The old
 sustained-riding charged volley is removed; Flurry Arrow Volley carries that role as
-the Mounted Archer's Q ability. Formation momentum remains for allied rider tactics.
+the Mounted Archer's ability 1. Formation momentum remains for allied rider tactics.
 Spirit bolts steer toward live, unhit enemies at the class turn rate while retaining
 their speed. The class `gallopSpeedMultiplier` still scales the Khan's Space / left-bumper
 gallop, and Lancer and Iron Pagoda gallops retain their existing pinning breakthrough.

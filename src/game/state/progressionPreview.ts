@@ -37,7 +37,7 @@ function metrics(r: RunState): Metric[] {
     { label: 'Clan resolve now', value: r.clan.integrity },
     { label: 'Shared attack damage', value: r.stats.damage },
     {
-      label: 'Khan basic attack range',
+      label: 'Khan light attack range',
       value: khanBasicRange(r),
       unit: ' paces',
       context: `${cls.basicAttack.name}; aimed manually`,
@@ -47,19 +47,19 @@ function metrics(r: RunState): Metric[] {
       value: r.stats.attackInterval * c.multipliers.hostInterval,
       unit: 's',
       lower: true,
-      context: 'Manual basic attack; class abilities have separate cooldowns',
+      context: 'Manual light attack; heavy attacks and class abilities have separate cooldowns',
     },
     {
-      label: 'Khan basic attack projectiles',
+      label: 'Khan light attack projectiles',
       value: basicVolley?.count ?? 1,
     },
     {
-      label: 'Khan basic attack spread',
+      label: 'Khan light attack spread',
       value: basicVolley ? (basicVolley.spacing * 180) / Math.PI : 0,
       unit: '°',
     },
     {
-      label: 'Khan basic attack damage',
+      label: 'Khan light attack damage',
       value:
         r.stats.damage *
         cls.basicAttack.damage *

@@ -122,11 +122,11 @@ test('Khan movement follows the ramp, terrain occludes sprites, and elevated com
     s.player.body.reset(3370, 2600);
     s.cameras.main.stopFollow().centerOn(3050, 2600);
   });
-  await page.keyboard.down('ArrowLeft');
+  await page.keyboard.down('KeyA');
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.player.x), { timeout: 20000 })
     .toBeLessThan(3150);
-  await page.keyboard.up('ArrowLeft');
+  await page.keyboard.up('KeyA');
   await settled(page);
   const position = await page.evaluate(() => {
     const s = (window as any).__gloam.scene,

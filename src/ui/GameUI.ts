@@ -91,7 +91,7 @@ export class GameUI {
   ) {
     root.dataset.phase = 'ready';
     root.innerHTML = `<main class="game-shell" aria-label="Hordes of the Fallen Sky game">
-      <div class="arena-wrap" id="arena-wrap" tabindex="0" aria-label="Game arena. Hold left click or use arrow keys to ride. Hold right click to attack. Q, W, E and R use class abilities. Space gallops. B builds. M migrates. F changes formation. Tab or J opens the clan chronicle. Escape pauses. Plus and minus zoom; zero resets.">
+      <div class="arena-wrap" id="arena-wrap" tabindex="0" aria-label="Game arena. Use WASD or arrow keys to ride. Hold left click for a light attack and right click for a heavy attack. Number keys 1, 2, 3 and 4 use class abilities. Space gallops. B builds. M migrates. F changes formation. Tab or J opens the clan chronicle. Escape pauses. Plus and minus zoom; zero resets.">
         <div id="game-canvas"></div>
         <div class="screen-shade" aria-hidden="true"></div>
         <div class="game-hud" id="game-hud" inert>
@@ -129,7 +129,7 @@ export class GameUI {
             )}</div><small id="successor-selection">1 / 2 · controller left / right</small></aside>
           <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span><span id="weapon-label">BOW</span> <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
           <section class="tradition-hud" aria-label="Run progression"><span>LEVEL <b id="level">01</b></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small></section>
-          <section id="ability-dock" class="ability-dock hud-surface" aria-label="Class abilities">${(['q', 'w', 'e', 'r'] as const).map((slot) => `<div class="ability-indicator" id="ability-${slot}"><kbd>${slot.toUpperCase()}</kbd><span><strong></strong><small></small></span></div>`).join('')}</section>
+          <section id="ability-dock" class="ability-dock hud-surface" aria-label="Class abilities">${(['q', 'w', 'e', 'r'] as const).map((slot, index) => `<div class="ability-indicator" id="ability-${slot}"><kbd>${index + 1}</kbd><span><strong></strong><small></small></span></div>`).join('')}</section>
           <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
           <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">${clanMark('bow')}</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
           <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><div><p id="clan-message"></p></div></div>
@@ -413,10 +413,11 @@ export class GameUI {
           ? 'SPACE / READY'
           : `RECHARGING ${((1 - dashReady) * dashCooldown).toFixed(1)}s`,
     );
-    this.text('momentum', 'RMB · AIMED BASIC ATTACK');
+    this.text('momentum', 'LMB LIGHT · RMB HEAVY');
     for (const ability of snapshot.abilities) {
       const indicator = this.get(`ability-${ability.slot}`);
       indicator.title = ability.description;
+      indicator.querySelector('kbd')!.textContent = ability.slotLabel;
       indicator.querySelector('strong')!.textContent = ability.name;
       indicator.querySelector('small')!.textContent =
         ability.remaining > 0 ? `${ability.remaining.toFixed(1)}s` : 'READY';

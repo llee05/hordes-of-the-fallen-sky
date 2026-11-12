@@ -1,19 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import {
   aimedDirection,
+  combatNumberAction,
+  digitalMovement,
   insideAttackArc,
   insideAttackLine,
-  movementTowardCursor,
 } from '../../src/game/state/khanControls';
 
 describe('manual Khan controls', () => {
-  it('moves toward a held cursor and settles near it', () => {
-    expect(movementTowardCursor({ x: 10, y: 20 }, { x: 40, y: 60 })).toEqual({
-      x: 0.6,
-      y: 0.8,
+  it('normalizes WASD and arrow-key movement without diagonal speed gain', () => {
+    const northeast = digitalMovement({ up: true, down: false, left: false, right: true });
+    expect(northeast.x).toBeCloseTo(Math.SQRT1_2);
+    expect(northeast.y).toBeCloseTo(-Math.SQRT1_2);
+    const southwest = digitalMovement({ up: false, down: true, left: true, right: false });
+    expect(southwest.x).toBeCloseTo(-Math.SQRT1_2);
+    expect(southwest.y).toBeCloseTo(Math.SQRT1_2);
+    expect(digitalMovement({ up: true, down: true, left: false, right: false })).toEqual({
+      x: 0,
+      y: 0,
     });
-    expect(movementTowardCursor({ x: 10, y: 20 }, { x: 20, y: 25 })).toEqual({ x: 0, y: 0 });
-    expect(movementTowardCursor({ x: 10, y: 20 }, undefined)).toEqual({ x: 0, y: 0 });
   });
 
   it('keeps the previous aim when the cursor is exactly on the rider', () => {
@@ -21,6 +26,21 @@ describe('manual Khan controls', () => {
       x: 0,
       y: -1,
     });
+  });
+
+  it('uses number keys for exactly one ability or succession action', () => {
+    expect([1, 2, 3, 4].map((key) => combatNumberAction(key as 1 | 2 | 3 | 4, true))).toEqual([
+      { kind: 'ability', slot: 'q' },
+      { kind: 'ability', slot: 'w' },
+      { kind: 'ability', slot: 'e' },
+      { kind: 'ability', slot: 'r' },
+    ]);
+    expect([1, 2, 3, 4].map((key) => combatNumberAction(key as 1 | 2 | 3 | 4, false))).toEqual([
+      { kind: 'successor', trait: 'outrider' },
+      { kind: 'successor', trait: 'hearthguard' },
+      undefined,
+      undefined,
+    ]);
   });
 
   it('distinguishes line and arc hit shapes', () => {

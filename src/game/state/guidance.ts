@@ -53,7 +53,7 @@ export function currentGuidance(run: RunState): Guidance | undefined {
     return {
       id: 'ride',
       title: 'Ride out, keep watch',
-      text: 'Hold left click to ride toward the cursor, or use arrows, the left stick or a touch drag. Hold right click / right trigger to attack; Q / W / E / R or the face buttons use class abilities. Space / left bumper gallops.',
+      text: 'Ride with WASD, arrows, the left stick or a touch drag. Hold left click / right trigger for light attacks and right click / left trigger for heavy attacks; 1 / 2 / 3 / 4 or the face buttons use class abilities. Space / left bumper gallops.',
     };
   if (!done('build'))
     return {

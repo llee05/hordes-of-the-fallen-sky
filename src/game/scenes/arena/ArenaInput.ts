@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GAME } from '../../config';
 import type { ClassAbilitySlot } from '../../data/classes';
 import type { SuccessorTrait } from '../../data/successors';
-import { movementTowardCursor } from '../../state/khanControls';
+import { combatNumberAction, digitalMovement } from '../../state/khanControls';
 import { isKhanActive } from '../../state/khan';
 import type { ActionKeys } from '../../systems/ActionKeys';
 import type { GamepadInput } from '../../systems/GamepadInput';
@@ -49,7 +49,10 @@ export class ArenaInput {
   dragOrigin?: Phaser.Math.Vector2;
   /** Screen-space joystick drawing for touch movement. */
   joystick?: Phaser.GameObjects.Graphics;
-  private keys!: Record<'up' | 'down' | 'left' | 'right', Phaser.Input.Keyboard.Key>;
+  private keys!: Record<
+    'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd',
+    Phaser.Input.Keyboard.Key
+  >;
   private actions!: ArenaActions;
   private readonly controllerMove = new Phaser.Math.Vector2();
   private readonly controllerAim = new Phaser.Math.Vector2();
@@ -57,9 +60,10 @@ export class ArenaInput {
   private readonly touchMove = new Phaser.Math.Vector2();
   private readonly pointerTarget = new Phaser.Math.Vector2();
   private hasPointerTarget = false;
-  private pointerMoveHeld = false;
-  private pointerAttackHeld = false;
-  private controllerAttackHeld = false;
+  private pointerLightAttackHeld = false;
+  private pointerHeavyAttackHeld = false;
+  private controllerLightAttackHeld = false;
+  private controllerHeavyAttackHeld = false;
   private wheelZoomDelta = 0;
 
   constructor(
@@ -77,9 +81,10 @@ export class ArenaInput {
     this.touchMove.set(0, 0);
     this.controllerAim.set(0, 0);
     this.controllerAimActive = false;
-    this.pointerMoveHeld = false;
-    this.pointerAttackHeld = false;
-    this.controllerAttackHeld = false;
+    this.pointerLightAttackHeld = false;
+    this.pointerHeavyAttackHeld = false;
+    this.controllerLightAttackHeld = false;
+    this.controllerHeavyAttackHeld = false;
     this.hasPointerTarget = false;
     this.dragOrigin = undefined;
     this.keys = keyboard.addKeys({
@@ -87,6 +92,10 @@ export class ArenaInput {
       down: 'DOWN',
       left: 'LEFT',
       right: 'RIGHT',
+      w: 'W',
+      a: 'A',
+      s: 'S',
+      d: 'D',
     }) as typeof this.keys;
     const bindAction = (key: string, action: () => void): void => {
       keyboard.on(`keydown-${key}`, (event: KeyboardEvent) => {
@@ -110,8 +119,15 @@ export class ArenaInput {
     bindAction('B', () => actions.openBuildings());
     bindAction('M', () => actions.openRoutes());
     bindAction('F', () => actions.cycleFormation());
-    bindAction('ONE', () => actions.selectSuccessor('outrider'));
-    bindAction('TWO', () => actions.selectSuccessor('hearthguard'));
+    const useNumber = (key: 1 | 2 | 3 | 4): void => {
+      const action = combatNumberAction(key, isKhanActive(this.arena.run));
+      if (action?.kind === 'ability') actions.useAbility(action.slot);
+      else if (action?.kind === 'successor') actions.selectSuccessor(action.trait);
+    };
+    bindAction('ONE', () => useNumber(1));
+    bindAction('TWO', () => useNumber(2));
+    bindAction('THREE', () => useNumber(3));
+    bindAction('FOUR', () => useNumber(4));
     bindAction('J', () => actions.toggleJournal());
     if (import.meta.env.DEV) {
       bindAction('F8', () => actions.toggleDeveloperMenu());
@@ -172,9 +188,6 @@ export class ArenaInput {
     // Native Space activation remains available to focused menu buttons.
     keyboard.removeCapture('SPACE');
     bindAction('SPACE', () => actions.dash());
-    for (const slot of ['q', 'w', 'e', 'r'] as const)
-      bindAction(slot.toUpperCase(), () => actions.useAbility(slot));
-
     // Drag anywhere in the arena for analog movement on touch screens.
     this.joystick = scene.add.graphics().setScrollFactor(0).setDepth(10000);
     scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -185,8 +198,8 @@ export class ArenaInput {
       if (this.arena.run.phase !== 'playing' || pointer.event.target !== scene.game.canvas) return;
       this.controllerAimActive = false;
       this.updatePointerTarget(pointer);
-      if (pointer.button === 0) this.pointerMoveHeld = true;
-      if (pointer.button === 2) this.pointerAttackHeld = true;
+      if (pointer.button === 0) this.pointerLightAttackHeld = true;
+      if (pointer.button === 2) this.pointerHeavyAttackHeld = true;
     });
     scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (this.dragOrigin) {
@@ -202,8 +215,8 @@ export class ArenaInput {
     const releasePointer = (pointer: Phaser.Input.Pointer): void => {
       if (pointer.wasTouch) this.clearTouch();
       const button = (pointer.event as PointerEvent).button;
-      if (button === 0) this.pointerMoveHeld = false;
-      if (button === 2) this.pointerAttackHeld = false;
+      if (button === 0) this.pointerLightAttackHeld = false;
+      if (button === 2) this.pointerHeavyAttackHeld = false;
     };
     scene.input.on('pointerup', releasePointer);
     scene.input.on('pointerupoutside', releasePointer);
@@ -226,7 +239,8 @@ export class ArenaInput {
       this.controllerAim.set(controller.aimX, controller.aimY);
       this.controllerAimActive = true;
     }
-    this.controllerAttackHeld = controller.basicAttack;
+    this.controllerLightAttackHeld = controller.lightAttack;
+    this.controllerHeavyAttackHeld = controller.heavyAttack;
     const phaseBeforeInput = this.arena.run.phase;
     if (controller.pause || (controller.back && BACK_PHASES.includes(this.arena.run.phase)))
       actions.togglePause();
@@ -256,21 +270,18 @@ export class ArenaInput {
     return this.arena.run.phase === phaseBeforeInput;
   }
 
-  /** The Khan's movement intent: arrow keys, controller, touch, then held left-click. */
-  movement(player: { x: number; y: number }): Phaser.Math.Vector2 {
-    const x = Number(this.keys.right.isDown) - Number(this.keys.left.isDown);
-    const y = Number(this.keys.down.isDown) - Number(this.keys.up.isDown);
-    const movement = new Phaser.Math.Vector2(x, y);
-    if (movement.lengthSq() > 0) movement.normalize();
-    else if (this.controllerMove.lengthSq() > 0) movement.copy(this.controllerMove);
-    else if (this.touchMove.lengthSq() > 0) movement.copy(this.touchMove);
-    else if (this.pointerMoveHeld) {
-      const toward = movementTowardCursor(
-        player,
-        this.hasPointerTarget ? this.pointerTarget : undefined,
-      );
-      const input = this.arena.landscape.world3d?.movementInput(toward.x, toward.y) ?? toward;
-      movement.set(input.x, input.y);
+  /** The Khan's movement intent: WASD/arrows, controller, then touch drag. */
+  movement(_player: { x: number; y: number }): Phaser.Math.Vector2 {
+    const keyboard = digitalMovement({
+      up: this.keys.up.isDown || this.keys.w.isDown,
+      down: this.keys.down.isDown || this.keys.s.isDown,
+      left: this.keys.left.isDown || this.keys.a.isDown,
+      right: this.keys.right.isDown || this.keys.d.isDown,
+    });
+    const movement = new Phaser.Math.Vector2(keyboard.x, keyboard.y);
+    if (movement.lengthSq() === 0) {
+      if (this.controllerMove.lengthSq() > 0) movement.copy(this.controllerMove);
+      else if (this.touchMove.lengthSq() > 0) movement.copy(this.touchMove);
     }
     return movement;
   }
@@ -290,8 +301,12 @@ export class ArenaInput {
     return new Phaser.Math.Vector2(player.x + facing.x * 500, player.y + facing.y * 500);
   }
 
-  attackHeld(): boolean {
-    return this.pointerAttackHeld || this.controllerAttackHeld;
+  lightAttackHeld(): boolean {
+    return this.pointerLightAttackHeld || this.controllerLightAttackHeld;
+  }
+
+  heavyAttackHeld(): boolean {
+    return this.pointerHeavyAttackHeld || this.controllerHeavyAttackHeld;
   }
 
   /** Redraws the touch joystick in screen space for the main camera's zoom. */
@@ -319,9 +334,10 @@ export class ArenaInput {
   /** Drops any held touch drag and partial wheel scroll, as every phase change does. */
   release(): void {
     this.wheelZoomDelta = 0;
-    this.pointerMoveHeld = false;
-    this.pointerAttackHeld = false;
-    this.controllerAttackHeld = false;
+    this.pointerLightAttackHeld = false;
+    this.pointerHeavyAttackHeld = false;
+    this.controllerLightAttackHeld = false;
+    this.controllerHeavyAttackHeld = false;
     this.clearTouch();
   }
 

@@ -6,7 +6,7 @@ import { campStatPreview } from '../../src/game/state/progressionPreview';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 describe('exact progression previews', () => {
   it.each(CHARACTER_CLASSES)(
-    '%s previews its manual basic when unlocking Burning Tempest',
+    '%s previews its manual light attack when unlocking Burning Tempest',
     (classId) => {
       const run = createRun();
       delete run.clan.estate;
@@ -19,8 +19,8 @@ describe('exact progression previews', () => {
       run.clan.buildings.sanctuary = 1;
       run.clan.paths.archery = ['fire-arrows'];
       const changes = campStatPreview(run, 'sanctuary', 'wind-shamans');
-      const projectiles = changes.find((c) => c.label === 'Khan basic attack projectiles');
-      const spacing = changes.find((c) => c.label === 'Khan basic attack spread');
+      const projectiles = changes.find((c) => c.label === 'Khan light attack projectiles');
+      const spacing = changes.find((c) => c.label === 'Khan light attack spread');
       if (classId === 'mounted-archer') {
         expect(projectiles).toMatchObject({ before: '3', after: '5' });
         expect(spacing).toMatchObject({ before: '6.875°', after: '16.043°' });

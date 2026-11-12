@@ -197,6 +197,7 @@ export interface HudSnapshot {
   dashCooldown: number;
   abilities: {
     slot: import('./data/classes').ClassAbilitySlot;
+    slotLabel: string;
     name: string;
     description: string;
     cooldown: number;
