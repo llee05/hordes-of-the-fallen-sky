@@ -64,7 +64,7 @@ export class SpiritCallerSystem extends ArenaSystem {
 
   releaseDrum(attack: ClassHeavyAttackDefinition, charge: number): boolean {
     const tuning = attack.charge;
-    if (!tuning) return false;
+    if (!tuning || tuning.kind !== 'waves') return false;
     const held = Math.max(attack.windup, Math.min(tuning.maxDuration, charge));
     const waves = Math.min(
       tuning.maxWaves,

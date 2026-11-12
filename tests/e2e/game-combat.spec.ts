@@ -42,7 +42,7 @@ test(
   },
 );
 
-test('right-click heavy attacks wind up and number keys trigger abilities while Q stays unbound', async ({
+test('right-click charging heavies release on mouse-up and number keys trigger abilities while Q stays unbound', async ({
   page,
 }) => {
   await openTitle(page);
@@ -52,14 +52,15 @@ test('right-click heavy attacks wind up and number keys trigger abilities while 
   const volleys = await page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys);
   await page.mouse.move(canvas.x + canvas.width / 2 + 180, canvas.y + canvas.height / 2);
   await page.mouse.down({ button: 'right' });
-  await page.waitForTimeout(150);
+  await page.waitForTimeout(600);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys)).toBe(volleys);
+  await page.mouse.up({ button: 'right' });
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys))
     .toBeGreaterThan(volleys);
-  await page.mouse.up({ button: 'right' });
 
   await expect(page.locator('#ability-q')).toContainText('READY');
+  await expect(page.locator('#ability-q')).toContainText('Parthian Shot');
   await page.keyboard.press('KeyQ');
   await expect(page.locator('#ability-q')).toContainText('READY');
   await page.keyboard.press('Digit1');

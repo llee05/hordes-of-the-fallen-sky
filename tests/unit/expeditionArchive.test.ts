@@ -602,6 +602,53 @@ describe('full expedition snapshots', () => {
       r: 0,
     });
   });
+  it('round-trips Mounted Archer counters, delayed effects, maneuvers, status and special arrows', () => {
+    const runtime = world();
+    runtime.timers.mountedArcher = {
+      basicShots: 2,
+      pendingShot: { delay: 0.05, x: 2800, y: 2700, damage: 1, range: 500, width: 9 },
+      parthian: { shots: 3, timer: 0.08, x: -1, y: 0 },
+      rain: {
+        x: 2800,
+        y: 2700,
+        warning: 0.2,
+        remaining: 1.5,
+        tickTimer: 0.1,
+        visualTimer: 0.04,
+      },
+      windstep: { remaining: 0.3, shotTimer: 0.05 },
+    };
+    runtime.timers.khanManeuver = {
+      remaining: 0.3,
+      speedMultiplier: 3.25,
+      direction: { x: 1, y: 0 },
+    };
+    runtime.enemies[0]!.state.status = {
+      stun: 0,
+      slow: 0,
+      slowMultiplier: 1,
+      shred: 0,
+      shredBonus: 0,
+      forced: 0.2,
+      forcedVx: 200,
+      forcedVy: 0,
+    };
+    runtime.projectiles[0]!.mountedKind = 'splinter';
+    const restored = decodeExpedition(captureExpedition(createRun(), runtime));
+    expect(restored.world.timers.mountedArcher).toEqual(runtime.timers.mountedArcher);
+    expect(restored.world.timers.khanManeuver).toEqual(runtime.timers.khanManeuver);
+    expect(restored.world.enemies[0]!.state.status).toEqual(runtime.enemies[0]!.state.status);
+    expect(restored.world.projectiles[0]!.mountedKind).toBe('splinter');
+  });
+  it('loads saves from before Mounted Archer runtime state with a fresh shot counter', () => {
+    const save = captureExpedition(createRun(), world()) as Record<string, any>;
+    delete save.world.timers.mountedArcher;
+    delete save.world.timers.khanManeuver;
+    const restored = decodeExpedition(save);
+    expect({ ...createArenaTimers(), ...restored.world.timers }.mountedArcher).toEqual({
+      basicShots: 0,
+    });
+  });
   it('round-trips Spirit Caller energy, summons, areas, veil and pending drum waves', () => {
     const runtime = world();
     runtime.timers.spiritCaller = {

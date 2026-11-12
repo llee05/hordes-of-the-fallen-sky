@@ -66,10 +66,10 @@ describe('character classes and character profile', () => {
     }
 
     expect(classDefinition('mounted-archer').abilities.map((a) => a.name)).toEqual([
-      'Flurry Arrow Volley',
-      'Saber Close Slash',
-      'Circling Shot',
-      'Windrunner',
+      'Parthian Shot',
+      'Rain of Arrows',
+      'Splintering Arrow',
+      'Windstep',
     ]);
     expect(classDefinition('lancer').abilities.map((a) => a.name)).toEqual([
       'Sweeping Strike',
@@ -92,7 +92,7 @@ describe('character classes and character profile', () => {
   });
 
   it.each([
-    ['mounted-archer', 440, 440, 0, 'projectile', 500, 570, 6],
+    ['mounted-archer', 440, 440, 0, 'projectile', 500, 570, 7],
     ['lancer', 250, 520, 0, 'line', 178, 638.4, 5],
     ['iron-pagoda', 215, 410, 0, 'arc', 126, 570, 15],
     ['spirit-caller', 380, 390, 0.45, 'projectile', 440, 570, 12],
@@ -108,7 +108,11 @@ describe('character classes and character profile', () => {
       expect(cls.basicAttack.range).toBe(basicRange);
       if (classId === 'spirit-caller') {
         expect(cls.heavyAttack.shape).toBe('pulse');
-        expect(cls.heavyAttack.charge?.maxWaves).toBe(3);
+        expect(cls.heavyAttack.charge?.kind).toBe('waves');
+        expect(cls.heavyAttack.charge?.kind === 'waves' && cls.heavyAttack.charge.maxWaves).toBe(3);
+      } else if (classId === 'mounted-archer') {
+        expect(cls.heavyAttack.charge?.kind).toBe('projectile');
+        expect(cls.heavyAttack.range).toBeGreaterThan(cls.basicAttack.range);
       } else {
         expect(cls.heavyAttack.range).toBeGreaterThan(cls.basicAttack.range);
         expect(cls.heavyAttack.damage).toBeGreaterThan(cls.basicAttack.damage);

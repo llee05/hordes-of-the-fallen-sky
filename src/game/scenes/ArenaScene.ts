@@ -54,6 +54,7 @@ import { completeGuidance } from '../state/guidance';
 import { currentLocation } from '../state/journey';
 import { advanceSuccession, beginSuccession, chooseSuccessor, isKhanActive } from '../state/khan';
 import { advanceMountedCombat } from '../state/mountedCombat';
+import { advanceKhanManeuver } from '../state/khanManeuvers';
 import { purchaseNomadicBuilding } from '../state/nomadicCamp';
 import { createRun } from '../state/run';
 import { ActionKeys } from '../systems/ActionKeys';
@@ -946,6 +947,7 @@ export class ArenaScene extends Phaser.Scene {
     this.timers.dashTimer = Math.max(0, this.timers.dashTimer - dt);
     this.timers.invulnerable = Math.max(0, this.timers.invulnerable - dt);
     this.timers.dashRemaining = Math.max(0, this.timers.dashRemaining - dt);
+    advanceKhanManeuver(this.timers, dt);
     const outcome = advanceClan(this.run, dt, this.clanDamage.protection);
     if (outcome === 'lost') {
       this.finish('dead');
@@ -1005,6 +1007,7 @@ export class ArenaScene extends Phaser.Scene {
       this.controls.lightAttackHeld(),
       this.controls.heavyAttackHeld(),
       aim,
+      this.controls.hasUsableAim(),
     );
     this.riderHost.fire();
     this.enemyDirector.tickSpawns(dt);

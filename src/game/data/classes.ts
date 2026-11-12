@@ -132,6 +132,41 @@ export type ClassAbilityEffect =
       speedMultiplier: number;
       shield: { start: number; max: number; perSecond: number; perHit: number };
       payload: StatusPayload;
+    }
+  | {
+      kind: 'parthian';
+      duration: number;
+      speedMultiplier: number;
+      shots: number;
+      shotEvery: number;
+      damage: number;
+      range: number;
+    }
+  | {
+      kind: 'rain';
+      range: number;
+      radius: number;
+      delay: number;
+      duration: number;
+      tickEvery: number;
+      damage: number;
+    }
+  | {
+      kind: 'splinter';
+      range: number;
+      damage: number;
+      fragments: number;
+      fragmentDamage: number;
+      fragmentPierce: number;
+      fragmentSpread: number;
+    }
+  | {
+      kind: 'windstep';
+      duration: number;
+      speedMultiplier: number;
+      shotEvery: number;
+      range: number;
+      damage: number;
     };
 
 interface ClassAbilityBase {
@@ -160,6 +195,9 @@ export interface ClassBasicAttackDefinition {
   combo?: AttackCombo;
   /** Status effects applied to every enemy the attack strikes. */
   payload?: StatusPayload;
+  /** Every Nth release schedules a second shot after `doubleDelay`. */
+  doubleEvery?: number;
+  doubleDelay?: number;
 }
 
 export interface AttackCombo {
@@ -174,14 +212,26 @@ export interface AttackCombo {
 export interface ClassHeavyAttackDefinition extends ClassBasicAttackDefinition {
   cooldown: number;
   windup: number;
-  charge?: {
-    maxDuration: number;
-    waveEvery: number;
-    maxWaves: number;
-    waveDelay: number;
-    rangeStep: number;
-    slowDuration: number;
-  };
+  charge?:
+    | {
+        kind: 'waves';
+        maxDuration: number;
+        waveEvery: number;
+        maxWaves: number;
+        waveDelay: number;
+        rangeStep: number;
+        slowDuration: number;
+      }
+    | {
+        kind: 'projectile';
+        maxDuration: number;
+        minimumDamage: number;
+        maximumDamage: number;
+        minimumPierce: number;
+        maximumPierce: number;
+        fullChargeBonus: number;
+        knockback: { distance: number; seconds: number };
+      };
 }
 
 export interface ClassProgressionNode {
@@ -359,46 +409,50 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedDamage: GAME.classes['mounted-archer'].chargedDamage,
     },
     basicAttack: {
-      name: 'Aimed Arrow',
-      description: 'A fast composite-bow shot loosed directly toward the cursor.',
+      name: 'Galloping Shot',
+      description:
+        'Loose toward the cursor at full riding speed; every third release follows with a second arrow.',
       ...GAME.classes['mounted-archer'].basic,
     },
     heavyAttack: {
-      name: 'Drawn Power Shot',
-      description: 'A fully drawn arrow that flies farther and strikes with crushing force.',
+      name: 'Piercing Draw',
+      description:
+        'Hold and release a piercing arrow; charge raises damage and penetration, and a full draw knocks back smaller foes.',
       ...GAME.classes['mounted-archer'].heavy,
     },
     abilities: [
       {
-        id: 'flurry-arrow-volley',
+        id: 'parthian-shot',
         slot: 'q',
         slotLabel: '1',
-        name: 'Flurry Arrow Volley',
-        description: 'Fans seven quick arrows toward the cursor.',
+        name: 'Parthian Shot',
+        description: 'Accelerate briefly while loosing a rapid volley opposite your movement.',
         ...GAME.classes['mounted-archer'].abilities.q,
       },
       {
-        id: 'saber-slash',
+        id: 'rain-of-arrows',
         slot: 'w',
         slotLabel: '2',
-        name: 'Saber Close Slash',
-        description: 'Sweeps a curved saber through a broad close arc.',
+        name: 'Rain of Arrows',
+        description:
+          'Mark a targeted area; after a short delay, arrows repeatedly strike within it.',
         ...GAME.classes['mounted-archer'].abilities.w,
       },
       {
-        id: 'circling-shot',
+        id: 'splintering-arrow',
         slot: 'e',
         slotLabel: '3',
-        name: 'Circling Shot',
-        description: 'Looses an eleven-arrow fan to open an escape route.',
+        name: 'Splintering Arrow',
+        description:
+          'Fire a special arrow that fans into piercing fragments on its first enemy hit.',
         ...GAME.classes['mounted-archer'].abilities.e,
       },
       {
-        id: 'windrunner',
+        id: 'windstep',
         slot: 'r',
         slotLabel: '4',
-        name: 'Windrunner',
-        description: 'Bursts forward and cuts a damaging lane through the horde.',
+        name: 'Windstep',
+        description: 'Evade at speed with brief invulnerability while arrows seek nearby enemies.',
         ...GAME.classes['mounted-archer'].abilities.r,
       },
     ],

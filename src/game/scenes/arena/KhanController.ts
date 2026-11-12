@@ -10,6 +10,7 @@ import { gallopCooldown } from '../../state/campCombat';
 import type { WorldArchive } from '../../state/expeditionArchive';
 import { completeGuidance } from '../../state/guidance';
 import { damageKhan, isKhanActive, khanSpeedMultiplier } from '../../state/khan';
+import { activeKhanManeuver } from '../../state/khanManeuvers';
 import {
   createKhanStatus,
   isKhanGuarded,
@@ -99,6 +100,8 @@ export class KhanController extends ArenaSystem {
       const rotated = this.landscape.world3d.movement(movement.x, movement.y);
       movement.set(rotated.x, rotated.y);
     }
+    const maneuver = activeKhanManeuver(this.timers);
+    if (maneuver?.direction) movement.set(maneuver.direction.x, maneuver.direction.y);
     const moving = movement.lengthSq() > 0.01;
     const status = khanStatusOf(this.timers);
     if (moving) {
@@ -114,7 +117,8 @@ export class KhanController extends ArenaSystem {
           // Unstoppable stances shrug off slowing terrain as well as knockback.
           (isKhanUnstoppable(status)
             ? 1
-            : areaMovementMultiplier(this.host.areaThreats, this.player)),
+            : areaMovementMultiplier(this.host.areaThreats, this.player)) *
+          (maneuver?.speedMultiplier ?? 1),
       );
     this.player.setVelocity(movement.x, movement.y);
     const faceX = this.landscape.world3d?.screenX(this.facing.x, this.facing.y) ?? this.facing.x;

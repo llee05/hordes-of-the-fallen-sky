@@ -301,6 +301,13 @@ export class ArenaInput {
     return new Phaser.Math.Vector2(player.x + facing.x * 500, player.y + facing.y * 500);
   }
 
+  /** Whether aim came from a cursor or right stick rather than prior facing. */
+  hasUsableAim(): boolean {
+    return (
+      (this.controllerAimActive && this.controllerAim.lengthSq() > 0.01) || this.hasPointerTarget
+    );
+  }
+
   lightAttackHeld(): boolean {
     return this.pointerLightAttackHeld || this.controllerLightAttackHeld;
   }

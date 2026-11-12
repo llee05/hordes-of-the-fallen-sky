@@ -46,6 +46,8 @@ import { migrateLegacyNomadicCamp } from './nomadicCampMigration';
 import { migrateRetiredJourney } from './retiredJourney';
 import { createRun } from './run';
 import type { SpiritCallerCombatState } from './spiritCaller';
+import type { KhanManeuverState } from './khanManeuvers';
+import type { MountedArcherCombatState } from './mountedArcher';
 
 interface Point {
   x: number;
@@ -92,6 +94,7 @@ export interface ProjectileArchive extends BodyArchive {
   precision?: boolean;
   ghost?: boolean;
   spiritSource?: 'wisp' | 'guardian' | 'veil';
+  mountedKind?: 'piercing-full' | 'splinter' | 'fragment';
   baseDamage?: number;
   dealtDamage?: number;
   rotation: number;
@@ -113,6 +116,8 @@ export interface WorldArchive {
     closeDefenseTimer?: number;
     abilityCooldowns?: { q: number; w: number; e: number; r: number };
     khanStatus?: KhanStatus;
+    mountedArcher?: MountedArcherCombatState;
+    khanManeuver?: KhanManeuverState;
     spiritCaller?: SpiritCallerCombatState;
     dashTimer: number;
     dashRemaining: number;
@@ -345,6 +350,7 @@ const projectile = object(
     precision: boolean,
     ghost: boolean,
     spiritSource: oneOf(['wisp', 'guardian', 'veil']),
+    mountedKind: oneOf(['piercing-full', 'splinter', 'fragment']),
     baseDamage: positive,
     dealtDamage: positive,
   },
@@ -383,6 +389,30 @@ const worldShape = object(
         closeDefenseTimer: number,
         abilityCooldowns: object({ q: number, w: number, e: number, r: number }),
         khanStatus,
+        khanManeuver: object({ remaining: number, speedMultiplier: number }, { direction: point }),
+        mountedArcher: object(
+          { basicShots: integer },
+          {
+            pendingShot: object({
+              delay: number,
+              x: number,
+              y: number,
+              damage: number,
+              range: number,
+              width: number,
+            }),
+            parthian: object({ shots: integer, timer: number, x: number, y: number }),
+            rain: object({
+              x: number,
+              y: number,
+              warning: number,
+              remaining: number,
+              tickTimer: number,
+              visualTimer: number,
+            }),
+            windstep: object({ remaining: number, shotTimer: number }),
+          },
+        ),
         spiritCaller: object(
           {
             energy: positive,
