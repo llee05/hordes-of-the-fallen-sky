@@ -94,15 +94,28 @@ const SHRUBS: readonly OrkhonSprite[] = ['shrub_gold', 'shrub_mix', 'shrub_olive
 const cone = ALTAN_OVOO.plateaus[0]!;
 const cache = new Map<string | number, readonly SceneDressing[]>();
 const SPRING_REEDS: readonly TerrainPoint[] = [
-  { x: 1315, y: 585 },
-  { x: 1360, y: 535 },
-  { x: 1430, y: 515 },
-  { x: 1515, y: 535 },
-  { x: 1580, y: 585 },
-  { x: 1600, y: 660 },
-  { x: 1555, y: 735 },
-  { x: 1370, y: 750 },
-  { x: 1300, y: 690 },
+  { x: 1340, y: 720 },
+  { x: 1335, y: 765 },
+  { x: 1350, y: 810 },
+  { x: 1380, y: 850 },
+  { x: 1425, y: 875 },
+  { x: 1390, y: 655 },
+  { x: 1440, y: 630 },
+  { x: 1510, y: 620 },
+  { x: 1575, y: 650 },
+  { x: 1615, y: 700 },
+  { x: 1625, y: 750 },
+  { x: 1610, y: 795 },
+  { x: 1580, y: 845 },
+];
+const SPRING_STONES: readonly { point: TerrainPoint; sprite: OrkhonSprite; scale: number }[] = [
+  { point: { x: 1325, y: 700 }, sprite: 'loose_pebbles', scale: 0.72 },
+  { point: { x: 1360, y: 865 }, sprite: 'loose_pebbles', scale: 0.82 },
+  { point: { x: 1430, y: 905 }, sprite: 'small_boulder', scale: 0.52 },
+  { point: { x: 1595, y: 860 }, sprite: 'loose_pebbles', scale: 0.76 },
+  { point: { x: 1640, y: 780 }, sprite: 'loose_pebbles', scale: 0.68 },
+  { point: { x: 1595, y: 640 }, sprite: 'small_boulder', scale: 0.48 },
+  { point: { x: 1505, y: 605 }, sprite: 'loose_pebbles', scale: 0.74 },
 ];
 
 function segmentDistance(point: TerrainPoint, a: TerrainPoint, b: TerrainPoint): number {
@@ -149,11 +162,8 @@ export function altanOvooDressingClear(point: TerrainPoint, margin = 80): boolea
     cone.ramps.some((ramp) => segmentDistance(point, ramp.foot, ramp.top) < ramp.shoulder + margin)
   )
     return false;
-  if (
-    Math.hypot(point.x - ALTAN_OVOO.spring.centre.x, point.y - ALTAN_OVOO.spring.centre.y) <
-    ALTAN_OVOO.spring.radius + margin
-  )
-    return false;
+  const pool = ALTAN_OVOO.spring.stream.sourcePool;
+  if (Math.hypot(point.x - pool.x, point.y - pool.y) < pool.radius + margin) return false;
   if (
     polylineDistance(point, streamPoints()) <
     ALTAN_OVOO.spring.stream.width / 2 + Math.max(55, margin)
@@ -196,6 +206,7 @@ function buildDressing(seed: string | number): SceneDressing[] {
     kind: SceneProp,
     scale: number,
     flip: boolean,
+    site?: SceneDressing['site'],
   ) => {
     const metrics = ORKHON_SPRITES[sprite];
     result.push({
@@ -210,6 +221,7 @@ function buildDressing(seed: string | number): SceneDressing[] {
       frame: sprite,
       shadow: kind === 'landmark' || kind === 'crag',
       originY: metrics.anchorY,
+      ...(site ? { site } : {}),
     });
   };
   const tierMatches = (cluster: Cluster, point: TerrainPoint) => {
@@ -234,13 +246,25 @@ function buildDressing(seed: string | number): SceneDressing[] {
       reed.x,
       reed.y,
       'reeds',
-      ORKHON_PROP_SCALE.reed * 1.5,
+      ORKHON_PROP_SCALE.reed * (1.1 + random(`spring-reed:${index}`)(2) * 0.7),
       random(`spring-reed:${index}`)(1) > 0.5,
+      'spring-bank',
+    );
+
+  for (const [index, stone] of SPRING_STONES.entries())
+    place(
+      stone.sprite,
+      stone.point.x,
+      stone.point.y,
+      'boulders',
+      stone.scale,
+      random(`spring-stone:${index}`)(1) > 0.5,
+      'spring-bank',
     );
 
   // A loose all-map scatter keeps the broad combat floor visually alive between the denser
   // authored ridges. Clearance checks still leave every route and named site readable.
-  const scatterStep = 520;
+  const scatterStep = 400;
   for (let row = 0; row * scatterStep < ALTAN_OVOO.world.height - 280; row++)
     for (let column = 0; column * scatterStep < ALTAN_OVOO.world.width - 280; column++) {
       const r = random(`scatter:${column}:${row}`);
@@ -249,8 +273,8 @@ function buildDressing(seed: string | number): SceneDressing[] {
         y: ALTAN_OVOO.world.minY + 140 + row * scatterStep + (r(2) - 0.5) * 360,
       };
       if (!altanOvooDressingClear(point, 88)) continue;
-      const tree = r(3) > 0.56;
-      const rock = !tree && r(4) < 0.32;
+      const tree = r(3) > 0.52;
+      const rock = !tree && r(4) < 0.28;
       const sprite = tree
         ? TREES[Math.floor(r(5) * TREES.length)]!
         : rock
@@ -268,7 +292,7 @@ function buildDressing(seed: string | number): SceneDressing[] {
           : ORKHON_PROP_SCALE.scrub * (1.05 + r(6) * 0.22);
       if (!occupied(point, kind)) place(sprite, point.x, point.y, kind, scale, r(7) > 0.5);
 
-      const satellites = r(8) > 0.55 ? 1 : 0;
+      const satellites = r(8) > 0.5 ? 1 : 0;
       for (let satellite = 0; satellite < satellites; satellite++) {
         const angle = r(9 + satellite * 3) * Math.PI * 2;
         const distance = 52 + r(10 + satellite * 3) * 62;
@@ -295,7 +319,7 @@ function buildDressing(seed: string | number): SceneDressing[] {
     }
 
   for (const [clusterIndex, cluster] of ROCK_CLUSTERS.entries()) {
-    const target = Math.ceil(cluster.count * 0.55);
+    const target = Math.ceil(cluster.count * 1.35);
     let placed = 0;
     for (let candidate = 0; candidate < target * 8 && placed < target; candidate++) {
       const r = random(`rock:${clusterIndex}:${candidate}`);
@@ -321,7 +345,7 @@ function buildDressing(seed: string | number): SceneDressing[] {
   }
 
   for (const [clusterIndex, cluster] of AUTUMN_CLUSTERS.entries()) {
-    const target = Math.ceil(cluster.count * 0.65);
+    const target = Math.ceil(cluster.count * 1.3);
     let placed = 0;
     for (let candidate = 0; candidate < target * 8 && placed < target; candidate++) {
       const r = random(`autumn:${clusterIndex}:${candidate}`);

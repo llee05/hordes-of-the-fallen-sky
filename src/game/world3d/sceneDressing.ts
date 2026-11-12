@@ -30,6 +30,8 @@ export interface SceneDressing {
   texture: string;
   frame: string;
   shadow: boolean;
+  /** Authored exception placed intentionally inside a protected site. */
+  site?: 'spring-bank';
   /** Vertical anchor of the painted ground contact; defaults to 0.9. */
   originY?: number;
 }

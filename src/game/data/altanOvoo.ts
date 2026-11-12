@@ -180,8 +180,8 @@ export const ALTAN_OVOO: AltanOvooLayout = {
       width: 44,
       color: 0x4e6f77,
       bank: 0x8f8064,
-      sourcePool: { ...ALTAN_OVOO_SITES.spring, radius: 155 },
-      course: [1450, 650, 1500, 720, 1540, 835, 1600, 980, 1690, 1150, 1820, 1330, 1980, 1500],
+      sourcePool: { x: 1480, y: 760, radius: 140 },
+      course: [1530, 875, 1560, 960, 1600, 1080, 1690, 1230, 1820, 1390, 1980, 1540],
     },
   },
   landmarks: [
@@ -244,23 +244,6 @@ export const ALTAN_OVOO: AltanOvooLayout = {
       role: 'spirit-site',
       scale: 0.75,
       footprint: 40,
-    },
-    {
-      id: 'spring-reeds-west',
-      sprite: 'reed_clump',
-      x: 1320,
-      y: 625,
-      role: 'spring',
-      scale: 0.9,
-    },
-    {
-      id: 'spring-reeds-east',
-      sprite: 'reed_clump',
-      x: 1570,
-      y: 660,
-      role: 'spring',
-      scale: 0.9,
-      flip: true,
     },
     // Existing standing stones indicate the site; dedicated balbal statue art remains a follow-up.
     {

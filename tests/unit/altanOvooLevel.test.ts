@@ -135,12 +135,11 @@ describe('Altan Ovoo authored layout', () => {
   it('authors the spring and stream without lava or a new wildlife system', () => {
     const { stream } = ALTAN_OVOO.spring;
     expect(stream.kind).toBe('stream');
-    expect(stream.course.slice(0, 2)).toEqual([
-      ALTAN_OVOO.spring.centre.x,
-      ALTAN_OVOO.spring.centre.y,
-    ]);
-    expect(stream.course.at(-2)).toBeGreaterThan(ALTAN_OVOO.spring.centre.x);
-    expect(stream.course.at(-1)).toBeGreaterThan(ALTAN_OVOO.spring.centre.y);
+    expect(
+      Math.hypot(stream.course[0]! - stream.sourcePool.x, stream.course[1]! - stream.sourcePool.y),
+    ).toBeLessThan(stream.sourcePool.radius);
+    expect(stream.course.at(-2)).toBeGreaterThan(stream.sourcePool.x);
+    expect(stream.course.at(-1)).toBeGreaterThan(stream.sourcePool.y);
     expect(JSON.stringify(ALTAN_OVOO)).not.toMatch(/lava|swan|wolf|horse_sprite/i);
   });
 
@@ -273,14 +272,14 @@ describe('Altan Ovoo authored dressing', () => {
     );
     const sorted = (items: typeof all) => items.map((item) => JSON.stringify(item)).sort();
     expect(sorted(parts)).toEqual(sorted(all));
-    expect(all.length).toBeGreaterThan(430);
+    expect(all.length).toBeGreaterThan(900);
     expect(
       all.filter((prop) => prop.kind === 'boulders' || prop.kind === 'crag').length,
-    ).toBeGreaterThan(220);
+    ).toBeGreaterThan(500);
     expect(
       all.filter((prop) => prop.kind === 'larch' || prop.kind === 'scrub').length,
-    ).toBeGreaterThan(150);
-    expect(all.filter((prop) => prop.kind === 'reeds')).toHaveLength(9);
+    ).toBeGreaterThan(300);
+    expect(all.filter((prop) => prop.kind === 'reeds')).toHaveLength(13);
   });
 
   it('uses existing manuscript scenery on both elevation tiers', () => {
@@ -297,18 +296,16 @@ describe('Altan Ovoo authored dressing', () => {
   });
 
   it('keeps camp, trails, ramps, water edges and combat lanes clear', () => {
-    for (const prop of all.filter((item) => item.kind !== 'landmark' && item.kind !== 'reeds'))
+    for (const prop of all.filter((item) => item.kind !== 'landmark' && !item.site))
       expect(
         altanOvooDressingClear({ x: prop.x - centre, y: prop.z - centre }, 80),
         `${prop.frame}@${prop.x - centre},${prop.z - centre}`,
       ).toBe(true);
+    const pool = ALTAN_OVOO.spring.stream.sourcePool;
     for (const reed of all.filter((item) => item.kind === 'reeds')) {
-      const distance = Math.hypot(
-        reed.x - centre - ALTAN_OVOO.spring.centre.x,
-        reed.z - centre - ALTAN_OVOO.spring.centre.y,
-      );
-      expect(distance).toBeGreaterThan(120);
-      expect(distance).toBeLessThan(175);
+      const distance = Math.hypot(reed.x - centre - pool.x, reed.z - centre - pool.y);
+      expect(distance).toBeGreaterThan(35);
+      expect(distance).toBeLessThan(155);
     }
   });
 
