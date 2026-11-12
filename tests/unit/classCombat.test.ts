@@ -103,9 +103,9 @@ describe('playable class combat', () => {
     expect(distant.health).toBeLessThan(10000);
   });
 
-  it('fires the Iron Pagoda heavy through a larger overhead-cleave arc', () => {
+  it('fires the Iron Pagoda heavy through a larger sweeping arc', () => {
     const arena = setup('iron-pagoda');
-    const distant = arena.spawn(130, 80);
+    const distant = arena.spawn(110, 70);
     arena.combat.fireHeavy({ x: 1600, y: 1000 });
     expect(distant.health).toBeLessThan(10000);
   });

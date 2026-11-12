@@ -368,9 +368,10 @@ their automatic targeting.
 - **Lancer** uses short piercing lance thrusts, a nearby sweeping strike and manual
   breakthrough charges. Its progression develops damage, piercing,
   health, speed, and additional thrusts.
-- **Iron Pagoda** uses a wide close saber arc and nearby crushing attacks, with
-  stronger personal armor, recovery, and clan protection. Shielded advances pin.
-  Its progression strengthens health, damage, piercing,
+- **Iron Pagoda** is the armoured saber bulwark: slow, broad sabre slashes that build a
+  combo, an armor-shattering cleave, and a kit of braces, stuns, pulls and an unstoppable
+  stance (see [the Iron Pagoda kit](#iron-pagoda-kit)), with stronger personal armor,
+  recovery, and clan protection. Its progression strengthens health, damage, piercing,
   cleaves, and firing speed.
 - **Spirit Caller** releases homing Spirit Wisps that build spiritual energy and charges
   an Ancestral Drum for expanding slowing waves. Ongod Guardians attack and intercept a
@@ -383,14 +384,14 @@ their automatic targeting.
 A supplied character profile applies its background and oath bonuses alongside
 its class loadout. Successors retain the expedition's class and progression.
 
-### Manual attacks and placeholder abilities
+### Manual attacks and abilities
 
-| Class          | Left-click light | Right-click heavy | 1                   | 2                  | 3             | 4                   |
-| -------------- | ---------------- | ----------------- | ------------------- | ------------------ | ------------- | ------------------- |
-| Mounted Archer | Aimed Arrow      | Drawn Power Shot  | Flurry Arrow Volley | Saber Close Slash  | Circling Shot | Windrunner          |
-| Lancer         | Couched Thrust   | Charging Thrust   | Sweeping Strike     | Devastating Charge | Line Breaker  | Shock Lance         |
-| Iron Pagoda    | Heavy Saber Arc  | Overhead Cleave   | Crushing Aura       | Unbreakable Stance | Shield Bash   | Shielded Advance    |
-| Spirit Caller  | Spirit Wisps     | Ancestral Drum    | Ongod Guardians     | Wind of Tengri     | Sacred Ovoo   | Veil Between Worlds |
+| Class          | Left-click light    | Right-click heavy | 1                   | 2                  | 3             | 4                 |
+| -------------- | ------------------- | ----------------- | ------------------- | ------------------ | ------------- | ----------------- |
+| Mounted Archer | Aimed Arrow         | Drawn Power Shot  | Flurry Arrow Volley | Saber Close Slash  | Circling Shot | Windrunner        |
+| Lancer         | Couched Thrust      | Charging Thrust   | Sweeping Strike     | Devastating Charge | Line Breaker  | Shock Lance       |
+| Iron Pagoda    | Heavy Sabre         | Sundering Cleave  | Iron Wall           | Crushing Hooves    | Chain Snare   | Unbroken Fortress |
+| Spirit Caller  | Spirit Wisps         | Ancestral Drum    | Ongod Guardians     | Wind of Tengri     | Sacred Ovoo   | Veil Between Worlds |
 
 Light and heavy range, rate, damage and hit shape, plus every ability cooldown and effect, are
 authored in `GAME.classes` and surfaced through `src/game/data/classes.ts`. Ability
@@ -408,3 +409,50 @@ Worlds consumes all stored energy and gains 0.3 active seconds per point. Its sp
 copies repeat Spirit Wisps; Sacred Ovoo empowers guardian and veil projectiles while the
 Khan and following spirits remain inside the cairn's area. Full saves retain energy,
 summons, the Ovoo, Veil duration and pending drum waves; older saves begin with zero energy.
+
+### Iron Pagoda kit
+
+The Iron Pagoda's attacks and abilities are authored in `GAME.classes['iron-pagoda']` and
+surfaced by `src/game/data/classes.ts`. All times are active gameplay seconds. Unless noted,
+damage is a multiple of the Khan's damage stat.
+
+| Slot                | Name             | Rules                                                                                                                                                                                                                                                                  |
+| ------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Left click          | Heavy Sabre      | A 150° arc, 126 range, 0.2 s windup and the class attack interval. Every enemy in the arc is struck. Each slash that lands adds 22% damage to the next, up to the fourth slash (+66%), which resets the chain; 1.5 s without a landed slash also resets it.            |
+| Right click         | Sundering Cleave | A 229° arc, 150 range, 0.42 s windup, 1.8 s cooldown, 2.0× damage. Strikes apply **armor shred** (30% more damage taken and no armor reduction for 6 s), a 0.55 s **stun** and a 64-unit **knockback** over 0.25 s.                                                    |
+| 1 Iron Wall         | Brace            | 4 s: 65% less damage taken (before the class's own reduction), immune to knockback, stuns and slowing terrain, but riding at 60% speed. Cooldown 15 s.                                                                                                                 |
+| 2 Crushing Hooves   | Shockwave        | A 150-unit circle around the Khan, 1.0× damage and a 1.4 s stun plus a short shove. Cooldown 12 s.                                                                                                                                                                     |
+| 3 Chain Snare       | Circular sweep   | A 210-unit circle, 0.7× damage. **Small** enemies are pulled up to 160 units toward the Khan (stopping 48 units short) and slowed to 60% for 1.5 s. **Large** enemies are not pulled and are slowed to 45% for 4 s. Cooldown 10 s.                                     |
+| 4 Unbroken Fortress | Stance           | 6 s unstoppable stance: a sweep of everything within 135 units every 0.7 s (0.8× damage, first blow after 0.15 s), 30% less damage taken, riding at 75% speed, and a shield that starts at 15, regenerates 8/s plus 2 per enemy struck, and caps at 40. Cooldown 24 s. |
+
+Attacks can be used while a stance lasts; using another ability does not end it. Falling,
+or the stance's duration running out, clears the braces and the shield.
+
+### Status effects
+
+`src/game/state/statusEffects.ts` holds the reusable combat statuses. A kit applies a
+`StatusPayload` (`stun`, `slow`, `shred`, `knockback`, `pull`) to the enemies a hit reaches;
+the pure functions there turn it into timers on `enemy.status`, which the scene counts down
+in active play time and saves with the enemy (older saves load with none).
+
+- **Stun** stops movement, shooting, charges, spell casting and camp attacks, and a stunned
+  enemy cannot hurt the Khan on contact. A stunned caster's unreleased area threats are
+  cancelled, as for pinned casters. A pinned enemy (gallop or pinning arrows) behaves the
+  same, and also loses armor.
+- **Slow** keeps a fraction of speed (never below 20%). The strongest slow wins; the longest
+  duration wins.
+- **Armor shred** raises damage taken by a bonus and removes an armor stat's reduction. The
+  only armored shared enemy is the Earthbound hulk (20% reduction); enemies without an
+  armor stat simply take the extra damage.
+- **Pull and knockback** are forced movement at a fixed velocity for a short time, applied
+  through physics so cliffs and terrain still stop the enemy. Forced movement interrupts a
+  ghost rider's charge.
+- **Size**: an enemy is **large** if it is an elite or its sprite scale is at least
+  `GAME.status.largeScale` (2.8); the hulk, frost mare and eclipse giant are large, wolves,
+  shades, ghost riders and seers are small. Large enemies keep 75% of stun and forced-movement
+  durations and distances, and elites keep 50%. Slow and shred are not resisted.
+- **Khan guards** (`KhanStatus`, saved with the combat timers) reduce damage by a fraction,
+  absorb damage in a stance shield, slow riding, and grant **unstoppable**: no knockback,
+  stun or terrain slow. No current enemy knocks the Khan back or stuns him, so unstoppable
+  currently matters against slowing terrain (frost, silt, wind); it is the hook for future
+  displacement.

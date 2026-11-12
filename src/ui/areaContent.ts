@@ -10,7 +10,7 @@ export function enemyTacticText(enemy: EnemyDefinition): string {
     role === 'pack'
       ? 'Flanks, then closes in. Keep room around your horse.'
       : role === 'bulwark'
-        ? 'Armoured until pinned. Charged pinning arrows open its guard.'
+        ? 'Armoured until pinned or shredded. Charged pinning arrows and armor-shattering cleaves open its guard.'
         : role === 'skirmisher'
           ? `Hangs back and looses ${enemy.volley?.shots ?? 2} shots at once.`
           : enemy.behavior === 'charger'

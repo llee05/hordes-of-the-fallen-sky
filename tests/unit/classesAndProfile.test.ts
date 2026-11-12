@@ -78,10 +78,10 @@ describe('character classes and character profile', () => {
       'Shock Lance',
     ]);
     expect(classDefinition('iron-pagoda').abilities.map((a) => a.name)).toEqual([
-      'Crushing Aura',
-      'Unbreakable Stance',
-      'Shield Bash',
-      'Shielded Advance',
+      'Iron Wall',
+      'Crushing Hooves',
+      'Chain Snare',
+      'Unbroken Fortress',
     ]);
     expect(classDefinition('spirit-caller').abilities.map((a) => a.name)).toEqual([
       'Ongod Guardians',
@@ -94,7 +94,7 @@ describe('character classes and character profile', () => {
   it.each([
     ['mounted-archer', 440, 440, 0, 'projectile', 500, 570, 6],
     ['lancer', 250, 520, 0, 'line', 178, 638.4, 5],
-    ['iron-pagoda', 215, 410, 0, 'arc', 118, 570, 6],
+    ['iron-pagoda', 215, 410, 0, 'arc', 126, 570, 15],
     ['spirit-caller', 380, 390, 0.45, 'projectile', 440, 570, 12],
   ] as const)(
     '%s weapon, manual attacks, gallop, and ability 1 cooldown match the class table',
@@ -233,7 +233,7 @@ describe('character classes and character profile', () => {
     expect(pagodaRun.health).toBe(170);
     expect(pagodaRun.clan.campEffects.multipliers.clanProtection).toBeLessThan(0.9);
     expect(pagodaRun.clan.campEffects.bonuses.range).toBe(0);
-    expect(khanBasicRange(pagodaRun)).toBe(118);
+    expect(khanBasicRange(pagodaRun)).toBe(126);
 
     const callerProfile: CharacterProfile = {
       ...defaultCharacterProfile(),
