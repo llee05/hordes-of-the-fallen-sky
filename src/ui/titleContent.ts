@@ -17,7 +17,7 @@ function titleButton(
   const className = options.className ? ` ${options.className}` : '';
   const attributes = options.attributes ? ` ${options.attributes}` : '';
   const shortcut = options.shortcut ? `<kbd>${options.shortcut}</kbd>` : '';
-  return `<button class="menu-button title-menu-button${className}" data-action="${action}"${attributes}><span class="title-menu-icon">${clanMark(icon)}</span><span class="title-menu-label">${label}</span>${shortcut}</button>`;
+  return `<button class="menu-button menu-plaque title-menu-button${className}" data-action="${action}"${attributes}><span class="title-menu-icon" data-icon="${icon}">${clanMark(icon)}</span><span class="title-menu-label">${label}</span>${shortcut}</button>`;
 }
 
 /** Title-only navigation. Pause and results menus keep their own longer labels and entries. */

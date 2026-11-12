@@ -350,58 +350,172 @@
   max-width: none;
   margin: 18px 0 0 13px;
 }
-.title-menu .title-menu-button {
+/* Reusable painted manuscript plaque button */
+.menu-plaque {
   position: relative;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
-  min-height: 48px;
+  min-height: 52px;
   margin: 0;
-  padding: 7px 25px 7px 18px;
-  overflow: hidden;
-  color: #3d2d20;
-  background: linear-gradient(90deg, #ecd8adf2, #e3c58ff2 52%, #efdcb5f2), var(--cloth-texture);
-  background-size: auto, 300px;
-  background-blend-mode: normal, multiply;
-  border: 2px solid #866135;
-  border-radius: 0;
-  clip-path: polygon(6% 0, 94% 0, 100% 50%, 94% 100%, 6% 100%, 0 50%);
-  box-shadow:
-    inset 0 0 0 3px #f5e5bf66,
-    0 3px 5px #4d341f66;
+  padding: 4px 40px 4px 32px;
+  overflow: visible;
+  color: #3b2818;
   font:
-    18px/1.1 Georgia,
+    18px/1.15 Georgia,
     serif;
   letter-spacing: 0;
   text-transform: none;
+  text-align: left;
+  border: none;
+  border-radius: 0;
+  clip-path: none;
+  outline: none;
+  cursor: pointer;
+  background-color: transparent;
+  background-image:
+    url('/art/ui-plaque-left.png'), url('/art/ui-plaque-right.png'),
+    url('/art/ui-plaque-middle.png');
+  background-position:
+    left center,
+    right center,
+    32px center;
+  background-repeat: no-repeat, no-repeat, repeat-x;
+  background-size:
+    auto 100%,
+    auto 100%,
+    calc(100% - 64px) 100%;
+  box-shadow: none;
+  filter: drop-shadow(0 3px 4px #261b1466);
   transition:
     color 120ms ease,
-    background-color 120ms ease,
     filter 120ms ease,
     transform 120ms ease;
 }
-.title-menu .title-menu-button::after {
-  content: '';
-  position: absolute;
-  inset: 4px 8px;
-  border: 1px solid #9c754699;
-  clip-path: inherit;
-  pointer-events: none;
+.menu-plaque::before,
+.menu-plaque::after {
+  content: none;
+}
+.menu-plaque:hover,
+.menu-plaque:focus,
+.menu-plaque:focus-visible,
+.menu-plaque.selected {
+  color: #fae8bd;
+  text-shadow: 0 1px 2px #260b08;
+  background-image:
+    url('/art/ui-plaque-selected-left.png'), url('/art/ui-plaque-selected-right.png'),
+    url('/art/ui-plaque-selected-middle.png');
+  filter: drop-shadow(0 4px 8px #3b1911cc) drop-shadow(0 0 6px #f5d48766);
+  transform: translateX(5px);
+}
+.menu-plaque:focus,
+.menu-plaque:focus-visible {
+  outline: none;
+}
+.title-menu .title-menu-button {
+  /* inherits .menu-plaque styling */
 }
 .title-menu .title-menu-icon {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 32px;
-  color: #754124;
-  border-right: 1px solid #9e7748;
+  width: 30px;
+  height: 30px;
+  border-right: none;
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  flex-shrink: 0;
 }
-.title-menu .title-menu-icon .clan-mark {
-  width: 27px;
-  height: 27px;
+.title-menu .title-menu-icon svg {
+  display: none;
+}
+.title-menu .title-menu-icon[data-icon='banner'] {
+  background-image: url('/art/ui-icon-banner.png');
+}
+.title-menu .title-menu-icon[data-icon='bow'] {
+  background-image: url('/art/ui-icon-bow.png');
+}
+.title-menu .title-menu-icon[data-icon='ger'] {
+  background-image: url('/art/ui-icon-ger.png');
+}
+.title-menu .title-menu-icon[data-icon='journal'] {
+  background-image: url('/art/ui-icon-journal.png');
+}
+.title-menu .title-menu-icon[data-icon='knot'] {
+  background-image: url('/art/ui-icon-knot.png');
+}
+.title-menu .title-menu-icon[data-icon='hammer'] {
+  background-image: url('/art/ui-icon-hammer.png');
+}
+.title-menu .title-menu-icon[data-icon='road'] {
+  background-image: url('/art/ui-icon-road.png');
+}
+
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
+  .title-menu-icon[data-icon='banner'] {
+  background-image: url('/art/ui-icon-banner-selected.png');
+}
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
+  .title-menu-icon[data-icon='bow'] {
+  background-image: url('/art/ui-icon-bow-selected.png');
+}
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
+  .title-menu-icon[data-icon='ger'] {
+  background-image: url('/art/ui-icon-ger-selected.png');
+}
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
+  .title-menu-icon[data-icon='journal'] {
+  background-image: url('/art/ui-icon-journal-selected.png');
+}
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
+  .title-menu-icon[data-icon='knot'] {
+  background-image: url('/art/ui-icon-knot-selected.png');
+}
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
+  .title-menu-icon[data-icon='hammer'] {
+  background-image: url('/art/ui-icon-hammer-selected.png');
+}
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
+  .title-menu-icon[data-icon='road'] {
+  background-image: url('/art/ui-icon-road-selected.png');
 }
 .title-menu .title-menu-label {
   min-width: 0;
@@ -416,36 +530,42 @@
   border-radius: 2px;
   font: 8px var(--mono);
 }
-.title-menu .title-menu-button.title-menu-new {
+.title-menu .title-menu-button.title-menu-new:not(:hover):not(:focus):not(:focus-visible) {
   color: #fae8bd;
-  background: linear-gradient(90deg, #813524f2, #9f432df2 55%, #773020f2), var(--cloth-texture);
-  background-size: auto, 300px;
-  background-blend-mode: normal, multiply;
-  border-color: #d5a358;
-  box-shadow:
-    inset 0 0 0 3px #50271f55,
-    0 4px 7px #4d2b2166;
+  text-shadow: 0 1px 2px #260b08;
+  background-image:
+    url('/art/ui-plaque-selected-left.png'), url('/art/ui-plaque-selected-right.png'),
+    url('/art/ui-plaque-selected-middle.png');
+  filter: drop-shadow(0 4px 6px #3b191199);
 }
-.title-menu .title-menu-new .title-menu-icon {
-  color: #f2c772;
-  border-right-color: #e2b66588;
+.title-menu
+  .title-menu-button.title-menu-new:not(:hover):not(:focus):not(:focus-visible)
+  .title-menu-icon[data-icon='bow'] {
+  background-image: url('/art/ui-icon-bow-selected.png');
 }
-.title-menu .title-menu-button:hover,
-.title-menu .title-menu-button:focus-visible {
-  color: #fff0c9;
-  background: linear-gradient(90deg, #873522f7, #a84b31f7 55%, #7b3020f7), var(--cloth-texture);
-  background-size: auto, 300px;
-  background-blend-mode: normal, multiply;
-  border-color: #f2ce7d;
-  outline: 3px solid #f7dda1;
-  outline-offset: 2px;
-  filter: drop-shadow(0 4px 4px #41261f99);
-  transform: translateX(5px);
+.title-menu .main-menu:has(.title-menu-button:hover) .title-menu-new:not(:hover),
+.title-menu .main-menu:has(.title-menu-button:focus) .title-menu-new:not(:focus),
+.title-menu .main-menu:has(.title-menu-button:focus-visible) .title-menu-new:not(:focus-visible) {
+  color: #3b2818;
+  text-shadow: none;
+  background-image:
+    url('/art/ui-plaque-left.png'), url('/art/ui-plaque-right.png'),
+    url('/art/ui-plaque-middle.png');
+  filter: drop-shadow(0 3px 4px #261b1466);
 }
-.title-menu .title-menu-button:hover .title-menu-icon,
-.title-menu .title-menu-button:focus-visible .title-menu-icon {
-  color: #f4c76e;
-  border-right-color: #edc47599;
+.title-menu
+  .main-menu:has(.title-menu-button:hover)
+  .title-menu-new:not(:hover)
+  .title-menu-icon[data-icon='bow'],
+.title-menu
+  .main-menu:has(.title-menu-button:focus)
+  .title-menu-new:not(:focus)
+  .title-menu-icon[data-icon='bow'],
+.title-menu
+  .main-menu:has(.title-menu-button:focus-visible)
+  .title-menu-new:not(:focus-visible)
+  .title-menu-icon[data-icon='bow'] {
+  background-image: url('/art/ui-icon-bow.png');
 }
 .title-menu .title-caption {
   margin: 12px 0 0 28px;
@@ -516,16 +636,12 @@
     margin: 13px 11px 0;
   }
   .title-menu .title-menu-button {
-    grid-template-columns: 38px minmax(0, 1fr) auto;
-    min-height: 45px;
-    padding: 6px 22px 6px 16px;
-    font-size: 16px;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    min-height: 44px;
+    padding: 3px 26px 3px 20px;
+    font-size: 15px;
   }
   .title-menu .title-menu-icon {
-    width: 30px;
-    height: 29px;
-  }
-  .title-menu .title-menu-icon .clan-mark {
     width: 24px;
     height: 24px;
   }
