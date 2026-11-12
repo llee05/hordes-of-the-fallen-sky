@@ -46,6 +46,7 @@ import { migrateLegacyNomadicCamp } from './nomadicCampMigration';
 import { migrateRetiredJourney } from './retiredJourney';
 import { createRun } from './run';
 import type { SpiritCallerCombatState } from './spiritCaller';
+import type { ClassActionState } from './classActions';
 import type { KhanManeuverState } from './khanManeuvers';
 import type { MountedArcherCombatState } from './mountedArcher';
 
@@ -119,6 +120,7 @@ export interface WorldArchive {
     mountedArcher?: MountedArcherCombatState;
     khanManeuver?: KhanManeuverState;
     spiritCaller?: SpiritCallerCombatState;
+    classAction?: ClassActionState;
     dashTimer: number;
     dashRemaining: number;
     invulnerable: number;
@@ -308,6 +310,21 @@ const khanStatus = object({
   shieldMax: number,
   shieldPerSecond: number,
 });
+const classAction = object({
+  kind: oneOf(['dash', 'unstoppable']),
+  remaining: number,
+  duration: number,
+  directionX: number,
+  directionY: number,
+  speed: number,
+  previousX: number,
+  previousY: number,
+  distance: number,
+  startSpeed: number,
+  hits: list(string, GAME.maxEnemies),
+  maxDuration: number,
+  extension: number,
+});
 const enemyState = object(
   {
     health: positive,
@@ -413,6 +430,7 @@ const worldShape = object(
             windstep: object({ remaining: number, shotTimer: number }),
           },
         ),
+        classAction,
         spiritCaller: object(
           {
             energy: positive,

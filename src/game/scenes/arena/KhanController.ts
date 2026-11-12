@@ -104,22 +104,32 @@ export class KhanController extends ArenaSystem {
     if (maneuver?.direction) movement.set(maneuver.direction.x, maneuver.direction.y);
     const moving = movement.lengthSq() > 0.01;
     const status = khanStatusOf(this.timers);
+    const classAction = this.timers.classAction;
     if (moving) {
       completeGuidance(this.run, 'ride');
       this.facing.copy(movement).normalize();
     }
-    if (this.timers.dashRemaining > 0) movement.copy(this.facing).scale(khanGallopSpeed(this.run));
-    else
+    if (!moving && classAction?.kind === 'unstoppable') movement.copy(this.facing);
+    if (classAction?.kind === 'dash')
+      movement
+        .set(classAction.directionX, classAction.directionY)
+        .normalize()
+        .scale(classAction.speed);
+    else if (this.timers.dashRemaining > 0)
+      movement.copy(this.facing).scale(khanGallopSpeed(this.run));
+    else {
+      // Unstoppable stances shrug off slowing terrain as well as knockback.
       movement.scale(
         this.run.stats.speed *
           khanSpeedMultiplier(this.run) *
           khanStatusSpeed(status) *
-          // Unstoppable stances shrug off slowing terrain as well as knockback.
+          (classAction?.kind === 'unstoppable' ? classAction.speed : 1) *
           (isKhanUnstoppable(status)
             ? 1
             : areaMovementMultiplier(this.host.areaThreats, this.player)) *
           (maneuver?.speedMultiplier ?? 1),
       );
+    }
     this.player.setVelocity(movement.x, movement.y);
     const faceX = this.landscape.world3d?.screenX(this.facing.x, this.facing.y) ?? this.facing.x;
     if (this.playerMotion.directional) this.player.setFlipX(false);
@@ -130,7 +140,7 @@ export class KhanController extends ArenaSystem {
     this.player.setDepth(100 + this.player.y);
     this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
     this.dustTimer -= dt;
-    if (moving && effectAmount(this.visualSettings) > 0 && this.dustTimer <= 0) {
+    if ((moving || !!classAction) && effectAmount(this.visualSettings) > 0 && this.dustTimer <= 0) {
       this.effects.dust(this.player.x, this.player.y, this.facing.x, this.timers.dashRemaining > 0);
       this.dustTimer = 0.12 / Math.max(0.1, effectAmount(this.visualSettings));
     }
@@ -171,6 +181,7 @@ export class KhanController extends ArenaSystem {
     this.shadow.setVisible(false);
     this.aura.setVisible(false);
     this.timers.dashRemaining = 0;
+    this.timers.classAction = undefined;
     this.timers.khanStatus = createKhanStatus();
     this.run.clan.momentum = 0;
     this.host.clearTouch();
@@ -249,6 +260,7 @@ export class KhanController extends ArenaSystem {
     this.facing.set(1, 0);
     this.playerMotion.face(1, 0);
     this.timers.dashRemaining = this.timers.dashTimer = 0;
+    this.timers.classAction = undefined;
     this.timers.attackTimer = this.dustTimer = 0;
     this.timers.khanStatus = createKhanStatus();
     this.timers.invulnerable = GAME.khan.returnProtection;

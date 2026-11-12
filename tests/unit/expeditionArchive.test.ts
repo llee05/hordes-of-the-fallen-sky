@@ -649,6 +649,49 @@ describe('full expedition snapshots', () => {
       basicShots: 0,
     });
   });
+  it('round-trips enemy control, Khan immunity, and an active class movement action', () => {
+    const runtime = world();
+    runtime.enemies[0]!.state.status = {
+      stun: 0.4,
+      slow: 0,
+      slowMultiplier: 1,
+      shred: 2,
+      shredBonus: 0.3,
+      forced: 0.2,
+      forcedVx: 100,
+      forcedVy: 0,
+    };
+    runtime.timers.khanStatus = {
+      guard: 0,
+      reduction: 0,
+      unstoppable: 2.5,
+      speedMultiplier: 1,
+      fortress: 0,
+      fortressTimer: 0,
+      shield: 0,
+      shieldMax: 0,
+      shieldPerSecond: 0,
+    };
+    runtime.timers.classAction = {
+      kind: 'dash',
+      remaining: 0.3,
+      duration: 0.52,
+      directionX: 1,
+      directionY: 0,
+      speed: 620,
+      previousX: 2700,
+      previousY: 2700,
+      distance: 100,
+      startSpeed: 192,
+      hits: ['1:2'],
+      maxDuration: 0.52,
+      extension: 0,
+    };
+    const restored = decodeExpedition(captureExpedition(createRun(), runtime));
+    expect(restored.world.enemies[0]!.state.status).toEqual(runtime.enemies[0]!.state.status);
+    expect(restored.world.timers.khanStatus).toEqual(runtime.timers.khanStatus);
+    expect(restored.world.timers.classAction).toEqual(runtime.timers.classAction);
+  });
   it('round-trips Spirit Caller energy, summons, areas, veil and pending drum waves', () => {
     const runtime = world();
     runtime.timers.spiritCaller = {

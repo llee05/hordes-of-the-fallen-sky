@@ -413,7 +413,12 @@ export class GameUI {
           ? 'SPACE / READY'
           : `RECHARGING ${((1 - dashReady) * dashCooldown).toFixed(1)}s`,
     );
-    this.text('momentum', 'LMB LIGHT · RMB HEAVY');
+    this.text(
+      'momentum',
+      snapshot.attackCharge
+        ? `${snapshot.attackCharge.name.toUpperCase()} ${Math.round(snapshot.attackCharge.progress * 100)}%`
+        : 'LMB LIGHT · RMB HEAVY',
+    );
     const spiritEnergy = this.get('spirit-energy');
     spiritEnergy.hidden = !snapshot.spiritCaller;
     if (snapshot.spiritCaller)

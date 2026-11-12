@@ -105,6 +105,9 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
       isWalkable: (_x: number, _y: number) => true,
       lineClear: () => true,
       nearestWalkable: (p: { x: number; y: number }) => ({ ...p }),
+      slide: (_from: { x: number; y: number }, desired: { x: number; y: number }) => ({
+        ...desired,
+      }),
     },
     world3d: undefined,
   } as any;

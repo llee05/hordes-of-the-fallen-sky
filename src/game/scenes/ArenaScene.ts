@@ -1090,6 +1090,7 @@ export class ArenaScene extends Phaser.Scene {
       },
       abilities: this.combat.abilityStates(),
       spiritCaller: this.combat.spiritStatus(),
+      attackCharge: this.combat.chargeStatus(),
     });
   }
   private publishPhase(): void {

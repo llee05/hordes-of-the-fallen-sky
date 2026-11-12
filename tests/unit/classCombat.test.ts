@@ -206,10 +206,11 @@ describe('playable class combat', () => {
     expect(arena.projectiles.countActive()).toBeGreaterThan(0);
   });
 
-  it('fires the Lancer heavy through its longer charging-thrust lane', () => {
+  it('fires the fully charged Lancer heavy through its longer impaling lane', () => {
     const arena = setup('lancer');
-    const distant = arena.spawn(270, 20);
-    arena.combat.fireHeavy({ x: 1600, y: 1000 });
+    const distant = arena.spawn(270, 10);
+    const heavy = classDefinition('lancer').heavyAttack;
+    arena.combat.fireHeavy({ x: 1600, y: 1000 }, heavy.holdCharge!.maxDuration);
     expect(distant.health).toBeLessThan(10000);
   });
 
@@ -459,10 +460,10 @@ describe('playable class combat', () => {
   });
 
   it('holds a non-charging heavy through its windup and repeats at its own cooldown', () => {
-    const arena = setup('lancer');
+    const arena = setup('iron-pagoda');
     const aim = { x: 1600, y: 1000 };
-    const target = arena.spawn(200, 0);
-    const heavy = classDefinition('lancer').heavyAttack;
+    const target = arena.spawn(100, 0);
+    const heavy = classDefinition('iron-pagoda').heavyAttack;
     arena.combat.tickKhanCombat(0.01, false, true, aim);
     arena.combat.tickKhanCombat(heavy.windup - 0.01, false, true, aim);
     expect(target.health).toBe(10000);
