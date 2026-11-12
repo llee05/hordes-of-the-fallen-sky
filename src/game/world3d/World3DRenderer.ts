@@ -19,6 +19,9 @@ import { Water3D } from './Water3D';
 import { OrkhonOverlay } from './orkhonOverlay';
 import { initialRenderScale, stepRenderScale, type RenderResolution } from './renderScale';
 import { orkhonPaintedGroundEnabled } from './orkhonPaintedGround';
+import { ALTAN_OVOO_PAINTED_GROUND, altanOvooPaintedGroundEnabled } from './altanOvooPaintedGround';
+import { ORKHON_PAINTED_GROUND } from './orkhonPaintedGround';
+import type { PaintedGroundDefinition } from './paintedGround';
 
 interface RenderChunk {
   group: THREE.Group;
@@ -109,17 +112,32 @@ export class World3DRenderer {
     this.sun.shadow.radius = 1.6;
     this.sun.shadow.intensity = 0.72;
     this.world.add(this.sun, this.sun.target, this.actors);
-    const orkhon =
-      terrain instanceof ComposedTerrain && terrain.region.scene.id === 'orkhon-valley'
+    const authored =
+      terrain instanceof ComposedTerrain &&
+      (terrain.region.scene.id === 'orkhon-valley' || terrain.region.scene.id === 'altan-ovoo')
         ? terrain
+        : undefined;
+    let paintedGround: PaintedGroundDefinition | undefined;
+    if (authored?.region.scene.id === 'orkhon-valley')
+      paintedGround = orkhonPaintedGroundEnabled(
+        globalThis.location?.search ?? '',
+        import.meta.env.DEV,
+      )
+        ? ORKHON_PAINTED_GROUND
+        : undefined;
+    if (authored?.region.scene.id === 'altan-ovoo')
+      paintedGround = altanOvooPaintedGroundEnabled(
+        globalThis.location?.search ?? '',
+        import.meta.env.DEV,
+      )
+        ? ALTAN_OVOO_PAINTED_GROUND
         : undefined;
     this.materials = new MountainMaterials(
       scene,
       palette,
       Math.min(WORLD_3D.anisotropy, this.renderer.capabilities.getMaxAnisotropy()),
-      orkhon,
-      orkhon !== undefined &&
-        orkhonPaintedGroundEnabled(globalThis.location?.search ?? '', import.meta.env.DEV),
+      authored,
+      paintedGround,
     );
     for (const material of [this.materials.surface, this.materials.wall]) {
       const mesh = new THREE.Mesh(new THREE.BufferGeometry(), material);

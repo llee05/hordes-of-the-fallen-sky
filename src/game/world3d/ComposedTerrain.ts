@@ -48,7 +48,10 @@ export class ComposedTerrain extends MountainHeightfield {
     const campPosition = this.campPosition;
     const cx = x - campPosition.x;
     const cz = z - campPosition.y;
-    const camp = 1 - smoothstep(350, 470, Math.hypot(cx, cz));
+    const clear = this.region.scene.campClearRadius;
+    const camp = clear
+      ? 1 - smoothstep(clear * 0.75, clear, Math.hypot(cx, cz))
+      : 1 - smoothstep(350, 470, Math.hypot(cx, cz));
     const roadX = Math.max(-320, Math.min(this.region.biome.caravan.length, cx));
     const distance = Math.hypot(cx - roadX, Math.max(0, Math.abs(cz) - 240));
     return Math.max(camp, 1 - smoothstep(0, 110, distance));

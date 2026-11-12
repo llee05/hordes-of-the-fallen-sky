@@ -274,7 +274,7 @@ describe('terrain shader programs', () => {
     expect(authored.color).not.toContain('paintedGroundBlend');
   });
 
-  it('gives only Orkhon a scene ground plan', () => {
+  it('gives only authored levels a scene ground plan', () => {
     for (const id of Object.keys(LANDSCAPES) as (keyof typeof LANDSCAPES)[]) {
       let region;
       try {
@@ -282,7 +282,7 @@ describe('terrain shader programs', () => {
       } catch {
         continue;
       }
-      expect(Boolean(region.scene.ground), id).toBe(id === 'orkhon-valley');
+      expect(Boolean(region.scene.ground), id).toBe(id === 'orkhon-valley' || id === 'altan-ovoo');
     }
   });
 });

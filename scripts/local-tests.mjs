@@ -36,8 +36,22 @@ export async function main(args = process.argv.slice(2)) {
   const locked = args[0] === '--locked';
   if (locked) args.shift();
   const mode = args.shift();
-  if (!['local', 'e2e', 'desktop', 'perf', 'review', 'core', 'reference', 'orkhon'].includes(mode))
-    throw new Error('Expected local, e2e, desktop, perf, review, core, reference, or orkhon');
+  if (
+    ![
+      'local',
+      'e2e',
+      'desktop',
+      'perf',
+      'review',
+      'core',
+      'reference',
+      'orkhon',
+      'altan-ovoo',
+    ].includes(mode)
+  )
+    throw new Error(
+      'Expected local, e2e, desktop, perf, review, core, reference, or a terrain capture',
+    );
   if (!locked) {
     console.log(
       `Waiting for ${mode === 'perf' ? 'exclusive' : 'shared'} browser lock: /tmp/bh-playwright.lock`,
@@ -82,7 +96,14 @@ export async function main(args = process.argv.slice(2)) {
   if (['local', 'e2e', 'perf'].includes(mode)) playwright();
   if (mode === 'core') playwright('--grep', '@core');
   if (mode === 'reference') playwright('--config', 'playwright.reference.config.ts');
-  if (mode === 'orkhon') playwright('--config', 'playwright.visual.config.ts');
+  if (mode === 'orkhon')
+    playwright('--config', 'playwright.visual.config.ts', 'tests/visual/orkhon-capture.spec.ts');
+  if (mode === 'altan-ovoo')
+    playwright(
+      '--config',
+      'playwright.visual.config.ts',
+      'tests/visual/altan-ovoo-capture.spec.ts',
+    );
   if (['local', 'desktop', 'perf'].includes(mode))
     playwright('--config', 'playwright.desktop.config.ts');
 }

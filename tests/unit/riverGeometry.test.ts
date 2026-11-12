@@ -32,8 +32,9 @@ describe('river shorelines', () => {
       expect(channels).toHaveLength(water.kind === 'braided' ? 2 : 1);
       for (const channel of channels) {
         expect(channel.sections.length).toBeLessThan(350);
-        // The Orkhon gorge starts below the falls rather than at the world edge.
-        expect(channel.length).toBeGreaterThan(water.gorge ? 4000 : 5000);
+        // The Orkhon gorge and Altan spring start at authored sites rather than world edges.
+        const minimum = water.gorge ? 4000 : definition === LANDSCAPES['altan-ovoo'] ? 900 : 5000;
+        expect(channel.length).toBeGreaterThan(minimum);
         let previous = -1;
         for (const section of channel.sections) {
           expect(Object.values(section).every(Number.isFinite)).toBe(true);

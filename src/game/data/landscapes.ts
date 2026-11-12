@@ -1,5 +1,6 @@
 import type { LocationId } from '../types';
 import type { MountainRegion } from '../terrain/types';
+import { ALTAN_OVOO } from './altanOvoo';
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
 import { ORKHON_VALLEY } from './orkhonValley';
 
@@ -222,6 +223,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       landmark('crag', 430, -165, 180),
       landmark('foothill', -430, -110, 220),
     ],
+    water: ALTAN_OVOO.spring.stream,
     air: { color: 0xd9b479, alpha: 0.035, particles: 'dust' },
   },
   'eej-khairkhan': {

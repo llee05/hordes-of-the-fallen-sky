@@ -2,6 +2,7 @@ import type { TerrainBounds } from '../terrain/types';
 import { terrainSeed } from '../terrain/noise';
 import { terrainHabitat } from './terrainHabitat';
 import { orkhonDressing } from './orkhonDressing';
+import { altanOvooDressing } from './altanOvooDressing';
 import type { ComposedTerrain } from './ComposedTerrain';
 
 export type SceneProp =
@@ -44,6 +45,7 @@ const DETAILS = new Set<SceneProp>(['grass', 'dry-grass', 'flowers', 'reeds', 'b
 export function sceneDressing(terrain: ComposedTerrain, bounds: TerrainBounds): SceneDressing[] {
   const result: { id: string; prop: SceneDressing }[] = [];
   if (terrain.region.scene.id === 'orkhon-valley') return orkhonDressing(terrain, bounds);
+  if (terrain.region.scene.id === 'altan-ovoo') return altanOvooDressing(terrain.seed, bounds);
   const vegetation = terrain.region.scene.vegetation;
   const within = (x: number, z: number) =>
     x >= bounds.x && z >= bounds.y && x < bounds.x + bounds.width && z < bounds.y + bounds.height;

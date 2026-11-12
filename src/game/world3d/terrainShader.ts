@@ -287,6 +287,7 @@ export const ORKHON_PAINTED_GROUND_SAMPLING = `
   uniform sampler2D paintedGroundNW; uniform sampler2D paintedGroundNE;
   uniform sampler2D paintedGroundSW; uniform sampler2D paintedGroundSE;
   uniform sampler2D paintedGroundDetail;
+  uniform float paintedGroundFeather;
   // minimum world x/z, followed by painted width/depth
   uniform vec4 paintedGroundBounds;
   float paintedGroundBlend(vec2 p, float normalY) {
@@ -298,7 +299,7 @@ export const ORKHON_PAINTED_GROUND_SAMPLING = `
     // playable rectangle. Internal quadrant seams use their own two-sided blend below.
     float variation=0.5+0.25*sin(p.x/91.0+sin(p.y/127.0)*1.7)+0.25*sin(p.y/73.0-p.x/149.0);
     float start=mix(12.0,28.0,variation);
-    float finish=mix(110.0,170.0,variation);
+    float finish=mix(paintedGroundFeather*0.65,paintedGroundFeather,variation);
     float edgeBlend=smoothstep(start,finish,edge);
     // Keep cliff walls and steep ramp flanks on their existing materials; the walkable ramp
     // surface remains shallow enough to receive the painting.

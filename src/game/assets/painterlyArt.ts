@@ -13,11 +13,13 @@ import {
   type OrkhonBank,
   type OrkhonTile,
 } from './orkhonValleyArt';
+import { ORKHON_PAINTED_GROUND, orkhonPaintedGroundEnabled } from '../world3d/orkhonPaintedGround';
 import {
-  ORKHON_GROUND_QUADRANTS,
-  ORKHON_PAINTED_GROUND,
-  orkhonPaintedGroundEnabled,
-} from '../world3d/orkhonPaintedGround';
+  ALTAN_OVOO_PAINTED_GROUND,
+  ALTAN_OVOO_GRASS_FALLBACK,
+  altanOvooPaintedGroundEnabled,
+} from '../world3d/altanOvooPaintedGround';
+import { PAINTED_GROUND_QUADRANTS, type PaintedGroundDefinition } from '../world3d/paintedGround';
 
 export { playerVisualConfig };
 
@@ -91,17 +93,26 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
     `${root}tapestry-scenery-v3.png`,
     `${root}tapestry-scenery-v3.json`,
   );
-  const orkhon = `${root}orkhon-valley/`;
-  if (orkhonPaintedGroundEnabled(globalThis.location?.search ?? '', import.meta.env.DEV)) {
-    for (const quadrant of ORKHON_GROUND_QUADRANTS) {
-      const painting = ORKHON_PAINTED_GROUND.quadrants[quadrant];
-      scene.load.image(painting.texture, `${orkhon}${painting.file}`);
+  const search = globalThis.location?.search ?? '';
+  const paintedGround = (definition: PaintedGroundDefinition, enabled: boolean) => {
+    if (!enabled) return;
+    const directory = `${root}${definition.directory}`;
+    for (const quadrant of PAINTED_GROUND_QUADRANTS) {
+      const painting = definition.quadrants[quadrant];
+      scene.load.image(painting.texture, `${directory}${painting.file}`);
     }
-    scene.load.image(
-      ORKHON_PAINTED_GROUND.detail.texture,
-      `${orkhon}${ORKHON_PAINTED_GROUND.detail.file}`,
-    );
-  }
+    scene.load.image(definition.detail.texture, `${directory}${definition.detail.file}`);
+  };
+  paintedGround(ORKHON_PAINTED_GROUND, orkhonPaintedGroundEnabled(search, import.meta.env.DEV));
+  paintedGround(
+    ALTAN_OVOO_PAINTED_GROUND,
+    altanOvooPaintedGroundEnabled(search, import.meta.env.DEV),
+  );
+  scene.load.image(
+    ALTAN_OVOO_GRASS_FALLBACK.texture,
+    `${root}${ALTAN_OVOO_PAINTED_GROUND.directory}${ALTAN_OVOO_GRASS_FALLBACK.file}`,
+  );
+  const orkhon = `${root}orkhon-valley/`;
   for (const tile of Object.keys(ORKHON_TILES) as OrkhonTile[])
     scene.load.image(orkhonTileKey(tile), `${orkhon}${ORKHON_TILES[tile]}.png`);
   for (const bank of Object.keys(ORKHON_BANKS) as OrkhonBank[])

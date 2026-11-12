@@ -1,13 +1,26 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ALTAN_OVOO, ALTAN_OVOO_FOOTPRINTS, ALTAN_OVOO_SITES } from '../../src/game/data/altanOvoo';
 import { ORKHON_SPRITES } from '../../src/game/assets/orkhonValleyArt';
-import { outlineField } from '../../src/game/world3d/ComposedTerrain';
+import { LANDSCAPES } from '../../src/game/data/landscapes';
+import { WORLD_REGIONS, composedRegion } from '../../src/game/data/worldRegions';
+import { ComposedTerrain, outlineField } from '../../src/game/world3d/ComposedTerrain';
 import {
   altanOvooDressing,
   altanOvooDressingClear,
   altanOvooLandmarkAt,
 } from '../../src/game/world3d/altanOvooDressing';
 import type { TerrainPoint } from '../../src/game/terrain/types';
+import {
+  ALTAN_OVOO_PAINTED_GROUND,
+  ALTAN_OVOO_GRASS_FALLBACK,
+  altanOvooPaintedGroundEnabled,
+  altanOvooPaintedGroundGpuBytes,
+  altanOvooPaintedGroundWorldBounds,
+} from '../../src/game/world3d/altanOvooPaintedGround';
+import { PAINTED_GROUND_QUADRANTS } from '../../src/game/world3d/paintedGround';
+import { sceneDressing } from '../../src/game/world3d/sceneDressing';
 
 const cone = ALTAN_OVOO.plateaus[0]!;
 const samePoint = (a: TerrainPoint, b: TerrainPoint) => a.x === b.x && a.y === b.y;
@@ -20,6 +33,11 @@ const distanceToSegment = (point: TerrainPoint, a: TerrainPoint, b: TerrainPoint
   );
   return Math.hypot(point.x - a.x - dx * t, point.y - a.y - dy * t);
 };
+const terrain = new ComposedTerrain(composedRegion('altan-ovoo'), LANDSCAPES['altan-ovoo'].water);
+const world = (point: TerrainPoint): TerrainPoint => ({
+  x: ALTAN_OVOO.world.terrainSize / 2 + point.x,
+  y: ALTAN_OVOO.world.terrainSize / 2 + point.y,
+});
 
 describe('Altan Ovoo authored layout', () => {
   it('uses the approved wide battlefield and keeps the camp inside southwest', () => {
@@ -134,6 +152,84 @@ describe('Altan Ovoo authored layout', () => {
         .filter((landmark) => landmark.role === 'balbal-site')
         .every((landmark) => landmark.sprite === 'standing_stone'),
     ).toBe(true);
+  });
+});
+
+describe('Altan Ovoo runtime terrain', () => {
+  it('registers the approved world, camp, cone, paths, obstacles and spring', () => {
+    expect(terrain.worldSize).toBe(6400);
+    expect(terrain.playBounds).toEqual({ x: 0, y: 1200, width: 6400, height: 4000 });
+    expect(terrain.campPosition).toEqual(world(ALTAN_OVOO_SITES.camp));
+    expect(WORLD_REGIONS['altan-ovoo'].shelves).toHaveLength(1);
+    expect(WORLD_REGIONS['altan-ovoo'].ground?.paths).toEqual(ALTAN_OVOO.paths);
+    expect(WORLD_REGIONS['altan-ovoo'].obstacles).toHaveLength(ALTAN_OVOO_FOOTPRINTS.length);
+    expect(terrain.river).toBeDefined();
+    const spring = world(ALTAN_OVOO_SITES.spring);
+    expect(terrain.river!.sample(spring.x, spring.y).shoreDistance).toBeLessThan(0);
+  });
+
+  it('keeps the camp flat, raises only one cone tier and grades both ramp cuts', () => {
+    const floor = terrain.region.scene.floor;
+    const elevation = (point: TerrainPoint) =>
+      terrain.height(world(point).x, world(point).y) * 1000 - floor;
+    expect(Math.abs(elevation(ALTAN_OVOO_SITES.camp))).toBeLessThan(0.001);
+    expect(elevation(ALTAN_OVOO_SITES.summit)).toBeGreaterThan(ALTAN_OVOO.rise - 20);
+    expect(elevation(ALTAN_OVOO_SITES.summit)).toBeLessThan(ALTAN_OVOO.rise + 12);
+    for (const ramp of cone.ramps) {
+      expect(elevation(ramp.foot)).toBeLessThan(20);
+      expect(elevation(ramp.top)).toBeGreaterThan(ALTAN_OVOO.rise * 0.7);
+      expect(
+        elevation({
+          x: (ramp.foot.x + ramp.top.x) / 2,
+          y: (ramp.foot.y + ramp.top.y) / 2,
+        }),
+      ).toBeGreaterThan(ALTAN_OVOO.rise * 0.2);
+    }
+    expect(terrain.protection(terrain.campPosition.x, terrain.campPosition.y)).toBe(1);
+    expect(
+      terrain.protection(
+        terrain.campPosition.x,
+        terrain.campPosition.y + ALTAN_OVOO.world.campClearRadius,
+      ),
+    ).toBe(0);
+  });
+
+  it('routes the authored dressing through the shared scene entry point', () => {
+    const bounds = { x: 0, y: 1200, width: 6400, height: 4000 };
+    expect(sceneDressing(terrain, bounds)).toEqual(altanOvooDressing(terrain.seed, bounds));
+  });
+});
+
+describe('Altan Ovoo painted ground', () => {
+  it('ships enabled with the same development-only fallback contract as Orkhon', () => {
+    expect(altanOvooPaintedGroundEnabled('', true)).toBe(true);
+    expect(altanOvooPaintedGroundEnabled('?altanOvooPaintedGround=0', true)).toBe(false);
+    expect(altanOvooPaintedGroundEnabled('?altanOvooPaintedGround=1', true)).toBe(true);
+    expect(altanOvooPaintedGroundEnabled('?altanOvooPaintedGround=0', false)).toBe(true);
+  });
+
+  it('maps four opaque paintings and the grayscale detail layer over the playable rectangle', () => {
+    expect(altanOvooPaintedGroundWorldBounds(6400)).toEqual([0, 1200, 6400, 4000]);
+    expect(ALTAN_OVOO_PAINTED_GROUND.outerFeather).toBe(700);
+    for (const quadrant of PAINTED_GROUND_QUADRANTS) {
+      const painting = ALTAN_OVOO_PAINTED_GROUND.quadrants[quadrant];
+      const png = readFileSync(resolve(`public/art/altan-ovoo/${painting.file}`));
+      expect(png.subarray(1, 4).toString()).toBe('PNG');
+      expect([png.readUInt32BE(16), png.readUInt32BE(20), png.readUInt8(25)]).toEqual([
+        1600, 1000, 2,
+      ]);
+    }
+    const detail = readFileSync(
+      resolve(`public/art/altan-ovoo/${ALTAN_OVOO_PAINTED_GROUND.detail.file}`),
+    );
+    expect([detail.readUInt32BE(16), detail.readUInt32BE(20), detail.readUInt8(25)]).toEqual([
+      1024, 1024, 0,
+    ]);
+    const fallback = readFileSync(
+      resolve(`public/art/altan-ovoo/${ALTAN_OVOO_GRASS_FALLBACK.file}`),
+    );
+    expect([fallback.readUInt32BE(16), fallback.readUInt32BE(20)]).toEqual([256, 256]);
+    expect(altanOvooPaintedGroundGpuBytes()).toBe(39_724_100);
   });
 });
 

@@ -65,7 +65,7 @@ const TREES: readonly OrkhonSprite[] = [
 ];
 const SHRUBS: readonly OrkhonSprite[] = ['shrub_gold', 'shrub_mix', 'shrub_olive', 'shrub_gold'];
 const cone = ALTAN_OVOO.plateaus[0]!;
-const cache = new Map<string, readonly SceneDressing[]>();
+const cache = new Map<string | number, readonly SceneDressing[]>();
 
 function segmentDistance(point: TerrainPoint, a: TerrainPoint, b: TerrainPoint): number {
   const dx = b.x - a.x,
@@ -131,7 +131,7 @@ export function altanOvooDressingClear(point: TerrainPoint, margin = 80): boolea
  * Dense manuscript-style volcanic dressing, built globally before chunk clipping so camera-chunk
  * boundaries cannot change a cluster. Coordinates returned to the renderer are terrain-relative.
  */
-export function altanOvooDressing(seed: string, bounds: TerrainBounds): SceneDressing[] {
+export function altanOvooDressing(seed: string | number, bounds: TerrainBounds): SceneDressing[] {
   let all = cache.get(seed);
   if (!all) {
     all = buildDressing(seed);
@@ -146,7 +146,7 @@ export function altanOvooDressing(seed: string, bounds: TerrainBounds): SceneDre
   );
 }
 
-function buildDressing(seed: string): SceneDressing[] {
+function buildDressing(seed: string | number): SceneDressing[] {
   const center = ALTAN_OVOO.world.terrainSize / 2;
   const result: SceneDressing[] = [];
   const random = (key: string) => (offset: number) =>
