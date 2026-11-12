@@ -407,12 +407,11 @@
   background-image:
     url('/art/ui-plaque-selected-left.png'), url('/art/ui-plaque-selected-right.png'),
     url('/art/ui-plaque-selected-middle.png');
-  filter: drop-shadow(0 4px 7px #3b191199);
+  filter: drop-shadow(0 4px 8px #3b1911cc) drop-shadow(0 0 6px #f5d48766);
   transform: translateX(5px);
 }
 .menu-plaque:focus-visible {
-  outline: 2px dashed #f2ce7d;
-  outline-offset: 3px;
+  outline: none;
 }
 .title-menu .title-menu-button {
   /* inherits .menu-plaque styling */
