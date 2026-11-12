@@ -8,7 +8,8 @@ test(
   { tag: '@core' },
   async ({ page }) => {
     await openTitle(page);
-    await page.getByRole('button', { name: 'Starting tradition: Shared hearth' }).click();
+    await expect(page.getByRole('button', { name: /Starting tradition/ })).toHaveCount(0);
+    await page.evaluate(() => (window as any).__gloam.scene.openStartingTraditions());
     await expect(page.getByRole('heading', { name: 'Choose a starting tradition' })).toBeVisible();
     await expect(page.locator('[data-starting-tradition]')).toHaveCount(4);
     await page.locator('[data-starting-tradition="outriders"]').click();
@@ -34,7 +35,7 @@ test(
     await page.getByRole('button', { name: 'Save to Slot 1' }).click();
     await expect(page.locator('.save-message')).toHaveText('Expedition saved.');
     await page.reload();
-    await page.getByRole('button', { name: /CONTINUE EXPEDITION/ }).click();
+    await page.getByRole('button', { name: /CONTINUE/ }).click();
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
     expect(await page.evaluate(() => (window as any).__gloam.scene.run.startingTradition)).toBe(
       'pathfinders',
@@ -46,7 +47,7 @@ test('Back keeps the chosen arrangement ready for New Game without starting time
   page,
 }) => {
   await openTitle(page);
-  await page.getByRole('button', { name: 'Starting tradition: Shared hearth' }).click();
+  await page.evaluate(() => (window as any).__gloam.scene.openStartingTraditions());
   await page.locator('[data-starting-tradition="hearthkeepers"]').click();
   await page.keyboard.press('F10');
   await page.locator('[data-developer-command-input]').fill('god on');
@@ -55,9 +56,10 @@ test('Back keeps the chosen arrangement ready for New Game without starting time
   expect(await page.evaluate(() => (window as any).__gloam.scene.developerRun)).toBe(false);
   await page.keyboard.press('F10');
   await page.keyboard.press('Escape');
-  await expect(
-    page.getByRole('button', { name: 'Starting tradition: Hearthkeepers' }),
-  ).toBeVisible();
+  await expect(page.getByRole('button', { name: /Starting tradition/ })).toHaveCount(0);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.startingTradition)).toBe(
+    'hearthkeepers',
+  );
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.xp)).toBe(0);
   await page.getByRole('button', { name: /NEW GAME/ }).click();
   await page.getByRole('button', { name: /Begin Journey/ }).click();

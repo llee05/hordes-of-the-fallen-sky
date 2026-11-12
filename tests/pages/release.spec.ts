@@ -15,7 +15,7 @@ test('production loads all local artwork under the Pages subpath without desktop
   await page.goto('./');
   // Allow a cold software-rendered load to finish before checking title focus.
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeFocused({ timeout: 15000 });
-  await expect(page.getByRole('button', { name: 'Quit game', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Quit', exact: true })).toHaveCount(0);
   await page.keyboard.press('F10');
   await page.keyboard.press('Backquote');
   await expect(page.locator('[data-developer-command-input]')).toHaveCount(0);

@@ -120,7 +120,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     expect(Math.abs(arena.height - viewport.height)).toBeLessThan(2);
     expect(Math.abs(arena.width - canvas.width)).toBeLessThan(2);
     expect(Math.abs(arena.height - canvas.height)).toBeLessThan(2);
-    await expect(page.getByRole('button', { name: 'Quit game', exact: true })).toHaveCount(1);
+    await expect(page.getByRole('button', { name: 'Quit', exact: true })).toHaveCount(1);
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
@@ -267,7 +267,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
     await closeOverlayOrPause(page);
     const closed = app.waitForEvent('close');
-    await page.locator('#overlay').getByRole('button', { name: 'Quit game', exact: true }).click();
+    await page.locator('#overlay').getByRole('button', { name: 'Quit', exact: true }).click();
     await closed;
     expect(errors).toEqual([]);
   } finally {
