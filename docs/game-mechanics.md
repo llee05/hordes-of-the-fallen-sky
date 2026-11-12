@@ -392,7 +392,8 @@ its class loadout. Successors retain the expedition's class and progression.
 
 Basic range, rate, damage and hit shape, plus every ability cooldown and effect, are
 authored in `GAME.classes` and surfaced through `src/game/data/classes.ts`. Ability
-cooldowns advance only during active play and appear in the battlefield HUD. The old
+cooldowns advance only during active play, appear in the battlefield HUD and persist
+in full expedition saves; older saves load the four abilities ready. The old
 sustained-riding charged volley is removed; Flurry Arrow Volley carries that role as
 the Mounted Archer's Q ability. Formation momentum remains for allied rider tactics.
 Spirit bolts steer toward live, unhit enemies at the class turn rate while retaining

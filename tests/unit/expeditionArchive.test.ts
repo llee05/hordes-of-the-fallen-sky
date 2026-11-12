@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProfileStore } from '../../desktop/profile';
 import { STARTING_TRADITIONS } from '../../src/game/data/clan';
+import { createArenaTimers } from '../../src/game/scenes/arena/ArenaTimers';
 import { syncAreaEncounter } from '../../src/game/state/areaEncounters';
 import { beginMigration } from '../../src/game/state/clan';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
@@ -570,6 +571,17 @@ describe('full expedition snapshots', () => {
     const second = decodeExpedition(captureExpedition(run, first)).world;
     expect(second.camp).toEqual(first.camp);
     expect(second.player).toEqual(first.player);
+  });
+  it('loads saves from before class abilities with ready cooldowns', () => {
+    const save = captureExpedition(createRun(), world()) as Record<string, any>;
+    delete save.world.timers.abilityCooldowns;
+    const restored = decodeExpedition(save);
+    expect({ ...createArenaTimers(), ...restored.world.timers }.abilityCooldowns).toEqual({
+      q: 0,
+      w: 0,
+      e: 0,
+      r: 0,
+    });
   });
   it('preserves succession and migration without healing, resetting the timer or paying arrival', () => {
     const run = createRun();

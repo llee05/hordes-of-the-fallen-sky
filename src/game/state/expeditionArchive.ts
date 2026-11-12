@@ -106,6 +106,7 @@ export interface WorldArchive {
     spawnTimer: number;
     attackTimer: number;
     closeDefenseTimer?: number;
+    abilityCooldowns?: { q: number; w: number; e: number; r: number };
     dashTimer: number;
     dashRemaining: number;
     invulnerable: number;
@@ -349,7 +350,10 @@ const worldShape = object(
         wagonTimer: number,
         wardTimer: number,
       },
-      { closeDefenseTimer: number },
+      {
+        closeDefenseTimer: number,
+        abilityCooldowns: object({ q: number, w: number, e: number, r: number }),
+      },
     ),
     generations: list(integer, GAME.maxEnemies),
     enemies: list(

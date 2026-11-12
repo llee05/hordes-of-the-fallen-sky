@@ -13,6 +13,7 @@ export function world(): WorldArchive {
     timers: {
       spawnTimer: 0.4,
       attackTimer: 0.8,
+      abilityCooldowns: { q: 1, w: 2, e: 3, r: 4 },
       dashTimer: 2,
       dashRemaining: 0.1,
       invulnerable: 0.3,

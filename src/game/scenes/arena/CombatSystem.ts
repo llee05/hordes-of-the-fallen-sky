@@ -53,12 +53,6 @@ export interface CombatHost {
  */
 export class CombatSystem extends ArenaSystem {
   private basicWindup = 0;
-  private readonly abilityCooldowns: Record<ClassAbilitySlot, number> = {
-    q: 0,
-    w: 0,
-    e: 0,
-    r: 0,
-  };
 
   constructor(
     arena: ArenaContext,
@@ -94,16 +88,16 @@ export class CombatSystem extends ArenaSystem {
 
   reset(): void {
     this.basicWindup = 0;
-    for (const slot of Object.keys(this.abilityCooldowns) as ClassAbilitySlot[])
-      this.abilityCooldowns[slot] = 0;
+    this.timers.abilityCooldowns = { q: 0, w: 0, e: 0, r: 0 };
   }
 
   /** Advances manual Khan combat. No attack occurs unless basic attack is held. */
   tickKhanCombat(dt: number, basicHeld: boolean, aim: { x: number; y: number }): void {
     if (this.run.phase !== 'playing') return;
     this.timers.attackTimer = Math.max(0, this.timers.attackTimer - dt);
-    for (const slot of Object.keys(this.abilityCooldowns) as ClassAbilitySlot[])
-      this.abilityCooldowns[slot] = Math.max(0, this.abilityCooldowns[slot] - dt);
+    const cooldowns = this.cooldowns();
+    for (const slot of Object.keys(cooldowns) as ClassAbilitySlot[])
+      cooldowns[slot] = Math.max(0, cooldowns[slot] - dt);
     if (this.basicWindup > 0) {
       if (!basicHeld || !isKhanActive(this.run)) {
         this.basicWindup = 0;
@@ -168,7 +162,7 @@ export class CombatSystem extends ArenaSystem {
   }
 
   useAbility(slot: ClassAbilitySlot, aim: { x: number; y: number }): boolean {
-    if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.abilityCooldowns[slot] > 0)
+    if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.cooldowns()[slot] > 0)
       return false;
     const cls = classDefinition(this.run.character?.classId);
     const ability = cls.abilities.find((entry) => entry.slot === slot)!;
@@ -214,7 +208,7 @@ export class CombatSystem extends ArenaSystem {
       this.timers.invulnerable = Math.max(this.timers.invulnerable, effect.duration);
     }
     if (!released) return false;
-    this.abilityCooldowns[slot] = ability.cooldown;
+    this.cooldowns()[slot] = ability.cooldown;
     this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 7);
     if (effect.kind === 'guard' || effect.kind === 'ward') this.audio.play('spell', this.player);
     markExpedition(this.run, 'fight');
@@ -225,8 +219,12 @@ export class CombatSystem extends ArenaSystem {
   abilityStates(): (ClassAbilityDefinition & { remaining: number })[] {
     return classDefinition(this.run.character?.classId).abilities.map((ability) => ({
       ...ability,
-      remaining: this.abilityCooldowns[ability.slot],
+      remaining: this.cooldowns()[ability.slot],
     }));
+  }
+
+  private cooldowns(): Record<ClassAbilitySlot, number> {
+    return (this.timers.abilityCooldowns ??= { q: 0, w: 0, e: 0, r: 0 });
   }
 
   private faceAim(aim: { x: number; y: number }, release = true): { x: number; y: number } {
