@@ -241,6 +241,20 @@ ground as exact ones. Orkhon's terrain code is a separate shader program
 The pack's ground and water tiles, cliff and waterfall sprites, `cliff_isolated` and rock
 sprites (other than the small boulder and pebbles) are retired: the kit replaces them.
 
+## Painted-ground prototype
+
+Development builds can compare one large Candidate C painting against the current tiled ground at
+the falls-plateau ramp nearest camp. Add `?orkhonPaintedGround=1` to the development URL. The switch
+is default-off and ignored by production builds; while off, the painted texture is not loaded and the
+current Orkhon shader program key and source remain unchanged.
+
+The 2,048² painting covers camp-relative `x = -550…1050`, `y = -1600…0` (1,600 units square,
+0.78125 units per texel). It is projected in world x/z over the existing elevation mesh. A noisy
+320–480-unit feather returns to the current shader before the image boundary, while steep ramp flanks
+and all cliff walls keep their current materials. Cliffs, kit cutouts, river, props, actors, collision,
+navigation, saves, gameplay and camera are unchanged. See
+[the source, prompt and measurements](art-orders/orkhon-painted-ground-c.md).
+
 ## Performance
 
 Navigation cells, collision walls and flow fields are built once when the level loads;

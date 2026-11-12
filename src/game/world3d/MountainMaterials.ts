@@ -10,6 +10,7 @@ import { terrainShaderSource } from './terrainShader';
 import type { ScenePalette } from '../data/worldRegions';
 import type { ComposedTerrain } from './ComposedTerrain';
 import { bakeOrkhonGroundMask, ORKHON_GROUND_MASK, orkhonRampUniforms } from './orkhonGround';
+import { ORKHON_PAINTED_GROUND, orkhonPaintedGroundWorldBounds } from './orkhonPaintedGround';
 export { WORLD_DEBUG_MODES, type WorldDebugMode } from './worldProjection';
 
 /** Reuses painted textures; all elevation, walls, lighting and shadows come from geometry. */
@@ -29,11 +30,13 @@ export class MountainMaterials {
     anisotropy = 1,
     /** Orkhon Valley's terrain: its kit tiles, per-pixel ground masks and painted cliffs. */
     orkhon?: ComposedTerrain,
+    /** Development URL flag; omitted/false keeps the current material and shader byte-for-byte. */
+    paintedGround = false,
   ) {
-    const texture = (key: string): THREE.Texture => {
+    const texture = (key: string, repeat = true): THREE.Texture => {
       const image = scene.textures.get(key).getSourceImage() as HTMLImageElement;
       const map = new THREE.Texture(image);
-      map.wrapS = map.wrapT = THREE.RepeatWrapping;
+      map.wrapS = map.wrapT = repeat ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
       map.colorSpace = THREE.SRGBColorSpace;
       map.anisotropy = anisotropy;
       map.minFilter = THREE.LinearMipmapLinearFilter;
@@ -73,9 +76,13 @@ export class MountainMaterials {
       ? tile('plateauMoss')
       : texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!);
     const meadowAltTex = authored ? tile('valleyOlive') : meadowTex;
+    const paintedGroundTex =
+      authored && paintedGround ? texture(ORKHON_PAINTED_GROUND.texture, false) : undefined;
     this.bedTexture = authored ? gravelTex : soilTex;
     this.waterTextures = authored ? [tile('riverChannel'), tile('riverRapids')] : undefined;
-    const orkhonMaps = orkhon ? this.orkhonUniforms(scene, orkhon, meadowAltTex) : undefined;
+    const orkhonMaps = orkhon
+      ? this.orkhonUniforms(scene, orkhon, meadowAltTex, paintedGroundTex)
+      : undefined;
 
     const maps = {
       meadow: { value: meadowTex },
@@ -100,7 +107,12 @@ export class MountainMaterials {
       snowTint: { value: tint(palette?.snow, 0xe4e9df) },
     };
     const source = terrainShaderSource(
-      orkhon ? { ramps: orkhon.region.scene.ground?.ramps?.length ?? 0 } : undefined,
+      orkhon
+        ? {
+            ramps: orkhon.region.scene.ground?.ramps?.length ?? 0,
+            paintedGround: paintedGroundTex !== undefined,
+          }
+        : undefined,
     );
     const make = (wall: boolean): THREE.MeshLambertMaterial => {
       const material = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
@@ -121,7 +133,11 @@ export class MountainMaterials {
       };
       // Generated places keep their program; Orkhon's carries its own code.
       material.customProgramCacheKey = () =>
-        authored ? `orkhon-terrain-v5-${wall}` : `living-steppe-materials-v7-${wall}`;
+        authored
+          ? paintedGroundTex
+            ? `orkhon-terrain-painted-v1-${wall}`
+            : `orkhon-terrain-v5-${wall}`
+          : `living-steppe-materials-v7-${wall}`;
       return material;
     };
     this.surface = make(false);
@@ -132,7 +148,12 @@ export class MountainMaterials {
    * Orkhon-only uniforms: the olive grass variant, the painted cliff bands, the baked ground mask
    * (worn earth, dry-grass potential, ramp neighbourhoods) and the graded ramps.
    */
-  private orkhonUniforms(scene: Phaser.Scene, terrain: ComposedTerrain, meadowAlt: THREE.Texture) {
+  private orkhonUniforms(
+    scene: Phaser.Scene,
+    terrain: ComposedTerrain,
+    meadowAlt: THREE.Texture,
+    paintedGround?: THREE.Texture,
+  ) {
     const ground = terrain.region.scene;
     const size = ORKHON_GROUND_MASK.size;
     const mask = new THREE.DataTexture(bakeOrkhonGroundMask(terrain), size, size);
@@ -145,6 +166,7 @@ export class MountainMaterials {
     const ramps = orkhonRampUniforms(terrain);
     const vectors = (rows: number[][]) =>
       (rows.length ? rows : [[-1e5, -1e5, 1, 0]]).map((row) => new THREE.Vector4(...row));
+    const bounds = orkhonPaintedGroundWorldBounds(terrain.worldSize);
     return {
       meadowAlt: { value: meadowAlt },
       tileSize: { value: ORKHON_TILE_WORLD_SIZE },
@@ -155,6 +177,12 @@ export class MountainMaterials {
       plateauRise: { value: Math.max(1, ...ground.shelves.map((shelf) => shelf.rise)) },
       rampAxis: { value: vectors(ramps.axis) },
       rampSize: { value: vectors(ramps.size.length ? ramps.size : [[1, 0, 0, 0]]) },
+      ...(paintedGround
+        ? {
+            paintedGroundMap: { value: paintedGround },
+            paintedGroundBounds: { value: new THREE.Vector4(...bounds) },
+          }
+        : {}),
     };
   }
 
