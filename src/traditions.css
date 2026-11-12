@@ -10,15 +10,33 @@
   display: block;
   text-align: left;
   padding: 18px;
-  border: 1px solid #9d875f;
-  background: #d9c69d80;
-  color: #343329;
+  border: 2px solid #9c7546;
+  background: linear-gradient(#f7ecd4c9, #eddab5c9), url('/art/ui-felt.png');
+  background-size: auto, 400px;
+  background-blend-mode: normal, multiply;
+  color: #343e39;
+  box-shadow:
+    0 2px 4px #4d341f22,
+    inset 0 0 0 1px #f5e5bf55;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+.starting-tradition-card:hover {
+  border-color: #c99c51;
+  box-shadow:
+    0 4px 8px #4d341f33,
+    inset 0 0 0 2px #f7dda166;
 }
 .starting-tradition-card[aria-pressed='true'] {
-  background: #294e55;
-  color: #f1e5c8;
-  border-color: #b99752;
-  box-shadow: inset 0 0 0 2px #b99752;
+  background: linear-gradient(135deg, #244155f0, #142d40 60%, #1e394cf5), url('/art/ui-felt.png');
+  background-size: auto, 410px;
+  background-blend-mode: normal, multiply;
+  color: #fae8bd;
+  border-color: #e5bd72;
+  box-shadow:
+    0 4px 10px #0e212d44,
+    inset 0 0 0 2px #e5bd7288;
 }
 .starting-tradition-card > span {
   display: block;
