@@ -4,7 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { ALTAN_OVOO, ALTAN_OVOO_FOOTPRINTS, ALTAN_OVOO_SITES } from '../../src/game/data/altanOvoo';
 import { ORKHON_SPRITES } from '../../src/game/assets/orkhonValleyArt';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
-import { WORLD_REGIONS, composedRegion } from '../../src/game/data/worldRegions';
+import {
+  ALTAN_OVOO_GENERATED_REGION,
+  WORLD_REGIONS,
+  composedRegion,
+} from '../../src/game/data/worldRegions';
 import { ComposedTerrain, outlineField } from '../../src/game/world3d/ComposedTerrain';
 import {
   altanOvooDressing,
@@ -197,6 +201,16 @@ describe('Altan Ovoo runtime terrain', () => {
   it('routes the authored dressing through the shared scene entry point', () => {
     const bounds = { x: 0, y: 1200, width: 6400, height: 4000 };
     expect(sceneDressing(terrain, bounds)).toEqual(altanOvooDressing(terrain.seed, bounds));
+  });
+
+  it('retains the former generated composition as a development fallback', () => {
+    const fallback = composedRegion('altan-ovoo', true);
+    expect(fallback.scene.ground).toBeUndefined();
+    expect(fallback.scene.terrainSize).toBeUndefined();
+    expect(fallback.scene.shelves[0]?.id).toBe('camp-shelf');
+    expect(fallback.scene.shelves.slice(1).map(({ id }) => id)).toEqual(
+      ALTAN_OVOO_GENERATED_REGION.shelves.map(({ id }) => id),
+    );
   });
 });
 

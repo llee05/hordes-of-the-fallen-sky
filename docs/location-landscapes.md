@@ -64,7 +64,8 @@ heights still differ from it.
 
 Altan Ovoo is authored as a 6,400 × 4,000-unit volcanic-steppe battlefield with one raised cinder cone, two walkable ramps, a south-west camp, a northern summit ovoo, and connected trails through the spring and other terrain sites.
 The level keeps open combat lanes between dense basalt outcrops and autumn clusters.
-See [the level guide](altan-ovoo.md) for its layout, hybrid-rendering boundary, existing-art mappings, and deferred gameplay features.
+Four hand-painted ground quadrants follow that terrain while the spring, cliffs, scenery, landmarks, actors, and collision remain separate.
+See [the level guide](altan-ovoo.md) for its layout, hybrid-rendering boundary, existing-art mappings, performance, and deferred gameplay features.
 
 ## Rivers and shores
 

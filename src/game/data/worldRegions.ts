@@ -123,6 +123,21 @@ const desert: ScenePalette = {
   fog: 0xcebc9f,
 };
 
+/** The pre-authored Altan Ovoo composition, retained as a development fallback. */
+export const ALTAN_OVOO_GENERATED_REGION: RegionComposition = {
+  id: 'altan-ovoo',
+  floor: 65,
+  snowLine: 10000,
+  vegetation: 'meadow',
+  palette: { ...meadow, grass: 0xb3a36b, rock: 0x72756e },
+  shelves: [
+    shelf('basalt-shoulder', -160, -850, 1160, 460, 225, -8),
+    shelf('old-volcanic-crown', -380, -1230, 720, 440, 180, 10, 60),
+    shelf('eastern-basalt', 920, 650, 440, 380, 165, -20),
+    shelf('distant-ridge', 0, -2200, 2450, 650, 290, 0, 90),
+  ],
+};
+
 /** One authored level-1 plateau, sharing the ramp mechanics of the composed shelves. */
 function plateau(
   source: Pick<OrkhonPlateau, 'id' | 'outline' | 'ramps'>,
@@ -287,22 +302,21 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
   },
 };
 
-export function composedRegion(id: LocationId): ComposedRegion {
+export function composedRegion(id: LocationId, generatedFallback = false): ComposedRegion {
+  const composition =
+    id === 'altan-ovoo' && generatedFallback ? ALTAN_OVOO_GENERATED_REGION : WORLD_REGIONS[id];
   return {
     seed: `living-steppe-scenes-v3:${id}`,
     biome: {
       ...OTGONTENGER_MOUNTAINS.biome,
       id: `scene-${id}`,
       heightScale: 1000,
-      campRadius: WORLD_REGIONS[id].campClearRadius ?? 350,
+      campRadius: composition.campClearRadius ?? 350,
       caravan: { length: 1530, halfWidth: 240, shoulder: 110 },
     },
     scene: {
-      ...WORLD_REGIONS[id],
-      shelves: [
-        ...(WORLD_REGIONS[id].campShelf === false ? [] : [CAMP_SHELF]),
-        ...WORLD_REGIONS[id].shelves,
-      ],
+      ...composition,
+      shelves: [...(composition.campShelf === false ? [] : [CAMP_SHELF]), ...composition.shelves],
     },
   };
 }

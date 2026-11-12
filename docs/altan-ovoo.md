@@ -2,6 +2,7 @@
 
 Altan Ovoo (Dariganga) is an authored volcanic-steppe battlefield built around one broad extinct cinder cone.
 Its 6,400 × 4,000-unit playable rectangle matches Orkhon Valley's approved scale while leaving the camera, combat rules, saves, interface, and existing elevation system unchanged.
+Run `npm run dev` or `npm run dev:web`, press **F8**, and choose **Altan Ovoo**.
 
 ## Layout
 
@@ -30,6 +31,19 @@ Spirit sites use stones and relic fires as terrain landmarks rather than introdu
 Dense rock ridges and autumn clusters frame the battlefield, but the camp clearing, trails, ramps, spring edge, and broad combat lanes stay open.
 `world3d/altanOvooDressing.ts` builds those clusters deterministically across the whole battlefield before clipping them into render chunks, so their placement cannot change at chunk boundaries.
 
+## Painted ground
+
+Four 1,600 × 1,000 macro paintings project over the 3,200 × 2,000 north-west, north-east, south-west, and south-east quadrants.
+The renderer blends their internal joins and adds the shared 1,024² paper-grain detail layer in world space.
+An irregular outer feather joins the playable painting to a seamless grass crop in the off-playfield terrain visible behind the northern camera limit.
+Cliffs, ramp flanks, water, dressing, landmarks, actors, collision, and shadows remain separate geometry or sprites.
+
+The development-only `?altanOvooPaintedGround=0` query keeps the authored terrain on its tiled fallback for diagnosis.
+The four quadrant uploads occupy 34,131,696 bytes (32.55 MiB) with complete mip chains.
+Including the detail layer they occupy 39,724,100 bytes (37.88 MiB); the 256² fallback grass tile adds 349,524 bytes (0.33 MiB).
+
+`npm run visual:altan` provides the same fixed-camera screenshot-only capture workflow as Orkhon when a browser capture run is explicitly approved.
+
 ## Points of interest and follow-ups
 
 Points of interest are scenery in this level and do not add new gameplay systems.
@@ -42,4 +56,5 @@ The following remain separate follow-ups:
 - wild-horse and swan behaviour;
 - dedicated balbal statue and spirit-wolf artwork.
 
-The generic Altan Ovoo composition remains the fallback until the authored terrain and painted-ground projection are registered with the runtime.
+The runtime selects this authored terrain and dressing for Altan Ovoo.
+For development diagnosis, `?altanOvooLevel=generated` restores the former generated composition without the authored spring, dressing, or painted projection.

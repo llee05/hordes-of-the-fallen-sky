@@ -114,6 +114,7 @@ export class World3DRenderer {
     this.world.add(this.sun, this.sun.target, this.actors);
     const authored =
       terrain instanceof ComposedTerrain &&
+      terrain.region.scene.ground !== undefined &&
       (terrain.region.scene.id === 'orkhon-valley' || terrain.region.scene.id === 'altan-ovoo')
         ? terrain
         : undefined;
