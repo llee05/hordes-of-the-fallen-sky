@@ -253,8 +253,8 @@ Legacy Orkhon saves without a layout marker are translated once from the old 5,2
 Navigation cells, collision walls and flow fields are built once when the level loads;
 play only reads the resident grid. River shore queries use an exact spatial index (per
 128-unit bucket, only segments that can be nearest), and cells clear of the gorge skip the
-water probe grid. The authored ground shader fetches only the tiles present at each point
-and returns single-channel grass, most of the ground, without blending; cliff walls fetch
+water probe grid. The tiled fallback's authored ground shader fetches only the tiles present at
+each point and returns single-channel grass, most of the ground, without blending; cliff walls fetch
 one band texel. Height blending still costs more per pixel than a cross-fade: on a
 software GPU (SwiftShader) the overhauled 350-enemy `profileCrowd` sample measured 24.186 ms
 for World3D rendering against 23.014 ms on main, a 5.1% increase inside the 10% frame budget.
@@ -264,6 +264,7 @@ The four 1,600 × 1,000 quadrant textures and the 1,024² grayscale detail textu
 39,724,100 RGBA upload bytes (37.88 MiB) with complete mip chains.
 The terrain kit adds one 1024 × 512 atlas and two bank textures; the pack atlas lost the
 retired sprites. Full-resolution 256-pixel tiles hold four times the texels of the pack's
-128-pixel ones (about 3 MB of GPU memory for all ten with mipmaps); the Orkhon art files total
-about 2.2 MB. The overlay draws one mesh per atlas plus one per bank painting, all built once
-when the level loads; bank bands discard texels along their edges rather than blending.
+128-pixel ones (about 3 MB of GPU memory for all ten with mipmaps). The fallback terrain and
+overlay files total about 2.2 MB on disk; the five painted-ground files add about 9.1 MB. The
+overlay draws one mesh per atlas plus one per bank painting, all built once when the level loads;
+bank bands discard texels along their edges rather than blending.

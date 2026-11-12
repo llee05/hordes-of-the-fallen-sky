@@ -100,6 +100,10 @@ on the ground; single stones and boulders stay between knee and shoulder of a ri
   (The first cut downsampled them to 128 px, 1.56 units per texel, which magnified every texel
   1.25–2.5 times and looked soft.) Tiles are healed to wrap seamlessly (measured wrap-to-interior
   colour step 0.82–1.06, where 1 is seamless).
+- **Orkhon's shipped ground** uses four bounded **1,600 × 1,000 px** paintings over
+  **3,200 × 2,000 units** each (2 units per colour texel), plus a seamless 1,024 px grayscale
+  detail painting repeated every 220 units. The two layers deliberately separate broad authored
+  colour from close brush and paper grain; the 0.78-unit rule remains the tiled fallback's contract.
 - Ground and water tiles are mipmapped with trilinear filtering and up to 8× anisotropic
   filtering, so ground seen at the 48° slant stays sharp instead of shimmering or smearing.
 - Sample each ground painting **at its painted scale**, in world space, with **hex-tile
@@ -280,8 +284,9 @@ _Thronefall_ and _The Banner Saga_.
   - Photographic textures, surface scans or 3D CG rendering (specular highlights, normal map bumps,
     plastic sheen).
   - Soft Gaussian blur, airbrush fades or feathered alpha resulting in muddy grey halos.
-  - Mixed texel densities (all terrain tiles match the spec's 0.78 world units per pixel, 256 px
-    covering 200 units).
+  - Mixed texel densities within one tiled material set (fallback terrain tiles match the spec's
+    0.78 world units per pixel, 256 px covering 200 units). Orkhon's bounded colour paintings and
+    repeating grayscale detail are an intentional two-layer exception.
   - Pasted white rectangular blocks for waterfalls (cascades must feature calligraphic wave strokes
     and soft mineral chalk washes).
 
@@ -295,19 +300,20 @@ _Thronefall_ and _The Banner Saga_.
 | Ground regions          | Level guide: grass regions "about 300 units across"; the shader's region field (`sin(x/290…)`) gives runs of about 400–1,100 units (median 890) | Measured 400–1,100; the guide is corrected                                |
 | Camera angle in prompts | Tapestry style and scenery prompts ask for 45°; detail-atlas prompt and the game use 48°                                                        | 48° (the game camera)                                                     |
 | Ger scale in one level  | Orkhon outskirts gers are 122–146 units; the live camp's gers are 66–83 units (front pair 83) at `GAME.camp.visualScale` 0.75                   | `structures` 75–150 from the pack; the live camp is listed as a follow-up |
-| Texel density           | Orkhon ground 0.78 units per texel (kit, full resolution), props 0.85–1.7, cliff bands about 1.4                                                | Recorded, not unified: each is its art's painted scale                    |
+| Texel density           | Orkhon fallback tiles 0.78 units per texel; shipped ground colour 2.0 plus 0.21-unit repeating detail; props 0.85–1.7; cliff bands about 1.4    | Recorded, not unified: each is its art's painted scale                    |
 
 ## Places that deviate (follow-ups)
 
-Only Orkhon Valley follows this spec today. These were measured, not changed:
+Orkhon Valley is the reference location for this spec. These other-place differences were measured,
+not changed:
 
 - **Shared scenery in the seven other places** (`world3d/sceneDressing.ts`): trees 92–182
   units (above `trees`), boulders 18–52 (partly below `rocks`), crags 74–114, small grass,
   flower and pebble accents 9–31 (partly below `shrubs`). Regional palettes tint the paintings,
   which this spec's no-filter rule excludes.
 - **Ground density in the other places:** materials repeat every 170–520 units on 1,254-px
-  paintings (about 0.14–0.41 units per texel), up to about five times finer than Orkhon's
-  0.78.
+  paintings (about 0.14–0.41 units per texel). Unlike Orkhon's bounded four-part ground and
+  separate detail layer, their colour paintings are also their repeating fine detail.
 - **Plateau heights in the other places:** shelves rise 155–450 units with peaks up to 300 more,
   and they keep the raised 150-unit camp shelf; Orkhon has one 240-unit level and no camp shelf.
 - **The live camp:** gers 66–83 units and migration carts 43–54 units, against 100–146 for the
