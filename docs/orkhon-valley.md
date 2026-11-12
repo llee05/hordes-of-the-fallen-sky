@@ -256,11 +256,12 @@ play only reads the resident grid. River shore queries use an exact spatial inde
 water probe grid. The authored ground shader fetches only the tiles present at each point
 and returns single-channel grass, most of the ground, without blending; cliff walls fetch
 one band texel. Height blending still costs more per pixel than a cross-fade: on a
-software GPU (SwiftShader) a 350-enemy `profileCrowd` frame is roughly a tenth slower than
-before the cliff and ground pass, with CPU simulation and render time unchanged. Per-pixel
-masks, hex-tile sampling, ramp flanks and mipmapped cliffs cost about 3–5% of that frame at
-pixel ratio 2 on an Intel Iris Xe (ANGLE/Vulkan), and about 1 ms in terrain-only views.
+software GPU (SwiftShader) the overhauled 350-enemy `profileCrowd` sample measured 24.186 ms
+for World3D rendering against 23.014 ms on main, a 5.1% increase inside the 10% frame budget.
+The World3D draw section was 2.157 ms against 2.243 ms on main.
 
+The four 1,600 × 1,000 quadrant textures and the 1,024² grayscale detail texture occupy
+39,724,100 RGBA upload bytes (37.88 MiB) with complete mip chains.
 The terrain kit adds one 1024 × 512 atlas and two bank textures; the pack atlas lost the
 retired sprites. Full-resolution 256-pixel tiles hold four times the texels of the pack's
 128-pixel ones (about 3 MB of GPU memory for all ten with mipmaps); the Orkhon art files total
