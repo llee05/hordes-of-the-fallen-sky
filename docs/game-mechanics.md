@@ -369,9 +369,10 @@ their automatic targeting.
   Splintering Arrow fans piercing fragments from its first hit, and Windstep combines
   an invulnerable evasive dash with automatic shots at nearby enemies. Its progression
   emphasizes extra arrows, firing speed, damage, mobility, and piercing.
-- **Lancer** uses short piercing lance thrusts, a nearby sweeping strike and manual
-  breakthrough charges. Its progression develops damage, piercing,
-  health, speed, and additional thrusts.
+- **Lancer** controls space with long, narrow Spear Thrusts and a held Impaling Strike.
+  Its four abilities break through a line, sweep a surrounding semicircle, vault over
+  blocked ground, and sustain an extendable collision-damage charge. Its progression
+  develops damage, piercing, health, speed, and additional thrusts.
 - **Iron Pagoda** is the armoured saber bulwark: slow, broad sabre slashes that build a
   combo, an armor-shattering cleave, and a kit of braces, stuns, pulls and an unstoppable
   stance (see [the Iron Pagoda kit](#iron-pagoda-kit)), with stronger personal armor,
@@ -393,7 +394,7 @@ its class loadout. Successors retain the expedition's class and progression.
 | Class          | Left-click light | Right-click heavy | 1               | 2                  | 3                 | 4                   |
 | -------------- | ---------------- | ----------------- | --------------- | ------------------ | ----------------- | ------------------- |
 | Mounted Archer | Galloping Shot   | Piercing Draw     | Parthian Shot   | Rain of Arrows     | Splintering Arrow | Windstep            |
-| Lancer         | Couched Thrust   | Charging Thrust   | Sweeping Strike | Devastating Charge | Line Breaker      | Shock Lance         |
+| Lancer         | Spear Thrust     | Impaling Strike   | Breakthrough    | Sweeping Lance     | Lance Vault       | Unstoppable Charge  |
 | Iron Pagoda    | Heavy Sabre      | Sundering Cleave  | Iron Wall       | Crushing Hooves    | Chain Snare       | Unbroken Fortress   |
 | Spirit Caller  | Spirit Wisps     | Ancestral Drum    | Ongod Guardians | Wind of Tengri     | Sacred Ovoo       | Veil Between Worlds |
 
@@ -406,6 +407,24 @@ full saves. Formation momentum remains for allied rider tactics.
 Spirit bolts steer toward live, unhit enemies at the class turn rate while retaining
 their speed. The class `gallopSpeedMultiplier` still scales the Khan's Space / left-bumper
 gallop, and Lancer and Iron Pagoda gallops retain their existing pinning breakthrough.
+
+The Lancer's Impaling Strike keeps charging while right click is held and releases
+when the button is released. Its HUD readout shows charge percentage. Reach, damage,
+and armour penetration rise with charge; penetration proportionally removes an
+armoured enemy's damage reduction. A full charge pushes survivors and briefly stuns
+them for bonus damage when a cliff, rock, map edge, or other blocking terrain stops
+the push. Breakthrough damages each enemy once along its travelled lane, scaling from
+entry speed and distance. Sweeping Lance applies resisted knockback in a forward
+semicircle. Lance Vault uses movement direction when moving and cursor aim while still,
+crosses actors and blocked cells, and chooses the furthest valid in-bounds landing before
+its shockwave. Unstoppable Charge ignores movement-slowing knockback effects, increases
+ride speed, damages each new contact, and gains a capped duration extension per enemy.
+These effects use the shared stun, forced-movement, armour and Khan-immunity status
+records, all measured only in active gameplay seconds and retained in full saves.
+
+The current Lancer presentation reuses the release pose, dust, impact bursts, and
+expanding rings. Dedicated lance sweep trails and a readable vault/landing pose are
+the highest-priority art follow-ups; no placeholder runtime art is fetched.
 
 Spirit Wisp hits grant one spiritual energy, capped at 12 and shown in the battlefield
 HUD with the active-spirit count. As a replaceable first-pass spending rule, Veil Between

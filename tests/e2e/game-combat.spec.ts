@@ -156,6 +156,38 @@ test('Iron Pagoda abilities brace, stun and snare through the number keys and th
     .toBeGreaterThan(0);
 });
 
+test('Lancer exposes release-to-fire Impaling Strike progress and its four authored abilities', async ({
+  page,
+}) => {
+  await openTitle(page);
+  await page.getByRole('button', { name: 'Developer mode F8' }).click();
+  await page.locator('[data-developer-class="lancer"]').click();
+  const canvas = await page.locator('canvas').first().boundingBox();
+  if (!canvas) throw new Error('Game canvas is unavailable');
+  await page.mouse.move(canvas.x + canvas.width / 2 + 220, canvas.y + canvas.height / 2);
+  await page.mouse.down({ button: 'right' });
+  await expect(page.locator('#momentum')).toContainText('IMPALING STRIKE');
+  await expect(page.locator('#momentum')).toContainText('%');
+  const volleys = await page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys);
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys)).toBe(volleys);
+  await page.mouse.up({ button: 'right' });
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys))
+    .toBeGreaterThan(volleys);
+
+  for (const [key, id, name] of [
+    ['Digit1', '#ability-q', 'Breakthrough'],
+    ['Digit2', '#ability-w', 'Sweeping Lance'],
+    ['Digit3', '#ability-e', 'Lance Vault'],
+    ['Digit4', '#ability-r', 'Unstoppable Charge'],
+  ] as const) {
+    await expect(page.locator(id)).toContainText(name);
+    await page.keyboard.press(key);
+    await expect(page.locator(id)).not.toContainText('READY');
+  }
+});
+
 test('guard riders fire at camp threats while the commander scouts away', async ({ page }) => {
   await openTitle(page);
   await startExpedition(page);
