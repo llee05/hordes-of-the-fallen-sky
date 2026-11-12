@@ -54,12 +54,37 @@ export {
   type CharacterProfile,
 };
 
-export interface ClassAbilityDefinition {
+export type ClassAbilitySlot = 'q' | 'w' | 'e' | 'r';
+
+export type ClassAbilityEffect =
+  | { kind: 'volley'; projectiles: number; damage: number }
+  | { kind: 'arc'; range: number; angle: number; damage: number }
+  | { kind: 'line'; range: number; width: number; damage: number }
+  | { kind: 'pulse'; range: number; width: number; damage: number }
+  | { kind: 'charge'; range: number; width: number; damage: number }
+  | { kind: 'guard'; duration: number; heal: number }
+  | { kind: 'ward'; duration: number; heal: number; resolve: number };
+
+interface ClassAbilityBase {
   id: string;
-  slot: 'basic' | 'secondary' | 'momentum' | 'gallop';
+  slot: ClassAbilitySlot;
   slotLabel: string;
   name: string;
   description: string;
+  cooldown: number;
+}
+
+export type ClassAbilityDefinition = ClassAbilityBase & ClassAbilityEffect;
+
+export interface ClassBasicAttackDefinition {
+  name: string;
+  description: string;
+  shape: 'projectile' | 'line' | 'arc';
+  range: number;
+  damage: number;
+  /** Projectile collision width, line width, or arc angle in radians. */
+  width: number;
+  projectiles: number;
 }
 
 export interface ClassProgressionNode {
@@ -101,11 +126,9 @@ export interface ClassDefinition {
     gallopCooldownMultiplier: number;
     gallopSpeedMultiplier: number;
     clanProtectionMultiplier: number;
-    closeDefenseRadius: number;
-    closeDefenseInterval: number;
-    closeDefenseDamage: number;
   };
   weapon: ClassWeaponDefinition;
+  basicAttack: ClassBasicAttackDefinition;
   abilities: readonly [
     ClassAbilityDefinition,
     ClassAbilityDefinition,
@@ -222,9 +245,6 @@ export const CLASSES: readonly ClassDefinition[] = [
       gallopCooldownMultiplier: GAME.classes['mounted-archer'].gallopCooldownMultiplier,
       gallopSpeedMultiplier: GAME.classes['mounted-archer'].gallopSpeedMultiplier,
       clanProtectionMultiplier: GAME.classes['mounted-archer'].clanProtectionMultiplier,
-      closeDefenseRadius: GAME.classes['mounted-archer'].closeDefenseRadius,
-      closeDefenseInterval: GAME.classes['mounted-archer'].closeDefenseInterval,
-      closeDefenseDamage: GAME.classes['mounted-archer'].closeDefenseDamage,
     },
     weapon: {
       id: 'recurve-bow',
@@ -240,36 +260,43 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedExtraPierce: GAME.classes['mounted-archer'].chargedExtraPierce,
       chargedDamage: GAME.classes['mounted-archer'].chargedDamage,
     },
+    basicAttack: {
+      name: 'Aimed Arrow',
+      description: 'A fast composite-bow shot loosed directly toward the cursor.',
+      ...GAME.classes['mounted-archer'].basic,
+    },
     abilities: [
       {
-        id: 'bow-shot',
-        slot: 'basic',
-        slotLabel: 'Basic Attack',
-        name: 'Bow Shot',
-        description: 'Looses composite arrows at the nearest threat while riding at full speed.',
+        id: 'flurry-arrow-volley',
+        slot: 'q',
+        slotLabel: 'Q',
+        name: 'Flurry Arrow Volley',
+        description: 'Fans seven quick arrows toward the cursor.',
+        ...GAME.classes['mounted-archer'].abilities.q,
       },
       {
         id: 'saber-slash',
-        slot: 'secondary',
-        slotLabel: 'Close Defense',
+        slot: 'w',
+        slotLabel: 'W',
         name: 'Saber Close Slash',
-        description:
-          'Sweeps a curved saber arc whenever enemies press into close range of your mount.',
-      },
-      {
-        id: 'flurry-arrow-volley',
-        slot: 'momentum',
-        slotLabel: 'Momentum',
-        name: 'Flurry Arrow Volley',
-        description: 'Unleashes a multi-arrow fan volley once mounted momentum builds.',
+        description: 'Sweeps a curved saber through a broad close arc.',
+        ...GAME.classes['mounted-archer'].abilities.w,
       },
       {
         id: 'circling-shot',
-        slot: 'gallop',
-        slotLabel: 'Gallop',
-        name: 'Circling Shot (Hit-and-Run)',
-        description:
-          'Galloping breaks encirclements and boosts parting shots fired while retreating.',
+        slot: 'e',
+        slotLabel: 'E',
+        name: 'Circling Shot',
+        description: 'Looses an eleven-arrow fan to open an escape route.',
+        ...GAME.classes['mounted-archer'].abilities.e,
+      },
+      {
+        id: 'windrunner',
+        slot: 'r',
+        slotLabel: 'R',
+        name: 'Windrunner',
+        description: 'Bursts forward and cuts a damaging lane through the horde.',
+        ...GAME.classes['mounted-archer'].abilities.r,
       },
     ],
     keyTraits: ['Ranged Harassment', 'High Mobility', 'Hit-and-Fade'],
@@ -325,9 +352,6 @@ export const CLASSES: readonly ClassDefinition[] = [
       gallopCooldownMultiplier: GAME.classes.lancer.gallopCooldownMultiplier,
       gallopSpeedMultiplier: GAME.classes.lancer.gallopSpeedMultiplier,
       clanProtectionMultiplier: GAME.classes.lancer.clanProtectionMultiplier,
-      closeDefenseRadius: GAME.classes.lancer.closeDefenseRadius,
-      closeDefenseInterval: GAME.classes.lancer.closeDefenseInterval,
-      closeDefenseDamage: GAME.classes.lancer.closeDefenseDamage,
     },
     weapon: {
       id: 'steppe-lance',
@@ -343,36 +367,43 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedExtraPierce: GAME.classes.lancer.chargedExtraPierce,
       chargedDamage: GAME.classes.lancer.chargedDamage,
     },
+    basicAttack: {
+      name: 'Couched Thrust',
+      description: 'A short, forceful lance thrust through enemies in a narrow line.',
+      ...GAME.classes.lancer.basic,
+    },
     abilities: [
       {
-        id: 'lance-thrust',
-        slot: 'basic',
-        slotLabel: 'Basic Attack',
-        name: 'Lance Thrust',
-        description: 'Drives a heavy piercing lance wave that impales multiple enemies in line.',
-      },
-      {
         id: 'sweeping-strike',
-        slot: 'secondary',
-        slotLabel: 'Close Defense',
+        slot: 'q',
+        slotLabel: 'Q',
         name: 'Sweeping Strike',
-        description: 'Cleaves surrounding enemies in a wide haft-and-blade arc around the mount.',
+        description: 'Cleaves a wide haft-and-blade arc ahead of the mount.',
+        ...GAME.classes.lancer.abilities.q,
       },
       {
         id: 'devastating-charge',
-        slot: 'momentum',
-        slotLabel: 'Momentum',
+        slot: 'w',
+        slotLabel: 'W',
         name: 'Devastating Charge',
-        description:
-          'Full momentum releases a heavier, deeper-piercing lance thrust that pins targets in place.',
+        description: 'Surges forward behind a crushing, deep-piercing thrust.',
+        ...GAME.classes.lancer.abilities.w,
+      },
+      {
+        id: 'line-breaker',
+        slot: 'e',
+        slotLabel: 'E',
+        name: 'Line Breaker',
+        description: 'Drives a braced lance through a long, broad enemy line.',
+        ...GAME.classes.lancer.abilities.e,
       },
       {
         id: 'shock-lance',
-        slot: 'gallop',
-        slotLabel: 'Gallop',
-        name: 'Shock Lance (Braced Impact)',
-        description:
-          'Galloping couches the lance for a faster charge, shorter cooldowns and breakthrough pins.',
+        slot: 'r',
+        slotLabel: 'R',
+        name: 'Shock Lance',
+        description: 'Gallops through a long breakthrough lane with the lance locked low.',
+        ...GAME.classes.lancer.abilities.r,
       },
     ],
     keyTraits: ['Piercing Reach', 'Devastating Charge', 'Line Breaker'],
@@ -429,9 +460,6 @@ export const CLASSES: readonly ClassDefinition[] = [
       gallopCooldownMultiplier: GAME.classes['iron-pagoda'].gallopCooldownMultiplier,
       gallopSpeedMultiplier: GAME.classes['iron-pagoda'].gallopSpeedMultiplier,
       clanProtectionMultiplier: GAME.classes['iron-pagoda'].clanProtectionMultiplier,
-      closeDefenseRadius: GAME.classes['iron-pagoda'].closeDefenseRadius,
-      closeDefenseInterval: GAME.classes['iron-pagoda'].closeDefenseInterval,
-      closeDefenseDamage: GAME.classes['iron-pagoda'].closeDefenseDamage,
     },
     weapon: {
       id: 'pagoda-saber',
@@ -447,37 +475,43 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedExtraPierce: GAME.classes['iron-pagoda'].chargedExtraPierce,
       chargedDamage: GAME.classes['iron-pagoda'].chargedDamage,
     },
+    basicAttack: {
+      name: 'Heavy Saber Arc',
+      description: 'A wide close cavalry-saber cut aimed toward the cursor.',
+      ...GAME.classes['iron-pagoda'].basic,
+    },
     abilities: [
       {
-        id: 'saber-cleave',
-        slot: 'basic',
-        slotLabel: 'Basic Attack',
-        name: 'Saber Cleave',
-        description: 'Unleashes twin overlapping saber shock-arcs that cut through armored ranks.',
+        id: 'crushing-aura',
+        slot: 'q',
+        slotLabel: 'Q',
+        name: 'Crushing Aura',
+        description: 'Crushes every enemy pressing close to the armored mount.',
+        ...GAME.classes['iron-pagoda'].abilities.q,
       },
       {
         id: 'unbreakable-stance',
-        slot: 'secondary',
-        slotLabel: 'Defensive Stance',
+        slot: 'w',
+        slotLabel: 'W',
         name: 'Unbreakable Stance',
-        description:
-          'Heavy lamellar plating shrugs off 28% of incoming damage and steadily mends wounds.',
+        description: 'Locks the lamellar guard, briefly preventing harm and mending wounds.',
+        ...GAME.classes['iron-pagoda'].abilities.w,
       },
       {
-        id: 'iron-pagoda-aura',
-        slot: 'momentum',
-        slotLabel: 'Battlefield Presence',
-        name: 'Iron Pagoda Aura',
-        description:
-          'Radiates an armored presence that bolsters clan protection and crushes nearby foes.',
+        id: 'shield-bash',
+        slot: 'e',
+        slotLabel: 'E',
+        name: 'Shield Bash',
+        description: 'Smashes a broad lane ahead with shield and armored horse.',
+        ...GAME.classes['iron-pagoda'].abilities.e,
       },
       {
         id: 'shielded-advance',
-        slot: 'gallop',
-        slotLabel: 'Gallop',
+        slot: 'r',
+        slotLabel: 'R',
         name: 'Shielded Advance',
-        description:
-          'Surges forward behind locked shields, knocking back and pinning enemies in your path.',
+        description: 'Surges forward behind the shield through a broad enemy lane.',
+        ...GAME.classes['iron-pagoda'].abilities.r,
       },
     ],
     keyTraits: ['Unbreakable Armor', 'Battlefield Presence', 'Frontline Bulwark'],
@@ -534,9 +568,6 @@ export const CLASSES: readonly ClassDefinition[] = [
       gallopCooldownMultiplier: GAME.classes['spirit-caller'].gallopCooldownMultiplier,
       gallopSpeedMultiplier: GAME.classes['spirit-caller'].gallopSpeedMultiplier,
       clanProtectionMultiplier: GAME.classes['spirit-caller'].clanProtectionMultiplier,
-      closeDefenseRadius: GAME.classes['spirit-caller'].closeDefenseRadius,
-      closeDefenseInterval: GAME.classes['spirit-caller'].closeDefenseInterval,
-      closeDefenseDamage: GAME.classes['spirit-caller'].closeDefenseDamage,
     },
     weapon: {
       id: 'ritual-staff',
@@ -553,34 +584,43 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedExtraPierce: GAME.classes['spirit-caller'].chargedExtraPierce,
       chargedDamage: GAME.classes['spirit-caller'].chargedDamage,
     },
+    basicAttack: {
+      name: 'Seeking Spirit Bolt',
+      description: 'A deliberate turquoise bolt that bends toward nearby foes.',
+      ...GAME.classes['spirit-caller'].basic,
+    },
     abilities: [
       {
-        id: 'spirit-bolt',
-        slot: 'basic',
-        slotLabel: 'Basic Attack',
-        name: 'Spirit Bolt',
-        description: 'Channels twin turquoise spirit bolts that curve toward nearby enemies.',
-      },
-      {
-        id: 'ritual-staff-pulse',
-        slot: 'secondary',
-        slotLabel: 'Secondary',
-        name: 'Ritual Staff & Drum',
-        description: 'Strikes the sacred drum to repel and pin enemies closing on your mount.',
+        id: 'drum-pulse',
+        slot: 'q',
+        slotLabel: 'Q',
+        name: 'Drum Pulse',
+        description: 'Sounds the sacred drum to damage and pin nearby enemies.',
+        ...GAME.classes['spirit-caller'].abilities.q,
       },
       {
         id: 'summon-ancestor',
-        slot: 'momentum',
-        slotLabel: 'Momentum',
-        name: 'Summon Ancestor (Call Spirit)',
-        description: 'Calls forth ancestral riders whose spectral bolts echo your attacks.',
+        slot: 'w',
+        slotLabel: 'W',
+        name: 'Summon Ancestor',
+        description: 'Calls ancestral echoes to loose five spectral bolts toward the cursor.',
+        ...GAME.classes['spirit-caller'].abilities.w,
       },
       {
         id: 'spirit-ward',
-        slot: 'gallop',
-        slotLabel: 'Support',
-        name: 'Spirit Ward (Tengri’s Blessing)',
-        description: 'Riding on the wind restores Khan vitality and steadies clan resolve.',
+        slot: 'e',
+        slotLabel: 'E',
+        name: 'Spirit Ward',
+        description: 'Raises a brief ward that restores Khan vitality and clan resolve.',
+        ...GAME.classes['spirit-caller'].abilities.e,
+      },
+      {
+        id: 'ancestral-chorus',
+        slot: 'r',
+        slotLabel: 'R',
+        name: 'Ancestral Chorus',
+        description: 'Releases a wide chorus of nine homing spirit bolts.',
+        ...GAME.classes['spirit-caller'].abilities.r,
       },
     ],
     keyTraits: ['Homing Spirit Bolts', 'Ancestral Summons', 'Clan Ward & Blessing'],
@@ -972,8 +1012,10 @@ export function playerVisualConfig(character?: CharacterProfile): {
   };
 }
 
-export function khanTargetingRange(run: Pick<RunState, 'character' | 'clan'>): number {
-  return classDefinition(run.character?.classId).stats.range + run.clan.campEffects.bonuses.range;
+export function khanBasicRange(run: Pick<RunState, 'character' | 'clan'>): number {
+  return (
+    classDefinition(run.character?.classId).basicAttack.range + run.clan.campEffects.bonuses.range
+  );
 }
 
 /** Khan gallop speed in world units per second, including the class gallop modifier. */

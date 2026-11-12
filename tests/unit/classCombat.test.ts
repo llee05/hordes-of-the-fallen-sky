@@ -5,7 +5,6 @@ vi.mock('phaser', async () => (await import('../support/mockPhaser')).mockPhaser
 import { CHARACTER_CLASSES } from '../../src/shared/characterProfile';
 import { createDeveloperClassRun } from '../../src/game/dev/levels';
 import { classDefinition } from '../../src/game/data/classes';
-import { GAME } from '../../src/game/config';
 import { ALL_ENEMIES } from '../../src/game/data/enemies';
 import { CombatSystem } from '../../src/game/scenes/arena/CombatSystem';
 import { EnemyDirector } from '../../src/game/scenes/arena/EnemyDirector';
@@ -62,28 +61,26 @@ describe('playable class combat', () => {
     },
   );
 
-  it.each([1, 2])('adds a charged archer fan to %s base projectiles', (baseCount) => {
+  it('fires the Mounted Archer basic as a fast aimed arrow', () => {
     const arena = setup('mounted-archer');
-    arena.spawn(300, 0);
-    arena.context.run.stats.projectiles = baseCount;
-    arena.context.run.combat.ready = true;
-    arena.combat.fire();
-    const arrows = arena.projectiles.getChildren().filter((arrow) => arrow.active);
-    expect(arrows).toHaveLength(baseCount + 2);
-    expect(arrows[0]!.body!.velocity.y).toBeLessThan(0);
-    expect(arrows.at(-1)!.body!.velocity.y).toBeGreaterThan(0);
-    expect(arena.context.run.combat.ready).toBe(false);
-    expect(arena.context.run.combat.volleys).toBe(1);
-    for (const arrow of arrows) arrow.disableBody(true, true);
-    arena.combat.fire();
-    expect(arena.projectiles.countActive()).toBe(baseCount);
+    expect(arena.combat.fireBasic({ x: 1400, y: 1000 })).toBe(true);
+    const arrow = arena.projectiles.getFirstAlive()!;
+    expect(arrow.body!.velocity.x).toBeGreaterThan(0);
+    expect(arrow.body!.velocity.y).toBeCloseTo(0);
+    expect(arrow.damage).toBeCloseTo(arena.context.run.stats.damage);
   });
 
-  it('keeps charged support volleys at their requested count', () => {
-    const arena = setup('mounted-archer');
-    const target = arena.spawn(300, 0);
-    arena.combat.shootVolley(1000, 1000, target, 1, 1, false, true, 'rider');
+  it('fires the Spirit Caller basic as one slower homing bolt', () => {
+    const arena = setup('spirit-caller');
+    arena.spawn(250, 80);
+    expect(arena.combat.fireBasic({ x: 1400, y: 1000 })).toBe(true);
+    const bolt = arena.projectiles.getFirstAlive()!;
     expect(arena.projectiles.countActive()).toBe(1);
+    expect(Math.hypot(bolt.body!.velocity.x, bolt.body!.velocity.y)).toBeCloseTo(
+      classDefinition('spirit-caller').stats.projectileSpeed,
+    );
+    arena.combat.updateProjectiles(0.1);
+    expect(bolt.body!.velocity.y).toBeGreaterThan(0);
   });
 
   it.each(CHARACTER_CLASSES)(
@@ -182,135 +179,62 @@ describe('playable class combat', () => {
     }
   });
 
-  it.each(['lancer', 'iron-pagoda', 'spirit-caller'])(
-    '%s charged hits pin before resolving armor and reset on pool reuse',
-    (classId) => {
-      const arena = setup(classId);
-      const enemy = arena.spawn(200, 0, 0.5);
-      arena.combat.shootVolley(1000, 1000, enemy, 1, 1, false, true, 'khan');
-      const bolt = arena.projectiles.getFirstAlive()!;
-      const damage = bolt.damage;
-      arena.combat.hitEnemy(bolt, enemy);
-      expect(enemy.pinned).toBe(0.65);
-      expect(enemy.health).toBeCloseTo(10000 - damage);
-      arena.combat.hitEnemy(bolt, enemy);
-      expect(enemy.health).toBeCloseTo(10000 - damage);
-      for (const shot of arena.projectiles.getChildren()) shot.disableBody(true, true);
-      arena.combat.shootVolley(1000, 1000, enemy, 1, 1, false, false, 'khan');
-      expect(arena.projectiles.getFirstAlive()!.pins).toBe(false);
-    },
-  );
+  it('fires the Lancer basic through a narrow forward line only', () => {
+    const arena = setup('lancer');
+    const ahead = arena.spawn(150, 0);
+    const beside = arena.spawn(120, 30);
+    const behind = arena.spawn(-30, 0);
+    arena.combat.fireBasic({ x: 1400, y: 1000 });
+    expect(ahead.health).toBeLessThan(10000);
+    expect(beside.health).toBe(10000);
+    expect(behind.health).toBe(10000);
+  });
 
-  it.each([
-    ['mounted-archer', 58, 1.05, 0.625],
-    ['lancer', 74, 0.95, 0.625],
-    ['iron-pagoda', 82, 0.85, 0.73],
-    ['spirit-caller', 70, 0.9, 0.86],
-  ] as const)(
-    '%s strikes nearby foes on its independent active-time cooldown',
-    (classId, radius, interval, multiplier) => {
-      const arena = setup(classId);
-      const enemies = [
-        [1, 0],
-        [-1, 0],
-        [0, 1],
-        [0, -1],
-      ].map(([x, y]) => arena.spawn(x! * (radius - 1), y! * (radius - 1)));
-      const outside = arena.spawn(radius + 1, 0);
-      arena.context.timers.attackTimer = 100;
-      arena.combat.tickFire(0.01);
-      const health = 10000 - arena.context.run.stats.damage * multiplier;
-      for (const enemy of enemies) {
-        expect(enemy.health).toBeCloseTo(health);
-        expect(enemy.pinned).toBe(classId === 'spirit-caller' ? 0.65 : 0);
-      }
-      expect(outside.health).toBe(10000);
-      arena.context.run.phase = 'paused';
-      arena.combat.tickFire(10);
-      expect(arena.context.timers.closeDefenseTimer).toBe(interval);
-      arena.context.run.phase = 'playing';
-      arena.context.run.health = 0;
-      arena.context.run.khan.successionRemaining = 5;
-      arena.combat.tickFire(10);
-      expect(enemies[0]!.health).toBeCloseTo(health);
-      expect(arena.context.timers.closeDefenseTimer).toBe(interval);
-      arena.context.run.health = arena.context.run.stats.maxHealth;
-      arena.context.run.khan.successionRemaining = 0;
-      arena.combat.tickFire(interval / 2);
-      expect(enemies[0]!.health).toBeCloseTo(health);
-      arena.combat.tickFire(interval / 2);
-      expect(enemies[0]!.health).toBeCloseTo(
-        10000 - 2 * arena.context.run.stats.damage * multiplier,
-      );
-    },
-  );
-  it.each(CHARACTER_CLASSES)('%s close defense respects terrain', (classId) => {
+  it('fires the Iron Pagoda basic through a wide close saber arc only', () => {
+    const arena = setup('iron-pagoda');
+    const ahead = arena.spawn(80, 50);
+    const flank = arena.spawn(40, 90);
+    const behind = arena.spawn(-80, 0);
+    arena.combat.fireBasic({ x: 1400, y: 1000 });
+    expect(ahead.health).toBeLessThan(10000);
+    expect(flank.health).toBeLessThan(10000);
+    expect(behind.health).toBe(10000);
+  });
+
+  it.each(CHARACTER_CLASSES)('%s never attacks without manual input', (classId) => {
     const arena = setup(classId);
     const enemy = arena.spawn(20, 0);
-    arena.context.landscape.navigation!.lineClear = () => false;
-    arena.combat.tickFire(0.1);
+    arena.combat.tickKhanCombat(10, false, { x: 1400, y: 1000 });
     expect(enemy.health).toBe(10000);
-    expect(arena.context.timers.closeDefenseTimer).toBe(0);
+    expect(arena.projectiles.countActive()).toBe(0);
   });
 
-  it.each([
-    ['mounted-archer', 1],
-    ['lancer', 2],
-    ['iron-pagoda', 1],
-    ['spirit-caller', 2],
-  ] as const)('%s charged volleys add %s class-specific pierce', (classId, extraPierce) => {
+  it.each(CHARACTER_CLASSES)('%s gates Q by its active-time cooldown', (classId) => {
     const arena = setup(classId);
-    const enemy = arena.spawn(180, 0);
-    arena.combat.shootVolley(1000, 1000, enemy, 1, 1, false, true, 'khan');
-    const bolt = arena.projectiles.getFirstAlive()!;
-    expect(bolt.pierces).toBe(arena.context.run.stats.pierce + extraPierce);
+    const q = classDefinition(classId).abilities[0];
+    arena.spawn(50, 0);
+    expect(arena.combat.useAbility('q', { x: 1400, y: 1000 })).toBe(true);
+    expect(arena.combat.useAbility('q', { x: 1400, y: 1000 })).toBe(false);
+    expect(arena.combat.abilityStates()[0]!.remaining).toBe(q.cooldown);
+    arena.context.run.phase = 'paused';
+    arena.combat.tickKhanCombat(q.cooldown, false, { x: 1400, y: 1000 });
+    expect(arena.combat.abilityStates()[0]!.remaining).toBe(q.cooldown);
+    arena.context.run.phase = 'playing';
+    arena.combat.tickKhanCombat(q.cooldown, false, { x: 1400, y: 1000 });
+    expect(arena.combat.useAbility('q', { x: 1400, y: 1000 })).toBe(true);
   });
 
-  it('spirit-caller charged fire releases an ancestral bolt with charged damage, pierce, and pin', () => {
-    const arena = setup('spirit-caller');
-    arena.spawn(300, 0);
-    arena.context.run.combat.ready = true;
-    arena.combat.fire();
-    const bolts = arena.projectiles.getChildren().filter((bolt) => bolt.active);
-    expect(bolts).toHaveLength(3);
-    const ancestral = bolts.find((bolt) => bolt.echoIndex === 1)!;
-    expect(ancestral).toBeDefined();
-    expect(ancestral.pins).toBe(true);
-    expect(ancestral.pierces).toBe(arena.context.run.stats.pierce + 2);
-    expect(ancestral.getData('ghost')).toBe(true);
-    expect(ancestral.damage).toBeCloseTo(arena.context.run.stats.damage * 1.35 * 0.85);
+  it('repeats a held basic only after windup and its class attack interval', () => {
+    const arena = setup('mounted-archer');
+    const aim = { x: 1400, y: 1000 };
+    arena.combat.tickKhanCombat(0.01, true, aim);
+    expect(arena.projectiles.countActive()).toBe(0);
+    arena.combat.tickKhanCombat(0.12, true, aim);
+    expect(arena.projectiles.countActive()).toBe(1);
+    arena.combat.tickKhanCombat(arena.context.run.stats.attackInterval - 0.01, true, aim);
+    expect(arena.projectiles.countActive()).toBe(1);
+    arena.combat.tickKhanCombat(0.02, true, aim);
+    arena.combat.tickKhanCombat(0.12, true, aim);
+    expect(arena.projectiles.countActive()).toBe(2);
   });
-
-  it('uses class-specific Khan weapon range without changing shared rider camp range bonuses', () => {
-    const lancer = setup('lancer');
-    expect(lancer.context.run.clan.campEffects.bonuses.range).toBe(0);
-    lancer.spawn(270, 0);
-    lancer.combat.fire();
-    expect(lancer.projectiles.countActive()).toBe(0);
-    lancer.spawn(240, 0);
-    lancer.combat.fire();
-    expect(lancer.projectiles.countActive()).toBe(1);
-  });
-
-  it.each([
-    ['mounted-archer', 1.35],
-    ['lancer', 1.6],
-    ['iron-pagoda', 1.35],
-    ['spirit-caller', 1.35],
-  ] as const)(
-    '%s charged volleys deal %sx damage while support volleys keep the shared bonus',
-    (classId, multiplier) => {
-      const arena = setup(classId);
-      const enemy = arena.spawn(180, 0);
-      arena.combat.shootVolley(1000, 1000, enemy, 1, 1, false, true, 'khan');
-      expect(arena.projectiles.getFirstAlive()!.damage).toBeCloseTo(
-        arena.context.run.stats.damage * multiplier,
-      );
-      for (const shot of arena.projectiles.getChildren()) shot.disableBody(true, true);
-      arena.combat.shootVolley(1000, 1000, enemy, 1, 1, false, true, 'rider');
-      expect(arena.projectiles.getFirstAlive()!.damage).toBeCloseTo(
-        arena.context.run.stats.damage * GAME.mounted.chargedDamage,
-      );
-    },
-  );
 });

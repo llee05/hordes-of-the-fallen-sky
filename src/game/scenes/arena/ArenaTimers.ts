@@ -12,7 +12,6 @@ export function createArenaTimers(): ArenaTimers {
   return {
     spawnTimer: 0,
     attackTimer: 0,
-    closeDefenseTimer: 0,
     dashTimer: 0,
     dashRemaining: 0,
     invulnerable: 0,

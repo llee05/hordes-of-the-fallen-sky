@@ -200,7 +200,7 @@ export function createTestHooks(
       ['enemyBehaviour', scene['enemyBehaviour'], 'update'],
       ['spatial.rebuild', arena.spatial, 'rebuild'],
       ['campDefences', scene['campDefences'], 'update'],
-      ['combat.tickFire', scene['combat'], 'tickFire'],
+      ['combat.manual', scene['combat'], 'tickKhanCombat'],
       ['combat.projectiles', scene['combat'], 'updateProjectiles'],
       ['combat.gems', scene['combat'], 'collectGems'],
       ['riders.fire', scene['riderHost'], 'fire'],

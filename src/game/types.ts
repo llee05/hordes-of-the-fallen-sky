@@ -195,6 +195,13 @@ export interface HudSnapshot {
   run: RunState;
   dashReady: number;
   dashCooldown: number;
+  abilities: {
+    slot: import('./data/classes').ClassAbilitySlot;
+    name: string;
+    description: string;
+    cooldown: number;
+    remaining: number;
+  }[];
   best: number;
   clanBearing: string;
   fieldBearing?: string;

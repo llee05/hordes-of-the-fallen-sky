@@ -23,7 +23,7 @@ export function riderCooldowns(combat: MountedCombatState, count: number): numbe
   while (cooldowns.length < count) cooldowns.push(0);
   return cooldowns;
 }
-/** Measures real travelled ground, so pressing into a wall cannot build momentum or charged volleys. */
+/** Measures real travelled ground for formation momentum; manual abilities replaced charged volleys. */
 export function advanceMountedCombat(
   run: RunState,
   dt: number,
@@ -59,21 +59,13 @@ export function advanceMountedCombat(
       run.clan.momentum + dt * (steady ? GAME.mounted.momentumGain : -GAME.mounted.momentumLoss),
     ),
   );
-  c.rideSeconds = steady
-    ? Math.min(GAME.mounted.chargeSeconds, c.rideSeconds + dt)
-    : Math.max(0, c.rideSeconds - dt * 2);
+  c.rideSeconds = 0;
   if (turn < 0.2) run.clan.momentum *= 0.8;
   run.clan.momentum = Math.max(0, run.clan.momentum);
-  c.ready = c.rideSeconds >= GAME.mounted.chargeSeconds;
+  c.ready = false;
 
   c.previous = { x: position.x, y: position.y };
   c.heading = heading;
-}
-export function spendMountedVolley(run: RunState): boolean {
-  if (!run.combat.ready || !isKhanActive(run)) return false;
-  run.combat.ready = false;
-  run.combat.rideSeconds = 0;
-  return true;
 }
 export function retreatShot(
   run: RunState,

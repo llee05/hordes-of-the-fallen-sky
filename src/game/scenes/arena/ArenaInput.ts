@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { GAME } from '../../config';
+import type { ClassAbilitySlot } from '../../data/classes';
 import type { SuccessorTrait } from '../../data/successors';
+import { movementTowardCursor } from '../../state/khanControls';
 import { isKhanActive } from '../../state/khan';
 import type { ActionKeys } from '../../systems/ActionKeys';
 import type { GamepadInput } from '../../systems/GamepadInput';
@@ -18,12 +20,12 @@ export interface ArenaActions {
   toggleDeveloperConsole(): void;
   changeZoom(steps: number): void;
   dash(): void;
+  useAbility(slot: ClassAbilitySlot): void;
   menuInput(action: 'next' | 'previous' | 'confirm'): void;
 }
 
 /** Phases where a controller Back press acts like Escape. */
 const BACK_PHASES = [
-  'playing',
   'paused',
   'building',
   'route',
@@ -47,13 +49,17 @@ export class ArenaInput {
   dragOrigin?: Phaser.Math.Vector2;
   /** Screen-space joystick drawing for touch movement. */
   joystick?: Phaser.GameObjects.Graphics;
-  private keys!: Record<
-    'up' | 'down' | 'left' | 'right' | 'w' | 'a' | 's' | 'd',
-    Phaser.Input.Keyboard.Key
-  >;
+  private keys!: Record<'up' | 'down' | 'left' | 'right', Phaser.Input.Keyboard.Key>;
   private actions!: ArenaActions;
   private readonly controllerMove = new Phaser.Math.Vector2();
+  private readonly controllerAim = new Phaser.Math.Vector2();
+  private controllerAimActive = false;
   private readonly touchMove = new Phaser.Math.Vector2();
+  private readonly pointerTarget = new Phaser.Math.Vector2();
+  private hasPointerTarget = false;
+  private pointerMoveHeld = false;
+  private pointerAttackHeld = false;
+  private controllerAttackHeld = false;
   private wheelZoomDelta = 0;
 
   constructor(
@@ -69,16 +75,18 @@ export class ArenaInput {
     this.actions = actions;
     this.wheelZoomDelta = 0;
     this.touchMove.set(0, 0);
+    this.controllerAim.set(0, 0);
+    this.controllerAimActive = false;
+    this.pointerMoveHeld = false;
+    this.pointerAttackHeld = false;
+    this.controllerAttackHeld = false;
+    this.hasPointerTarget = false;
     this.dragOrigin = undefined;
     this.keys = keyboard.addKeys({
       up: 'UP',
       down: 'DOWN',
       left: 'LEFT',
       right: 'RIGHT',
-      w: 'W',
-      a: 'A',
-      s: 'S',
-      d: 'D',
     }) as typeof this.keys;
     const bindAction = (key: string, action: () => void): void => {
       keyboard.on(`keydown-${key}`, (event: KeyboardEvent) => {
@@ -164,22 +172,46 @@ export class ArenaInput {
     // Native Space activation remains available to focused menu buttons.
     keyboard.removeCapture('SPACE');
     bindAction('SPACE', () => actions.dash());
+    for (const slot of ['q', 'w', 'e', 'r'] as const)
+      bindAction(slot.toUpperCase(), () => actions.useAbility(slot));
 
     // Drag anywhere in the arena for analog movement on touch screens.
     this.joystick = scene.add.graphics().setScrollFactor(0).setDepth(10000);
     scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.wasTouch && this.arena.run.phase === 'playing')
+      if (pointer.wasTouch && this.arena.run.phase === 'playing') {
         this.dragOrigin = new Phaser.Math.Vector2(pointer.x, pointer.y);
+        return;
+      }
+      if (this.arena.run.phase !== 'playing' || pointer.event.target !== scene.game.canvas) return;
+      this.controllerAimActive = false;
+      this.updatePointerTarget(pointer);
+      if (pointer.button === 0) this.pointerMoveHeld = true;
+      if (pointer.button === 2) this.pointerAttackHeld = true;
     });
     scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (!this.dragOrigin) return;
-      this.touchMove
-        .set(pointer.x - this.dragOrigin.x, pointer.y - this.dragOrigin.y)
-        .limit(45)
-        .scale(1 / 45);
+      if (this.dragOrigin) {
+        this.touchMove
+          .set(pointer.x - this.dragOrigin.x, pointer.y - this.dragOrigin.y)
+          .limit(45)
+          .scale(1 / 45);
+      } else if (!pointer.wasTouch) {
+        this.controllerAimActive = false;
+        this.updatePointerTarget(pointer);
+      }
     });
-    scene.input.on('pointerup', () => this.clearTouch());
-    scene.input.on('pointerupoutside', () => this.clearTouch());
+    const releasePointer = (pointer: Phaser.Input.Pointer): void => {
+      if (pointer.wasTouch) this.clearTouch();
+      const button = (pointer.event as PointerEvent).button;
+      if (button === 0) this.pointerMoveHeld = false;
+      if (button === 2) this.pointerAttackHeld = false;
+    };
+    scene.input.on('pointerup', releasePointer);
+    scene.input.on('pointerupoutside', releasePointer);
+    const preventContextMenu = (event: MouseEvent): void => event.preventDefault();
+    scene.game.canvas.addEventListener('contextmenu', preventContextMenu);
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
+      scene.game.canvas.removeEventListener('contextmenu', preventContextMenu),
+    );
   }
 
   /**
@@ -190,6 +222,11 @@ export class ArenaInput {
     const actions = this.actions;
     const controller = this.controller.poll();
     this.controllerMove.set(controller.x, controller.y);
+    if (controller.aimX || controller.aimY) {
+      this.controllerAim.set(controller.aimX, controller.aimY);
+      this.controllerAimActive = true;
+    }
+    this.controllerAttackHeld = controller.basicAttack;
     const phaseBeforeInput = this.arena.run.phase;
     if (controller.pause || (controller.back && BACK_PHASES.includes(this.arena.run.phase)))
       actions.togglePause();
@@ -201,7 +238,11 @@ export class ArenaInput {
         if (controller.previous) actions.selectSuccessor('outrider');
         else if (controller.next) actions.selectSuccessor('hearthguard');
       }
-      if (controller.confirm) actions.dash();
+      if (controller.gallop) actions.dash();
+      if (controller.abilityQ) actions.useAbility('q');
+      if (controller.abilityW) actions.useAbility('w');
+      if (controller.abilityE) actions.useAbility('e');
+      if (controller.abilityR) actions.useAbility('r');
       if (controller.build) actions.openBuildings();
       else if (controller.migrate) actions.openRoutes();
       else if (controller.formation) actions.cycleFormation();
@@ -215,19 +256,42 @@ export class ArenaInput {
     return this.arena.run.phase === phaseBeforeInput;
   }
 
-  /** The Khan's movement intent: keys first, then the controller stick, then touch. */
-  movement(): Phaser.Math.Vector2 {
-    const x =
-      Number(this.keys.right.isDown || this.keys.d.isDown) -
-      Number(this.keys.left.isDown || this.keys.a.isDown);
-    const y =
-      Number(this.keys.down.isDown || this.keys.s.isDown) -
-      Number(this.keys.up.isDown || this.keys.w.isDown);
+  /** The Khan's movement intent: arrow keys, controller, touch, then held left-click. */
+  movement(player: { x: number; y: number }): Phaser.Math.Vector2 {
+    const x = Number(this.keys.right.isDown) - Number(this.keys.left.isDown);
+    const y = Number(this.keys.down.isDown) - Number(this.keys.up.isDown);
     const movement = new Phaser.Math.Vector2(x, y);
     if (movement.lengthSq() > 0) movement.normalize();
     else if (this.controllerMove.lengthSq() > 0) movement.copy(this.controllerMove);
-    else movement.copy(this.touchMove);
+    else if (this.touchMove.lengthSq() > 0) movement.copy(this.touchMove);
+    else if (this.pointerMoveHeld) {
+      const toward = movementTowardCursor(
+        player,
+        this.hasPointerTarget ? this.pointerTarget : undefined,
+      );
+      const input = this.arena.landscape.world3d?.movementInput(toward.x, toward.y) ?? toward;
+      movement.set(input.x, input.y);
+    }
     return movement;
+  }
+
+  /** Current world-space aim from the right stick or mouse cursor. */
+  aimPoint(
+    player: { x: number; y: number },
+    facing: { x: number; y: number },
+  ): Phaser.Math.Vector2 {
+    if (this.controllerAimActive && this.controllerAim.lengthSq() > 0.01) {
+      const aim = this.arena.landscape.world3d
+        ? this.arena.landscape.world3d.movement(this.controllerAim.x, this.controllerAim.y)
+        : this.controllerAim;
+      return new Phaser.Math.Vector2(player.x + aim.x * 500, player.y + aim.y * 500);
+    }
+    if (this.hasPointerTarget) return this.pointerTarget.clone();
+    return new Phaser.Math.Vector2(player.x + facing.x * 500, player.y + facing.y * 500);
+  }
+
+  attackHeld(): boolean {
+    return this.pointerAttackHeld || this.controllerAttackHeld;
   }
 
   /** Redraws the touch joystick in screen space for the main camera's zoom. */
@@ -255,6 +319,9 @@ export class ArenaInput {
   /** Drops any held touch drag and partial wheel scroll, as every phase change does. */
   release(): void {
     this.wheelZoomDelta = 0;
+    this.pointerMoveHeld = false;
+    this.pointerAttackHeld = false;
+    this.controllerAttackHeld = false;
     this.clearTouch();
   }
 
@@ -262,5 +329,12 @@ export class ArenaInput {
     this.dragOrigin = undefined;
     this.touchMove.set(0, 0);
     this.joystick?.clear();
+  }
+
+  private updatePointerTarget(pointer: Phaser.Input.Pointer): void {
+    const world = this.arena.landscape.world3d?.groundPoint(pointer.x, pointer.y);
+    if (world) this.pointerTarget.set(world.x, world.y);
+    else this.arena.scene.cameras.main.getWorldPoint(pointer.x, pointer.y, this.pointerTarget);
+    this.hasPointerTarget = true;
   }
 }

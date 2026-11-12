@@ -22,7 +22,7 @@ import {
   OATHS,
   classDefinition,
   khanGallopSpeed,
-  khanTargetingRange,
+  khanBasicRange,
   playerVisualConfig,
 } from '../../src/game/data/classes';
 import {
@@ -66,60 +66,48 @@ describe('character classes and character profile', () => {
     }
 
     expect(classDefinition('mounted-archer').abilities.map((a) => a.name)).toEqual([
-      'Bow Shot',
-      'Saber Close Slash',
       'Flurry Arrow Volley',
-      'Circling Shot (Hit-and-Run)',
+      'Saber Close Slash',
+      'Circling Shot',
+      'Windrunner',
     ]);
     expect(classDefinition('lancer').abilities.map((a) => a.name)).toEqual([
-      'Lance Thrust',
       'Sweeping Strike',
       'Devastating Charge',
-      'Shock Lance (Braced Impact)',
+      'Line Breaker',
+      'Shock Lance',
     ]);
     expect(classDefinition('iron-pagoda').abilities.map((a) => a.name)).toEqual([
-      'Saber Cleave',
+      'Crushing Aura',
       'Unbreakable Stance',
-      'Iron Pagoda Aura',
+      'Shield Bash',
       'Shielded Advance',
     ]);
     expect(classDefinition('spirit-caller').abilities.map((a) => a.name)).toEqual([
-      'Spirit Bolt',
-      'Ritual Staff & Drum',
-      'Summon Ancestor (Call Spirit)',
-      'Spirit Ward (Tengri’s Blessing)',
+      'Drum Pulse',
+      'Summon Ancestor',
+      'Spirit Ward',
+      'Ancestral Chorus',
     ]);
   });
 
   it.each([
-    ['mounted-archer', 440, 440, 0, 1.35, 570, 58, 1.05, 10],
-    ['lancer', 250, 520, 0, 1.6, 638.4, 74, 0.95, 15],
-    ['iron-pagoda', 215, 410, 0, 1.35, 570, 82, 0.85, 16],
-    ['spirit-caller', 380, 390, 0.45, 1.35, 570, 70, 0.9, 12],
+    ['mounted-archer', 440, 440, 0, 'projectile', 500, 570, 6],
+    ['lancer', 250, 520, 0, 'line', 178, 638.4, 5],
+    ['iron-pagoda', 215, 410, 0, 'arc', 118, 570, 6],
+    ['spirit-caller', 380, 390, 0.45, 'projectile', 440, 570, 5],
   ] as const)(
-    '%s weapon, charged attack, gallop, and close defense match the class table',
-    (
-      classId,
-      range,
-      projectileSpeed,
-      homing,
-      chargedDamage,
-      gallopSpeed,
-      closeRadius,
-      closeInterval,
-      closeDamage,
-    ) => {
+    '%s weapon, manual basic, gallop, and Q cooldown match the class table',
+    (classId, range, projectileSpeed, homing, basicShape, basicRange, gallopSpeed, qCooldown) => {
       const cls = classDefinition(classId);
       const run = createRun('shared-hearth', { ...defaultCharacterProfile(), classId });
       expect(cls.stats.range).toBe(range);
       expect(cls.stats.projectileSpeed).toBe(projectileSpeed);
       expect(cls.weapon.homingTurnRate).toBe(homing);
-      expect(cls.weapon.chargedDamage).toBe(chargedDamage);
+      expect(cls.basicAttack.shape).toBe(basicShape);
+      expect(cls.basicAttack.range).toBe(basicRange);
       expect(khanGallopSpeed(run)).toBeCloseTo(gallopSpeed);
-      expect(cls.stats.closeDefenseRadius).toBe(closeRadius);
-      expect(cls.stats.closeDefenseInterval).toBe(closeInterval);
-      // The table lists close-defense damage at the class's starting damage stat.
-      expect(cls.stats.damage * cls.stats.closeDefenseDamage).toBeCloseTo(closeDamage, 0);
+      expect(cls.abilities[0].cooldown).toBe(qCooldown);
     },
   );
 
@@ -193,7 +181,7 @@ describe('character classes and character profile', () => {
     expect(archerRun.clan.food).toBe(82); // 70 base + 12 Steppe Herder
     expect(archerRun.clan.herd).toBe(5); // 3 base + 2 Steppe Herder
     expect(archerRun.clan.campEffects.bonuses.range).toBe(0);
-    expect(khanTargetingRange(archerRun)).toBe(440);
+    expect(khanBasicRange(archerRun)).toBe(500);
 
     const lancerProfile: CharacterProfile = {
       ...defaultCharacterProfile(),
@@ -215,7 +203,7 @@ describe('character classes and character profile', () => {
     });
     expect(lancerRun.clan.materials).toBe(68); // 50 base + 18 Artisan
     expect(lancerRun.clan.campEffects.bonuses.range).toBe(0);
-    expect(khanTargetingRange(lancerRun)).toBe(250);
+    expect(khanBasicRange(lancerRun)).toBe(178);
 
     const pagodaProfile: CharacterProfile = {
       ...defaultCharacterProfile(),
@@ -236,7 +224,7 @@ describe('character classes and character profile', () => {
     expect(pagodaRun.health).toBe(170);
     expect(pagodaRun.clan.campEffects.multipliers.clanProtection).toBeLessThan(0.9);
     expect(pagodaRun.clan.campEffects.bonuses.range).toBe(0);
-    expect(khanTargetingRange(pagodaRun)).toBe(215);
+    expect(khanBasicRange(pagodaRun)).toBe(118);
 
     const callerProfile: CharacterProfile = {
       ...defaultCharacterProfile(),
@@ -257,7 +245,7 @@ describe('character classes and character profile', () => {
     expect(callerRun.clan.spirit).toBe(18); // 0 base + 10 Ritual Apprentice + 8 Oath of the Spirits
     expect(callerRun.clan.campEffects.bonuses.resolveRecovery).toBeCloseTo(0.14); // 0.02 starting hearth + 0.12 Oath of the Spirits
     expect(callerRun.clan.campEffects.bonuses.range).toBe(0);
-    expect(khanTargetingRange(callerRun)).toBe(380);
+    expect(khanBasicRange(callerRun)).toBe(440);
 
     // Advance all four classes across level 3 and level 6 progression milestones
     while (archerRun.level < 6) gainExperience(archerRun, archerRun.nextLevelXp);

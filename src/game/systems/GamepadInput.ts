@@ -1,6 +1,14 @@
 export interface ControllerFrame {
   x: number;
   y: number;
+  aimX: number;
+  aimY: number;
+  basicAttack: boolean;
+  abilityQ: boolean;
+  abilityW: boolean;
+  abilityE: boolean;
+  abilityR: boolean;
+  gallop: boolean;
   confirm: boolean;
   back: boolean;
   pause: boolean;
@@ -31,6 +39,14 @@ export class GamepadInput {
     const frame: ControllerFrame = {
       x: 0,
       y: 0,
+      aimX: 0,
+      aimY: 0,
+      basicAttack: false,
+      abilityQ: false,
+      abilityW: false,
+      abilityE: false,
+      abilityR: false,
+      gallop: false,
       confirm: false,
       back: false,
       pause: false,
@@ -59,12 +75,18 @@ export class GamepadInput {
     frame.confirm = (tapped & 1) !== 0;
     frame.back = (tapped & (1 << 1)) !== 0;
     frame.pause = (tapped & (1 << 9)) !== 0;
-    frame.build = (tapped & (1 << 2)) !== 0;
-    frame.migrate = (tapped & (1 << 3)) !== 0;
+    frame.abilityQ = (tapped & 1) !== 0;
+    frame.abilityW = (tapped & (1 << 1)) !== 0;
+    frame.abilityE = (tapped & (1 << 2)) !== 0;
+    frame.abilityR = (tapped & (1 << 3)) !== 0;
+    frame.gallop = (tapped & (1 << 4)) !== 0;
+    frame.basicAttack = pressed(7);
+    frame.build = (tapped & (1 << 12)) !== 0;
+    frame.migrate = (tapped & (1 << 13)) !== 0;
     frame.formation = (tapped & (1 << 5)) !== 0;
     frame.journal = (tapped & (1 << 8)) !== 0;
-    frame.zoomIn = (tapped & (1 << 7)) !== 0;
-    frame.zoomOut = (tapped & (1 << 6)) !== 0;
+    frame.zoomIn = (tapped & (1 << 15)) !== 0;
+    frame.zoomOut = (tapped & (1 << 14)) !== 0;
     frame.zoomReset = (tapped & (1 << 11)) !== 0;
     const x = pad.axes[0] ?? 0;
     const y = pad.axes[1] ?? 0;
@@ -74,12 +96,13 @@ export class GamepadInput {
       frame.x = (x / length) * strength;
       frame.y = (y / length) * strength;
     }
-    const digitalX = Number(pressed(15)) - Number(pressed(14));
-    const digitalY = Number(pressed(13)) - Number(pressed(12));
-    if (digitalX || digitalY) {
-      const magnitude = Math.hypot(digitalX, digitalY);
-      frame.x = digitalX / magnitude;
-      frame.y = digitalY / magnitude;
+    const aimX = pad.axes[2] ?? 0;
+    const aimY = pad.axes[3] ?? 0;
+    const aimLength = Math.hypot(aimX, aimY);
+    if (aimLength > 0.24) {
+      const strength = Math.min(1, (aimLength - 0.24) / 0.76);
+      frame.aimX = (aimX / aimLength) * strength;
+      frame.aimY = (aimY / aimLength) * strength;
     }
     const direction =
       pressed(15) || pressed(13) || x > 0.55 || y > 0.55

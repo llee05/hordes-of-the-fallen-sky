@@ -4,14 +4,19 @@ import type { CharacterMotion } from '../../animation/CharacterMotion';
 import type { CampBarrier } from '../../assets/CampBarrier';
 import { effectAmount } from '../../../shared/visualSettings';
 import { GAME } from '../../config';
-import { classDefinition, khanTargetingRange } from '../../data/classes';
+import {
+  classDefinition,
+  khanBasicRange,
+  type ClassAbilityDefinition,
+  type ClassAbilitySlot,
+} from '../../data/classes';
 import { Enemy, Gem, Projectile } from '../../entities/actors';
 import { campBoundary } from '../../state/campBarrier';
 import { hasDevelopment } from '../../state/clan';
 import type { ProjectileArchive, WorldArchive } from '../../state/expeditionArchive';
 import { markExpedition } from '../../state/expeditionMetrics';
 import { isKhanActive } from '../../state/khan';
-import { retreatShot, spendMountedVolley } from '../../state/mountedCombat';
+import { aimedDirection, insideAttackArc, insideAttackLine } from '../../state/khanControls';
 import { gainExperience } from '../../state/run';
 import { khanVolleyFactors, volleyFactors } from '../../state/volley';
 import type { EnemyDefinition } from '../../types';
@@ -47,6 +52,14 @@ export interface CombatHost {
  * private methods, which browser tests still call through scene forwarders.
  */
 export class CombatSystem extends ArenaSystem {
+  private basicWindup = 0;
+  private readonly abilityCooldowns: Record<ClassAbilitySlot, number> = {
+    q: 0,
+    w: 0,
+    e: 0,
+    r: 0,
+  };
+
   constructor(
     arena: ArenaContext,
     private readonly host: CombatHost,
@@ -79,103 +92,225 @@ export class CombatSystem extends ArenaSystem {
     );
   }
 
-  /** Counts down the Khan's attack timer and fires when it is due. */
-  tickFire(dt: number): void {
+  reset(): void {
+    this.basicWindup = 0;
+    for (const slot of Object.keys(this.abilityCooldowns) as ClassAbilitySlot[])
+      this.abilityCooldowns[slot] = 0;
+  }
+
+  /** Advances manual Khan combat. No attack occurs unless basic attack is held. */
+  tickKhanCombat(dt: number, basicHeld: boolean, aim: { x: number; y: number }): void {
     if (this.run.phase !== 'playing') return;
-    this.tickCloseDefense(dt);
-    this.timers.attackTimer -= dt;
-    if (this.timers.attackTimer <= 0) this.fire();
+    this.timers.attackTimer = Math.max(0, this.timers.attackTimer - dt);
+    for (const slot of Object.keys(this.abilityCooldowns) as ClassAbilitySlot[])
+      this.abilityCooldowns[slot] = Math.max(0, this.abilityCooldowns[slot] - dt);
+    if (this.basicWindup > 0) {
+      if (!basicHeld || !isKhanActive(this.run)) {
+        this.basicWindup = 0;
+        return;
+      }
+      this.faceAim(aim, false);
+      this.basicWindup = Math.max(0, this.basicWindup - dt);
+      if (this.basicWindup <= 0) this.fireBasic(aim);
+    } else if (basicHeld && this.timers.attackTimer <= 0 && isKhanActive(this.run)) {
+      this.basicWindup = 0.12;
+      this.faceAim(aim, false);
+    }
   }
 
-  private tickCloseDefense(dt: number): void {
-    if (!isKhanActive(this.run)) return;
-    this.timers.closeDefenseTimer = Math.max(0, (this.timers.closeDefenseTimer ?? 0) - dt);
-    if (this.timers.closeDefenseTimer > 0) return;
+  isWindingUp(): boolean {
+    return this.basicWindup > 0;
+  }
+
+  fireBasic(aim: { x: number; y: number }): boolean {
+    if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.timers.attackTimer > 0)
+      return false;
     const cls = classDefinition(this.run.character?.classId);
-    let struck = false;
-    this.spatial.forEachNearby(
-      this.player.x,
-      this.player.y,
-      cls.stats.closeDefenseRadius,
-      (enemy) => {
-        if (
-          this.landscape.navigation &&
-          !this.landscape.navigation.lineClear(this.player, enemy, 0)
-        )
-          return;
-        if (cls.id === 'spirit-caller') {
-          enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
-          enemy.setVelocity(0, 0);
-        }
-        this.damageEnemy(enemy, this.run.stats.damage * cls.stats.closeDefenseDamage);
-        struck = true;
-      },
-    );
-    if (!struck) return;
-    this.timers.closeDefenseTimer = cls.stats.closeDefenseInterval;
-    this.host.playerMotion.attack();
-    this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 5);
-    this.audio.play('impact', this.player);
-    markExpedition(this.run, 'fight');
-  }
-
-  fire(): void {
-    let hostFired = false;
-    const momentum = this.run.clan.momentum;
-    const target = this.spatial.nearest(
-      this.player.x,
-      this.player.y,
-      khanTargetingRange(this.run) + momentum * 120,
-      (e) => !this.landscape.navigation || this.landscape.navigation.lineClear(this.player, e, 0),
-    );
-    if (isKhanActive(this.run) && target) {
-      this.host.playerMotion.attack();
-      if (this.player.body!.velocity.lengthSq() < 4) this.host.faceTarget(target.x, target.y);
-      const charged = this.run.combat.ready;
-      const cls = classDefinition(this.run.character?.classId);
-      const retreat = retreatShot(this.run, this.player, this.camp, target, this.facing);
-      const released = this.shootVolley(
+    const basicRange = khanBasicRange(this.run);
+    const direction = this.faceAim(aim);
+    const extraProjectiles = Math.max(0, this.run.stats.projectiles - cls.stats.projectiles);
+    const scaledDamage = cls.basicAttack.damage * (1 + extraProjectiles * 0.3);
+    let released = false;
+    if (cls.basicAttack.shape === 'projectile') {
+      const count = cls.basicAttack.projectiles + extraProjectiles;
+      released = this.shootVolley(
         this.player.x,
         this.player.y,
-        target,
-        this.run.stats.projectiles,
-        (1 + momentum * 0.3) * (retreat ? GAME.mounted.retreatDamage : 1),
+        aim,
+        count,
+        cls.basicAttack.damage,
         false,
-        charged,
+        false,
         'khan',
+        undefined,
+        false,
+        undefined,
+        basicRange,
       );
-      hostFired ||= released;
-      if (released && charged && cls.id === 'spirit-caller') {
-        // Summon Ancestor (Call Spirit): channels an ancestral spectral bolt alongside charged volleys
-        this.shootVolley(
-          this.player.x,
-          this.player.y,
-          target,
-          1,
-          0.85,
-          true,
-          true,
-          'khan',
-          1,
-          true,
-        );
-      }
-      if (released && charged) {
-        spendMountedVolley(this.run);
-        this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 5);
-      }
+    } else if (cls.basicAttack.shape === 'line') {
+      released = this.strikeLine(direction, basicRange, cls.basicAttack.width, scaledDamage);
+    } else {
+      released = this.strikeArc(direction, basicRange, cls.basicAttack.width, scaledDamage);
     }
-    if (hostFired) this.run.combat.volleys++;
     this.timers.attackTimer =
-      this.run.stats.attackInterval *
-      this.run.clan.campEffects.multipliers.hostInterval *
-      (this.run.clan.formation === 'retreat' && momentum > 0.4 ? 0.7 : 1);
+      this.run.stats.attackInterval * this.run.clan.campEffects.multipliers.hostInterval;
+    if (released) this.run.combat.volleys++;
+    return released;
+  }
+
+  /** Compatibility hook for tests and developer tools: manually fires along current facing. */
+  fire(): boolean {
+    const cls = classDefinition(this.run.character?.classId);
+    return this.fireBasic({
+      x: this.player.x + this.facing.x * cls.basicAttack.range,
+      y: this.player.y + this.facing.y * cls.basicAttack.range,
+    });
+  }
+
+  useAbility(slot: ClassAbilitySlot, aim: { x: number; y: number }): boolean {
+    if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.abilityCooldowns[slot] > 0)
+      return false;
+    const cls = classDefinition(this.run.character?.classId);
+    const ability = cls.abilities.find((entry) => entry.slot === slot)!;
+    this.basicWindup = 0;
+    const direction = this.faceAim(aim);
+    const effect = ability;
+    let released = true;
+    if (effect.kind === 'volley') {
+      released = this.shootVolley(
+        this.player.x,
+        this.player.y,
+        aim,
+        effect.projectiles,
+        effect.damage,
+        cls.id === 'spirit-caller',
+        false,
+        'khan',
+        cls.id === 'spirit-caller' ? 1 : undefined,
+        cls.id === 'spirit-caller',
+        undefined,
+        cls.stats.range + this.run.clan.campEffects.bonuses.range,
+      );
+    } else if (effect.kind === 'arc') {
+      this.strikeArc(direction, effect.range, effect.angle, effect.damage);
+    } else if (effect.kind === 'line') {
+      this.strikeLine(direction, effect.range, effect.width, effect.damage, true);
+    } else if (effect.kind === 'pulse') {
+      this.strikePulse(effect.range, effect.damage, cls.id === 'spirit-caller');
+    } else if (effect.kind === 'charge') {
+      this.strikeLine(direction, effect.range, effect.width, effect.damage, true);
+      this.run.combat.gallopSerial++;
+      this.timers.dashRemaining = Math.max(this.timers.dashRemaining, GAME.dash.duration);
+      this.timers.invulnerable = Math.max(this.timers.invulnerable, GAME.dash.duration);
+    } else if (effect.kind === 'guard') {
+      this.run.health = Math.min(this.run.stats.maxHealth, this.run.health + effect.heal);
+      this.timers.invulnerable = Math.max(this.timers.invulnerable, effect.duration);
+    } else {
+      this.run.health = Math.min(this.run.stats.maxHealth, this.run.health + effect.heal);
+      this.run.clan.integrity = Math.min(
+        GAME.clan.maxResolve,
+        this.run.clan.integrity + effect.resolve,
+      );
+      this.timers.invulnerable = Math.max(this.timers.invulnerable, effect.duration);
+    }
+    if (!released) return false;
+    this.abilityCooldowns[slot] = ability.cooldown;
+    this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 7);
+    if (effect.kind === 'guard' || effect.kind === 'ward') this.audio.play('spell', this.player);
+    markExpedition(this.run, 'fight');
+    this.arena.hud.refresh();
+    return true;
+  }
+
+  abilityStates(): (ClassAbilityDefinition & { remaining: number })[] {
+    return classDefinition(this.run.character?.classId).abilities.map((ability) => ({
+      ...ability,
+      remaining: this.abilityCooldowns[ability.slot],
+    }));
+  }
+
+  private faceAim(aim: { x: number; y: number }, release = true): { x: number; y: number } {
+    const direction = aimedDirection(this.player, aim, this.facing);
+    this.facing.x = direction.x;
+    this.facing.y = direction.y;
+    const faceX = this.landscape.world3d?.screenX(direction.x, direction.y) ?? direction.x;
+    if (Math.abs(faceX) > 0.01) this.player.setFlipX(faceX < 0);
+    if (release) this.host.playerMotion.attack();
+    return direction;
+  }
+
+  private strikeLine(
+    direction: { x: number; y: number },
+    range: number,
+    width: number,
+    damageMultiplier: number,
+    pin = false,
+  ): boolean {
+    let struck = false;
+    this.spatial.forEachNearby(this.player.x, this.player.y, range + width / 2, (enemy) => {
+      if (
+        !insideAttackLine(this.player, direction, enemy, range, width) ||
+        (this.landscape.navigation && !this.landscape.navigation.lineClear(this.player, enemy, 0))
+      )
+        return;
+      if (pin) {
+        enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
+        enemy.setVelocity(0, 0);
+      }
+      this.damageEnemy(enemy, this.run.stats.damage * damageMultiplier);
+      struck = true;
+    });
+    this.finishMeleeAttack(struck);
+    return true;
+  }
+
+  private strikeArc(
+    direction: { x: number; y: number },
+    range: number,
+    angle: number,
+    damageMultiplier: number,
+  ): boolean {
+    let struck = false;
+    this.spatial.forEachNearby(this.player.x, this.player.y, range, (enemy) => {
+      if (
+        !insideAttackArc(this.player, direction, enemy, range, angle) ||
+        (this.landscape.navigation && !this.landscape.navigation.lineClear(this.player, enemy, 0))
+      )
+        return;
+      this.damageEnemy(enemy, this.run.stats.damage * damageMultiplier);
+      struck = true;
+    });
+    this.finishMeleeAttack(struck);
+    return true;
+  }
+
+  private strikePulse(range: number, damageMultiplier: number, pin: boolean): boolean {
+    let struck = false;
+    this.spatial.forEachNearby(this.player.x, this.player.y, range, (enemy) => {
+      if (this.landscape.navigation && !this.landscape.navigation.lineClear(this.player, enemy, 0))
+        return;
+      if (pin) {
+        enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
+        enemy.setVelocity(0, 0);
+      }
+      this.damageEnemy(enemy, this.run.stats.damage * damageMultiplier);
+      struck = true;
+    });
+    this.finishMeleeAttack(struck);
+    return true;
+  }
+
+  private finishMeleeAttack(struck: boolean): void {
+    const cls = classDefinition(this.run.character?.classId);
+    this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 5);
+    this.audio.play(struck ? 'impact' : 'shoot', this.player);
+    markExpedition(this.run, 'fight');
   }
 
   shootVolley(
     x: number,
     y: number,
-    target: Enemy,
+    target: { x: number; y: number },
     count: number,
     damageOrMultiplier: number,
     ancestral = false,
@@ -184,6 +319,7 @@ export class CombatSystem extends ArenaSystem {
     echoIndex?: number,
     ghost = false,
     origin?: Enemy,
+    range?: number,
   ): boolean {
     const cls = classDefinition(this.run.character?.classId);
     const volley =
@@ -256,7 +392,9 @@ export class CombatSystem extends ArenaSystem {
       bolt.setData('dealt-damage', 0);
       bolt.setData('precision', false);
       bolt.setData('ghost', ghost);
-      bolt.remaining = GAME.projectile.lifetime;
+      bolt.remaining = range
+        ? range / Math.max(1, baseSpeed * volley.speed)
+        : GAME.projectile.lifetime;
       bolt.setVelocity(
         Math.cos(angle) * baseSpeed * volley.speed,
         Math.sin(angle) * baseSpeed * volley.speed,

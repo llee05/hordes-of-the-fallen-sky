@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { CHARACTER_CLASSES } from '../../src/shared/characterProfile';
+import { classDefinition } from '../../src/game/data/classes';
 import { buildStructure, clanDamageMultiplier } from '../../src/game/state/clan';
 import { campStatPreview } from '../../src/game/state/progressionPreview';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 describe('exact progression previews', () => {
   it.each(CHARACTER_CLASSES)(
-    '%s previews its spacing when unlocking Burning Tempest',
+    '%s previews its manual basic when unlocking Burning Tempest',
     (classId) => {
       const run = createRun();
       delete run.clan.estate;
       run.character!.classId = classId;
-      run.stats.projectiles = 3;
+      run.stats.projectiles = classDefinition(classId).stats.projectiles + 2;
       run.phase = 'building';
       run.clan.materials = 1000;
       run.clan.spirit = 1000;
@@ -18,14 +19,16 @@ describe('exact progression previews', () => {
       run.clan.buildings.sanctuary = 1;
       run.clan.paths.archery = ['fire-arrows'];
       const changes = campStatPreview(run, 'sanctuary', 'wind-shamans');
-      expect(changes.find((c) => c.label === 'Khan arrows per volley')).toMatchObject({
-        before: '3',
-        after: '5',
-      });
-      const spacing = changes.find((c) => c.label === 'Khan wide-volley spacing');
+      const projectiles = changes.find((c) => c.label === 'Khan basic attack projectiles');
+      const spacing = changes.find((c) => c.label === 'Khan basic attack spread');
       if (classId === 'mounted-archer') {
+        expect(projectiles).toMatchObject({ before: '3', after: '5' });
         expect(spacing).toMatchObject({ before: '6.875°', after: '16.043°' });
+      } else if (classId === 'spirit-caller') {
+        expect(projectiles).toMatchObject({ before: '3', after: '5' });
+        expect(spacing).toBeUndefined();
       } else {
+        expect(projectiles).toBeUndefined();
         expect(spacing).toBeUndefined();
       }
     },
