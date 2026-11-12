@@ -28,6 +28,23 @@ export class ArenaEffects {
     }
   }
 
+  /** Expanding translucent ring reused by spirit pulses and sacred areas. */
+  ring(x: number, y: number, radius: number, color: number): void {
+    const ring = this.arena.scene.add
+      .graphics()
+      .setPosition(x, y)
+      .setDepth(9500)
+      .lineStyle(3, color, 0.7)
+      .strokeCircle(0, 0, Math.max(8, radius * 0.25));
+    this.arena.scene.tweens.add({
+      targets: ring,
+      alpha: 0,
+      scale: 4,
+      duration: 420,
+      onComplete: () => ring.destroy(),
+    });
+  }
+
   /** One dust puff behind a rider at (x, y) facing along `facingX`. */
   dust(x: number, y: number, facingX: number, galloping: boolean): void {
     const { scene } = this.arena;

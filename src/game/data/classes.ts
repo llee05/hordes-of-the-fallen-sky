@@ -63,7 +63,35 @@ export type ClassAbilityEffect =
   | { kind: 'pulse'; range: number; width: number; damage: number }
   | { kind: 'charge'; range: number; width: number; damage: number }
   | { kind: 'guard'; duration: number; heal: number }
-  | { kind: 'ward'; duration: number; heal: number; resolve: number };
+  | { kind: 'ward'; duration: number; heal: number; resolve: number }
+  | {
+      kind: 'guardians';
+      duration: number;
+      count: number;
+      attackEvery: number;
+      range: number;
+      damage: number;
+      intercepts: number;
+      interceptRange: number;
+    }
+  | { kind: 'gust'; range: number; width: number; damage: number; push: number }
+  | {
+      kind: 'ovoo';
+      duration: number;
+      range: number;
+      slowDuration: number;
+      spiritDamage: number;
+      spiritRate: number;
+    }
+  | {
+      kind: 'veil';
+      duration: number;
+      energyDuration: number;
+      spiritMultiplier: number;
+      spectralCopies: number;
+      echoEvery: number;
+      echoDamage: number;
+    };
 
 interface ClassAbilityBase {
   id: string;
@@ -79,7 +107,7 @@ export type ClassAbilityDefinition = ClassAbilityBase & ClassAbilityEffect;
 export interface ClassBasicAttackDefinition {
   name: string;
   description: string;
-  shape: 'projectile' | 'line' | 'arc';
+  shape: 'projectile' | 'line' | 'arc' | 'pulse';
   range: number;
   damage: number;
   /** Projectile collision width, line width, or arc angle in radians. */
@@ -90,6 +118,14 @@ export interface ClassBasicAttackDefinition {
 export interface ClassHeavyAttackDefinition extends ClassBasicAttackDefinition {
   cooldown: number;
   windup: number;
+  charge?: {
+    maxDuration: number;
+    waveEvery: number;
+    maxWaves: number;
+    waveDelay: number;
+    rangeStep: number;
+    slowDuration: number;
+  };
 }
 
 export interface ClassProgressionNode {
@@ -573,7 +609,7 @@ export const CLASSES: readonly ClassDefinition[] = [
     title: 'Spirit Caller',
     subtitle: 'Ancestral Wind Channeler',
     summary:
-      'A conduit between the living clan and the eternal sky who commands homing spirit bolts, ancestral echoes, and protective wards.',
+      'A conduit between the living clan and the eternal sky who gathers spiritual energy, summons Ongod guardians, and parts the veil between worlds.',
     stats: {
       maxHealth: GAME.classes['spirit-caller'].health,
       speed: GAME.classes['spirit-caller'].speed,
@@ -606,50 +642,50 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedDamage: GAME.classes['spirit-caller'].chargedDamage,
     },
     basicAttack: {
-      name: 'Seeking Spirit Bolt',
-      description: 'A deliberate turquoise bolt that bends toward nearby foes.',
+      name: 'Spirit Wisps',
+      description: 'Small homing wisps that generate spiritual energy whenever they hit.',
       ...GAME.classes['spirit-caller'].basic,
     },
     heavyAttack: {
-      name: 'Ancestral Bolt',
-      description: 'A large, slow-cast spirit bolt that seeks foes across a greater distance.',
+      name: 'Ancestral Drum',
+      description: 'An expanding slowing shockwave; hold longer to release up to three waves.',
       ...GAME.classes['spirit-caller'].heavy,
     },
     abilities: [
       {
-        id: 'drum-pulse',
+        id: 'ongod-guardians',
         slot: 'q',
         slotLabel: '1',
-        name: 'Drum Pulse',
-        description: 'Sounds the sacred drum to damage and pin nearby enemies.',
+        name: 'Ongod Guardians',
+        description: 'Summons two spirits that attack nearby foes and intercept four shots.',
         ...GAME.classes['spirit-caller'].abilities.q,
       },
       {
-        id: 'summon-ancestor',
+        id: 'wind-of-tengri',
         slot: 'w',
         slotLabel: '2',
-        name: 'Summon Ancestor',
-        description: 'Calls ancestral echoes to loose five spectral bolts toward the cursor.',
+        name: 'Wind of Tengri',
+        description: 'Drives a damaging gust through a broad lane and pushes enemies away.',
         ...GAME.classes['spirit-caller'].abilities.w,
       },
       {
-        id: 'spirit-ward',
+        id: 'sacred-ovoo',
         slot: 'e',
         slotLabel: '3',
-        name: 'Spirit Ward',
-        description: 'Raises a brief ward that restores Khan vitality and clan resolve.',
+        name: 'Sacred Ovoo',
+        description: 'Raises a slowing sacred area that empowers spirits fighting within it.',
         ...GAME.classes['spirit-caller'].abilities.e,
       },
       {
-        id: 'ancestral-chorus',
+        id: 'veil-between-worlds',
         slot: 'r',
         slotLabel: '4',
-        name: 'Ancestral Chorus',
-        description: 'Releases a wide chorus of nine homing spirit bolts.',
+        name: 'Veil Between Worlds',
+        description: 'Multiplies active spirits and creates spectral echoes of Spirit Wisps.',
         ...GAME.classes['spirit-caller'].abilities.r,
       },
     ],
-    keyTraits: ['Homing Spirit Bolts', 'Ancestral Summons', 'Clan Ward & Blessing'],
+    keyTraits: ['Spiritual Energy', 'Ongod Guardians', 'Veil Between Worlds'],
     progression: [
       {
         level: 3,

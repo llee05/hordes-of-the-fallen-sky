@@ -28,6 +28,7 @@ import { ArenaSystem } from './ArenaSystem';
 import { captureBody } from './bodyArchive';
 import type { ClanDamage } from './ClanDamage';
 import type { EnemyDirector } from './EnemyDirector';
+import { SpiritCallerSystem, type SpiritProjectileSource } from './SpiritCallerSystem';
 
 /**
  * What a hostile shot reads from its shooter. Browser tests fire from plain
@@ -54,7 +55,8 @@ export interface CombatHost {
  * private methods, which browser tests still call through scene forwarders.
  */
 export class CombatSystem extends ArenaSystem {
-  private attackWindup?: { kind: 'light' | 'heavy'; remaining: number };
+  private attackWindup?: { kind: 'light' | 'heavy'; remaining: number; charge?: number };
+  private readonly spiritCaller: SpiritCallerSystem;
 
   constructor(
     arena: ArenaContext,
@@ -63,6 +65,26 @@ export class CombatSystem extends ArenaSystem {
     private readonly clanDamage: ClanDamage,
   ) {
     super(arena);
+    this.spiritCaller = new SpiritCallerSystem(arena, {
+      damageEnemy: (enemy, amount) => this.damageEnemy(enemy, amount),
+      shootSpiritVolley: (target, count, damage, range, width, source) =>
+        this.shootVolley(
+          this.player.x,
+          this.player.y,
+          target,
+          count,
+          damage,
+          true,
+          false,
+          'khan',
+          source === 'guardian' ? 1 : 2,
+          true,
+          undefined,
+          range,
+          width,
+          source,
+        ),
+    });
   }
 
   /** Registers the shot, bolt and contact overlaps; call once per `create`. */
@@ -75,6 +97,7 @@ export class CombatSystem extends ArenaSystem {
         !this.projectileReaches(shot as Projectile)
       )
         return;
+      if (this.spiritCaller.intercepts(shot as Projectile)) return;
       const damage = (shot as Projectile).damage;
       (shot as Projectile).disableBody(true, true);
       this.host.takeDamage(damage);
@@ -91,6 +114,7 @@ export class CombatSystem extends ArenaSystem {
   reset(): void {
     this.attackWindup = undefined;
     this.timers.abilityCooldowns = { q: 0, w: 0, e: 0, r: 0 };
+    this.spiritCaller.reset();
   }
 
   /** Advances manual Khan combat. No attack occurs unless a mouse button or trigger is held. */
@@ -105,9 +129,38 @@ export class CombatSystem extends ArenaSystem {
     const cooldowns = this.cooldowns();
     for (const slot of Object.keys(cooldowns) as ClassAbilitySlot[])
       cooldowns[slot] = Math.max(0, cooldowns[slot] - dt);
+    this.spiritCaller.tick(dt);
     if (this.attackWindup) {
       const held = this.attackWindup.kind === 'light' ? lightHeld : heavyHeld;
-      if (!held || !isKhanActive(this.run)) {
+      const cls = classDefinition(this.run.character?.classId);
+      const drumCharge =
+        this.attackWindup.kind === 'heavy' && cls.id === 'spirit-caller'
+          ? cls.heavyAttack.charge
+          : undefined;
+      if (!isKhanActive(this.run)) {
+        this.attackWindup = undefined;
+        return;
+      }
+      if (drumCharge) {
+        if (!held) {
+          const charge = this.attackWindup.charge ?? 0;
+          this.attackWindup = undefined;
+          if (charge >= cls.heavyAttack.windup) this.fireHeavy(aim, charge);
+          return;
+        }
+        this.faceAim(aim, false);
+        this.attackWindup.charge = Math.min(
+          drumCharge.maxDuration,
+          (this.attackWindup.charge ?? 0) + dt,
+        );
+        if (this.attackWindup.charge >= drumCharge.maxDuration) {
+          const charge = this.attackWindup.charge;
+          this.attackWindup = undefined;
+          this.fireHeavy(aim, charge);
+        }
+        return;
+      }
+      if (!held) {
         this.attackWindup = undefined;
         return;
       }
@@ -124,6 +177,7 @@ export class CombatSystem extends ArenaSystem {
       this.attackWindup = {
         kind,
         remaining: kind === 'heavy' ? cls.heavyAttack.windup : 0.12,
+        charge: kind === 'heavy' && cls.id === 'spirit-caller' ? 0 : undefined,
       };
       this.faceAim(aim, false);
     }
@@ -137,17 +191,24 @@ export class CombatSystem extends ArenaSystem {
     return this.fireAttack('light', aim);
   }
 
-  fireHeavy(aim: { x: number; y: number }): boolean {
-    return this.fireAttack('heavy', aim);
+  fireHeavy(aim: { x: number; y: number }, charge = 0): boolean {
+    return this.fireAttack('heavy', aim, charge);
   }
 
-  private fireAttack(kind: 'light' | 'heavy', aim: { x: number; y: number }): boolean {
+  private fireAttack(kind: 'light' | 'heavy', aim: { x: number; y: number }, charge = 0): boolean {
     if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.timers.attackTimer > 0)
       return false;
     const cls = classDefinition(this.run.character?.classId);
     const attack: ClassBasicAttackDefinition = kind === 'heavy' ? cls.heavyAttack : cls.basicAttack;
     const range = kind === 'heavy' ? khanHeavyRange(this.run) : khanBasicRange(this.run);
     const direction = this.faceAim(aim);
+    if (kind === 'heavy' && cls.id === 'spirit-caller' && cls.heavyAttack.charge) {
+      const released = this.spiritCaller.releaseDrum(cls.heavyAttack, charge);
+      this.timers.attackTimer =
+        cls.heavyAttack.cooldown * this.run.clan.campEffects.multipliers.hostInterval;
+      if (released) this.run.combat.volleys++;
+      return released;
+    }
     const extraProjectiles = Math.max(0, this.run.stats.projectiles - cls.stats.projectiles);
     const scaledDamage = attack.damage * (1 + extraProjectiles * 0.3);
     let released = false;
@@ -167,11 +228,14 @@ export class CombatSystem extends ArenaSystem {
         undefined,
         range,
         attack.width,
+        cls.id === 'spirit-caller' && kind === 'light' ? 'wisp' : undefined,
       );
     } else if (attack.shape === 'line') {
       released = this.strikeLine(direction, range, attack.width, scaledDamage);
-    } else {
+    } else if (attack.shape === 'arc') {
       released = this.strikeArc(direction, range, attack.width, scaledDamage);
+    } else {
+      released = this.strikePulse(range, scaledDamage, false);
     }
     this.timers.attackTimer =
       (kind === 'heavy' ? cls.heavyAttack.cooldown : this.run.stats.attackInterval) *
@@ -224,10 +288,17 @@ export class CombatSystem extends ArenaSystem {
       this.run.combat.gallopSerial++;
       this.timers.dashRemaining = Math.max(this.timers.dashRemaining, GAME.dash.duration);
       this.timers.invulnerable = Math.max(this.timers.invulnerable, GAME.dash.duration);
+    } else if (
+      effect.kind === 'guardians' ||
+      effect.kind === 'gust' ||
+      effect.kind === 'ovoo' ||
+      effect.kind === 'veil'
+    ) {
+      released = this.spiritCaller.cast(effect, direction);
     } else if (effect.kind === 'guard') {
       this.run.health = Math.min(this.run.stats.maxHealth, this.run.health + effect.heal);
       this.timers.invulnerable = Math.max(this.timers.invulnerable, effect.duration);
-    } else {
+    } else if (effect.kind === 'ward') {
       this.run.health = Math.min(this.run.stats.maxHealth, this.run.health + effect.heal);
       this.run.clan.integrity = Math.min(
         GAME.clan.maxResolve,
@@ -238,7 +309,8 @@ export class CombatSystem extends ArenaSystem {
     if (!released) return false;
     this.cooldowns()[slot] = ability.cooldown;
     this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 7);
-    if (effect.kind === 'guard' || effect.kind === 'ward') this.audio.play('spell', this.player);
+    if (['guard', 'ward', 'guardians', 'gust', 'ovoo', 'veil'].includes(effect.kind))
+      this.audio.play('spell', this.player);
     markExpedition(this.run, 'fight');
     this.arena.hud.refresh();
     return true;
@@ -249,6 +321,10 @@ export class CombatSystem extends ArenaSystem {
       ...ability,
       remaining: this.cooldowns()[ability.slot],
     }));
+  }
+
+  spiritStatus(): { energy: number; maximum: number; activeSpirits: number } | undefined {
+    return this.spiritCaller.status();
   }
 
   private cooldowns(): Record<ClassAbilitySlot, number> {
@@ -347,6 +423,7 @@ export class CombatSystem extends ArenaSystem {
     origin?: Enemy,
     range?: number,
     collisionWidth?: number,
+    spiritSource?: SpiritProjectileSource,
   ): boolean {
     const cls = classDefinition(this.run.character?.classId);
     const volley =
@@ -419,6 +496,7 @@ export class CombatSystem extends ArenaSystem {
       bolt.setData('dealt-damage', 0);
       bolt.setData('precision', false);
       bolt.setData('ghost', ghost);
+      bolt.setData('spirit-source', spiritSource);
       bolt.remaining = range
         ? range / Math.max(1, baseSpeed * volley.speed)
         : GAME.projectile.lifetime;
@@ -535,6 +613,9 @@ export class CombatSystem extends ArenaSystem {
     if (bolt.hitTargets.get(enemy) === enemy.spawnId) return;
     bolt.hitTargets.set(enemy, enemy.spawnId);
     const hitDamage = bolt.damage;
+    if (bolt.getData('spirit-source') === 'wisp') {
+      if (this.spiritCaller.gainWispEnergy()) this.arena.hud.refresh();
+    }
 
     if (bolt.pierces > 0) {
       bolt.pierces -= 1;
@@ -654,6 +735,7 @@ export class CombatSystem extends ArenaSystem {
           echoIndex: p.echoIndex,
           precision: p.getData('precision') as boolean | undefined,
           ghost: p.getData('ghost') as boolean | undefined,
+          spiritSource: p.getData('spirit-source') as ProjectileArchive['spiritSource'],
           baseDamage: p.getData('base-damage') as number | undefined,
           dealtDamage: p.getData('dealt-damage') as number | undefined,
           rotation: p.rotation,
@@ -683,6 +765,7 @@ export class CombatSystem extends ArenaSystem {
         Object.assign(p, state);
         p.setData('precision', saved.precision);
         p.setData('ghost', saved.ghost);
+        p.setData('spirit-source', saved.spiritSource);
         p.setData('base-damage', saved.baseDamage);
         p.setData('dealt-damage', saved.dealtDamage);
         p.setScale(hostile ? 1.1 : 1)

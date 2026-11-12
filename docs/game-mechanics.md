@@ -118,7 +118,7 @@ Friendly projectiles last 1.6 seconds. Khan projectile speed and starting pierce
 
 Sacred Ovoo lightning searches within 520 units of the living Khan, then the camp, and deals three times shared damage in a 70-unit radius. Its base interval is 3.5 seconds, or 1.8 with Shaman’s Ger, multiplied by the camp’s sanctuary-interval modifier. The Wagon Yard fires within 520 units every 0.9 seconds, at shared damage ×1.5 while stationary or ×0.7 during migration. These support clocks continue during migration and succession and remain independent of host firing haste.
 
-The building requirements for **Burning Tempest** are listed in [the camp overview](../README.md#build-defend-migrate). Ordinary friendly volleys gain two additional projectiles. Mounted Archer, rider and wagon volleys gain a wider fan and alternating curvature ±0.65 radians/second. Other Khan classes retain their weapon's spread; Spirit Caller bolts home instead of using alternating curvature. Khan, rider and wagon projectiles participate; the Spirit Caller's additional ancestral bolt remains a single shot. Fire-arrow hits apply a two-second burn at shared damage ×0.45 per second, multiplied by the camp burn-damage modifier; hits refresh the timer rather than stacking separate burns.
+The building requirements for **Burning Tempest** are listed in [the camp overview](../README.md#build-defend-migrate). Ordinary friendly volleys gain two additional projectiles. Mounted Archer, rider and wagon volleys gain a wider fan and alternating curvature ±0.65 radians/second. Other Khan classes retain their weapon's spread; Spirit Wisps and Spirit Caller summon projectiles home instead of using alternating curvature. Khan, rider and wagon projectiles participate. Fire-arrow hits apply a two-second burn at shared damage ×0.45 per second, multiplied by the camp burn-damage modifier; hits refresh the timer rather than stacking separate burns.
 
 ### Choosing a new Khan
 
@@ -374,9 +374,11 @@ their automatic targeting.
   stronger personal armor, recovery, and clan protection. Shielded advances pin.
   Its progression strengthens health, damage, piercing,
   cleaves, and firing speed.
-- **Spirit Caller** uses deliberate homing staff bolts, a pinning drum pulse,
-  ancestral volleys and a restorative ward. Its progression adds bolts, pickup radius, damage,
-  firing speed, piercing, and health.
+- **Spirit Caller** releases homing Spirit Wisps that build spiritual energy and charges
+  an Ancestral Drum for expanding slowing waves. Ongod Guardians attack and intercept a
+  limited number of shots, Wind of Tengri clears a lane, Sacred Ovoo slows enemies and
+  empowers spirits, and Veil Between Worlds multiplies summons and repeats wisp attacks.
+  Its progression adds bolts, pickup radius, damage, firing speed, piercing, and health.
 
 `src/game/data/classes.ts` owns weapon, ability, and progression definitions;
 `GAME.classes`, `GAME.backgrounds`, and `GAME.oaths` own their starting balance.
@@ -385,12 +387,12 @@ its class loadout. Successors retain the expedition's class and progression.
 
 ### Manual attacks and placeholder abilities
 
-| Class          | Left-click light    | Right-click heavy | 1                   | 2                  | 3             | 4                |
-| -------------- | ------------------- | ----------------- | ------------------- | ------------------ | ------------- | ---------------- |
-| Mounted Archer | Aimed Arrow         | Drawn Power Shot  | Flurry Arrow Volley | Saber Close Slash  | Circling Shot | Windrunner       |
-| Lancer         | Couched Thrust      | Charging Thrust   | Sweeping Strike     | Devastating Charge | Line Breaker  | Shock Lance      |
-| Iron Pagoda    | Heavy Saber Arc     | Overhead Cleave   | Crushing Aura       | Unbreakable Stance | Shield Bash   | Shielded Advance |
-| Spirit Caller  | Seeking Spirit Bolt | Ancestral Bolt    | Drum Pulse          | Summon Ancestor    | Spirit Ward   | Ancestral Chorus |
+| Class          | Left-click light | Right-click heavy | 1                   | 2                  | 3             | 4                   |
+| -------------- | ---------------- | ----------------- | ------------------- | ------------------ | ------------- | ------------------- |
+| Mounted Archer | Aimed Arrow      | Drawn Power Shot  | Flurry Arrow Volley | Saber Close Slash  | Circling Shot | Windrunner          |
+| Lancer         | Couched Thrust   | Charging Thrust   | Sweeping Strike     | Devastating Charge | Line Breaker  | Shock Lance         |
+| Iron Pagoda    | Heavy Saber Arc  | Overhead Cleave   | Crushing Aura       | Unbreakable Stance | Shield Bash   | Shielded Advance    |
+| Spirit Caller  | Spirit Wisps     | Ancestral Drum    | Ongod Guardians     | Wind of Tengri     | Sacred Ovoo   | Veil Between Worlds |
 
 Light and heavy range, rate, damage and hit shape, plus every ability cooldown and effect, are
 authored in `GAME.classes` and surfaced through `src/game/data/classes.ts`. Ability
@@ -401,3 +403,10 @@ the Mounted Archer's ability 1. Formation momentum remains for allied rider tact
 Spirit bolts steer toward live, unhit enemies at the class turn rate while retaining
 their speed. The class `gallopSpeedMultiplier` still scales the Khan's Space / left-bumper
 gallop, and Lancer and Iron Pagoda gallops retain their existing pinning breakthrough.
+
+Spirit Wisp hits grant one spiritual energy, capped at 12 and shown in the battlefield
+HUD with the active-spirit count. As a replaceable first-pass spending rule, Veil Between
+Worlds consumes all stored energy and gains 0.3 active seconds per point. Its spectral
+copies repeat Spirit Wisps; Sacred Ovoo empowers guardian and veil projectiles while the
+Khan and following spirits remain inside the cairn's area. Full saves retain energy,
+summons, the Ovoo, Veil duration and pending drum waves; older saves begin with zero energy.

@@ -1086,6 +1086,7 @@ export class ArenaScene extends Phaser.Scene {
         message: this.persistence.message,
       },
       abilities: this.combat.abilityStates(),
+      spiritCaller: this.combat.spiritStatus(),
     });
   }
   private publishPhase(): void {

@@ -135,6 +135,7 @@ export class EnemyBehaviour extends ArenaSystem {
     enemy.clanAttackTimer -= dt;
     enemy.chargeTimer -= dt;
     enemy.pinned = Math.max(0, enemy.pinned - dt);
+    enemy.spiritSlow = Math.max(0, enemy.spiritSlow - dt);
     enemy.dangerTimer -= dt;
   }
 
@@ -220,6 +221,7 @@ export class EnemyBehaviour extends ArenaSystem {
   private adjustSpeed(enemy: Enemy, aim: EnemyAim, speed: number): number {
     const { distance, ranged, clearShot } = aim;
     if (enemy.pinned > 0) speed = 0;
+    else if (enemy.spiritSlow > 0) speed *= GAME.classes['spirit-caller'].spirit.slowMultiplier;
     if (
       this.run.combat.trails.some(
         (t) => Math.hypot(enemy.x - t.x, enemy.y - t.y) < GAME.mounted.trailRadius,

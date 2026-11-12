@@ -583,6 +583,30 @@ describe('full expedition snapshots', () => {
       r: 0,
     });
   });
+  it('round-trips Spirit Caller energy, summons, areas, veil and pending drum waves', () => {
+    const runtime = world();
+    runtime.timers.spiritCaller = {
+      energy: 7,
+      guardians: { remaining: 4, attackTimer: 0.3, count: 2, intercepts: 1 },
+      ovoo: { x: 1200, y: 1300, remaining: 5, pulseTimer: 0.2 },
+      veilRemaining: 3,
+      echoTimer: 0.4,
+      drumWaves: [{ delay: 0.1, range: 180, damage: 0.8, slowDuration: 1.4 }],
+    };
+    const restored = decodeExpedition(captureExpedition(createRun(), runtime));
+    expect(restored.world.timers.spiritCaller).toEqual(runtime.timers.spiritCaller);
+  });
+  it('loads saves from before the Spirit Caller resource with empty spiritual energy', () => {
+    const save = captureExpedition(createRun(), world()) as Record<string, any>;
+    delete save.world.timers.spiritCaller;
+    const restored = decodeExpedition(save);
+    expect({ ...createArenaTimers(), ...restored.world.timers }.spiritCaller).toEqual({
+      energy: 0,
+      veilRemaining: 0,
+      echoTimer: 0,
+      drumWaves: [],
+    });
+  });
   it('preserves succession and migration without healing, resetting the timer or paying arrival', () => {
     const run = createRun();
     run.phase = 'playing';

@@ -203,6 +203,7 @@ export interface HudSnapshot {
     cooldown: number;
     remaining: number;
   }[];
+  spiritCaller?: { energy: number; maximum: number; activeSpirits: number };
   best: number;
   clanBearing: string;
   fieldBearing?: string;

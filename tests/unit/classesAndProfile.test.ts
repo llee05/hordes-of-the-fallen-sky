@@ -84,10 +84,10 @@ describe('character classes and character profile', () => {
       'Shielded Advance',
     ]);
     expect(classDefinition('spirit-caller').abilities.map((a) => a.name)).toEqual([
-      'Drum Pulse',
-      'Summon Ancestor',
-      'Spirit Ward',
-      'Ancestral Chorus',
+      'Ongod Guardians',
+      'Wind of Tengri',
+      'Sacred Ovoo',
+      'Veil Between Worlds',
     ]);
   });
 
@@ -95,7 +95,7 @@ describe('character classes and character profile', () => {
     ['mounted-archer', 440, 440, 0, 'projectile', 500, 570, 6],
     ['lancer', 250, 520, 0, 'line', 178, 638.4, 5],
     ['iron-pagoda', 215, 410, 0, 'arc', 118, 570, 6],
-    ['spirit-caller', 380, 390, 0.45, 'projectile', 440, 570, 5],
+    ['spirit-caller', 380, 390, 0.45, 'projectile', 440, 570, 12],
   ] as const)(
     '%s weapon, manual attacks, gallop, and ability 1 cooldown match the class table',
     (classId, range, projectileSpeed, homing, basicShape, basicRange, gallopSpeed, qCooldown) => {
@@ -106,9 +106,14 @@ describe('character classes and character profile', () => {
       expect(cls.weapon.homingTurnRate).toBe(homing);
       expect(cls.basicAttack.shape).toBe(basicShape);
       expect(cls.basicAttack.range).toBe(basicRange);
-      expect(cls.heavyAttack.range).toBeGreaterThan(cls.basicAttack.range);
-      expect(cls.heavyAttack.damage).toBeGreaterThan(cls.basicAttack.damage);
-      expect(cls.heavyAttack.windup).toBeGreaterThan(0.25);
+      if (classId === 'spirit-caller') {
+        expect(cls.heavyAttack.shape).toBe('pulse');
+        expect(cls.heavyAttack.charge?.maxWaves).toBe(3);
+      } else {
+        expect(cls.heavyAttack.range).toBeGreaterThan(cls.basicAttack.range);
+        expect(cls.heavyAttack.damage).toBeGreaterThan(cls.basicAttack.damage);
+        expect(cls.heavyAttack.windup).toBeGreaterThan(0.25);
+      }
       expect(cls.abilities.map((ability) => ability.slotLabel)).toEqual(['1', '2', '3', '4']);
       expect(khanGallopSpeed(run)).toBeCloseTo(gallopSpeed);
       expect(cls.abilities[0].cooldown).toBe(qCooldown);

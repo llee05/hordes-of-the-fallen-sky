@@ -72,7 +72,7 @@ describe('playable class combat', () => {
 
   it('fires the Spirit Caller basic as one slower homing bolt', () => {
     const arena = setup('spirit-caller');
-    arena.spawn(250, 80);
+    const target = arena.spawn(250, 80);
     expect(arena.combat.fireBasic({ x: 1400, y: 1000 })).toBe(true);
     const bolt = arena.projectiles.getFirstAlive()!;
     expect(arena.projectiles.countActive()).toBe(1);
@@ -81,6 +81,8 @@ describe('playable class combat', () => {
     );
     arena.combat.updateProjectiles(0.1);
     expect(bolt.body!.velocity.y).toBeGreaterThan(0);
+    arena.combat.hitEnemy(bolt, target);
+    expect(arena.combat.spiritStatus()).toMatchObject({ energy: 1, maximum: 12 });
   });
 
   it('fires the Mounted Archer heavy as a harder-hitting drawn power shot', () => {
@@ -106,13 +108,85 @@ describe('playable class combat', () => {
     expect(distant.health).toBeLessThan(10000);
   });
 
-  it('fires the Spirit Caller heavy as a large ancestral bolt', () => {
+  it('charges the Ancestral Drum into three expanding slowing waves', () => {
     const arena = setup('spirit-caller');
-    expect(arena.combat.fireHeavy({ x: 1600, y: 1000 })).toBe(true);
+    const near = arena.spawn(100, 0);
+    const far = arena.spawn(205, 0);
+    const heavy = classDefinition('spirit-caller').heavyAttack;
+    expect(arena.combat.fireHeavy({ x: 1600, y: 1000 }, heavy.charge!.maxDuration)).toBe(true);
+    expect(arena.context.timers.spiritCaller?.drumWaves).toHaveLength(3);
+    arena.combat.tickKhanCombat(0.01, false, false, { x: 1600, y: 1000 });
+    expect(near.health).toBeLessThan(10000);
+    expect(near.spiritSlow).toBe(heavy.charge!.slowDuration);
+    expect(far.health).toBe(10000);
+    arena.combat.tickKhanCombat(heavy.charge!.waveDelay, false, false, { x: 1600, y: 1000 });
+    arena.combat.tickKhanCombat(heavy.charge!.waveDelay, false, false, { x: 1600, y: 1000 });
+    expect(far.health).toBeLessThan(10000);
+  });
+
+  it('releases additional Ancestral Drum waves according to held right-click charge', () => {
+    const arena = setup('spirit-caller');
+    const aim = { x: 1500, y: 1000 };
+    arena.combat.tickKhanCombat(0.01, false, true, aim);
+    arena.combat.tickKhanCombat(0.56, false, true, aim);
+    arena.combat.tickKhanCombat(0.01, false, false, aim);
+    expect(arena.context.timers.spiritCaller?.drumWaves).toHaveLength(2);
+  });
+
+  it('Ongod Guardians attack and intercept only their limited allotment of hostile shots', () => {
+    const arena = setup('spirit-caller');
+    const target = arena.spawn(120, 0);
+    expect(arena.combat.useAbility('q', target)).toBe(true);
+    for (let index = 0; index < 6; index++) {
+      const shot = arena.hostileShots.get(1010 + index, 1000)!;
+      shot.enableBody(true, 1010 + index, 1000, true, true);
+    }
+    arena.combat.tickKhanCombat(0.01, false, false, target);
+    expect(arena.hostileShots.countActive()).toBe(2);
+    expect(arena.projectiles.countActive()).toBeGreaterThanOrEqual(2);
+    expect(arena.combat.spiritStatus()?.activeSpirits).toBe(2);
+  });
+
+  it('Wind of Tengri damages enemies and opens a broad corridor by pushing them forward', () => {
+    const arena = setup('spirit-caller');
+    const ahead = arena.spawn(180, 20);
+    const outside = arena.spawn(180, 80);
+    expect(arena.combat.useAbility('w', { x: 1500, y: 1000 })).toBe(true);
+    expect(ahead.health).toBeLessThan(10000);
+    expect(ahead.x).toBeGreaterThan(1180);
+    expect(outside.health).toBe(10000);
+  });
+
+  it('Sacred Ovoo slows enemies and empowers guardian attacks while the spirits are inside', () => {
+    const arena = setup('spirit-caller');
+    const target = arena.spawn(100, 0);
+    expect(arena.combat.useAbility('e', { x: 1400, y: 1000 })).toBe(true);
+    expect(arena.combat.useAbility('q', target)).toBe(true);
+    arena.combat.tickKhanCombat(0.01, false, false, target);
+    expect(target.spiritSlow).toBeGreaterThan(0);
     const bolt = arena.projectiles.getFirstAlive()!;
+    const guardians = classDefinition('spirit-caller').abilities.find(
+      (ability) => ability.kind === 'guardians',
+    )!;
+    const ovoo = classDefinition('spirit-caller').abilities.find(
+      (ability) => ability.kind === 'ovoo',
+    )!;
     expect(bolt.damage).toBeCloseTo(
-      arena.context.run.stats.damage * classDefinition('spirit-caller').heavyAttack.damage,
+      arena.context.run.stats.damage * guardians.damage * ovoo.spiritDamage,
     );
+  });
+
+  it('Veil consumes spiritual energy, multiplies guardians, and repeats Spirit Wisps', () => {
+    const arena = setup('spirit-caller');
+    const target = arena.spawn(120, 0);
+    arena.context.timers.spiritCaller!.energy = 4;
+    expect(arena.combat.useAbility('q', target)).toBe(true);
+    expect(arena.combat.useAbility('r', target)).toBe(true);
+    expect(arena.context.timers.spiritCaller!.energy).toBe(0);
+    expect(arena.context.timers.spiritCaller!.veilRemaining).toBeCloseTo(6.2);
+    expect(arena.combat.spiritStatus()?.activeSpirits).toBe(6);
+    arena.combat.tickKhanCombat(0.01, false, false, target);
+    expect(arena.projectiles.countActive()).toBeGreaterThanOrEqual(6);
   });
 
   it.each(CHARACTER_CLASSES)(

@@ -127,7 +127,7 @@ export class GameUI {
             .join(
               '',
             )}</div><small id="successor-selection">1 / 2 · controller left / right</small></aside>
-          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span><span id="weapon-label">BOW</span> <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
+          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span><span id="weapon-label">BOW</span> <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span><span id="spirit-energy" hidden>SPIRITUAL ENERGY 0 / 12</span></div></section>
           <section class="tradition-hud" aria-label="Run progression"><span>LEVEL <b id="level">01</b></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small></section>
           <section id="ability-dock" class="ability-dock hud-surface" aria-label="Class abilities">${(['q', 'w', 'e', 'r'] as const).map((slot, index) => `<div class="ability-indicator" id="ability-${slot}"><kbd>${index + 1}</kbd><span><strong></strong><small></small></span></div>`).join('')}</section>
           <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
@@ -414,6 +414,10 @@ export class GameUI {
           : `RECHARGING ${((1 - dashReady) * dashCooldown).toFixed(1)}s`,
     );
     this.text('momentum', 'LMB LIGHT · RMB HEAVY');
+    const spiritEnergy = this.get('spirit-energy');
+    spiritEnergy.hidden = !snapshot.spiritCaller;
+    if (snapshot.spiritCaller)
+      spiritEnergy.textContent = `SPIRITUAL ENERGY ${snapshot.spiritCaller.energy} / ${snapshot.spiritCaller.maximum} · ${snapshot.spiritCaller.activeSpirits} ACTIVE SPIRITS`;
     for (const ability of snapshot.abilities) {
       const indicator = this.get(`ability-${ability.slot}`);
       indicator.title = ability.description;

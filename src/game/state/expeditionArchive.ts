@@ -44,6 +44,7 @@ import {
 import { migrateLegacyNomadicCamp } from './nomadicCampMigration';
 import { migrateRetiredJourney } from './retiredJourney';
 import { createRun } from './run';
+import type { SpiritCallerCombatState } from './spiritCaller';
 
 interface Point {
   x: number;
@@ -67,6 +68,7 @@ export interface EnemyArchive extends BodyArchive {
     | 'chargeTimer'
     | 'burning'
     | 'pinned'
+    | 'spiritSlow'
     | 'lastGallop'
     | 'dangerTimer'
     | 'tacticalSlot'
@@ -88,6 +90,7 @@ export interface ProjectileArchive extends BodyArchive {
   echoIndex?: number;
   precision?: boolean;
   ghost?: boolean;
+  spiritSource?: 'wisp' | 'guardian' | 'veil';
   baseDamage?: number;
   dealtDamage?: number;
   rotation: number;
@@ -107,6 +110,7 @@ export interface WorldArchive {
     attackTimer: number;
     closeDefenseTimer?: number;
     abilityCooldowns?: { q: number; w: number; e: number; r: number };
+    spiritCaller?: SpiritCallerCombatState;
     dashTimer: number;
     dashRemaining: number;
     invulnerable: number;
@@ -294,7 +298,7 @@ const enemyState = object(
       { aim: point, direction: point },
     ),
   },
-  { objectiveId: integer, elite: boolean },
+  { objectiveId: integer, elite: boolean, spiritSlow: positive },
 );
 const projectile = object(
   {
@@ -316,6 +320,7 @@ const projectile = object(
     echoIndex: integer,
     precision: boolean,
     ghost: boolean,
+    spiritSource: oneOf(['wisp', 'guardian', 'veil']),
     baseDamage: positive,
     dealtDamage: positive,
   },
@@ -353,6 +358,26 @@ const worldShape = object(
       {
         closeDefenseTimer: number,
         abilityCooldowns: object({ q: number, w: number, e: number, r: number }),
+        spiritCaller: object(
+          {
+            energy: positive,
+            veilRemaining: positive,
+            echoTimer: number,
+            drumWaves: list(
+              object({ delay: number, range: positive, damage: positive, slowDuration: positive }),
+              3,
+            ),
+          },
+          {
+            guardians: object({
+              remaining: positive,
+              attackTimer: number,
+              count: integer,
+              intercepts: integer,
+            }),
+            ovoo: object({ x: number, y: number, remaining: positive, pulseTimer: number }),
+          },
+        ),
       },
     ),
     generations: list(integer, GAME.maxEnemies),

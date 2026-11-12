@@ -37,6 +37,7 @@ export function world(): WorldArchive {
           chargeTimer: 0,
           burning: 1,
           pinned: 0,
+          spiritSlow: 0,
           lastGallop: -1,
           dangerTimer: 2,
           tacticalSlot: 1,

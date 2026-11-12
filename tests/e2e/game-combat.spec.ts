@@ -66,6 +66,51 @@ test('right-click heavy attacks wind up and number keys trigger abilities while 
   await expect(page.locator('#ability-q')).not.toContainText('READY');
 });
 
+test('Spirit Caller builds spiritual energy and exposes the authored drum and spirit kit', async ({
+  page,
+}) => {
+  await openTitle(page);
+  await page.getByRole('button', { name: 'Developer mode F8' }).click();
+  await page.locator('[data-developer-class="spirit-caller"]').click();
+  await expect(page.locator('#spirit-energy')).toContainText('SPIRITUAL ENERGY 0 / 12');
+  await page.evaluate(() => {
+    const scene = (window as any).__gloam.scene;
+    window.__gloam.hooks.quietBattlefield({ timers: ['spawnTimer'], clearEnemies: true });
+    scene.spawnEnemy();
+    const enemy = scene.enemies.getChildren().find((item: any) => item.active);
+    enemy.health = 100000;
+    enemy.setPosition(scene.player.x + 100, scene.player.y);
+    scene.spatial.rebuild(scene.enemies.getChildren());
+  });
+  const canvas = await page.locator('canvas').first().boundingBox();
+  if (!canvas) throw new Error('Game canvas is unavailable');
+  await page.mouse.move(canvas.x + canvas.width / 2 + 100, canvas.y + canvas.height / 2);
+  await page.mouse.down({ button: 'left' });
+  await expect(page.locator('#spirit-energy')).not.toContainText('ENERGY 0 / 12');
+  await page.mouse.up({ button: 'left' });
+
+  await page.mouse.down({ button: 'right' });
+  await page.waitForTimeout(600);
+  await page.mouse.up({ button: 'right' });
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as any).__gloam.scene.enemies.getChildren().find((item: any) => item.active)
+            ?.spiritSlow ?? 0,
+      ),
+    )
+    .toBeGreaterThan(0);
+
+  await page.keyboard.press('Digit1');
+  await expect(page.locator('#spirit-energy')).toContainText('2 ACTIVE SPIRITS');
+  await page.keyboard.press('Digit2');
+  await page.keyboard.press('Digit3');
+  await expect(page.locator('#ability-e')).not.toContainText('READY');
+  await page.keyboard.press('Digit4');
+  await expect(page.locator('#spirit-energy')).toContainText('6 ACTIVE SPIRITS');
+});
+
 test('guard riders fire at camp threats while the commander scouts away', async ({ page }) => {
   await openTitle(page);
   await startExpedition(page);

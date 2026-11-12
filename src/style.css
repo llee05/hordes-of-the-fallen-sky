@@ -481,11 +481,18 @@ canvas {
 }
 .vital-stats {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
   font: 7px var(--mono);
   color: #a8bca6;
   margin-top: 12px;
+}
+#spirit-energy {
+  flex: 1 0 100%;
+  border-top: 1px solid #72e0d144;
+  padding-top: 6px;
+  color: #86d9cd;
 }
 .vital-stats b {
   font-weight: 400;
