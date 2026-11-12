@@ -400,6 +400,7 @@
   content: none;
 }
 .menu-plaque:hover,
+.menu-plaque:focus,
 .menu-plaque:focus-visible,
 .menu-plaque.selected {
   color: #fae8bd;
@@ -410,6 +411,7 @@
   filter: drop-shadow(0 4px 8px #3b1911cc) drop-shadow(0 0 6px #f5d48766);
   transform: translateX(5px);
 }
+.menu-plaque:focus,
 .menu-plaque:focus-visible {
   outline: none;
 }
@@ -452,31 +454,66 @@
   background-image: url('/art/ui-icon-road.png');
 }
 
-:is(.title-menu-button:hover, .title-menu-button:focus-visible, .title-menu-button.selected)
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
   .title-menu-icon[data-icon='banner'] {
   background-image: url('/art/ui-icon-banner-selected.png');
 }
-:is(.title-menu-button:hover, .title-menu-button:focus-visible, .title-menu-button.selected)
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
   .title-menu-icon[data-icon='bow'] {
   background-image: url('/art/ui-icon-bow-selected.png');
 }
-:is(.title-menu-button:hover, .title-menu-button:focus-visible, .title-menu-button.selected)
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
   .title-menu-icon[data-icon='ger'] {
   background-image: url('/art/ui-icon-ger-selected.png');
 }
-:is(.title-menu-button:hover, .title-menu-button:focus-visible, .title-menu-button.selected)
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
   .title-menu-icon[data-icon='journal'] {
   background-image: url('/art/ui-icon-journal-selected.png');
 }
-:is(.title-menu-button:hover, .title-menu-button:focus-visible, .title-menu-button.selected)
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
   .title-menu-icon[data-icon='knot'] {
   background-image: url('/art/ui-icon-knot-selected.png');
 }
-:is(.title-menu-button:hover, .title-menu-button:focus-visible, .title-menu-button.selected)
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
   .title-menu-icon[data-icon='hammer'] {
   background-image: url('/art/ui-icon-hammer-selected.png');
 }
-:is(.title-menu-button:hover, .title-menu-button:focus-visible, .title-menu-button.selected)
+:is(
+    .title-menu-button:hover,
+    .title-menu-button:focus,
+    .title-menu-button:focus-visible,
+    .title-menu-button.selected
+  )
   .title-menu-icon[data-icon='road'] {
   background-image: url('/art/ui-icon-road-selected.png');
 }
@@ -493,7 +530,7 @@
   border-radius: 2px;
   font: 8px var(--mono);
 }
-.title-menu .title-menu-button.title-menu-new:not(:hover):not(:focus-visible) {
+.title-menu .title-menu-button.title-menu-new:not(:hover):not(:focus):not(:focus-visible) {
   color: #fae8bd;
   text-shadow: 0 1px 2px #260b08;
   background-image:
@@ -502,11 +539,12 @@
   filter: drop-shadow(0 4px 6px #3b191199);
 }
 .title-menu
-  .title-menu-button.title-menu-new:not(:hover):not(:focus-visible)
+  .title-menu-button.title-menu-new:not(:hover):not(:focus):not(:focus-visible)
   .title-menu-icon[data-icon='bow'] {
   background-image: url('/art/ui-icon-bow-selected.png');
 }
 .title-menu .main-menu:has(.title-menu-button:hover) .title-menu-new:not(:hover),
+.title-menu .main-menu:has(.title-menu-button:focus) .title-menu-new:not(:focus),
 .title-menu .main-menu:has(.title-menu-button:focus-visible) .title-menu-new:not(:focus-visible) {
   color: #3b2818;
   text-shadow: none;
@@ -518,6 +556,10 @@
 .title-menu
   .main-menu:has(.title-menu-button:hover)
   .title-menu-new:not(:hover)
+  .title-menu-icon[data-icon='bow'],
+.title-menu
+  .main-menu:has(.title-menu-button:focus)
+  .title-menu-new:not(:focus)
   .title-menu-icon[data-icon='bow'],
 .title-menu
   .main-menu:has(.title-menu-button:focus-visible)
