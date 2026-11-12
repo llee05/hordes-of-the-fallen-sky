@@ -154,7 +154,7 @@ describe('local rules follow the physical landscape', () => {
       terrain = new ComposedTerrain(composedRegion(id), LANDSCAPES[id].water);
     for (const b of terrain.river!.bridges)
       expect(areaSurface(terrain, id, b.x, b.z).shore).toBe(0);
-    expect(areaSurface(terrain, id, 2600, 2600).grove).toBe(0);
+    expect(areaSurface(terrain, id, terrain.campPosition.x, terrain.campPosition.y).grove).toBe(0);
     const forest = new ComposedTerrain(composedRegion('bogd-khan-uul'));
     let max = 0;
     for (let x = 1300; x < 2400; x += 128)

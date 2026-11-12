@@ -23,8 +23,9 @@ describe('shared material and ecology masks', () => {
     const dry = new ComposedTerrain(composedRegion('orkhon-valley'));
     const wet = new ComposedTerrain(composedRegion('orkhon-valley'), MEADOW_STREAM);
     const p = wet.river!.channels[0]!.sections[100]!;
-    const x = p.x + 2600,
-      z = p.y + 2600;
+    const center = wet.worldSize / 2;
+    const x = p.x + center,
+      z = p.y + center;
     const a = terrainHabitat(dry, x, z, 65, 1),
       b = terrainHabitat(wet, x, z, 65, 1);
     expect(b.moisture).toBeGreaterThan(a.moisture);

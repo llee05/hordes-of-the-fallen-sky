@@ -58,13 +58,14 @@ describe('river shorelines', () => {
     }
   });
 
-  it('keeps the Orkhon gorge as one channel from the falls to the southern edge', () => {
+  it('keeps the Orkhon gorge as one channel from the eastern falls to the north-west edge', () => {
     const water = LANDSCAPES['orkhon-valley'].water!;
     const [main, ...rest] = riverChannels(water);
     expect(rest).toHaveLength(0);
-    expect(main!.sections[0]!.y).toBeLessThan(-1400);
-    expect(main!.sections.at(-1)!.y).toBeGreaterThan(2600);
-    expect(Math.min(...main!.sections.map((section) => section.x))).toBeGreaterThan(1500);
+    expect(main!.sections[0]).toMatchObject({ x: 2250, y: -260 });
+    expect(main!.sections.at(-1)).toMatchObject({ x: -3260, y: -1830 });
+    expect(Math.min(...main!.sections.map((section) => section.x))).toBeLessThan(-3200);
+    expect(Math.max(...main!.sections.map((section) => section.x))).toBeGreaterThan(2200);
   });
 
   it('recognizes water and dry ground beside authored channels', () => {

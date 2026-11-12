@@ -11,7 +11,6 @@ import {
   ORKHON_TILES,
   type OrkhonSprite,
 } from '../../src/game/assets/orkhonValleyArt';
-import { GAME } from '../../src/game/config';
 import { ALL_ENEMIES } from '../../src/game/data/enemies';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
 import { ORKHON_VALLEY } from '../../src/game/data/orkhonValley';
@@ -169,12 +168,18 @@ describe('art spec companion', () => {
 
 describe('Orkhon Valley scenery inside the art spec bands', () => {
   let all: SceneDressing[];
+  const center = ORKHON_VALLEY.world.terrainSize / 2;
   beforeAll(() => {
     const terrain = new ComposedTerrain(
       composedRegion('orkhon-valley'),
       LANDSCAPES['orkhon-valley'].water,
     );
-    all = sceneDressing(terrain, { x: 0, y: 0, width: GAME.worldSize, height: GAME.worldSize });
+    all = sceneDressing(terrain, {
+      x: 0,
+      y: 0,
+      width: terrain.worldSize,
+      height: terrain.worldSize,
+    });
   });
 
   const PROP_BANDS: Record<string, ArtBand> = {
@@ -221,10 +226,7 @@ describe('Orkhon Valley scenery inside the art spec bands', () => {
       const band = bands[landmark.sprite];
       expect(band, landmark.id).toBeDefined();
       const prop = all.find(
-        (p) =>
-          p.kind === 'landmark' &&
-          p.frame === landmark.sprite &&
-          p.x === GAME.worldSize / 2 + landmark.x,
+        (p) => p.kind === 'landmark' && p.frame === landmark.sprite && p.x === center + landmark.x,
       )!;
       const height = billboardHeight(prop);
       expect(inside(height, ART_SPEC.bands[band!]), `${landmark.id} ${height}`).toBe(true);

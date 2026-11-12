@@ -92,7 +92,10 @@ export class TerrainNavigation {
             Math.min(size, terrain.worldSize - row * size) >= GAME.terrain.actorClearance * 2 &&
             !this.blocked[this.index(column, row)],
         );
-    const campPosition = terrain.campPosition;
+    const campPosition = terrain.campPosition ?? {
+      x: terrain.worldSize / 2,
+      y: terrain.worldSize / 2,
+    };
     const camp = this.index(
       Math.floor(campPosition.x / terrain.cellSize),
       Math.floor(campPosition.y / terrain.cellSize),
