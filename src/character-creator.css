@@ -18,8 +18,11 @@
   background:
     linear-gradient(#eddbb5c9, #edd7aec9),
     url('/art/ui-felt.png') center / 540px;
-  border: 8px double var(--creator-rust);
-  box-shadow: inset 0 0 0 2px #ba914f;
+  border: 2px solid var(--creator-line);
+  border-top: 8px solid var(--creator-rust);
+  box-shadow:
+    inset 0 0 0 1px #f5e5bf55,
+    inset 0 0 0 4px #986e3d26;
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 13px;
   text-align: left;
@@ -63,32 +66,62 @@
 .creator-heading {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   position: relative;
   min-height: 58px;
   flex-shrink: 0;
-  text-align: center;
-  border-bottom: 3px double var(--creator-line);
-  margin-bottom: 8px;
+  padding: 10px 18px;
+  margin: -10px -14px 10px;
+  color: #f5dfb1;
+  background: linear-gradient(135deg, #244155f0, #142d40 60%, #1e394cf5), url('/art/ui-felt.png');
+  background-size: auto, 410px;
+  background-blend-mode: normal, multiply;
+  border-bottom: 2px solid #e5bd72;
+}
+.creator-heading::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: url('/art/ui-braid.svg') repeat-x center / 72px 8px;
+  opacity: 0.9;
+  pointer-events: none;
 }
 .creator-heading p {
   margin: 0;
-  font-size: 15px;
+  font-size: 13px;
+  color: #d7bd82;
   font-style: italic;
 }
 .creator-heading #overlay-title {
-  font-size: 27px;
-  margin: 0 0 5px;
-  color: var(--creator-ink);
+  font-size: 26px;
+  margin: 0;
+  color: #f7e6bd;
   line-height: 1.15;
+  text-shadow: 1px 2px #0f2535;
 }
 .creator-back {
-  position: absolute;
-  right: 0;
-  border: 1px solid var(--creator-line);
-  background: #eee0c5;
-  padding: 6px 10px;
-  border-radius: 3px;
+  position: static;
+  border: 1px solid #c8a35d;
+  background: #1b394b;
+  color: #f4dcad;
+  box-shadow: inset 0 0 0 2px #dfc28a22;
+  padding: 6px 14px;
+  border-radius: 2px;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+.creator-back:hover,
+.creator-back:focus-visible {
+  background: #2b556f;
+  border-color: #f5d397;
+  color: #fff2d1;
+  outline: 2px solid #f7dda1;
+  outline-offset: 1px;
 }
 .creator-layout {
   display: grid;

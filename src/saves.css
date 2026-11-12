@@ -1,26 +1,66 @@
 .save-menu {
-  width: min(760px, 95vw);
+  box-sizing: border-box;
+  width: min(780px, 95vw);
   max-height: 90dvh;
   overflow-y: auto;
-  padding: clamp(18px, 3vw, 36px);
-  background: var(--paper, #e0cfaa);
-  color: #302f25;
-  border: 1px solid #ac8e58;
-  box-shadow: 0 18px 80px #071c25a0;
+  padding: 0;
+  background-color: var(--paper-aged, #e9d8b5);
+  background-image: linear-gradient(#f4e8ccc9, #eedcb6c9), url('/art/ui-felt.png');
+  background-size: auto, 520px;
+  background-blend-mode: normal, multiply;
+  color: var(--paper-ink, #343e39);
+  border: 2px solid var(--brass-border, #9c7546);
+  border-top: 8px solid var(--rust, #984d37);
+  box-shadow:
+    0 16px 80px #091b2c80,
+    inset 0 0 0 1px #f5e5bf55,
+    inset 0 0 0 4px #986e3d26;
+  border-radius: 2px;
 }
-.save-menu h2,
-.save-menu h3 {
-  font-family: Georgia, serif;
+.save-menu header {
+  position: relative;
+  padding: 18px 28px 20px;
+  color: #f5dfb1;
+  background: linear-gradient(135deg, #244155f0, #142d40 60%, #1e394cf5), url('/art/ui-felt.png');
+  background-size: auto, 410px;
+  background-blend-mode: normal, multiply;
+  border-bottom: 2px solid var(--gold-leaf, #e5bd72);
 }
-.save-menu .eyebrow {
-  color: #725231;
+.save-menu header::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: url('/art/ui-braid.svg') repeat-x center / 72px 8px;
+  opacity: 0.9;
+  pointer-events: none;
 }
-.save-menu h2 {
-  font-size: clamp(24px, 4vw, 36px);
-  margin: 8px 0 16px;
+.save-menu header .eyebrow {
+  color: #d7bd82;
+  font: 8px var(--mono, monospace);
+  letter-spacing: 1.8px;
+  margin: 0 0 4px;
 }
-.save-menu p {
-  line-height: 1.5;
+.save-menu header h2 {
+  color: #f7e6bd;
+  font:
+    30px/1.1 Georgia,
+    serif;
+  letter-spacing: -0.8px;
+  margin: 0 0 6px;
+  text-shadow: 1px 2px #0f2535;
+}
+.save-menu header p {
+  color: #ded1b4;
+  font:
+    italic 13px/1.4 Georgia,
+    serif;
+  margin: 0;
+}
+.save-slots {
+  padding: 12px 28px;
 }
 .save-slot {
   display: flex;
@@ -28,17 +68,28 @@
   justify-content: space-between;
   gap: 18px;
   padding: 16px 0;
-  border-top: 1px solid #8e795847;
+  border-top: 1px dashed var(--paper-line, #8e795847);
+}
+.save-slot:first-child {
+  border-top: none;
 }
 .save-slot h3 {
-  margin: 0 0 8px;
+  color: #27443c;
+  font:
+    18px Georgia,
+    serif;
+  margin: 0 0 4px;
 }
 .save-slot p {
-  margin: 0 0 6px;
+  color: var(--paper-muted, #675d4c);
+  font:
+    12px/1.5 Georgia,
+    serif;
+  margin: 0 0 4px;
 }
 .save-slot time {
-  font-size: 12px;
-  color: #655e4a;
+  font: 11px var(--mono, monospace);
+  color: #7d6e53;
 }
 .save-slot nav {
   display: flex;
@@ -48,37 +99,62 @@
   max-width: 240px;
 }
 .save-menu button {
-  min-height: 40px;
+  min-height: 38px;
+  cursor: pointer;
 }
 .save-menu button:focus-visible {
-  outline: 3px solid #386b77;
-  outline-offset: 3px;
+  outline: 3px solid #b98b4d;
+  outline-offset: 2px;
 }
 .save-menu button:disabled {
   opacity: 0.5;
   cursor: wait;
 }
 .save-menu footer {
-  border-top: 1px solid #8e795847;
-  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 28px 18px;
+  border-top: 1px dashed var(--paper-line, #8e795847);
+  background: #dfc89d20;
 }
 .save-menu footer p {
-  font-size: 12px;
+  color: var(--paper-muted, #675d4c);
+  font:
+    12px/1.4 Georgia,
+    serif;
+  margin: 0;
 }
 .save-message {
-  min-height: 24px;
-  color: #354e48;
+  min-height: 20px;
+  margin: 10px 28px 0;
+  color: #3b5f4c;
+  font:
+    italic 12px Georgia,
+    serif;
 }
 .save-confirmation {
-  padding: 14px;
+  margin: 12px 28px;
+  padding: 14px 18px;
   border: 1px solid #9b583d;
-  background: #c9ae7e55;
-  margin-bottom: 16px;
+  background: #dfcb9f77;
+  box-shadow: inset 0 0 0 2px #c9ae7e44;
+}
+.save-confirmation p {
+  color: #343e39;
+  font:
+    13px/1.4 Georgia,
+    serif;
+  margin: 0 0 10px;
 }
 .save-confirmation button + button {
   margin-left: 10px;
 }
 @media (max-width: 600px) {
+  .save-slots {
+    padding: 10px 18px;
+  }
   .save-slot {
     align-items: start;
     flex-direction: column;
@@ -86,5 +162,10 @@
   }
   .save-slot nav {
     max-width: none;
+  }
+  .save-menu footer {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 18px 16px;
   }
 }
