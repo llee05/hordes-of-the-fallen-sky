@@ -5,7 +5,7 @@ import { openTitle, startExpedition } from './helpers';
 test.describe.configure({ mode: 'parallel' });
 
 test(
-  'automatic attacks defeat enemies and collected XP raises levels without interrupting combat',
+  'right-click attacks defeat enemies and collected XP raises levels without interrupting combat',
   { tag: '@core' },
   async ({ page }) => {
     await openTitle(page);
@@ -18,7 +18,14 @@ test(
       enemy.setPosition(scene.player.x + 100, scene.player.y);
       enemy.health = 1;
     });
+    await page.waitForTimeout(500);
+    await expect(page.locator('#kills')).toHaveText('0');
+    const canvas = await page.locator('canvas').first().boundingBox();
+    if (!canvas) throw new Error('Game canvas is unavailable');
+    await page.mouse.move(canvas.x + canvas.width / 2 + 140, canvas.y + canvas.height / 2);
+    await page.mouse.down({ button: 'right' });
     await expect(page.locator('#kills')).not.toHaveText('0', { timeout: 15000 });
+    await page.mouse.up({ button: 'right' });
     // Place a shard at the player to exercise actual pickup and level-up integration.
     await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;

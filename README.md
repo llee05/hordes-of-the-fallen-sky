@@ -52,7 +52,7 @@ The game opens at the title menu. **New Game** opens [character creation](docs/c
 
 The title sits on an indigo manuscript cartouche over a full-screen painted steppe chronicle. Ornate parchment plaques, rust-red selection, brass clan symbols, and warm manuscript pages carry the world's art into the interface. Camp cards reuse the painted gers, riders, and wagons from the battlefield; migration choices have illustrated landscape vignettes. All UI materials and artwork ship locally.
 
-The battlefield fills the entire game window. Zoom with the mouse wheel, + / − (including the number pad), or controller RT / LT. The on-screen − / percentage / + controls offer the same actions; click the percentage, press 0, or click the right stick to reset to 100%. Zoom ranges from 60% to 160% and keeps the interface readable at its original size. It is available during active play, follows the Khan or caravan during succession, and carries across new expeditions for the app session. Compact resources and objectives sit at the top, with Khan health, clan resolve, gallop, and a keyboard command dock near the bottom. Brief clan messages appear as notifications. Dismissible contextual guidance teaches riding, camp development, shards, formations, and the first migration through actual actions. Hide tips in the field or restore them from How to play; the preference lasts for the app session. Persistent food, resolve, population, and pasture warnings remain visible when tips are hidden.
+The battlefield fills the entire game window. Zoom with the mouse wheel, + / − (including the number pad), or controller D-pad left / right. The on-screen − / percentage / + controls offer the same actions; click the percentage, press 0, or click the right stick to reset to 100%. Zoom ranges from 60% to 160% and keeps the interface readable at its original size. It is available during active play, follows the Khan or caravan during succession, and carries across new expeditions for the app session. Compact resources and objectives sit at the top, with Khan health, clan resolve, gallop, and a keyboard command dock near the bottom. Brief clan messages appear as notifications. Dismissible contextual guidance teaches riding, camp development, shards, formations, and the first migration through actual actions. Hide tips in the field or restore them from How to play; the preference lasts for the app session. Persistent food, resolve, population, and pasture warnings remain visible when tips are hidden.
 
 The title cartouche settles gently, parchment menus open into place, and illustrations respond to mouse or keyboard focus. Resource changes, damage, gallop readiness, and newly available migration routes have brief visual feedback. Controls respond immediately throughout. The operating system's reduced-motion preference disables interface animations and transitions, including when changed while the game is open.
 
@@ -101,7 +101,7 @@ The expedition begins at Mount Otgontenger. From any camp, the clan can migrate 
 
 There are no journey chapters, crossing encounters, or final stand for now, and no victory condition: the expedition continues until the clan's people or resolve run out. The chronicle's **Your clan** tab records each Khan’s time carrying the banner, the host’s victories during that tenure, and factual clan memories (camp work, departures, arrivals, losses, and succession). The record retains the latest 96 clan moments and 64 Khans, with total counts visible.
 
-Start with eight people, three horses, two gers, supplies, and a mounted Khan with one accompanying rider. Attacks are automatic. Ride to collect spirit shards and gain XP levels without interrupting combat. Keep moving to build momentum, increasing arrow range and damage. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through. XP levels also grant automatic [class progression bonuses](docs/game-mechanics.md#playable-classes). Camp development is the sole progression interface; patron research and knowledge points have been removed for now. Spirit remains the camp currency earned from kills.
+Start with eight people, three horses, two gers, supplies, and a mounted Khan with one accompanying rider. Hold left click to ride toward the cursor and hold right click to aim the class's basic weapon; Q, W, E and R use four class abilities. Arrow keys and controller movement remain available. Ride to collect spirit shards and gain XP levels without interrupting combat. Gallop grants brief invulnerability; in charging wedge, it also damages enemies you ride through. XP levels also grant automatic [class progression bonuses](docs/game-mechanics.md#playable-classes). Camp development is the sole progression interface; patron research and knowledge points have been removed for now. Spirit remains the camp currency earned from kills.
 
 Press **B** to visit the illustrated **nomadic camp**. Five permanent core households begin at level 1: **Khan's Ger, Horse Lines, Herding Grounds, Communal Hearth and Wagon Yard**. Choose five different workplaces from fourteen military, economy, survival, spiritual and cultural buildings for the five optional locations. Every building has three levels, a visible upgraded appearance, authored costs and effects, and a compact parchment inspector. The Khan's Ger governs population capacity and higher building levels. Search and Provisions stay within the same painted map; Escape/controller Back closes a popover before leaving. Planning freezes the world. Unsupported mount, equipment, companion, trading and corruption benefits are recorded as **Planned** data rather than simulated systems.
 
@@ -113,7 +113,7 @@ Purchases and completed migrations save the portable camp checkpoint. **Continue
 
 A portable barricade of lashed wooden hurdles and indigo and rust felt bands surrounds the camp. It expands around growing households and workplaces, then travels as low wheeled screens around the caravan. Enemies stop at its edge and repeatedly attack clan resolve until defeated; hostile shots strike the barrier itself. Struck panels briefly jolt and brighten, and worn wood and frayed cloth reflect low resolve. Your Khan, riders, and camp defenses can still defeat the attackers. Packing up makes attackers pursue the moving caravan again when it leaves their reach. The barricade uses the clan's existing resolve and protection rather than a separate health pool.
 
-Battles alternate warned assaults, featured enemies, and recovery windows. Optional supply carts, loose herds, stranded households, and enemy gatherings invite short rides away from camp. Terrain-aware enemies use the current area’s passes, ramps, dry ground, and river crossings. Sustained riding charges a stronger volley.
+Battles alternate warned assaults, featured enemies, and recovery windows. Optional supply carts, loose herds, stranded households, and enemy gatherings invite short rides away from camp. Terrain-aware enemies use the current area’s passes, ramps, dry ground, and river crossings. The Mounted Archer's Flurry Arrow Volley now carries the former charged-volley role as a manual Q ability.
 
 Pastures deplete and spawn pressure increases while you stay. After 45 active seconds at a camp, press **M** to inspect routes. You choose when to leave. Stay to gather materials and grow, or pack up before grazing and provisions run out. Refugees strengthen your host but consume food. Starvation and attacks can cost families and livestock; losing all people or clan resolve ends the run.
 
@@ -137,22 +137,23 @@ For resources, combat, enemies, levels, and camp development, see [the game mech
 
 ## Controls
 
-| Action                          | Keyboard / mouse                    | Standard controller      |
-| ------------------------------- | ----------------------------------- | ------------------------ |
-| Ride                            | WASD / arrows                       | Left stick / D-pad       |
-| Attack                          | Automatic                           | Automatic                |
-| Gallop                          | Space / Gallop button               | A                        |
-| Develop camp                    | B / Develop camp                    | X                        |
-| Pack and choose route           | M / Pack & migrate                  | Y                        |
-| Cycle unlocked formations       | F / Formation button                | Right bumper             |
-| Clan chronicle                  | Tab / J / chronicle button          | View                     |
-| Pause / resume / close planning | Escape / P                          | Start / B                |
-| Navigate menus                  | Tab / Shift+Tab                     | Stick / D-pad            |
-| Confirm                         | Enter / Space / click               | A                        |
-| Zoom in / out                   | + / − / mouse wheel                 | RT / LT                  |
-| Reset zoom                      | 0 / percentage button               | Right stick click        |
-| Fullscreen                      | F11 / Alt+Enter / fullscreen button | —                        |
-| Quit                            | Quit / window close                 | Navigate to Quit, then A |
+| Action                          | Keyboard / mouse                    | Standard controller           |
+| ------------------------------- | ----------------------------------- | ----------------------------- |
+| Ride                            | Hold left click / arrows            | Left stick                    |
+| Basic attack                    | Hold right click                    | Right trigger                 |
+| Class abilities                 | Q / W / E / R                       | A / B / X / Y                 |
+| Gallop                          | Space / Gallop button               | Left bumper                   |
+| Develop camp                    | B / Develop camp                    | D-pad up                      |
+| Pack and choose route           | M / Pack & migrate                  | D-pad down                    |
+| Cycle unlocked formations       | F / Formation button                | Right bumper                  |
+| Clan chronicle                  | Tab / J / chronicle button          | View                          |
+| Pause / resume / close planning | Escape / P                          | Start / B in menus            |
+| Navigate menus                  | Tab / Shift+Tab                     | Stick / D-pad                 |
+| Confirm                         | Enter / Space / click               | A                             |
+| Zoom in / out                   | + / − / mouse wheel                 | D-pad right / left            |
+| Reset zoom                      | 0 / percentage button               | Right stick click             |
+| Fullscreen                      | F11 / Alt+Enter / fullscreen button | —                             |
+| Quit                            | Quit game / window close            | Navigate to Quit game, then A |
 
 Caravan guard keeps riders near the clan and reduces clan damage. Encirclement circles nearby enemies and rewards moving fire. Charging wedge follows your Khan and turns gallop into an attack. Feigned retreat spreads riders, accelerates moving volleys, and gathers shards from farther away. Touch preview supports dragging to ride and tapping command buttons.
 

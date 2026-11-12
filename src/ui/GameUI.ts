@@ -91,7 +91,7 @@ export class GameUI {
   ) {
     root.dataset.phase = 'ready';
     root.innerHTML = `<main class="game-shell" aria-label="Hordes of the Fallen Sky game">
-      <div class="arena-wrap" id="arena-wrap" tabindex="0" aria-label="Game arena. WASD to ride. Space to gallop. B to build. M to migrate. F for formation. Tab or J for the clan chronicle. Escape to pause. Plus and minus to zoom, zero to reset.">
+      <div class="arena-wrap" id="arena-wrap" tabindex="0" aria-label="Game arena. Hold left click or use arrow keys to ride. Hold right click to attack. Q, W, E and R use class abilities. Space gallops. B builds. M migrates. F changes formation. Tab or J opens the clan chronicle. Escape pauses. Plus and minus zoom; zero resets.">
         <div id="game-canvas"></div>
         <div class="screen-shade" aria-hidden="true"></div>
         <div class="game-hud" id="game-hud" inert>
@@ -115,7 +115,7 @@ export class GameUI {
           <nav class="hud-menu" aria-label="Game menus"><button id="journal" class="hud-menu-button" title="Clan chronicle (Tab / J)" aria-label="Open clan chronicle" aria-keyshortcuts="Tab J"><span>${clanMark('journal')}</span><kbd>TAB</kbd></button><button id="pause" class="hud-menu-button" aria-label="Pause" title="Pause (Escape)"><span>${clanMark('pause')}</span><kbd>ESC</kbd></button></nav>
           <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><strong id="location">OTGONTENGER</strong><span id="camp-age">DAY 1</span></div><p id="objective">Grow the camp. Keep your people alive.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Journey</span><b id="migration-percent">0%</b></div><div class="track"><div id="migration-fill"></div></div></div><p class="objective-hint" id="migration-hint">Routes open in 45s.</p><p id="camp-pressure" class="field-status" role="status"></p><p id="clan-losses" class="field-status"></p><p id="major-loss" class="major-loss" role="status" hidden></p><p id="encounter-status" class="field-status" role="status"></p><p id="field-objective" class="field-status"></p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
           <aside id="field-guide" class="field-guide hud-surface" aria-label="Expedition guidance" hidden></aside>
-          <div class="zoom-controls hud-surface" role="group" aria-label="Battlefield zoom"><button id="zoom-out" aria-label="Zoom out" aria-keyshortcuts="-" title="Zoom out (− / LT)">−</button><button id="zoom-reset" aria-label="Reset battlefield zoom to 100%" aria-keyshortcuts="0" title="Reset zoom (0 / Right stick click)"><span id="zoom-level">100%</span></button><button id="zoom-in" aria-label="Zoom in" aria-keyshortcuts="+" title="Zoom in (+ / RT)">+</button></div>
+          <div class="zoom-controls hud-surface" role="group" aria-label="Battlefield zoom"><button id="zoom-out" aria-label="Zoom out" aria-keyshortcuts="-" title="Zoom out (− / D-pad left)">−</button><button id="zoom-reset" aria-label="Reset battlefield zoom to 100%" aria-keyshortcuts="0" title="Reset zoom (0 / Right stick click)"><span id="zoom-level">100%</span></button><button id="zoom-in" aria-label="Zoom in" aria-keyshortcuts="+" title="Zoom in (+ / D-pad right)">+</button></div>
           <div id="danger-warnings" class="danger-warnings" aria-label="Offscreen danger warnings" role="list"></div><div id="elite-markers" class="elite-markers" aria-label="Elite and armoured enemies" role="list"></div><div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
           <aside id="successor-choice" class="successor-choice hud-surface" aria-label="Choose successor" hidden><strong>Who will carry the banner?</strong><p>The countdown runs on. Choosing is up to you.</p><div>${Object.entries(
             SUCCESSORS,
@@ -129,6 +129,7 @@ export class GameUI {
             )}</div><small id="successor-selection">1 / 2 · controller left / right</small></aside>
           <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span><span id="weapon-label">BOW</span> <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span></div></section>
           <section class="tradition-hud" aria-label="Run progression"><span>LEVEL <b id="level">01</b></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small></section>
+          <section id="ability-dock" class="ability-dock hud-surface" aria-label="Class abilities">${(['q', 'w', 'e', 'r'] as const).map((slot) => `<div class="ability-indicator" id="ability-${slot}"><kbd>${slot.toUpperCase()}</kbd><span><strong></strong><small></small></span></div>`).join('')}</section>
           <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
           <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">${clanMark('bow')}</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
           <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><div><p id="clan-message"></p></div></div>
@@ -412,12 +413,15 @@ export class GameUI {
           ? 'SPACE / READY'
           : `RECHARGING ${((1 - dashReady) * dashCooldown).toFixed(1)}s`,
     );
-    this.text(
-      'momentum',
-      run.combat.ready
-        ? 'CHARGED VOLLEY READY'
-        : `MOMENTUM ${Math.round(clan.momentum * 100)}% · CHARGE ${Math.round((run.combat.rideSeconds / GAME.mounted.chargeSeconds) * 100)}%`,
-    );
+    this.text('momentum', 'RMB · AIMED BASIC ATTACK');
+    for (const ability of snapshot.abilities) {
+      const indicator = this.get(`ability-${ability.slot}`);
+      indicator.title = ability.description;
+      indicator.querySelector('strong')!.textContent = ability.name;
+      indicator.querySelector('small')!.textContent =
+        ability.remaining > 0 ? `${ability.remaining.toFixed(1)}s` : 'READY';
+      indicator.classList.toggle('cooling', ability.remaining > 0);
+    }
     for (const id of ['population', 'herd', 'food', 'materials', 'spirit'] as const)
       this.number(id, Math.floor(clan[id]));
     this.get('food').classList.toggle('danger', clan.food < 15);

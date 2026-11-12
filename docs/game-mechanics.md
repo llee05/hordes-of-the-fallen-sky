@@ -134,7 +134,7 @@ Clan population or resolve reaching zero ends the expedition during the countdow
 
 ### Gallop
 
-**Space / controller A** gallops in the current or last facing direction at speed 570 (scaled by the class gallop modifier) for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop.
+**Space / controller left bumper** gallops in the current or last facing direction at speed 570 (scaled by the class gallop modifier) for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop.
 
 ### Formation tree
 
@@ -218,14 +218,15 @@ The Last Court, Iron Vow, Sundering, creatures, and refuge are original fantasy;
 
 | Action                         | Keyboard / mouse                     | Standard controller |
 | ------------------------------ | ------------------------------------ | ------------------- |
-| Ride                           | WASD / arrow keys                    | Left stick / D-pad  |
-| Attack                         | Automatic                            | Automatic           |
-| Gallop                         | Space / HUD button                   | A                   |
-| Develop camp                   | B / HUD button                       | X                   |
-| Choose migration route         | M / HUD button                       | Y                   |
+| Ride                           | Hold left click / arrow keys         | Left stick          |
+| Basic attack                   | Hold right click                     | Right trigger       |
+| Class abilities                | Q / W / E / R                        | A / B / X / Y       |
+| Gallop                         | Space / HUD button                   | Left bumper         |
+| Develop camp                   | B / HUD button                       | D-pad up            |
+| Choose migration route         | M / HUD button                       | D-pad down          |
 | Cycle formations               | F / HUD button                       | Right bumper        |
 | Chronicle                      | Tab / J / HUD button                 | View                |
-| Pause, resume, close a panel   | Escape / P                           | Start / B           |
+| Pause, resume, close a panel   | Escape / P                           | Start / B in menus  |
 | Menu navigation / confirmation | Tab, Shift+Tab / Enter, Space, click | Stick or D-pad / A  |
 | Fullscreen                     | F11 / Alt+Enter / Settings           | Navigate Settings   |
 | Quit desktop game              | Quit game / window close             | Navigate Quit game  |
@@ -259,7 +260,7 @@ See [the progression UI guide](progression-ui.md) for adding technologies, build
 
 ### Battlefield zoom
 
-During active play, use + / −, number-pad + / −, the mouse wheel, or controller RT / LT to change the camera in 10% steps from 60% to 160%. Click the displayed percentage, press 0, or click the right stick to reset to 100%. The scene retains the zoom across expedition restarts within the app session. Menus ignore battlefield zoom input. HUD dimensions, movement, combat ranges, and collision bodies retain their world values; enemy spawn placement accounts for the zoomed visible area. Very large windows raise the minimum zoom enough to keep the view inside the world.
+During active play, use + / −, number-pad + / −, the mouse wheel, or controller D-pad left / right to change the camera in 10% steps from 60% to 160%. Click the displayed percentage, press 0, or click the right stick to reset to 100%. The scene retains the zoom across expedition restarts within the app session. Menus ignore battlefield zoom input. HUD dimensions, movement, combat ranges, and collision bodies retain their world values; enemy spawn placement accounts for the zoomed visible area. Very large windows raise the minimum zoom enough to keep the view inside the world.
 
 Portable camp checkpoints save after successful purchases and completed migrations through the native profile store. **Continue clan camp** restores camp organisation and supplies into a fresh expedition, reconstructing continuing benefits once. **New Game** starts a fresh clan. This portable camp action starts fresh; see [the checkpoint contract](camp-checkpoints.md).
 
@@ -355,26 +356,24 @@ Combat adds bounded elite/armour markers, grouped offscreen warnings and retaine
 
 ## Playable classes
 
-The four playable classes share automatic targeting, mounted momentum, formations,
-and succession. The temporary selection controls are documented in
-[developer tools](developer-mode.md#playable-class-testing); normal New Game still
-begins directly, without a character creation screen. Classes currently reuse the
-mounted Khan sprite sheet with tint accents; dedicated class art and animations
-remain separate work.
+The four playable classes share formations, gallop and succession, but the Khan no
+longer attacks automatically. Hold right click to attack toward the cursor; controller
+aim uses the right stick and attacks with the right trigger. The class atlas supplies
+the weapon-specific windup and release poses. Allied riders and camp defenses keep
+their automatic targeting.
 
-- **Mounted Archer** uses a composite recurve bow, a close-range saber sweep, and
-  a charged arrow fan. Its progression emphasizes extra arrows, firing speed,
+- **Mounted Archer** uses a fast aimed composite-bow shot, a close-range saber sweep,
+  and manual arrow fans. Its progression emphasizes extra arrows, firing speed,
   damage, mobility, and piercing.
-- **Lancer** uses piercing lance thrusts, a nearby sweeping strike, heavier charged
-  pins, and faster pinning gallop breakthroughs. Its progression develops damage, piercing,
+- **Lancer** uses short piercing lance thrusts, a nearby sweeping strike and manual
+  breakthrough charges. Its progression develops damage, piercing,
   health, speed, and additional thrusts.
-- **Iron Pagoda** uses overlapping saber arcs and nearby crushing attacks, with
-  stronger personal armor, recovery, and clan protection. Charged attacks and
-  gallop breakthroughs pin. Its progression strengthens health, damage, piercing,
+- **Iron Pagoda** uses a wide close saber arc and nearby crushing attacks, with
+  stronger personal armor, recovery, and clan protection. Shielded advances pin.
+  Its progression strengthens health, damage, piercing,
   cleaves, and firing speed.
-- **Spirit Caller** uses homing staff bolts and a pinning drum pulse. Charged
-  volleys release an additional charged ancestral bolt; galloping restores Khan
-  health and clan resolve. Its progression adds bolts, pickup radius, damage,
+- **Spirit Caller** uses deliberate homing staff bolts, a pinning drum pulse,
+  ancestral volleys and a restorative ward. Its progression adds bolts, pickup radius, damage,
   firing speed, piercing, and health.
 
 `src/game/data/classes.ts` owns weapon, ability, and progression definitions;
@@ -382,24 +381,20 @@ remain separate work.
 A supplied character profile applies its background and oath bonuses alongside
 its class loadout. Successors retain the expedition's class and progression.
 
-### Close defense and charged attacks
+### Manual attacks and placeholder abilities
 
-All four classes automatically strike nearby enemies with a clear terrain path on
-an independent cooldown. Radius, interval, and damage multiplier come from
-`GAME.classes`; damage scales with the Khan's current damage stat. The Spirit
-Caller pulse also pins enemies. Close defense freezes in menus and during Khan
-succession. Cooldown persistence follows the
-[save contract](expedition-saves.md#snapshot-and-hydration-contract). Charged pinning
-weapons apply the existing pin duration before armor resolves. Spirit Caller bolts steer toward live, unhit enemies at
-the class turn rate while retaining their speed.
+| Class          | Right-click basic   | Q                   | W                  | E             | R                |
+| -------------- | ------------------- | ------------------- | ------------------ | ------------- | ---------------- |
+| Mounted Archer | Aimed Arrow         | Flurry Arrow Volley | Saber Close Slash  | Circling Shot | Windrunner       |
+| Lancer         | Couched Thrust      | Sweeping Strike     | Devastating Charge | Line Breaker  | Shock Lance      |
+| Iron Pagoda    | Heavy Saber Arc     | Crushing Aura       | Unbreakable Stance | Shield Bash   | Shielded Advance |
+| Spirit Caller  | Seeking Spirit Bolt | Drum Pulse          | Summon Ancestor    | Spirit Ward   | Ancestral Chorus |
 
-Each class sets its Khan charged-volley damage multiplier and extra pierce in
-`GAME.classes` (the Lancer's Devastating Charge deals 1.6× damage with +2 pierce;
-the other classes use 1.35×). Accompanying riders keep `GAME.mounted.chargedDamage`
-and +1 pierce. The class `gallopSpeedMultiplier` scales the Khan's gallop speed;
-the Lancer's Shock Lance gallops 12% faster.
-
-Mounted Archer charged volleys add two arrows to the current projectile count,
-forming a fan and retaining progression bonuses. Lancer and Iron Pagoda gallops
-pin enemies they break through for 0.65 active seconds, once per enemy per gallop,
-while retaining the existing pushback.
+Basic range, rate, damage and hit shape, plus every ability cooldown and effect, are
+authored in `GAME.classes` and surfaced through `src/game/data/classes.ts`. Ability
+cooldowns advance only during active play and appear in the battlefield HUD. The old
+sustained-riding charged volley is removed; Flurry Arrow Volley carries that role as
+the Mounted Archer's Q ability. Formation momentum remains for allied rider tactics.
+Spirit bolts steer toward live, unhit enemies at the class turn rate while retaining
+their speed. The class `gallopSpeedMultiplier` still scales the Khan's Space / left-bumper
+gallop, and Lancer and Iron Pagoda gallops retain their existing pinning breakthrough.

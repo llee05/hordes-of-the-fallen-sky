@@ -53,7 +53,7 @@ export function currentGuidance(run: RunState): Guidance | undefined {
     return {
       id: 'ride',
       title: 'Ride out, keep watch',
-      text: 'Ride with WASD, arrows, the left stick or a touch drag; your bow fires on its own. Space / controller A breaks into a short, protected gallop.',
+      text: 'Hold left click to ride toward the cursor, or use arrows, the left stick or a touch drag. Hold right click / right trigger to attack; Q / W / E / R or the face buttons use class abilities. Space / left bumper gallops.',
     };
   if (!done('build'))
     return {
