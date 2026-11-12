@@ -72,10 +72,10 @@ describe('character classes and character profile', () => {
       'Windstep',
     ]);
     expect(classDefinition('lancer').abilities.map((a) => a.name)).toEqual([
-      'Sweeping Strike',
-      'Devastating Charge',
-      'Line Breaker',
-      'Shock Lance',
+      'Breakthrough',
+      'Sweeping Lance',
+      'Lance Vault',
+      'Unstoppable Charge',
     ]);
     expect(classDefinition('iron-pagoda').abilities.map((a) => a.name)).toEqual([
       'Iron Wall',
@@ -93,7 +93,7 @@ describe('character classes and character profile', () => {
 
   it.each([
     ['mounted-archer', 440, 440, 0, 'projectile', 500, 570, 7],
-    ['lancer', 250, 520, 0, 'line', 178, 638.4, 5],
+    ['lancer', 250, 520, 0, 'line', 230, 638.4, 7],
     ['iron-pagoda', 215, 410, 0, 'arc', 126, 570, 15],
     ['spirit-caller', 380, 390, 0.45, 'projectile', 440, 570, 12],
   ] as const)(
@@ -113,6 +113,9 @@ describe('character classes and character profile', () => {
       } else if (classId === 'mounted-archer') {
         expect(cls.heavyAttack.charge?.kind).toBe('projectile');
         expect(cls.heavyAttack.range).toBeGreaterThan(cls.basicAttack.range);
+      } else if (classId === 'lancer') {
+        expect(cls.heavyAttack.holdCharge?.maxDuration).toBe(1.2);
+        expect(cls.heavyAttack.holdCharge?.maxArmorPenetration).toBeGreaterThan(0);
       } else {
         expect(cls.heavyAttack.range).toBeGreaterThan(cls.basicAttack.range);
         expect(cls.heavyAttack.damage).toBeGreaterThan(cls.basicAttack.damage);
@@ -216,7 +219,7 @@ describe('character classes and character profile', () => {
     });
     expect(lancerRun.clan.materials).toBe(68); // 50 base + 18 Artisan
     expect(lancerRun.clan.campEffects.bonuses.range).toBe(0);
-    expect(khanBasicRange(lancerRun)).toBe(178);
+    expect(khanBasicRange(lancerRun)).toBe(230);
 
     const pagodaProfile: CharacterProfile = {
       ...defaultCharacterProfile(),
