@@ -2,7 +2,7 @@ import type { ComposedRegion, SceneShelf } from '../data/worldRegions';
 import { coherentNoise, fractalNoise, smoothstep } from '../terrain/noise';
 import type { TerrainBounds, TerrainCell, TerrainPoint } from '../terrain/types';
 import { MountainHeightfield, type HeightNode } from './MountainHeightfield';
-import type { RiverDefinition } from '../assets/riverGeometry';
+import { sourcePoolRadius, type RiverDefinition } from '../assets/riverGeometry';
 import { WorldRiver } from './WorldRiver';
 
 /** Multiple overlapping geological shelves with authored approaches and a protected battle floor. */
@@ -91,6 +91,13 @@ export class ComposedTerrain extends MountainHeightfield {
     // Gorge rivers meet authored cliffs directly instead of grading the shelves into banks.
     const gorge = !!this.river?.definition.gorge;
     const shore = river?.shoreDistance ?? Infinity;
+    const sourcePool = this.river?.definition.sourcePool;
+    const poolX = sourcePool ? x - this.river!.center - sourcePool.x : 0,
+      poolZ = sourcePool ? z - this.river!.center - sourcePool.y : 0;
+    const poolShore = sourcePool
+      ? Math.hypot(poolX, poolZ) - sourcePoolRadius(sourcePool, Math.atan2(poolZ, poolX))
+      : Infinity;
+    const nearestIsPool = poolShore <= shore + 0.001;
     const bank = river ? smoothstep(0, 110, shore) : 1;
     const bed = river
       ? shore <= 0
@@ -133,12 +140,19 @@ export class ComposedTerrain extends MountainHeightfield {
       const height = shelf.rise * weathering + peak;
       const bankGrade =
         river && !gorge
-          ? smoothstep(8, 72 + (shelf.rise + (shelf.peak ?? 0)) * (shelf.camp ? 3 : 2), shore)
+          ? smoothstep(
+              8,
+              nearestIsPool ? 180 : 72 + (shelf.rise + (shelf.peak ?? 0)) * (shelf.camp ? 3 : 2),
+              shore,
+            )
           : 1;
       base += height * ramp * grade * (1 - shelter) * bankGrade;
       const rise = height * (1 - ramp) * (1 - shelter) * bankGrade;
       // Round small cliff remnants into the riverbank rather than leaving dark slivers.
-      const roundedBank = river && !gorge ? 1 - smoothstep(300, 500, shore) : 0;
+      const roundedBank =
+        river && !gorge
+          ? 1 - smoothstep(nearestIsPool ? 120 : 300, nearestIsPool ? 220 : 500, shore)
+          : 0;
       base += rise * roundedBank * smoothstep(-96, 96, field);
       return { field, rise: rise * (1 - roundedBank) };
     });

@@ -59,6 +59,7 @@ export interface AltanOvooLayout {
       width: number;
       color: number;
       bank: number;
+      sourcePool: { x: number; y: number; radius: number };
       course: readonly number[];
     };
   };
@@ -179,6 +180,7 @@ export const ALTAN_OVOO: AltanOvooLayout = {
       width: 44,
       color: 0x4e6f77,
       bank: 0x8f8064,
+      sourcePool: { ...ALTAN_OVOO_SITES.spring, radius: 155 },
       course: [1450, 650, 1500, 720, 1540, 835, 1600, 980, 1690, 1150, 1820, 1330, 1980, 1500],
     },
   },

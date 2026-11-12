@@ -5,6 +5,7 @@ import { Water3D } from '../../src/game/world3d/Water3D';
 import { ComposedTerrain } from '../../src/game/world3d/ComposedTerrain';
 import { composedRegion } from '../../src/game/data/worldRegions';
 import { riverPoint } from '../../src/game/assets/riverGeometry';
+import { sourcePoolRadius } from '../../src/game/assets/riverGeometry';
 import * as THREE from 'three';
 import { MEADOW_STREAM } from './fixtures/stream';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
@@ -80,6 +81,17 @@ describe('integrated organic rivers', () => {
             dx * s.a.nx + dz * s.a.ny < 0
               ? s.a.left + (s.b.left - s.a.left) * t
               : s.a.right + (s.b.right - s.a.right) * t;
+        }
+        const pool = water.sourcePool;
+        if (pool) {
+          const poolX = x - 2600 - pool.x,
+            poolZ = z - 2600 - pool.y,
+            poolDistance = Math.hypot(poolX, poolZ),
+            radius = sourcePoolRadius(pool, Math.atan2(poolZ, poolX));
+          if (poolDistance - radius < Math.sqrt(best) - halfWidth) {
+            best = poolDistance * poolDistance;
+            halfWidth = radius;
+          }
         }
         expect(river.sample(x, z)).toEqual({
           distance: Math.sqrt(best),

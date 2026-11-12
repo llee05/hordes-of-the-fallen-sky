@@ -47,6 +47,8 @@ export interface LandscapeDefinition {
     width: number;
     color: number;
     bank: number;
+    /** Optional still-water head feeding the first point of an authored stream. */
+    sourcePool?: { x: number; y: number; radius: number };
     /** Spline coordinates relative to the camp. All channels are decorative unless `gorge` is set. */
     course: readonly number[];
     /**

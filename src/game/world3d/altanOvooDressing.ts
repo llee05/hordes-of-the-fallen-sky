@@ -35,6 +35,18 @@ const ROCK_CLUSTERS: readonly Cluster[] = [
   { x: 2860, y: 420, radiusX: 220, radiusY: 300, count: 16, tier: 'lower' },
   { x: 420, y: 1580, radiusX: 520, radiusY: 150, count: 20, tier: 'lower' },
   { x: 2480, y: 1510, radiusX: 380, radiusY: 150, count: 17, tier: 'lower' },
+  { x: -2260, y: -1380, radiusX: 300, radiusY: 135, count: 17, tier: 'upper' },
+  { x: -1260, y: -1380, radiusX: 300, radiusY: 120, count: 18, tier: 'upper' },
+  { x: -180, y: -1680, radiusX: 340, radiusY: 120, count: 18, tier: 'upper' },
+  { x: 920, y: -1380, radiusX: 320, radiusY: 135, count: 18, tier: 'upper' },
+  { x: 1800, y: -760, radiusX: 260, radiusY: 150, count: 16, tier: 'upper' },
+  { x: 1500, y: 80, radiusX: 260, radiusY: 120, count: 15, tier: 'upper' },
+  { x: -1180, y: 250, radiusX: 300, radiusY: 120, count: 16, tier: 'upper' },
+  { x: -3030, y: -1580, radiusX: 120, radiusY: 270, count: 15, tier: 'lower' },
+  { x: 3000, y: -1530, radiusX: 120, radiusY: 280, count: 15, tier: 'lower' },
+  { x: -1700, y: 1770, radiusX: 300, radiusY: 100, count: 15, tier: 'lower' },
+  { x: -500, y: 1640, radiusX: 350, radiusY: 105, count: 17, tier: 'lower' },
+  { x: 1560, y: 1730, radiusX: 360, radiusY: 105, count: 17, tier: 'lower' },
 ];
 
 const AUTUMN_CLUSTERS: readonly Cluster[] = [
@@ -49,9 +61,22 @@ const AUTUMN_CLUSTERS: readonly Cluster[] = [
   { x: 800, y: 1370, radiusX: 320, radiusY: 190, count: 12, tier: 'lower' },
   { x: 2620, y: 250, radiusX: 210, radiusY: 260, count: 10, tier: 'lower' },
   { x: 2700, y: 1450, radiusX: 240, radiusY: 170, count: 9, tier: 'lower' },
+  { x: -2250, y: -1350, radiusX: 230, radiusY: 150, count: 10, tier: 'upper' },
+  { x: -1250, y: -1450, radiusX: 230, radiusY: 150, count: 11, tier: 'upper' },
+  { x: -120, y: -1580, radiusX: 260, radiusY: 150, count: 11, tier: 'upper' },
+  { x: 980, y: -1280, radiusX: 250, radiusY: 160, count: 11, tier: 'upper' },
+  { x: 1840, y: -580, radiusX: 210, radiusY: 170, count: 10, tier: 'upper' },
+  { x: 1500, y: 140, radiusX: 230, radiusY: 140, count: 9, tier: 'upper' },
+  { x: -1210, y: 230, radiusX: 260, radiusY: 140, count: 10, tier: 'upper' },
+  { x: -2980, y: -1450, radiusX: 130, radiusY: 250, count: 9, tier: 'lower' },
+  { x: 2990, y: -1450, radiusX: 130, radiusY: 250, count: 9, tier: 'lower' },
+  { x: -1700, y: 1750, radiusX: 270, radiusY: 110, count: 9, tier: 'lower' },
+  { x: -480, y: 1620, radiusX: 300, radiusY: 120, count: 10, tier: 'lower' },
+  { x: 1540, y: 1700, radiusX: 310, radiusY: 120, count: 10, tier: 'lower' },
 ];
 
 const ROCKS: readonly OrkhonSprite[] = [
+  'prop_cliff_scree',
   'prop_cliff_scree',
   'small_boulder',
   'loose_pebbles',
@@ -60,12 +85,25 @@ const ROCKS: readonly OrkhonSprite[] = [
 const TREES: readonly OrkhonSprite[] = [
   'autumn_yellow_tree',
   'autumn_red_tree',
+  'autumn_yellow_tree',
+  'autumn_red_tree',
   'olive_tree',
   'bare_tree',
 ];
 const SHRUBS: readonly OrkhonSprite[] = ['shrub_gold', 'shrub_mix', 'shrub_olive', 'shrub_gold'];
 const cone = ALTAN_OVOO.plateaus[0]!;
 const cache = new Map<string | number, readonly SceneDressing[]>();
+const SPRING_REEDS: readonly TerrainPoint[] = [
+  { x: 1315, y: 585 },
+  { x: 1360, y: 535 },
+  { x: 1430, y: 515 },
+  { x: 1515, y: 535 },
+  { x: 1580, y: 585 },
+  { x: 1600, y: 660 },
+  { x: 1555, y: 735 },
+  { x: 1370, y: 750 },
+  { x: 1300, y: 690 },
+];
 
 function segmentDistance(point: TerrainPoint, a: TerrainPoint, b: TerrainPoint): number {
   const dx = b.x - a.x,
@@ -170,7 +208,7 @@ function buildDressing(seed: string | number): SceneDressing[] {
       heightScale: 1,
       texture: orkhonAtlasOf(sprite),
       frame: sprite,
-      shadow: kind === 'larch' || kind === 'landmark' || kind === 'crag',
+      shadow: kind === 'landmark' || kind === 'crag',
       originY: metrics.anchorY,
     });
   };
@@ -190,9 +228,76 @@ function buildDressing(seed: string | number): SceneDressing[] {
     place(landmark.sprite, landmark.x, landmark.y, 'landmark', scale, landmark.flip ?? false);
   }
 
+  for (const [index, reed] of SPRING_REEDS.entries())
+    place(
+      'reed_clump',
+      reed.x,
+      reed.y,
+      'reeds',
+      ORKHON_PROP_SCALE.reed * 1.5,
+      random(`spring-reed:${index}`)(1) > 0.5,
+    );
+
+  // A loose all-map scatter keeps the broad combat floor visually alive between the denser
+  // authored ridges. Clearance checks still leave every route and named site readable.
+  const scatterStep = 520;
+  for (let row = 0; row * scatterStep < ALTAN_OVOO.world.height - 280; row++)
+    for (let column = 0; column * scatterStep < ALTAN_OVOO.world.width - 280; column++) {
+      const r = random(`scatter:${column}:${row}`);
+      const point = {
+        x: ALTAN_OVOO.world.minX + 140 + column * scatterStep + (r(1) - 0.5) * 360,
+        y: ALTAN_OVOO.world.minY + 140 + row * scatterStep + (r(2) - 0.5) * 360,
+      };
+      if (!altanOvooDressingClear(point, 88)) continue;
+      const tree = r(3) > 0.56;
+      const rock = !tree && r(4) < 0.32;
+      const sprite = tree
+        ? TREES[Math.floor(r(5) * TREES.length)]!
+        : rock
+          ? r(5) < 0.55
+            ? 'prop_cliff_scree'
+            : 'small_boulder'
+          : SHRUBS[Math.floor(r(5) * SHRUBS.length)]!;
+      const kind: SceneProp = tree ? 'larch' : rock ? 'boulders' : 'scrub';
+      const scale = tree
+        ? ORKHON_PROP_SCALE.tree * (1 + r(6) * 0.2)
+        : rock
+          ? sprite === 'prop_cliff_scree'
+            ? ORKHON_PROP_SCALE.scree * (1.08 + r(6) * 0.25)
+            : 0.63 + r(6) * 0.16
+          : ORKHON_PROP_SCALE.scrub * (1.05 + r(6) * 0.22);
+      if (!occupied(point, kind)) place(sprite, point.x, point.y, kind, scale, r(7) > 0.5);
+
+      const satellites = r(8) > 0.55 ? 1 : 0;
+      for (let satellite = 0; satellite < satellites; satellite++) {
+        const angle = r(9 + satellite * 3) * Math.PI * 2;
+        const distance = 52 + r(10 + satellite * 3) * 62;
+        const nearby = {
+          x: point.x + Math.cos(angle) * distance,
+          y: point.y + Math.sin(angle) * distance,
+        };
+        if (!altanOvooDressingClear(nearby, 80) || occupied(nearby, 'scrub')) continue;
+        const satelliteSprite =
+          r(11 + satellite * 3) < 0.48
+            ? SHRUBS[Math.floor(r(12 + satellite * 3) * SHRUBS.length)]!
+            : 'small_boulder';
+        place(
+          satelliteSprite,
+          nearby.x,
+          nearby.y,
+          satelliteSprite === 'small_boulder' ? 'boulders' : 'scrub',
+          satelliteSprite === 'small_boulder'
+            ? 0.52 + r(13 + satellite * 3) * 0.14
+            : ORKHON_PROP_SCALE.scrub * (0.9 + r(13 + satellite * 3) * 0.18),
+          r(14 + satellite * 3) > 0.5,
+        );
+      }
+    }
+
   for (const [clusterIndex, cluster] of ROCK_CLUSTERS.entries()) {
+    const target = Math.ceil(cluster.count * 0.55);
     let placed = 0;
-    for (let candidate = 0; candidate < cluster.count * 5 && placed < cluster.count; candidate++) {
+    for (let candidate = 0; candidate < target * 8 && placed < target; candidate++) {
       const r = random(`rock:${clusterIndex}:${candidate}`);
       const angle = r(1) * Math.PI * 2;
       const radius = Math.sqrt(r(2));
@@ -200,7 +305,7 @@ function buildDressing(seed: string | number): SceneDressing[] {
         x: cluster.x + Math.cos(angle) * cluster.radiusX * radius,
         y: cluster.y + Math.sin(angle) * cluster.radiusY * radius,
       };
-      if (!tierMatches(cluster, point) || !altanOvooDressingClear(point, 86)) continue;
+      if (!tierMatches(cluster, point) || !altanOvooDressingClear(point, 80)) continue;
       const pillar = placed === 0 && r(3) > 0.45;
       const sprite = pillar ? 'landmark_basalt_pillar' : ROCKS[Math.floor(r(4) * ROCKS.length)]!;
       const kind: SceneProp = pillar ? 'crag' : 'boulders';
@@ -208,16 +313,17 @@ function buildDressing(seed: string | number): SceneDressing[] {
       const base = pillar
         ? 0.42 + r(5) * 0.12
         : sprite === 'prop_cliff_scree'
-          ? ORKHON_PROP_SCALE.scree * (0.86 + r(5) * 0.24)
-          : 0.5 * (0.88 + r(5) * 0.28);
+          ? ORKHON_PROP_SCALE.scree * (1.08 + r(5) * 0.3)
+          : 0.62 * (0.9 + r(5) * 0.3);
       place(sprite, point.x, point.y, kind, base, r(6) > 0.5);
       placed++;
     }
   }
 
   for (const [clusterIndex, cluster] of AUTUMN_CLUSTERS.entries()) {
+    const target = Math.ceil(cluster.count * 0.65);
     let placed = 0;
-    for (let candidate = 0; candidate < cluster.count * 6 && placed < cluster.count; candidate++) {
+    for (let candidate = 0; candidate < target * 8 && placed < target; candidate++) {
       const r = random(`autumn:${clusterIndex}:${candidate}`);
       const angle = r(1) * Math.PI * 2;
       const radius = Math.sqrt(r(2));
@@ -229,7 +335,7 @@ function buildDressing(seed: string | number): SceneDressing[] {
       const kind: SceneProp = tree ? 'larch' : 'scrub';
       if (
         !tierMatches(cluster, point) ||
-        !altanOvooDressingClear(point, tree ? 105 : 82) ||
+        !altanOvooDressingClear(point, tree ? 92 : 80) ||
         occupied(point, kind)
       )
         continue;
@@ -237,8 +343,8 @@ function buildDressing(seed: string | number): SceneDressing[] {
         ? TREES[Math.floor(r(4) * TREES.length)]!
         : SHRUBS[Math.floor(r(4) * SHRUBS.length)]!;
       const scale = tree
-        ? ORKHON_PROP_SCALE.tree * (0.88 + r(5) * 0.2)
-        : ORKHON_PROP_SCALE.scrub * (0.9 + r(5) * 0.2);
+        ? ORKHON_PROP_SCALE.tree * (1.02 + r(5) * 0.24)
+        : ORKHON_PROP_SCALE.scrub * (1.08 + r(5) * 0.24);
       place(sprite, point.x, point.y, kind, scale, r(6) > 0.5);
       placed++;
     }

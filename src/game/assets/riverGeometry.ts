@@ -17,6 +17,14 @@ export interface RiverChannel {
   length: number;
 }
 
+/** A small asymmetric shoreline keeps authored source pools from reading as perfect circles. */
+export function sourcePoolRadius(
+  pool: NonNullable<RiverDefinition['sourcePool']>,
+  angle: number,
+): number {
+  return pool.radius * (1 + Math.sin(angle * 3 + 0.7) * 0.07 + Math.sin(angle * 7 - 0.9) * 0.04);
+}
+
 function interpolate(a: number, b: number, c: number, d: number, t: number): number {
   return b + 0.5 * t * (c - a + t * (2 * a - 5 * b + 4 * c - d + t * (3 * (b - c) + d - a)));
 }

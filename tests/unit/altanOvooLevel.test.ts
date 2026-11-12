@@ -170,6 +170,9 @@ describe('Altan Ovoo runtime terrain', () => {
     expect(terrain.river).toBeDefined();
     const spring = world(ALTAN_OVOO_SITES.spring);
     expect(terrain.river!.sample(spring.x, spring.y).shoreDistance).toBeLessThan(0);
+    expect(terrain.river!.sample(spring.x, spring.y).halfWidth).toBeGreaterThan(
+      ALTAN_OVOO.spring.radius * 0.9,
+    );
   });
 
   it('keeps the camp flat, raises only one cone tier and grades both ramp cuts', () => {
@@ -270,13 +273,14 @@ describe('Altan Ovoo authored dressing', () => {
     );
     const sorted = (items: typeof all) => items.map((item) => JSON.stringify(item)).sort();
     expect(sorted(parts)).toEqual(sorted(all));
-    expect(all.length).toBeGreaterThan(190);
+    expect(all.length).toBeGreaterThan(430);
     expect(
       all.filter((prop) => prop.kind === 'boulders' || prop.kind === 'crag').length,
-    ).toBeGreaterThan(100);
+    ).toBeGreaterThan(220);
     expect(
       all.filter((prop) => prop.kind === 'larch' || prop.kind === 'scrub').length,
-    ).toBeGreaterThan(55);
+    ).toBeGreaterThan(150);
+    expect(all.filter((prop) => prop.kind === 'reeds')).toHaveLength(9);
   });
 
   it('uses existing manuscript scenery on both elevation tiers', () => {
@@ -293,11 +297,19 @@ describe('Altan Ovoo authored dressing', () => {
   });
 
   it('keeps camp, trails, ramps, water edges and combat lanes clear', () => {
-    for (const prop of all.filter((item) => item.kind !== 'landmark'))
+    for (const prop of all.filter((item) => item.kind !== 'landmark' && item.kind !== 'reeds'))
       expect(
         altanOvooDressingClear({ x: prop.x - centre, y: prop.z - centre }, 80),
         `${prop.frame}@${prop.x - centre},${prop.z - centre}`,
       ).toBe(true);
+    for (const reed of all.filter((item) => item.kind === 'reeds')) {
+      const distance = Math.hypot(
+        reed.x - centre - ALTAN_OVOO.spring.centre.x,
+        reed.z - centre - ALTAN_OVOO.spring.centre.y,
+      );
+      expect(distance).toBeGreaterThan(120);
+      expect(distance).toBeLessThan(175);
+    }
   });
 
   it('places every authored landmark once and preserves its semantic entry', () => {
