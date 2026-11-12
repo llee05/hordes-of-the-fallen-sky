@@ -16,14 +16,30 @@
   min-width: 0;
   padding: 12px;
   text-align: left;
-  border: 1px solid var(--paper-line);
-  background: #f6ecd45c;
+  border: 1px solid #9c754688;
+  background: linear-gradient(#f9f0dcbb, #ebd9b4bb), url('/art/ui-felt.png');
+  background-size: auto, 360px;
+  background-blend-mode: normal, multiply;
   color: var(--paper-ink);
+  box-shadow:
+    0 2px 4px #4d341f22,
+    inset 0 0 0 1px #f5e5bf55;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+.destination-card:hover {
+  border-color: #b98b4d;
+  box-shadow: 0 4px 8px #4d341f33;
 }
 .destination-card[aria-pressed='true'] {
-  border-color: #80552e;
-  background: #d2b77761;
-  box-shadow: inset 3px 0 #984d37;
+  border-color: #813524;
+  background: linear-gradient(#f7e5d2dd, #ecd0b9dd), url('/art/ui-felt.png');
+  background-size: auto, 360px;
+  background-blend-mode: normal, multiply;
+  box-shadow:
+    inset 4px 0 0 #813524,
+    0 2px 6px #4d341f33;
 }
 .destination-illustration {
   display: block;
