@@ -188,7 +188,7 @@ test('controller confirms inspection and explicit purchase; Back dismisses the d
   });
   await openTitle(page);
   await startExpedition(page);
-  await tapController(page, 2);
+  await tapController(page, 12);
   await expect(page.locator('[data-camp-encampment]')).toBeFocused();
   await tapController(page, 0);
   await expect(page.locator('.camp-popup')).toBeVisible();

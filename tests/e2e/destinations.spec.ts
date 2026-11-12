@@ -136,7 +136,7 @@ test('keyboard and controller select a destination before confirming the journey
   await page.evaluate(() => {
     (window as any).__gloam.scene.run.clan.stageTime = 45;
   });
-  await tapController(page, 3);
+  await tapController(page, 13);
   await expect(page.locator('[data-destination="bogd-khan-uul"]')).toBeFocused();
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('[data-destination="altai-tavan-bogd"]')).toBeFocused();

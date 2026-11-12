@@ -117,7 +117,7 @@ test('menus ignore zoom input and search remains editable; the chosen view survi
   }
 });
 
-test('controller triggers and reset work once per press, including during succession, while spawns stay outside a wide view', async ({
+test('controller d-pad zoom and reset work once per press, including during succession, while spawns stay outside a wide view', async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -132,9 +132,9 @@ test('controller triggers and reset work once per press, including during succes
   });
   await openTitle(page);
   await startExpedition(page);
-  await tapController(page, 7);
+  await tapController(page, 15);
   await expect(page.locator('#zoom-level')).toHaveText('110%');
-  await tapController(page, 6);
+  await tapController(page, 14);
   await expect(page.locator('#zoom-level')).toHaveText('100%');
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
