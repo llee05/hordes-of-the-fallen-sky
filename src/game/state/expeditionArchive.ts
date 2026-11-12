@@ -15,6 +15,7 @@ import { BUILDINGS, LOCATIONS, ROUTES, STARTING_TRADITIONS } from '../data/clan'
 import { ALL_ENEMIES } from '../data/enemies';
 import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
 import { NOMADIC_BUILDINGS } from '../data/nomadicCamp';
+import { ORKHON_VALLEY } from '../data/orkhonValley';
 import { SUCCESSORS } from '../data/successors';
 import type { Enemy } from '../entities/actors';
 import type { RunState } from '../types';
@@ -400,12 +401,29 @@ function migrateOrkhonLayout(value: unknown): void {
   const clan = value.run.clan;
   if (!isRecord(clan) || clan.locationId !== 'orkhon-valley' || value.world.orkhonLayout === 2)
     return;
-  const bounds = { minX: 24, maxX: 6376, minY: 1224, maxY: 5176 };
+  const center = ORKHON_VALLEY.world.terrainSize / 2;
+  const destination = {
+    x: center + ORKHON_VALLEY.world.camp.x,
+    y: center + ORKHON_VALLEY.world.camp.y,
+  };
+  const offset = { x: destination.x - 2600, y: destination.y - 2600 };
+  const bounds = {
+    minX: center + ORKHON_VALLEY.world.minX + 24,
+    maxX: center + ORKHON_VALLEY.world.minX + ORKHON_VALLEY.world.width - 24,
+    minY: center + ORKHON_VALLEY.world.minY + 24,
+    maxY: center + ORKHON_VALLEY.world.minY + ORKHON_VALLEY.world.height - 24,
+  };
   const translate = (point: unknown) => {
     if (!isRecord(point) || typeof point.x !== 'number' || typeof point.y !== 'number') return;
-    point.x = Math.max(bounds.minX, Math.min(bounds.maxX, point.x + 600));
-    point.y = Math.max(bounds.minY, Math.min(bounds.maxY, point.y + 600));
+    point.x = Math.max(bounds.minX, Math.min(bounds.maxX, point.x + offset.x));
+    point.y = Math.max(bounds.minY, Math.min(bounds.maxY, point.y + offset.y));
   };
+  const run = value.run;
+  if (isRecord(run.combat)) {
+    translate(run.combat.previous);
+    if (Array.isArray(run.combat.trails)) for (const trail of run.combat.trails) translate(trail);
+  }
+  if (isRecord(run.field)) translate(run.field.objective);
   const world = value.world;
   translate(world.player);
   translate(world.camp);
@@ -415,6 +433,8 @@ function migrateOrkhonLayout(value: unknown): void {
       for (const point of points) {
         translate(point);
         if (isRecord(point)) translate(point.previous);
+        if (isRecord(point) && isRecord(point.state) && isRecord(point.state.tactics))
+          translate(point.state.tactics.aim);
       }
   }
   if (isRecord(world.areaThreats) && Array.isArray(world.areaThreats.threats))

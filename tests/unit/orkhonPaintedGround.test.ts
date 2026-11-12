@@ -16,6 +16,7 @@ describe('Orkhon painted ground', () => {
     expect(orkhonPaintedGroundEnabled('?orkhonPaintedGround=1', true)).toBe(true);
     expect(orkhonPaintedGroundEnabled('?unrelated=1&orkhonPaintedGround=1', true)).toBe(true);
     expect(orkhonPaintedGroundEnabled('', false)).toBe(true);
+    expect(orkhonPaintedGroundEnabled('?orkhonPaintedGround=0', false)).toBe(true);
   });
 
   it('maps the approved 16:10 battlefield into its square terrain', () => {

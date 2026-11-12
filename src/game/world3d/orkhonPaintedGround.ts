@@ -24,8 +24,8 @@ export const ORKHON_PAINTED_GROUND = {
 } as const;
 
 /** Painted ground ships on; development captures can force the tiled fallback with `=0`. */
-export function orkhonPaintedGroundEnabled(search: string, _development: boolean): boolean {
-  return new URLSearchParams(search).get(ORKHON_PAINTED_GROUND.query) !== '0';
+export function orkhonPaintedGroundEnabled(search: string, development: boolean): boolean {
+  return !development || new URLSearchParams(search).get(ORKHON_PAINTED_GROUND.query) !== '0';
 }
 
 /** World-space shader bounds: minimum x/z followed by width/depth. */

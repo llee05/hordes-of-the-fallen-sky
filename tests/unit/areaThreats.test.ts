@@ -4,6 +4,7 @@ import {
   createAreaThreats,
   addAreaThreat,
   advanceAreaThreats,
+  areaThreatPointInBounds,
   areaMovementMultiplier,
 } from '../../src/game/state/areaThreats';
 import { createRun } from '../../src/game/state/run';
@@ -97,6 +98,13 @@ describe('bounded local terrain and spell threats', () => {
       expect(state).toEqual(before);
       expect(state.threats[0]!.warning).toBe(GAME.areaCombat.threats[kind].warning + 1);
     }
+  });
+  it('rejects threat candidates outside the playable rectangle before selection', () => {
+    const bounds = { x: 0, y: 1200, width: 6400, height: 4000 };
+    expect(areaThreatPointInBounds({ x: 24, y: 1224 }, bounds)).toBe(true);
+    expect(areaThreatPointInBounds({ x: 6376, y: 5176 }, bounds)).toBe(true);
+    expect(areaThreatPointInBounds({ x: 3200, y: 1199 }, bounds)).toBe(false);
+    expect(areaThreatPointInBounds({ x: 3200, y: 5201 }, bounds)).toBe(false);
   });
 });
 describe('local rules follow the physical landscape', () => {

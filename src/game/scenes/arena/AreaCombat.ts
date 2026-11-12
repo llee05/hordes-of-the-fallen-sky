@@ -10,6 +10,7 @@ import {
 import {
   addAreaThreat,
   advanceAreaThreats,
+  areaThreatPointInBounds,
   createAreaThreats,
   type AreaThreat,
 } from '../../state/areaThreats';
@@ -79,14 +80,7 @@ export class AreaCombat extends ArenaSystem {
   queueThreat(kind: AreaThreatKind, point: { x: number; y: number }, owner?: string): boolean {
     const nav = this.landscape.navigation;
     if (nav && !nav.isWalkable(point.x, point.y, 8, true)) return false;
-    const bounds = this.landscape.playBounds;
-    if (
-      point.x < bounds.x + 24 ||
-      point.y < bounds.y + 24 ||
-      point.x > bounds.x + bounds.width - 24 ||
-      point.y > bounds.y + bounds.height - 24
-    )
-      return false;
+    if (!areaThreatPointInBounds(point, this.landscape.playBounds)) return false;
     return addAreaThreat(this.areaThreats, kind, point, 0, owner);
   }
 
@@ -106,6 +100,7 @@ export class AreaCombat extends ArenaSystem {
         };
         if (Math.hypot(point.x - this.camp.x, point.y - this.camp.y) < GAME.areaCombat.campSafety)
           continue;
+        if (!areaThreatPointInBounds(point, this.landscape.playBounds)) continue;
         if (nav && !nav.isWalkable(point.x, point.y, 8, true)) continue;
         const surface = areaSurface(nav?.terrain, currentLocation(this.run).id, point.x, point.y);
         let score =
