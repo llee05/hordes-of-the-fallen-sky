@@ -11,7 +11,7 @@ export class ComposedTerrain extends MountainHeightfield {
   private readonly surfaceNormals = new Map<string, readonly [number, number, number]>();
   readonly river?: WorldRiver;
   constructor(region: ComposedRegion, water?: RiverDefinition) {
-    super(region);
+    super(region, region.scene.terrainSize);
     if (water)
       this.river = new WorldRiver(water, this.worldSize / 2, region.scene.floor, this.seed);
     if (region.scene.shelves.length > 8)
@@ -28,9 +28,26 @@ export class ComposedTerrain extends MountainHeightfield {
         throw new Error('Invalid scene shelf');
   }
 
+  override get campPosition(): TerrainPoint {
+    const center = this.worldSize / 2;
+    return {
+      x: center + (this.region.scene.camp?.x ?? 0),
+      y: center + (this.region.scene.camp?.y ?? 0),
+    };
+  }
+
+  override get playBounds(): TerrainBounds {
+    const center = this.worldSize / 2;
+    const bounds = this.region.scene.playBounds;
+    return bounds
+      ? { x: center + bounds.x, y: center + bounds.y, width: bounds.width, height: bounds.height }
+      : super.playBounds;
+  }
+
   override protection(x: number, z: number): number {
-    const cx = x - this.worldSize / 2;
-    const cz = z - this.worldSize / 2;
+    const campPosition = this.campPosition;
+    const cx = x - campPosition.x;
+    const cz = z - campPosition.y;
     const camp = 1 - smoothstep(350, 470, Math.hypot(cx, cz));
     const roadX = Math.max(-320, Math.min(this.region.biome.caravan.length, cx));
     const distance = Math.hypot(cx - roadX, Math.max(0, Math.abs(cz) - 240));

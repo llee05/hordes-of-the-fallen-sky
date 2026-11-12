@@ -15,6 +15,7 @@ import { BUILDINGS, LOCATIONS, ROUTES, STARTING_TRADITIONS } from '../data/clan'
 import { ALL_ENEMIES } from '../data/enemies';
 import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
 import { NOMADIC_BUILDINGS } from '../data/nomadicCamp';
+import { ORKHON_VALLEY } from '../data/orkhonValley';
 import { SUCCESSORS } from '../data/successors';
 import type { Enemy } from '../entities/actors';
 import type { RunState } from '../types';
@@ -95,6 +96,8 @@ export interface ProjectileArchive extends BodyArchive {
   hits: { slot: number; spawnId: number }[];
 }
 export interface WorldArchive {
+  /** Present after Orkhon changed from the legacy 5200-square coordinate space. */
+  orkhonLayout?: 2;
   player: BodyArchive & { motion: MotionArchive };
   camp: Point;
   facing: Point;
@@ -329,65 +332,115 @@ const threat = object(
   },
   { owner: string },
 );
-const worldShape = object({
-  player: object({ ...bodyFields, motion }),
-  camp: point,
-  facing: point,
-  zoom: positive,
-  timers: object(
-    {
-      spawnTimer: number,
-      attackTimer: number,
-      dashTimer: number,
-      dashRemaining: number,
-      invulnerable: number,
-      supportTimer: number,
-      wagonTimer: number,
-      wardTimer: number,
-    },
-    { closeDefenseTimer: number },
-  ),
-  generations: list(integer, GAME.maxEnemies),
-  enemies: list(
-    object({
-      ...bodyFields,
-      slot: integer,
-      definition: oneOf(ALL_ENEMIES.map((e) => e.id)),
-      state: enemyState,
-      motion,
-    }),
-    GAME.maxEnemies,
-  ),
-  projectiles: list(projectile, GAME.maxProjectiles),
-  hostileShots: list(projectile, 180),
-  gems: list(
-    object({ ...bodyFields, value: positive, attracted: boolean }, { secondary: boolean }),
-    GAME.maxGems,
-  ),
-  riders: list(object({ x: number, y: number, flip: boolean, motion }), 16),
-  hazards: list(
-    object(
-      { x: number, y: number, remaining: number },
+const worldShape = object(
+  {
+    player: object({ ...bodyFields, motion }),
+    camp: point,
+    facing: point,
+    zoom: positive,
+    timers: object(
       {
-        radius: positive,
-        damage: positive,
-        source: oneOf(['seer']),
-        researchCrossed: boolean,
-        researchEntered: boolean,
+        spawnTimer: number,
+        attackTimer: number,
+        dashTimer: number,
+        dashRemaining: number,
+        invulnerable: number,
+        supportTimer: number,
+        wagonTimer: number,
+        wardTimer: number,
       },
+      { closeDefenseTimer: number },
     ),
-    100,
-  ),
-  areaEncounter: object({
-    key: string,
-    clock: number,
-    announced: boolean,
-    nextThreat: number,
-    sequence: integer,
-    arrivals: integer,
-  }),
-  areaThreats: object({ nextId: integer, threats: list(threat, GAME.areaCombat.maxThreats) }),
-});
+    generations: list(integer, GAME.maxEnemies),
+    enemies: list(
+      object({
+        ...bodyFields,
+        slot: integer,
+        definition: oneOf(ALL_ENEMIES.map((e) => e.id)),
+        state: enemyState,
+        motion,
+      }),
+      GAME.maxEnemies,
+    ),
+    projectiles: list(projectile, GAME.maxProjectiles),
+    hostileShots: list(projectile, 180),
+    gems: list(
+      object({ ...bodyFields, value: positive, attracted: boolean }, { secondary: boolean }),
+      GAME.maxGems,
+    ),
+    riders: list(object({ x: number, y: number, flip: boolean, motion }), 16),
+    hazards: list(
+      object(
+        { x: number, y: number, remaining: number },
+        {
+          radius: positive,
+          damage: positive,
+          source: oneOf(['seer']),
+          researchCrossed: boolean,
+          researchEntered: boolean,
+        },
+      ),
+      100,
+    ),
+    areaEncounter: object({
+      key: string,
+      clock: number,
+      announced: boolean,
+      nextThreat: number,
+      sequence: integer,
+      arrivals: integer,
+    }),
+    areaThreats: object({ nextId: integer, threats: list(threat, GAME.areaCombat.maxThreats) }),
+  },
+  { orkhonLayout: integer },
+);
+
+/** Moves pre-overhaul Orkhon saves into the centred 6400-unit terrain exactly once. */
+function migrateOrkhonLayout(value: unknown): void {
+  if (!isRecord(value) || !isRecord(value.run) || !isRecord(value.world)) return;
+  const clan = value.run.clan;
+  if (!isRecord(clan) || clan.locationId !== 'orkhon-valley' || value.world.orkhonLayout === 2)
+    return;
+  const center = ORKHON_VALLEY.world.terrainSize / 2;
+  const destination = {
+    x: center + ORKHON_VALLEY.world.camp.x,
+    y: center + ORKHON_VALLEY.world.camp.y,
+  };
+  const offset = { x: destination.x - 2600, y: destination.y - 2600 };
+  const bounds = {
+    minX: center + ORKHON_VALLEY.world.minX + 24,
+    maxX: center + ORKHON_VALLEY.world.minX + ORKHON_VALLEY.world.width - 24,
+    minY: center + ORKHON_VALLEY.world.minY + 24,
+    maxY: center + ORKHON_VALLEY.world.minY + ORKHON_VALLEY.world.height - 24,
+  };
+  const translate = (point: unknown) => {
+    if (!isRecord(point) || typeof point.x !== 'number' || typeof point.y !== 'number') return;
+    point.x = Math.max(bounds.minX, Math.min(bounds.maxX, point.x + offset.x));
+    point.y = Math.max(bounds.minY, Math.min(bounds.maxY, point.y + offset.y));
+  };
+  const run = value.run;
+  if (isRecord(run.combat)) {
+    translate(run.combat.previous);
+    if (Array.isArray(run.combat.trails)) for (const trail of run.combat.trails) translate(trail);
+  }
+  if (isRecord(run.field)) translate(run.field.objective);
+  const world = value.world;
+  translate(world.player);
+  translate(world.camp);
+  for (const key of ['enemies', 'projectiles', 'hostileShots', 'gems', 'riders', 'hazards']) {
+    const points = world[key];
+    if (Array.isArray(points))
+      for (const point of points) {
+        translate(point);
+        if (isRecord(point)) translate(point.previous);
+        if (isRecord(point) && isRecord(point.state) && isRecord(point.state.tactics))
+          translate(point.state.tactics.aim);
+      }
+  }
+  if (isRecord(world.areaThreats) && Array.isArray(world.areaThreats.threats))
+    for (const point of world.areaThreats.threats) translate(point);
+  world.orkhonLayout = 2;
+}
 
 export function captureExpedition(
   run: RunState,
@@ -406,7 +459,7 @@ export function captureExpedition(
         stage: run.clan.stage,
       },
       run: { ...run, phase: 'paused' },
-      world,
+      world: currentLocation(run).id === 'orkhon-valley' ? { ...world, orkhonLayout: 2 } : world,
     }),
   ) as ExpeditionSave;
   decodeExpedition(snapshot);
@@ -486,6 +539,7 @@ export function decodeExpedition(value: unknown): {
     if (isRecord(value.world)) delete value.world.support;
   }
   const retiredJourney = isRecord(value) && migrateRetiredJourney(value);
+  migrateOrkhonLayout(value);
   if (!isExpeditionSave(value) || !runShape(value.run) || !worldShape(value.world))
     throw new Error('This expedition is damaged or incompatible with the current game.');
   const run = value.run as unknown as RunState;

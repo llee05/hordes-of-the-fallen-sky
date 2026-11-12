@@ -48,10 +48,13 @@ export class KhanController extends ArenaSystem {
 
   /** Creates the ground shadow and aura at the world centre. */
   createAttachments(): void {
-    const center = GAME.worldSize / 2;
-    this.shadow = this.add.image(center, center, 'shadow').setDisplaySize(64, 24).setAlpha(0.85);
+    const center = this.landscape.campPosition;
+    this.shadow = this.add
+      .image(center.x, center.y, 'shadow')
+      .setDisplaySize(64, 24)
+      .setAlpha(0.85);
     this.aura = this.add
-      .circle(center, center, 24, 0x9bc9c3, 0.02)
+      .circle(center.x, center.y, 24, 0x9bc9c3, 0.02)
       .setStrokeStyle(1, 0xe9dfaf, 0.45)
       .setScale(1, 0.5)
       .setDepth(2);
@@ -163,7 +166,12 @@ export class KhanController extends ArenaSystem {
   returnKhan(): void {
     if (!isKhanActive(this.run)) return;
     const x = this.camp.x;
-    const y = Phaser.Math.Clamp(this.camp.y + GAME.khan.campOffset, 24, GAME.worldSize - 24);
+    const bounds = this.landscape.playBounds;
+    const y = Phaser.Math.Clamp(
+      this.camp.y + GAME.khan.campOffset,
+      bounds.y + 24,
+      bounds.y + bounds.height - 24,
+    );
     this.player.enableBody(true, x, y, true, true);
     this.player
       .setVelocity(0, 0)

@@ -1,5 +1,6 @@
 import { GAME } from '../config';
 import type { AreaThreatKind } from '../data/areaEncounters';
+import type { TerrainBounds } from '../terrain/types';
 import type { RunPhase } from '../types';
 export interface AreaThreat {
   id: number;
@@ -15,6 +16,18 @@ export interface AreaThreat {
 export interface AreaThreatState {
   nextId: number;
   threats: AreaThreat[];
+}
+
+export function areaThreatPointInBounds(
+  point: { x: number; y: number },
+  bounds: TerrainBounds,
+): boolean {
+  return (
+    point.x >= bounds.x + 24 &&
+    point.y >= bounds.y + 24 &&
+    point.x <= bounds.x + bounds.width - 24 &&
+    point.y <= bounds.y + bounds.height - 24
+  );
 }
 export function createAreaThreats(): AreaThreatState {
   return { nextId: 1, threats: [] };

@@ -282,30 +282,55 @@ export const ORKHON_SAMPLING = `
   }
 `;
 
-/** Optional world-space painting for the reversible Orkhon prototype. */
+/** Four world-space Orkhon paintings with seam blends and a close paper/brush detail layer. */
 export const ORKHON_PAINTED_GROUND_SAMPLING = `
-  uniform sampler2D paintedGroundMap;
+  uniform sampler2D paintedGroundNW; uniform sampler2D paintedGroundNE;
+  uniform sampler2D paintedGroundSW; uniform sampler2D paintedGroundSE;
+  uniform sampler2D paintedGroundDetail;
   // minimum world x/z, followed by painted width/depth
   uniform vec4 paintedGroundBounds;
   float paintedGroundBlend(vec2 p, float normalY) {
     vec2 uv=(p-paintedGroundBounds.xy)/paintedGroundBounds.zw;
     float inside=step(0.0,uv.x)*step(0.0,uv.y)*step(uv.x,1.0)*step(uv.y,1.0);
-    vec2 edge2=min(uv,1.0-uv);
+    vec2 edge2=min(uv,1.0-uv)*paintedGroundBounds.zw;
     float edge=min(edge2.x,edge2.y);
-    // About 320–480 world units of irregular feather. It always reaches zero before the
-    // rectangle boundary, so the clamped texture can never expose a straight edge.
+    // A short irregular outer feather hides the transition to fallback ground beyond the
+    // playable rectangle. Internal quadrant seams use their own two-sided blend below.
     float variation=0.5+0.25*sin(p.x/91.0+sin(p.y/127.0)*1.7)+0.25*sin(p.y/73.0-p.x/149.0);
-    float start=mix(0.02,0.05,variation);
-    float finish=mix(0.2,0.3,variation);
+    float start=mix(12.0,28.0,variation);
+    float finish=mix(110.0,170.0,variation);
     float edgeBlend=smoothstep(start,finish,edge);
     // Keep cliff walls and steep ramp flanks on their existing materials; the walkable ramp
     // surface remains shallow enough to receive the painting.
     return inside*edgeBlend*smoothstep(0.64,0.78,normalY);
   }
+  vec3 paintedNorth(vec2 uv) {
+    float seam=0.0125;
+    if(uv.x<0.5-seam) return texture2D(paintedGroundNW,vec2(uv.x*2.0,1.0-uv.y*2.0)).rgb;
+    if(uv.x>0.5+seam) return texture2D(paintedGroundNE,vec2((uv.x-0.5)*2.0,1.0-uv.y*2.0)).rgb;
+    vec3 west=texture2D(paintedGroundNW,vec2(uv.x*2.0,1.0-uv.y*2.0)).rgb;
+    vec3 east=texture2D(paintedGroundNE,vec2((uv.x-0.5)*2.0,1.0-uv.y*2.0)).rgb;
+    return mix(west,east,smoothstep(0.5-seam,0.5+seam,uv.x));
+  }
+  vec3 paintedSouth(vec2 uv) {
+    float seam=0.0125;
+    if(uv.x<0.5-seam) return texture2D(paintedGroundSW,vec2(uv.x*2.0,1.0-(uv.y-0.5)*2.0)).rgb;
+    if(uv.x>0.5+seam) return texture2D(paintedGroundSE,vec2((uv.x-0.5)*2.0,1.0-(uv.y-0.5)*2.0)).rgb;
+    vec3 west=texture2D(paintedGroundSW,vec2(uv.x*2.0,1.0-(uv.y-0.5)*2.0)).rgb;
+    vec3 east=texture2D(paintedGroundSE,vec2((uv.x-0.5)*2.0,1.0-(uv.y-0.5)*2.0)).rgb;
+    return mix(west,east,smoothstep(0.5-seam,0.5+seam,uv.x));
+  }
   vec3 paintedGroundColor(vec2 p) {
     vec2 uv=(p-paintedGroundBounds.xy)/paintedGroundBounds.zw;
-    // World z grows south/down the source painting; Three's image texture has a bottom-left UV.
-    return texture2D(paintedGroundMap,vec2(uv.x,1.0-uv.y)).rgb;
+    float seam=0.0125;
+    vec3 color;
+    if(uv.y<0.5-seam) color=paintedNorth(uv);
+    else if(uv.y>0.5+seam) color=paintedSouth(uv);
+    else color=mix(paintedNorth(uv),paintedSouth(uv),smoothstep(0.5-seam,0.5+seam,uv.y));
+    // Hex-translated 220-unit paper grain restores close brush detail without a visible repeat.
+    vec2 detailUV=p/220.0;
+    float detail=dot(hexPainting(paintedGroundDetail,detailUV,hexGrid(detailUV),89.3),LUMA)-0.5;
+    return color*clamp(1.0+detail*3.5,0.93,1.07);
   }
 `;
 
@@ -317,6 +342,7 @@ export const ORKHON_COLOR = `
   if(worldDebug<=1) {
     vec3 surface;
     if(isWall==0) {
+      // painted-ground-open
       vec4 wA; float wMoss;
       orkhonWeights(worldPoint,n.y,materialA.x,wA,wMoss);
       surface=authoredGround(worldPoint.xz,wA,wMoss);
@@ -348,6 +374,7 @@ export const ORKHON_COLOR = `
         surface=mix(surface,cliffFace(along,cliffTop-worldPoint.y,dAlong,-vec2(pointDx.y,pointDy.y)),
           smoothstep(0.75,0.5,n.y));
       }
+      // painted-ground-close
     } else if(materialB.z>0.5) surface=cliffFace(materialB.x,materialB.y,vec2(faceDx.x,faceDy.x),vec2(faceDx.y,faceDy.y));
     else {
       vec3 tri=pow(abs(n),vec3(5.0)); tri/=max(0.001,tri.x+tri.y+tri.z);
@@ -377,10 +404,14 @@ export function terrainShaderSource(
   const paintedGround = orkhon.paintedGround === true;
   const color = paintedGround
     ? ORKHON_COLOR.replace(
-        '    } else if(materialB.z>0.5)',
+        '      // painted-ground-open',
         `      float paintedBlend=paintedGroundBlend(worldPoint.xz,n.y);
-      surface=mix(surface,paintedGroundColor(worldPoint.xz),paintedBlend);
-    } else if(materialB.z>0.5)`,
+      if(paintedBlend>0.995) surface=paintedGroundColor(worldPoint.xz);
+      else {`,
+      ).replace(
+        '      // painted-ground-close',
+        `        if(paintedBlend>0.005) surface=mix(surface,paintedGroundColor(worldPoint.xz),paintedBlend);
+      }`,
       )
     : ORKHON_COLOR;
   return {

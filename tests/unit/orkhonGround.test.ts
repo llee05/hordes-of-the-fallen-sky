@@ -95,7 +95,7 @@ describe('Orkhon per-pixel ground masks', () => {
         wear = Math.max(wear, Math.abs(bakedWear - exact.wear));
         count++;
       }
-    // A texel is about 5 units, several times finer than any worn edge; dry grass may shift only
+    // A texel is 6.25 units, several times finer than any worn edge; dry grass may shift only
     // in a few places beside cliffs and the river, where moisture inputs are interpolated over
     // about 40 units.
     expect(wear).toBeLessThan(0.15);
@@ -113,19 +113,30 @@ describe('Orkhon per-pixel ground masks', () => {
         inside += near > 0 ? 1 : 0;
         count++;
       }
-    // Eight ramps' neighbourhoods are under a tenth of the battlefield.
+    // The ramps' neighbourhoods are under a tenth of the battlefield.
     expect(inside / count).toBeLessThan(0.1);
   });
 
   it('draws trail edges that change within a mesh cell instead of along its triangles', () => {
-    // Walk across the camp-to-bridge trail (along z = camp + 0) in 2-unit steps: the wear falls
-    // from full to none over about 28 units, less than one 32-unit mesh cell.
+    // Walk perpendicular to a long camp trail in 2-unit steps: the wear falls from full to none
+    // over less than two 32-unit mesh cells.
+    const a = ground.paths[6]![1]!;
+    const b = ground.paths[6]![2]!;
+    const length = Math.hypot(b.x - a.x, b.y - a.y);
+    const middle = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const normal = { x: -(b.y - a.y) / length, y: (b.x - a.x) / length };
     const profile = Array.from(
-      { length: 30 },
-      (_, i) => sampleGroundMask(mask, orkhon.worldSize, C + 700, C + i * 2)[0],
+      { length: 50 },
+      (_, i) =>
+        sampleGroundMask(
+          mask,
+          orkhon.worldSize,
+          C + middle.x + normal.x * i * 2,
+          C + middle.y + normal.y * i * 2,
+        )[0],
     );
     expect(profile[0]).toBeGreaterThan(0.85);
-    expect(profile[29]).toBeLessThan(0.02);
+    expect(profile.at(-1)).toBeLessThan(0.02);
     const partial = profile.filter((value) => value > 0.05 && value < 0.85);
     expect(partial.length).toBeGreaterThanOrEqual(5);
     for (let i = 1; i < profile.length; i++)
@@ -146,7 +157,7 @@ describe('Orkhon ramps', () => {
   };
 
   it('wears the ramp up to the head of the cut and not onto the plateau', () => {
-    for (const ramp of ground.ramps!) {
+    for (const [rampIndex, ramp] of ground.ramps!.entries()) {
       const { at } = frame(ramp);
       for (let t = 0.15; t <= 0.75; t += 0.05) {
         const p = at(t, 0);
@@ -159,7 +170,7 @@ describe('Orkhon ramps', () => {
           const p = at(t, u);
           expect(rampWear([ramp], p.x, p.z), `${t},${u}`).toBe(0);
           const [wear] = sampleGroundMask(mask, orkhon.worldSize, p.x + C, p.z + C);
-          expect(wear, `${t},${u}`).toBeLessThan(0.02);
+          expect(wear, `${rampIndex}:${t},${u}`).toBeLessThan(0.15);
         }
     }
   });

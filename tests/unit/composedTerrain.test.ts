@@ -11,14 +11,16 @@ describe('composed angled landscapes', () => {
   it('protects the camp and complete caravan route in every regional composition', () => {
     for (const id of Object.keys(WORLD_REGIONS) as (keyof typeof WORLD_REGIONS)[]) {
       const terrain = new ComposedTerrain(composedRegion(id));
-      for (let x = 2400; x <= 2850; x += 100)
-        for (const z of [2480, 2600, 2720])
+      const camp = terrain.campPosition;
+      for (let x = camp.x - 200; x <= camp.x + 250; x += 100)
+        for (const z of [camp.y - 120, camp.y, camp.y + 120])
           expect(terrain.height(x, z) * 1000).toBeCloseTo(
             terrain.region.scene.floor + (terrain.region.scene.campShelf === false ? 0 : 150),
             6,
           );
       const high = terrain.region.scene.shelves[0]!;
-      expect(terrain.height(2600 + high.x, 2600 + high.z) * 1000).toBeGreaterThan(
+      const center = terrain.worldSize / 2;
+      expect(terrain.height(center + high.x, center + high.z) * 1000).toBeGreaterThan(
         terrain.region.scene.floor + 90,
       );
     }

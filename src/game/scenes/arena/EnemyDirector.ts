@@ -113,15 +113,21 @@ export class EnemyDirector {
                   )
               : undefined,
         },
+        landscape.playBounds,
       );
       if (!point) return false;
     } else {
-      point = enemySpawnPosition(view, anchor, angle);
+      point = enemySpawnPosition(view, anchor, angle, landscape.playBounds);
       if (navigation) {
         let safe = navigation.nearestWalkable(point);
         // Prefer connected ground beyond the view; never start a pooled actor inside a cliff.
         for (let attempt = 0; attempt < 12; attempt++) {
-          const candidate = enemySpawnPosition(view, anchor, angle + (attempt * Math.PI) / 6);
+          const candidate = enemySpawnPosition(
+            view,
+            anchor,
+            angle + (attempt * Math.PI) / 6,
+            landscape.playBounds,
+          );
           if (navigation.isWalkable(candidate.x, candidate.y, GAME.terrain.actorClearance, true)) {
             safe = candidate;
             break;

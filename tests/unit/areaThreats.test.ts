@@ -4,6 +4,7 @@ import {
   createAreaThreats,
   addAreaThreat,
   advanceAreaThreats,
+  areaThreatPointInBounds,
   areaMovementMultiplier,
 } from '../../src/game/state/areaThreats';
 import { createRun } from '../../src/game/state/run';
@@ -98,6 +99,13 @@ describe('bounded local terrain and spell threats', () => {
       expect(state.threats[0]!.warning).toBe(GAME.areaCombat.threats[kind].warning + 1);
     }
   });
+  it('rejects threat candidates outside the playable rectangle before selection', () => {
+    const bounds = { x: 0, y: 1200, width: 6400, height: 4000 };
+    expect(areaThreatPointInBounds({ x: 24, y: 1224 }, bounds)).toBe(true);
+    expect(areaThreatPointInBounds({ x: 6376, y: 5176 }, bounds)).toBe(true);
+    expect(areaThreatPointInBounds({ x: 3200, y: 1199 }, bounds)).toBe(false);
+    expect(areaThreatPointInBounds({ x: 3200, y: 5201 }, bounds)).toBe(false);
+  });
 });
 describe('local rules follow the physical landscape', () => {
   it('aligns bank approaches to the real curved river instead of an arbitrary compass direction', () => {
@@ -154,7 +162,7 @@ describe('local rules follow the physical landscape', () => {
       terrain = new ComposedTerrain(composedRegion(id), LANDSCAPES[id].water);
     for (const b of terrain.river!.bridges)
       expect(areaSurface(terrain, id, b.x, b.z).shore).toBe(0);
-    expect(areaSurface(terrain, id, 2600, 2600).grove).toBe(0);
+    expect(areaSurface(terrain, id, terrain.campPosition.x, terrain.campPosition.y).grove).toBe(0);
     const forest = new ComposedTerrain(composedRegion('bogd-khan-uul'));
     let max = 0;
     for (let x = 1300; x < 2400; x += 128)

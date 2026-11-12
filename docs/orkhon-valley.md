@@ -1,35 +1,27 @@
 # Orkhon Valley level
 
-Orkhon Valley (Ulaan Tsutgalan) is the one hand-authored level. It follows the layout
-reference supplied with the Orkhon Valley texture pack v2. Its terrain (ground, cliffs, river,
-banks, falls, cliff-foot scree, basalt pillars and river islets) comes from the manuscript-style
-terrain kit sheet ordered in [the art order](art-orders/orkhon-terrain-kit.md); trees, shrubs,
-landmarks, camps and the bridge deck still come from the texture pack.
+Orkhon Valley (Ulaan Tsutgalan) is the wide hand-authored level.
+It follows the approved antique manuscript concept: a river winds from the north-west to the large eastern falls, the clan camp occupies open central steppe, and worn tracks connect basalt shelves, landmarks and the crossing.
+Four hand-painted ground quadrants cover the terrain while cliffs, water, trees, landmarks, actors and shadows remain separate objects.
+The existing terrain-kit materials remain available as a development fallback.
 Run `npm run dev` (or `npm run dev:web`), press **F8**, and choose **Orkhon Valley**.
 
 ## Layout
 
-`src/game/data/orkhonValley.ts` holds the whole level as camp-relative data (+x east,
-+y south; the battlefield spans ±2600):
+`src/game/data/orkhonValley.ts` holds the whole level as level-centre-relative data (+x east, +y south).
+The playable battlefield is 6,400 × 4,000 units, from x = -3,200…3,200 and y = -2,000…2,000.
+It occupies the middle of a 6,400-unit terrain square so the shared elevation, chunk and navigation systems remain square while camera and physics bounds use the wide rectangle.
 
-- **Valley floor (level 0):** the main combat area. The camp sits in open steppe at its
-  centre, with worn paths to every ramp and to the bridge. Corridors between plateaus
-  reach the north and west edges.
-- **Plateaus (level 1):** six basalt shelves around the valley — the shrine heights (NW),
-  the falls plateau (N and NE, wrapping the east bank), the western, south-western,
-  southern and gorge shelves. All share one rise of 240 units: about four mounted riders in
-  world units, and about two and a half on screen, where the camera foreshortens the walls.
-  Their authored outlines are broken into irregular basalt jogs (`plateau()` steps a point
-  up to 48 units in or out every ~210 units), except within 330 units of a ramp crossing
-  or the falls, which keep their authored edge.
-- **Ramps:** each plateau has one ramp (the falls plateau has two). North ramps climb
-  30° east of north and west ramps climb slightly north of west. A ramp's length follows
-  the rise so its grade stays walkable; its 112-unit walkable half width is flanked by
-  100 units of steep, blocked basalt.
-- **River:** the falls drop from the north-east plateau into the head of a gorge river
-  that runs south past the east bank. One bridge crosses it at the end of the caravan road.
-- **Landmarks:** four raider camps at the edges, stone ruins, the sacred ovoo, two relic
-  shrines with standing stones, three basalt pillars, camp outskirts and groves.
+- **Open steppe (level 0):** the main horde arena surrounds the camp at (-550, 420), away from both painting seams.
+  Tracks branch toward the sacred ovoo, ancient ruins, the north-west spirit grove, the bridge and every ramp.
+- **Basalt (level 1):** six low one-rise masses frame the spirit heights, eastern falls, western ruins, south-west edge, southern outcrops and eastern gorge.
+  They all rise 240 units and keep irregular basalt jogs except at ramps and the falls.
+- **River and falls:** the river enters at the north-west edge, bends east across the northern half and meets the large waterfall at (2250, -300).
+  The bridge crossing is at (520, -1050), keeping a connected route between the north bank and the central camp.
+- **Landmarks:** ancient ruins sit west of camp, the sacred ovoo north of camp, the spirit grove in the north-west, and four existing raider-camp landmarks provide ordinary arrival bearings.
+  Existing basalt pillars, river islets and camp-outskirts props dress the remaining routes.
+- **Ground-only sites:** the paintings mark the north-east creature-lair ground, south-east hot springs, marsh and roaming-threat tracks.
+  They are landmarks only; no spawning, spirit, resource or roaming-threat rules were added.
 
 ## Elevation and traversal
 
@@ -53,16 +45,16 @@ so enemies route through ramps and over the bridge instead of sticking on cliffs
 
 Landmarks map onto existing systems where one exists (`systems/authoredSites.ts`):
 
-| Landmark                                 | System                                                    |
-| ---------------------------------------- | --------------------------------------------------------- |
-| Central camp                             | The live camp: gers, fence, standard, defences, migration |
-| Ruins, sacred ovoo, valley relic shrine  | Field objectives are placed beside them, in that order    |
-| Four raider camps                        | Ordinary arrivals come from a raider camp's direction     |
-| Heights shrine, standing stones, pillars | Scenery with solid footprints                             |
-| Camp outskirts, banners, racks           | Scenery                                                   |
+| Landmark                                | System                                                    |
+| --------------------------------------- | --------------------------------------------------------- |
+| Central camp                            | The live camp: gers, fence, standard, defences, migration |
+| Ancient ruins, sacred ovoo, spirit fire | Field objectives are placed beside them, in that order    |
+| Four raider camps                       | Ordinary arrivals come from a raider camp's direction     |
+| Spirit stones and basalt pillars        | Scenery with solid footprints                             |
+| Camp outskirts, banners, racks          | Scenery                                                   |
 
 Field objectives fall back to the usual ring around the camp if a site has no reachable
-ground nearby. Arrivals keep spawning just outside the camera; only the bearing of
+ground nearby. Arrivals keep spawning just outside the wide playable bounds; only the bearing of
 ordinary (non-warning, non-assault) spawns changes, by up to ±26° around a randomly chosen
 raider camp. Warning and assault waves keep their river-bank pattern. There is no boon,
 loot or shrine system to attach the ovoo, ruins or shrines to, so they add no new rules.
@@ -241,35 +233,38 @@ ground as exact ones. Orkhon's terrain code is a separate shader program
 The pack's ground and water tiles, cliff and waterfall sprites, `cliff_isolated` and rock
 sprites (other than the small boulder and pebbles) are retired: the kit replaces them.
 
-## Painted-ground prototype
+## Painted ground
 
-Development builds can compare one large Candidate C painting against the current tiled ground at
-the falls-plateau ramp nearest camp. Add `?orkhonPaintedGround=1` to the development URL. The switch
-is default-off and ignored by production builds; while off, the painted texture is not loaded and the
-current Orkhon shader program key and source remain unchanged.
+The level ground is split into four 3,200 × 2,000-world-unit quadrants: north-west, north-east, south-west and south-east.
+Each opaque 1,600 × 1,000 painting is sampled in world x/z and blended across an 80-unit band at the internal seams.
+The four images share the warm olive Candidate C grass, ochre dry patches and manuscript brushwork approved for the overhaul.
 
-The 2,048² painting covers camp-relative `x = -550…1050`, `y = -1600…0` (1,600 units square,
-0.78125 units per texel). It is projected in world x/z over the existing elevation mesh. A noisy
-320–480-unit feather returns to the current shader before the image boundary, while steep ramp flanks
-and all cliff walls keep their current materials. Cliffs, kit cutouts, river, props, actors, collision,
-navigation, saves, gameplay and camera are unchanged. See
-[the source, prompt and measurements](art-orders/orkhon-painted-ground-c.md).
+A separate seamless 1,024² grayscale detail texture repeats at 220 world units using the same translated hex sampling as the terrain kit.
+It modulates lightness by at most seven percent, restoring fine paper grain and brush variation when the camera is close without changing the quadrant colours.
+The painting applies only to ground-facing surfaces.
+Cliff walls, steep ramp flanks, water, bridge, trees, landmarks, actors and object shadows keep their separate geometry and art.
+
+Painted ground is the shipped default.
+Development captures can append `?orkhonPaintedGround=0` to load the previous tiled ground shader instead; the tiled materials remain the fallback and are not loaded into the painted shader.
+Legacy Orkhon saves without a layout marker are translated once from the old 5,200-square coordinate space into the new terrain and then saved with layout marker 2.
 
 ## Performance
 
 Navigation cells, collision walls and flow fields are built once when the level loads;
 play only reads the resident grid. River shore queries use an exact spatial index (per
 128-unit bucket, only segments that can be nearest), and cells clear of the gorge skip the
-water probe grid. The authored ground shader fetches only the tiles present at each point
-and returns single-channel grass, most of the ground, without blending; cliff walls fetch
+water probe grid. The tiled fallback's authored ground shader fetches only the tiles present at
+each point and returns single-channel grass, most of the ground, without blending; cliff walls fetch
 one band texel. Height blending still costs more per pixel than a cross-fade: on a
-software GPU (SwiftShader) a 350-enemy `profileCrowd` frame is roughly a tenth slower than
-before the cliff and ground pass, with CPU simulation and render time unchanged. Per-pixel
-masks, hex-tile sampling, ramp flanks and mipmapped cliffs cost about 3–5% of that frame at
-pixel ratio 2 on an Intel Iris Xe (ANGLE/Vulkan), and about 1 ms in terrain-only views.
+software GPU (SwiftShader) the overhauled 350-enemy `profileCrowd` sample measured 24.186 ms
+for World3D rendering against 23.014 ms on main, a 5.1% increase inside the 10% frame budget.
+The World3D draw section was 2.157 ms against 2.243 ms on main.
 
+The four 1,600 × 1,000 quadrant textures and the 1,024² grayscale detail texture occupy
+39,724,100 RGBA upload bytes (37.88 MiB) with complete mip chains.
 The terrain kit adds one 1024 × 512 atlas and two bank textures; the pack atlas lost the
 retired sprites. Full-resolution 256-pixel tiles hold four times the texels of the pack's
-128-pixel ones (about 3 MB of GPU memory for all ten with mipmaps); the Orkhon art files total
-about 2.2 MB. The overlay draws one mesh per atlas plus one per bank painting, all built once
-when the level loads; bank bands discard texels along their edges rather than blending.
+128-pixel ones (about 3 MB of GPU memory for all ten with mipmaps). The fallback terrain and
+overlay files total about 2.2 MB on disk; the five painted-ground files add about 9.1 MB. The
+overlay draws one mesh per atlas plus one per bank painting, all built once when the level loads;
+bank bands discard texels along their edges rather than blending.

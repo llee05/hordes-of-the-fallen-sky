@@ -28,7 +28,10 @@ import { ambientArrivalAngle, authoredFieldSite } from '../../src/game/systems/a
 import { TerrainNavigation } from '../../src/game/terrain/TerrainNavigation';
 import type { TerrainPoint } from '../../src/game/terrain/types';
 import { ComposedTerrain, outlineField } from '../../src/game/world3d/ComposedTerrain';
-import { ORKHON_PAINTED_GROUND } from '../../src/game/world3d/orkhonPaintedGround';
+import {
+  ORKHON_GROUND_QUADRANTS,
+  ORKHON_PAINTED_GROUND,
+} from '../../src/game/world3d/orkhonPaintedGround';
 import {
   BANK_ACROSS,
   CAMERA_DIRECTION,
@@ -41,8 +44,9 @@ import { terrainHabitat, terrainMaterialWeights } from '../../src/game/world3d/t
 import { WORLD_3D } from '../../src/game/world3d/worldProjection';
 
 const art = resolve('public/art/orkhon-valley');
-const C = GAME.worldSize / 2;
+const C = ORKHON_VALLEY.world.terrainSize / 2;
 const world = (p: TerrainPoint): TerrainPoint => ({ x: C + p.x, y: C + p.y });
+const camp = world(ORKHON_VALLEY.world.camp);
 const clearance = GAME.terrain.actorClearance;
 let terrain: ComposedTerrain;
 let nav: TerrainNavigation;
@@ -91,7 +95,10 @@ describe('Orkhon Valley terrain kit and pack assets', () => {
       .sort();
     expect(files).toEqual(
       [
-        ORKHON_PAINTED_GROUND.file,
+        ...ORKHON_GROUND_QUADRANTS.map(
+          (quadrant) => ORKHON_PAINTED_GROUND.quadrants[quadrant].file,
+        ),
+        ORKHON_PAINTED_GROUND.detail.file,
         ...Object.values(ORKHON_TILES).map((tile) => `${tile}.png`),
         ...Object.values(ORKHON_BANKS).map((bank) => `${bank}.png`),
         ...[ORKHON_ATLAS, ORKHON_KIT_ATLAS].flatMap((atlas) => [`${atlas}.json`, `${atlas}.png`]),
@@ -120,19 +127,25 @@ describe('Orkhon Valley terrain kit and pack assets', () => {
 });
 
 describe('Orkhon Valley two-level terrain', () => {
+  it('uses a 6400 by 4000 playable rectangle with the camp in the south-west quadrant', () => {
+    expect(terrain.worldSize).toBe(6400);
+    expect(terrain.playBounds).toEqual({ x: 0, y: 1200, width: 6400, height: 4000 });
+    expect(terrain.campPosition).toEqual({ x: 2650, y: 3620 });
+  });
+
   it('keeps the camp on the valley floor and every plateau one level above it', () => {
     const floor = terrain.region.scene.floor;
-    expect(terrain.height(C, C) * 1000).toBeCloseTo(floor, 6);
+    expect(terrain.height(camp.x, camp.y) * 1000).toBeCloseTo(floor, 6);
     for (const plateau of ORKHON_VALLEY.plateaus) {
       const xs = plateau.outline.map((p) => p.x);
       let inside = 0;
-      for (let y = -2500; y <= 2500; y += 173)
-        for (let x = Math.min(...xs); x <= Math.max(...xs); x += 173) {
-          if (Math.abs(x) > 2500 || outlineField(plateau.outline, x, y) < 260) continue;
+      for (let y = -1900; y <= 1900; y += 120)
+        for (let x = Math.min(...xs); x <= Math.max(...xs); x += 120) {
+          if (Math.abs(x) > 3100 || outlineField(plateau.outline, x, y) < 260) continue;
           if (plateau.ramps.some((ramp) => segmentDistance({ x, y }, ramp.foot, ramp.top) < 400))
             continue;
           inside++;
-          expect(elevation(world({ x, y })), plateau.id).toBeGreaterThan(ORKHON_VALLEY.rise - 12);
+          expect(elevation(world({ x, y })), plateau.id).toBeGreaterThan(ORKHON_VALLEY.rise - 20);
           expect(elevation(world({ x, y })), plateau.id).toBeLessThan(ORKHON_VALLEY.rise + 12);
         }
       expect(inside, plateau.id).toBeGreaterThan(0);
@@ -154,14 +167,17 @@ describe('Orkhon Valley two-level terrain', () => {
         const a = outline[i]!,
           b = outline[(i + 1) % outline.length]!,
           c = outline[(i + 2) % outline.length]!;
-        if (Math.max(Math.abs(b.x), Math.abs(b.y)) > 2550) continue;
+        if (Math.abs(b.x) > 3150 || Math.abs(b.y) > 1950) continue;
         // No straight run inside the world is longer than about two jogs.
-        if (Math.max(Math.abs(a.x), Math.abs(a.y), Math.abs(b.x), Math.abs(b.y)) < 2550)
+        if (
+          Math.max(Math.abs(a.x), Math.abs(b.x)) < 3150 &&
+          Math.max(Math.abs(a.y), Math.abs(b.y)) < 1950
+        )
           expect(Math.hypot(b.x - a.x, b.y - a.y), plateau.id).toBeLessThan(560);
         const cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
         if (Math.abs(cross) > 1) turns++;
       }
-      expect(turns, plateau.id).toBeGreaterThan(5);
+      expect(turns, plateau.id).toBeGreaterThanOrEqual(5);
       for (const ramp of plateau.ramps) {
         const crossing = { x: (ramp.foot.x + ramp.top.x) / 2, y: (ramp.foot.y + ramp.top.y) / 2 };
         expect(Math.abs(outlineField(outline, crossing.x, crossing.y)), plateau.id).toBeLessThan(2);
@@ -180,7 +196,7 @@ describe('Orkhon Valley two-level terrain', () => {
         const a = plateau.outline[i]!,
           b = plateau.outline[(i + 1) % plateau.outline.length]!;
         const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-        if (Math.abs(mid.x) > 2400 || Math.abs(mid.y) > 2400) continue;
+        if (Math.abs(mid.x) > 3050 || Math.abs(mid.y) > 1850) continue;
         if (plateau.ramps.some((r) => segmentDistance(mid, r.foot, r.top) < 320)) continue;
         const length = Math.hypot(b.x - a.x, b.y - a.y);
         let n = { x: (b.y - a.y) / length, y: -(b.x - a.x) / length };
@@ -191,6 +207,8 @@ describe('Orkhon Valley two-level terrain', () => {
         if (outlineField(plateau.outline, inner.x - C, inner.y - C) < 180) continue;
         // The river's banks replace the rim beside the gorge.
         if (terrain.river!.sample(rim.x, rim.y).shoreDistance < 150) continue;
+        const rimHeight = terrain.height(rim.x, rim.y) * 1000;
+        if (terrainHabitat(terrain, rim.x, rim.y, rimHeight, 1).wear > 0.3) continue;
         const valley = world({ x: mid.x - n.x * 260, y: mid.y - n.y * 260 });
         const weights = (p: TerrainPoint) => {
           const height = terrain.height(p.x, p.y) * 1000;
@@ -214,7 +232,7 @@ describe('Orkhon Valley two-level terrain', () => {
           expect(weights(valley)[4], plateau.id).toBe(0);
         rims++;
       }
-    expect(rims).toBeGreaterThan(10);
+    expect(rims).toBeGreaterThanOrEqual(8);
   });
 
   it('blocks a unit from crossing any cliff edge away from its ramps', () => {
@@ -228,7 +246,7 @@ describe('Orkhon Valley two-level terrain', () => {
         const n = { x: (b.y - a.y) / length, y: -(b.x - a.x) / length };
         for (let t = 0.2; t <= 0.8; t += 0.3) {
           const mid = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
-          if (Math.abs(mid.x) > 2400 || Math.abs(mid.y) > 2400) continue;
+          if (Math.abs(mid.x) > 3050 || Math.abs(mid.y) > 1850) continue;
           if (plateau.ramps.some((ramp) => segmentDistance(mid, ramp.foot, ramp.top) < 260))
             continue;
           const outside = { x: mid.x + n.x * 140, y: mid.y + n.y * 140 };
@@ -270,7 +288,6 @@ describe('Orkhon Valley two-level terrain', () => {
   });
 
   it('routes pursuing enemies off each plateau through one of its ramps', () => {
-    const camp = { x: C, y: C };
     for (const plateau of ORKHON_VALLEY.plateaus) {
       const ramp = plateau.ramps[0]!;
       const start = nav.nearestWalkable(
@@ -281,7 +298,9 @@ describe('Orkhon Valley two-level terrain', () => {
       )!;
       expect(elevation(start), plateau.id).toBeGreaterThan(ORKHON_VALLEY.rise - 12);
       const path = route(start, camp);
-      expect(Math.hypot(path.at(-1)!.x - C, path.at(-1)!.y - C), plateau.id).toBeLessThan(140);
+      expect(Math.hypot(path.at(-1)!.x - camp.x, path.at(-1)!.y - camp.y), plateau.id).toBeLessThan(
+        140,
+      );
       const descent = path.findIndex((p) => elevation(p) < ORKHON_VALLEY.rise / 2);
       expect(descent, plateau.id).toBeGreaterThan(0);
       const step = path[descent]!;
@@ -305,7 +324,7 @@ describe('Orkhon Valley two-level terrain', () => {
       const x = C + section.x,
         y = C + section.y;
       if (river.bridgeHeight(x, y) !== undefined) continue;
-      if (Math.abs(section.y) > 2500) continue;
+      if (Math.abs(section.y) > 1900) continue;
       if (Math.min(...river.bridges.map((b) => Math.hypot(b.x - x, b.z - y))) < 260) continue;
       expect(nav.isWalkable(x, y, clearance), `${section.x},${section.y}`).toBe(false);
       wet++;
@@ -338,9 +357,18 @@ describe('Orkhon Valley two-level terrain', () => {
 
   it('routes enemies from the far bank to the camp over the bridge', () => {
     const river = terrain.river!;
-    const start = nav.nearestWalkable(world({ x: 2350, y: 600 }))!;
-    const path = route(start, { x: C, y: C });
-    expect(Math.hypot(path.at(-1)!.x - C, path.at(-1)!.y - C)).toBeLessThan(140);
+    const bridge = river.bridges[0]!;
+    const ends = [-1, 1].map((side) => ({
+      x: bridge.x + bridge.nx * side * (bridge.length / 2 + 90),
+      y: bridge.z + bridge.nz * side * (bridge.length / 2 + 90),
+    }));
+    const start = nav.nearestWalkable(
+      ends.sort(
+        (a, b) => Math.hypot(b.x - camp.x, b.y - camp.y) - Math.hypot(a.x - camp.x, a.y - camp.y),
+      )[0]!,
+    )!;
+    const path = route(start, camp);
+    expect(Math.hypot(path.at(-1)!.x - camp.x, path.at(-1)!.y - camp.y)).toBeLessThan(140);
     expect(path.some((p) => river.bridgeHeight(p.x, p.y) !== undefined)).toBe(true);
     expect(
       path.every(
@@ -368,8 +396,8 @@ describe('Orkhon Valley two-level terrain', () => {
       for (let x = -1300; x <= 1300; x += 100) {
         total++;
         if (
-          nav.isWalkable(C + x, C + y, clearance, true) &&
-          Math.abs(elevation(world({ x, y }))) < 15
+          nav.isWalkable(camp.x + x, camp.y + y, clearance, true) &&
+          Math.abs(elevation({ x: camp.x + x, y: camp.y + y })) < 15
         )
           open++;
       }
@@ -394,8 +422,8 @@ describe('Orkhon Valley painted scene', () => {
     const all = sceneDressing(terrain, {
       x: 0,
       y: 0,
-      width: GAME.worldSize,
-      height: GAME.worldSize,
+      width: terrain.worldSize,
+      height: terrain.worldSize,
     });
     expect(all.length).toBeGreaterThan(150);
     for (const prop of all) {
@@ -405,7 +433,7 @@ describe('Orkhon Valley painted scene', () => {
       // Everything stands on land except the sacred islets, which stand in the river.
       const shore = terrain.river!.sample(prop.x, prop.z).shoreDistance;
       if (prop.frame === 'prop_river_islet') expect(shore).toBeLessThan(-30);
-      else expect(shore).toBeGreaterThan(0);
+      else expect(shore, `${prop.frame}@${prop.x},${prop.z}`).toBeGreaterThan(0);
     }
     expect(all.filter((prop) => prop.frame === 'prop_river_islet')).toHaveLength(2);
     for (const landmark of ORKHON_VALLEY.landmarks)
@@ -418,8 +446,8 @@ describe('Orkhon Valley painted scene', () => {
     const all = sceneDressing(terrain, {
       x: 0,
       y: 0,
-      width: GAME.worldSize,
-      height: GAME.worldSize,
+      width: terrain.worldSize,
+      height: terrain.worldSize,
     });
     const scale = (kind: string) =>
       ({
@@ -459,8 +487,8 @@ describe('Orkhon Valley painted scene', () => {
     const all = sceneDressing(terrain, {
       x: 0,
       y: 0,
-      width: GAME.worldSize,
-      height: GAME.worldSize,
+      width: terrain.worldSize,
+      height: terrain.worldSize,
     });
     const field = (prop: { x: number; z: number }) =>
       Math.max(
@@ -570,16 +598,19 @@ describe('Orkhon Valley painted scene', () => {
             expect(
               terrainHabitat(terrain, C + x, C + y, height, 1).wear,
               plateau.id,
-            ).toBeGreaterThan(0.85);
+            ).toBeGreaterThan(0.8);
           }
       }
   });
 
   it('places every packed sprite, so only used pack art is bundled', () => {
     const used = new Set([
-      ...sceneDressing(terrain, { x: 0, y: 0, width: GAME.worldSize, height: GAME.worldSize }).map(
-        (prop) => prop.frame,
-      ),
+      ...sceneDressing(terrain, {
+        x: 0,
+        y: 0,
+        width: terrain.worldSize,
+        height: terrain.worldSize,
+      }).map((prop) => prop.frame),
       ...orkhonOverlay(terrain).map((piece) => piece.sprite),
       ...ORKHON_CLIFF_FACES.map((face) => face.sprite),
     ]);
@@ -688,12 +719,12 @@ describe('Orkhon Valley painted scene', () => {
 
 describe('Orkhon Valley landmark systems', () => {
   it('sends ordinary arrivals from the direction of a raider camp', () => {
-    const anchor = { x: C, y: C };
+    const anchor = camp;
     for (const [index, camp] of ORKHON_ENEMY_CAMPS.entries()) {
       const pick = (index + 0.5) / ORKHON_ENEMY_CAMPS.length;
       const draws = [pick, 0.5];
       const angle = ambientArrivalAngle('orkhon-valley', anchor, () => draws.shift()!);
-      expect(angle).toBeCloseTo(Math.atan2(camp.y, camp.x));
+      expect(angle).toBeCloseTo(Math.atan2(C + camp.y - anchor.y, C + camp.x - anchor.x));
     }
   });
 

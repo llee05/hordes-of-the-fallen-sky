@@ -10,7 +10,11 @@ import { terrainShaderSource } from './terrainShader';
 import type { ScenePalette } from '../data/worldRegions';
 import type { ComposedTerrain } from './ComposedTerrain';
 import { bakeOrkhonGroundMask, ORKHON_GROUND_MASK, orkhonRampUniforms } from './orkhonGround';
-import { ORKHON_PAINTED_GROUND, orkhonPaintedGroundWorldBounds } from './orkhonPaintedGround';
+import {
+  ORKHON_GROUND_QUADRANTS,
+  ORKHON_PAINTED_GROUND,
+  orkhonPaintedGroundWorldBounds,
+} from './orkhonPaintedGround';
 export { WORLD_DEBUG_MODES, type WorldDebugMode } from './worldProjection';
 
 /** Reuses painted textures; all elevation, walls, lighting and shadows come from geometry. */
@@ -33,11 +37,11 @@ export class MountainMaterials {
     /** Development URL flag; omitted/false keeps the current material and shader byte-for-byte. */
     paintedGround = false,
   ) {
-    const texture = (key: string, repeat = true): THREE.Texture => {
+    const texture = (key: string, repeat = true, srgb = true): THREE.Texture => {
       const image = scene.textures.get(key).getSourceImage() as HTMLImageElement;
       const map = new THREE.Texture(image);
       map.wrapS = map.wrapT = repeat ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
-      map.colorSpace = THREE.SRGBColorSpace;
+      map.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
       map.anisotropy = anisotropy;
       map.minFilter = THREE.LinearMipmapLinearFilter;
       map.magFilter = THREE.LinearFilter;
@@ -76,12 +80,19 @@ export class MountainMaterials {
       ? tile('plateauMoss')
       : texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!);
     const meadowAltTex = authored ? tile('valleyOlive') : meadowTex;
-    const paintedGroundTex =
-      authored && paintedGround ? texture(ORKHON_PAINTED_GROUND.texture, false) : undefined;
+    const paintedGroundTextures =
+      authored && paintedGround
+        ? {
+            quadrants: ORKHON_GROUND_QUADRANTS.map((quadrant) =>
+              texture(ORKHON_PAINTED_GROUND.quadrants[quadrant].texture, false),
+            ),
+            detail: texture(ORKHON_PAINTED_GROUND.detail.texture, true, false),
+          }
+        : undefined;
     this.bedTexture = authored ? gravelTex : soilTex;
     this.waterTextures = authored ? [tile('riverChannel'), tile('riverRapids')] : undefined;
     const orkhonMaps = orkhon
-      ? this.orkhonUniforms(scene, orkhon, meadowAltTex, paintedGroundTex)
+      ? this.orkhonUniforms(scene, orkhon, meadowAltTex, paintedGroundTextures)
       : undefined;
 
     const maps = {
@@ -110,7 +121,7 @@ export class MountainMaterials {
       orkhon
         ? {
             ramps: orkhon.region.scene.ground?.ramps?.length ?? 0,
-            paintedGround: paintedGroundTex !== undefined,
+            paintedGround: paintedGroundTextures !== undefined,
           }
         : undefined,
     );
@@ -134,8 +145,8 @@ export class MountainMaterials {
       // Generated places keep their program; Orkhon's carries its own code.
       material.customProgramCacheKey = () =>
         authored
-          ? paintedGroundTex
-            ? `orkhon-terrain-painted-v1-${wall}`
+          ? paintedGroundTextures
+            ? `orkhon-terrain-painted-v2-${wall}`
             : `orkhon-terrain-v5-${wall}`
           : `living-steppe-materials-v7-${wall}`;
       return material;
@@ -152,7 +163,7 @@ export class MountainMaterials {
     scene: Phaser.Scene,
     terrain: ComposedTerrain,
     meadowAlt: THREE.Texture,
-    paintedGround?: THREE.Texture,
+    paintedGround?: { quadrants: THREE.Texture[]; detail: THREE.Texture },
   ) {
     const ground = terrain.region.scene;
     const size = ORKHON_GROUND_MASK.size;
@@ -179,7 +190,11 @@ export class MountainMaterials {
       rampSize: { value: vectors(ramps.size.length ? ramps.size : [[1, 0, 0, 0]]) },
       ...(paintedGround
         ? {
-            paintedGroundMap: { value: paintedGround },
+            paintedGroundNW: { value: paintedGround.quadrants[0] },
+            paintedGroundNE: { value: paintedGround.quadrants[1] },
+            paintedGroundSW: { value: paintedGround.quadrants[2] },
+            paintedGroundSE: { value: paintedGround.quadrants[3] },
+            paintedGroundDetail: { value: paintedGround.detail },
             paintedGroundBounds: { value: new THREE.Vector4(...bounds) },
           }
         : {}),

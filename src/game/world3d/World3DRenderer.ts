@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import * as THREE from 'three';
-import { GAME } from '../config';
 import { MOUNTAIN_TERRAIN_ART } from '../assets/painterlyArt';
 import { terrainDressing } from '../terrain/terrainDressing';
 import { WORLD_3D, groundView, projectGround, screenMovement } from './worldProjection';
@@ -448,9 +447,12 @@ export class World3DRenderer {
         if (!this.navigation.blocked[index]) continue;
         const corners = [
           [i, j],
-          [Math.min(i + cellSize, GAME.worldSize), j],
-          [Math.min(i + cellSize, GAME.worldSize), Math.min(j + cellSize, GAME.worldSize)],
-          [i, Math.min(j + cellSize, GAME.worldSize)],
+          [Math.min(i + cellSize, this.terrain.worldSize), j],
+          [
+            Math.min(i + cellSize, this.terrain.worldSize),
+            Math.min(j + cellSize, this.terrain.worldSize),
+          ],
+          [i, Math.min(j + cellSize, this.terrain.worldSize)],
         ];
         for (let k = 0; k < 4; k++)
           for (const point of [corners[k]!, corners[(k + 1) % 4]!])

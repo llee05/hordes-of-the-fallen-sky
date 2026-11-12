@@ -146,6 +146,21 @@ describe('projected enemy arrivals', () => {
     expect(safeEdge).toBeDefined();
     expect(border.walkable(safeEdge.x, safeEdge.y)).toBe(true);
   });
+  it('uses the wide Orkhon play rectangle instead of the square terrain edge', () => {
+    const bounds = { x: 0, y: 1200, width: 6400, height: 4000 };
+    const point = projectedEnemySpawnPosition(
+      { ...camera(), focus: { x: 2650, y: 3620, elevation: 215 } },
+      { x: 2650, y: 3620 },
+      { x: 2650, y: 3720 },
+      -Math.PI / 2,
+      flat,
+      bounds,
+    )!;
+    expect(point.y).toBeGreaterThanOrEqual(1224);
+    expect(point.y).toBeLessThanOrEqual(5176);
+    expect(point.x).toBeGreaterThanOrEqual(24);
+    expect(point.x).toBeLessThanOrEqual(6376);
+  });
   it('preserves introductory pacing and migration pressure, retrying rejected positions quickly without catch-up bursts', () => {
     expect(encounterSpawnDelay(0, true)).toBe(2);
     expect(encounterSpawnDelay(17.99, true)).toBe(2);

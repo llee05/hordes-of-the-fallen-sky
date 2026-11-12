@@ -520,6 +520,57 @@ describe('full expedition snapshots', () => {
     restored.run.clan.food = 0;
     expect(save.run.clan).not.toEqual(restored.run.clan);
   });
+  it('moves legacy Orkhon actors into the wide terrain once and marks the new coordinates', () => {
+    const run = createRun();
+    run.clan.locationId = 'orkhon-valley';
+    run.combat.previous = { x: 2600, y: 2700 };
+    run.combat.heading = { x: 0, y: 1 };
+    run.combat.trails = [{ x: 2500, y: 2500, remaining: 1 }];
+    run.field.objective = {
+      id: 1,
+      kind: 'gathering',
+      x: 2800,
+      y: 2900,
+      progress: 0,
+      status: 'available',
+      guards: 0,
+      defeated: 0,
+    };
+    const runtime = world();
+    runtime.enemies[0]!.state.tactics.aim = { x: 2500, y: 2400 };
+    runtime.projectiles[0]!.previous = { x: 2550, y: 2650 };
+    runtime.hostileShots = [
+      { ...structuredClone(runtime.projectiles[0]!), x: 0, y: 0, previous: { x: 0, y: 0 } },
+    ];
+    runtime.riders = [
+      { x: 2400, y: 2500, flip: false, motion: structuredClone(runtime.player.motion) },
+    ];
+    const save = captureExpedition(run, runtime);
+    delete save.world.orkhonLayout;
+    const restored = decodeExpedition(save);
+    const first = restored.world;
+    expect(first.orkhonLayout).toBe(2);
+    expect(first.camp).toEqual({ x: 2650, y: 3620 });
+    expect(first.player).toMatchObject({ x: 2650, y: 3720 });
+    expect(first.enemies[0]).toMatchObject({ x: 2650, y: 3720 });
+    expect(first.enemies[0]!.state.tactics.aim).toEqual({ x: 2550, y: 3420 });
+    expect(first.projectiles[0]).toMatchObject({ x: 2650, y: 3720 });
+    expect(first.projectiles[0]!.previous).toEqual({ x: 2600, y: 3670 });
+    expect(first.hostileShots[0]).toMatchObject({ x: 50, y: 1224 });
+    expect(first.hostileShots[0]!.previous).toEqual({ x: 50, y: 1224 });
+    expect(first.gems[0]).toMatchObject({ x: 2650, y: 3720 });
+    expect(first.riders[0]).toMatchObject({ x: 2450, y: 3520 });
+    expect(first.hazards[0]).toMatchObject({ x: 2750, y: 3720 });
+    expect(first.areaThreats.threats[0]).toMatchObject({ x: 2750, y: 3820 });
+    expect(restored.run.combat.previous).toEqual({ x: 2650, y: 3720 });
+    expect(restored.run.combat.heading).toEqual({ x: 0, y: 1 });
+    expect(restored.run.combat.trails[0]).toMatchObject({ x: 2550, y: 3520 });
+    expect(restored.run.field.objective).toMatchObject({ x: 2850, y: 3920 });
+    expect(first.facing).toEqual({ x: 0, y: 1 });
+    const second = decodeExpedition(captureExpedition(run, first)).world;
+    expect(second.camp).toEqual(first.camp);
+    expect(second.player).toEqual(first.player);
+  });
   it('preserves succession and migration without healing, resetting the timer or paying arrival', () => {
     const run = createRun();
     run.phase = 'playing';

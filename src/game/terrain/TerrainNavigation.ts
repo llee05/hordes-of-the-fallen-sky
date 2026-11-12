@@ -92,9 +92,13 @@ export class TerrainNavigation {
             Math.min(size, terrain.worldSize - row * size) >= GAME.terrain.actorClearance * 2 &&
             !this.blocked[this.index(column, row)],
         );
+    const campPosition = terrain.campPosition ?? {
+      x: terrain.worldSize / 2,
+      y: terrain.worldSize / 2,
+    };
     const camp = this.index(
-      Math.floor(terrain.worldSize / 2 / terrain.cellSize),
-      Math.floor(terrain.worldSize / 2 / terrain.cellSize),
+      Math.floor(campPosition.x / terrain.cellSize),
+      Math.floor(campPosition.y / terrain.cellSize),
     );
     const field = this.buildFlow(camp, 'ground');
     this.reachable = Uint8Array.from(field, (distance) => Number(Number.isFinite(distance)));

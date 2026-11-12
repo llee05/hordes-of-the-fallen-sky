@@ -1,4 +1,5 @@
 import { GAME } from '../config';
+import type { TerrainBounds } from '../terrain/types';
 import { projectGround } from '../world3d/worldProjection';
 
 interface Point {
@@ -45,16 +46,17 @@ export function projectedEnemySpawnPosition(
   player: Point | undefined,
   angle: number,
   ground: SpawnGround,
+  bounds: TerrainBounds = { x: 0, y: 0, width: GAME.worldSize, height: GAME.worldSize },
 ): Point | undefined {
   const C = GAME.spawning,
     padding = GAME.terrain.actorClearance;
   const inside = (p: Point, margin: number = GAME.camera.spawnMargin) =>
     withinProjectedView(view, p, ground.heightAt(p.x, p.y), margin);
   const valid = (p: Point) =>
-    p.x >= padding &&
-    p.y >= padding &&
-    p.x <= GAME.worldSize - padding &&
-    p.y <= GAME.worldSize - padding &&
+    p.x >= bounds.x + padding &&
+    p.y >= bounds.y + padding &&
+    p.x <= bounds.x + bounds.width - padding &&
+    p.y <= bounds.y + bounds.height - padding &&
     (!player || Math.hypot(p.x - player.x, p.y - player.y) >= C.minimumPlayerDistance) &&
     ground.walkable(p.x, p.y);
   let preferred: Point | undefined,
@@ -68,10 +70,10 @@ export function projectedEnemySpawnPosition(
     const edge = Math.min(
       Math.abs(dx) < 0.00001
         ? Infinity
-        : ((dx > 0 ? GAME.worldSize - padding : padding) - anchor.x) / dx,
+        : ((dx > 0 ? bounds.x + bounds.width - padding : bounds.x + padding) - anchor.x) / dx,
       Math.abs(dy) < 0.00001
         ? Infinity
-        : ((dy > 0 ? GAME.worldSize - padding : padding) - anchor.y) / dy,
+        : ((dy > 0 ? bounds.y + bounds.height - padding : bounds.y + padding) - anchor.y) / dy,
     );
     if (edge <= 0 || !Number.isFinite(edge)) continue;
     const at = (distance: number): Point => ({
@@ -127,10 +129,10 @@ export function projectedEnemySpawnPosition(
   }
   // If the whole playable world fits on screen there is no invisible ground. Use a distant valid edge.
   const worldVisible = [
-    { x: padding, y: padding },
-    { x: GAME.worldSize - padding, y: padding },
-    { x: padding, y: GAME.worldSize - padding },
-    { x: GAME.worldSize - padding, y: GAME.worldSize - padding },
+    { x: bounds.x + padding, y: bounds.y + padding },
+    { x: bounds.x + bounds.width - padding, y: bounds.y + padding },
+    { x: bounds.x + padding, y: bounds.y + bounds.height - padding },
+    { x: bounds.x + bounds.width - padding, y: bounds.y + bounds.height - padding },
   ].every((p) => inside(p, 0));
   return preferred ?? (worldVisible ? fallback : undefined);
 }

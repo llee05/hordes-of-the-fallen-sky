@@ -1,4 +1,5 @@
 import { GAME } from '../config';
+import type { TerrainBounds } from '../terrain/types';
 
 export interface WorldView {
   x: number;
@@ -7,13 +8,29 @@ export interface WorldView {
   height: number;
 }
 
-export function cameraZoomLimits(width: number, height: number): { min: number; max: number } {
-  const min = Math.max(GAME.camera.minZoom, width / GAME.worldSize, height / GAME.worldSize);
+const defaultBounds = (): TerrainBounds => ({
+  x: 0,
+  y: 0,
+  width: GAME.worldSize,
+  height: GAME.worldSize,
+});
+
+export function cameraZoomLimits(
+  width: number,
+  height: number,
+  bounds: TerrainBounds = defaultBounds(),
+): { min: number; max: number } {
+  const min = Math.max(GAME.camera.minZoom, width / bounds.width, height / bounds.height);
   return { min, max: Math.max(GAME.camera.maxZoom, min) };
 }
 
-export function clampCameraZoom(zoom: number, width: number, height: number): number {
-  const { min, max } = cameraZoomLimits(width, height);
+export function clampCameraZoom(
+  zoom: number,
+  width: number,
+  height: number,
+  bounds: TerrainBounds = defaultBounds(),
+): number {
+  const { min, max } = cameraZoomLimits(width, height, bounds);
   return Math.max(
     min,
     Math.min(max, Number.isFinite(zoom) ? Math.round(zoom * 100) / 100 : GAME.camera.defaultZoom),
@@ -25,6 +42,7 @@ export function enemySpawnPosition(
   view: WorldView,
   anchor: { x: number; y: number },
   angle: number,
+  bounds: TerrainBounds = defaultBounds(),
 ): { x: number; y: number } {
   const margin = GAME.camera.spawnMargin;
   let fallback = { x: anchor.x, y: anchor.y };
@@ -49,8 +67,8 @@ export function enemySpawnPosition(
     );
     const distance = Math.max(spread, Math.min(acrossX, acrossY));
     const point = {
-      x: Math.max(24, Math.min(GAME.worldSize - 24, anchor.x + dx * distance)),
-      y: Math.max(24, Math.min(GAME.worldSize - 24, anchor.y + dy * distance)),
+      x: Math.max(bounds.x + 24, Math.min(bounds.x + bounds.width - 24, anchor.x + dx * distance)),
+      y: Math.max(bounds.y + 24, Math.min(bounds.y + bounds.height - 24, anchor.y + dy * distance)),
     };
     if (
       point.x < view.x - margin / 2 ||

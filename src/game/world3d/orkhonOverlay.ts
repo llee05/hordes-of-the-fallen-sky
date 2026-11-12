@@ -301,7 +301,7 @@ export function orkhonBanks(terrain: ComposedTerrain): BankStrip[] {
         );
         const shore = points.map((row) => row[2]!);
         if (
-          points.some((row) => row.some((p) => p.v < ORKHON_BANK_SHORE && p.ground > floor + 24)) ||
+          points.some((row) => row.some((p) => p.ground > floor + 24)) ||
           points.some((row) => row.some((p) => river.bridgeHeight(p.x, p.z) !== undefined)) ||
           shore.some(
             (p) => Math.hypot(p.x - river.center - falls.x, p.z - river.center - falls.y) < 120,

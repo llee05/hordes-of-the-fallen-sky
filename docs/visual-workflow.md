@@ -131,8 +131,8 @@ option) and, for the grazing view, the camera elevation (the console's `camera-a
 Compare captures from before and after a change on the same machine: they depend on the GPU and
 browser that drew them.
 
-For the reversible painted-ground prototype, an ordinary capture keeps the current ground. Set
-`ORKHON_PAINTED_GROUND=1` to pass the development-only `?orkhonPaintedGround=1` URL flag:
+An ordinary capture explicitly selects the development-only tiled-ground fallback. Set
+`ORKHON_PAINTED_GROUND=1` to capture the shipped painted ground instead:
 
 ```sh
 VISUAL_OUTPUT_DIR=/tmp/orkhon-current npm run visual:orkhon

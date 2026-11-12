@@ -56,4 +56,17 @@ describe('battlefield view', () => {
     expect(Number.isFinite(entireWorld.x + entireWorld.y)).toBe(true);
     expect(Math.hypot(entireWorld.x - 2600, entireWorld.y - 2600)).toBeGreaterThan(2500);
   });
+
+  it('clamps zoom and fallback arrivals to a wide offset battlefield', () => {
+    const bounds = { x: 0, y: 1200, width: 6400, height: 4000 };
+    expect(cameraZoomLimits(1440, 1000, bounds).min).toBe(0.6);
+    const view = { x: 1700, y: 2500, width: 1440, height: 1000 };
+    for (let i = 0; i < 16; i++) {
+      const point = enemySpawnPosition(view, { x: 2650, y: 3620 }, (i * Math.PI) / 8, bounds);
+      expect(point.x).toBeGreaterThanOrEqual(24);
+      expect(point.x).toBeLessThanOrEqual(6376);
+      expect(point.y).toBeGreaterThanOrEqual(1224);
+      expect(point.y).toBeLessThanOrEqual(5176);
+    }
+  });
 });
