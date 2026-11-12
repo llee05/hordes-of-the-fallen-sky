@@ -4,9 +4,10 @@ import { terrainSeed } from '../terrain/noise';
 import type { TerrainPoint } from '../terrain/types';
 
 /**
- * Authored Orkhon Valley (Ulaan Tsutgalan) level, following the texture pack's reference layout.
- * Coordinates are camp-relative world units: +x is east and +y is south. The battlefield is
- * 5200 units square, so ±2600 is the world edge. Outlines extend past it to avoid edge walls.
+ * Authored Orkhon Valley (Ulaan Tsutgalan) level, following the approved manuscript layout.
+ * Coordinates are level-centre-relative world units: +x is east and +y is south. The playable
+ * battlefield is 6400 by 4000 units. Its 6400-unit terrain square leaves an off-screen band north
+ * and south so the existing chunk, elevation and navigation geometry can remain square.
  */
 export interface OrkhonRamp {
   /** Valley-floor end of the ramp, outside the plateau. */
@@ -51,6 +52,15 @@ export interface OrkhonGrove {
 }
 
 export interface OrkhonValleyLayout {
+  world: {
+    width: number;
+    height: number;
+    terrainSize: number;
+    minX: number;
+    minY: number;
+    /** The live clan camp, relative to the level centre. */
+    camp: TerrainPoint;
+  };
   /** Height of every level-1 plateau above the level-0 valley floor. */
   rise: number;
   plateaus: readonly OrkhonPlateau[];
@@ -93,7 +103,7 @@ const ramp = (at: TerrainPoint, direction: 'north' | 'west'): OrkhonRamp => {
   };
 };
 const p = (x: number, y: number): TerrainPoint => ({ x, y });
-const FALLS = p(1620, -1478);
+const FALLS = p(2250, -300);
 
 /**
  * Break a plateau's long straight edges into irregular basalt jogs, as in the reference layout:
@@ -114,13 +124,13 @@ function plateau(id: string, outline: readonly TerrainPoint[], ramps: OrkhonRamp
       b = outline[(i + 1) % outline.length]!;
     result.push(a);
     const length = Math.hypot(b.x - a.x, b.y - a.y);
-    const pieces = Math.floor(length / 210);
+    const pieces = Math.floor(length / 240);
     const n = { x: (b.y - a.y) / length, y: -(b.x - a.x) / length };
     for (let k = 1; k < pieces; k++) {
       const t = (k + (random() - 0.5) * 0.5) / pieces;
       const at = p(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
       const step = (k % 2 ? 1 : -1) * (18 + random() * 30);
-      if (Math.abs(at.x) > 2650 || Math.abs(at.y) > 2650) continue;
+      if (Math.abs(at.x) > 3250 || Math.abs(at.y) > 2050) continue;
       const offset = keep.some((q) => Math.hypot(q.x - at.x, q.y - at.y) < 330) ? 0 : step;
       result.push(p(Math.round(at.x + n.x * offset), Math.round(at.y + n.y * offset)));
     }
@@ -129,291 +139,324 @@ function plateau(id: string, outline: readonly TerrainPoint[], ramps: OrkhonRamp
 }
 
 export const ORKHON_VALLEY: OrkhonValleyLayout = {
+  world: {
+    width: 6400,
+    height: 4000,
+    terrainSize: 6400,
+    minX: -3200,
+    minY: -2000,
+    camp: p(-550, 420),
+  },
   rise: RISE,
   plateaus: [
     plateau(
-      'shrine-heights',
+      'spirit-heights',
       [
-        p(-2700, -2700),
-        p(-750, -2700),
-        p(-750, -1700),
-        p(-1000, -1350),
-        p(-1650, -1250),
-        p(-2100, -1450),
-        p(-2700, -1450),
+        p(-3300, -2100),
+        p(-1500, -2100),
+        p(-1480, -1540),
+        p(-1680, -1240),
+        p(-2100, -1130),
+        p(-2600, -1220),
+        p(-3300, -1080),
       ],
-      [ramp(p(-1300, -1304), 'north')],
+      [ramp(p(-1850, -1195), 'west')],
     ),
     plateau(
       'falls-plateau',
       [
-        p(-450, -2700),
-        p(2700, -2700),
-        p(2700, -300),
-        p(2350, -300),
-        p(2150, -450),
-        p(2000, -900),
-        p(1950, -1350),
-        p(1700, -1500),
-        p(1450, -1450),
-        p(1050, -1450),
-        p(600, -1250),
-        p(-100, -1300),
-        p(-450, -1600),
+        p(900, -2100),
+        p(3300, -2100),
+        p(3300, 520),
+        p(2900, 520),
+        p(2660, 300),
+        p(2510, -80),
+        p(2380, -250),
+        FALLS,
+        p(2090, -250),
+        p(1850, -100),
+        p(1600, -300),
+        p(1220, -650),
+        p(900, -1120),
       ],
-      [ramp(p(250, -1275), 'north'), ramp(p(2420, -300), 'north')],
+      [ramp(p(3000, 520), 'north')],
     ),
     plateau(
-      'western-shelf',
-      [p(-2700, -750), p(-1900, -750), p(-1750, -450), p(-1800, 250), p(-2050, 550), p(-2700, 550)],
-      [ramp(p(-1770, -170), 'west')],
+      'ruins-shelf',
+      [
+        p(-3300, -260),
+        p(-2450, -360),
+        p(-2020, -120),
+        p(-1980, 720),
+        p(-2260, 1040),
+        p(-3300, 1120),
+      ],
+      [ramp(p(-1994, 430), 'west')],
     ),
     plateau(
       'southwest-shelf',
-      [
-        p(-2700, 1250),
-        p(-1900, 1250),
-        p(-1550, 1500),
-        p(-1350, 1900),
-        p(-1500, 2700),
-        p(-2700, 2700),
-      ],
-      [ramp(p(-1397, 2150), 'west')],
+      [p(-3300, 1420), p(-2450, 1380), p(-2050, 1600), p(-1840, 2100), p(-3300, 2100)],
+      [ramp(p(-1987, 1750), 'west')],
     ),
     plateau(
-      'southern-shelf',
-      [p(-650, 1750), p(700, 1700), p(950, 1950), p(1000, 2700), p(-800, 2700), p(-850, 2050)],
-      [ramp(p(967, 2200), 'west')],
+      'southern-outcrops',
+      [p(100, 1520), p(980, 1460), p(1260, 1700), p(1320, 2100), p(-80, 2100), p(-180, 1770)],
+      [ramp(p(1282, 1850), 'west')],
     ),
     plateau(
       'gorge-shelf',
-      [p(700, 500), p(1500, 420), p(1680, 700), p(1650, 1150), p(1200, 1250), p(750, 1050)],
-      [ramp(p(1300, 1228), 'north')],
+      [p(1320, 650), p(2140, 560), p(2460, 820), p(2380, 1320), p(1780, 1440), p(1260, 1110)],
+      [ramp(p(2000, 1396), 'north')],
     ),
   ],
   river: {
     course: [
-      1620, -1440, 1760, -1100, 1810, -700, 1720, -300, 1790, 20, 1920, 300, 1890, 700, 1910, 1100,
-      2060, 1550, 2250, 2050, 2420, 2750,
+      2250, -260, 2050, -380, 1780, -520, 1400, -690, 980, -850, 520, -1050, 20, -1190, -520, -1300,
+      -1120, -1420, -1740, -1510, -2380, -1660, -3260, -1830,
     ],
-    width: 120,
-    rapids: 420,
-    /** The deck runs 30° north of east so the supplied bridge painting stays level on screen. */
-    bridges: [{ x: 1790, y: 20, angle: -Math.PI / 6, length: 360, width: 150 }],
+    width: 130,
+    rapids: 520,
+    /** The crossing sits on the eastern bend below the falls. */
+    bridges: [{ x: 520, y: -1050, angle: -Math.PI / 2.7, length: 390, width: 150 }],
   },
   waterfall: FALLS,
   paths: [
-    [p(0, 0), p(1450, 0), p(1640, 105)],
-    [p(1950, -75), p(2200, -90), p(2334, -150)],
-    [p(-150, -120), p(-900, -650), p(-1386, -1154)],
-    [p(0, -250), p(164, -1125)],
-    [p(-250, -60), p(-1599, -146)],
-    [p(-200, 220), p(-600, 640), p(-1000, 1060), p(-1226, 2174)],
-    [p(220, 220), p(1214, 1378), p(1150, 1700), p(1138, 2224)],
+    [p(-550, 420), p(-180, 140), p(-500, -360)],
+    [p(-550, 420), p(-1000, 400), p(-1500, 420), p(-1823, 454)],
+    [p(-550, 420), p(-220, 20), p(80, -420), p(360, -800), p(520, -1050)],
+    [p(720, -1030), p(1260, -700), p(1760, -480), p(2150, -320), FALLS],
+    [p(-450, 620), p(300, 700), p(1100, 740), p(2000, 720), p(2600, 690), p(2914, 670)],
+    [p(-620, 520), p(-980, 930), p(-1550, 1320), p(-1816, 1774)],
+    [p(-420, 560), p(180, 820), p(900, 1050), p(1500, 1280), p(1700, 1600), p(1453, 1874)],
+    [p(-660, 260), p(-1050, -180), p(-1500, -720), p(-1679, -1171)],
+    [
+      p(-350, 600),
+      p(200, 500),
+      p(900, 400),
+      p(1500, 300),
+      p(2300, 450),
+      p(2700, 900),
+      p(2600, 1600),
+      p(1914, 1546),
+    ],
   ],
   pathWidth: 46,
   landmarks: [
     {
-      id: 'north-raiders',
+      id: 'northwest-raiders',
       sprite: 'enemy_camp_palisade',
-      x: 650,
-      y: -1950,
+      x: -2650,
+      y: -1900,
       role: 'enemy-camp',
       footprint: 115,
     },
     {
-      id: 'east-raiders',
+      id: 'northeast-raiders',
       sprite: 'enemy_camp_tents',
-      x: 2400,
-      y: -1300,
+      x: 2700,
+      y: -1420,
       role: 'enemy-camp',
       footprint: 115,
     },
     {
-      id: 'west-raiders',
+      id: 'southwest-raiders',
       sprite: 'enemy_camp_ger',
-      x: -1450,
-      y: 700,
+      x: -2600,
+      y: 1740,
       role: 'enemy-camp',
       footprint: 115,
     },
     {
-      id: 'south-raiders',
+      id: 'southeast-raiders',
       sprite: 'enemy_camp_palisade',
-      x: 1300,
-      y: 1800,
+      x: 2050,
+      y: 1080,
       role: 'enemy-camp',
       footprint: 115,
       flip: true,
     },
-    { id: 'ruins', sprite: 'stone_ruins', x: -620, y: 700, role: 'field-site', footprint: 95 },
-    { id: 'ovoo', sprite: 'sacred_ovoo', x: 1050, y: -650, role: 'field-site', footprint: 120 },
     {
-      id: 'valley-shrine',
+      id: 'ancient-ruins',
+      sprite: 'stone_ruins',
+      x: -2450,
+      y: 450,
+      role: 'field-site',
+      footprint: 95,
+    },
+    {
+      id: 'sacred-ovoo',
+      sprite: 'sacred_ovoo',
+      x: -500,
+      y: -360,
+      role: 'field-site',
+      footprint: 120,
+    },
+    {
+      id: 'spirit-grove-fire',
       sprite: 'relic_fire',
-      x: -1000,
-      y: 1060,
+      x: -2450,
+      y: -850,
       role: 'field-site',
       footprint: 40,
     },
     {
-      id: 'heights-shrine',
+      id: 'spirit-grove-stone',
       sprite: 'relic_fire',
-      x: -1700,
-      y: -1850,
+      x: -2250,
+      y: -930,
       role: 'shrine',
       footprint: 40,
     },
     {
-      id: 'heights-stone-west',
+      id: 'spirit-stone-west',
       sprite: 'standing_stone',
-      x: -1840,
-      y: -1890,
+      x: -2580,
+      y: -910,
       role: 'shrine',
       footprint: 30,
     },
     {
-      id: 'heights-stone-east',
+      id: 'spirit-stone-east',
       sprite: 'standing_stone',
-      x: -1560,
-      y: -1900,
+      x: -2310,
+      y: -980,
       role: 'shrine',
       footprint: 30,
       flip: true,
     },
     {
-      id: 'valley-stone',
+      id: 'ruins-standing-stone',
       sprite: 'standing_stone',
-      x: -1110,
-      y: 1010,
+      x: -2320,
+      y: 560,
       role: 'shrine',
       footprint: 30,
     },
-    { id: 'north-banner', sprite: 'red_enemy_banner', x: 470, y: -1830, role: 'scenery' },
-    { id: 'north-rack', sprite: 'spear_rack', x: 840, y: -1830, role: 'scenery' },
-    { id: 'east-banner', sprite: 'red_enemy_banner', x: 2230, y: -1180, role: 'scenery' },
-    { id: 'west-banner', sprite: 'red_enemy_banner', x: -1270, y: 790, role: 'scenery' },
-    { id: 'west-rack', sprite: 'spear_rack', x: -1640, y: 800, role: 'scenery' },
-    { id: 'south-banner', sprite: 'red_enemy_banner', x: 1120, y: 1900, role: 'scenery' },
-    { id: 'south-rack', sprite: 'wooden_rack', x: 1480, y: 1910, role: 'scenery' },
+    { id: 'northwest-banner', sprite: 'red_enemy_banner', x: -2470, y: -1950, role: 'scenery' },
+    { id: 'northwest-rack', sprite: 'spear_rack', x: -2820, y: -1940, role: 'scenery' },
+    { id: 'northeast-banner', sprite: 'red_enemy_banner', x: 2520, y: -1310, role: 'scenery' },
+    { id: 'southwest-banner', sprite: 'red_enemy_banner', x: -2420, y: 1840, role: 'scenery' },
+    { id: 'southwest-rack', sprite: 'spear_rack', x: -2780, y: 1850, role: 'scenery' },
+    { id: 'southeast-banner', sprite: 'red_enemy_banner', x: 1870, y: 1180, role: 'scenery' },
+    { id: 'southeast-rack', sprite: 'wooden_rack', x: 2230, y: 1190, role: 'scenery' },
     {
       id: 'west-pillar',
       sprite: 'landmark_basalt_pillar',
-      x: -1980,
-      y: 880,
+      x: -1880,
+      y: 820,
       role: 'scenery',
       footprint: 50,
     },
     {
       id: 'gorge-pillar',
       sprite: 'landmark_basalt_pillar',
-      x: 1450,
-      y: -760,
+      x: 2600,
+      y: -80,
       role: 'scenery',
       footprint: 50,
     },
     {
       id: 'east-pillar',
       sprite: 'landmark_basalt_pillar',
-      x: 2300,
-      y: 1250,
+      x: 2380,
+      y: 1380,
       role: 'scenery',
       footprint: 50,
     },
     // Sacred stones on gravel islets in the river, on its course; the water is already impassable.
-    { id: 'river-islet-north', sprite: 'prop_river_islet', x: 1890, y: 700, role: 'scenery' },
-    { id: 'river-islet-south', sprite: 'prop_river_islet', x: 2060, y: 1550, role: 'scenery' },
+    { id: 'river-islet-east', sprite: 'prop_river_islet', x: 1400, y: -690, role: 'scenery' },
+    { id: 'river-islet-west', sprite: 'prop_river_islet', x: -520, y: -1300, role: 'scenery' },
     {
       id: 'outskirts-ger',
       sprite: 'player_ger_small',
-      x: -560,
-      y: -300,
+      x: -960,
+      y: 250,
       role: 'camp-outskirts',
       footprint: 60,
     },
     {
       id: 'outskirts-ger-east',
       sprite: 'player_ger_medium',
-      x: 470,
-      y: -420,
+      x: -180,
+      y: 120,
       role: 'camp-outskirts',
       footprint: 50,
       flip: true,
     },
-    { id: 'outskirts-cart', sprite: 'camp_supply_cart', x: 560, y: 330, role: 'camp-outskirts' },
-    { id: 'outskirts-canopy', sprite: 'camp_canopy', x: -560, y: 290, role: 'camp-outskirts' },
-    { id: 'outskirts-fire', sprite: 'camp_fire', x: -470, y: 420, role: 'camp-outskirts' },
-    { id: 'outskirts-rack', sprite: 'wooden_rack', x: -660, y: -150, role: 'camp-outskirts' },
+    { id: 'outskirts-cart', sprite: 'camp_supply_cart', x: -20, y: 720, role: 'camp-outskirts' },
+    { id: 'outskirts-canopy', sprite: 'camp_canopy', x: -1080, y: 700, role: 'camp-outskirts' },
+    { id: 'outskirts-fire', sprite: 'camp_fire', x: -920, y: 820, role: 'camp-outskirts' },
+    { id: 'outskirts-rack', sprite: 'wooden_rack', x: -1120, y: 400, role: 'camp-outskirts' },
     {
       id: 'outskirts-banner-west',
       sprite: 'blue_camp_banner',
-      x: -470,
-      y: -470,
+      x: -930,
+      y: 20,
       role: 'camp-outskirts',
     },
     {
       id: 'outskirts-banner-east',
       sprite: 'blue_camp_banner',
-      x: 560,
-      y: -230,
+      x: -40,
+      y: 300,
       role: 'camp-outskirts',
       flip: true,
     },
   ],
   groves: [
     {
-      x: -2150,
-      y: -2050,
-      radius: 330,
-      count: 11,
+      x: -2450,
+      y: -850,
+      radius: 420,
+      count: 16,
       sprites: ['pine_tree', 'autumn_yellow_tree', 'pine_tree'],
     },
-    { x: -1150, y: -2250, radius: 260, count: 7, sprites: ['autumn_yellow_tree', 'olive_tree'] },
+    { x: -1550, y: -1750, radius: 260, count: 7, sprites: ['autumn_yellow_tree', 'olive_tree'] },
     {
-      x: -50,
-      y: -2150,
+      x: -450,
+      y: -1650,
       radius: 320,
       count: 9,
       sprites: ['pine_tree', 'autumn_red_tree', 'olive_tree'],
     },
-    { x: 1350, y: -2200, radius: 320, count: 9, sprites: ['pine_tree', 'autumn_yellow_tree'] },
-    { x: 2350, y: -2250, radius: 260, count: 7, sprites: ['pine_tree', 'olive_tree'] },
-    { x: 2450, y: -750, radius: 200, count: 5, sprites: ['autumn_yellow_tree', 'pine_tree'] },
-    { x: -2300, y: -150, radius: 260, count: 7, sprites: ['pine_tree', 'autumn_red_tree'] },
+    { x: 1150, y: -1650, radius: 320, count: 9, sprites: ['pine_tree', 'autumn_yellow_tree'] },
+    { x: 2550, y: -1650, radius: 260, count: 7, sprites: ['pine_tree', 'olive_tree'] },
+    { x: 2720, y: -620, radius: 200, count: 5, sprites: ['autumn_yellow_tree', 'pine_tree'] },
+    { x: -2750, y: 200, radius: 260, count: 7, sprites: ['pine_tree', 'autumn_red_tree'] },
     {
-      x: -2150,
-      y: 2050,
+      x: -2650,
+      y: 1650,
       radius: 360,
       count: 10,
       sprites: ['autumn_yellow_tree', 'pine_tree', 'olive_tree'],
     },
     {
-      x: 100,
-      y: 2300,
+      x: 450,
+      y: 1700,
       radius: 320,
       count: 8,
       sprites: ['pine_tree', 'autumn_red_tree', 'autumn_yellow_tree'],
     },
-    { x: 1250, y: 760, radius: 150, count: 3, sprites: ['autumn_yellow_tree', 'olive_tree'] },
+    { x: 1450, y: 820, radius: 150, count: 3, sprites: ['autumn_yellow_tree', 'olive_tree'] },
     {
-      x: -1000,
-      y: -330,
+      x: -1300,
+      y: -420,
       radius: 150,
       count: 3,
       sprites: ['autumn_yellow_tree', 'autumn_red_tree'],
     },
-    { x: 620, y: 720, radius: 140, count: 3, sprites: ['olive_tree', 'bare_tree'] },
-    { x: -1750, y: 1350, radius: 200, count: 4, sprites: ['pine_tree', 'autumn_yellow_tree'] },
-    { x: 1350, y: -950, radius: 130, count: 3, sprites: ['autumn_red_tree', 'olive_tree'] },
+    { x: 520, y: 760, radius: 140, count: 3, sprites: ['olive_tree', 'bare_tree'] },
+    { x: -1850, y: 1250, radius: 200, count: 4, sprites: ['pine_tree', 'autumn_yellow_tree'] },
+    { x: 1350, y: -1050, radius: 130, count: 3, sprites: ['autumn_red_tree', 'olive_tree'] },
     {
-      x: 2350,
+      x: 2550,
       y: 900,
       radius: 260,
       count: 6,
       sprites: ['pine_tree', 'autumn_yellow_tree', 'olive_tree'],
     },
-    { x: 2500, y: 1800, radius: 230, count: 5, sprites: ['autumn_red_tree', 'pine_tree'] },
-    { x: -400, y: -1150, radius: 140, count: 3, sprites: ['pine_tree', 'bare_tree'] },
+    { x: 2650, y: 1650, radius: 230, count: 5, sprites: ['autumn_red_tree', 'pine_tree'] },
+    { x: -250, y: -1250, radius: 140, count: 3, sprites: ['pine_tree', 'bare_tree'] },
   ],
 };
 

@@ -6,6 +6,7 @@ import type {
   TerrainBounds,
   TerrainCell,
   TerrainChunk,
+  TerrainPoint,
   TerrainSample,
 } from './types';
 
@@ -58,6 +59,16 @@ export class MountainTerrain {
 
   get cachedChunks(): number {
     return this.chunks.size;
+  }
+
+  /** Settlement anchor in terrain world coordinates. */
+  get campPosition(): TerrainPoint {
+    return { x: this.worldSize / 2, y: this.worldSize / 2 };
+  }
+
+  /** Camera and physics limits in terrain world coordinates. */
+  get playBounds(): TerrainBounds {
+    return { x: 0, y: 0, width: this.worldSize, height: this.worldSize };
   }
 
   /** The protected corridor is wider than the camp barrier and every formation. */

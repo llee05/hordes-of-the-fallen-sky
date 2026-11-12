@@ -1,5 +1,5 @@
 import type { LocationId } from '../types';
-import type { MountainRegion, TerrainPoint } from '../terrain/types';
+import type { MountainRegion, TerrainBounds, TerrainPoint } from '../terrain/types';
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
 import { ORKHON_FOOTPRINTS, ORKHON_VALLEY, type OrkhonPlateau } from './orkhonValley';
 
@@ -38,6 +38,12 @@ export interface RegionComposition {
   vegetation: 'meadow' | 'woodland' | 'alpine' | 'desert' | 'river';
   palette: ScenePalette;
   shelves: readonly SceneShelf[];
+  /** Square terrain extent used by the elevation and chunk systems. */
+  terrainSize?: number;
+  /** Playable camera and physics rectangle inside the terrain square, relative to its centre. */
+  playBounds?: TerrainBounds;
+  /** Settlement anchor relative to the terrain centre. */
+  camp?: TerrainPoint;
   /** Authored levels keep the camp on the valley floor instead of a raised camp shelf. */
   campShelf?: boolean;
   /** Scale of the gentle valley-floor undulation; authored two-level maps keep it low. */
@@ -240,6 +246,14 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
     palette: { ...meadow, grass: 0x92aa73, rock: 0x929784, fog: 0xc9c2a2 },
     campShelf: false,
     relief: 0.35,
+    terrainSize: ORKHON_VALLEY.world.terrainSize,
+    playBounds: {
+      x: ORKHON_VALLEY.world.minX,
+      y: ORKHON_VALLEY.world.minY,
+      width: ORKHON_VALLEY.world.width,
+      height: ORKHON_VALLEY.world.height,
+    },
+    camp: ORKHON_VALLEY.world.camp,
     ground: {
       // Trails end at the ramp feet; each ramp wears its own graded width (`rampWear`).
       paths: ORKHON_VALLEY.paths,

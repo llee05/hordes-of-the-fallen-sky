@@ -43,13 +43,15 @@ export class RiderHost extends ArenaSystem {
 
   /** Builds the hidden rider slots at the world centre. */
   createSlots(): void {
-    const center = GAME.worldSize / 2;
+    const center = this.landscape.campPosition;
     for (let i = 0; i < RIDER_SLOTS; i += 1) {
-      this.riders.push(paintedImage(this.arena.scene, center, center, 'rider').setVisible(false));
+      this.riders.push(
+        paintedImage(this.arena.scene, center.x, center.y, 'rider').setVisible(false),
+      );
       this.riderMotions.push(new CharacterMotion('rider', i * 0.137));
       this.riderSpeeds.push(0);
       this.riderShadows.push(
-        this.add.image(center, center, 'shadow').setDisplaySize(48, 18).setVisible(false),
+        this.add.image(center.x, center.y, 'shadow').setDisplaySize(48, 18).setVisible(false),
       );
     }
   }

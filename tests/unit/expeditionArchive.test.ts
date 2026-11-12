@@ -520,6 +520,23 @@ describe('full expedition snapshots', () => {
     restored.run.clan.food = 0;
     expect(save.run.clan).not.toEqual(restored.run.clan);
   });
+  it('moves legacy Orkhon actors into the wide terrain once and marks the new coordinates', () => {
+    const run = createRun();
+    run.clan.locationId = 'orkhon-valley';
+    const save = captureExpedition(run, world());
+    delete save.world.orkhonLayout;
+    const first = decodeExpedition(save).world;
+    expect(first.orkhonLayout).toBe(2);
+    expect(first.camp).toEqual({ x: 3200, y: 3200 });
+    expect(first.player).toMatchObject({ x: 3200, y: 3300 });
+    expect(first.enemies[0]).toMatchObject({ x: 3200, y: 3300 });
+    expect(first.gems[0]).toMatchObject({ x: 3200, y: 3300 });
+    expect(first.hazards[0]).toMatchObject({ x: 3300, y: 3300 });
+    expect(first.areaThreats.threats[0]).toMatchObject({ x: 3300, y: 3400 });
+    const second = decodeExpedition(captureExpedition(run, first)).world;
+    expect(second.camp).toEqual(first.camp);
+    expect(second.player).toEqual(first.player);
+  });
   it('preserves succession and migration without healing, resetting the timer or paying arrival', () => {
     const run = createRun();
     run.phase = 'playing';

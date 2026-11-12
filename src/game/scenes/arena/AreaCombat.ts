@@ -79,11 +79,12 @@ export class AreaCombat extends ArenaSystem {
   queueThreat(kind: AreaThreatKind, point: { x: number; y: number }, owner?: string): boolean {
     const nav = this.landscape.navigation;
     if (nav && !nav.isWalkable(point.x, point.y, 8, true)) return false;
+    const bounds = this.landscape.playBounds;
     if (
-      point.x < 24 ||
-      point.y < 24 ||
-      point.x > GAME.worldSize - 24 ||
-      point.y > GAME.worldSize - 24
+      point.x < bounds.x + 24 ||
+      point.y < bounds.y + 24 ||
+      point.x > bounds.x + bounds.width - 24 ||
+      point.y > bounds.y + bounds.height - 24
     )
       return false;
     return addAreaThreat(this.areaThreats, kind, point, 0, owner);

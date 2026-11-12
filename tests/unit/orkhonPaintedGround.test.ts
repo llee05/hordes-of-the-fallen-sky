@@ -2,37 +2,51 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  ORKHON_GROUND_QUADRANTS,
   ORKHON_PAINTED_GROUND,
+  orkhonPaintedGroundGpuBytes,
   orkhonPaintedGroundEnabled,
   orkhonPaintedGroundWorldBounds,
 } from '../../src/game/world3d/orkhonPaintedGround';
 
-describe('Orkhon painted-ground prototype', () => {
-  it('is enabled only by the explicit development query flag', () => {
-    expect(orkhonPaintedGroundEnabled('', true)).toBe(false);
+describe('Orkhon painted ground', () => {
+  it('ships enabled and keeps an explicit development fallback', () => {
+    expect(orkhonPaintedGroundEnabled('', true)).toBe(true);
     expect(orkhonPaintedGroundEnabled('?orkhonPaintedGround=0', true)).toBe(false);
     expect(orkhonPaintedGroundEnabled('?orkhonPaintedGround=1', true)).toBe(true);
     expect(orkhonPaintedGroundEnabled('?unrelated=1&orkhonPaintedGround=1', true)).toBe(true);
-    expect(orkhonPaintedGroundEnabled('?orkhonPaintedGround=1', false)).toBe(false);
+    expect(orkhonPaintedGroundEnabled('', false)).toBe(true);
   });
 
-  it('maps the approved camp-relative square into world space', () => {
-    expect(ORKHON_PAINTED_GROUND.bounds).toEqual({ minX: -550, minY: -1600, size: 1600 });
-    expect(orkhonPaintedGroundWorldBounds(5200)).toEqual([2050, 1000, 1600, 1600]);
-    expect(ORKHON_PAINTED_GROUND.pixels / ORKHON_PAINTED_GROUND.bounds.size).toBeCloseTo(
-      1 / 0.78125,
-      9,
+  it('maps the approved 16:10 battlefield into its square terrain', () => {
+    expect(ORKHON_PAINTED_GROUND.bounds).toEqual({
+      minX: -3200,
+      minY: -2000,
+      width: 6400,
+      height: 4000,
+    });
+    expect(orkhonPaintedGroundWorldBounds(6400)).toEqual([0, 1200, 6400, 4000]);
+    expect(ORKHON_PAINTED_GROUND.pixels.width / 3200).toBeCloseTo(0.5, 9);
+    expect(ORKHON_PAINTED_GROUND.pixels.height / 2000).toBeCloseTo(0.5, 9);
+  });
+
+  it('ships four opaque quadrant paintings and the fine grayscale detail layer', () => {
+    for (const quadrant of ORKHON_GROUND_QUADRANTS) {
+      const painting = ORKHON_PAINTED_GROUND.quadrants[quadrant];
+      const png = readFileSync(resolve(`public/art/orkhon-valley/${painting.file}`));
+      expect(png.subarray(1, 4).toString()).toBe('PNG');
+      expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([
+        ORKHON_PAINTED_GROUND.pixels.width,
+        ORKHON_PAINTED_GROUND.pixels.height,
+      ]);
+      expect(png.readUInt8(25)).toBe(2);
+    }
+    const detail = readFileSync(
+      resolve(`public/art/orkhon-valley/${ORKHON_PAINTED_GROUND.detail.file}`),
     );
-  });
-
-  it('ships the approved opaque power-of-two runtime texture', () => {
-    const png = readFileSync(resolve(`public/art/orkhon-valley/${ORKHON_PAINTED_GROUND.file}`));
-    expect(png.subarray(1, 4).toString()).toBe('PNG');
-    expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([
-      ORKHON_PAINTED_GROUND.pixels,
-      ORKHON_PAINTED_GROUND.pixels,
+    expect([detail.readUInt32BE(16), detail.readUInt32BE(20), detail.readUInt8(25)]).toEqual([
+      1024, 1024, 0,
     ]);
-    // PNG colour type 2 is opaque RGB; no alpha is uploaded or blended at the painted edges.
-    expect(png.readUInt8(25)).toBe(2);
+    expect(orkhonPaintedGroundGpuBytes()).toBe(39_724_100);
   });
 });

@@ -337,19 +337,19 @@ export class ArenaScene extends Phaser.Scene {
     this.areaCombat.create();
     this.animator.create();
     this.fieldObjectives.create();
-    this.physics.world.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.landscape = new SteppeLandscape(this);
     this.landscape.setResolution(this.visualSettings.renderResolution);
-    const center = GAME.worldSize / 2;
+    this.applyLandscapeBounds();
+    const center = this.landscape.campPosition;
     this.camp = this.add
-      .container(center, center)
+      .container(center.x, center.y)
       .setScale(CAMP_VISUAL_SCALE)
-      .setDepth(100 + center);
+      .setDepth(100 + center.y);
     this.campPresenter = new CampPresenter(this.arena);
     this.riderHost.createSlots();
     this.khan.createAttachments();
     this.player = this.physics.add
-      .sprite(center, center + 100, ...artTexture('player'))
+      .sprite(center.x, center.y + 100, ...artTexture('player'))
       .setName('khan')
       .setCollideWorldBounds(true);
     styleActor(this.player, 'player', ART_WIDTH.player!, 10);
@@ -370,7 +370,6 @@ export class ArenaScene extends Phaser.Scene {
     this.gems = this.physics.add.group({ classType: Gem, maxSize: GAME.maxGems });
     this.hostileShots = this.physics.add.group({ classType: Projectile, maxSize: 180 });
     this.combat.registerOverlaps();
-    this.cameras.main.setBounds(0, 0, GAME.worldSize, GAME.worldSize);
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09);
     this.cameras.main.roundPixels = false;
     this.cameras.main.setFollowOffset(120, 0);
@@ -407,6 +406,8 @@ export class ArenaScene extends Phaser.Scene {
     this.tweens.pauseAll();
     if (developerRun) {
       this.landscape.setLocation(currentLocation(this.run));
+      this.applyLandscapeBounds();
+      this.relocateToLandscapeCamp();
       this.reconcileTerrain();
       this.campBarrier.relocate(this.run, this.camp);
       this.timers.invulnerable = GAME.khan.returnProtection;
@@ -482,6 +483,7 @@ export class ArenaScene extends Phaser.Scene {
     const body = captureBody;
     const pool = this.enemies.getChildren() as Enemy[];
     return {
+      orkhonLayout: currentLocation(this.run).id === 'orkhon-valley' ? 2 : undefined,
       player: this.khan.capture(),
       camp: { x: this.camp.x, y: this.camp.y },
       facing: { x: this.facing.x, y: this.facing.y },
@@ -512,6 +514,7 @@ export class ArenaScene extends Phaser.Scene {
     Object.assign(this.timers, { closeDefenseTimer: 0 }, world.timers);
     this.areaCombat.restore(world);
     this.landscape.setLocation(currentLocation(run));
+    this.applyLandscapeBounds();
     this.campPresenter.restore(world.camp);
     this.khan.restore(world);
     if (!isKhanActive(run)) this.khan.hideFallenKhan();
@@ -815,7 +818,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private applyCameraZoom(zoom: number): void {
     const camera = this.cameras.main;
-    this.cameraZoom = clampCameraZoom(zoom, camera.width, camera.height);
+    this.cameraZoom = clampCameraZoom(zoom, camera.width, camera.height, this.landscape.playBounds);
     camera.setZoom(this.cameraZoom);
   }
 
@@ -847,6 +850,18 @@ export class ArenaScene extends Phaser.Scene {
     void this.platform
       .saveVisualSettings(this.visualSettings)
       .catch(() => this.callbacks?.onSaveError());
+  }
+
+  private applyLandscapeBounds(): void {
+    const bounds = this.landscape.playBounds;
+    this.physics.world.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+    this.cameras.main.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+  }
+
+  private relocateToLandscapeCamp(): void {
+    const camp = this.landscape.campPosition;
+    this.camp.setPosition(camp.x, camp.y).setDepth(100 + camp.y);
+    this.player.setPosition(camp.x, camp.y + 100).setVelocity(0, 0);
   }
 
   private reconcileTerrain(): void {
@@ -1071,19 +1086,19 @@ export class ArenaScene extends Phaser.Scene {
 
   private arrive(): void {
     this.persistence.saveCamp();
-    const center = GAME.worldSize / 2;
     // Each migration leads to a new handcrafted arena; structures travel with the clan.
     this.campPresenter.relocate();
-    this.camp.setPosition(center, center);
-    this.player.setPosition(center, center + 100).setVelocity(0, 0);
+    this.landscape.setLocation(currentLocation(this.run));
+    this.applyLandscapeBounds();
+    this.relocateToLandscapeCamp();
+    const camp = this.landscape.campPosition;
     for (const group of [this.enemies, this.projectiles, this.hostileShots])
       for (const actor of group.getChildren() as Enemy[]) actor.disableBody(true, true);
     // Carry all uncollected experience to the next camp rather than discarding it.
     for (const gem of this.gems.getChildren() as Gem[])
-      if (gem.active) gem.setPosition(center, center + 100);
+      if (gem.active) gem.setPosition(camp.x, camp.y + 100);
     this.hazardSystem.clear();
     this.areaCombat.reset();
-    this.landscape.setLocation(currentLocation(this.run));
     this.reconcileTerrain();
     this.campPresenter.refresh();
     this.campBarrier.relocate(this.run, this.camp);

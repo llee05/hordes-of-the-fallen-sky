@@ -3,7 +3,6 @@ import { CampBarrier } from '../../assets/CampBarrier';
 import { ClanLife } from '../../assets/ClanLife';
 import { ClanStandard } from '../../assets/ClanStandard';
 import { ART_WIDTH, CAMP_VISUAL_SCALE, paintedImage } from '../../assets/painterlyArt';
-import { GAME } from '../../config';
 import { campShelters } from '../../state/campLife';
 import type { ArenaContext } from './ArenaContext';
 
@@ -28,12 +27,12 @@ export class CampPresenter {
 
   constructor(private readonly arena: ArenaContext) {
     const { scene } = arena;
-    const center = GAME.worldSize / 2;
+    const center = arena.landscape.campPosition;
     this.campBarrier = new CampBarrier(scene);
     this.refresh();
     this.clanLife = new ClanLife(scene);
     this.label = scene.add
-      .text(center, center - 125 * CAMP_VISUAL_SCALE, 'YOUR CLAN', {
+      .text(center.x, center.y - 125 * CAMP_VISUAL_SCALE, 'YOUR CLAN', {
         fontFamily: 'Georgia',
         fontSize: '11px',
         color: '#f5e6bf',
@@ -104,7 +103,7 @@ export class CampPresenter {
   update(dt: number): void {
     const { run, camp } = this.arena;
     const clan = run.clan;
-    const center = GAME.worldSize / 2;
+    const center = this.arena.landscape.campPosition.x;
     if (clan.population !== this.population || clan.herd !== this.herd) this.refresh();
     if (clan.stage === 'migration') camp.x = center + clan.migrationProgress * 1150;
     camp.setDepth(100 + camp.y);
