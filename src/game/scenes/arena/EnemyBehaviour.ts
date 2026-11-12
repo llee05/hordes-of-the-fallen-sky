@@ -7,6 +7,7 @@ import type { Enemy } from '../../entities/actors';
 import { barrierContact, campBoundary } from '../../state/campBarrier';
 import { currentLocation } from '../../state/journey';
 import { isKhanActive } from '../../state/khan';
+import { isEnemyDisabled, statusSpeedMultiplier, tickEnemyStatus } from '../../state/statusEffects';
 import { areaSurface, habitatPreference } from '../../systems/AreaHabitat';
 import { routeDue } from '../../systems/enemyRoutes';
 import { advanceCharge, createEnemyTactics, tacticalGoal } from '../../systems/enemyTactics';
@@ -136,6 +137,7 @@ export class EnemyBehaviour extends ArenaSystem {
     enemy.chargeTimer -= dt;
     enemy.pinned = Math.max(0, enemy.pinned - dt);
     enemy.spiritSlow = Math.max(0, enemy.spiritSlow - dt);
+    tickEnemyStatus(enemy.status, dt);
     enemy.dangerTimer -= dt;
   }
 
@@ -217,11 +219,12 @@ export class EnemyBehaviour extends ArenaSystem {
     if (enemy.elite) warnings.lineStyle(3, 0xe0bc76, 0.85).strokeCircle(enemy.x, enemy.y, 30);
   }
 
-  /** Stops pinned, held or aiming enemies and slows them in trails. */
+  /** Stops pinned, stunned, held or aiming enemies; slows them in trails and by status. */
   private adjustSpeed(enemy: Enemy, aim: EnemyAim, speed: number): number {
     const { distance, ranged, clearShot } = aim;
-    if (enemy.pinned > 0) speed = 0;
+    if (isEnemyDisabled(enemy)) speed = 0;
     else if (enemy.spiritSlow > 0) speed *= GAME.classes['spirit-caller'].spirit.slowMultiplier;
+    speed *= statusSpeedMultiplier(enemy.status);
     if (
       this.run.combat.trails.some(
         (t) => Math.hypot(enemy.x - t.x, enemy.y - t.y) < GAME.mounted.trailRadius,
@@ -241,7 +244,15 @@ export class EnemyBehaviour extends ArenaSystem {
     warnings: Phaser.GameObjects.Graphics,
   ): void {
     const { attackingCamp, target, distance, behavior, ranged, clearShot } = aim;
-    if (attackingCamp) {
+    if (enemy.status.forced > 0) {
+      // Pulls and knockbacks override steering; an interrupted charge has to recover.
+      enemy.setVelocity(enemy.status.forcedVx, enemy.status.forcedVy);
+      if (behavior === 'charger' && enemy.tactics.phase !== 'approach') {
+        enemy.tactics.phase = 'recover';
+        enemy.tactics.remaining = GAME.tactics.chargeRecovery;
+      }
+      enemy.preparingAttack = false;
+    } else if (attackingCamp) {
       // Hold outside the tents instead of walking (or charging) into their centre.
       enemy.setVelocity(0, 0);
       enemy.chargeTimer = 0;
@@ -263,7 +274,7 @@ export class EnemyBehaviour extends ArenaSystem {
         const ahead = { x: enemy.x + Math.cos(angle) * 90, y: enemy.y + Math.sin(angle) * 90 };
         const blocked =
           !!this.landscape.navigation && !this.landscape.navigation.lineClear(enemy, ahead);
-        advanceCharge(state, dt, enemy, target, blocked, enemy.pinned > 0);
+        advanceCharge(state, dt, enemy, target, blocked, isEnemyDisabled(enemy));
         enemy.chargeTimer =
           state.phase === 'charge'
             ? state.remaining + 2.3
@@ -362,7 +373,7 @@ export class EnemyBehaviour extends ArenaSystem {
   /** Strikes the camp barrier when in range and ready. */
   private attackCamp(enemy: Enemy, aim: EnemyAim): void {
     const { attackingCamp } = aim;
-    if (attackingCamp && enemy.clanAttackTimer <= 0) {
+    if (attackingCamp && enemy.clanAttackTimer <= 0 && enemy.status.stun <= 0) {
       enemy.motion.attack();
       this.clanDamage.damage(
         enemy.definition.damage * GAME.camp.enemyAttack.damageMultiplier,
@@ -383,7 +394,7 @@ export class EnemyBehaviour extends ArenaSystem {
     if (
       behavior === 'ranged' &&
       clearShot &&
-      enemy.pinned <= 0 &&
+      !isEnemyDisabled(enemy) &&
       enemy.attackTimer <= 0 &&
       distance < 650
     ) {
@@ -406,7 +417,7 @@ export class EnemyBehaviour extends ArenaSystem {
       enemy.definition.ability &&
       distance < GAME.areaCombat.abilityRange &&
       enemy.dangerTimer <= 0 &&
-      enemy.pinned <= 0 &&
+      !isEnemyDisabled(enemy) &&
       (!this.landscape.navigation || this.landscape.navigation.lineClear(enemy, target, 0))
     ) {
       const ability = enemy.definition.ability,
@@ -437,7 +448,7 @@ export class EnemyBehaviour extends ArenaSystem {
       distance < 650 &&
       clearShot &&
       enemy.dangerTimer <= 0 &&
-      enemy.pinned <= 0
+      !isEnemyDisabled(enemy)
     ) {
       this.host.addSeerHazard(target, enemy.definition);
       enemy.dangerTimer = GAME.tactics.seerEvery;

@@ -1,4 +1,5 @@
 import type { EnemyRoute } from '../systems/enemyRoutes';
+import { createEnemyStatus } from '../state/statusEffects';
 import { createEnemyTactics } from '../systems/enemyTactics';
 import Phaser from 'phaser';
 import type { EnemyDefinition } from '../types';
@@ -20,6 +21,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   tactics = createEnemyTactics();
   pinned = 0;
   spiritSlow = 0;
+  /** Stun, slow, armour shred and forced movement; see `state/statusEffects.ts`. */
+  status = createEnemyStatus();
   lastGallop = -1;
   dangerTimer = 3;
   tacticalSlot = 0;

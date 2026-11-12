@@ -214,6 +214,17 @@ export const GAME = {
       caller: { shots: 3, spread: 0.32, interval: 4.2 },
     },
   },
+  /** Shared rules for stun, slow, armour shred and forced movement. */
+  status: {
+    /** Enemies at this sprite scale or above (and every elite) count as large. */
+    largeScale: 2.8,
+    /** Fraction of stun and forced-movement duration large enemies and elites keep. */
+    largeControl: 0.75,
+    eliteControl: 0.5,
+    /** A slow never takes an enemy below this fraction of its speed. */
+    slowFloor: 0.2,
+    tint: { stun: 0xf0dc8a, slow: 0x9fc3ff, shred: 0xe58a72 },
+  },
   maxProjectiles: 250,
   maxGems: 500,
   player: { health: 100, speed: 190, damage: 16, attackInterval: 0.6, pickupRadius: 85 },

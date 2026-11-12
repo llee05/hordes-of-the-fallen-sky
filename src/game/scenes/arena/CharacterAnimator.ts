@@ -1,3 +1,4 @@
+import { GAME } from '../../config';
 import { DefeatSprites, renderCharacter } from '../../animation/CharacterVisuals';
 import type { Enemy } from '../../entities/actors';
 import type { ArenaContext } from './ArenaContext';
@@ -35,9 +36,15 @@ export class CharacterAnimator extends ArenaSystem {
           ? 0xffd3b2
           : enemy.burning > 0
             ? 0xffad67
-            : enemy.definition.id === 'frost-mare'
-              ? 0xb1efff
-              : (enemy.definition.tint ?? 0xffffff),
+            : enemy.status.stun > 0
+              ? GAME.status.tint.stun
+              : enemy.status.slow > 0
+                ? GAME.status.tint.slow
+                : enemy.status.shred > 0
+                  ? GAME.status.tint.shred
+                  : enemy.definition.id === 'frost-mare'
+                    ? 0xb1efff
+                    : (enemy.definition.tint ?? 0xffffff),
       );
     }
     this.defeats.update(dt);
