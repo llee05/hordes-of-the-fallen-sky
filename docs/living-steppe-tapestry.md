@@ -20,13 +20,13 @@ See [the landscape catalog](location-landscapes.md),
 [the full atlas generation prompt](location-scenery-prompt.md). These suggest the
 surrounding land rather than reconstructing real monuments or sacred ceremonies.
 
-The interface uses indigo felt, warm manuscript paper, brass edging, rust-red woven trim, and serif chapter titles. A stitched hanging cloth carries the title menu while leaving the painted camp visible beside it. During play, compact textile HUD panels and a bottom command dock float above the full-window battlefield. Detailed manuscript pages live in the paused clan chronicle and management menus. Keep material contrast quiet beneath text, and keep decorative stitches and borders out of pointer and keyboard navigation.
+The interface uses indigo felt, warm manuscript paper, brass edging, rust-red woven trim, and serif chapter titles. The title screen is a full painted chronicle: a mounted Khan overlooks the steppe from the right while a quiet parchment field supports a live indigo title cartouche and ornate plaque controls on the left. During play, compact textile HUD panels and a bottom command dock float above the full-window battlefield. Detailed manuscript pages live in the paused clan chronicle and management menus. Keep material contrast quiet beneath text, and keep decorative stitches and borders out of pointer and keyboard navigation.
 
 `src/tapestry.css` defines the material treatment. `src/ui/artwork.ts` defines decorative brass-cut SVG symbols and route landscape vignettes. Camp and chronicle illustrations crop locally bundled painted atlases using their JSON frame metadata. The camp management architecture uses its own level-dependent sheet; see [the camp artwork record](nomadic-camp-artwork.md). Symbols and illustrations are hidden from assistive technology; the containing controls retain their text labels, keyboard focus, and controller navigation.
 
 The camp development screen presents a flat illustrated manuscript map. Gers, households, carts, grazing animals and a blue banner sit on a continuous painted grassland panorama with worn paths, shrubs, rocks and low grassy banks. Small parchment plaques, diamond badges and contextual upgrade popovers keep the painting visible. The [camp artwork record](nomadic-camp-artwork.md) owns the bundled terrain and three-stage architecture assets; [the nomadic camp guide](nomadic-camp.md#state-rendering-and-simulation) owns layout, controls, rendering modules and planning behavior.
 
-`src/motion.css` gives the hanging title cloth a slow breathing motion, opens manuscript panels in 240ms, and lightly staggers their illustrations. River currents and banner cloth animate inside the migration vignettes. Hover and keyboard focus lift illustrations while keeping their controls in place. Buying a structure or changing chronicle tabs refreshes content without replaying the whole panel entrance. Actions never wait for animation completion. A single reduced-motion rule disables all interface keyframes and transitions, including the older meters and notifications.
+`src/motion.css` settles the title composition into place, opens manuscript panels in 240ms, and lightly staggers their illustrations. River currents and banner cloth animate inside the migration vignettes. Hover and keyboard focus lift illustrations while keeping their controls in place. Buying a structure or changing chronicle tabs refreshes content without replaying the whole panel entrance. Actions never wait for animation completion. A single reduced-motion rule disables all interface keyframes and transitions, including the older meters and notifications.
 
 `src/ui/Motion.ts` adds short feedback animations to displayed resource and health changes, damage, gallop readiness, formation changes, and unlocked migration. It uses the Web Animations API with at most one transient effect per element; it never stores simulation values or schedules gameplay. Feedback cancels on pause, document hiding, live reduced-motion changes, and renderer destruction. UI values always update immediately to the current scene snapshot.
 
@@ -36,10 +36,15 @@ The original world-art PNGs, two character animation sheets, and the UI felt tex
 
 | Asset                     | Path                                                            | Role                                                                          |
 | ------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Title chronicle           | `public/art/title-main-menu.png`                                | Full-screen painted title landscape with quiet live-UI space                  |
 | Painted grassland         | `public/art/steppe-ground.png`                                  | Repeating ground surface                                                      |
 | Mounted host and calamity | `public/art/steppe-actors.png`                                  | Commander, archer, wolf, shade, earth creature, ghost rider, seer, Skybreaker |
 | Camp and terrain props    | `public/art/steppe-props.png`                                   | Ger, cart, two-color banners, sheep, stone outcrop, ribbon cairn              |
 | Atlas metadata            | `public/art/steppe-actors.json`, `public/art/steppe-props.json` | Named frames tightly bounded from the generated alpha                         |
+
+## Title-screen generation prompt
+
+The built-in image generation tool produced `public/art/title-main-menu.png`. The supplied menu concept was a style and broad-composition reference, not an edit target. The production prompt requested an original 16:9 antique illuminated-manuscript steppe valley with a mounted Khan on the right, a cloud-wolf spirit, matte mineral pigment, and a quiet parchment field across the left 38% for live HTML. It explicitly excluded text, letters, logos, cartouches, buttons, interface elements, glossy surfaces, photography, and 3D rendering.
 
 [The art specification](art-spec.md) holds the measured numbers behind this direction: camera, size bands, tile repetition, edges, shadows and palette ranges.
 
