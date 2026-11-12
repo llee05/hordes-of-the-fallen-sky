@@ -28,6 +28,7 @@ Existing Orkhon Valley scenery supplies the sacred ovoo, prayer flags, standing 
 Standing stones mark the balbal location until dedicated statue art exists.
 Spirit sites use stones and relic fires as terrain landmarks rather than introducing new encounters.
 Dense rock ridges and autumn clusters frame the battlefield, but the camp clearing, trails, ramps, spring edge, and broad combat lanes stay open.
+`world3d/altanOvooDressing.ts` builds those clusters deterministically across the whole battlefield before clipping them into render chunks, so their placement cannot change at chunk boundaries.
 
 ## Points of interest and follow-ups
 

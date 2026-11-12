@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { ALTAN_OVOO, ALTAN_OVOO_FOOTPRINTS, ALTAN_OVOO_SITES } from '../../src/game/data/altanOvoo';
 import { ORKHON_SPRITES } from '../../src/game/assets/orkhonValleyArt';
 import { outlineField } from '../../src/game/world3d/ComposedTerrain';
+import {
+  altanOvooDressing,
+  altanOvooDressingClear,
+  altanOvooLandmarkAt,
+} from '../../src/game/world3d/altanOvooDressing';
 import type { TerrainPoint } from '../../src/game/terrain/types';
 
 const cone = ALTAN_OVOO.plateaus[0]!;
@@ -129,5 +134,74 @@ describe('Altan Ovoo authored layout', () => {
         .filter((landmark) => landmark.role === 'balbal-site')
         .every((landmark) => landmark.sprite === 'standing_stone'),
     ).toBe(true);
+  });
+});
+
+describe('Altan Ovoo authored dressing', () => {
+  const terrainSize = ALTAN_OVOO.world.terrainSize;
+  const centre = terrainSize / 2;
+  const all = altanOvooDressing('altan-ovoo-test', {
+    x: 0,
+    y: 0,
+    width: terrainSize,
+    height: terrainSize,
+  });
+
+  it('is dense, deterministic and stable across terrain chunks', () => {
+    const parts = [0, centre].flatMap((x) =>
+      [0, centre].flatMap((y) =>
+        altanOvooDressing('altan-ovoo-test', {
+          x,
+          y,
+          width: centre,
+          height: centre,
+        }),
+      ),
+    );
+    const sorted = (items: typeof all) => items.map((item) => JSON.stringify(item)).sort();
+    expect(sorted(parts)).toEqual(sorted(all));
+    expect(all.length).toBeGreaterThan(190);
+    expect(
+      all.filter((prop) => prop.kind === 'boulders' || prop.kind === 'crag').length,
+    ).toBeGreaterThan(100);
+    expect(
+      all.filter((prop) => prop.kind === 'larch' || prop.kind === 'scrub').length,
+    ).toBeGreaterThan(55);
+  });
+
+  it('uses existing manuscript scenery on both elevation tiers', () => {
+    const scenery = all.filter((prop) => prop.kind !== 'landmark');
+    const tier = (prop: (typeof all)[number]) =>
+      outlineField(cone.outline, prop.x - centre, prop.z - centre);
+    expect(scenery.filter((prop) => tier(prop) > 80).length).toBeGreaterThan(80);
+    expect(scenery.filter((prop) => tier(prop) < -80).length).toBeGreaterThan(50);
+    for (const prop of all) {
+      expect(ORKHON_SPRITES).toHaveProperty(prop.frame);
+      expect(prop.tint).toBe(0xffffff);
+    }
+    expect(JSON.stringify(all)).not.toMatch(/wolf|horse|swan/i);
+  });
+
+  it('keeps camp, trails, ramps, water edges and combat lanes clear', () => {
+    for (const prop of all.filter((item) => item.kind !== 'landmark'))
+      expect(
+        altanOvooDressingClear({ x: prop.x - centre, y: prop.z - centre }, 80),
+        `${prop.frame}@${prop.x - centre},${prop.z - centre}`,
+      ).toBe(true);
+  });
+
+  it('places every authored landmark once and preserves its semantic entry', () => {
+    const landmarks = all.filter((prop) => prop.kind === 'landmark');
+    expect(landmarks).toHaveLength(ALTAN_OVOO.landmarks.length);
+    for (const landmark of ALTAN_OVOO.landmarks) {
+      const prop = landmarks.find(
+        (item) =>
+          item.x === centre + landmark.x &&
+          item.z === centre + landmark.y &&
+          item.frame === landmark.sprite,
+      );
+      expect(prop, landmark.id).toBeDefined();
+      expect(altanOvooLandmarkAt(prop!)?.id).toBe(landmark.id);
+    }
   });
 });
