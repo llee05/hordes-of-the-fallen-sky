@@ -179,6 +179,7 @@ export class EnemyDirector {
     enemy.tacticalSlot = enemies.getChildren().indexOf(enemy);
     enemy.route = undefined;
     enemy.pinned = 0;
+    enemy.status = createEnemyStatus();
     enemy.spiritSlow = 0;
     enemy.status = createEnemyStatus();
     enemy.lastGallop = -1;
@@ -232,6 +233,7 @@ export class EnemyDirector {
                   chargeTimer: e.chargeTimer,
                   burning: e.burning,
                   pinned: e.pinned,
+                  status: { ...e.status },
                   spiritSlow: e.spiritSlow,
                   status: { ...e.status },
                   lastGallop: e.lastGallop,

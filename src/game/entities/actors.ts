@@ -20,6 +20,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   objectiveId?: number;
   tactics = createEnemyTactics();
   pinned = 0;
+  /** Stun, slow, armour shred and forced movement; see `state/statusEffects.ts`. */
+  status = createEnemyStatus();
   spiritSlow = 0;
   /** Stun, slow, armour shred and forced movement; see `state/statusEffects.ts`. */
   status = createEnemyStatus();
