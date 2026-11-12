@@ -69,6 +69,9 @@ test(
     page.on('pageerror', (error) => errors.push(error.message));
     await openTitle(page);
     await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Load', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Starting tradition/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'How to play', exact: true })).toHaveCount(0);
     await expect(page).toHaveTitle('Hordes of the Fallen Sky · A people, not a place.');
     await page.screenshot({ path: 'test-results/desktop-ready.png', fullPage: true });
     await page.getByRole('button', { name: /NEW GAME/ }).focus();

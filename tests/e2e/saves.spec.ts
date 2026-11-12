@@ -57,7 +57,7 @@ test(
     ).toBe(true);
     await page.screenshot({ path: 'test-results/save-menu.png' });
     await page.reload();
-    await page.getByRole('button', { name: /CONTINUE EXPEDITION/ }).click();
+    await page.getByRole('button', { name: /CONTINUE/ }).click();
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
     const restored = await page.evaluate(() => {
       const s = (window as any).__gloam.scene;
@@ -119,7 +119,7 @@ test('save and return to title preserves a normal expedition and developer runs 
   await page.keyboard.press('Escape');
   await expect.poll(() => page.evaluate(() => !(window as any).__gloam.scene.saveBusy)).toBe(true);
   await page.getByRole('button', { name: 'Save and return to title' }).click();
-  await expect(page.getByRole('button', { name: /CONTINUE EXPEDITION/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /CONTINUE/ })).toBeVisible();
   const before = await page.evaluate(() => localStorage.getItem('gloam-expedition-auto'));
   await page.keyboard.press('F8');
   await page.locator('[data-developer-level="place:otgontenger"]').click();
@@ -172,7 +172,7 @@ test('a carved 2.5D migration route resumes with the same terrain and progress',
     };
   });
   await page.reload();
-  await page.getByRole('button', { name: /CONTINUE EXPEDITION/ }).click();
+  await page.getByRole('button', { name: /CONTINUE/ }).click();
   await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
   const after = await page.evaluate(() => {
     const s = (window as any).__gloam.scene;

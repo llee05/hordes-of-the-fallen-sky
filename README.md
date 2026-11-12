@@ -50,15 +50,15 @@ builds once the repository's Pages source is set to **GitHub Actions**.
 
 The game opens at the title menu. **New Game** opens [character creation](docs/character-creator.md). Choose identity, appearance, origin, combat tradition, oath, mount, banner and name, then **Begin Journey** starts the expedition at Mount Otgontenger. The last character profile is remembered.
 
-The title is embroidered across an indigo felt banner over the painted steppe. Woven rust-red trim, brass clan symbols, and warm manuscript pages carry the world's art into the interface. Camp cards reuse the painted gers, riders, and wagons from the battlefield; migration choices have illustrated landscape vignettes. All UI materials and artwork ship locally.
+The title sits on an indigo manuscript cartouche over a full-screen painted steppe chronicle. Ornate parchment plaques, rust-red selection, brass clan symbols, and warm manuscript pages carry the world's art into the interface. Camp cards reuse the painted gers, riders, and wagons from the battlefield; migration choices have illustrated landscape vignettes. All UI materials and artwork ship locally.
 
 The battlefield fills the entire game window. Zoom with the mouse wheel, + / − (including the number pad), or controller RT / LT. The on-screen − / percentage / + controls offer the same actions; click the percentage, press 0, or click the right stick to reset to 100%. Zoom ranges from 60% to 160% and keeps the interface readable at its original size. It is available during active play, follows the Khan or caravan during succession, and carries across new expeditions for the app session. Compact resources and objectives sit at the top, with Khan health, clan resolve, gallop, and a keyboard command dock near the bottom. Brief clan messages appear as notifications. Dismissible contextual guidance teaches riding, camp development, shards, formations, and the first migration through actual actions. Hide tips in the field or restore them from How to play; the preference lasts for the app session. Persistent food, resolve, population, and pasture warnings remain visible when tips are hidden.
 
-The title cloth breathes gently, parchment menus settle into place, and illustrations respond to mouse or keyboard focus. Resource changes, damage, gallop readiness, and newly available migration routes have brief visual feedback. Controls respond immediately throughout. The operating system's reduced-motion preference disables interface animations and transitions, including when changed while the game is open.
+The title cartouche settles gently, parchment menus open into place, and illustrations respond to mouse or keyboard focus. Resource changes, damage, gallop readiness, and newly available migration routes have brief visual feedback. Controls respond immediately throughout. The operating system's reduced-motion preference disables interface animations and transitions, including when changed while the game is open.
 
 During play, press **Tab** or **J** (controller **View**) to open the clan chronicle. Its **The journey** and **Your clan** tabs show locations, buildings, workforce, formations, Khans, and factual memories while simulation is paused. Arrow keys switch focused tabs; Escape or J closes the chronicle. You can open camp development or choose an available migration route directly from it during an ongoing expedition. After defeat, use **Clan chronicle** on the results screen to inspect the records; closing it returns to those results. Tab and Shift+Tab navigate menu controls.
 
-The title and pause menus contain **Settings** and **How to play**. Mute and separate music, ambience, combat, and interface levels save automatically. Settings also offers five recorded reference auditions. Fullscreen is available in Settings or with F11 / Alt+Enter. Escape backs out to the menu you came from; closing Settings during a paused expedition keeps that expedition paused. Native Quit game is available in the main and pause menus. Keyboard, mouse, controller, and touch-preview actions use the same scene-owned run state.
+The title menu contains **Settings**; the pause menu contains **Settings** and **How to play**. Mute and separate music, ambience, combat, and interface levels save automatically. Settings also offers five recorded reference auditions. Fullscreen is available in Settings or with F11 / Alt+Enter. Escape backs out to the menu you came from; closing Settings during a paused expedition keeps that expedition paused. Native **Quit** is available on the title and **Quit game** remains in the pause menu. Keyboard, mouse, controller, and touch-preview actions use the same scene-owned run state.
 
 The sound palette uses licensed recordings of recurve bows, real horse contacts, paper, leather, wood, metal, frame drums, wind, water, and campfire. Layered events choose shuffled takes with subtle variation; sound remains bounded during large battles. Four buses provide separate music, ambience, combat, and interface controls. Long environmental passages crossfade as biome, combat and camp context change; menus freeze movement cadence. All recordings and their CC0 provenance ship locally. Recorded music and additional horse, cloth, wildlife and region-specific material are explicit pending asset slots; no electronic fallback fills them. See [the audit](docs/audio-audit.md) and [the sound design guide](docs/sound-design.md) for the five references, licences, architecture, and remaining recording work.
 
@@ -89,7 +89,7 @@ weathered cliffs, shared riverbeds and shores, clustered vegetation, and render 
 
 The Khan, allied archers, and all six creature designs have painted sprite animation: four gait or hovering frames and two attack poses each. Riding speed drives the gait, galloping quickens it, and actual volleys, charges, and strikes trigger release poses. Hits briefly tint the character; defeated enemies fade through a small visual pool after their collision bodies leave immediately. Character animation and these effects freeze in every paused run phase. See [the sprite sheets, registration, and generation prompts](docs/character-animation.md).
 
-Choose **Starting tradition** at the title to compare Shared hearth, Outrider circle, Hearthkeepers, and Pathfinders. Their riders, protection, movement, and starting-store tradeoffs change the opening while every facility remains available. The chosen preparation persists through the expedition and full saves. See [starting clan traditions](docs/starting-traditions.md).
+New expeditions retain the current default **Shared hearth** starting tradition. Starting-tradition rules and save compatibility remain unchanged; see [starting clan traditions](docs/starting-traditions.md).
 
 Brass elite/armour labels, directional offscreen danger warnings, and brief named-cause clan-loss messages make crowded combat easier to read. Settings offers saved **Projectile contrast**, **Effect density** and **3D resolution** (Automatic or 100%) controls; Minimal keeps combat warnings visible while removing decorative bursts and dust. See [combat readability](docs/combat-readability.md).
 
@@ -137,22 +137,22 @@ For resources, combat, enemies, levels, and camp development, see [the game mech
 
 ## Controls
 
-| Action                          | Keyboard / mouse                    | Standard controller           |
-| ------------------------------- | ----------------------------------- | ----------------------------- |
-| Ride                            | WASD / arrows                       | Left stick / D-pad            |
-| Attack                          | Automatic                           | Automatic                     |
-| Gallop                          | Space / Gallop button               | A                             |
-| Develop camp                    | B / Develop camp                    | X                             |
-| Pack and choose route           | M / Pack & migrate                  | Y                             |
-| Cycle unlocked formations       | F / Formation button                | Right bumper                  |
-| Clan chronicle                  | Tab / J / chronicle button          | View                          |
-| Pause / resume / close planning | Escape / P                          | Start / B                     |
-| Navigate menus                  | Tab / Shift+Tab                     | Stick / D-pad                 |
-| Confirm                         | Enter / Space / click               | A                             |
-| Zoom in / out                   | + / − / mouse wheel                 | RT / LT                       |
-| Reset zoom                      | 0 / percentage button               | Right stick click             |
-| Fullscreen                      | F11 / Alt+Enter / fullscreen button | —                             |
-| Quit                            | Quit game / window close            | Navigate to Quit game, then A |
+| Action                          | Keyboard / mouse                    | Standard controller      |
+| ------------------------------- | ----------------------------------- | ------------------------ |
+| Ride                            | WASD / arrows                       | Left stick / D-pad       |
+| Attack                          | Automatic                           | Automatic                |
+| Gallop                          | Space / Gallop button               | A                        |
+| Develop camp                    | B / Develop camp                    | X                        |
+| Pack and choose route           | M / Pack & migrate                  | Y                        |
+| Cycle unlocked formations       | F / Formation button                | Right bumper             |
+| Clan chronicle                  | Tab / J / chronicle button          | View                     |
+| Pause / resume / close planning | Escape / P                          | Start / B                |
+| Navigate menus                  | Tab / Shift+Tab                     | Stick / D-pad            |
+| Confirm                         | Enter / Space / click               | A                        |
+| Zoom in / out                   | + / − / mouse wheel                 | RT / LT                  |
+| Reset zoom                      | 0 / percentage button               | Right stick click        |
+| Fullscreen                      | F11 / Alt+Enter / fullscreen button | —                        |
+| Quit                            | Quit / window close                 | Navigate to Quit, then A |
 
 Caravan guard keeps riders near the clan and reduces clan damage. Encirclement circles nearby enemies and rewards moving fire. Charging wedge follows your Khan and turns gallop into an attack. Feigned retreat spreads riders, accelerates moving volleys, and gathers shards from farther away. Touch preview supports dragging to ride and tapping command buttons.
 
@@ -177,7 +177,7 @@ To preserve existing profiles, native saves retain the original internal **Gloam
 | Linux   | `${XDG_CONFIG_HOME:-~/.config}/Gloam/saves/profile.json` |
 | macOS   | `~/Library/Application Support/Gloam/saves/profile.json` |
 
-**Continue expedition** resumes the latest full save. **Saved expeditions**, on the title, pause, and results screens, offers three manual slots plus an autosave, with location, journey time, population, level, and save date. Overwriting, deleting, and loading over a live expedition require confirmation. Loaded expeditions open paused; no simulation runs while the game is closed. **Save and return to title** keeps the current journey. **New Game** starts fresh; the existing **Continue clan camp** still carries only the portable camp into a fresh journey.
+**Continue** on the title resumes the latest full save. **Load** opens the save screen from the title; **Saved expeditions** remains its label in the pause and results menus. The screen offers three manual slots plus an autosave, with location, journey time, population, level, and save date. Overwriting, deleting, and loading over a live expedition require confirmation. Loaded expeditions open paused; no simulation runs while the game is closed. **Save and return to title** keeps the current journey. **New Game** starts fresh; the existing **Continue clan camp** still carries only the portable camp into a fresh journey.
 
 Autosaves run every 30 active seconds, on pausing, after progression/travel checkpoints, and before a normal desktop close or Quit. Normal saves preserve the Khan and succession timer, resources and facilities, migration and objectives, enemies, projectiles, dropped XP, and ability/encounter cooldowns. Developer and cheated runs cannot overwrite normal saves. Manual slots remain available after defeat.
 

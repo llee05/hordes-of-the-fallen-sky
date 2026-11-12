@@ -3,7 +3,7 @@ import { AUDIO_REFERENCE_CUES, type SoundKind } from '../game/audio/soundPalette
 import { GAME } from '../game/config';
 import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
 import { classDefinition } from '../game/data/classes';
-import { FORMATIONS, startingTradition } from '../game/data/clan';
+import { FORMATIONS } from '../game/data/clan';
 import { AREA_ENEMIES } from '../game/data/enemies';
 import { FIELD_OBJECTIVES } from '../game/data/fieldObjectives';
 import { NOMADIC_BUILDINGS } from '../game/data/nomadicCamp';
@@ -52,6 +52,7 @@ import {
 import { UIMotion } from './Motion';
 import { escapeHtml, type TreeViewState } from './progressionTree';
 import { saveMenu, type SaveConfirmation } from './saveContent';
+import { titleMenuContent } from './titleContent';
 
 const emblem = `<span class="clan-seal">${clanMark('spirit')}</span>`;
 
@@ -643,7 +644,12 @@ export class GameUI {
     else if (run.phase === 'saves')
       this.overlay.innerHTML = saveMenu(snapshot, this.saveConfirmation);
     else if (run.phase === 'ready') {
-      this.overlay.innerHTML = `<section class="title-menu"><div class="title-emblem">${emblem}</div><p class="eyebrow">WHEN HEAVEN WENT SILENT</p><h1 id="overlay-title"><span class="title-prefix">Hordes of the</span> <em>Fallen Sky</em></h1><p class="title-tagline">You don’t build a city.<br>You build a people.</p><nav class="main-menu" aria-label="Main menu">${latestSave ? `<button class="menu-button featured" data-action="continue-expedition" data-slot="${latestSave.slot}" data-primary>CONTINUE EXPEDITION <span>→</span></button>` : ''}<button class="menu-button featured" data-action="begin" data-primary>NEW GAME <span>→</span></button>${this.platform.profile.camp ? '<button class="menu-button" data-action="continue-camp" title="Take your saved camp and stores into a new expedition. Battle starts over.">Continue clan camp</button>' : ''}${savedMenu}<button class="menu-button" data-action="starting-traditions">Starting tradition: ${startingTradition(run.startingTradition).title}</button><button class="menu-button" data-action="help">How to play</button><button class="menu-button" data-action="settings">Settings</button>${developer}${quit}</nav><p class="title-caption">One people to carry through.</p></section>`;
+      this.overlay.innerHTML = titleMenuContent({
+        latestSaveSlot: latestSave?.slot,
+        hasCamp: Boolean(this.platform.profile.camp),
+        developer: import.meta.env.DEV,
+        desktop: Boolean(this.platform.desktop),
+      });
     } else if (run.phase === 'paused') {
       this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">The steppe holds still until you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="restart">Start a new run</button>${savedMenu}<button class="menu-button" data-action="save-title">${snapshot.developerRun ? 'Return to title' : 'Save and return to title'}</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${developer}${quit}</nav></section>`;
     } else if (run.phase === 'building')

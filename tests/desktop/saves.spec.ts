@@ -63,7 +63,7 @@ test('native expeditions survive a real window close, relaunch paused, and keep 
     expect(JSON.parse(await readFile(manualFile, 'utf8'))).toEqual(manual);
     app = await launch();
     page = await app.firstWindow();
-    await page.getByRole('button', { name: /CONTINUE EXPEDITION/ }).click();
+    await page.getByRole('button', { name: /CONTINUE/ }).click();
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
     const frozen = await page.locator('#timer').textContent();
     await page.getByRole('button', { name: 'Saved expeditions', exact: true }).click();

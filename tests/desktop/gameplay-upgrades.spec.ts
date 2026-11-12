@@ -4,7 +4,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-test('desktop starting traditions and combat settings fit a compact window and persist through native saves', async () => {
+test('desktop default tradition and combat settings persist through native saves', async () => {
   test.setTimeout(90000);
   const directory = await mkdtemp(join(tmpdir(), 'gloam-gameplay-upgrades-'));
   const env: Record<string, string> = { ...electronEnvironment() };
@@ -24,17 +24,7 @@ test('desktop starting traditions and combat settings fit a compact window and p
     await app.evaluate(({ BrowserWindow }) =>
       BrowserWindow.getAllWindows()[0]!.setContentSize(800, 600),
     );
-    await page.getByRole('button', { name: 'Starting tradition: Shared hearth' }).click();
-    await page.locator('[data-starting-tradition="hearthkeepers"]').click();
-    await expect(page.locator('[data-starting-tradition="hearthkeepers"]')).toBeFocused();
-    await expect(page.locator('[data-starting-tradition="hearthkeepers"]')).toBeInViewport({
-      ratio: 0.8,
-    });
-    expect(
-      await page.locator('.starting-traditions').evaluate((el) => el.scrollWidth <= el.clientWidth),
-    ).toBe(true);
-    await page.screenshot({ path: 'test-results/native-starting-traditions.png' });
-    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: /Starting tradition/ })).toHaveCount(0);
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByRole('button', { name: 'Projectile contrast', exact: true }).click();
     await page.getByRole('button', { name: 'Effect density', exact: true }).click();
@@ -53,7 +43,7 @@ test('desktop starting traditions and combat settings fit a compact window and p
     const save = JSON.parse(
       await readFile(join(directory, 'saves/expedition-slot-1.json'), 'utf8'),
     );
-    expect(save.run.startingTradition).toBe('hearthkeepers');
+    expect(save.run.startingTradition).toBe('shared-hearth');
     expect(save.run.metrics.stages).toHaveLength(1);
     const profile = JSON.parse(await readFile(join(directory, 'saves/profile.json'), 'utf8'));
     expect(profile.visualSettings).toEqual({

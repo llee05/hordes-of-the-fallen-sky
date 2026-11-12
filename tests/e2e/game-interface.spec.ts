@@ -138,18 +138,20 @@ test(
     expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(
       true,
     );
-    await page.getByRole('button', { name: 'How to play', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'How to play', exact: true })).toBeVisible();
-    expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('help');
-    await closeOverlayOrPause(page);
-    await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
-    await expect(page.locator('#timer')).toHaveText('00:00');
+    await expect(page.getByRole('button', { name: 'How to play', exact: true })).toHaveCount(0);
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByRole('button', { name: 'Mute sound', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Unmute sound', exact: true })).toBeVisible();
     await closeOverlayOrPause(page);
+    await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
+    await expect(page.locator('#timer')).toHaveText('00:00');
     await startExpedition(page);
     await closeOverlayOrPause(page);
+    await page.getByRole('button', { name: 'How to play', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'How to play', exact: true })).toBeVisible();
+    expect(await page.evaluate(() => (window as any).__gloam.scene.run.phase)).toBe('help');
+    await closeOverlayOrPause(page);
+    await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await expectFrozen(
       page,
