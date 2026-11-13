@@ -235,7 +235,6 @@ export class EnemyDirector {
                   pinned: e.pinned,
                   status: { ...e.status },
                   spiritSlow: e.spiritSlow,
-                  status: { ...e.status },
                   lastGallop: e.lastGallop,
                   dangerTimer: e.dangerTimer,
                   tacticalSlot: e.tacticalSlot,

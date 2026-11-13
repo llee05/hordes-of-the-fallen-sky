@@ -27,16 +27,6 @@ import {
 import type { ProjectileArchive, WorldArchive } from '../../state/expeditionArchive';
 import { markExpedition } from '../../state/expeditionMetrics';
 import { isKhanActive } from '../../state/khan';
-import {
-  applyStatusPayload,
-  controlResistance,
-  createKhanStatus,
-  isShredded,
-  khanStatusOf,
-  statusDamageMultiplier,
-  tickKhanStatus,
-  type StatusPayload,
-} from '../../state/statusEffects';
 import { aimedDirection, insideAttackArc, insideAttackLine } from '../../state/khanControls';
 import { gainExperience } from '../../state/run';
 import {
