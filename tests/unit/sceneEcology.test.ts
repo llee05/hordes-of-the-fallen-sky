@@ -6,7 +6,7 @@ import { MEADOW_STREAM } from './fixtures/stream';
 
 describe('clustered landscape ecology', () => {
   it('keeps the same objects when a neighborhood is streamed as separate chunks', () => {
-    const terrain = new ComposedTerrain(composedRegion('belukha'), MEADOW_STREAM);
+    const terrain = new ComposedTerrain(composedRegion('bogd-khan-uul', true), MEADOW_STREAM);
     const whole = sceneDressing(terrain, { x: 1536, y: 1536, width: 1024, height: 1024 });
     const parts = [1536, 2048].flatMap((x) =>
       [1536, 2048].flatMap((y) => sceneDressing(terrain, { x, y, width: 512, height: 512 })),
@@ -17,7 +17,7 @@ describe('clustered landscape ecology', () => {
     expect(whole.length).toBeGreaterThan(15);
   });
   it('leaves camp/road, water, steep ground, and snow clear while keeping varied groups', () => {
-    const terrain = new ComposedTerrain(composedRegion('belukha'), MEADOW_STREAM);
+    const terrain = new ComposedTerrain(composedRegion('bogd-khan-uul', true), MEADOW_STREAM);
     const items = sceneDressing(terrain, { x: 1024, y: 1024, width: 3072, height: 3072 });
     const trees = items.filter((p) => ['willow', 'pine', 'larch'].includes(p.kind));
     expect(trees.length).toBeGreaterThan(6);
