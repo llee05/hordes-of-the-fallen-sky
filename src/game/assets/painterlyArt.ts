@@ -88,6 +88,7 @@ export function artTexture(name: string): [string, string?] {
 export function preloadPainterlyArt(scene: Phaser.Scene): void {
   const root = `${import.meta.env.BASE_URL}art/`;
   scene.load.image('ground', `${root}steppe-ground.png`);
+  scene.load.image('spirit-wisp', `${root}spirit-wisp.png`);
   const tiles = new Set(Object.values(LANDSCAPES).map((landscape) => landscape.groundTile));
   for (const tile of tiles) {
     if (tile) scene.load.image(`ground-${tile}`, `${root}${tile}.png`);
