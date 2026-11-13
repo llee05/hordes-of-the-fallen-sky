@@ -102,7 +102,7 @@ boundary, memory budget, and deferred gameplay features.
 
 ## Bogd Khan Uul level
 
-Bogd Khan Uul is authored as a 6,400 × 4,000-unit Tuul-side foothill battlefield with an open lower camp meadow, a northern riverbank and one raised southern woodland shoulder joined by two ramps. Connected tracks reach five named terrain sites while dense pine and golden-larch groves frame broad combat ground. Four hand-painted ground quadrants follow the same terrain, tracks and dry riverbanks; water, cliffs, vegetation, landmarks and collision remain separate runtime layers. See [the level guide](bogd-khan-uul.md) for the layout, hybrid boundary, memory cost and deferred gameplay ideas.
+Bogd Khan Uul is authored as a 6,400 × 4,000-unit Tuul-side foothill battlefield with an open lower camp meadow, a broad northern river channel and one clearly raised southern woodland shoulder joined by two ramps. Connected tracks reach five named terrain sites while dense pine and golden-larch groves frame broad combat ground. Four hand-painted ground quadrants follow the same terrain, tracks and dry riverbanks; water, cliffs, vegetation, landmarks and collision remain separate runtime layers. See [the level guide](bogd-khan-uul.md) for the layout, hybrid boundary, memory cost and deferred gameplay ideas.
 
 ## Rivers and shores
 

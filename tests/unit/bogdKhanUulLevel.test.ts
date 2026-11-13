@@ -45,7 +45,7 @@ describe('Bogd Khan Uul authored layout', () => {
     expect(BOGD_KHAN_UUL.world).toMatchObject({
       width: 6400,
       height: 4000,
-      terrainSize: 6400,
+      terrainSize: 8000,
       minX: -3200,
       minY: -2000,
       camp: { x: -2050, y: -500 },
@@ -56,7 +56,7 @@ describe('Bogd Khan Uul authored layout', () => {
   });
 
   it('has two elevation tiers joined by two broad ramps', () => {
-    expect(BOGD_KHAN_UUL.rise).toBe(240);
+    expect(BOGD_KHAN_UUL.rise).toBe(320);
     expect(BOGD_KHAN_UUL.plateaus).toHaveLength(1);
     expect(shoulder.ramps).toHaveLength(2);
     for (const ramp of shoulder.ramps) {
@@ -85,7 +85,7 @@ describe('Bogd Khan Uul authored layout', () => {
 
   it('frames the north with an authored west-east Tuul course and existing scenery only', () => {
     expect(BOGD_KHAN_UUL.river.kind).toBe('stream');
-    expect(BOGD_KHAN_UUL.river.width).toBeGreaterThanOrEqual(140);
+    expect(BOGD_KHAN_UUL.river.width).toBeGreaterThanOrEqual(220);
     expect(BOGD_KHAN_UUL.river.course[0]).toBeLessThan(BOGD_KHAN_UUL.world.minX);
     expect(BOGD_KHAN_UUL.river.course.at(-2)).toBeGreaterThan(
       BOGD_KHAN_UUL.world.minX + BOGD_KHAN_UUL.world.width,
@@ -98,13 +98,23 @@ describe('Bogd Khan Uul authored layout', () => {
 
 describe('Bogd Khan Uul runtime terrain', () => {
   it('registers play bounds, camp, paths, shoulder, obstacles and Tuul water', () => {
-    expect(terrain.worldSize).toBe(6400);
-    expect(terrain.playBounds).toEqual({ x: 0, y: 1200, width: 6400, height: 4000 });
+    expect(terrain.worldSize).toBe(8000);
+    expect(terrain.playBounds).toEqual({ x: 800, y: 2000, width: 6400, height: 4000 });
+    expect(terrain.playBounds.x).toBeGreaterThanOrEqual(800);
+    expect(
+      terrain.worldSize - terrain.playBounds.x - terrain.playBounds.width,
+    ).toBeGreaterThanOrEqual(800);
+    expect(terrain.playBounds.y).toBeGreaterThanOrEqual(1600);
+    expect(
+      terrain.worldSize - terrain.playBounds.y - terrain.playBounds.height,
+    ).toBeGreaterThanOrEqual(1600);
     expect(terrain.campPosition).toEqual(world(BOGD_KHAN_UUL_SITES.camp));
     expect(WORLD_REGIONS['bogd-khan-uul'].ground?.paths).toEqual(BOGD_KHAN_UUL.paths);
     expect(WORLD_REGIONS['bogd-khan-uul'].obstacles).toHaveLength(BOGD_KHAN_UUL_FOOTPRINTS.length);
     expect(terrain.river).toBeDefined();
-    expect(terrain.river!.sample(3200, 1660).shoreDistance).toBeLessThan(40);
+    expect(
+      terrain.river!.sample(world({ x: 0, y: -1540 }).x, world({ x: 0, y: -1540 }).y).shoreDistance,
+    ).toBeLessThan(40);
   });
 
   it('keeps camp flat, raises the southern shoulder and grades both ramps', () => {
@@ -140,7 +150,7 @@ describe('Bogd Khan Uul painted ground', () => {
     expect(bogdKhanUulPaintedGroundEnabled('', true)).toBe(true);
     expect(bogdKhanUulPaintedGroundEnabled('?bogdKhanUulPaintedGround=0', true)).toBe(false);
     expect(bogdKhanUulPaintedGroundEnabled('?bogdKhanUulPaintedGround=0', false)).toBe(true);
-    expect(bogdKhanUulPaintedGroundWorldBounds(6400)).toEqual([0, 1200, 6400, 4000]);
+    expect(bogdKhanUulPaintedGroundWorldBounds(8000)).toEqual([800, 2000, 6400, 4000]);
     for (const quadrant of PAINTED_GROUND_QUADRANTS) {
       const painting = BOGD_KHAN_UUL_PAINTED_GROUND.quadrants[quadrant];
       const png = readFileSync(resolve(`public/art/bogd-khan-uul/${painting.file}`));

@@ -5,14 +5,14 @@ import type { CameraOptions } from '../../src/game/dev/gameControls';
 
 // Repeatable Bogd Khan Uul diagnosis captures, never compared with baselines. Run only with
 // explicit browser-capture approval. Views use the normal 48-degree camera and full resolution.
-const at = (x: number, y: number) => ({ x: 3200 + x, y: 3200 + y });
+const at = (x: number, y: number) => ({ x: 4000 + x, y: 4000 + y });
 
 const SHOTS: readonly { name: string; camera: CameraOptions }[] = [
   { name: '01-camp-and-main-trail', camera: { ...at(-2050, 50), zoom: 1 } },
-  { name: '02-west-ramp-and-shoulder', camera: { ...at(-1275, 1100), zoom: 1 } },
-  { name: '03-tuul-bank-and-landing-road', camera: { ...at(-800, -450), zoom: 1 } },
+  { name: '02-west-ramp-and-shoulder', camera: { ...at(-1275, 760), zoom: 1 } },
+  { name: '03-tuul-bank-and-landing-road', camera: { ...at(-2100, -1320), zoom: 1 } },
   { name: '04-larch-glade', camera: { ...at(780, 100), zoom: 1 } },
-  { name: '05-east-ramp-and-pine-hollow', camera: { ...at(1550, 1150), zoom: 1 } },
+  { name: '05-east-ramp-and-pine-hollow', camera: { ...at(1550, 760), zoom: 1 } },
 ];
 
 interface World3D {

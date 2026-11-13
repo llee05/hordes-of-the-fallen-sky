@@ -61,13 +61,16 @@ export const BOGD_KHAN_UUL = {
   world: {
     width: 6400,
     height: 4000,
-    terrainSize: 6400,
+    // The playable painting remains 6,400 × 4,000. A streamed ground apron keeps the tilted
+    // camera over terrain even at the outer play-bound clamps and minimum zoom.
+    terrainSize: 8000,
     minX: -3200,
     minY: -2000,
     camp: BOGD_KHAN_UUL_SITES.camp,
     campClearRadius: 520,
   },
-  rise: ART_SPEC.orkhon.plateauRise,
+  // A taller wooded shoulder stays legible beneath the dense tree line and at combat zoom.
+  rise: ART_SPEC.orkhon.plateauRise + 80,
   plateaus: [
     {
       id: 'southern-woodland-shoulder',
@@ -109,7 +112,7 @@ export const BOGD_KHAN_UUL = {
       BOGD_KHAN_UUL_SITES.pineHollow,
       EAST_RAMP.top,
       EAST_RAMP.foot,
-      p(1200, 100),
+      p(1470, 100),
       BOGD_KHAN_UUL_SITES.larchGlade,
     ],
     [p(650, 1130), p(0, 1300), BOGD_KHAN_UUL_SITES.tsetseeShoulder],
@@ -117,8 +120,8 @@ export const BOGD_KHAN_UUL = {
   pathWidth: 72,
   river: {
     kind: 'stream' as const,
-    width: 150,
-    color: 0x55777a,
+    width: 240,
+    color: 0x426f78,
     bank: 0x918165,
     course: [
       -3500, -1470, -2600, -1580, -1700, -1450, -700, -1600, 300, -1500, 1300, -1620, 2300, -1480,

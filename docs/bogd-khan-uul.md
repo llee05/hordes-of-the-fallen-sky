@@ -4,13 +4,13 @@ Bogd Khan Uul is a 6,400 × 4,000-unit authored battlefield inspired by the prot
 
 ## Layout and traversal
 
-The camp sits on open lower ground at `(-2050, -500)`, away from both painting seams, with a 520-unit spawn-safe clearing. The Tuul follows the northern edge. One 240-unit woodland shoulder fills the south and is reached by broad west and east ramps. Connected tracks link the camp, Tuul landing, larch glade, Tuul bend, Tsetsee shoulder and Pine Hollow; no track ends anonymously in open ground.
+The camp sits on open lower ground at `(-2050, -500)`, away from both painting seams, with a 520-unit spawn-safe clearing. The broad Tuul channel follows the northern edge, with landing and bend tracks reaching its south bank. One 320-unit woodland shoulder fills the south and is reached by broad west and east ramps. Connected tracks link the camp, Tuul landing, larch glade, Tuul bend, Tsetsee shoulder and Pine Hollow; no track ends anonymously in open ground.
 
 The lower meadow and upper shoulder leave broad clear lanes for horde combat. Pine and golden-larch groves concentrate at the outer boundaries, beside the river and along the high shoulder. Dressing clearance keeps trees, scrub and rocks away from camp, tracks, ramp grades, water and solid landmark footprints.
 
 ## Hybrid rendering boundary
 
-Four 1,600 × 1,000 opaque ground paintings cover the approved 6,400 × 4,000 play rectangle. They contain only meadow, woodland soil, roots, needles, gravel, dry Tuul banks and worn tracks. The shared 1,024² grayscale detail tile restores close brush grain. Runtime geometry still owns elevation, cliff faces, ramp grades, water, collision, vegetation, landmarks, actors and shadows.
+Four 1,600 × 1,000 opaque ground paintings cover the approved 6,400 × 4,000 play rectangle. They contain only meadow, woodland soil, roots, needles, gravel, dry Tuul banks and worn tracks. An 8,000-unit streamed terrain square leaves an unpainted ground apron outside the play bounds so the tilted camera never exposes a map-edge gap. The shared 1,024² grayscale detail tile restores close brush grain. Runtime geometry still owns elevation, cliff faces, ramp grades, water, collision, vegetation, landmarks, actors and shadows.
 
 Development builds can append `?bogdKhanUulPaintedGround=0` to inspect the tiled material fallback, or `?bogdKhanUulLevel=generated` to load the former generic region. Shipping builds always use the authored level and paintings.
 
