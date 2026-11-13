@@ -20,6 +20,10 @@ import { OrkhonOverlay } from './orkhonOverlay';
 import { initialRenderScale, stepRenderScale, type RenderResolution } from './renderScale';
 import { orkhonPaintedGroundEnabled } from './orkhonPaintedGround';
 import { ALTAN_OVOO_PAINTED_GROUND, altanOvooPaintedGroundEnabled } from './altanOvooPaintedGround';
+import {
+  OTGONTENGER_PAINTED_GROUND,
+  otgontengerPaintedGroundEnabled,
+} from './otgontengerPaintedGround';
 import { ORKHON_PAINTED_GROUND } from './orkhonPaintedGround';
 import type { PaintedGroundDefinition } from './paintedGround';
 import { StaticDressing3D } from './StaticDressing3D';
@@ -117,7 +121,9 @@ export class World3DRenderer {
     const authored =
       terrain instanceof ComposedTerrain &&
       terrain.region.scene.ground !== undefined &&
-      (terrain.region.scene.id === 'orkhon-valley' || terrain.region.scene.id === 'altan-ovoo')
+      (terrain.region.scene.id === 'orkhon-valley' ||
+        terrain.region.scene.id === 'altan-ovoo' ||
+        terrain.region.scene.id === 'otgontenger')
         ? terrain
         : undefined;
     let paintedGround: PaintedGroundDefinition | undefined;
@@ -134,6 +140,13 @@ export class World3DRenderer {
         import.meta.env.DEV,
       )
         ? ALTAN_OVOO_PAINTED_GROUND
+        : undefined;
+    if (authored?.region.scene.id === 'otgontenger')
+      paintedGround = otgontengerPaintedGroundEnabled(
+        globalThis.location?.search ?? '',
+        import.meta.env.DEV,
+      )
+        ? OTGONTENGER_PAINTED_GROUND
         : undefined;
     this.materials = new MountainMaterials(
       scene,
@@ -164,7 +177,10 @@ export class World3DRenderer {
       this.overlay = new OrkhonOverlay(scene, terrain);
       this.world.add(this.overlay.group);
     }
-    if (terrain instanceof ComposedTerrain && terrain.region.scene.id === 'altan-ovoo') {
+    if (
+      terrain instanceof ComposedTerrain &&
+      (terrain.region.scene.id === 'altan-ovoo' || terrain.region.scene.id === 'otgontenger')
+    ) {
       this.staticDressing = new StaticDressing3D(
         scene,
         terrain,
@@ -506,7 +522,8 @@ export class World3DRenderer {
     if (
       !backdrop &&
       this.terrain instanceof ComposedTerrain &&
-      this.terrain.region.scene.id !== 'altan-ovoo'
+      this.terrain.region.scene.id !== 'altan-ovoo' &&
+      this.terrain.region.scene.id !== 'otgontenger'
     )
       for (const prop of sceneDressing(this.terrain, bounds)) {
         const image = this.scene.add

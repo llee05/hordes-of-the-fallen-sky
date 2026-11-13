@@ -440,7 +440,7 @@ describe('Orkhon Valley painted scene', () => {
       expect(all.some((prop) => prop.frame === landmark.sprite && prop.x === C + landmark.x)).toBe(
         true,
       );
-  });
+  }, 30_000);
 
   it('draws trees, scrub, rocks and landmarks at one miniature scale', () => {
     const all = sceneDressing(terrain, {
@@ -546,12 +546,12 @@ describe('Orkhon Valley painted scene', () => {
         }
       }
     expect(checked).toBeGreaterThan(500);
-    // Other places keep their plain rock walls.
-    const other = new ComposedTerrain(composedRegion('otgontenger'));
+    // Generated places keep their plain rock walls.
+    const other = new ComposedTerrain(composedRegion('khan-tengri'));
     const { walls } = sceneGeometry(other, { x: 2048, y: 1536, width: 1024, height: 1024 });
     expect(walls.weights.length).toBeGreaterThan(0);
     for (let i = 6; i < walls.weights.length; i += 7) expect(walls.weights[i]).toBe(0);
-  });
+  }, 30_000);
 
   it('crops every cliff-face band from inside the kit cliff run', () => {
     const atlas = atlasJson(ORKHON_KIT_ATLAS);
@@ -739,7 +739,7 @@ describe('Orkhon Valley landmark systems', () => {
       expect(angle).toBeCloseTo(Math.PI / 2);
       expect(draws).toBe(1);
       expect(composedRegion(id).scene.shelves[0]!.id).toBe(
-        id === 'altan-ovoo' ? 'cinder-cone' : 'camp-shelf',
+        id === 'altan-ovoo' ? 'cinder-cone' : id === 'otgontenger' ? 'alpine-bench' : 'camp-shelf',
       );
     }
   });

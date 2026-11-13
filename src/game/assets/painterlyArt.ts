@@ -19,6 +19,10 @@ import {
   ALTAN_OVOO_GRASS_FALLBACK,
   altanOvooPaintedGroundEnabled,
 } from '../world3d/altanOvooPaintedGround';
+import {
+  OTGONTENGER_PAINTED_GROUND,
+  otgontengerPaintedGroundEnabled,
+} from '../world3d/otgontengerPaintedGround';
 import { PAINTED_GROUND_QUADRANTS, type PaintedGroundDefinition } from '../world3d/paintedGround';
 
 export { playerVisualConfig };
@@ -107,6 +111,10 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
   paintedGround(
     ALTAN_OVOO_PAINTED_GROUND,
     altanOvooPaintedGroundEnabled(search, import.meta.env.DEV),
+  );
+  paintedGround(
+    OTGONTENGER_PAINTED_GROUND,
+    otgontengerPaintedGroundEnabled(search, import.meta.env.DEV),
   );
   scene.load.image(
     ALTAN_OVOO_GRASS_FALLBACK.texture,

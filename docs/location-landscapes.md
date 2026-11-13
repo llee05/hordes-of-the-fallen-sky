@@ -7,7 +7,7 @@ models. Existing cultural context remains in `data/clan.ts` and
 
 | Location         | Landscape and scenery                                                 |
 | ---------------- | --------------------------------------------------------------------- |
-| Otgontenger      | Seeded ranges and plateaus, winding grass passes, rocky slopes, snow  |
+| Otgontenger      | Authored alpine bench, snow overlook, glacial tarn and larch valley   |
 | Bogd Khan Uul    | Sheltered green foothills with golden larch and deep sage pine groves |
 | Altai Tavan Bogd | Five snowy crests, turquoise glacier seams, silver-green gravel       |
 | Khan Tengri      | Single sharp white pyramid, lavender scree, angular blue-grey crags   |
@@ -66,6 +66,15 @@ Altan Ovoo is authored as a 6,400 × 4,000-unit volcanic-steppe battlefield with
 The level keeps open combat lanes between dense basalt outcrops and autumn clusters.
 Four hand-painted ground quadrants follow that terrain while the spring, cliffs, scenery, landmarks, actors, and collision remain separate.
 See [the level guide](altan-ovoo.md) for its layout, hybrid-rendering boundary, existing-art mappings, performance, and deferred gameplay features.
+
+## Mount Otgontenger level
+
+Mount Otgontenger is authored as a 6,400 × 4,000-unit alpine battlefield with one raised snow
+bench, two broad ramps, a south-west starting camp, connected valley tracks, and an eastern glacial
+tarn and outflow. Four hand-painted ground quadrants follow the geometry while cliffs, water,
+larch, moraines, landmarks, actors, and collision remain separate. See
+[the level guide](otgontenger.md) for the layout, painted-ground boundary, performance, fallbacks,
+and deferred gameplay ideas.
 
 ## Rivers and shores
 

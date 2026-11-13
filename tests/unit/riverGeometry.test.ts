@@ -32,8 +32,10 @@ describe('river shorelines', () => {
       expect(channels).toHaveLength(water.kind === 'braided' ? 2 : 1);
       for (const channel of channels) {
         expect(channel.sections.length).toBeLessThan(350);
-        // The Orkhon gorge and Altan spring start at authored sites rather than world edges.
-        const minimum = water.gorge ? 4000 : definition === LANDSCAPES['altan-ovoo'] ? 750 : 5000;
+        // Authored pools and outflows start at named sites rather than opposite world edges.
+        const shortAuthoredCourse =
+          definition === LANDSCAPES['altan-ovoo'] || definition === LANDSCAPES.otgontenger;
+        const minimum = water.gorge ? 4000 : shortAuthoredCourse ? 750 : 5000;
         expect(channel.length).toBeGreaterThan(minimum);
         let previous = -1;
         for (const section of channel.sections) {

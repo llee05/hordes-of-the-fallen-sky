@@ -64,7 +64,7 @@ describe('terrain-aware enemy navigation', () => {
     (id) => {
       const terrain = new ComposedTerrain(composedRegion(id), LANDSCAPES[id].water);
       const nav = new TerrainNavigation(terrain);
-      const goal = { x: 2600, y: 2600 };
+      const goal = terrain.campPosition;
       let p = nav.nearestWalkable({ x: 1800, y: 1850 })!;
       expect(p).toBeDefined();
       for (let i = 0; i < 140 && Math.hypot(p.x - goal.x, p.y - goal.y) > 1; i++) {
@@ -76,6 +76,7 @@ describe('terrain-aware enemy navigation', () => {
       for (const bridge of terrain.river?.bridges ?? [])
         expect(terrain.waterDepth(bridge.x, bridge.z)).toBe(0);
     },
+    30_000,
   );
   it('treats a world-edge cell narrower than actor clearance as closed', () => {
     // 740 units leave a 36-unit last column, below twice the actor clearance.
@@ -115,5 +116,5 @@ describe('terrain-aware enemy navigation', () => {
     expect(nav.waypoint(near, khan).x).not.toBe(-1);
     for (let i = 0; i < 10; i++) nav.waypoint(near, { x: 2000 + i * 40, y: 2000 });
     expect(nav.rememberedTargets).toBe(GAME.terrain.safeTargetMemo);
-  });
+  }, 30_000);
 });

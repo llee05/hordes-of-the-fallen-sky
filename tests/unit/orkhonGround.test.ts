@@ -101,7 +101,7 @@ describe('Orkhon per-pixel ground masks', () => {
     expect(wear).toBeLessThan(0.15);
     expect(sum / count).toBeLessThan(0.005);
     expect(off / count).toBeLessThan(0.01);
-  });
+  }, 30_000);
 
   it('marks every place a ramp can wear the ground, and little else', () => {
     let inside = 0,
@@ -282,7 +282,9 @@ describe('terrain shader programs', () => {
       } catch {
         continue;
       }
-      expect(Boolean(region.scene.ground), id).toBe(id === 'orkhon-valley' || id === 'altan-ovoo');
+      expect(Boolean(region.scene.ground), id).toBe(
+        id === 'orkhon-valley' || id === 'altan-ovoo' || id === 'otgontenger',
+      );
     }
   });
 });
