@@ -10,7 +10,7 @@ models. Existing cultural context remains in `data/clan.ts` and
 | Otgontenger      | Authored alpine bench, snow overlook, glacial tarn and larch valley   |
 | Bogd Khan Uul    | Sheltered green foothills with golden larch and deep sage pine groves |
 | Altai Tavan Bogd | Five snowy crests, turquoise glacier seams, silver-green gravel       |
-| Khan Tengri      | Single sharp white pyramid, lavender scree, angular blue-grey crags   |
+| Khan Tengri      | Authored glacier margin, lavender scree, blue ice and northern ridge  |
 | Belukha          | Authored twin-height glacial valley, milky lake, meadow and conifers  |
 | Altan Ovoo       | Authored two-tier cinder cone, amber grass, charcoal basalt; no lava  |
 | Eej Khairkhan    | Authored granite terrace, rock pools, pale sand, sparse dry grasses   |
@@ -89,6 +89,16 @@ Mount Belukha is authored as a 6,400 × 4,000-unit glacial-valley battlefield be
 Western moraine and eastern larch terraces form the raised tier, three ramps connect them to the broad lower meadow, and connected trails link the south-west camp to the lake shore, bridge, conifer hollow, overlook and outwash.
 Four hand-painted quadrants follow that terrain while the milky lake and outflow, bridge, cliffs, conifers, glacier pieces, summit silhouette, actors and collision remain separate.
 See [the level guide](belukha.md) for the layout, camera-edge coverage, hybrid-rendering boundary, memory figures and deferred gameplay features.
+
+## Khan Tengri level
+
+Khan Tengri is authored as a 6,400 × 4,000-unit glacier-margin battlefield with a safe south-west
+camp, one raised lateral-moraine terrace, two broad ramps, a connected moraine trail loop, and an
+eastern meltwater channel. Four hand-painted quadrants carry snow, blue ice, lavender scree,
+exposed alpine rock, the glacier tongue and its calm water surface across both elevation tiers.
+An off-playfield terrain ridge frames the northern peaks while cliffs, crags, collision and sparse
+rock dressing remain separate. See [the level guide](khan-tengri.md) for the layout, rendering
+boundary, memory budget, and deferred gameplay features.
 
 ## Rivers and shores
 

@@ -23,6 +23,7 @@
     "test:reference": "node scripts/local-tests.mjs reference",
     "visual:orkhon": "node scripts/local-tests.mjs orkhon",
     "visual:altan": "node scripts/local-tests.mjs altan-ovoo",
+    "visual:khan-tengri": "node scripts/local-tests.mjs khan-tengri",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run format:check && npm run typecheck && npm test && npm run build",

@@ -28,6 +28,10 @@ import {
   EEJ_KHAIRKHAN_PAINTED_GROUND,
   eejKhairkhanPaintedGroundEnabled,
 } from '../world3d/eejKhairkhanPaintedGround';
+import {
+  KHAN_TENGRI_PAINTED_GROUND,
+  khanTengriPaintedGroundEnabled,
+} from '../world3d/khanTengriPaintedGround';
 import { PAINTED_GROUND_QUADRANTS, type PaintedGroundDefinition } from '../world3d/paintedGround';
 import {
   BELUKHA_PAINTED_GROUND,
@@ -130,6 +134,10 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
     eejKhairkhanPaintedGroundEnabled(search, import.meta.env.DEV),
   );
   paintedGround(BELUKHA_PAINTED_GROUND, belukhaPaintedGroundEnabled(search, import.meta.env.DEV));
+  paintedGround(
+    KHAN_TENGRI_PAINTED_GROUND,
+    khanTengriPaintedGroundEnabled(search, import.meta.env.DEV),
+  );
   scene.load.image(
     ALTAN_OVOO_GRASS_FALLBACK.texture,
     `${root}${ALTAN_OVOO_PAINTED_GROUND.directory}${ALTAN_OVOO_GRASS_FALLBACK.file}`,
