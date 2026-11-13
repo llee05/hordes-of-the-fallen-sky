@@ -87,13 +87,21 @@ function buildDressing(seed: string | number): SceneDressing[] {
     shadow = false,
     site?: SceneDressing['site'],
   ) => {
+    const tint =
+      texture === 'tapestry-scenery'
+        ? frame === 'scrub'
+          ? 0xc1aa7b
+          : 0xd99d82
+        : frame === 'reeds'
+          ? 0xb6a873
+          : 0xd5b681;
     result.push({
       x: center + x,
       z: center + y,
       kind,
       width,
       flip,
-      tint: 0xffffff,
+      tint,
       heightScale: 1,
       texture,
       frame,

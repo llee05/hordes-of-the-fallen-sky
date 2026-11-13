@@ -179,7 +179,7 @@ export class MountainMaterials {
       material.customProgramCacheKey = () =>
         authored
           ? paintedGroundTextures
-            ? `authored-terrain-painted-v2-${paintedGround?.query}-${wall}`
+            ? `authored-terrain-painted-v3-${paintedGround?.query}-${wall}`
             : `authored-terrain-v5-${wall}`
           : `living-steppe-materials-v7-${wall}`;
       return material;
@@ -218,6 +218,12 @@ export class MountainMaterials {
       meadowAlt: { value: meadowAlt },
       tileSize: { value: ORKHON_TILE_WORLD_SIZE },
       ...cliffs,
+      cliffTint: {
+        value:
+          ground.id === 'eej-khairkhan'
+            ? new THREE.Vector3(1.3, 0.88, 0.72)
+            : new THREE.Vector3(1, 1, 1),
+      },
       groundMask: { value: mask },
       worldSize: { value: terrain.worldSize },
       floorHeight: { value: ground.floor },
