@@ -6,6 +6,7 @@ import { OTGONTENGER, OTGONTENGER_FOOTPRINTS } from './otgontenger';
 import { EEJ_KHAIRKHAN, EEJ_KHAIRKHAN_FOOTPRINTS } from './eejKhairkhan';
 import { BELUKHA } from './belukha';
 import { KHAN_TENGRI, KHAN_TENGRI_FOOTPRINTS } from './khanTengri';
+import { BOGD_KHAN_UUL, BOGD_KHAN_UUL_FOOTPRINTS } from './bogdKhanUul';
 import { ORKHON_FOOTPRINTS, ORKHON_VALLEY, type OrkhonPlateau } from './orkhonValley';
 
 export interface SceneShelf {
@@ -202,6 +203,21 @@ export const KHAN_TENGRI_GENERATED_REGION: RegionComposition = {
   ],
 };
 
+/** The former generated Bogd Khan Uul composition, retained as a development fallback. */
+export const BOGD_KHAN_UUL_GENERATED_REGION: RegionComposition = {
+  id: 'bogd-khan-uul',
+  floor: 65,
+  snowLine: 10000,
+  vegetation: 'woodland',
+  palette: { ...meadow, grass: 0x8b9e66, rock: 0x8f9383 },
+  shelves: [
+    shelf('forest-shelf', -180, -790, 1200, 440, 180, -9),
+    shelf('larch-highland', -500, -1190, 690, 430, 170, 12),
+    shelf('woodland-shoulder', 910, 620, 480, 390, 155, -17),
+    shelf('distant-ridge', 0, -2120, 2450, 650, 310, 0, 120),
+  ],
+};
+
 /** One authored level-1 plateau, sharing the ramp mechanics of the composed shelves. */
 function plateau(
   source: Pick<OrkhonPlateau, 'id' | 'outline' | 'ramps'>,
@@ -267,12 +283,28 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
     snowLine: 10000,
     vegetation: 'woodland',
     palette: { ...meadow, grass: 0x8b9e66, rock: 0x8f9383 },
-    shelves: [
-      shelf('forest-shelf', -180, -790, 1200, 440, 180, -9),
-      shelf('larch-highland', -500, -1190, 690, 430, 170, 12),
-      shelf('woodland-shoulder', 910, 620, 480, 390, 155, -17),
-      shelf('distant-ridge', 0, -2120, 2450, 650, 310, 0, 120),
-    ],
+    campShelf: false,
+    relief: 0.35,
+    terrainSize: BOGD_KHAN_UUL.world.terrainSize,
+    playBounds: {
+      x: BOGD_KHAN_UUL.world.minX,
+      y: BOGD_KHAN_UUL.world.minY,
+      width: BOGD_KHAN_UUL.world.width,
+      height: BOGD_KHAN_UUL.world.height,
+    },
+    camp: BOGD_KHAN_UUL.world.camp,
+    campClearRadius: BOGD_KHAN_UUL.world.campClearRadius,
+    ground: {
+      paths: BOGD_KHAN_UUL.paths,
+      width: BOGD_KHAN_UUL.pathWidth,
+      ramps: BOGD_KHAN_UUL.plateaus.flatMap((source) => source.ramps),
+    },
+    obstacles: BOGD_KHAN_UUL_FOOTPRINTS.map(({ x, y, footprint }) => ({
+      x,
+      y,
+      radius: footprint,
+    })),
+    shelves: BOGD_KHAN_UUL.plateaus.map((source) => plateau(source, BOGD_KHAN_UUL.rise)),
   },
   'altai-tavan-bogd': {
     id: 'altai-tavan-bogd',
@@ -450,7 +482,9 @@ export function composedRegion(id: LocationId, generatedFallback = false): Compo
             ? BELUKHA_GENERATED_REGION
             : id === 'khan-tengri'
               ? KHAN_TENGRI_GENERATED_REGION
-              : undefined;
+              : id === 'bogd-khan-uul'
+                ? BOGD_KHAN_UUL_GENERATED_REGION
+                : undefined;
   const composition = generatedFallback && fallback ? fallback : WORLD_REGIONS[id];
   return {
     seed: `living-steppe-scenes-v3:${id}`,

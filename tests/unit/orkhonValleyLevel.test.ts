@@ -749,7 +749,9 @@ describe('Orkhon Valley landmark systems', () => {
                 ? 'twin-summit-headwall'
                 : id === 'khan-tengri'
                   ? 'lateral-moraine-terrace'
-                  : 'camp-shelf',
+                  : id === 'bogd-khan-uul'
+                    ? 'southern-woodland-shoulder'
+                    : 'camp-shelf',
       );
     }
   });

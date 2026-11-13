@@ -55,8 +55,7 @@ describe('location scenery content', () => {
     expect(compositions.size).toBe(LOCATIONS.length);
   });
 
-  it('keeps the dry camp dry and distinguishes the mountain silhouettes', () => {
-    expect(LANDSCAPES['bogd-khan-uul'].water).toBeUndefined();
+  it('distinguishes the mountain silhouettes and authored waters', () => {
     expect(LANDSCAPES['eej-khairkhan'].water?.sourcePool).toMatchObject({ radius: 150 });
     expect(LANDSCAPES['altai-tavan-bogd'].landmarks.filter((item) => item.y < 0)).toHaveLength(5);
     expect(LANDSCAPES.otgontenger.landmarks[0]?.prop).toBe('snow-dome');
@@ -65,6 +64,7 @@ describe('location scenery content', () => {
     expect(LANDSCAPES['khan-tengri'].water?.gorge?.bridges).toEqual([]);
     expect(LANDSCAPES.belukha.landmarks[0]?.prop).toBe('twin-summit');
     expect(LANDSCAPES['altan-ovoo'].water?.kind).toBe('stream');
+    expect(LANDSCAPES['bogd-khan-uul'].water?.kind).toBe('stream');
     expect(LANDSCAPES['orkhon-valley'].water?.kind).toBe('stream');
     expect(LANDSCAPES['orkhon-valley'].water?.gorge?.bridges.length).toBeGreaterThan(0);
   });
