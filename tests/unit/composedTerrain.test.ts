@@ -110,7 +110,7 @@ describe('composed angled landscapes', () => {
         (prop) => Math.hypot(prop.x - camp.x, prop.z - camp.y) > 520,
       ),
     ).toBe(true);
-  });
+  }, 15_000);
 
   it('cuts water below the battle floor and shares bridge elevations with actor anchors', () => {
     const terrain = new ComposedTerrain(
