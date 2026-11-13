@@ -9,7 +9,7 @@ import {
 import type { WorldGeometry } from '../../src/game/world3d/mountainGeometry';
 const empty = (): WorldGeometry => ({ positions: [], normals: [], weights: [], occlusion: [] });
 it('registers weathered faces at unchanged feet/tops and shares relief across chunk edges', () => {
-  const terrain = new ComposedTerrain(composedRegion('eej-khairkhan'));
+  const terrain = new ComposedTerrain(composedRegion('otgontenger'));
   const a: CliffAnchor = { x: 2500, z: 1900, bottom: 65, top: 230 };
   const seam: CliffAnchor = { ...a, x: 2560 };
   const b: CliffAnchor = { ...a, x: 2600 };

@@ -283,7 +283,10 @@ describe('terrain shader programs', () => {
         continue;
       }
       expect(Boolean(region.scene.ground), id).toBe(
-        id === 'orkhon-valley' || id === 'altan-ovoo' || id === 'otgontenger',
+        id === 'orkhon-valley' ||
+          id === 'altan-ovoo' ||
+          id === 'otgontenger' ||
+          id === 'eej-khairkhan',
       );
     }
   });
