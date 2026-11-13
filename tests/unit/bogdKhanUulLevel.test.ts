@@ -171,10 +171,10 @@ describe('Bogd Khan Uul authored dressing', () => {
     );
     const sorted = (items: typeof all) => items.map((item) => JSON.stringify(item)).sort();
     expect(sorted(parts)).toEqual(sorted(all));
-    expect(all.length).toBeGreaterThan(400);
+    expect(all.length).toBeGreaterThan(150);
     expect(
       all.filter((prop) => prop.kind === 'pine' || prop.kind === 'larch').length,
-    ).toBeGreaterThan(240);
+    ).toBeGreaterThan(95);
   });
 
   it('uses existing untinted manuscript scenery and preserves protected clearances', () => {

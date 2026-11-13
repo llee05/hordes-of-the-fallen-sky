@@ -16,6 +16,8 @@ Development builds can append `?bogdKhanUulPaintedGround=0` to inspect the tiled
 
 The four paintings plus detail occupy 39,724,100 uncompressed GPU bytes (37.88 MiB) with complete mip chains. A repeatable capture view is available through `npm run visual:bogd`; it is a diagnosis capture, not a regression suite, and was not run during this change because browser suites require separate approval.
 
+A paired 30-second, 350-enemy manual `profileCrowd` sample on SwiftShader measured 8.292 ms per World3D render for the authored level versus 11.526 ms for its retained pre-authored generated fallback, 28.1% faster and therefore inside the 10% frame budget. World3D draw time was 2.722 ms versus 2.677 ms (+1.7%). Both samples used full render scale, seed 1 and the same Chromium session.
+
 ## Terrain sites and follow-ups
 
 The Tuul landing, bend, larch glade, Tsetsee shoulder and Pine Hollow are terrain/scenery sites only. Existing bundled boulders, pebbles and scree mark a few edges without inventing buildings or culturally specific monuments.

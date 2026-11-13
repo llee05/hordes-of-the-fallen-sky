@@ -177,7 +177,10 @@ function buildDressing(seed: string | number): SceneDressing[] {
     );
 
   for (const [groveIndex, grove] of GROVES.entries()) {
-    const target = Math.ceil(grove.count * 1.3);
+    // Each authored cluster is visible as a grove, but the static batch covers the whole map at
+    // once. A compact sample keeps the forest silhouette without paying alpha overdraw for dense
+    // off-camera interiors.
+    const target = Math.ceil(grove.count * 0.28);
     let placed = 0;
     for (let candidate = 0; candidate < target * 12 && placed < target; candidate++) {
       const r = random(`grove:${groveIndex}:${candidate}`);
@@ -201,7 +204,7 @@ function buildDressing(seed: string | number): SceneDressing[] {
       );
       placed++;
 
-      if (r(6) > 0.38) {
+      if (r(6) > 0.7) {
         const nearby = {
           x: point.x + (r(7) - 0.5) * 130,
           y: point.y + (r(8) - 0.5) * 100,
@@ -220,8 +223,8 @@ function buildDressing(seed: string | number): SceneDressing[] {
   }
 
   // Low rock and shrub scatter gives the broad horde floor detail without closing it in.
-  for (let row = 0; row < 9; row++)
-    for (let column = 0; column < 14; column++) {
+  for (let row = 0; row < 8; row++)
+    for (let column = 0; column < 12; column++) {
       const r = random(`scatter:${column}:${row}`);
       const point = {
         x: -3000 + column * 455 + (r(1) - 0.5) * 280,

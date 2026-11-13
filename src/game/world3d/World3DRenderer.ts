@@ -233,8 +233,7 @@ export class World3DRenderer {
         terrain.region.scene.id === 'otgontenger' ||
         terrain.region.scene.id === 'eej-khairkhan' ||
         terrain.region.scene.id === 'belukha' ||
-        terrain.region.scene.id === 'khan-tengri' ||
-        terrain.region.scene.id === 'bogd-khan-uul')
+        terrain.region.scene.id === 'khan-tengri')
     ) {
       this.staticDressing = new StaticDressing3D(
         scene,
@@ -600,8 +599,7 @@ export class World3DRenderer {
       this.terrain.region.scene.id !== 'altan-ovoo' &&
       this.terrain.region.scene.id !== 'otgontenger' &&
       this.terrain.region.scene.id !== 'eej-khairkhan' &&
-      this.terrain.region.scene.id !== 'belukha' &&
-      this.terrain.region.scene.id !== 'bogd-khan-uul'
+      this.terrain.region.scene.id !== 'belukha'
     )
       for (const prop of sceneDressing(this.terrain, bounds)) {
         const image = this.scene.add
