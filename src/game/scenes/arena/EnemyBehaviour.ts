@@ -136,8 +136,8 @@ export class EnemyBehaviour extends ArenaSystem {
     enemy.clanAttackTimer -= dt;
     enemy.chargeTimer -= dt;
     enemy.pinned = Math.max(0, enemy.pinned - dt);
-    enemy.spiritSlow = Math.max(0, enemy.spiritSlow - dt);
     tickEnemyStatus(enemy.status, dt);
+    enemy.spiritSlow = Math.max(0, enemy.spiritSlow - dt);
     enemy.dangerTimer -= dt;
   }
 

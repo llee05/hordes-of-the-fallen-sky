@@ -62,10 +62,35 @@ export type ClassAbilitySlot = 'q' | 'w' | 'e' | 'r';
 
 export type ClassAbilityEffect =
   | { kind: 'volley'; projectiles: number; damage: number }
-  | { kind: 'arc'; range: number; angle: number; damage: number }
+  | { kind: 'arc'; range: number; angle: number; damage: number; payload?: StatusPayload }
   | { kind: 'line'; range: number; width: number; damage: number }
   | { kind: 'pulse'; range: number; width: number; damage: number }
   | { kind: 'charge'; range: number; width: number; damage: number }
+  | {
+      kind: 'dash';
+      duration: number;
+      speed: number;
+      width: number;
+      damage: number;
+      speedDamage: number;
+      distanceDamage: number;
+    }
+  | {
+      kind: 'vault';
+      distance: number;
+      invulnerability: number;
+      landingRange: number;
+      damage: number;
+    }
+  | {
+      kind: 'unstoppable';
+      duration: number;
+      maxDuration: number;
+      extension: number;
+      speedMultiplier: number;
+      range: number;
+      damage: number;
+    }
   | { kind: 'guard'; duration: number; heal: number }
   | { kind: 'ward'; duration: number; heal: number; resolve: number }
   | {
@@ -232,6 +257,16 @@ export interface ClassHeavyAttackDefinition extends ClassBasicAttackDefinition {
         fullChargeBonus: number;
         knockback: { distance: number; seconds: number };
       };
+  /** Generic release-to-fire charge tuning; unlike drum waves it stays held at full charge. */
+  holdCharge?: {
+    maxDuration: number;
+    maxRangeMultiplier: number;
+    maxDamageMultiplier: number;
+    maxArmorPenetration: number;
+    fullPush: number;
+    fullStun: number;
+    terrainBonus: number;
+  };
 }
 
 export interface ClassProgressionNode {
@@ -525,50 +560,51 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedDamage: GAME.classes.lancer.chargedDamage,
     },
     basicAttack: {
-      name: 'Couched Thrust',
-      description: 'A short, forceful lance thrust through enemies in a narrow line.',
+      name: 'Spear Thrust',
+      description: 'A long, narrow lance thrust aimed toward the cursor.',
       ...GAME.classes.lancer.basic,
     },
     heavyAttack: {
-      name: 'Charging Thrust',
-      description: 'A braced forward thrust that punches through a longer, broader lane.',
+      name: 'Impaling Strike',
+      description:
+        'Hold and release a thrust whose reach and armour penetration grow to a terrain-pinning impact.',
       ...GAME.classes.lancer.heavy,
     },
     abilities: [
       {
-        id: 'sweeping-strike',
+        id: 'breakthrough',
         slot: 'q',
         slotLabel: '1',
-        name: 'Sweeping Strike',
-        description: 'Cleaves a wide haft-and-blade arc ahead of the mount.',
+        name: 'Breakthrough',
+        description: 'Charges through a piercing lane; speed and distance increase its damage.',
         ...GAME.classes.lancer.abilities.q,
       },
       {
-        id: 'devastating-charge',
+        id: 'sweeping-lance',
         slot: 'w',
         slotLabel: '2',
-        name: 'Devastating Charge',
-        description: 'Surges forward behind a crushing, deep-piercing thrust.',
+        name: 'Sweeping Lance',
+        description: 'Swings a broad forward semicircle that knocks enemies away.',
         ...GAME.classes.lancer.abilities.w,
       },
       {
-        id: 'line-breaker',
+        id: 'lance-vault',
         slot: 'e',
         slotLabel: '3',
-        name: 'Line Breaker',
-        description: 'Drives a braced lance through a long, broad enemy line.',
+        name: 'Lance Vault',
+        description: 'Vaults over enemies and terrain, then lands with a small shockwave.',
         ...GAME.classes.lancer.abilities.e,
       },
       {
-        id: 'shock-lance',
+        id: 'unstoppable-charge',
         slot: 'r',
         slotLabel: '4',
-        name: 'Shock Lance',
-        description: 'Gallops through a long breakthrough lane with the lance locked low.',
+        name: 'Unstoppable Charge',
+        description: 'Gains speed and knockback immunity while contact hits extend the charge.',
         ...GAME.classes.lancer.abilities.r,
       },
     ],
-    keyTraits: ['Piercing Reach', 'Devastating Charge', 'Line Breaker'],
+    keyTraits: ['Piercing Reach', 'Terrain Pins', 'Unstoppable Charge'],
     progression: [
       {
         level: 3,

@@ -35,6 +35,7 @@ export interface HudSession {
   saves: NonNullable<HudSnapshot['saves']>;
   abilities: HudSnapshot['abilities'];
   spiritCaller: HudSnapshot['spiritCaller'];
+  attackCharge: HudSnapshot['attackCharge'];
 }
 
 /** Builds the HUD snapshot from the live world. It reads state only and changes nothing. */
@@ -74,6 +75,7 @@ export class HudPresenter {
       run,
       abilities: session.abilities,
       spiritCaller: session.spiritCaller,
+      attackCharge: session.attackCharge,
       dashReady: Math.max(0, 1 - this.arena.timers.dashTimer / gallopCooldown(run)),
       dashCooldown: gallopCooldown(run),
       best: session.best,

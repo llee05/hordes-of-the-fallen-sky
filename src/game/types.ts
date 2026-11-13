@@ -204,6 +204,7 @@ export interface HudSnapshot {
     remaining: number;
   }[];
   spiritCaller?: { energy: number; maximum: number; activeSpirits: number };
+  attackCharge?: { name: string; progress: number };
   best: number;
   clanBearing: string;
   fieldBearing?: string;

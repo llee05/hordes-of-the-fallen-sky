@@ -15,6 +15,15 @@ import {
 import { Enemy, Gem, Projectile } from '../../entities/actors';
 import { campBoundary } from '../../state/campBarrier';
 import { hasDevelopment } from '../../state/clan';
+import {
+  breakthroughDamage,
+  chargeRatio,
+  chargedValue,
+  distanceToSegment,
+  extendAction,
+  safeVaultLanding,
+  type ClassActionState,
+} from '../../state/classActions';
 import type { ProjectileArchive, WorldArchive } from '../../state/expeditionArchive';
 import { markExpedition } from '../../state/expeditionMetrics';
 import { isKhanActive } from '../../state/khan';
@@ -157,6 +166,7 @@ export class CombatSystem extends ArenaSystem {
   reset(): void {
     this.attackWindup = undefined;
     this.combo = { count: 0, remaining: 0 };
+    this.timers.classAction = undefined;
     this.timers.abilityCooldowns = { q: 0, w: 0, e: 0, r: 0 };
     this.mountedArcher.reset();
     this.spiritCaller.reset();
@@ -184,10 +194,14 @@ export class CombatSystem extends ArenaSystem {
     this.mountedArcher.tick(dt);
     this.spiritCaller.tick(dt);
     this.tickComboAndStance(dt);
+    this.tickClassAction(dt);
     if (this.attackWindup) {
       const held = this.attackWindup.kind === 'light' ? lightHeld : heavyHeld;
       const cls = classDefinition(this.run.character?.classId);
-      const heavyCharge = this.attackWindup.kind === 'heavy' ? cls.heavyAttack.charge : undefined;
+      const heavyCharge =
+        this.attackWindup.kind === 'heavy'
+          ? (cls.heavyAttack.charge ?? cls.heavyAttack.holdCharge)
+          : undefined;
       if (!isKhanActive(this.run)) {
         this.attackWindup = undefined;
         return;
@@ -205,11 +219,15 @@ export class CombatSystem extends ArenaSystem {
           heavyCharge.maxDuration,
           (this.attackWindup.charge ?? 0) + dt,
         );
-        if (heavyCharge.kind === 'projectile') {
+        if (cls.heavyAttack.charge?.kind === 'projectile') {
           this.mountedArcher.showCharge(this.attackWindup.charge, cls.heavyAttack);
           return;
         }
-        if (this.attackWindup.charge >= heavyCharge.maxDuration) {
+        // Drum waves release at full charge; ordinary held attacks wait for button release.
+        if (
+          cls.heavyAttack.charge?.kind === 'waves' &&
+          this.attackWindup.charge >= heavyCharge.maxDuration
+        ) {
           const charge = this.attackWindup.charge;
           this.attackWindup = undefined;
           this.fireAttack('heavy', aim, charge, aimUsable);
@@ -234,7 +252,10 @@ export class CombatSystem extends ArenaSystem {
       this.attackWindup = {
         kind,
         remaining: kind === 'heavy' ? cls.heavyAttack.windup : (cls.basicAttack.windup ?? 0.12),
-        charge: kind === 'heavy' && cls.heavyAttack.charge ? 0 : undefined,
+        charge:
+          kind === 'heavy' && (cls.heavyAttack.charge || cls.heavyAttack.holdCharge)
+            ? 0
+            : undefined,
         aimUsable,
       };
       this.faceAim(aim, false);
@@ -271,6 +292,18 @@ export class CombatSystem extends ArenaSystem {
     return !!this.attackWindup;
   }
 
+  /** Charge information for the HUD; absent for ordinary windups and every idle attack. */
+  chargeStatus(): { name: string; progress: number } | undefined {
+    if (this.attackWindup?.kind !== 'heavy') return;
+    const heavy = classDefinition(this.run.character?.classId).heavyAttack;
+    const tuning = heavy.charge ?? heavy.holdCharge;
+    if (!tuning) return;
+    return {
+      name: heavy.name,
+      progress: chargeRatio(this.attackWindup.charge ?? 0, tuning.maxDuration),
+    };
+  }
+
   fireBasic(aim: { x: number; y: number }): boolean {
     return this.fireAttack('light', aim, 0, true);
   }
@@ -289,7 +322,7 @@ export class CombatSystem extends ArenaSystem {
       return false;
     const cls = classDefinition(this.run.character?.classId);
     const attack: ClassBasicAttackDefinition = kind === 'heavy' ? cls.heavyAttack : cls.basicAttack;
-    const range = kind === 'heavy' ? khanHeavyRange(this.run) : khanBasicRange(this.run);
+    let range = kind === 'heavy' ? khanHeavyRange(this.run) : khanBasicRange(this.run);
     const target =
       cls.id === 'mounted-archer' && kind === 'light' && !aimUsable
         ? (this.spatial.nearest(this.player.x, this.player.y, range) ?? aim)
@@ -318,7 +351,17 @@ export class CombatSystem extends ArenaSystem {
       return released;
     }
     const extraProjectiles = Math.max(0, this.run.stats.projectiles - cls.stats.projectiles);
-    const scaledDamage = attack.damage * (1 + extraProjectiles * 0.3);
+    let scaledDamage = attack.damage * (1 + extraProjectiles * 0.3);
+    let armorPenetration = 0;
+    let fullImpale = false;
+    if (kind === 'heavy' && cls.heavyAttack.holdCharge) {
+      const tuning = cls.heavyAttack.holdCharge;
+      const ratio = chargeRatio(charge, tuning.maxDuration);
+      range = chargedValue(range, tuning.maxRangeMultiplier, ratio);
+      scaledDamage = chargedValue(scaledDamage, tuning.maxDamageMultiplier, ratio);
+      armorPenetration = tuning.maxArmorPenetration * ratio;
+      fullImpale = ratio >= 0.999;
+    }
     let released = false;
     if (attack.shape === 'projectile') {
       const count = attack.projectiles + extraProjectiles;
@@ -339,7 +382,13 @@ export class CombatSystem extends ArenaSystem {
         cls.id === 'spirit-caller' && kind === 'light' ? 'wisp' : undefined,
       );
     } else if (attack.shape === 'line') {
-      released = this.strikeLine(direction, range, attack.width, scaledDamage);
+      released = this.strikeLine(direction, range, attack.width, scaledDamage, false, {
+        armorPenetration,
+        onHit:
+          fullImpale && cls.heavyAttack.holdCharge
+            ? (enemy) => this.pushImpaledEnemy(enemy, direction, cls.heavyAttack.holdCharge!)
+            : undefined,
+      });
     } else if (attack.shape === 'arc') {
       const combo = attack.combo;
       const comboScale = combo ? 1 + combo.damagePerStep * this.combo.count : 1;
@@ -431,7 +480,7 @@ export class CombatSystem extends ArenaSystem {
       );
     } else if (effect.kind === 'arc') {
       const direction = this.faceAim(aim);
-      this.strikeArc(direction, effect.range, effect.angle, effect.damage);
+      this.strikeArc(direction, effect.range, effect.angle, effect.damage, effect.payload);
     } else if (effect.kind === 'line') {
       const direction = this.faceAim(aim);
       this.strikeLine(direction, effect.range, effect.width, effect.damage, true);
@@ -443,6 +492,51 @@ export class CombatSystem extends ArenaSystem {
       this.run.combat.gallopSerial++;
       this.timers.dashRemaining = Math.max(this.timers.dashRemaining, GAME.dash.duration);
       this.timers.invulnerable = Math.max(this.timers.invulnerable, GAME.dash.duration);
+    } else if (effect.kind === 'dash') {
+      const direction = this.faceAim(aim);
+      this.beginClassAction({
+        kind: 'dash',
+        remaining: effect.duration,
+        duration: effect.duration,
+        directionX: direction.x,
+        directionY: direction.y,
+        speed: effect.speed,
+        previousX: this.player.x,
+        previousY: this.player.y,
+        distance: 0,
+        startSpeed: this.player.body
+          ? Math.hypot(this.player.body.velocity.x, this.player.body.velocity.y)
+          : 0,
+        hits: [],
+        maxDuration: effect.duration,
+        extension: 0,
+      });
+    } else if (effect.kind === 'vault') {
+      const direction = this.faceAim(aim);
+      this.vault(direction, effect);
+    } else if (effect.kind === 'unstoppable') {
+      const direction = this.faceAim(aim);
+      this.beginClassAction({
+        kind: 'unstoppable',
+        remaining: effect.duration,
+        duration: effect.duration,
+        directionX: direction.x,
+        directionY: direction.y,
+        speed: effect.speedMultiplier,
+        previousX: this.player.x,
+        previousY: this.player.y,
+        distance: 0,
+        startSpeed: this.player.body
+          ? Math.hypot(this.player.body.velocity.x, this.player.body.velocity.y)
+          : 0,
+        hits: [],
+        maxDuration: effect.maxDuration,
+        extension: effect.extension,
+      });
+      khanStatusOf(this.timers).unstoppable = Math.max(
+        khanStatusOf(this.timers).unstoppable,
+        effect.duration,
+      );
     } else if (
       effect.kind === 'guardians' ||
       effect.kind === 'gust' ||
@@ -544,6 +638,11 @@ export class CombatSystem extends ArenaSystem {
     width: number,
     damageMultiplier: number,
     pin = false,
+    options: {
+      armorPenetration?: number;
+      payload?: StatusPayload;
+      onHit?: (enemy: Enemy) => void;
+    } = {},
   ): boolean {
     let struck = false;
     this.spatial.forEachNearby(this.player.x, this.player.y, range + width / 2, (enemy) => {
@@ -556,7 +655,9 @@ export class CombatSystem extends ArenaSystem {
         enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
         enemy.setVelocity(0, 0);
       }
-      this.damageEnemy(enemy, this.run.stats.damage * damageMultiplier);
+      this.applyPayload(enemy, options.payload);
+      options.onHit?.(enemy);
+      this.damageEnemy(enemy, this.run.stats.damage * damageMultiplier, options.armorPenetration);
       struck = true;
     });
     this.finishMeleeAttack(struck);
@@ -635,6 +736,137 @@ export class CombatSystem extends ArenaSystem {
       controlResistance(enemy.definition, enemy.elite),
     );
     if (enemy.status.stun > 0 || enemy.status.forced > 0) enemy.setVelocity(0, 0);
+  }
+
+  private pushImpaledEnemy(
+    enemy: Enemy,
+    direction: { x: number; y: number },
+    tuning: NonNullable<ReturnType<typeof classDefinition>['heavyAttack']['holdCharge']>,
+  ): void {
+    const start = { x: enemy.x, y: enemy.y };
+    const desired = {
+      x: Math.max(
+        GAME.terrain.actorClearance,
+        Math.min(
+          GAME.worldSize - GAME.terrain.actorClearance,
+          enemy.x + direction.x * tuning.fullPush,
+        ),
+      ),
+      y: Math.max(
+        GAME.terrain.actorClearance,
+        Math.min(
+          GAME.worldSize - GAME.terrain.actorClearance,
+          enemy.y + direction.y * tuning.fullPush,
+        ),
+      ),
+    };
+    const landing =
+      this.landscape.navigation?.slide(enemy, desired, GAME.terrain.actorClearance) ?? desired;
+    enemy.setPosition(landing.x, landing.y);
+    enemy.body?.updateFromGameObject();
+    const progress = (landing.x - start.x) * direction.x + (landing.y - start.y) * direction.y;
+    if (progress >= tuning.fullPush * 0.7) return;
+    this.applyPayload(enemy, { stun: tuning.fullStun });
+    this.damageEnemy(enemy, this.run.stats.damage * tuning.terrainBonus, 1);
+    this.effects.burst(enemy.x, enemy.y, GAME.status.tint.stun, 8);
+  }
+
+  private beginClassAction(action: ClassActionState): void {
+    this.timers.classAction = action;
+    this.host.playerMotion.attack();
+  }
+
+  private tickClassAction(dt: number): void {
+    const action = this.timers.classAction;
+    if (!action) return;
+    if (!isKhanActive(this.run)) {
+      this.timers.classAction = undefined;
+      return;
+    }
+    if (action.kind === 'dash') this.tickBreakthrough(action);
+    else this.tickUnstoppable(action, dt);
+    action.remaining = Math.max(0, action.remaining - dt);
+    if (action.remaining <= 0) this.timers.classAction = undefined;
+  }
+
+  private tickBreakthrough(action: ClassActionState): void {
+    const ability = classDefinition(this.run.character?.classId).abilities.find(
+      (entry) => entry.kind === 'dash',
+    );
+    if (ability?.kind !== 'dash') {
+      this.timers.classAction = undefined;
+      return;
+    }
+    const from = { x: action.previousX, y: action.previousY };
+    const to = { x: this.player.x, y: this.player.y };
+    const step = Math.hypot(to.x - from.x, to.y - from.y);
+    action.distance += step;
+    this.spatial.forEachNearby(this.player.x, this.player.y, step + ability.width, (enemy) => {
+      const key = `${enemy.tacticalSlot}:${enemy.spawnId}`;
+      if (action.hits.includes(key) || distanceToSegment(enemy, from, to) > ability.width / 2)
+        return;
+      action.hits.push(key);
+      const multiplier = breakthroughDamage(
+        ability.damage,
+        ability.speedDamage,
+        ability.distanceDamage,
+        action.startSpeed,
+        this.run.stats.speed,
+        action.distance,
+        ability.speed * ability.duration,
+      );
+      this.damageEnemy(enemy, this.run.stats.damage * multiplier, 0.35);
+    });
+    action.previousX = to.x;
+    action.previousY = to.y;
+  }
+
+  private tickUnstoppable(action: ClassActionState, dt: number): void {
+    const ability = classDefinition(this.run.character?.classId).abilities.find(
+      (entry) => entry.kind === 'unstoppable',
+    );
+    if (ability?.kind !== 'unstoppable') {
+      this.timers.classAction = undefined;
+      return;
+    }
+    action.distance += dt;
+    this.spatial.forEachNearby(this.player.x, this.player.y, ability.range, (enemy) => {
+      const key = `${enemy.tacticalSlot}:${enemy.spawnId}`;
+      if (action.hits.includes(key)) return;
+      action.hits.push(key);
+      this.damageEnemy(enemy, this.run.stats.damage * ability.damage, 0.25);
+      action.remaining = extendAction(
+        action.remaining,
+        action.distance,
+        action.extension,
+        action.maxDuration,
+      );
+      khanStatusOf(this.timers).unstoppable = Math.max(
+        khanStatusOf(this.timers).unstoppable,
+        action.remaining,
+      );
+    });
+  }
+
+  private vault(
+    aimed: { x: number; y: number },
+    effect: Extract<ClassAbilityDefinition, { kind: 'vault' }>,
+  ): void {
+    const velocity = this.player.body?.velocity;
+    const moving = velocity && Math.hypot(velocity.x, velocity.y) > GAME.mounted.minimumSpeed;
+    const direction = moving ? { x: velocity.x, y: velocity.y } : aimed;
+    const origin = { x: this.player.x, y: this.player.y };
+    const landing = safeVaultLanding(origin, direction, effect.distance, (point) =>
+      this.landscape.navigation
+        ? this.landscape.navigation.isWalkable(point.x, point.y, GAME.terrain.actorClearance, true)
+        : true,
+    );
+    this.player.setPosition(landing.x, landing.y);
+    this.player.body?.updateFromGameObject();
+    this.timers.invulnerable = Math.max(this.timers.invulnerable, effect.invulnerability);
+    this.strikePulse(effect.landingRange, effect.damage, false);
+    this.effects.dust(landing.x, landing.y, direction.x, true);
+    this.effects.ring(landing.x, landing.y, effect.landingRange, 0xe2c586);
   }
 
   private finishMeleeAttack(struck: boolean): void {
@@ -873,7 +1105,7 @@ export class CombatSystem extends ArenaSystem {
     return true;
   }
 
-  damageEnemy(enemy: Enemy, amount: number): number {
+  damageEnemy(enemy: Enemy, amount: number, armorPenetration = 0): number {
     if (!enemy.active) return 0;
     // Pinned and shredded enemies lose their armour reduction; shred also adds damage taken.
     const hasArmor =
@@ -881,7 +1113,9 @@ export class CombatSystem extends ArenaSystem {
       enemy.pinned <= 0 &&
       !isShredded(enemy.status);
     const baseArmor = hasArmor ? (enemy.definition.armor ?? GAME.tactics.heavyArmor) : 1;
-    amount *= baseArmor * statusDamageMultiplier(enemy.status);
+    const penetration = Math.max(0, Math.min(1, armorPenetration));
+    const effectiveArmor = baseArmor + (1 - baseArmor) * penetration;
+    amount *= effectiveArmor * statusDamageMultiplier(enemy.status);
     const actual = Math.min(Math.max(0, enemy.health), Math.max(0, amount));
     if (amount >= 1) enemy.motion.hit();
     enemy.health -= amount;
