@@ -10,6 +10,14 @@ import { gallopCooldown } from '../../state/campCombat';
 import type { WorldArchive } from '../../state/expeditionArchive';
 import { completeGuidance } from '../../state/guidance';
 import { damageKhan, isKhanActive, khanSpeedMultiplier } from '../../state/khan';
+import {
+  createKhanStatus,
+  isKhanGuarded,
+  isKhanUnstoppable,
+  khanStatusOf,
+  khanStatusSpeed,
+  mitigateKhanDamage,
+} from '../../state/statusEffects';
 import type { ArenaContext } from './ArenaContext';
 import { ArenaSystem } from './ArenaSystem';
 import { captureBody } from './bodyArchive';
@@ -92,6 +100,7 @@ export class KhanController extends ArenaSystem {
       movement.set(rotated.x, rotated.y);
     }
     const moving = movement.lengthSq() > 0.01;
+    const status = khanStatusOf(this.timers);
     if (moving) {
       completeGuidance(this.run, 'ride');
       this.facing.copy(movement).normalize();
@@ -101,7 +110,11 @@ export class KhanController extends ArenaSystem {
       movement.scale(
         this.run.stats.speed *
           khanSpeedMultiplier(this.run) *
-          areaMovementMultiplier(this.host.areaThreats, this.player),
+          khanStatusSpeed(status) *
+          // Unstoppable stances shrug off slowing terrain as well as knockback.
+          (isKhanUnstoppable(status)
+            ? 1
+            : areaMovementMultiplier(this.host.areaThreats, this.player)),
       );
     this.player.setVelocity(movement.x, movement.y);
     const faceX = this.landscape.world3d?.screenX(this.facing.x, this.facing.y) ?? this.facing.x;
@@ -125,6 +138,7 @@ export class KhanController extends ArenaSystem {
       this.run.phase !== 'playing' ||
       !isKhanActive(this.run) ||
       !enemy.active ||
+      enemy.status.stun > 0 ||
       this.timers.invulnerable > 0
     )
       return;
@@ -135,7 +149,8 @@ export class KhanController extends ArenaSystem {
   takeDamage(amount: number): void {
     if (this.run.phase !== 'playing' || this.timers.invulnerable > 0) return;
     if (import.meta.env.DEV && this.arena.developerTools?.invincible) return;
-    const outcome = damageKhan(this.run, amount);
+    // Guards and the stance shield absorb damage before the class multiplier applies.
+    const outcome = damageKhan(this.run, mitigateKhanDamage(khanStatusOf(this.timers), amount));
     if (!outcome) return;
     this.playerMotion.hit();
     this.timers.invulnerable = GAME.invulnerability;
@@ -152,6 +167,7 @@ export class KhanController extends ArenaSystem {
     this.shadow.setVisible(false);
     this.aura.setVisible(false);
     this.timers.dashRemaining = 0;
+    this.timers.khanStatus = createKhanStatus();
     this.run.clan.momentum = 0;
     this.host.clearTouch();
     this.cameras.main.startFollow(this.camp, true, 0.09, 0.09).setFollowOffset(0, 0);
@@ -160,7 +176,11 @@ export class KhanController extends ArenaSystem {
 
   renderPlayerVisual(): void {
     this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
-    const tint = this.playerMotion.hurt ? 0xffd3b2 : 0xffffff;
+    const tint = this.playerMotion.hurt
+      ? 0xffd3b2
+      : isKhanGuarded(khanStatusOf(this.timers))
+        ? 0xcfd9ea
+        : 0xffffff;
     this.player.setTint(tint);
     if (this.playerMotion.upperFrame && !this.upper) {
       this.upper = this.add
@@ -226,6 +246,7 @@ export class KhanController extends ArenaSystem {
     this.playerMotion.face(1, 0);
     this.timers.dashRemaining = this.timers.dashTimer = 0;
     this.timers.attackTimer = this.dustTimer = 0;
+    this.timers.khanStatus = createKhanStatus();
     this.timers.invulnerable = GAME.khan.returnProtection;
     this.host.clearTouch();
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09).setFollowOffset(0, 0);

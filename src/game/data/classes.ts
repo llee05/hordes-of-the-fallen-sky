@@ -26,6 +26,7 @@ import {
 } from '../../shared/characterProfile.js';
 import { GAME } from '../config.js';
 import { applyCampEffects } from '../state/camp.js';
+import type { StatusPayload } from '../state/statusEffects.js';
 import type { CampEffectDefinition, PlayerStats, RunState } from '../types.js';
 
 export {
@@ -53,6 +54,9 @@ export {
   type CharacterOathId,
   type CharacterProfile,
 };
+
+const IRON = GAME.classes['iron-pagoda'];
+const pct = (fraction: number): string => `${Math.round(fraction * 100)}%`;
 
 export type ClassAbilitySlot = 'q' | 'w' | 'e' | 'r';
 
@@ -91,6 +95,43 @@ export type ClassAbilityEffect =
       spectralCopies: number;
       echoEvery: number;
       echoDamage: number;
+    }
+  | {
+      /** Damage reduction and knockback/slow immunity for `duration`, at reduced ride speed. */
+      kind: 'brace';
+      duration: number;
+      damageReduction: number;
+      speedMultiplier: number;
+    }
+  | {
+      /** A ground shockwave around the Khan that applies `payload` to every enemy it reaches. */
+      kind: 'shockwave';
+      range: number;
+      damage: number;
+      payload: StatusPayload;
+    }
+  | {
+      /** A circular sweep with a different payload for small and large enemies. */
+      kind: 'snare';
+      range: number;
+      damage: number;
+      small: StatusPayload;
+      large: StatusPayload;
+    }
+  | {
+      /**
+       * An unstoppable stance: it sweeps nearby enemies every `interval` seconds and keeps
+       * refilling a damage-absorbing shield (also fed by `perHit` for each enemy struck).
+       */
+      kind: 'fortress';
+      duration: number;
+      interval: number;
+      range: number;
+      damage: number;
+      damageReduction: number;
+      speedMultiplier: number;
+      shield: { start: number; max: number; perSecond: number; perHit: number };
+      payload: StatusPayload;
     };
 
 interface ClassAbilityBase {
@@ -113,6 +154,21 @@ export interface ClassBasicAttackDefinition {
   /** Projectile collision width, line width, or arc angle in radians. */
   width: number;
   projectiles: number;
+  /** Seconds the attack is held before release. Defaults to the shared light windup. */
+  windup?: number;
+  /** Chained attacks: each slash that lands raises the next one's damage. */
+  combo?: AttackCombo;
+  /** Status effects applied to every enemy the attack strikes. */
+  payload?: StatusPayload;
+}
+
+export interface AttackCombo {
+  /** Slashes in the chain; the last one resets it. */
+  steps: number;
+  /** Extra damage per earlier slash in the chain (0.2 = +20% each). */
+  damagePerStep: number;
+  /** Seconds without a landed slash before the chain resets. */
+  window: number;
 }
 
 export interface ClassHeavyAttackDefinition extends ClassBasicAttackDefinition {
@@ -528,46 +584,47 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedDamage: GAME.classes['iron-pagoda'].chargedDamage,
     },
     basicAttack: {
-      name: 'Heavy Saber Arc',
-      description: 'A wide close cavalry-saber cut aimed toward the cursor.',
+      name: 'Heavy Sabre',
+      description: `Slow, broad sabre slashes strike every enemy in front of the horse. Each slash that lands hits ${pct(IRON.basic.combo.damagePerStep)} harder, up to slash ${IRON.basic.combo.steps}; a pause resets the chain.`,
       ...GAME.classes['iron-pagoda'].basic,
     },
     heavyAttack: {
-      name: 'Overhead Cleave',
-      description: 'A deliberate overhead blow that crushes a larger close arc.',
+      name: 'Sundering Cleave',
+      description: `A wide sweeping cleave that shatters armor (enemies take ${pct(IRON.heavy.payload.shred.bonus)} more damage for ${IRON.heavy.payload.shred.seconds} seconds) and heavily staggers nearby foes.`,
       ...GAME.classes['iron-pagoda'].heavy,
     },
     abilities: [
       {
-        id: 'crushing-aura',
+        id: 'iron-wall',
         slot: 'q',
         slotLabel: '1',
-        name: 'Crushing Aura',
-        description: 'Crushes every enemy pressing close to the armored mount.',
+        name: 'Iron Wall',
+        description: `Brace behind reinforced armor for ${IRON.abilities.q.duration} seconds: ${pct(IRON.abilities.q.damageReduction)} less damage taken and no knockback or slowing terrain, but slower riding.`,
         ...GAME.classes['iron-pagoda'].abilities.q,
       },
       {
-        id: 'unbreakable-stance',
+        id: 'crushing-hooves',
         slot: 'w',
         slotLabel: '2',
-        name: 'Unbreakable Stance',
-        description: 'Locks the lamellar guard, briefly preventing harm and mending wounds.',
+        name: 'Crushing Hooves',
+        description:
+          'The warhorse rears and slams the ground, stunning every nearby enemy and shoving them back.',
         ...GAME.classes['iron-pagoda'].abilities.w,
       },
       {
-        id: 'shield-bash',
+        id: 'chain-snare',
         slot: 'e',
         slotLabel: '3',
-        name: 'Shield Bash',
-        description: 'Smashes a broad lane ahead with shield and armored horse.',
+        name: 'Chain Snare',
+        description: `Swing a heavy chain in a full circle: smaller enemies are dragged to the horse, larger ones are slowed for ${IRON.abilities.e.large.slow.seconds} seconds.`,
         ...GAME.classes['iron-pagoda'].abilities.e,
       },
       {
-        id: 'shielded-advance',
+        id: 'unbroken-fortress',
         slot: 'r',
         slotLabel: '4',
-        name: 'Shielded Advance',
-        description: 'Surges forward behind the shield through a broad enemy lane.',
+        name: 'Unbroken Fortress',
+        description: `An unstoppable stance for ${IRON.abilities.r.duration} seconds: sweeping blows strike nearby enemies every ${IRON.abilities.r.interval} seconds while a shield rebuilds and damage is cut by ${pct(IRON.abilities.r.damageReduction)}.`,
         ...GAME.classes['iron-pagoda'].abilities.r,
       },
     ],

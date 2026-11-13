@@ -578,6 +578,19 @@ describe('full expedition snapshots', () => {
     expect(second.camp).toEqual(first.camp);
     expect(second.player).toEqual(first.player);
   });
+  it('loads saves from before status effects with neutral statuses', () => {
+    const save = captureExpedition(createRun(), world()) as Record<string, any>;
+    delete save.world.timers.khanStatus;
+    delete save.world.enemies[0].state.status;
+    const restored = decodeExpedition(save);
+    expect(restored.world.timers.khanStatus).toBeUndefined();
+    expect(restored.world.enemies[0]!.state.status).toBeUndefined();
+  });
+  it('rejects saves with a malformed status effect', () => {
+    const save = captureExpedition(createRun(), world()) as Record<string, any>;
+    save.world.enemies[0].state.status.stun = 'long';
+    expect(() => decodeExpedition(save)).toThrow();
+  });
   it('loads saves from before class abilities with ready cooldowns', () => {
     const save = captureExpedition(createRun(), world()) as Record<string, any>;
     delete save.world.timers.abilityCooldowns;

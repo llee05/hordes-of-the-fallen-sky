@@ -111,6 +111,50 @@ test('Spirit Caller builds spiritual energy and exposes the authored drum and sp
   await expect(page.locator('#spirit-energy')).toContainText('6 ACTIVE SPIRITS');
 });
 
+test('Iron Pagoda abilities brace, stun and snare through the number keys and the HUD', async ({
+  page,
+}) => {
+  await openTitle(page);
+  await startExpedition(page);
+  await page.evaluate(() => {
+    const scene = (window as any).__gloam.scene;
+    scene.run.character = { ...(scene.run.character ?? {}), classId: 'iron-pagoda' };
+    window.__gloam.hooks.setTimers({ spawnTimer: 999 });
+    scene.spawnEnemy();
+    const enemy = scene.enemies.getChildren().find((item: any) => item.active);
+    enemy.setPosition(scene.player.x + 90, scene.player.y);
+    enemy.health = enemy.maxHealth = 100000;
+  });
+  const names = ['Iron Wall', 'Crushing Hooves', 'Chain Snare', 'Unbroken Fortress'];
+  for (const [index, slot] of ['q', 'w', 'e', 'r'].entries())
+    await expect(page.locator(`#ability-${slot}`)).toContainText(names[index]!);
+
+  await page.keyboard.press('Digit1');
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__gloam.scene.timers.khanStatus.guard))
+    .toBeGreaterThan(0);
+  await page.keyboard.press('Digit2');
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as any).__gloam.scene.enemies.getChildren().find((item: any) => item.active)
+            .status.stun,
+      ),
+    )
+    .toBeGreaterThan(0);
+  await page.keyboard.press('Digit3');
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as any).__gloam.scene.enemies.getChildren().find((item: any) => item.active)
+            .status.slow,
+      ),
+    )
+    .toBeGreaterThan(0);
+});
+
 test('guard riders fire at camp threats while the commander scouts away', async ({ page }) => {
   await openTitle(page);
   await startExpedition(page);

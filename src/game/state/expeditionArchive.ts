@@ -19,6 +19,7 @@ import { ORKHON_VALLEY } from '../data/orkhonValley';
 import { SUCCESSORS } from '../data/successors';
 import type { Enemy } from '../entities/actors';
 import type { RunState } from '../types';
+import type { EnemyStatus, KhanStatus } from './statusEffects';
 import {
   boolean,
   dictionary,
@@ -75,7 +76,7 @@ export interface EnemyArchive extends BodyArchive {
     | 'objectiveId'
     | 'preparingAttack'
     | 'tactics'
-  > & { elite?: boolean };
+  > & { elite?: boolean; status?: EnemyStatus };
   motion: MotionArchive;
 }
 export interface ProjectileArchive extends BodyArchive {
@@ -111,6 +112,7 @@ export interface WorldArchive {
     /** Retired manual-combat predecessor; accepted so old version 1 saves still load. */
     closeDefenseTimer?: number;
     abilityCooldowns?: { q: number; w: number; e: number; r: number };
+    khanStatus?: KhanStatus;
     spiritCaller?: SpiritCallerCombatState;
     dashTimer: number;
     dashRemaining: number;
@@ -280,6 +282,27 @@ function shape(example: unknown, path = ''): Rule {
 optional.clan!.estate = shape(createCampEstate(), 'clan.estate');
 optional.clan!.nomadicCamp = isNomadicCamp;
 const runShape = shape(createRun());
+const enemyStatus = object({
+  stun: number,
+  slow: number,
+  slowMultiplier: number,
+  shred: number,
+  shredBonus: number,
+  forced: number,
+  forcedVx: number,
+  forcedVy: number,
+});
+const khanStatus = object({
+  guard: number,
+  reduction: number,
+  unstoppable: number,
+  speedMultiplier: number,
+  fortress: number,
+  fortressTimer: number,
+  shield: number,
+  shieldMax: number,
+  shieldPerSecond: number,
+});
 const enemyState = object(
   {
     health: positive,
@@ -299,7 +322,7 @@ const enemyState = object(
       { aim: point, direction: point },
     ),
   },
-  { objectiveId: integer, elite: boolean, spiritSlow: positive },
+  { objectiveId: integer, elite: boolean, spiritSlow: positive, status: enemyStatus },
 );
 const projectile = object(
   {
@@ -359,6 +382,7 @@ const worldShape = object(
       {
         closeDefenseTimer: number,
         abilityCooldowns: object({ q: number, w: number, e: number, r: number }),
+        khanStatus,
         spiritCaller: object(
           {
             energy: positive,

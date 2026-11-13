@@ -20,6 +20,19 @@ import { markExpedition } from '../../state/expeditionMetrics';
 import { isKhanActive } from '../../state/khan';
 import { aimedDirection, insideAttackArc, insideAttackLine } from '../../state/khanControls';
 import { gainExperience } from '../../state/run';
+import {
+  addShield,
+  applyStatusPayload,
+  controlResistance,
+  createKhanStatus,
+  enemySize,
+  guardKhan,
+  isShredded,
+  khanStatusOf,
+  statusDamageMultiplier,
+  tickKhanStatus,
+  type StatusPayload,
+} from '../../state/statusEffects';
 import { khanVolleyFactors, volleyFactors } from '../../state/volley';
 import type { EnemyDefinition } from '../../types';
 import { projectileTerrainClear } from '../../world3d/projectileTerrain';
@@ -57,6 +70,8 @@ export interface CombatHost {
 export class CombatSystem extends ArenaSystem {
   private attackWindup?: { kind: 'light' | 'heavy'; remaining: number; charge?: number };
   private readonly spiritCaller: SpiritCallerSystem;
+  /** Slashes landed in the current chain, and seconds left to land the next one. */
+  private combo = { count: 0, remaining: 0 };
 
   constructor(
     arena: ArenaContext,
@@ -113,8 +128,15 @@ export class CombatSystem extends ArenaSystem {
 
   reset(): void {
     this.attackWindup = undefined;
+    this.combo = { count: 0, remaining: 0 };
     this.timers.abilityCooldowns = { q: 0, w: 0, e: 0, r: 0 };
     this.spiritCaller.reset();
+    this.timers.khanStatus = createKhanStatus();
+  }
+
+  /** Current slash number in the Khan's combo chain (0 when no chain is running). */
+  comboCount(): number {
+    return this.combo.count;
   }
 
   /** Advances manual Khan combat. No attack occurs unless a mouse button or trigger is held. */
@@ -130,6 +152,7 @@ export class CombatSystem extends ArenaSystem {
     for (const slot of Object.keys(cooldowns) as ClassAbilitySlot[])
       cooldowns[slot] = Math.max(0, cooldowns[slot] - dt);
     this.spiritCaller.tick(dt);
+    this.tickComboAndStance(dt);
     if (this.attackWindup) {
       const held = this.attackWindup.kind === 'light' ? lightHeld : heavyHeld;
       const cls = classDefinition(this.run.character?.classId);
@@ -176,11 +199,37 @@ export class CombatSystem extends ArenaSystem {
       const cls = classDefinition(this.run.character?.classId);
       this.attackWindup = {
         kind,
-        remaining: kind === 'heavy' ? cls.heavyAttack.windup : 0.12,
+        remaining: kind === 'heavy' ? cls.heavyAttack.windup : (cls.basicAttack.windup ?? 0.12),
         charge: kind === 'heavy' && cls.id === 'spirit-caller' ? 0 : undefined,
       };
       this.faceAim(aim, false);
     }
+  }
+
+  /** Counts down the combo window and the Khan's guards, and fires fortress sweeps. */
+  private tickComboAndStance(dt: number): void {
+    if (!isKhanActive(this.run)) {
+      this.combo = { count: 0, remaining: 0 };
+      this.timers.khanStatus = createKhanStatus();
+      return;
+    }
+    if (this.combo.remaining > 0) {
+      this.combo.remaining = Math.max(0, this.combo.remaining - dt);
+      if (this.combo.remaining <= 0) this.combo.count = 0;
+    }
+    const status = khanStatusOf(this.timers);
+    tickKhanStatus(status, dt);
+    if (status.fortress <= 0) return;
+    const fortress = classDefinition(this.run.character?.classId).abilities.find(
+      (ability) => ability.kind === 'fortress',
+    );
+    if (fortress?.kind !== 'fortress') return;
+    status.fortressTimer -= dt;
+    if (status.fortressTimer > 0) return;
+    status.fortressTimer += fortress.interval;
+    const struck = this.strikePulse(fortress.range, fortress.damage, false, fortress.payload);
+    addShield(status, struck * fortress.shield.perHit);
+    this.effects.ring(this.player.x, this.player.y, fortress.range, 0xd8dee9);
   }
 
   isWindingUp(): boolean {
@@ -233,15 +282,51 @@ export class CombatSystem extends ArenaSystem {
     } else if (attack.shape === 'line') {
       released = this.strikeLine(direction, range, attack.width, scaledDamage);
     } else if (attack.shape === 'arc') {
-      released = this.strikeArc(direction, range, attack.width, scaledDamage);
+      const combo = attack.combo;
+      const comboScale = combo ? 1 + combo.damagePerStep * this.combo.count : 1;
+      const struck = this.strikeArc(
+        direction,
+        range,
+        attack.width,
+        scaledDamage * comboScale,
+        attack.payload,
+      );
+      released = true;
+      if (attack.combo || attack.payload) {
+        this.effects.sweep(
+          this.player.x,
+          this.player.y,
+          direction,
+          range,
+          attack.width,
+          kind === 'heavy' ? 0xe0bc76 : cls.weapon.projectileTint,
+        );
+        if (kind === 'heavy') this.effects.shake(110, 0.004);
+      }
+      if (combo && struck > 0) this.advanceCombo(combo, range);
     } else {
-      released = this.strikePulse(range, scaledDamage, false);
+      this.strikePulse(range, scaledDamage, false);
+      released = true;
     }
     this.timers.attackTimer =
       (kind === 'heavy' ? cls.heavyAttack.cooldown : this.run.stats.attackInterval) *
       this.run.clan.campEffects.multipliers.hostInterval;
     if (released) this.run.combat.volleys++;
     return released;
+  }
+
+  /** Counts a landed slash; the last slash of the chain finishes it with a heavier ring. */
+  private advanceCombo(
+    combo: NonNullable<ClassBasicAttackDefinition['combo']>,
+    range: number,
+  ): void {
+    this.combo.count += 1;
+    this.combo.remaining = combo.window;
+    if (this.combo.count >= combo.steps) {
+      this.combo = { count: 0, remaining: 0 };
+      this.effects.ring(this.player.x, this.player.y, range, 0xe0bc76);
+      this.effects.shake(90, 0.003);
+    }
   }
 
   /** Compatibility hook for tests and developer tools: manually fires along current facing. */
@@ -295,6 +380,39 @@ export class CombatSystem extends ArenaSystem {
       effect.kind === 'veil'
     ) {
       released = this.spiritCaller.cast(effect, direction);
+    } else if (effect.kind === 'brace') {
+      guardKhan(khanStatusOf(this.timers), {
+        duration: effect.duration,
+        reduction: effect.damageReduction,
+        speedMultiplier: effect.speedMultiplier,
+        unstoppable: true,
+      });
+      this.effects.ring(this.player.x, this.player.y, 80, 0xd8dee9, true);
+      this.audio.play('barrier', this.player);
+    } else if (effect.kind === 'shockwave') {
+      this.strikePulse(effect.range, effect.damage, false, effect.payload);
+      this.effects.ring(this.player.x, this.player.y, effect.range, 0xc9a26a);
+      this.effects.shake(140, 0.006);
+      this.effects.dust(this.player.x, this.player.y, direction.x, true);
+    } else if (effect.kind === 'snare') {
+      this.strikeSnare(effect);
+      this.effects.ring(this.player.x, this.player.y, effect.range, 0x9fc3ff, true);
+    } else if (effect.kind === 'fortress') {
+      const status = khanStatusOf(this.timers);
+      guardKhan(status, {
+        duration: effect.duration,
+        reduction: effect.damageReduction,
+        speedMultiplier: effect.speedMultiplier,
+        unstoppable: true,
+      });
+      status.fortress = effect.duration;
+      // The first blow lands almost at once; later ones follow every `interval`.
+      status.fortressTimer = 0.15;
+      status.shieldMax = effect.shield.max;
+      status.shieldPerSecond = effect.shield.perSecond;
+      status.shield = Math.min(effect.shield.max, effect.shield.start);
+      this.effects.ring(this.player.x, this.player.y, effect.range, 0xe0bc76);
+      this.audio.play('barrier', this.player);
     } else if (effect.kind === 'guard') {
       this.run.health = Math.min(this.run.stats.maxHealth, this.run.health + effect.heal);
       this.timers.invulnerable = Math.max(this.timers.invulnerable, effect.duration);
@@ -365,28 +483,37 @@ export class CombatSystem extends ArenaSystem {
     return true;
   }
 
+  /** Strikes every enemy inside the arc; returns how many were struck. */
   private strikeArc(
     direction: { x: number; y: number },
     range: number,
     angle: number,
     damageMultiplier: number,
-  ): boolean {
-    let struck = false;
+    payload?: StatusPayload,
+  ): number {
+    let struck = 0;
     this.spatial.forEachNearby(this.player.x, this.player.y, range, (enemy) => {
       if (
         !insideAttackArc(this.player, direction, enemy, range, angle) ||
         (this.landscape.navigation && !this.landscape.navigation.lineClear(this.player, enemy, 0))
       )
         return;
+      this.applyPayload(enemy, payload);
       this.damageEnemy(enemy, this.run.stats.damage * damageMultiplier);
-      struck = true;
+      struck++;
     });
-    this.finishMeleeAttack(struck);
-    return true;
+    this.finishMeleeAttack(struck > 0);
+    return struck;
   }
 
-  private strikePulse(range: number, damageMultiplier: number, pin: boolean): boolean {
-    let struck = false;
+  /** Strikes every enemy within `range` of the Khan; returns how many were struck. */
+  private strikePulse(
+    range: number,
+    damageMultiplier: number,
+    pin: boolean,
+    payload?: StatusPayload,
+  ): number {
+    let struck = 0;
     this.spatial.forEachNearby(this.player.x, this.player.y, range, (enemy) => {
       if (this.landscape.navigation && !this.landscape.navigation.lineClear(this.player, enemy, 0))
         return;
@@ -394,11 +521,40 @@ export class CombatSystem extends ArenaSystem {
         enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
         enemy.setVelocity(0, 0);
       }
+      this.applyPayload(enemy, payload);
       this.damageEnemy(enemy, this.run.stats.damage * damageMultiplier);
-      struck = true;
+      struck++;
     });
-    this.finishMeleeAttack(struck);
-    return true;
+    this.finishMeleeAttack(struck > 0);
+    return struck;
+  }
+
+  /** A circular sweep: small enemies get `small`, large ones and elites get `large`. */
+  private strikeSnare(effect: Extract<ClassAbilityDefinition, { kind: 'snare' }>): number {
+    let struck = 0;
+    this.spatial.forEachNearby(this.player.x, this.player.y, effect.range, (enemy) => {
+      if (this.landscape.navigation && !this.landscape.navigation.lineClear(this.player, enemy, 0))
+        return;
+      const large = enemySize(enemy.definition, enemy.elite) === 'large';
+      this.applyPayload(enemy, large ? effect.large : effect.small);
+      this.damageEnemy(enemy, this.run.stats.damage * effect.damage);
+      struck++;
+    });
+    this.finishMeleeAttack(struck > 0);
+    return struck;
+  }
+
+  /** Applies stun, slow, shred and forced movement; elites and large enemies resist control. */
+  private applyPayload(enemy: Enemy, payload: StatusPayload | undefined): void {
+    if (!payload || !enemy.active) return;
+    applyStatusPayload(
+      enemy.status,
+      payload,
+      enemy,
+      this.player,
+      controlResistance(enemy.definition, enemy.elite),
+    );
+    if (enemy.status.stun > 0 || enemy.status.forced > 0) enemy.setVelocity(0, 0);
   }
 
   private finishMeleeAttack(struck: boolean): void {
@@ -636,11 +792,13 @@ export class CombatSystem extends ArenaSystem {
 
   damageEnemy(enemy: Enemy, amount: number): number {
     if (!enemy.active) return 0;
+    // Pinned and shredded enemies lose their armour reduction; shred also adds damage taken.
     const hasArmor =
       (enemy.definition.armor !== undefined || enemy.definition.id === 'brute') &&
-      enemy.pinned <= 0;
+      enemy.pinned <= 0 &&
+      !isShredded(enemy.status);
     const baseArmor = hasArmor ? (enemy.definition.armor ?? GAME.tactics.heavyArmor) : 1;
-    amount *= baseArmor;
+    amount *= baseArmor * statusDamageMultiplier(enemy.status);
     const actual = Math.min(Math.max(0, enemy.health), Math.max(0, amount));
     if (amount >= 1) enemy.motion.hit();
     enemy.health -= amount;

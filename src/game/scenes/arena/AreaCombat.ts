@@ -17,6 +17,7 @@ import {
 import type { WorldArchive } from '../../state/expeditionArchive';
 import { currentLocation } from '../../state/journey';
 import { isKhanActive } from '../../state/khan';
+import { isEnemyDisabled } from '../../state/statusEffects';
 import { areaSurface, habitatPreference } from '../../systems/AreaHabitat';
 import type { ArenaContext } from './ArenaContext';
 import { ArenaSystem } from './ArenaSystem';
@@ -142,7 +143,7 @@ export class AreaCombat extends ArenaSystem {
       ownerActive: (key) => {
         const [slot, id] = key.split(':').map(Number),
           enemy = this.enemies.getChildren()[slot!] as Enemy | undefined;
-        return !!enemy?.active && enemy.spawnId === id && enemy.pinned <= 0;
+        return !!enemy?.active && enemy.spawnId === id && !isEnemyDisabled(enemy);
       },
       hit: (threat, damage) => {
         const radius = GAME.areaCombat.threats[threat.kind].radius;

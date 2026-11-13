@@ -163,6 +163,9 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
     effects: {
       burst: () => {},
       ring: () => {},
+      sweep: () => {},
+      shake: () => {},
+      dust: () => {},
     } as any,
     hud: {
       refresh: () => {},

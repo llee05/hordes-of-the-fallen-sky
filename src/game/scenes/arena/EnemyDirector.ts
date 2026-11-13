@@ -12,6 +12,7 @@ import { encounterEnemy, encounterPlan } from '../../state/encounters';
 import type { EnemyArchive, WorldArchive } from '../../state/expeditionArchive';
 import { completedMigrations, currentLocation } from '../../state/journey';
 import { isKhanActive } from '../../state/khan';
+import { createEnemyStatus } from '../../state/statusEffects';
 import { areaRiverTangent, areaSurface, habitatPreference } from '../../systems/AreaHabitat';
 import { enemySpawnPosition } from '../../systems/CameraView';
 import { projectedEnemySpawnPosition } from '../../systems/EnemySpawning';
@@ -179,6 +180,7 @@ export class EnemyDirector {
     enemy.route = undefined;
     enemy.pinned = 0;
     enemy.spiritSlow = 0;
+    enemy.status = createEnemyStatus();
     enemy.lastGallop = -1;
     enemy.dangerTimer = definition.ability
       ? GAME.areaCombat.abilityEvery + (enemy.tacticalSlot % 7) * 0.15
@@ -231,6 +233,7 @@ export class EnemyDirector {
                   burning: e.burning,
                   pinned: e.pinned,
                   spiritSlow: e.spiritSlow,
+                  status: { ...e.status },
                   lastGallop: e.lastGallop,
                   dangerTimer: e.dangerTimer,
                   tacticalSlot: e.tacticalSlot,
