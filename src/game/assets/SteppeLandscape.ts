@@ -32,7 +32,14 @@ export class SteppeLandscape {
     this.world3d?.destroy();
     this.world3d = undefined;
     this.navigation = undefined;
-    const terrain = new ComposedTerrain(composedRegion(id), LANDSCAPES[id].water);
+    const generatedAltan =
+      import.meta.env.DEV &&
+      id === 'altan-ovoo' &&
+      new URLSearchParams(globalThis.location?.search ?? '').get('altanOvooLevel') === 'generated';
+    const terrain = new ComposedTerrain(
+      composedRegion(id, generatedAltan),
+      generatedAltan ? undefined : LANDSCAPES[id].water,
+    );
     this.navigation = new TerrainNavigation(terrain);
     this.world3d = new World3DRenderer(this.scene, terrain, this.navigation);
     this.world3d.setResolution(this.resolution);

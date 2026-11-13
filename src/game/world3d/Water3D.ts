@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { MountainHeightfield } from './MountainHeightfield';
-import { waterGeometry } from './waterGeometry';
+import { sourcePoolBankGeometry, waterGeometry } from './waterGeometry';
 import { ORKHON_TILE_WORLD_SIZE } from '../assets/orkhonValleyArt';
 import type { WorldRiver } from './WorldRiver';
 
@@ -21,7 +21,8 @@ export class Water3D {
     const geometry = new THREE.BufferGeometry()
       .setAttribute('position', new THREE.Float32BufferAttribute(data.positions, 3))
       .setAttribute('uv', new THREE.Float32BufferAttribute(data.uv, 2))
-      .setAttribute('riverDepth', new THREE.Float32BufferAttribute(data.depth, 1));
+      .setAttribute('riverDepth', new THREE.Float32BufferAttribute(data.depth, 1))
+      .setAttribute('sourcePool', new THREE.Float32BufferAttribute(data.pool, 1));
     geometry.computeVertexNormals();
     const frozen = river.definition.kind === 'frozen';
     const material = new THREE.MeshLambertMaterial({
@@ -45,12 +46,12 @@ export class Water3D {
       };
       shader.uniforms.shallowWater = { value: new THREE.Color(0x8cae98) };
       shader.vertexShader =
-        `attribute float riverDepth; varying float waterDepth; varying vec2 riverUv; varying vec2 riverWorld;\n${shader.vertexShader}`.replace(
+        `attribute float riverDepth;attribute float sourcePool;varying float waterDepth;varying float poolWater;varying vec2 riverUv;varying vec2 riverWorld;\n${shader.vertexShader}`.replace(
           '#include <begin_vertex>',
-          '#include <begin_vertex>\nwaterDepth=riverDepth;riverUv=uv;riverWorld=position.xz;',
+          '#include <begin_vertex>\nwaterDepth=riverDepth;poolWater=sourcePool;riverUv=uv;riverWorld=position.xz;',
         );
       shader.fragmentShader =
-        `varying float waterDepth; varying vec2 riverUv; varying vec2 riverWorld;
+        `varying float waterDepth;varying float poolWater;varying vec2 riverUv;varying vec2 riverWorld;
         uniform float flowTime;uniform float motionAmount;uniform int frozen;
         uniform vec3 shallowWater;uniform vec3 deepWater;uniform sampler2D bedTexture;
         uniform int authored;uniform sampler2D flowTexture;uniform sampler2D rapidsTexture;
@@ -66,7 +67,7 @@ export class Water3D {
         float edge=1.0-smoothstep(0.0,2.2,waterDepth);
         float broken=0.35+0.65*smoothstep(0.15,0.8,sin(riverUv.y*.4+sin(riverUv.y*.11)));
         water=mix(water,vec3(.59,.68,.56),edge*broken*.25)+stroke;
-        if(authored==1) {
+        if(authored==1 && poolWater<0.5) {
           // One tile spans bank to bank: the supplied tiles' light edge columns fall on the
           // faded shoreline, and their seamless rows repeat along the current.
           float along=riverUv.y*36.0;
@@ -83,6 +84,26 @@ export class Water3D {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.receiveShadow = true;
     mesh.name = 'river-water';
+    const bank = sourcePoolBankGeometry(river, terrain);
+    if (bank) {
+      const bankGeometry = new THREE.BufferGeometry()
+        .setAttribute('position', new THREE.Float32BufferAttribute(bank.positions, 3))
+        .setAttribute('uv', new THREE.Float32BufferAttribute(bank.uv, 2));
+      bankGeometry.computeVertexNormals();
+      const bankMaterial = new THREE.MeshLambertMaterial({
+        color: river.definition.bank,
+        map: bedTexture,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.6,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+      });
+      const bankMesh = new THREE.Mesh(bankGeometry, bankMaterial);
+      bankMesh.receiveShadow = true;
+      bankMesh.name = 'source-pool-bank';
+      this.group.add(bankMesh);
+    }
     this.group.add(mesh);
     const matrices: THREE.Matrix4[] = [];
     const colors: THREE.Color[] = [];

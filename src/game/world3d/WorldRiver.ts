@@ -1,6 +1,7 @@
 import {
   riverChannels,
   riverSectionAt,
+  sourcePoolRadius,
   type RiverDefinition,
   type RiverChannel,
   type RiverSection,
@@ -177,8 +178,19 @@ export class WorldRiver {
         right = s.a.right + (s.b.right - s.a.right) * t;
       halfWidth = dx * s.a.nx + dz * s.a.ny < 0 ? left : right;
     }
-    const distance = Math.sqrt(best),
-      value = { distance, halfWidth, shoreDistance: distance - halfWidth };
+    let distance = Math.sqrt(best);
+    const pool = this.definition.sourcePool;
+    if (pool) {
+      const poolX = px - pool.x,
+        poolZ = pz - pool.y,
+        poolDistance = Math.hypot(poolX, poolZ),
+        radius = sourcePoolRadius(pool, Math.atan2(poolZ, poolX));
+      if (poolDistance - radius < distance - halfWidth) {
+        distance = poolDistance;
+        halfWidth = radius;
+      }
+    }
+    const value = { distance, halfWidth, shoreDistance: distance - halfWidth };
     this.samples.set(key, value);
     if (this.samples.size > 32768) this.samples.delete(this.samples.keys().next().value!);
     return value;

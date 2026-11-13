@@ -19,6 +19,10 @@ import { Water3D } from './Water3D';
 import { OrkhonOverlay } from './orkhonOverlay';
 import { initialRenderScale, stepRenderScale, type RenderResolution } from './renderScale';
 import { orkhonPaintedGroundEnabled } from './orkhonPaintedGround';
+import { ALTAN_OVOO_PAINTED_GROUND, altanOvooPaintedGroundEnabled } from './altanOvooPaintedGround';
+import { ORKHON_PAINTED_GROUND } from './orkhonPaintedGround';
+import type { PaintedGroundDefinition } from './paintedGround';
+import { StaticDressing3D } from './StaticDressing3D';
 
 interface RenderChunk {
   group: THREE.Group;
@@ -38,6 +42,7 @@ export class World3DRenderer {
   readonly effects: GraphicsBridge;
   readonly water?: Water3D;
   readonly overlay?: OrkhonOverlay;
+  readonly staticDressing?: StaticDressing3D;
   viewBounds?: TerrainBounds;
   spawnView?: ProjectedGroundView;
   angle: number = WORLD_3D.angle;
@@ -109,17 +114,33 @@ export class World3DRenderer {
     this.sun.shadow.radius = 1.6;
     this.sun.shadow.intensity = 0.72;
     this.world.add(this.sun, this.sun.target, this.actors);
-    const orkhon =
-      terrain instanceof ComposedTerrain && terrain.region.scene.id === 'orkhon-valley'
+    const authored =
+      terrain instanceof ComposedTerrain &&
+      terrain.region.scene.ground !== undefined &&
+      (terrain.region.scene.id === 'orkhon-valley' || terrain.region.scene.id === 'altan-ovoo')
         ? terrain
+        : undefined;
+    let paintedGround: PaintedGroundDefinition | undefined;
+    if (authored?.region.scene.id === 'orkhon-valley')
+      paintedGround = orkhonPaintedGroundEnabled(
+        globalThis.location?.search ?? '',
+        import.meta.env.DEV,
+      )
+        ? ORKHON_PAINTED_GROUND
+        : undefined;
+    if (authored?.region.scene.id === 'altan-ovoo')
+      paintedGround = altanOvooPaintedGroundEnabled(
+        globalThis.location?.search ?? '',
+        import.meta.env.DEV,
+      )
+        ? ALTAN_OVOO_PAINTED_GROUND
         : undefined;
     this.materials = new MountainMaterials(
       scene,
       palette,
       Math.min(WORLD_3D.anisotropy, this.renderer.capabilities.getMaxAnisotropy()),
-      orkhon,
-      orkhon !== undefined &&
-        orkhonPaintedGroundEnabled(globalThis.location?.search ?? '', import.meta.env.DEV),
+      authored,
+      paintedGround,
     );
     for (const material of [this.materials.surface, this.materials.wall]) {
       const mesh = new THREE.Mesh(new THREE.BufferGeometry(), material);
@@ -142,6 +163,14 @@ export class World3DRenderer {
     if (terrain instanceof ComposedTerrain && terrain.region.scene.id === 'orkhon-valley') {
       this.overlay = new OrkhonOverlay(scene, terrain);
       this.world.add(this.overlay.group);
+    }
+    if (terrain instanceof ComposedTerrain && terrain.region.scene.id === 'altan-ovoo') {
+      this.staticDressing = new StaticDressing3D(
+        scene,
+        terrain,
+        sceneDressing(terrain, { x: 0, y: 0, width: terrain.worldSize, height: terrain.worldSize }),
+      );
+      this.world.add(this.staticDressing.group);
     }
     this.label = document.createElement('div');
     this.label.dataset.worldDebug = '';
@@ -303,6 +332,7 @@ export class World3DRenderer {
     this.camera.lookAt(x, this.focusHeight, z);
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld();
+    this.staticDressing?.update(this.camera);
     this.spawnView = {
       focus: { x, y: z, elevation: this.focusHeight },
       width: width / zoom,
@@ -473,7 +503,11 @@ export class World3DRenderer {
     collision.name = 'arcade-collision-cells';
     group.add(collision);
     const props: Phaser.GameObjects.Image[] = [];
-    if (!backdrop && this.terrain instanceof ComposedTerrain)
+    if (
+      !backdrop &&
+      this.terrain instanceof ComposedTerrain &&
+      this.terrain.region.scene.id !== 'altan-ovoo'
+    )
       for (const prop of sceneDressing(this.terrain, bounds)) {
         const image = this.scene.add
           .image(prop.x, prop.z, prop.texture, prop.frame)
@@ -569,6 +603,7 @@ export class World3DRenderer {
     this.effects.destroy();
     this.water?.destroy();
     this.overlay?.destroy();
+    this.staticDressing?.destroy();
     for (const mesh of this.merged) mesh.geometry.dispose();
     this.collisionMaterial.dispose();
     this.materials.destroy();

@@ -9,12 +9,13 @@ import { cliffFaceUniforms } from './orkhonCliffs';
 import { terrainShaderSource } from './terrainShader';
 import type { ScenePalette } from '../data/worldRegions';
 import type { ComposedTerrain } from './ComposedTerrain';
+import { ALTAN_OVOO_GRASS_FALLBACK } from './altanOvooPaintedGround';
 import { bakeOrkhonGroundMask, ORKHON_GROUND_MASK, orkhonRampUniforms } from './orkhonGround';
 import {
-  ORKHON_GROUND_QUADRANTS,
-  ORKHON_PAINTED_GROUND,
-  orkhonPaintedGroundWorldBounds,
-} from './orkhonPaintedGround';
+  PAINTED_GROUND_QUADRANTS,
+  paintedGroundWorldBounds,
+  type PaintedGroundDefinition,
+} from './paintedGround';
 export { WORLD_DEBUG_MODES, type WorldDebugMode } from './worldProjection';
 
 /** Reuses painted textures; all elevation, walls, lighting and shadows come from geometry. */
@@ -32,10 +33,10 @@ export class MountainMaterials {
     scene: Phaser.Scene,
     palette?: ScenePalette,
     anisotropy = 1,
-    /** Orkhon Valley's terrain: its kit tiles, per-pixel ground masks and painted cliffs. */
-    orkhon?: ComposedTerrain,
-    /** Development URL flag; omitted/false keeps the current material and shader byte-for-byte. */
-    paintedGround = false,
+    /** Authored terrain using the shared masks, painted cliffs and tiled fallback. */
+    authoredTerrain?: ComposedTerrain,
+    /** Optional four-quadrant macro painting projected over the authored geometry. */
+    paintedGround?: PaintedGroundDefinition,
   ) {
     const texture = (key: string, repeat = true, srgb = true): THREE.Texture => {
       const image = scene.textures.get(key).getSourceImage() as HTMLImageElement;
@@ -60,14 +61,17 @@ export class MountainMaterials {
       );
     };
     // Orkhon Valley uses the terrain kit tiles untinted, at one shared painted scale.
-    const authored = orkhon !== undefined;
+    const authored = authoredTerrain !== undefined;
+    const altan = authoredTerrain?.region.scene.id === 'altan-ovoo';
     const tile = (name: OrkhonTile) => texture(orkhonTileKey(name));
     // Authored channels: calm valley grass with regions of the olive variant, rare sun-cured
     // straw, the darker plateau moss on top, trail dirt on paths and ramps, scree at cliff feet.
     const meadowTex = authored
-      ? tile('valleyCalm')
+      ? altan
+        ? texture(ALTAN_OVOO_GRASS_FALLBACK.texture)
+        : tile('valleyCalm')
       : texture(palette ? 'tapestry-meadow' : MOUNTAIN_TERRAIN_ART.materials.grassland.texture!);
-    const dryMeadowTex = authored ? tile('valleyStraw') : texture('ground');
+    const dryMeadowTex = authored ? (altan ? meadowTex : tile('valleyStraw')) : texture('ground');
     const soilTex = authored
       ? tile('trailDirt')
       : texture(MOUNTAIN_TERRAIN_ART.materials['rocky-soil'].texture!);
@@ -75,24 +79,33 @@ export class MountainMaterials {
       ? tile('screeGravel')
       : texture(palette ? 'tapestry-stone' : MOUNTAIN_TERRAIN_ART.materials.stone.texture!);
     const gravelTex = authored ? stoneTex : soilTex;
-    // Authored channel 4 is plateau-top moss; channel 5 is unused there. Neither has snow.
+    // Authored channel 4 is the upper-tier ground; Altan stays in warm olive manuscript grass
+    // rather than inheriting Orkhon's pale plateau moss. Channel 5 is unused; neither has snow.
     const snowTex = authored
-      ? tile('plateauMoss')
+      ? altan
+        ? meadowTex
+        : tile('plateauMoss')
       : texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!);
-    const meadowAltTex = authored ? tile('valleyOlive') : meadowTex;
+    const meadowAltTex = authored ? (altan ? meadowTex : tile('valleyOlive')) : meadowTex;
     const paintedGroundTextures =
       authored && paintedGround
         ? {
-            quadrants: ORKHON_GROUND_QUADRANTS.map((quadrant) =>
-              texture(ORKHON_PAINTED_GROUND.quadrants[quadrant].texture, false),
+            quadrants: PAINTED_GROUND_QUADRANTS.map((quadrant) =>
+              texture(paintedGround.quadrants[quadrant].texture, false),
             ),
-            detail: texture(ORKHON_PAINTED_GROUND.detail.texture, true, false),
+            detail: texture(paintedGround.detail.texture, true, false),
           }
         : undefined;
     this.bedTexture = authored ? gravelTex : soilTex;
     this.waterTextures = authored ? [tile('riverChannel'), tile('riverRapids')] : undefined;
-    const orkhonMaps = orkhon
-      ? this.orkhonUniforms(scene, orkhon, meadowAltTex, paintedGroundTextures)
+    const authoredMaps = authoredTerrain
+      ? this.authoredUniforms(
+          scene,
+          authoredTerrain,
+          meadowAltTex,
+          paintedGround,
+          paintedGroundTextures,
+        )
       : undefined;
 
     const maps = {
@@ -103,7 +116,7 @@ export class MountainMaterials {
       stone: { value: stoneTex },
       snow: { value: snowTex },
       // Generated places keep the inert uniforms their unchanged program declares.
-      ...(orkhonMaps ?? {
+      ...(authoredMaps ?? {
         meadowAlt: { value: meadowAltTex },
         patchMap: { value: snowTex },
         authored: { value: 0 },
@@ -118,9 +131,9 @@ export class MountainMaterials {
       snowTint: { value: tint(palette?.snow, 0xe4e9df) },
     };
     const source = terrainShaderSource(
-      orkhon
+      authoredTerrain
         ? {
-            ramps: orkhon.region.scene.ground?.ramps?.length ?? 0,
+            ramps: authoredTerrain.region.scene.ground?.ramps?.length ?? 0,
             paintedGround: paintedGroundTextures !== undefined,
           }
         : undefined,
@@ -146,8 +159,8 @@ export class MountainMaterials {
       material.customProgramCacheKey = () =>
         authored
           ? paintedGroundTextures
-            ? `orkhon-terrain-painted-v2-${wall}`
-            : `orkhon-terrain-v5-${wall}`
+            ? `authored-terrain-painted-v2-${paintedGround?.query}-${wall}`
+            : `authored-terrain-v5-${wall}`
           : `living-steppe-materials-v7-${wall}`;
       return material;
     };
@@ -156,13 +169,14 @@ export class MountainMaterials {
   }
 
   /**
-   * Orkhon-only uniforms: the olive grass variant, the painted cliff bands, the baked ground mask
-   * (worn earth, dry-grass potential, ramp neighbourhoods) and the graded ramps.
+   * Authored-level uniforms: grass variants, painted cliff bands, the baked ground mask (worn
+   * earth, dry-grass potential, ramp neighbourhoods), graded ramps and optional macro paintings.
    */
-  private orkhonUniforms(
+  private authoredUniforms(
     scene: Phaser.Scene,
     terrain: ComposedTerrain,
     meadowAlt: THREE.Texture,
+    definition?: PaintedGroundDefinition,
     paintedGround?: { quadrants: THREE.Texture[]; detail: THREE.Texture },
   ) {
     const ground = terrain.region.scene;
@@ -177,7 +191,9 @@ export class MountainMaterials {
     const ramps = orkhonRampUniforms(terrain);
     const vectors = (rows: number[][]) =>
       (rows.length ? rows : [[-1e5, -1e5, 1, 0]]).map((row) => new THREE.Vector4(...row));
-    const bounds = orkhonPaintedGroundWorldBounds(terrain.worldSize);
+    const bounds = definition
+      ? paintedGroundWorldBounds(definition, terrain.worldSize)
+      : ([0, 0, terrain.worldSize, terrain.worldSize] as const);
     return {
       meadowAlt: { value: meadowAlt },
       tileSize: { value: ORKHON_TILE_WORLD_SIZE },
@@ -196,6 +212,7 @@ export class MountainMaterials {
             paintedGroundSE: { value: paintedGround.quadrants[3] },
             paintedGroundDetail: { value: paintedGround.detail },
             paintedGroundBounds: { value: new THREE.Vector4(...bounds) },
+            paintedGroundFeather: { value: definition?.outerFeather ?? 170 },
           }
         : {}),
     };

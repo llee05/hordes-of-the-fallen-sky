@@ -56,12 +56,13 @@ describe('location scenery content', () => {
   });
 
   it('keeps dry camps dry and distinguishes the mountain silhouettes', () => {
-    for (const id of ['bogd-khan-uul', 'khan-tengri', 'altan-ovoo', 'eej-khairkhan'] as const)
+    for (const id of ['bogd-khan-uul', 'khan-tengri', 'eej-khairkhan'] as const)
       expect(LANDSCAPES[id].water).toBeUndefined();
     expect(LANDSCAPES['altai-tavan-bogd'].landmarks.filter((item) => item.y < 0)).toHaveLength(5);
     expect(LANDSCAPES.otgontenger.landmarks[0]?.prop).toBe('snow-dome');
     expect(LANDSCAPES['khan-tengri'].landmarks[0]?.prop).toBe('pyramid');
     expect(LANDSCAPES.belukha.landmarks[0]?.prop).toBe('twin-summit');
+    expect(LANDSCAPES['altan-ovoo'].water?.kind).toBe('stream');
     expect(LANDSCAPES['orkhon-valley'].water?.kind).toBe('stream');
     expect(LANDSCAPES['orkhon-valley'].water?.gorge?.bridges.length).toBeGreaterThan(0);
   });

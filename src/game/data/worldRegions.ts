@@ -1,6 +1,7 @@
 import type { LocationId } from '../types';
 import type { MountainRegion, TerrainBounds, TerrainPoint } from '../terrain/types';
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
+import { ALTAN_OVOO, ALTAN_OVOO_FOOTPRINTS } from './altanOvoo';
 import { ORKHON_FOOTPRINTS, ORKHON_VALLEY, type OrkhonPlateau } from './orkhonValley';
 
 export interface SceneShelf {
@@ -44,6 +45,8 @@ export interface RegionComposition {
   playBounds?: TerrainBounds;
   /** Settlement anchor relative to the terrain centre. */
   camp?: TerrainPoint;
+  /** Flat, protected radius around an authored settlement. */
+  campClearRadius?: number;
   /** Authored levels keep the camp on the valley floor instead of a raised camp shelf. */
   campShelf?: boolean;
   /** Scale of the gentle valley-floor undulation; authored two-level maps keep it low. */
@@ -120,8 +123,26 @@ const desert: ScenePalette = {
   fog: 0xcebc9f,
 };
 
+/** The pre-authored Altan Ovoo composition, retained as a development fallback. */
+export const ALTAN_OVOO_GENERATED_REGION: RegionComposition = {
+  id: 'altan-ovoo',
+  floor: 65,
+  snowLine: 10000,
+  vegetation: 'meadow',
+  palette: { ...meadow, grass: 0xb3a36b, rock: 0x72756e },
+  shelves: [
+    shelf('basalt-shoulder', -160, -850, 1160, 460, 225, -8),
+    shelf('old-volcanic-crown', -380, -1230, 720, 440, 180, 10, 60),
+    shelf('eastern-basalt', 920, 650, 440, 380, 165, -20),
+    shelf('distant-ridge', 0, -2200, 2450, 650, 290, 0, 90),
+  ],
+};
+
 /** One authored level-1 plateau, sharing the ramp mechanics of the composed shelves. */
-function plateau(source: OrkhonPlateau, rise: number): SceneShelf {
+function plateau(
+  source: Pick<OrkhonPlateau, 'id' | 'outline' | 'ramps'>,
+  rise: number,
+): SceneShelf {
   const xs = source.outline.map((point) => point.x);
   const ys = source.outline.map((point) => point.y);
   const [first, ...rest] = source.ramps.map((ramp) => ({
@@ -218,12 +239,28 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
     snowLine: 10000,
     vegetation: 'meadow',
     palette: { ...meadow, grass: 0xb3a36b, rock: 0x72756e },
-    shelves: [
-      shelf('basalt-shoulder', -160, -850, 1160, 460, 225, -8),
-      shelf('old-volcanic-crown', -380, -1230, 720, 440, 180, 10, 60),
-      shelf('eastern-basalt', 920, 650, 440, 380, 165, -20),
-      shelf('distant-ridge', 0, -2200, 2450, 650, 290, 0, 90),
-    ],
+    campShelf: false,
+    relief: 0.35,
+    terrainSize: ALTAN_OVOO.world.terrainSize,
+    playBounds: {
+      x: ALTAN_OVOO.world.minX,
+      y: ALTAN_OVOO.world.minY,
+      width: ALTAN_OVOO.world.width,
+      height: ALTAN_OVOO.world.height,
+    },
+    camp: ALTAN_OVOO.world.camp,
+    campClearRadius: ALTAN_OVOO.world.campClearRadius,
+    ground: {
+      paths: ALTAN_OVOO.paths,
+      width: ALTAN_OVOO.pathWidth,
+      ramps: ALTAN_OVOO.plateaus.flatMap((source) => source.ramps),
+    },
+    obstacles: ALTAN_OVOO_FOOTPRINTS.map(({ x, y, footprint }) => ({
+      x,
+      y,
+      radius: footprint,
+    })),
+    shelves: ALTAN_OVOO.plateaus.map((source) => plateau(source, ALTAN_OVOO.rise)),
   },
   'eej-khairkhan': {
     id: 'eej-khairkhan',
@@ -265,22 +302,21 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
   },
 };
 
-export function composedRegion(id: LocationId): ComposedRegion {
+export function composedRegion(id: LocationId, generatedFallback = false): ComposedRegion {
+  const composition =
+    id === 'altan-ovoo' && generatedFallback ? ALTAN_OVOO_GENERATED_REGION : WORLD_REGIONS[id];
   return {
     seed: `living-steppe-scenes-v3:${id}`,
     biome: {
       ...OTGONTENGER_MOUNTAINS.biome,
       id: `scene-${id}`,
       heightScale: 1000,
-      campRadius: 350,
+      campRadius: composition.campClearRadius ?? 350,
       caravan: { length: 1530, halfWidth: 240, shoulder: 110 },
     },
     scene: {
-      ...WORLD_REGIONS[id],
-      shelves: [
-        ...(WORLD_REGIONS[id].campShelf === false ? [] : [CAMP_SHELF]),
-        ...WORLD_REGIONS[id].shelves,
-      ],
+      ...composition,
+      shelves: [...(composition.campShelf === false ? [] : [CAMP_SHELF]), ...composition.shelves],
     },
   };
 }

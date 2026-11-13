@@ -138,3 +138,10 @@ An ordinary capture explicitly selects the development-only tiled-ground fallbac
 VISUAL_OUTPUT_DIR=/tmp/orkhon-current npm run visual:orkhon
 ORKHON_PAINTED_GROUND=1 VISUAL_OUTPUT_DIR=/tmp/orkhon-painted npm run visual:orkhon
 ```
+
+Altan Ovoo has the parallel fixed-camera capture entry point below.
+Run it only when the browser-capture gate is approved:
+
+```bash
+VISUAL_OUTPUT_DIR=/tmp/altan-painted npm run visual:altan
+```

@@ -12,7 +12,7 @@ models. Existing cultural context remains in `data/clan.ts` and
 | Altai Tavan Bogd | Five snowy crests, turquoise glacier seams, silver-green gravel       |
 | Khan Tengri      | Single sharp white pyramid, lavender scree, angular blue-grey crags   |
 | Belukha          | Paired white heights, milky glacial water, cool meadow and conifers   |
-| Altan Ovoo       | Flat-topped extinct cone, amber grass, charcoal basalt; no lava       |
+| Altan Ovoo       | Authored two-tier cinder cone, amber grass, charcoal basalt; no lava  |
 | Eej Khairkhan    | Sculpted peach granite, pale sand ribbons, sparse dry grasses         |
 | Orkhon Valley    | Authored two-level basalt gorge, eastern falls and river, open steppe |
 
@@ -59,6 +59,13 @@ the falls. See [the level guide](orkhon-valley.md) for its layout, traversal rul
 which pack assets are used where. Its scale is the reference for
 [the art specification](art-spec.md); the other locations' scenery, ground and shelf
 heights still differ from it.
+
+## Altan Ovoo level
+
+Altan Ovoo is authored as a 6,400 × 4,000-unit volcanic-steppe battlefield with one raised cinder cone, two walkable ramps, a south-west camp, a northern summit ovoo, and connected trails through the spring and other terrain sites.
+The level keeps open combat lanes between dense basalt outcrops and autumn clusters.
+Four hand-painted ground quadrants follow that terrain while the spring, cliffs, scenery, landmarks, actors, and collision remain separate.
+See [the level guide](altan-ovoo.md) for its layout, hybrid-rendering boundary, existing-art mappings, performance, and deferred gameplay features.
 
 ## Rivers and shores
 
