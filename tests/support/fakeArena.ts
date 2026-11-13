@@ -181,6 +181,7 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
       dust: () => {},
       charge: () => {},
       telegraph: () => {},
+      classAttack: () => {},
     } as any,
     hud: {
       refresh: () => {},

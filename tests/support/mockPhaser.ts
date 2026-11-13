@@ -24,6 +24,7 @@ export function mockPhaser() {
     depth = 0;
     tintTopLeft = 0xffffff;
     flipX = false;
+    texture = { key: '' };
     body = new MockArcadeBody();
     private data = new Map<string, any>();
 
@@ -72,7 +73,8 @@ export function mockPhaser() {
       this.flipX = f;
       return this;
     }
-    setTexture(_t: string) {
+    setTexture(t: string) {
+      this.texture.key = t;
       return this;
     }
     setScale(s: number) {
