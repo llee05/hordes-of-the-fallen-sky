@@ -9,6 +9,7 @@ import type { EnemyDirectorHost } from '../../src/game/scenes/arena/EnemyDirecto
 import { ClanDamage } from '../../src/game/scenes/arena/ClanDamage';
 import { createAreaEncounter } from '../../src/game/state/areaEncounters';
 import { createSpiritCallerCombatState } from '../../src/game/state/spiritCaller';
+import { createMountedArcherCombatState } from '../../src/game/state/mountedArcher';
 import { createLegacyCampRun as createRun } from './legacyCamp';
 import type { RunState } from '../../src/game/types';
 
@@ -72,6 +73,7 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
   const timers: ArenaTimers = {
     spawnTimer: 0,
     attackTimer: 0,
+    mountedArcher: createMountedArcherCombatState(),
     spiritCaller: createSpiritCallerCombatState(),
     dashTimer: 0,
     dashRemaining: 0,
@@ -157,7 +159,15 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
       muted: false,
     } as any,
     visualSettings,
-    facing: { x: 1, y: 0 } as any,
+    facing: {
+      x: 1,
+      y: 0,
+      set(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+        return this;
+      },
+    } as any,
     cameraZoom: 1,
     developerTools: createDeveloperTools(),
     effects: {
@@ -166,6 +176,8 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
       sweep: () => {},
       shake: () => {},
       dust: () => {},
+      charge: () => {},
+      telegraph: () => {},
     } as any,
     hud: {
       refresh: () => {},

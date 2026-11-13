@@ -220,7 +220,7 @@ The Last Court, Iron Vow, Sundering, creatures, and refuge are original fantasy;
 | ------------------------------ | ------------------------------------ | ------------------- |
 | Ride                           | WASD / arrow keys                    | Left stick          |
 | Light attack                   | Hold left click                      | Right trigger       |
-| Heavy attack                   | Hold right click                     | Left trigger        |
+| Heavy attack                   | Hold right click; release to charge  | Left trigger        |
 | Class abilities                | 1 / 2 / 3 / 4                        | A / B / X / Y       |
 | Gallop                         | Space / HUD button                   | Left bumper         |
 | Develop camp                   | B / HUD button                       | D-pad up            |
@@ -357,14 +357,18 @@ Combat adds bounded elite/armour markers, grouped offscreen warnings and retaine
 
 The four playable classes share formations, gallop and succession, but the Khan no
 longer attacks automatically. Hold left click for a quick light attack or right click
-for a slower, stronger heavy attack toward the cursor. Controller aim uses the right
+for a stronger heavy attack toward the cursor; charging heavies fire on release. Controller aim uses the right
 stick, with right trigger for light and left trigger for heavy. The class atlas supplies
 the weapon-specific windup and release poses. Allied riders and camp defenses keep
 their automatic targeting.
 
-- **Mounted Archer** uses a fast aimed composite-bow shot, a close-range saber sweep,
-  and manual arrow fans. Its progression emphasizes extra arrows, firing speed,
-  damage, mobility, and piercing.
+- **Mounted Archer** fires Galloping Shots at full riding speed, with every third
+  release followed by a second arrow. Piercing Draw scales damage and penetration with
+  held charge; a full draw knocks back small enemies. Parthian Shot fires backward
+  during a speed burst, Rain of Arrows repeatedly strikes a warned target area,
+  Splintering Arrow fans piercing fragments from its first hit, and Windstep combines
+  an invulnerable evasive dash with automatic shots at nearby enemies. Its progression
+  emphasizes extra arrows, firing speed, damage, mobility, and piercing.
 - **Lancer** uses short piercing lance thrusts, a nearby sweeping strike and manual
   breakthrough charges. Its progression develops damage, piercing,
   health, speed, and additional thrusts.
@@ -384,21 +388,21 @@ their automatic targeting.
 A supplied character profile applies its background and oath bonuses alongside
 its class loadout. Successors retain the expedition's class and progression.
 
-### Manual attacks and abilities
+### Manual attacks and class abilities
 
-| Class          | Left-click light | Right-click heavy | 1                   | 2                  | 3             | 4                   |
-| -------------- | ---------------- | ----------------- | ------------------- | ------------------ | ------------- | ------------------- |
-| Mounted Archer | Aimed Arrow      | Drawn Power Shot  | Flurry Arrow Volley | Saber Close Slash  | Circling Shot | Windrunner          |
-| Lancer         | Couched Thrust   | Charging Thrust   | Sweeping Strike     | Devastating Charge | Line Breaker  | Shock Lance         |
-| Iron Pagoda    | Heavy Sabre      | Sundering Cleave  | Iron Wall           | Crushing Hooves    | Chain Snare   | Unbroken Fortress   |
-| Spirit Caller  | Spirit Wisps     | Ancestral Drum    | Ongod Guardians     | Wind of Tengri     | Sacred Ovoo   | Veil Between Worlds |
+| Class          | Left-click light | Right-click heavy | 1               | 2                  | 3                 | 4                   |
+| -------------- | ---------------- | ----------------- | --------------- | ------------------ | ----------------- | ------------------- |
+| Mounted Archer | Galloping Shot   | Piercing Draw     | Parthian Shot   | Rain of Arrows     | Splintering Arrow | Windstep            |
+| Lancer         | Couched Thrust   | Charging Thrust   | Sweeping Strike | Devastating Charge | Line Breaker      | Shock Lance         |
+| Iron Pagoda    | Heavy Sabre      | Sundering Cleave  | Iron Wall       | Crushing Hooves    | Chain Snare       | Unbroken Fortress   |
+| Spirit Caller  | Spirit Wisps     | Ancestral Drum    | Ongod Guardians | Wind of Tengri     | Sacred Ovoo       | Veil Between Worlds |
 
 Light and heavy range, rate, damage and hit shape, plus every ability cooldown and effect, are
 authored in `GAME.classes` and surfaced through `src/game/data/classes.ts`. Ability
 cooldowns advance only during active play, appear in the battlefield HUD and persist
-in full expedition saves; older saves load the four abilities ready. The old
-sustained-riding charged volley is removed; Flurry Arrow Volley carries that role as
-the Mounted Archer's ability 1. Formation momentum remains for allied rider tactics.
+in full expedition saves; older saves load the four abilities ready. Mounted Archer
+delayed shots, target areas, volleys and maneuvers also use active time and persist in
+full saves. Formation momentum remains for allied rider tactics.
 Spirit bolts steer toward live, unhit enemies at the class turn rate while retaining
 their speed. The class `gallopSpeedMultiplier` still scales the Khan's Space / left-bumper
 gallop, and Lancer and Iron Pagoda gallops retain their existing pinning breakthrough.

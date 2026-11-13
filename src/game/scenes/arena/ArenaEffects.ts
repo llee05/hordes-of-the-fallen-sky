@@ -83,6 +83,35 @@ export class ArenaEffects {
     this.arena.scene.cameras.main.shake(duration, intensity);
   }
 
+  /** Short-lived progress arc kept close to a charging Khan. */
+  charge(x: number, y: number, progress: number, color: number): void {
+    const arc = this.arena.scene.add
+      .arc(x, y, 20, -90, -90 + Math.max(0.02, Math.min(1, progress)) * 360, false, color, 0.1)
+      .setStrokeStyle(3, color, 0.9)
+      .setDepth(9600);
+    this.arena.scene.tweens.add({
+      targets: arc,
+      alpha: 0,
+      duration: 110,
+      onComplete: () => arc.destroy(),
+    });
+  }
+
+  /** Ground-target warning whose fill grows as impact approaches. */
+  telegraph(x: number, y: number, radius: number, color: number, progress: number): void {
+    const marker = this.arena.scene.add
+      .circle(x, y, radius, color, 0.04 + Math.max(0, Math.min(1, progress)) * 0.1)
+      .setStrokeStyle(2, color, 0.8)
+      .setScale(1, 0.62)
+      .setDepth(9400);
+    this.arena.scene.tweens.add({
+      targets: marker,
+      alpha: 0,
+      duration: 150,
+      onComplete: () => marker.destroy(),
+    });
+  }
+
   /** One dust puff behind a rider at (x, y) facing along `facingX`. */
   dust(x: number, y: number, facingX: number, galloping: boolean): void {
     const { scene } = this.arena;

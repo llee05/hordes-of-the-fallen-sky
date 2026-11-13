@@ -42,6 +42,7 @@ import { captureBody } from './bodyArchive';
 import type { ClanDamage } from './ClanDamage';
 import type { EnemyDirector } from './EnemyDirector';
 import { SpiritCallerSystem, type SpiritProjectileSource } from './SpiritCallerSystem';
+import { MountedArcherSystem, type MountedShotOptions } from './MountedArcherSystem';
 
 /**
  * What a hostile shot reads from its shooter. Browser tests fire from plain
@@ -68,10 +69,16 @@ export interface CombatHost {
  * private methods, which browser tests still call through scene forwarders.
  */
 export class CombatSystem extends ArenaSystem {
-  private attackWindup?: { kind: 'light' | 'heavy'; remaining: number; charge?: number };
+  private attackWindup?: {
+    kind: 'light' | 'heavy';
+    remaining: number;
+    charge?: number;
+    aimUsable: boolean;
+  };
   private readonly spiritCaller: SpiritCallerSystem;
   /** Slashes landed in the current chain, and seconds left to land the next one. */
   private combo = { count: 0, remaining: 0 };
+  private readonly mountedArcher: MountedArcherSystem;
 
   constructor(
     arena: ArenaContext,
@@ -99,6 +106,27 @@ export class CombatSystem extends ArenaSystem {
           width,
           source,
         ),
+    });
+    this.mountedArcher = new MountedArcherSystem(arena, {
+      shoot: (x, y, target, count, damage, range, width, options) =>
+        this.shootVolley(
+          x,
+          y,
+          target,
+          count,
+          damage,
+          false,
+          false,
+          'khan',
+          undefined,
+          false,
+          options?.origin,
+          range,
+          width,
+          undefined,
+          options,
+        ),
+      damageEnemy: (enemy, amount) => this.damageEnemy(enemy, amount),
     });
   }
 
@@ -130,6 +158,7 @@ export class CombatSystem extends ArenaSystem {
     this.attackWindup = undefined;
     this.combo = { count: 0, remaining: 0 };
     this.timers.abilityCooldowns = { q: 0, w: 0, e: 0, r: 0 };
+    this.mountedArcher.reset();
     this.spiritCaller.reset();
     this.timers.khanStatus = createKhanStatus();
   }
@@ -145,41 +174,45 @@ export class CombatSystem extends ArenaSystem {
     lightHeld: boolean,
     heavyHeld: boolean,
     aim: { x: number; y: number },
+    aimUsable = true,
   ): void {
     if (this.run.phase !== 'playing') return;
     this.timers.attackTimer = Math.max(0, this.timers.attackTimer - dt);
     const cooldowns = this.cooldowns();
     for (const slot of Object.keys(cooldowns) as ClassAbilitySlot[])
       cooldowns[slot] = Math.max(0, cooldowns[slot] - dt);
+    this.mountedArcher.tick(dt);
     this.spiritCaller.tick(dt);
     this.tickComboAndStance(dt);
     if (this.attackWindup) {
       const held = this.attackWindup.kind === 'light' ? lightHeld : heavyHeld;
       const cls = classDefinition(this.run.character?.classId);
-      const drumCharge =
-        this.attackWindup.kind === 'heavy' && cls.id === 'spirit-caller'
-          ? cls.heavyAttack.charge
-          : undefined;
+      const heavyCharge = this.attackWindup.kind === 'heavy' ? cls.heavyAttack.charge : undefined;
       if (!isKhanActive(this.run)) {
         this.attackWindup = undefined;
         return;
       }
-      if (drumCharge) {
+      if (heavyCharge) {
         if (!held) {
           const charge = this.attackWindup.charge ?? 0;
+          const usable = this.attackWindup.aimUsable;
           this.attackWindup = undefined;
-          if (charge >= cls.heavyAttack.windup) this.fireHeavy(aim, charge);
+          if (charge >= cls.heavyAttack.windup) this.fireAttack('heavy', aim, charge, usable);
           return;
         }
         this.faceAim(aim, false);
         this.attackWindup.charge = Math.min(
-          drumCharge.maxDuration,
+          heavyCharge.maxDuration,
           (this.attackWindup.charge ?? 0) + dt,
         );
-        if (this.attackWindup.charge >= drumCharge.maxDuration) {
+        if (heavyCharge.kind === 'projectile') {
+          this.mountedArcher.showCharge(this.attackWindup.charge, cls.heavyAttack);
+          return;
+        }
+        if (this.attackWindup.charge >= heavyCharge.maxDuration) {
           const charge = this.attackWindup.charge;
           this.attackWindup = undefined;
-          this.fireHeavy(aim, charge);
+          this.fireAttack('heavy', aim, charge, aimUsable);
         }
         return;
       }
@@ -191,8 +224,9 @@ export class CombatSystem extends ArenaSystem {
       this.attackWindup.remaining = Math.max(0, this.attackWindup.remaining - dt);
       if (this.attackWindup.remaining <= 0) {
         const kind = this.attackWindup.kind;
+        const usable = this.attackWindup.aimUsable;
         this.attackWindup = undefined;
-        this.fireAttack(kind, aim);
+        this.fireAttack(kind, aim, 0, usable);
       }
     } else if ((lightHeld || heavyHeld) && this.timers.attackTimer <= 0 && isKhanActive(this.run)) {
       const kind = heavyHeld ? 'heavy' : 'light';
@@ -200,7 +234,8 @@ export class CombatSystem extends ArenaSystem {
       this.attackWindup = {
         kind,
         remaining: kind === 'heavy' ? cls.heavyAttack.windup : (cls.basicAttack.windup ?? 0.12),
-        charge: kind === 'heavy' && cls.id === 'spirit-caller' ? 0 : undefined,
+        charge: kind === 'heavy' && cls.heavyAttack.charge ? 0 : undefined,
+        aimUsable,
       };
       this.faceAim(aim, false);
     }
@@ -237,22 +272,46 @@ export class CombatSystem extends ArenaSystem {
   }
 
   fireBasic(aim: { x: number; y: number }): boolean {
-    return this.fireAttack('light', aim);
+    return this.fireAttack('light', aim, 0, true);
   }
 
   fireHeavy(aim: { x: number; y: number }, charge = 0): boolean {
-    return this.fireAttack('heavy', aim, charge);
+    return this.fireAttack('heavy', aim, charge, true);
   }
 
-  private fireAttack(kind: 'light' | 'heavy', aim: { x: number; y: number }, charge = 0): boolean {
+  private fireAttack(
+    kind: 'light' | 'heavy',
+    aim: { x: number; y: number },
+    charge = 0,
+    aimUsable = true,
+  ): boolean {
     if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.timers.attackTimer > 0)
       return false;
     const cls = classDefinition(this.run.character?.classId);
     const attack: ClassBasicAttackDefinition = kind === 'heavy' ? cls.heavyAttack : cls.basicAttack;
     const range = kind === 'heavy' ? khanHeavyRange(this.run) : khanBasicRange(this.run);
-    const direction = this.faceAim(aim);
-    if (kind === 'heavy' && cls.id === 'spirit-caller' && cls.heavyAttack.charge) {
+    const target =
+      cls.id === 'mounted-archer' && kind === 'light' && !aimUsable
+        ? (this.spatial.nearest(this.player.x, this.player.y, range) ?? aim)
+        : aim;
+    const direction = this.faceAim(target);
+    if (
+      kind === 'heavy' &&
+      cls.id === 'spirit-caller' &&
+      cls.heavyAttack.charge?.kind === 'waves'
+    ) {
       const released = this.spiritCaller.releaseDrum(cls.heavyAttack, charge);
+      this.timers.attackTimer =
+        cls.heavyAttack.cooldown * this.run.clan.campEffects.multipliers.hostInterval;
+      if (released) this.run.combat.volleys++;
+      return released;
+    }
+    if (
+      kind === 'heavy' &&
+      cls.id === 'mounted-archer' &&
+      cls.heavyAttack.charge?.kind === 'projectile'
+    ) {
+      const released = this.mountedArcher.releasePiercing(target, cls.heavyAttack, range, charge);
       this.timers.attackTimer =
         cls.heavyAttack.cooldown * this.run.clan.campEffects.multipliers.hostInterval;
       if (released) this.run.combat.volleys++;
@@ -266,7 +325,7 @@ export class CombatSystem extends ArenaSystem {
       released = this.shootVolley(
         this.player.x,
         this.player.y,
-        aim,
+        target,
         count,
         attack.damage,
         false,
@@ -312,6 +371,8 @@ export class CombatSystem extends ArenaSystem {
       (kind === 'heavy' ? cls.heavyAttack.cooldown : this.run.stats.attackInterval) *
       this.run.clan.campEffects.multipliers.hostInterval;
     if (released) this.run.combat.volleys++;
+    if (released && cls.id === 'mounted-archer' && kind === 'light')
+      this.mountedArcher.recordBasic(target, attack, range);
     return released;
   }
 
@@ -344,10 +405,16 @@ export class CombatSystem extends ArenaSystem {
     const cls = classDefinition(this.run.character?.classId);
     const ability = cls.abilities.find((entry) => entry.slot === slot)!;
     this.attackWindup = undefined;
-    const direction = this.faceAim(aim);
     const effect = ability;
     let released = true;
-    if (effect.kind === 'volley') {
+    if (
+      cls.id === 'mounted-archer' &&
+      ['parthian', 'rain', 'splinter', 'windstep'].includes(effect.kind)
+    ) {
+      released = this.mountedArcher.cast(effect, aim, this.movementDirection(aim));
+      if (released) this.host.playerMotion.attack();
+    } else if (effect.kind === 'volley') {
+      this.faceAim(aim);
       released = this.shootVolley(
         this.player.x,
         this.player.y,
@@ -363,12 +430,15 @@ export class CombatSystem extends ArenaSystem {
         cls.stats.range + this.run.clan.campEffects.bonuses.range,
       );
     } else if (effect.kind === 'arc') {
+      const direction = this.faceAim(aim);
       this.strikeArc(direction, effect.range, effect.angle, effect.damage);
     } else if (effect.kind === 'line') {
+      const direction = this.faceAim(aim);
       this.strikeLine(direction, effect.range, effect.width, effect.damage, true);
     } else if (effect.kind === 'pulse') {
       this.strikePulse(effect.range, effect.damage, cls.id === 'spirit-caller');
     } else if (effect.kind === 'charge') {
+      const direction = this.faceAim(aim);
       this.strikeLine(direction, effect.range, effect.width, effect.damage, true);
       this.run.combat.gallopSerial++;
       this.timers.dashRemaining = Math.max(this.timers.dashRemaining, GAME.dash.duration);
@@ -379,6 +449,7 @@ export class CombatSystem extends ArenaSystem {
       effect.kind === 'ovoo' ||
       effect.kind === 'veil'
     ) {
+      const direction = this.faceAim(aim);
       released = this.spiritCaller.cast(effect, direction);
     } else if (effect.kind === 'brace') {
       guardKhan(khanStatusOf(this.timers), {
@@ -393,7 +464,7 @@ export class CombatSystem extends ArenaSystem {
       this.strikePulse(effect.range, effect.damage, false, effect.payload);
       this.effects.ring(this.player.x, this.player.y, effect.range, 0xc9a26a);
       this.effects.shake(140, 0.006);
-      this.effects.dust(this.player.x, this.player.y, direction.x, true);
+      this.effects.dust(this.player.x, this.player.y, this.facing.x, true);
     } else if (effect.kind === 'snare') {
       this.strikeSnare(effect);
       this.effects.ring(this.player.x, this.player.y, effect.range, 0x9fc3ff, true);
@@ -456,6 +527,15 @@ export class CombatSystem extends ArenaSystem {
     this.host.faceTarget(aim.x, aim.y);
     if (release) this.host.playerMotion.attack();
     return direction;
+  }
+
+  /** Current ride direction, falling back to cursor aim while standing still. */
+  private movementDirection(aim: { x: number; y: number }): { x: number; y: number } {
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    const speed = Math.hypot(body.velocity.x, body.velocity.y);
+    return speed > 1
+      ? { x: body.velocity.x / speed, y: body.velocity.y / speed }
+      : aimedDirection(this.player, aim, this.facing);
   }
 
   private strikeLine(
@@ -579,6 +659,7 @@ export class CombatSystem extends ArenaSystem {
     range?: number,
     collisionWidth?: number,
     spiritSource?: SpiritProjectileSource,
+    mountedOptions?: MountedShotOptions,
   ): boolean {
     const cls = classDefinition(this.run.character?.classId);
     const volley =
@@ -595,8 +676,8 @@ export class CombatSystem extends ArenaSystem {
     const tempest = volley.tempest;
     const first = this.projectiles.get(x, y, 'bolt') as Projectile | null;
     if (!first) return false;
-    const arrowCount = volley.count;
-    const spacing = volley.spacing;
+    const arrowCount = mountedOptions?.exactCount ? count : volley.count;
+    const spacing = mountedOptions?.spread ?? volley.spacing;
     const chargedPierce = owner === 'khan' ? cls.weapon.chargedExtraPierce : 1;
     const basePierces = this.run.stats.pierce + (charged ? chargedPierce : 0);
     const baseSpeed = owner === 'khan' ? cls.stats.projectileSpeed : GAME.projectile.speed;
@@ -620,7 +701,7 @@ export class CombatSystem extends ArenaSystem {
       bolt.setCircle(radius, bolt.width / 2 - radius, bolt.height / 2 - radius);
       bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
       bolt.tempest = tempest;
-      bolt.pierces = basePierces;
+      bolt.pierces = mountedOptions?.pierces ?? basePierces;
       bolt.pins = owner === 'khan' && charged && cls.weapon.pinsOnCharged;
       if (owner === 'khan' && cls.id !== 'mounted-archer') {
         bolt.setTint(cls.weapon.projectileTint);
@@ -652,6 +733,7 @@ export class CombatSystem extends ArenaSystem {
       bolt.setData('precision', false);
       bolt.setData('ghost', ghost);
       bolt.setData('spirit-source', spiritSource);
+      bolt.setData('mounted-kind', mountedOptions?.kind);
       bolt.remaining = range
         ? range / Math.max(1, baseSpeed * volley.speed)
         : GAME.projectile.lifetime;
@@ -768,6 +850,7 @@ export class CombatSystem extends ArenaSystem {
     if (bolt.hitTargets.get(enemy) === enemy.spawnId) return;
     bolt.hitTargets.set(enemy, enemy.spawnId);
     const hitDamage = bolt.damage;
+    this.mountedArcher.onProjectileHit(bolt, enemy);
     if (bolt.getData('spirit-source') === 'wisp') {
       if (this.spiritCaller.gainWispEnergy()) this.arena.hud.refresh();
     }
@@ -893,6 +976,7 @@ export class CombatSystem extends ArenaSystem {
           precision: p.getData('precision') as boolean | undefined,
           ghost: p.getData('ghost') as boolean | undefined,
           spiritSource: p.getData('spirit-source') as ProjectileArchive['spiritSource'],
+          mountedKind: p.getData('mounted-kind') as ProjectileArchive['mountedKind'],
           baseDamage: p.getData('base-damage') as number | undefined,
           dealtDamage: p.getData('dealt-damage') as number | undefined,
           rotation: p.rotation,
@@ -923,6 +1007,7 @@ export class CombatSystem extends ArenaSystem {
         p.setData('precision', saved.precision);
         p.setData('ghost', saved.ghost);
         p.setData('spirit-source', saved.spiritSource);
+        p.setData('mounted-kind', saved.mountedKind);
         p.setData('base-damage', saved.baseDamage);
         p.setData('dealt-damage', saved.dealtDamage);
         p.setScale(hostile ? 1.1 : 1)

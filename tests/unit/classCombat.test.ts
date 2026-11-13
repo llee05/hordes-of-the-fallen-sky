@@ -87,13 +87,123 @@ describe('playable class combat', () => {
     expect(arena.combat.spiritStatus()).toMatchObject({ energy: 1, maximum: 12 });
   });
 
-  it('fires the Mounted Archer heavy as a harder-hitting drawn power shot', () => {
+  it('fires the Mounted Archer full Piercing Draw with its full-charge bonus', () => {
     const arena = setup('mounted-archer');
-    expect(arena.combat.fireHeavy({ x: 1600, y: 1000 })).toBe(true);
+    const heavy = classDefinition('mounted-archer').heavyAttack;
+    const charge = heavy.charge;
+    if (charge?.kind !== 'projectile') throw new Error('Piercing Draw charge is missing');
+    expect(arena.combat.fireHeavy({ x: 1600, y: 1000 }, charge.maxDuration)).toBe(true);
     const arrow = arena.projectiles.getFirstAlive()!;
     expect(arrow.damage).toBeCloseTo(
-      arena.context.run.stats.damage * classDefinition('mounted-archer').heavyAttack.damage,
+      arena.context.run.stats.damage * (charge.maximumDamage + charge.fullChargeBonus),
     );
+  });
+
+  it('Galloping Shot keeps ride velocity and adds a quick arrow after every third release', () => {
+    const arena = setup('mounted-archer');
+    arena.context.player.setVelocity(196, 0);
+    for (let shot = 0; shot < 3; shot++) {
+      expect(arena.combat.fireBasic({ x: 1400, y: 1000 })).toBe(true);
+      arena.context.timers.attackTimer = 0;
+    }
+    expect(arena.projectiles.countActive()).toBe(3);
+    expect(arena.context.player.body!.velocity.x).toBe(196);
+    arena.combat.tickKhanCombat(0.12, false, false, { x: 1400, y: 1000 });
+    expect(arena.projectiles.countActive()).toBe(4);
+  });
+
+  it('Galloping Shot falls back to the nearest enemy only without usable cursor aim', () => {
+    const arena = setup('mounted-archer');
+    arena.spawn(180, 0);
+    arena.context.facing.set(-1, 0);
+    const fallback = { x: 500, y: 1000 };
+    arena.combat.tickKhanCombat(0.01, true, false, fallback, false);
+    arena.combat.tickKhanCombat(0.12, true, false, fallback, false);
+    expect(arena.projectiles.getFirstAlive()!.body!.velocity.x).toBeGreaterThan(0);
+  });
+
+  it('Piercing Draw scales damage and pierce, releases on mouse-up, and knocks back only small foes at full charge', () => {
+    const arena = setup('mounted-archer');
+    const aim = { x: 1600, y: 1000 };
+    const heavy = classDefinition('mounted-archer').heavyAttack;
+    const charge = heavy.charge;
+    if (charge?.kind !== 'projectile') throw new Error('Piercing Draw charge is missing');
+
+    arena.combat.tickKhanCombat(0.01, false, true, aim);
+    arena.combat.tickKhanCombat(charge.maxDuration / 2, false, true, aim);
+    expect(arena.projectiles.countActive()).toBe(0);
+    arena.combat.tickKhanCombat(0.01, false, false, aim);
+    const partial = arena.projectiles.getFirstAlive()!;
+    expect(partial.damage).toBeCloseTo(
+      arena.context.run.stats.damage * (charge.minimumDamage + charge.maximumDamage) * 0.5,
+    );
+    expect(partial.pierces).toBe(Math.round((charge.minimumPierce + charge.maximumPierce) * 0.5));
+
+    partial.disableBody(true, true);
+    arena.context.timers.attackTimer = 0;
+    arena.combat.fireHeavy(aim, charge.maxDuration);
+    const full = arena.projectiles.getFirstAlive()!;
+    const small = arena.spawn(100, 0);
+    arena.combat.hitEnemy(full, small);
+    expect(small.status.forced).toBeGreaterThan(0);
+
+    full.disableBody(true, true);
+    arena.context.timers.attackTimer = 0;
+    arena.combat.fireHeavy(aim, charge.maxDuration);
+    const second = arena.projectiles.getFirstAlive()!;
+    const large = arena.spawn(120, 0);
+    large.definition = { ...large.definition, scale: 3 };
+    arena.combat.hitEnemy(second, large);
+    expect(large.status.forced).toBe(0);
+  });
+
+  it('Parthian Shot accelerates and releases a rapid volley opposite movement', () => {
+    const arena = setup('mounted-archer');
+    arena.context.player.setVelocity(100, 0);
+    expect(arena.combat.useAbility('q', { x: 1400, y: 1000 })).toBe(true);
+    expect(arena.context.timers.khanManeuver?.speedMultiplier).toBeGreaterThan(1);
+    expect(arena.projectiles.getFirstAlive()!.body!.velocity.x).toBeLessThan(0);
+    arena.combat.tickKhanCombat(0.12, false, false, { x: 1400, y: 1000 });
+    expect(arena.projectiles.countActive()).toBeGreaterThanOrEqual(2);
+  });
+
+  it('Rain of Arrows warns before applying repeated area damage', () => {
+    const arena = setup('mounted-archer');
+    const target = arena.spawn(200, 0);
+    const rain = classDefinition('mounted-archer').abilities[1];
+    if (rain.kind !== 'rain') throw new Error('Rain of Arrows is missing');
+    expect(arena.combat.useAbility('w', target)).toBe(true);
+    arena.combat.tickKhanCombat(rain.delay - 0.01, false, false, target);
+    expect(target.health).toBe(10000);
+    arena.combat.tickKhanCombat(0.02, false, false, target);
+    const first = target.health;
+    expect(first).toBeLessThan(10000);
+    arena.combat.tickKhanCombat(rain.tickEvery, false, false, target);
+    expect(target.health).toBeLessThan(first);
+  });
+
+  it('Splintering Arrow fans piercing fragments onward from its first hit', () => {
+    const arena = setup('mounted-archer');
+    const target = arena.spawn(120, 0);
+    const splinter = classDefinition('mounted-archer').abilities[2];
+    if (splinter.kind !== 'splinter') throw new Error('Splintering Arrow is missing');
+    expect(arena.combat.useAbility('e', { x: 1600, y: 1000 })).toBe(true);
+    const arrow = arena.projectiles.getFirstAlive()!;
+    arena.combat.hitEnemy(arrow, target);
+    const fragments = arena.projectiles.getChildren().filter((bolt) => bolt.active);
+    expect(fragments).toHaveLength(splinter.fragments);
+    expect(fragments.every((bolt) => bolt.pierces === splinter.fragmentPierce)).toBe(true);
+    expect(fragments.every((bolt) => bolt.body!.velocity.x > 0)).toBe(true);
+  });
+
+  it('Windstep dashes toward aim with invulnerability and auto-fires at nearby enemies', () => {
+    const arena = setup('mounted-archer');
+    arena.spawn(100, 0);
+    expect(arena.combat.useAbility('r', { x: 1600, y: 1000 })).toBe(true);
+    expect(arena.context.timers.khanManeuver?.direction?.x).toBeCloseTo(1);
+    expect(arena.context.timers.invulnerable).toBeGreaterThan(0);
+    arena.combat.tickKhanCombat(0.01, false, false, { x: 1600, y: 1000 });
+    expect(arena.projectiles.countActive()).toBeGreaterThan(0);
   });
 
   it('fires the Lancer heavy through its longer charging-thrust lane', () => {
@@ -115,14 +225,16 @@ describe('playable class combat', () => {
     const near = arena.spawn(100, 0);
     const far = arena.spawn(205, 0);
     const heavy = classDefinition('spirit-caller').heavyAttack;
-    expect(arena.combat.fireHeavy({ x: 1600, y: 1000 }, heavy.charge!.maxDuration)).toBe(true);
+    const charge = heavy.charge;
+    if (charge?.kind !== 'waves') throw new Error('Spirit Caller drum charge is missing');
+    expect(arena.combat.fireHeavy({ x: 1600, y: 1000 }, charge.maxDuration)).toBe(true);
     expect(arena.context.timers.spiritCaller?.drumWaves).toHaveLength(3);
     arena.combat.tickKhanCombat(0.01, false, false, { x: 1600, y: 1000 });
     expect(near.health).toBeLessThan(10000);
-    expect(near.spiritSlow).toBe(heavy.charge!.slowDuration);
+    expect(near.spiritSlow).toBe(charge.slowDuration);
     expect(far.health).toBe(10000);
-    arena.combat.tickKhanCombat(heavy.charge!.waveDelay, false, false, { x: 1600, y: 1000 });
-    arena.combat.tickKhanCombat(heavy.charge!.waveDelay, false, false, { x: 1600, y: 1000 });
+    arena.combat.tickKhanCombat(charge.waveDelay, false, false, { x: 1600, y: 1000 });
+    arena.combat.tickKhanCombat(charge.waveDelay, false, false, { x: 1600, y: 1000 });
     expect(far.health).toBeLessThan(10000);
   });
 
@@ -346,17 +458,19 @@ describe('playable class combat', () => {
     expect(arena.projectiles.countActive()).toBe(2);
   });
 
-  it('holds a heavy through its longer windup and repeats at its own cooldown', () => {
-    const arena = setup('mounted-archer');
+  it('holds a non-charging heavy through its windup and repeats at its own cooldown', () => {
+    const arena = setup('lancer');
     const aim = { x: 1600, y: 1000 };
-    const heavy = classDefinition('mounted-archer').heavyAttack;
+    const target = arena.spawn(200, 0);
+    const heavy = classDefinition('lancer').heavyAttack;
     arena.combat.tickKhanCombat(0.01, false, true, aim);
     arena.combat.tickKhanCombat(heavy.windup - 0.01, false, true, aim);
-    expect(arena.projectiles.countActive()).toBe(0);
+    expect(target.health).toBe(10000);
     arena.combat.tickKhanCombat(0.02, false, true, aim);
-    expect(arena.projectiles.countActive()).toBe(1);
+    const once = target.health;
+    expect(once).toBeLessThan(10000);
     arena.combat.tickKhanCombat(heavy.cooldown, false, true, aim);
     arena.combat.tickKhanCombat(heavy.windup, false, true, aim);
-    expect(arena.projectiles.countActive()).toBe(2);
+    expect(target.health).toBeLessThan(once);
   });
 });
