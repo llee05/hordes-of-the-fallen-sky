@@ -94,10 +94,13 @@ the character creator/developer class selection to test its actual loadout. The
 preview uses the existing development-only scene bridge and adds no production
 hook. Saved expeditions render their profile's class automatically.
 
-Remaining art: separate idle loops, special/ability poses and effect atlases
-(arrow volley, lance dust, Pagoda aura, spirit bolt/ward/ancestor), dedicated hurt
-and death poses, and original close portrait assets. Existing hit flashes and
-succession visibility continue unchanged. The combined rider/horse paintings have
+All playable basic, heavy, and Q/W/E/R attacks now drive short manuscript-ink weapon
+strokes, projectile releases and impacts, area marks, or stance auras from their existing
+combat events. The Spirit Caller's projectile uses its own painted wisp cutout; the other
+effects are bounded procedural strokes so they follow gameplay timing without adding large
+atlases. Remaining art: separate idle loops, ability-specific rider poses beyond the shared
+weapon release, dedicated hurt and death poses, and original close portrait assets. Existing
+hit flashes and succession visibility continue unchanged. The combined rider/horse paintings have
 no separate clothing or mount mask, so profile clothing colours, coat variants,
 gender, hair and headgear are not yet represented in the battlefield art. Separate
 painted layers or masks are needed to recolour clothing without tinting skin,

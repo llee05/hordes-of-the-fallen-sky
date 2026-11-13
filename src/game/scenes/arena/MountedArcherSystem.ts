@@ -121,6 +121,12 @@ export class MountedArcherSystem extends ArenaSystem {
         y: backward.y,
       };
       startKhanManeuver(this.timers, ability.duration, ability.speedMultiplier);
+      this.effects.classAttack('mounted-archer:parthian-shot', {
+        x: this.player.x,
+        y: this.player.y,
+        direction: backward,
+        range: ability.range,
+      });
       this.tickParthian(ability, 0);
     } else if (ability.kind === 'rain') {
       const target = this.clampedTarget(aim, ability.range);
@@ -133,7 +139,7 @@ export class MountedArcherSystem extends ArenaSystem {
       };
       this.effects.telegraph(target.x, target.y, ability.radius, 0xd9c17d, 0);
     } else if (ability.kind === 'splinter') {
-      return this.host.shoot(
+      const released = this.host.shoot(
         this.player.x,
         this.player.y,
         aim,
@@ -143,11 +149,25 @@ export class MountedArcherSystem extends ArenaSystem {
         13,
         { exactCount: true, pierces: 0, kind: 'splinter' },
       );
+      if (released)
+        this.effects.classAttack('mounted-archer:splintering-arrow', {
+          x: this.player.x,
+          y: this.player.y,
+          target: aim,
+          range: ability.range,
+        });
+      return released;
     } else if (ability.kind === 'windstep') {
       this.state().windstep = { remaining: ability.duration, shotTimer: 0 };
       startKhanManeuver(this.timers, ability.duration, ability.speedMultiplier, movement);
       this.timers.invulnerable = Math.max(this.timers.invulnerable, ability.duration);
       this.facing.set(movement.x, movement.y);
+      this.effects.classAttack('mounted-archer:windstep', {
+        x: this.player.x,
+        y: this.player.y,
+        direction: movement,
+        range: ability.range,
+      });
     } else return false;
     return true;
   }
@@ -177,6 +197,12 @@ export class MountedArcherSystem extends ArenaSystem {
           shot.width,
           { exactCount: true },
         );
+        this.effects.classAttack('mounted-archer:galloping-shot', {
+          x: this.player.x,
+          y: this.player.y,
+          target: shot,
+          range: shot.range,
+        });
       }
     }
 
@@ -225,6 +251,12 @@ export class MountedArcherSystem extends ArenaSystem {
         origin: enemy,
       },
     );
+    this.effects.classAttack('mounted-archer:splintering-arrow', {
+      x: enemy.x,
+      y: enemy.y,
+      target,
+      range: ability.range,
+    });
     this.effects.burst(enemy.x, enemy.y, 0xe2c586, ability.fragments + 2);
   }
 
@@ -253,6 +285,12 @@ export class MountedArcherSystem extends ArenaSystem {
         )
       )
         break;
+      this.effects.classAttack('mounted-archer:parthian-shot', {
+        x: this.player.x,
+        y: this.player.y,
+        target,
+        range: ability.range,
+      });
       volley.shots--;
       volley.timer += ability.shotEvery;
     }
@@ -279,6 +317,12 @@ export class MountedArcherSystem extends ArenaSystem {
         this.host.damageEnemy(enemy, this.run.stats.damage * ability.damage);
       });
       this.effects.ring(rain.x, rain.y, ability.radius, 0xe2c586);
+      this.effects.classAttack('mounted-archer:rain-of-arrows', {
+        x: this.player.x,
+        y: this.player.y,
+        target: rain,
+        radius: ability.radius,
+      });
       rain.tickTimer += ability.tickEvery;
     }
     if (rain.remaining <= 0) delete this.state().rain;
@@ -308,6 +352,12 @@ export class MountedArcherSystem extends ArenaSystem {
         )
       )
         break;
+      this.effects.classAttack('mounted-archer:windstep', {
+        x: this.player.x,
+        y: this.player.y,
+        target,
+        range: ability.range,
+      });
       windstep.shotTimer += ability.shotEvery;
     }
     if (windstep.remaining <= 0) delete this.state().windstep;

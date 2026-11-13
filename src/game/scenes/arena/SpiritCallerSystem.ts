@@ -89,6 +89,11 @@ export class SpiritCallerSystem extends ArenaSystem {
         count: effect.count,
         intercepts: effect.intercepts,
       };
+      this.effects.classAttack('spirit-caller:ongod-guardians', {
+        x: this.player.x,
+        y: this.player.y,
+        radius: 32,
+      });
     } else if (effect.kind === 'gust') {
       this.strikeWind(direction, effect);
     } else if (effect.kind === 'ovoo') {
@@ -99,11 +104,21 @@ export class SpiritCallerSystem extends ArenaSystem {
         pulseTimer: 0,
       };
       this.effects.ring(this.player.x, this.player.y, effect.range, 0x72e0d1);
+      this.effects.classAttack('spirit-caller:sacred-ovoo', {
+        x: this.player.x,
+        y: this.player.y,
+        radius: effect.range,
+      });
     } else if (effect.kind === 'veil') {
       const state = this.state();
       state.veilRemaining = effect.duration + state.energy * effect.energyDuration;
       state.energy = 0;
       state.echoTimer = 0;
+      this.effects.classAttack('spirit-caller:veil-between-worlds', {
+        x: this.player.x,
+        y: this.player.y,
+        radius: 38,
+      });
     } else return false;
     return true;
   }
@@ -138,6 +153,11 @@ export class SpiritCallerSystem extends ArenaSystem {
         if (state.ovoo.pulseTimer <= 0) {
           state.ovoo.pulseTimer = 0.8;
           this.effects.ring(state.ovoo.x, state.ovoo.y, ovoo.range, 0x72e0d1);
+          this.effects.classAttack('spirit-caller:sacred-ovoo', {
+            x: state.ovoo.x,
+            y: state.ovoo.y,
+            radius: ovoo.range,
+          });
         }
       }
     }
@@ -173,6 +193,15 @@ export class SpiritCallerSystem extends ArenaSystem {
                 2,
               );
             }
+            this.effects.classAttack('spirit-caller:ongod-guardians', {
+              x: this.player.x,
+              y: this.player.y,
+              direction: {
+                x: target.x - this.player.x,
+                y: target.y - this.player.y,
+              },
+              radius: 32,
+            });
             state.guardians.attackTimer = guardians.attackEvery * (empowerment?.spiritRate ?? 1);
           } else state.guardians.attackTimer = 0.15;
         }
@@ -195,6 +224,15 @@ export class SpiritCallerSystem extends ArenaSystem {
             13,
             'veil',
           );
+          this.effects.classAttack('spirit-caller:veil-between-worlds', {
+            x: this.player.x,
+            y: this.player.y,
+            direction: {
+              x: target.x - this.player.x,
+              y: target.y - this.player.y,
+            },
+            radius: 38,
+          });
           state.echoTimer = veil.echoEvery;
         } else state.echoTimer = 0.15;
       }
@@ -245,6 +283,11 @@ export class SpiritCallerSystem extends ArenaSystem {
       this.host.damageEnemy(enemy, this.run.stats.damage * damage);
     });
     this.effects.ring(this.player.x, this.player.y, range, 0x72e0d1);
+    this.effects.classAttack('spirit-caller:ancestral-drum', {
+      x: this.player.x,
+      y: this.player.y,
+      radius: range,
+    });
     this.audio.play('spell', this.player);
   }
 
@@ -274,5 +317,11 @@ export class SpiritCallerSystem extends ArenaSystem {
       0x72e0d1,
       12,
     );
+    this.effects.classAttack('spirit-caller:wind-of-tengri', {
+      x: this.player.x,
+      y: this.player.y,
+      direction,
+      range: effect.range,
+    });
   }
 }

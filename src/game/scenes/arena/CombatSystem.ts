@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import type { DefeatSprites } from '../../animation/CharacterVisuals';
 import type { CharacterMotion } from '../../animation/CharacterMotion';
 import type { CampBarrier } from '../../assets/CampBarrier';
+import type { CharacterClassId } from '../../../shared/characterProfile';
 import { effectAmount } from '../../../shared/visualSettings';
 import { GAME } from '../../config';
 import {
@@ -283,9 +284,15 @@ export class CombatSystem extends ArenaSystem {
     status.fortressTimer -= dt;
     if (status.fortressTimer > 0) return;
     status.fortressTimer += fortress.interval;
+    this.host.playerMotion.attack();
     const struck = this.strikePulse(fortress.range, fortress.damage, false, fortress.payload);
     addShield(status, struck * fortress.shield.perHit);
     this.effects.ring(this.player.x, this.player.y, fortress.range, 0xd8dee9);
+    this.effects.classAttack('iron-pagoda:unbroken-fortress', {
+      x: this.player.x,
+      y: this.player.y,
+      radius: fortress.range,
+    });
   }
 
   isWindingUp(): boolean {
@@ -336,7 +343,15 @@ export class CombatSystem extends ArenaSystem {
       const released = this.spiritCaller.releaseDrum(cls.heavyAttack, charge);
       this.timers.attackTimer =
         cls.heavyAttack.cooldown * this.run.clan.campEffects.multipliers.hostInterval;
-      if (released) this.run.combat.volleys++;
+      if (released) {
+        this.run.combat.volleys++;
+        this.effects.classAttack('spirit-caller:ancestral-drum', {
+          x: this.player.x,
+          y: this.player.y,
+          direction,
+          radius: range,
+        });
+      }
       return released;
     }
     if (
@@ -347,7 +362,16 @@ export class CombatSystem extends ArenaSystem {
       const released = this.mountedArcher.releasePiercing(target, cls.heavyAttack, range, charge);
       this.timers.attackTimer =
         cls.heavyAttack.cooldown * this.run.clan.campEffects.multipliers.hostInterval;
-      if (released) this.run.combat.volleys++;
+      if (released) {
+        this.run.combat.volleys++;
+        this.effects.classAttack('mounted-archer:piercing-draw', {
+          x: this.player.x,
+          y: this.player.y,
+          direction,
+          target,
+          range,
+        });
+      }
       return released;
     }
     const extraProjectiles = Math.max(0, this.run.stats.projectiles - cls.stats.projectiles);
@@ -400,17 +424,7 @@ export class CombatSystem extends ArenaSystem {
         attack.payload,
       );
       released = true;
-      if (attack.combo || attack.payload) {
-        this.effects.sweep(
-          this.player.x,
-          this.player.y,
-          direction,
-          range,
-          attack.width,
-          kind === 'heavy' ? 0xe0bc76 : cls.weapon.projectileTint,
-        );
-        if (kind === 'heavy') this.effects.shake(110, 0.004);
-      }
+      if ((attack.combo || attack.payload) && kind === 'heavy') this.effects.shake(110, 0.004);
       if (combo && struck > 0) this.advanceCombo(combo, range);
     } else {
       this.strikePulse(range, scaledDamage, false);
@@ -420,6 +434,7 @@ export class CombatSystem extends ArenaSystem {
       (kind === 'heavy' ? cls.heavyAttack.cooldown : this.run.stats.attackInterval) *
       this.run.clan.campEffects.multipliers.hostInterval;
     if (released) this.run.combat.volleys++;
+    if (released) this.showAttackRelease(cls.id, kind, direction, target, range);
     if (released && cls.id === 'mounted-archer' && kind === 'light')
       this.mountedArcher.recordBasic(target, attack, range);
     return released;
@@ -481,6 +496,12 @@ export class CombatSystem extends ArenaSystem {
     } else if (effect.kind === 'arc') {
       const direction = this.faceAim(aim);
       this.strikeArc(direction, effect.range, effect.angle, effect.damage, effect.payload);
+      this.effects.classAttack('lancer:sweeping-lance', {
+        x: this.player.x,
+        y: this.player.y,
+        direction,
+        range: effect.range,
+      });
     } else if (effect.kind === 'line') {
       const direction = this.faceAim(aim);
       this.strikeLine(direction, effect.range, effect.width, effect.damage, true);
@@ -511,6 +532,12 @@ export class CombatSystem extends ArenaSystem {
         maxDuration: effect.duration,
         extension: 0,
       });
+      this.effects.classAttack('lancer:breakthrough', {
+        x: this.player.x,
+        y: this.player.y,
+        direction,
+        range: effect.speed * effect.duration,
+      });
     } else if (effect.kind === 'vault') {
       const direction = this.faceAim(aim);
       this.vault(direction, effect);
@@ -537,6 +564,12 @@ export class CombatSystem extends ArenaSystem {
         khanStatusOf(this.timers).unstoppable,
         effect.duration,
       );
+      this.effects.classAttack('lancer:unstoppable-charge', {
+        x: this.player.x,
+        y: this.player.y,
+        direction,
+        radius: effect.range,
+      });
     } else if (
       effect.kind === 'guardians' ||
       effect.kind === 'gust' ||
@@ -553,15 +586,30 @@ export class CombatSystem extends ArenaSystem {
         unstoppable: true,
       });
       this.effects.ring(this.player.x, this.player.y, 80, 0xd8dee9, true);
+      this.effects.classAttack('iron-pagoda:iron-wall', {
+        x: this.player.x,
+        y: this.player.y,
+        radius: 52,
+      });
       this.audio.play('barrier', this.player);
     } else if (effect.kind === 'shockwave') {
       this.strikePulse(effect.range, effect.damage, false, effect.payload);
       this.effects.ring(this.player.x, this.player.y, effect.range, 0xc9a26a);
       this.effects.shake(140, 0.006);
       this.effects.dust(this.player.x, this.player.y, this.facing.x, true);
+      this.effects.classAttack('iron-pagoda:crushing-hooves', {
+        x: this.player.x,
+        y: this.player.y,
+        radius: effect.range,
+      });
     } else if (effect.kind === 'snare') {
       this.strikeSnare(effect);
       this.effects.ring(this.player.x, this.player.y, effect.range, 0x9fc3ff, true);
+      this.effects.classAttack('iron-pagoda:chain-snare', {
+        x: this.player.x,
+        y: this.player.y,
+        radius: effect.range,
+      });
     } else if (effect.kind === 'fortress') {
       const status = khanStatusOf(this.timers);
       guardKhan(status, {
@@ -577,6 +625,11 @@ export class CombatSystem extends ArenaSystem {
       status.shieldPerSecond = effect.shield.perSecond;
       status.shield = Math.min(effect.shield.max, effect.shield.start);
       this.effects.ring(this.player.x, this.player.y, effect.range, 0xe0bc76);
+      this.effects.classAttack('iron-pagoda:unbroken-fortress', {
+        x: this.player.x,
+        y: this.player.y,
+        radius: effect.range,
+      });
       this.audio.play('barrier', this.player);
     } else if (effect.kind === 'guard') {
       this.run.health = Math.min(this.run.stats.maxHealth, this.run.health + effect.heal);
@@ -590,6 +643,7 @@ export class CombatSystem extends ArenaSystem {
       this.timers.invulnerable = Math.max(this.timers.invulnerable, effect.duration);
     }
     if (!released) return false;
+    this.host.playerMotion.attack();
     this.cooldowns()[slot] = ability.cooldown;
     this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 7);
     if (['guard', 'ward', 'guardians', 'gust', 'ovoo', 'veil'].includes(effect.kind))
@@ -621,6 +675,36 @@ export class CombatSystem extends ArenaSystem {
     this.host.faceTarget(aim.x, aim.y);
     if (release) this.host.playerMotion.attack();
     return direction;
+  }
+
+  private showAttackRelease(
+    classId: CharacterClassId,
+    kind: 'light' | 'heavy',
+    direction: { x: number; y: number },
+    target: { x: number; y: number },
+    range: number,
+  ): void {
+    const options = {
+      x: this.player.x,
+      y: this.player.y,
+      direction,
+      target,
+      range,
+    };
+    if (classId === 'mounted-archer' && kind === 'light')
+      this.effects.classAttack('mounted-archer:galloping-shot', options);
+    else if (classId === 'lancer')
+      this.effects.classAttack(
+        kind === 'heavy' ? 'lancer:impaling-strike' : 'lancer:spear-thrust',
+        options,
+      );
+    else if (classId === 'iron-pagoda')
+      this.effects.classAttack(
+        kind === 'heavy' ? 'iron-pagoda:sundering-cleave' : 'iron-pagoda:heavy-sabre',
+        options,
+      );
+    else if (classId === 'spirit-caller' && kind === 'light')
+      this.effects.classAttack('spirit-caller:spirit-wisps', options);
   }
 
   /** Current ride direction, falling back to cursor aim while standing still. */
@@ -867,6 +951,13 @@ export class CombatSystem extends ArenaSystem {
     this.strikePulse(effect.landingRange, effect.damage, false);
     this.effects.dust(landing.x, landing.y, direction.x, true);
     this.effects.ring(landing.x, landing.y, effect.landingRange, 0xe2c586);
+    this.effects.classAttack('lancer:lance-vault', {
+      x: origin.x,
+      y: origin.y,
+      direction,
+      target: landing,
+      radius: effect.landingRange,
+    });
   }
 
   private finishMeleeAttack(struck: boolean): void {
@@ -923,19 +1014,21 @@ export class CombatSystem extends ArenaSystem {
         owner === 'khan' || owner === 'wagon' || owner === 'wagon-ricochet' ? owner : undefined;
       bolt.setData('terrain-previous', { x, y });
       const radius = (collisionWidth ?? 9) / 2;
+      const spiritProjectile = spiritSource !== undefined;
       bolt
-        .setTexture('bolt')
-        .setScale(Math.min(1.6, Math.max(1, radius / 4.5)))
+        .setTexture(spiritProjectile ? 'spirit-wisp' : 'bolt')
+        .setScale(spiritProjectile ? 32 / 96 : Math.min(1.6, Math.max(1, radius / 4.5)))
         .setDepth(9200)
-        .setRotation(angle + Math.PI / 4)
+        .setRotation(angle + (spiritProjectile ? 0 : Math.PI / 4))
         .setAlpha(1)
         .clearTint();
-      bolt.setCircle(radius, bolt.width / 2 - radius, bolt.height / 2 - radius);
+      const bodyRadius = spiritProjectile ? radius / bolt.scaleX : radius;
+      bolt.setCircle(bodyRadius, bolt.width / 2 - bodyRadius, bolt.height / 2 - bodyRadius);
       bolt.fire = hasDevelopment(this.run, 'archery', 'fire-arrows');
       bolt.tempest = tempest;
       bolt.pierces = mountedOptions?.pierces ?? basePierces;
       bolt.pins = owner === 'khan' && charged && cls.weapon.pinsOnCharged;
-      if (owner === 'khan' && cls.id !== 'mounted-archer') {
+      if (owner === 'khan' && cls.id !== 'mounted-archer' && !spiritProjectile) {
         bolt.setTint(cls.weapon.projectileTint);
       }
       if (charged) bolt.setTint(0xe2c586);
@@ -1051,7 +1144,7 @@ export class CombatSystem extends ArenaSystem {
           }
         } else angle += bolt.turn * dt;
         bolt.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
-        bolt.setRotation(angle + Math.PI / 4);
+        bolt.setRotation(angle + (bolt.getData('spirit-source') !== undefined ? 0 : Math.PI / 4));
       }
       if (bolt.remaining <= 0) bolt.disableBody(true, true);
     }
@@ -1083,7 +1176,10 @@ export class CombatSystem extends ArenaSystem {
     bolt.hitTargets.set(enemy, enemy.spawnId);
     const hitDamage = bolt.damage;
     this.mountedArcher.onProjectileHit(bolt, enemy);
-    if (bolt.getData('spirit-source') === 'wisp') {
+    const spiritSource = bolt.getData('spirit-source') as SpiritProjectileSource | undefined;
+    if (spiritSource) this.effects.burst(enemy.x, enemy.y, 0x72e0d1, 5);
+    else if (bolt.source === 'khan') this.effects.burst(enemy.x, enemy.y, 0xe2c586, 3);
+    if (spiritSource === 'wisp') {
       if (this.spiritCaller.gainWispEnergy()) this.arena.hud.refresh();
     }
 
@@ -1244,14 +1340,16 @@ export class CombatSystem extends ArenaSystem {
         p.setData('mounted-kind', saved.mountedKind);
         p.setData('base-damage', saved.baseDamage);
         p.setData('dealt-damage', saved.dealtDamage);
-        p.setScale(hostile ? 1.1 : 1)
+        const spiritProjectile = !hostile && saved.spiritSource !== undefined;
+        p.setTexture(hostile ? 'gem' : spiritProjectile ? 'spirit-wisp' : 'bolt')
+          .setScale(hostile ? 1.1 : spiritProjectile ? 32 / 96 : 1)
           .setDepth(9200)
           .setRotation(rotation)
           .setTint(tint)
           .setAlpha(1)
           .setFlipX(flip)
           .setVelocity(vx, vy);
-        const radius = hostile ? 5.4 / p.scaleX : 4.5;
+        const radius = hostile ? 5.4 / p.scaleX : spiritProjectile ? 4.5 / p.scaleX : 4.5;
         p.setCircle(radius, p.width / 2 - radius, p.height / 2 - radius);
         p.setData('terrain-previous', previous ?? { x: saved.x, y: saved.y });
         if (hostile) this.styleHostileProjectile(p);

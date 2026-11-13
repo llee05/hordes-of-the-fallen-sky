@@ -7,6 +7,7 @@ import { createDeveloperClassRun } from '../../src/game/dev/levels';
 import { classDefinition } from '../../src/game/data/classes';
 import { ALL_ENEMIES } from '../../src/game/data/enemies';
 import { CombatSystem } from '../../src/game/scenes/arena/CombatSystem';
+import { CLASS_ATTACK_CUES } from '../../src/game/scenes/arena/ArenaEffects';
 import { EnemyDirector } from '../../src/game/scenes/arena/EnemyDirector';
 import {
   EnemyBehaviour,
@@ -31,6 +32,29 @@ function setup(classId: string) {
 }
 
 describe('playable class combat', () => {
+  it.each(CHARACTER_CLASSES)('%s dispatches presentation cues for all six attacks', (classId) => {
+    const arena = setup(classId);
+    const classAttack = vi.fn();
+    arena.context.effects.classAttack = classAttack;
+    const definition = classDefinition(classId);
+    const aim = { x: 1400, y: 1000 };
+
+    arena.combat.fireBasic(aim);
+    arena.context.timers.attackTimer = 0;
+    const charge = definition.heavyAttack.charge ?? definition.heavyAttack.holdCharge;
+    arena.combat.fireHeavy(aim, charge?.maxDuration ?? 0);
+    arena.context.timers.attackTimer = 0;
+    for (const ability of definition.abilities) {
+      arena.combat.useAbility(ability.slot, aim);
+      if (ability.kind === 'rain')
+        arena.combat.tickKhanCombat(ability.delay + 0.01, false, false, aim);
+    }
+
+    const actual = new Set(classAttack.mock.calls.map(([cue]) => cue));
+    const expected = CLASS_ATTACK_CUES.filter((cue) => cue.startsWith(`${classId}:`));
+    expect(actual).toEqual(new Set(expected));
+  });
+
   it.each([
     ['mounted-archer', 0.12, 0.28],
     ['lancer', 0.08, 0.08],
@@ -78,6 +102,7 @@ describe('playable class combat', () => {
     expect(arena.combat.fireBasic({ x: 1400, y: 1000 })).toBe(true);
     const bolt = arena.projectiles.getFirstAlive()!;
     expect(arena.projectiles.countActive()).toBe(1);
+    expect(bolt.texture.key).toBe('spirit-wisp');
     expect(Math.hypot(bolt.body!.velocity.x, bolt.body!.velocity.y)).toBeCloseTo(
       classDefinition('spirit-caller').stats.projectileSpeed,
     );
