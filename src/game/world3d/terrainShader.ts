@@ -140,7 +140,7 @@ export const ORKHON_SAMPLING = `
   varying vec4 materialA; varying vec3 materialB; varying float occlusion;
   uniform sampler2D cliffAtlas; uniform vec2 cliffAtlasSize; uniform vec4 cliffFaces[4];
   uniform float cliffFaceWidth; uniform float cliffPixel; uniform float cliffRise; uniform float cliffTop;
-  uniform vec3 cliffTint;
+  uniform vec3 cliffTint; uniform float cliffTintAmount;
   uniform sampler2D groundMask; uniform float worldSize; uniform float floorHeight; uniform float plateauRise;
   uniform vec4 rampAxis[ORKHON_RAMPS]; uniform vec4 rampSize[ORKHON_RAMPS];
   // Authored cliffs repeat opaque basalt bands cut from the terrain kit's straight cliff run along
@@ -158,8 +158,10 @@ export const ORKHON_SAMPLING = `
     float y=clamp(depth/cliffRise,0.0,1.0)*face.z;
     vec2 px=face.xy+vec2(clamp(x,0.5,cliffFaceWidth-0.5),clamp(y,0.5,face.z-0.5));
     vec2 scale=vec2(1.0/cliffPixel,-face.z/cliffRise)/cliffAtlasSize;
-    return textureGrad(cliffAtlas,vec2(px.x/cliffAtlasSize.x,1.0-px.y/cliffAtlasSize.y),
-      vec2(dAlong.x,dDepth.x)*scale,vec2(dAlong.y,dDepth.y)*scale).rgb*cliffTint;
+    vec3 color=textureGrad(cliffAtlas,vec2(px.x/cliffAtlasSize.x,1.0-px.y/cliffAtlasSize.y),
+      vec2(dAlong.x,dDepth.x)*scale,vec2(dAlong.y,dDepth.y)*scale).rgb;
+    float light=dot(color,vec3(0.299,0.587,0.114));
+    return cliffTintAmount>0.0?mix(color,light*cliffTint,cliffTintAmount):color*cliffTint;
   }
   // Ramp flanks run their bands along the nearest ramp's own arc length (orkhonFlankAlong), so
   // the bands keep their painted width instead of shearing where the normal's dominant axis

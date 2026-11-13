@@ -124,7 +124,9 @@ export class MountainMaterials {
         : undefined;
     this.bedTexture = authored ? gravelTex : soilTex;
     this.waterTextures =
-      authored && !belukha ? [tile('riverChannel'), tile('riverRapids')] : undefined;
+      authored && !belukha && !khanTengri
+        ? [tile('riverChannel'), tile('riverRapids')]
+        : undefined;
     const authoredMaps = authoredTerrain
       ? this.authoredUniforms(
           scene,
@@ -156,6 +158,10 @@ export class MountainMaterials {
       soilTint: { value: tint(palette?.soil, 0xc3a574) },
       rockTint: { value: tint(palette?.rock, 0x8d8f85) },
       snowTint: { value: tint(palette?.snow, 0xe4e9df) },
+      cliffTint: {
+        value: new THREE.Color(palette?.rock ?? 0xffffff).multiplyScalar(khanTengri ? 1.55 : 1),
+      },
+      cliffTintAmount: { value: khanTengri ? 0.78 : 0 },
     };
     const source = terrainShaderSource(
       authoredTerrain

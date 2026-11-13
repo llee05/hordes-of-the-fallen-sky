@@ -128,9 +128,11 @@ function buildDressing(seed: string | number): SceneDressing[] {
       frame: landmark.frame,
       shadow: landmark.shadow ?? false,
       originY:
-        landmark.texture === 'steppe-scenery'
-          ? 0.9
-          : ORKHON_SPRITES[landmark.frame as OrkhonSprite]?.anchorY,
+        landmark.role === 'peak-frame'
+          ? 1
+          : landmark.texture === 'steppe-scenery'
+            ? 0.9
+            : ORKHON_SPRITES[landmark.frame as OrkhonSprite]?.anchorY,
     });
 
   // One quiet candidate per 250-unit cell preserves broad combat lanes while breaking up the
@@ -146,15 +148,9 @@ function buildDressing(seed: string | number): SceneDressing[] {
       };
       if (!khanTengriDressingClear(point, 78) || occupied(point, 44)) continue;
       const roll = r(3);
-      const sprite: OrkhonSprite =
-        roll > 0.91 ? 'prop_cliff_scree' : roll > 0.62 ? 'small_boulder' : 'loose_pebbles';
+      const sprite: OrkhonSprite = roll > 0.91 ? 'prop_cliff_scree' : 'loose_pebbles';
       const kind: SceneProp = sprite === 'prop_cliff_scree' ? 'crag' : 'boulders';
-      const width =
-        sprite === 'prop_cliff_scree'
-          ? 86 + r(4) * 58
-          : sprite === 'small_boulder'
-            ? 30 + r(4) * 28
-            : 22 + r(4) * 22;
+      const width = sprite === 'prop_cliff_scree' ? 86 + r(4) * 58 : 22 + r(4) * 22;
       placeOrkhon(sprite, point, kind, width, r(5) > 0.5);
 
       if (r(6) > 0.88) {

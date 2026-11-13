@@ -47,6 +47,7 @@ export async function main(args = process.argv.slice(2)) {
       'reference',
       'orkhon',
       'altan-ovoo',
+      'khan-tengri',
     ].includes(mode)
   )
     throw new Error(
@@ -103,6 +104,12 @@ export async function main(args = process.argv.slice(2)) {
       '--config',
       'playwright.visual.config.ts',
       'tests/visual/altan-ovoo-capture.spec.ts',
+    );
+  if (mode === 'khan-tengri')
+    playwright(
+      '--config',
+      'playwright.visual.config.ts',
+      'tests/visual/khan-tengri-capture.spec.ts',
     );
   if (['local', 'desktop', 'perf'].includes(mode))
     playwright('--config', 'playwright.desktop.config.ts');

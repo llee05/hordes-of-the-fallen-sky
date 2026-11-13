@@ -15,6 +15,7 @@ export class Water3D {
     bedTexture: THREE.Texture,
     /** Supplied flow and rapids tiles. Authored rivers show them directly and draw no plank decks. */
     waterTextures?: readonly [THREE.Texture, THREE.Texture],
+    crossings = waterTextures === undefined,
   ) {
     this.group.name = 'world-river';
     const data = waterGeometry(river, terrain);
@@ -44,7 +45,12 @@ export class Water3D {
       shader.uniforms.deepWater = {
         value: new THREE.Color(river.definition.color).multiplyScalar(0.65),
       };
-      shader.uniforms.shallowWater = { value: new THREE.Color(0x8cae98) };
+      shader.uniforms.shallowWater = {
+        value:
+          river.definition.kind === 'glacial'
+            ? new THREE.Color(river.definition.color).lerp(new THREE.Color(0xe6f1ef), 0.35)
+            : new THREE.Color(0x8cae98),
+      };
       shader.vertexShader =
         `attribute float riverDepth;attribute float sourcePool;varying float waterDepth;varying float poolWater;varying vec2 riverUv;varying vec2 riverWorld;\n${shader.vertexShader}`.replace(
           '#include <begin_vertex>',
@@ -108,7 +114,7 @@ export class Water3D {
     const matrices: THREE.Matrix4[] = [];
     const colors: THREE.Color[] = [];
     const dummy = new THREE.Object3D();
-    for (const bridge of waterTextures ? [] : river.bridges) {
+    for (const bridge of crossings ? river.bridges : []) {
       const planks = Math.ceil(bridge.length / 10);
       for (let i = 0; i < planks; i++) {
         const distance = ((i + 0.5) / planks) * bridge.length - bridge.length / 2;

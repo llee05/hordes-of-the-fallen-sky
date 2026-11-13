@@ -206,6 +206,7 @@ export class World3DRenderer {
         terrain,
         this.materials.bedTexture,
         this.materials.waterTextures,
+        terrain.region.scene.id !== 'khan-tengri',
       );
       this.world.add(this.water.group);
     }

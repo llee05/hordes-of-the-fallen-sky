@@ -55,6 +55,7 @@ export interface KhanTengriLayout {
     color: number;
     bank: number;
     course: readonly number[];
+    gorge: { rapids: number; bridges: readonly [] };
   };
   landmarks: readonly KhanTengriLandmark[];
 }
@@ -166,10 +167,11 @@ export const KHAN_TENGRI: KhanTengriLayout = {
   pathWidth: 76,
   meltwater: {
     kind: 'glacial',
-    width: 86,
+    width: 58,
     color: 0x78aabc,
     bank: 0xa7a5ad,
     course: [2500, -2000, 2450, -1300, 2520, -600, 2700, 50, 2650, 600, 2820, 1250, 3050, 2000],
+    gorge: { rapids: 0, bridges: [] },
   },
   landmarks: [
     {
@@ -177,11 +179,10 @@ export const KHAN_TENGRI: KhanTengriLayout = {
       texture: 'steppe-scenery',
       frame: 'pyramid',
       x: -450,
-      y: -1760,
-      width: 760,
+      y: -2050,
+      width: 480,
       role: 'peak-frame',
-      footprint: 285,
-      shadow: true,
+      footprint: 180,
     },
     {
       id: 'western-overlook-stone',
@@ -204,27 +205,6 @@ export const KHAN_TENGRI: KhanTengriLayout = {
       role: 'gap',
       footprint: 155,
       shadow: true,
-    },
-    {
-      id: 'upper-glacier',
-      texture: 'steppe-scenery',
-      frame: 'glacier',
-      x: 2520,
-      y: -820,
-      width: 510,
-      role: 'glacier',
-      footprint: 145,
-    },
-    {
-      id: 'ice-toe',
-      texture: 'steppe-scenery',
-      frame: 'glacier',
-      x: 2600,
-      y: -180,
-      width: 450,
-      role: 'glacier',
-      footprint: 125,
-      flip: true,
     },
     {
       id: 'erratic-west',

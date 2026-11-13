@@ -94,7 +94,7 @@ describe('Khan Tengri authored layout', () => {
   it('uses only bundled scenery and keeps the single pyramid as an edge frame', () => {
     const peaks = KHAN_TENGRI.landmarks.filter((landmark) => landmark.role === 'peak-frame');
     expect(peaks).toHaveLength(1);
-    expect(peaks[0]).toMatchObject({ frame: 'pyramid', y: -1760 });
+    expect(peaks[0]).toMatchObject({ frame: 'pyramid', y: -2050 });
     for (const landmark of KHAN_TENGRI.landmarks)
       if (landmark.texture === 'steppe-scenery')
         expect(['pyramid', 'glacier', 'crag']).toContain(landmark.frame);
@@ -111,7 +111,7 @@ describe('Khan Tengri runtime terrain', () => {
     expect(WORLD_REGIONS['khan-tengri'].ground?.paths).toEqual(KHAN_TENGRI.paths);
     expect(WORLD_REGIONS['khan-tengri'].obstacles).toHaveLength(KHAN_TENGRI_FOOTPRINTS.length);
     expect(terrain.river?.definition.kind).toBe('glacial');
-    expect(terrain.river?.definition.gorge).toBeUndefined();
+    expect(terrain.river?.definition.gorge).toEqual({ rapids: 0, bridges: [] });
   });
 
   it('keeps the camp flat, raises one terrace and grades both ramp cuts', () => {
