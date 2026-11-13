@@ -65,7 +65,9 @@ describe('terrain-aware enemy navigation', () => {
       const terrain = new ComposedTerrain(composedRegion(id), LANDSCAPES[id].water);
       const nav = new TerrainNavigation(terrain);
       const goal = terrain.campPosition;
-      let p = nav.nearestWalkable({ x: 1800, y: 1850 })!;
+      let p = nav.nearestWalkable(
+        id === 'belukha' ? { x: goal.x + 800, y: goal.y + 350 } : { x: 1800, y: 1850 },
+      )!;
       expect(p).toBeDefined();
       for (let i = 0; i < 140 && Math.hypot(p.x - goal.x, p.y - goal.y) > 1; i++) {
         const next = nav.waypoint(p, goal, 'heavy');

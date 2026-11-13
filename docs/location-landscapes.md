@@ -11,7 +11,7 @@ models. Existing cultural context remains in `data/clan.ts` and
 | Bogd Khan Uul    | Sheltered green foothills with golden larch and deep sage pine groves |
 | Altai Tavan Bogd | Five snowy crests, turquoise glacier seams, silver-green gravel       |
 | Khan Tengri      | Single sharp white pyramid, lavender scree, angular blue-grey crags   |
-| Belukha          | Paired white heights, milky glacial water, cool meadow and conifers   |
+| Belukha          | Authored twin-height glacial valley, milky lake, meadow and conifers  |
 | Altan Ovoo       | Authored two-tier cinder cone, amber grass, charcoal basalt; no lava  |
 | Eej Khairkhan    | Authored granite terrace, rock pools, pale sand, sparse dry grasses   |
 | Orkhon Valley    | Authored two-level basalt gorge, eastern falls and river, open steppe |
@@ -82,6 +82,13 @@ Eej Khairkhan is authored as a 6,400 × 4,000-unit granite-desert battlefield wi
 The impassable sculpted massif frames the northern edge while pale sand-and-gravel ground leaves wide combat lanes below.
 Four hand-painted ground quadrants follow the routes and elevation geometry; cliffs, water, sparse granite dressing, actors and shadows remain separate.
 See [the level guide](eej-khairkhan.md) for the real-place translation, layout, renderer boundary, GPU cost and deferred features.
+
+## Mount Belukha level
+
+Mount Belukha is authored as a 6,400 × 4,000-unit glacial-valley battlefield below an inaccessible twin-summit headwall.
+Western moraine and eastern larch terraces form the raised tier, three ramps connect them to the broad lower meadow, and connected trails link the south-west camp to the lake shore, bridge, conifer hollow, overlook and outwash.
+Four hand-painted quadrants follow that terrain while the milky lake and outflow, bridge, cliffs, conifers, glacier pieces, summit silhouette, actors and collision remain separate.
+See [the level guide](belukha.md) for the layout, camera-edge coverage, hybrid-rendering boundary, memory figures and deferred gameplay features.
 
 ## Rivers and shores
 

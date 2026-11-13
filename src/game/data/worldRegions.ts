@@ -4,6 +4,7 @@ import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
 import { ALTAN_OVOO, ALTAN_OVOO_FOOTPRINTS } from './altanOvoo';
 import { OTGONTENGER, OTGONTENGER_FOOTPRINTS } from './otgontenger';
 import { EEJ_KHAIRKHAN, EEJ_KHAIRKHAN_FOOTPRINTS } from './eejKhairkhan';
+import { BELUKHA } from './belukha';
 import { ORKHON_FOOTPRINTS, ORKHON_VALLEY, type OrkhonPlateau } from './orkhonValley';
 
 export interface SceneShelf {
@@ -170,6 +171,21 @@ export const EEJ_KHAIRKHAN_GENERATED_REGION: RegionComposition = {
   ],
 };
 
+/** The pre-authored Mount Belukha composition, retained as a development fallback. */
+export const BELUKHA_GENERATED_REGION: RegionComposition = {
+  id: 'belukha',
+  floor: 75,
+  snowLine: 300,
+  vegetation: 'woodland',
+  palette: { ...alpine, grass: 0x87a08a },
+  shelves: [
+    shelf('forest-bank', -120, -810, 1230, 440, 230, -5),
+    shelf('western-white-summit', -650, -1250, 420, 390, 310, 8, 130),
+    shelf('eastern-white-summit', 380, -1300, 430, 400, 330, -10, 140),
+    shelf('distant-ridge', 0, -2200, 2400, 700, 430, 0, 150),
+  ],
+};
+
 /** One authored level-1 plateau, sharing the ramp mechanics of the composed shelves. */
 function plateau(
   source: Pick<OrkhonPlateau, 'id' | 'outline' | 'ramps'>,
@@ -274,12 +290,23 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
     snowLine: 300,
     vegetation: 'woodland',
     palette: { ...alpine, grass: 0x87a08a },
-    shelves: [
-      shelf('forest-bank', -120, -810, 1230, 440, 230, -5),
-      shelf('western-white-summit', -650, -1250, 420, 390, 310, 8, 130),
-      shelf('eastern-white-summit', 380, -1300, 430, 400, 330, -10, 140),
-      shelf('distant-ridge', 0, -2200, 2400, 700, 430, 0, 150),
-    ],
+    campShelf: false,
+    relief: 0.35,
+    terrainSize: BELUKHA.world.terrainSize,
+    playBounds: {
+      x: BELUKHA.world.minX,
+      y: BELUKHA.world.minY,
+      width: BELUKHA.world.width,
+      height: BELUKHA.world.height,
+    },
+    camp: BELUKHA.world.camp,
+    campClearRadius: BELUKHA.world.campClearRadius,
+    ground: {
+      paths: BELUKHA.paths,
+      width: BELUKHA.pathWidth,
+      ramps: BELUKHA.plateaus.flatMap((source) => source.ramps),
+    },
+    shelves: BELUKHA.plateaus.map((source) => plateau(source, BELUKHA.rise)),
   },
   'altan-ovoo': {
     id: 'altan-ovoo',
@@ -374,7 +401,9 @@ export function composedRegion(id: LocationId, generatedFallback = false): Compo
         ? OTGONTENGER_GENERATED_REGION
         : id === 'eej-khairkhan'
           ? EEJ_KHAIRKHAN_GENERATED_REGION
-          : undefined;
+          : id === 'belukha'
+            ? BELUKHA_GENERATED_REGION
+            : undefined;
   const composition = generatedFallback && fallback ? fallback : WORLD_REGIONS[id];
   return {
     seed: `living-steppe-scenes-v3:${id}`,

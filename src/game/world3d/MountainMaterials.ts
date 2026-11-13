@@ -66,6 +66,7 @@ export class MountainMaterials {
     const altan = authoredTerrain?.region.scene.id === 'altan-ovoo';
     const otgontenger = authoredTerrain?.region.scene.id === 'otgontenger';
     const eejKhairkhan = authoredTerrain?.region.scene.id === 'eej-khairkhan';
+    const belukha = authoredTerrain?.region.scene.id === 'belukha';
     const localFallback = altan
       ? ALTAN_OVOO_GRASS_FALLBACK
       : eejKhairkhan
@@ -79,7 +80,9 @@ export class MountainMaterials {
         ? texture(localFallback.texture)
         : otgontenger
           ? texture('ground-mount-otgontenger')
-          : tile('valleyCalm')
+          : belukha
+            ? texture('ground-mount-belukha')
+            : tile('valleyCalm')
       : texture(palette ? 'tapestry-meadow' : MOUNTAIN_TERRAIN_ART.materials.grassland.texture!);
     const dryMeadowTex = authored
       ? localFallback || otgontenger
@@ -117,7 +120,8 @@ export class MountainMaterials {
           }
         : undefined;
     this.bedTexture = authored ? gravelTex : soilTex;
-    this.waterTextures = authored ? [tile('riverChannel'), tile('riverRapids')] : undefined;
+    this.waterTextures =
+      authored && !belukha ? [tile('riverChannel'), tile('riverRapids')] : undefined;
     const authoredMaps = authoredTerrain
       ? this.authoredUniforms(
           scene,
