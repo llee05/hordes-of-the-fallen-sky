@@ -5,6 +5,7 @@ import { OTGONTENGER } from './otgontenger';
 import { EEJ_KHAIRKHAN } from './eejKhairkhan';
 import { BELUKHA } from './belukha';
 import { KHAN_TENGRI } from './khanTengri';
+import { BOGD_KHAN_UUL } from './bogdKhanUul';
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
 import { ORKHON_VALLEY } from './orkhonValley';
 
@@ -124,6 +125,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       landmark('larch', 405, -200, 210),
       landmark('pine', 490, 320, 165),
     ],
+    water: BOGD_KHAN_UUL.river,
     air: { color: 0x9eae83, alpha: 0.03, particles: 'seeds' },
   },
   'altai-tavan-bogd': {

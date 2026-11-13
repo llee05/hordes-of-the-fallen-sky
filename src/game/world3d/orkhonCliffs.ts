@@ -47,7 +47,11 @@ export function orkhonKitTexture(scene: Phaser.Scene): THREE.Texture {
  * Shader inputs for the painted Orkhon cliff walls: the shared kit texture and each face band's
  * source rectangle in atlas pixels. Without a scene the uniforms are inert placeholders.
  */
-export function cliffFaceUniforms(scene?: Phaser.Scene) {
+export function cliffFaceUniforms(
+  scene?: Phaser.Scene,
+  rise = ORKHON_VALLEY.rise,
+  floor = WORLD_REGIONS['orkhon-valley'].floor,
+) {
   const faces = ORKHON_CLIFF_FACES.map(() => new THREE.Vector4());
   let atlas = new THREE.Texture();
   const size = new THREE.Vector2(1, 1);
@@ -66,8 +70,8 @@ export function cliffFaceUniforms(scene?: Phaser.Scene) {
     cliffAtlasSize: { value: size },
     cliffFaces: { value: faces },
     cliffFaceWidth: { value: ORKHON_CLIFF_FACE_WIDTH },
-    cliffPixel: { value: cliffFacePixel() },
-    cliffRise: { value: ORKHON_VALLEY.rise },
-    cliffTop: { value: WORLD_REGIONS['orkhon-valley'].floor + ORKHON_VALLEY.rise },
+    cliffPixel: { value: cliffFacePixel(rise) },
+    cliffRise: { value: rise },
+    cliffTop: { value: floor + rise },
   };
 }

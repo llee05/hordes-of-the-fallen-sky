@@ -547,7 +547,7 @@ describe('Orkhon Valley painted scene', () => {
       }
     expect(checked).toBeGreaterThan(500);
     // Generated places keep their plain rock walls.
-    const other = new ComposedTerrain(composedRegion('bogd-khan-uul'));
+    const other = new ComposedTerrain(composedRegion('altai-tavan-bogd'));
     const { walls } = sceneGeometry(other, { x: 2048, y: 1536, width: 1024, height: 1024 });
     expect(walls.weights.length).toBeGreaterThan(0);
     for (let i = 6; i < walls.weights.length; i += 7) expect(walls.weights[i]).toBe(0);
@@ -749,7 +749,9 @@ describe('Orkhon Valley landmark systems', () => {
                 ? 'twin-summit-headwall'
                 : id === 'khan-tengri'
                   ? 'lateral-moraine-terrace'
-                  : 'camp-shelf',
+                  : id === 'bogd-khan-uul'
+                    ? 'southern-woodland-shoulder'
+                    : 'camp-shelf',
       );
     }
   });

@@ -217,7 +217,8 @@ export class MountainMaterials {
     mask.wrapS = mask.wrapT = THREE.ClampToEdgeWrapping;
     mask.generateMipmaps = false;
     mask.needsUpdate = true;
-    const cliffs = cliffFaceUniforms(scene);
+    const plateauRise = Math.max(1, ...ground.shelves.map((shelf) => shelf.rise));
+    const cliffs = cliffFaceUniforms(scene, plateauRise, ground.floor);
     this.textures.push(mask, cliffs.cliffAtlas.value);
     const ramps = orkhonRampUniforms(terrain);
     const vectors = (rows: number[][]) =>
@@ -233,12 +234,14 @@ export class MountainMaterials {
         value:
           ground.id === 'eej-khairkhan'
             ? new THREE.Vector3(1.3, 0.88, 0.72)
-            : new THREE.Vector3(1, 1, 1),
+            : ground.id === 'bogd-khan-uul'
+              ? new THREE.Vector3(0.78, 0.67, 0.5)
+              : new THREE.Vector3(1, 1, 1),
       },
       groundMask: { value: mask },
       worldSize: { value: terrain.worldSize },
       floorHeight: { value: ground.floor },
-      plateauRise: { value: Math.max(1, ...ground.shelves.map((shelf) => shelf.rise)) },
+      plateauRise: { value: plateauRise },
       rampAxis: { value: vectors(ramps.axis) },
       rampSize: { value: vectors(ramps.size.length ? ramps.size : [[1, 0, 0, 0]]) },
       ...(paintedGround

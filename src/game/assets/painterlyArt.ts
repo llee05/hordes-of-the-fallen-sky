@@ -37,6 +37,10 @@ import {
   BELUKHA_PAINTED_GROUND,
   belukhaPaintedGroundEnabled,
 } from '../world3d/belukhaPaintedGround';
+import {
+  BOGD_KHAN_UUL_PAINTED_GROUND,
+  bogdKhanUulPaintedGroundEnabled,
+} from '../world3d/bogdKhanUulPaintedGround';
 
 export { playerVisualConfig };
 
@@ -138,6 +142,10 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
   paintedGround(
     KHAN_TENGRI_PAINTED_GROUND,
     khanTengriPaintedGroundEnabled(search, import.meta.env.DEV),
+  );
+  paintedGround(
+    BOGD_KHAN_UUL_PAINTED_GROUND,
+    bogdKhanUulPaintedGroundEnabled(search, import.meta.env.DEV),
   );
   scene.load.image(
     ALTAN_OVOO_GRASS_FALLBACK.texture,

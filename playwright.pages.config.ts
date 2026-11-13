@@ -17,7 +17,9 @@ export default defineConfig({
   grepInvert: selection.grepInvert,
   fullyParallel: false,
   workers: 1,
-  timeout: 45000,
+  // Production boot preloads every location's authored paintings. Leave enough time for a cold
+  // software-rendered CI worker to decode those local assets before the smoke assertions run.
+  timeout: 90000,
   outputDir: 'test-results/pages',
   globalSetup: graphics.headless ? undefined : './tests/support/checkGraphics.ts',
   use: {

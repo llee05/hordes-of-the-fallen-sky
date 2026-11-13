@@ -116,7 +116,7 @@ describe('local rules follow the physical landscape', () => {
     expect(Math.abs(Math.cos(angle) * bridge.nz - Math.sin(angle) * bridge.nx)).toBeGreaterThan(
       0.97,
     );
-    expect(areaRiverTangent(undefined, 'bogd-khan-uul', { x: 2600, y: 2600 }, 1.2)).toBe(1.2);
+    expect(areaRiverTangent(undefined, 'khan-tengri', { x: 2600, y: 2600 }, 1.2)).not.toBe(1.2);
   });
   it('teaches once, respects recovery, never banks bursts, and resets on actual migration/arrival', () => {
     const r = createRun();

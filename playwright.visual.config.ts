@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 import base from './playwright.config';
 
 // Repeatable terrain captures for visual diagnosis (tests/visual/), never compared with
-// baselines. The `visual:orkhon` and `visual:altan` scripts select one capture file under the
+// baselines. The `visual:orkhon`, `visual:altan` and `visual:bogd` scripts select one capture file under the
 // shared browser lock; PNGs go to test-results/visual/<level>/ (or VISUAL_OUTPUT_DIR).
 export default defineConfig({
   ...base,
