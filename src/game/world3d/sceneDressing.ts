@@ -23,6 +23,7 @@ export type SceneProp =
   | 'reeds'
   | 'branch'
   | 'pebbles'
+  | 'cliff'
   | 'landmark';
 export interface SceneDressing {
   x: number;

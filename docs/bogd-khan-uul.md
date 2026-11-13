@@ -6,7 +6,7 @@ Bogd Khan Uul is a 6,400 × 4,000-unit authored battlefield inspired by the prot
 
 The camp sits on open lower ground at `(-2050, -500)`, away from both painting seams, with a 520-unit spawn-safe clearing. The broad Tuul channel follows the northern edge, with landing and bend tracks reaching its south bank. One 320-unit woodland shoulder fills the south and is reached by broad west and east ramps. Connected tracks link the camp, Tuul landing, larch glade, Tuul bend, Tsetsee shoulder and Pine Hollow; no track ends anonymously in open ground.
 
-The lower meadow and upper shoulder leave broad clear lanes for horde combat. Pine and golden-larch groves concentrate at the outer boundaries, beside the river and along the high shoulder. Dressing clearance keeps trees, scrub and rocks away from camp, tracks, ramp grades, water and solid landmark footprints.
+The lower meadow and upper shoulder leave broad clear lanes for horde combat. A run of existing painted rock-and-earth cliff sections makes the shoulder's far-facing rim readable from the fixed camera, with broad openings where the two graded ramps cross it. Pine and golden-larch groves concentrate at the outer boundaries, beside the river and along the high shoulder. Dressing clearance keeps trees, scrub and rocks away from camp, tracks, ramp grades, water and solid landmark footprints.
 
 ## Hybrid rendering boundary
 

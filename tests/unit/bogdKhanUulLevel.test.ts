@@ -192,10 +192,26 @@ describe('Bogd Khan Uul authored dressing', () => {
       expect(ORKHON_SPRITES).toHaveProperty(prop.frame);
       expect(prop.tint).toBe(0xffffff);
     }
-    for (const prop of all.filter((item) => item.kind !== 'landmark'))
+    for (const prop of all.filter((item) => item.kind !== 'landmark' && item.kind !== 'cliff'))
       expect(
         bogdKhanUulDressingClear({ x: prop.x - centre, y: prop.z - centre }, 72),
         `${prop.frame}@${prop.x - centre},${prop.z - centre}`,
+      ).toBe(true);
+  });
+
+  it('marks the shoulder rim with painted cliff runs and keeps both ramp cuts open', () => {
+    const cliffs = all.filter((prop) => prop.kind === 'cliff');
+    expect(cliffs).toHaveLength(12);
+    expect(cliffs.every((prop) => prop.frame === 'cliff_straight_run')).toBe(true);
+    for (const ramp of shoulder.ramps)
+      expect(
+        cliffs.every(
+          (prop) =>
+            Math.hypot(
+              prop.x - centre - (ramp.foot.x + ramp.top.x) / 2,
+              prop.z - centre - (ramp.foot.y + ramp.top.y) / 2,
+            ) > 350,
+        ),
       ).toBe(true);
   });
 

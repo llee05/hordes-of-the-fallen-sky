@@ -58,6 +58,22 @@ const LARCHES: readonly OrkhonSprite[] = [
   'pine_tree',
 ];
 const SHRUBS: readonly OrkhonSprite[] = ['shrub_olive', 'shrub_mix', 'shrub_gold'];
+// The southern shoulder's north face points away from the fixed camera. Existing painted cliff
+// runs make its height legible while preserving broad, deliberate openings at both graded ramps.
+const CLIFF_RIM: readonly TerrainPoint[] = [
+  { x: -3000, y: 540 },
+  { x: -2550, y: 600 },
+  { x: -2100, y: 570 },
+  { x: -1750, y: 650 },
+  { x: -850, y: 680 },
+  { x: -400, y: 650 },
+  { x: 50, y: 660 },
+  { x: 500, y: 690 },
+  { x: 950, y: 610 },
+  { x: 2050, y: 600 },
+  { x: 2500, y: 680 },
+  { x: 2950, y: 610 },
+];
 const cache = new Map<string | number, readonly SceneDressing[]>();
 
 function segmentDistance(point: TerrainPoint, a: TerrainPoint, b: TerrainPoint): number {
@@ -175,6 +191,8 @@ function buildDressing(seed: string | number): SceneDressing[] {
       landmark.scale ?? ORKHON_LANDMARK_SCALE[landmark.sprite] ?? 1,
       landmark.flip ?? false,
     );
+
+  for (const rim of CLIFF_RIM) place('cliff_straight_run', rim.x, rim.y, 'cliff', 1.3, false);
 
   for (const [groveIndex, grove] of GROVES.entries()) {
     // Each authored cluster is visible as a grove, but the static batch covers the whole map at
