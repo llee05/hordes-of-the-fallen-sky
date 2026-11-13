@@ -229,7 +229,7 @@ export class World3DRenderer {
         terrain.river,
         terrain,
         this.materials.bedTexture,
-        this.materials.waterTextures,
+        terrain.region.scene.id === 'altai-tavan-bogd' ? undefined : this.materials.waterTextures,
         terrain.region.scene.id !== 'khan-tengri',
         terrain.region.scene.id !== 'khan-tengri' || paintedGround === undefined,
       );

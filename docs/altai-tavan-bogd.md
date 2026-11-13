@@ -15,8 +15,8 @@ Ovoo.
   seams, with a 520-unit spawn-safe clearing.
 - One irregular northern moraine terrace forms the upper tier, 240 units above the valley.
 - Broad west and east ramp cuts complete a loop across the moraine and back to the lower valley.
-- Five existing snowy-peak cutouts and a glacier cutout frame the impassable northern edge.
-- An impassable turquoise glacial channel broadens into the long lake along the eastern edge.
+- Five existing snowy-peak cutouts and a glacier cutout form a distant wall beyond the impassable northern play bound.
+- An impassable calm turquoise glacial channel broadens into the long lake along the eastern edge.
 - The main circuit joins camp, both ramps, the western moraine pass, Potanin overlook, lake shore
   and lower-valley junction. Lower branches join the boulder meadow and southern lake meadow.
 
@@ -28,8 +28,14 @@ moraine centre and ramp approaches remain broad horde-combat spaces.
 The existing authored-level renderer owns elevation, cliff walls, graded ramps, water, collision,
 navigation, props and shadows. Four 1,600 × 1,000 ground paintings project over the 3,200 × 2,000
 NW, NE, SW and SE quadrants. They contain horizontal ground only: silver-green gravel, muted sage,
-tracks, scree, snow patches, glacier silt and pale lake banks. The raised moraine uses the same
-matte manuscript language as the lower valley, shifted cooler and darker.
+tracks, angular scree, sharp snow patches, glacier silt and pale lake banks. Crisp, visible gouache
+strokes keep gravel, grass and tracks legible at play scale. The raised moraine uses the same matte
+manuscript language as the lower valley, shifted cooler and darker.
+
+The 8,000-unit terrain canvas surrounds the 6,400 × 4,000 playable rectangle with 800-unit side
+buffers and 2,000-unit north/south buffers, so the angled camera never exposes an unpainted world
+edge. The painted quadrants still project only over the playable rectangle; the buffer uses the
+matching tiled fallback.
 
 The shared 1,024² grayscale detail layer restores close paper and brush grain in world space.
 The four paintings occupy 34,131,696 bytes (32.55 MiB) with complete mip chains; including the

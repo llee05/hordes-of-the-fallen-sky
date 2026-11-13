@@ -40,7 +40,7 @@ describe('Altai Tavan Bogd authored level', () => {
     expect(ALTAI_TAVAN_BOGD.world).toMatchObject({
       width: 6400,
       height: 4000,
-      terrainSize: 6400,
+      terrainSize: 8000,
       minX: -3200,
       minY: -2000,
       campClearRadius: 520,
@@ -51,6 +51,21 @@ describe('Altai Tavan Bogd authored level', () => {
     expect(ALTAI_TAVAN_BOGD.rise).toBe(240);
     expect(ALTAI_TAVAN_BOGD.plateaus).toHaveLength(1);
     expect(ALTAI_TAVAN_BOGD.plateaus[0]!.ramps).toHaveLength(2);
+    const region = WORLD_REGIONS['altai-tavan-bogd'];
+    expect(region.playBounds).toEqual({ x: -3200, y: -2000, width: 6400, height: 4000 });
+    expect(terrain.playBounds).toEqual({ x: 800, y: 2000, width: 6400, height: 4000 });
+    expect(region.terrainSize! - terrain.playBounds.x - terrain.playBounds.width).toBe(800);
+    expect(region.terrainSize! - terrain.playBounds.y - terrain.playBounds.height).toBe(2000);
+  });
+
+  it('frames the playable valley with distant peaks and rock-finished ramp shoulders', () => {
+    const peaks = ALTAI_TAVAN_BOGD.landmarks.filter(({ role }) => role === 'peak-frame');
+    expect(peaks).toHaveLength(5);
+    for (const peak of peaks) expect(peak.y).toBeLessThan(ALTAI_TAVAN_BOGD.world.minY);
+    expect(ALTAI_TAVAN_BOGD.landmarks.find(({ role }) => role === 'glacier')!.y).toBeLessThan(
+      ALTAI_TAVAN_BOGD.world.minY,
+    );
+    expect(ALTAI_TAVAN_BOGD.landmarks.filter(({ id }) => id.includes('ramp-cap'))).toHaveLength(4);
   });
 
   it('keeps every track endpoint at a named site and inside the playable rectangle', () => {
@@ -76,7 +91,7 @@ describe('Altai Tavan Bogd authored level', () => {
   });
 
   it('projects authored terrain, water, camp and ramps while retaining the generated fallback', () => {
-    expect(terrain.playBounds).toEqual({ x: 0, y: 1200, width: 6400, height: 4000 });
+    expect(terrain.playBounds).toEqual({ x: 800, y: 2000, width: 6400, height: 4000 });
     expect(terrain.campPosition).toEqual(world(ALTAI_TAVAN_BOGD_SITES.camp));
     expect(terrain.river?.definition).toEqual(ALTAI_TAVAN_BOGD.lake);
     expect(WORLD_REGIONS['altai-tavan-bogd'].shelves).toHaveLength(1);
@@ -101,7 +116,7 @@ describe('Altai Tavan Bogd authored level', () => {
     expect(altaiTavanBogdPaintedGroundEnabled('', true)).toBe(true);
     expect(altaiTavanBogdPaintedGroundEnabled('?altaiTavanBogdPaintedGround=0', true)).toBe(false);
     expect(altaiTavanBogdPaintedGroundEnabled('?altaiTavanBogdPaintedGround=0', false)).toBe(true);
-    expect(altaiTavanBogdPaintedGroundWorldBounds(6400)).toEqual([0, 1200, 6400, 4000]);
+    expect(altaiTavanBogdPaintedGroundWorldBounds(8000)).toEqual([800, 2000, 6400, 4000]);
     for (const quadrant of PAINTED_GROUND_QUADRANTS) {
       const painting = ALTAI_TAVAN_BOGD_PAINTED_GROUND.quadrants[quadrant];
       const png = readFileSync(resolve(`public/art/altai-tavan-bogd/${painting.file}`));
