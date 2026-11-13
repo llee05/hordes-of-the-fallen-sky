@@ -179,6 +179,7 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
     } as any,
     takeDamage: () => {},
     hurtPlayer: () => {},
+    faceTarget: () => {},
   };
 
   const enemyDirectorHost: EnemyDirectorHost = {

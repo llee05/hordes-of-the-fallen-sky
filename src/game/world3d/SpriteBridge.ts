@@ -196,6 +196,9 @@ export class SpriteBridge {
     const width = text ? object.width : frame.cutWidth;
     const heightPixels = text ? object.height : frame.cutHeight;
     const tint = object instanceof Phaser.GameObjects.Text ? 0xffffff : object.tintTopLeft;
+    // Layered riders share one ground anchor. A tiny camera-depth bias prevents coplanar
+    // lower/upper quads from fighting without moving either layer on screen.
+    const billboardLayer = Number(object.getData('billboardLayer') ?? 0);
     if (tint !== this.colorHex) {
       this.color.setHex(tint);
       this.colorHex = tint;
@@ -241,9 +244,9 @@ export class SpriteBridge {
       } else
         positions.setXYZ(
           i + j,
-          x + dx * basis[0]! - dy * basis[4]!,
-          height + dx * basis[1]! - dy * basis[5]! + 2,
-          z + dx * basis[2]! - dy * basis[6]!,
+          x + dx * basis[0]! - dy * basis[4]! + billboardLayer * basis[8]!,
+          height + dx * basis[1]! - dy * basis[5]! + 2 + billboardLayer * basis[9]!,
+          z + dx * basis[2]! - dy * basis[6]! + billboardLayer * basis[10]!,
         );
       uvs.setXY(
         i + j,

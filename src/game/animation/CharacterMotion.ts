@@ -15,7 +15,15 @@ const PROFILES = {
 
 export type CharacterKind = keyof typeof PROFILES;
 export const CHARACTER_KINDS = Object.keys(PROFILES) as CharacterKind[];
-export const MOTION_SHEETS = ['mounted', 'creature', 'clan', 'classes'] as const;
+export const MOTION_SHEETS = [
+  'mounted',
+  'creature',
+  'clan',
+  'classes',
+  'classes-directional',
+] as const;
+export const CHARACTER_DIRECTIONS = ['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'] as const;
+export type CharacterDirection = (typeof CHARACTER_DIRECTIONS)[number];
 export interface MotionArchive {
   cycle: number;
   releaseRemaining: number;
@@ -42,6 +50,7 @@ export class CharacterMotion {
   private moving = false;
   private windingUp = false;
   private playerClass?: CharacterClassId;
+  private direction: CharacterDirection = 'e';
 
   /** Appearance comes from the profile, never from the motion save archive. */
   setPlayerClass(classId: CharacterClassId): void {
@@ -49,9 +58,15 @@ export class CharacterMotion {
   }
 
   get texture(): string {
+    if (this.directional) return 'steppe-classes-directional-motion';
     return this.kind === 'player' && this.playerClass
       ? 'steppe-classes-motion'
       : characterTexture(this.kind)[0];
+  }
+
+  /** Directional class art keeps the horse gait and rider upper body on independent layers. */
+  get directional(): boolean {
+    return this.kind === 'player' && this.playerClass !== undefined;
   }
 
   constructor(kind: CharacterKind, offset = 0) {
@@ -66,6 +81,7 @@ export class CharacterMotion {
     this.hurtRemaining = 0;
     this.moving = false;
     this.windingUp = false;
+    this.direction = 'e';
   }
 
   capture(): MotionArchive {
@@ -94,6 +110,13 @@ export class CharacterMotion {
     this.releaseRemaining = PROFILES[this.kind].recovery;
   }
 
+  /** Selects one of eight screen-space facings without changing movement or combat state. */
+  face(x: number, y: number): void {
+    if (x * x + y * y <= 0.0001) return;
+    const octant = Math.round(Math.atan2(y, x) / (Math.PI / 4));
+    this.direction = CHARACTER_DIRECTIONS[(octant + 8) % 8]!;
+  }
+
   hit(): void {
     // Continuous burn ticks must not extend a hit flash indefinitely.
     if (this.hurtRemaining <= 0) this.hurtRemaining = 0.1;
@@ -103,13 +126,30 @@ export class CharacterMotion {
     return this.hurtRemaining > 0;
   }
 
+  private get moveFrame(): number {
+    return this.moving || PROFILES[this.kind].idleFps > 0 ? Math.floor(this.cycle * 4) : 0;
+  }
+
+  /** The upper layer may attack while `frame` continues advancing the horse gait. */
+  get upperFrame(): string | undefined {
+    if (!this.directional || !this.playerClass) return undefined;
+    if (this.releaseRemaining > 0) return `${this.playerClass}-${this.direction}-upper-attack-1`;
+    if (this.windingUp) return `${this.playerClass}-${this.direction}-upper-attack-0`;
+    return `${this.playerClass}-${this.direction}-upper-move-${this.moveFrame}`;
+  }
+
+  /** Attack paintings replace the complete neutral rider while its gait clock keeps advancing. */
+  get upperReplacesBase(): boolean {
+    return this.directional && (this.windingUp || this.releaseRemaining > 0);
+  }
+
   get frame(): string {
     const kind = this.kind === 'player' && this.playerClass ? this.playerClass : this.kind;
+    if (this.directional) return `${kind}-${this.direction}-move-${this.moveFrame}`;
     if (this.releaseRemaining > 0) return `${kind}-attack-1`;
     if (this.windingUp) return `${kind}-attack-0`;
     if (!this.moving && 'resting' in PROFILES[this.kind])
       return `${this.kind}-attack-${Math.floor(this.cycle * 4) % 2}`;
-    const frame = this.moving || PROFILES[this.kind].idleFps > 0 ? Math.floor(this.cycle * 4) : 0;
-    return `${kind}-move-${frame}`;
+    return `${kind}-move-${this.moveFrame}`;
   }
 }
