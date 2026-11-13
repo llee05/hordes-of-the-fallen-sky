@@ -124,9 +124,7 @@ export class MountainMaterials {
         : undefined;
     this.bedTexture = authored ? gravelTex : soilTex;
     this.waterTextures =
-      authored && !belukha && !khanTengri
-        ? [tile('riverChannel'), tile('riverRapids')]
-        : undefined;
+      authored && !belukha && !khanTengri ? [tile('riverChannel'), tile('riverRapids')] : undefined;
     const authoredMaps = authoredTerrain
       ? this.authoredUniforms(
           scene,
