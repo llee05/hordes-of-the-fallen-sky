@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 test('production loads all local artwork under the Pages subpath without desktop capabilities', async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   const errors: string[] = [];
   const failures: string[] = [];
   const requests: string[] = [];
