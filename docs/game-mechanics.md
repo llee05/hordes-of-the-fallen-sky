@@ -391,12 +391,12 @@ its class loadout. Successors retain the expedition's class and progression.
 
 ### Manual attacks and class abilities
 
-| Class          | Left-click light | Right-click heavy | 1               | 2                  | 3                 | 4                   |
-| -------------- | ---------------- | ----------------- | --------------- | ------------------ | ----------------- | ------------------- |
-| Mounted Archer | Galloping Shot   | Piercing Draw     | Parthian Shot   | Rain of Arrows     | Splintering Arrow | Windstep            |
-| Lancer         | Spear Thrust     | Impaling Strike   | Breakthrough    | Sweeping Lance     | Lance Vault       | Unstoppable Charge  |
-| Iron Pagoda    | Heavy Sabre      | Sundering Cleave  | Iron Wall       | Crushing Hooves    | Chain Snare       | Unbroken Fortress   |
-| Spirit Caller  | Spirit Wisps     | Ancestral Drum    | Ongod Guardians | Wind of Tengri     | Sacred Ovoo       | Veil Between Worlds |
+| Class          | Left-click light | Right-click heavy | 1               | 2               | 3                 | 4                   |
+| -------------- | ---------------- | ----------------- | --------------- | --------------- | ----------------- | ------------------- |
+| Mounted Archer | Galloping Shot   | Piercing Draw     | Parthian Shot   | Rain of Arrows  | Splintering Arrow | Windstep            |
+| Lancer         | Spear Thrust     | Impaling Strike   | Breakthrough    | Sweeping Lance  | Lance Vault       | Unstoppable Charge  |
+| Iron Pagoda    | Heavy Sabre      | Sundering Cleave  | Iron Wall       | Crushing Hooves | Chain Snare       | Unbroken Fortress   |
+| Spirit Caller  | Spirit Wisps     | Ancestral Drum    | Ongod Guardians | Wind of Tengri  | Sacred Ovoo       | Veil Between Worlds |
 
 Light and heavy range, rate, damage and hit shape, plus every ability cooldown and effect, are
 authored in `GAME.classes` and surfaced through `src/game/data/classes.ts`. Ability
