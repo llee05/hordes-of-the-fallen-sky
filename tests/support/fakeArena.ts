@@ -8,6 +8,7 @@ import type { CombatHost } from '../../src/game/scenes/arena/CombatSystem';
 import type { EnemyDirectorHost } from '../../src/game/scenes/arena/EnemyDirector';
 import { ClanDamage } from '../../src/game/scenes/arena/ClanDamage';
 import { createAreaEncounter } from '../../src/game/state/areaEncounters';
+import { createSpiritCallerCombatState } from '../../src/game/state/spiritCaller';
 import { createLegacyCampRun as createRun } from './legacyCamp';
 import type { RunState } from '../../src/game/types';
 
@@ -71,6 +72,7 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
   const timers: ArenaTimers = {
     spawnTimer: 0,
     attackTimer: 0,
+    spiritCaller: createSpiritCallerCombatState(),
     dashTimer: 0,
     dashRemaining: 0,
     invulnerable: 0,
@@ -160,6 +162,7 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
     developerTools: createDeveloperTools(),
     effects: {
       burst: () => {},
+      ring: () => {},
     } as any,
     hud: {
       refresh: () => {},

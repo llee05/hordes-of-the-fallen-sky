@@ -3,7 +3,7 @@ import { effectAmount } from '../../../shared/visualSettings';
 import { CharacterMotion } from '../../animation/CharacterMotion';
 import { renderCharacter, renderCharacterLayers } from '../../animation/CharacterVisuals';
 import { GAME } from '../../config';
-import { classDefinition, khanGallopSpeed, khanTargetingRange } from '../../data/classes';
+import { classDefinition, khanGallopSpeed } from '../../data/classes';
 import type { Enemy } from '../../entities/actors';
 import { areaMovementMultiplier, type AreaThreatState } from '../../state/areaThreats';
 import { gallopCooldown } from '../../state/campCombat';
@@ -80,11 +80,6 @@ export class KhanController extends ArenaSystem {
     this.timers.invulnerable = Math.max(this.timers.invulnerable, GAME.dash.duration);
     this.audio.play('dash');
     const cls = classDefinition(this.run.character?.classId);
-    if (cls.id === 'spirit-caller') {
-      // Spirit Ward (Tengri's Blessing): galloping restores Khan vitality and steadies clan resolve
-      this.run.health = Math.min(this.run.stats.maxHealth, this.run.health + 8);
-      this.run.clan.integrity = Math.min(GAME.clan.maxResolve, this.run.clan.integrity + 1.5);
-    }
     this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 7);
   }
 
@@ -243,12 +238,7 @@ export class KhanController extends ArenaSystem {
   animate(dt: number, preparingVolley: boolean): void {
     if (isKhanActive(this.run)) {
       this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
-      this.playerMotion.advance(
-        dt,
-        this.player.body!.velocity.length(),
-        preparingVolley &&
-          Boolean(this.spatial.nearest(this.player.x, this.player.y, khanTargetingRange(this.run))),
-      );
+      this.playerMotion.advance(dt, this.player.body!.velocity.length(), preparingVolley);
       this.renderPlayerVisual();
     }
   }

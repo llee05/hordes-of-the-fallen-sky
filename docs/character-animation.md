@@ -13,7 +13,7 @@ Every trimmed frame registers to a **256 × 360 logical canvas**, with feet or t
 
 `src/game/animation/CharacterMotion.ts` is renderer-independent. It advances only when supplied active gameplay seconds, selects grounded idle or four-frame locomotion according to movement, increases gait cadence for faster riding, and selects attack windup/release poses. Hovering shades and seers have slow idle loops. Stable per-actor offsets prevent synchronized marching. Reset clears all pose and hit-feedback state when an enemy is reused from its pool.
 
-`arena/CharacterAnimator.ts` advances character clocks after active simulation, dispatching Khan and rider poses through `KhanController.animate` and `RiderHost.animate` before updating enemy frames, tints and defeat copies. It chooses windup poses from the shared combat timers; see the [arena module map](arena-scene.md) for actor ownership. Actual firing, melee, and charge events trigger release poses without delaying projectiles or changing damage timing. `CharacterVisuals.ts` applies frames without changing actor dimensions, origins, scale, or body offsets. A pool of at most 32 non-physical defeat copies fades over 0.28 active seconds. Bodies, kills, spirit, and XP update immediately even when that visual pool is full. Both character clocks and defeat copies freeze during menus, death, and victory; existing world-effect tweens pause alongside them.
+`arena/CharacterAnimator.ts` advances character clocks after active simulation, dispatching Khan and rider poses through `KhanController.animate` and `RiderHost.animate` before updating enemy frames, tints and defeat copies. It reads the Khan's manual light- or heavy-attack windup from `CombatSystem`; see the [arena module map](arena-scene.md) for actor ownership. Releasing a light attack, heavy attack, or ability triggers the weapon-specific release pose, while damage still resolves on the combat event. `CharacterVisuals.ts` applies frames without changing actor dimensions, origins, scale, or body offsets. A pool of at most 32 non-physical defeat copies fades over 0.28 active seconds. Bodies, kills, spirit, and XP update immediately even when that visual pool is full. Both character clocks and defeat copies freeze during menus, death, and victory; existing world-effect tweens pause alongside them.
 
 The two sheets load once as shared atlases. The original static actor atlas remains a local UI illustration source. Characters face right with left-facing mirroring; the sheets provide the painted poses shown in the prompts below. Tests cover all frame registrations, gait cadence, combat poses, pause, stable collision geometry, defeated-body removal, XP preservation, and pool reuse.
 
@@ -59,7 +59,7 @@ The built-in image_gen tool created this sheet. The final source and cutout prom
 
 `public/art/steppe-classes-motion.png` and its JSON atlas contain original painted
 riders for `mounted-archer`, `lancer`, `iron-pagoda`, and `spirit-caller`. Each has
-four canter phases, a grounded idle using the first gait pose, and two basic attack
+four canter phases, a grounded idle using the first gait pose, and two weapon attack
 poses. Archer carries a recurve bow and quiver; Lancer has a long lance and rust
 cape; Iron Pagoda has heavy horse barding, a round shield and saber; Spirit Caller
 has a ring-topped staff, lapis robes and an ivory horse with turquoise mane accents.

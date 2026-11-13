@@ -1,4 +1,4 @@
-import { khanTargetingRange } from '../data/classes';
+import { classDefinition, khanBasicRange } from '../data/classes';
 import { SUCCESSORS } from '../data/successors';
 import type { BuildingId, RunState } from '../types';
 import { gallopCooldown, wagonDefence } from './campCombat';
@@ -25,7 +25,11 @@ const n = (value: number) => Number(value.toFixed(3)).toString();
 function metrics(r: RunState): Metric[] {
   const rates = economyForecast(r),
     c = r.clan.campEffects;
-  const volley = khanVolleyFactors(r, r.stats.projectiles);
+  const cls = classDefinition(r.character?.classId);
+  const basicProjectiles =
+    cls.basicAttack.projectiles + Math.max(0, r.stats.projectiles - cls.stats.projectiles);
+  const basicVolley =
+    cls.basicAttack.shape === 'projectile' ? khanVolleyFactors(r, basicProjectiles) : undefined;
   return [
     { label: 'Clan population', value: r.clan.population },
     { label: 'Herd', value: r.clan.herd },
@@ -33,29 +37,36 @@ function metrics(r: RunState): Metric[] {
     { label: 'Clan resolve now', value: r.clan.integrity },
     { label: 'Shared attack damage', value: r.stats.damage },
     {
-      label: 'Khan targeting range',
-      value: khanTargetingRange(r) + r.clan.momentum * 120,
+      label: 'Khan light attack range',
+      value: khanBasicRange(r),
       unit: ' paces',
-      context: 'Includes the current momentum targeting bonus',
+      context: `${cls.basicAttack.name}; aimed manually`,
     },
     {
       label: 'Host firing interval',
       value: r.stats.attackInterval * c.multipliers.hostInterval,
       unit: 's',
       lower: true,
-      context: 'Before Feigned retreat’s momentum condition',
-    },
-    { label: 'Khan arrows per volley', value: volley.count },
-    {
-      label: 'Khan wide-volley damage',
-      value: r.stats.damage * volley.damage,
-      context:
-        'Includes formation; before momentum, retreat, charged-shot and enemy-specific bonuses',
+      context: 'Manual light attack; heavy attacks and class abilities have separate cooldowns',
     },
     {
-      label: 'Khan wide-volley spacing',
-      value: (volley.spacing * 180) / Math.PI,
+      label: 'Khan light attack projectiles',
+      value: basicVolley?.count ?? 1,
+    },
+    {
+      label: 'Khan light attack spread',
+      value: basicVolley ? (basicVolley.spacing * 180) / Math.PI : 0,
       unit: '°',
+    },
+    {
+      label: 'Khan light attack damage',
+      value:
+        r.stats.damage *
+        cls.basicAttack.damage *
+        (cls.basicAttack.shape === 'projectile'
+          ? 1
+          : 1 + Math.max(0, r.stats.projectiles - cls.stats.projectiles) * 0.3),
+      context: 'Before enemy armour and hit-specific effects',
     },
     { label: 'Additional arrow pierces', value: r.stats.pierce },
     { label: 'Riding speed', value: r.stats.speed, unit: ' paces/s' },

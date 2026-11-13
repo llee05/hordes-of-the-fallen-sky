@@ -13,6 +13,7 @@ export function world(): WorldArchive {
     timers: {
       spawnTimer: 0.4,
       attackTimer: 0.8,
+      abilityCooldowns: { q: 1, w: 2, e: 3, r: 4 },
       dashTimer: 2,
       dashRemaining: 0.1,
       invulnerable: 0.3,
@@ -36,6 +37,7 @@ export function world(): WorldArchive {
           chargeTimer: 0,
           burning: 1,
           pinned: 0,
+          spiritSlow: 0,
           lastGallop: -1,
           dangerTimer: 2,
           tacticalSlot: 1,

@@ -77,6 +77,9 @@ export class World3DRenderer {
   private readonly frustum = new THREE.Frustum();
   private readonly viewMatrix = new THREE.Matrix4();
   private readonly chunkBox = new THREE.Box3();
+  private readonly pointerRay = new THREE.Raycaster();
+  private readonly groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  private readonly pointerHit = new THREE.Vector3();
   readonly timings = { sprites: 0, effects: 0, draw: 0 };
 
   constructor(
@@ -267,6 +270,26 @@ export class World3DRenderer {
       x: ((p.x + 1) * this.scene.scale.width) / 2,
       y: ((1 - p.y) * this.scene.scale.height) / 2,
     };
+  }
+  /** Converts a canvas pointer into the visible terrain position used by manual aim. */
+  groundPoint(screenX: number, screenY: number): { x: number; y: number } | undefined {
+    const width = this.width || this.scene.scale.width;
+    const height = this.height || this.scene.scale.height;
+    if (width <= 0 || height <= 0) return;
+    this.pointerRay.setFromCamera(
+      new THREE.Vector2((screenX / width) * 2 - 1, 1 - (screenY / height) * 2),
+      this.camera,
+    );
+    const terrainHit = this.pointerRay
+      .intersectObjects(
+        [...this.chunks.values()].map((chunk) => chunk.group),
+        true,
+      )
+      .find((hit) => hit.object instanceof THREE.Mesh);
+    const point =
+      terrainHit?.point ?? this.pointerRay.ray.intersectPlane(this.groundPlane, this.pointerHit);
+    if (!point) return;
+    return { x: point.x, y: point.z };
   }
   nearView(point: { x: number; y: number }, padding = 0): boolean {
     return (

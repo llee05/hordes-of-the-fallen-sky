@@ -1,4 +1,5 @@
 import type { WorldArchive } from '../../state/expeditionArchive';
+import { createSpiritCallerCombatState } from '../../state/spiritCaller';
 
 /**
  * The combat and world timers a full save keeps, in one record shared by the scene and its
@@ -12,7 +13,8 @@ export function createArenaTimers(): ArenaTimers {
   return {
     spawnTimer: 0,
     attackTimer: 0,
-    closeDefenseTimer: 0,
+    abilityCooldowns: { q: 0, w: 0, e: 0, r: 0 },
+    spiritCaller: createSpiritCallerCombatState(),
     dashTimer: 0,
     dashRemaining: 0,
     invulnerable: 0,

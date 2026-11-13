@@ -2,6 +2,7 @@ import { DefeatSprites, renderCharacter } from '../../animation/CharacterVisuals
 import type { Enemy } from '../../entities/actors';
 import type { ArenaContext } from './ArenaContext';
 import { ArenaSystem } from './ArenaSystem';
+import type { CombatSystem } from './CombatSystem';
 import type { KhanController } from './KhanController';
 import type { RiderHost } from './RiderHost';
 
@@ -13,6 +14,7 @@ export class CharacterAnimator extends ArenaSystem {
     arena: ArenaContext,
     private readonly khan: KhanController,
     private readonly riderHost: RiderHost,
+    private readonly combat: CombatSystem,
   ) {
     super(arena);
   }
@@ -22,9 +24,8 @@ export class CharacterAnimator extends ArenaSystem {
   }
 
   update(dt: number): void {
-    const preparingVolley = this.timers.attackTimer > 0 && this.timers.attackTimer < 0.12;
-    this.khan.animate(dt, preparingVolley);
-    this.riderHost.animate(dt, preparingVolley);
+    this.khan.animate(dt, this.combat.isWindingUp());
+    this.riderHost.animate(dt, false);
     for (const enemy of this.enemies.getChildren() as Enemy[]) {
       if (!enemy.active) continue;
       enemy.motion.advance(dt, enemy.body!.velocity.length(), enemy.preparingAttack);

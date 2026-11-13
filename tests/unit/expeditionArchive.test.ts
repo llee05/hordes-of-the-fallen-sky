@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProfileStore } from '../../desktop/profile';
 import { STARTING_TRADITIONS } from '../../src/game/data/clan';
+import { createArenaTimers } from '../../src/game/scenes/arena/ArenaTimers';
 import { syncAreaEncounter } from '../../src/game/state/areaEncounters';
 import { beginMigration } from '../../src/game/state/clan';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
@@ -511,7 +512,6 @@ describe('full expedition snapshots', () => {
     run.khan.trait = 'outrider';
     run.combat.previous = { x: 2600, y: 2700 };
     const runtime = world();
-    runtime.timers.closeDefenseTimer = 0.73;
     syncAreaEncounter(runtime.areaEncounter, run);
     const save = captureExpedition(run, runtime);
     const restored = decodeExpedition(JSON.parse(JSON.stringify(save)));
@@ -519,6 +519,13 @@ describe('full expedition snapshots', () => {
     expect(restored.world).toEqual(runtime);
     restored.run.clan.food = 0;
     expect(save.run.clan).not.toEqual(restored.run.clan);
+  });
+  it('accepts and ignores the retired close-defense timer in older version 1 saves', () => {
+    const save = captureExpedition(createRun(), world()) as Record<string, any>;
+    save.world.timers.closeDefenseTimer = 0.73;
+    const restored = decodeExpedition(save);
+    expect(restored.world.timers.closeDefenseTimer).toBe(0.73);
+    expect(createArenaTimers()).not.toHaveProperty('closeDefenseTimer');
   });
   it('moves legacy Orkhon actors into the wide terrain once and marks the new coordinates', () => {
     const run = createRun();
@@ -570,6 +577,41 @@ describe('full expedition snapshots', () => {
     const second = decodeExpedition(captureExpedition(run, first)).world;
     expect(second.camp).toEqual(first.camp);
     expect(second.player).toEqual(first.player);
+  });
+  it('loads saves from before class abilities with ready cooldowns', () => {
+    const save = captureExpedition(createRun(), world()) as Record<string, any>;
+    delete save.world.timers.abilityCooldowns;
+    const restored = decodeExpedition(save);
+    expect({ ...createArenaTimers(), ...restored.world.timers }.abilityCooldowns).toEqual({
+      q: 0,
+      w: 0,
+      e: 0,
+      r: 0,
+    });
+  });
+  it('round-trips Spirit Caller energy, summons, areas, veil and pending drum waves', () => {
+    const runtime = world();
+    runtime.timers.spiritCaller = {
+      energy: 7,
+      guardians: { remaining: 4, attackTimer: 0.3, count: 2, intercepts: 1 },
+      ovoo: { x: 1200, y: 1300, remaining: 5, pulseTimer: 0.2 },
+      veilRemaining: 3,
+      echoTimer: 0.4,
+      drumWaves: [{ delay: 0.1, range: 180, damage: 0.8, slowDuration: 1.4 }],
+    };
+    const restored = decodeExpedition(captureExpedition(createRun(), runtime));
+    expect(restored.world.timers.spiritCaller).toEqual(runtime.timers.spiritCaller);
+  });
+  it('loads saves from before the Spirit Caller resource with empty spiritual energy', () => {
+    const save = captureExpedition(createRun(), world()) as Record<string, any>;
+    delete save.world.timers.spiritCaller;
+    const restored = decodeExpedition(save);
+    expect({ ...createArenaTimers(), ...restored.world.timers }.spiritCaller).toEqual({
+      energy: 0,
+      veilRemaining: 0,
+      echoTimer: 0,
+      drumWaves: [],
+    });
   });
   it('preserves succession and migration without healing, resetting the timer or paying arrival', () => {
     const run = createRun();

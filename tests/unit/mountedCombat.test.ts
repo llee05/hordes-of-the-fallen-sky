@@ -6,7 +6,6 @@ import {
   advanceMountedCombat,
   retreatShot,
   riderCooldowns,
-  spendMountedVolley,
 } from '../../src/game/state/mountedCombat';
 import { createRun } from '../../src/game/state/run';
 import {
@@ -44,7 +43,7 @@ describe('rider cooldowns', () => {
 });
 
 describe('mounted positioning', () => {
-  it('charges from real sustained riding, rejects wall pushing/teleports, and spends a volley once', () => {
+  it('builds formation momentum from real riding without charging an automatic volley', () => {
     const r = createRun();
     r.phase = 'playing';
     for (let i = 0; i < 100; i++) advanceMountedCombat(r, 0.05, { x: 2600, y: 2600 }, false);
@@ -52,10 +51,9 @@ describe('mounted positioning', () => {
     expect(r.combat.ready).toBe(false);
     for (let i = 0; i < 80; i++)
       advanceMountedCombat(r, 0.05, { x: 2600 + i * 9.5, y: 2600 }, false);
-    expect(r.combat.ready).toBe(true);
+    expect(r.combat.ready).toBe(false);
+    expect(r.combat.rideSeconds).toBe(0);
     expect(r.clan.momentum).toBe(1);
-    expect(spendMountedVolley(r)).toBe(true);
-    expect(spendMountedVolley(r)).toBe(false);
     advanceMountedCombat(r, 0.05, { x: 500, y: 500 }, false);
     expect(r.combat.rideSeconds).toBe(0);
     const actor = { x: 3000, y: 2600, rendererCallback: () => {} };

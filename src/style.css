@@ -481,11 +481,18 @@ canvas {
 }
 .vital-stats {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
   font: 7px var(--mono);
   color: #a8bca6;
   margin-top: 12px;
+}
+#spirit-energy {
+  flex: 1 0 100%;
+  border-top: 1px solid #72e0d144;
+  padding-top: 6px;
+  color: #86d9cd;
 }
 .vital-stats b {
   font-weight: 400;
@@ -562,6 +569,52 @@ canvas {
   width: 100%;
   height: 3px;
   background: var(--gold);
+}
+.ability-dock {
+  position: absolute;
+  left: 50%;
+  bottom: 96px;
+  transform: translateX(-50%);
+  width: min(620px, calc(100% - 420px));
+  min-width: 430px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding: 5px;
+}
+.ability-indicator {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 7px;
+  border: 1px solid #bfbe8c55;
+  background: #263e36e8;
+}
+.ability-indicator kbd {
+  color: var(--gold);
+  font: 700 11px var(--mono);
+}
+.ability-indicator span,
+.ability-indicator strong,
+.ability-indicator small {
+  min-width: 0;
+  display: block;
+}
+.ability-indicator strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #ede4c1;
+  font-size: 8px;
+}
+.ability-indicator small {
+  margin-top: 2px;
+  color: #b6c8ac;
+  font: 7px var(--mono);
+}
+.ability-indicator.cooling {
+  opacity: 0.58;
 }
 .command-dock {
   position: absolute;
@@ -1747,6 +1800,20 @@ canvas {
     min-width: 137px;
     padding: 12px 13px 14px;
     gap: 10px;
+  }
+  .ability-dock {
+    bottom: 82px;
+    width: 240px;
+    min-width: 0;
+    padding: 3px;
+    gap: 2px;
+  }
+  .ability-indicator {
+    justify-content: center;
+    padding: 6px 3px;
+  }
+  .ability-indicator span {
+    display: none;
   }
   .dash-button strong {
     font-size: 10px;

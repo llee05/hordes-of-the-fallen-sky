@@ -178,6 +178,7 @@ export class EnemyDirector {
     enemy.tacticalSlot = enemies.getChildren().indexOf(enemy);
     enemy.route = undefined;
     enemy.pinned = 0;
+    enemy.spiritSlow = 0;
     enemy.lastGallop = -1;
     enemy.dangerTimer = definition.ability
       ? GAME.areaCombat.abilityEvery + (enemy.tacticalSlot % 7) * 0.15
@@ -229,6 +230,7 @@ export class EnemyDirector {
                   chargeTimer: e.chargeTimer,
                   burning: e.burning,
                   pinned: e.pinned,
+                  spiritSlow: e.spiritSlow,
                   lastGallop: e.lastGallop,
                   dangerTimer: e.dangerTimer,
                   tacticalSlot: e.tacticalSlot,

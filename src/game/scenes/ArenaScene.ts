@@ -29,6 +29,7 @@ import { SteppeLandscape } from '../assets/SteppeLandscape';
 import { environmentForLocation } from '../audio/mixing';
 import type { SoundKind } from '../audio/soundPalette';
 import { GAME } from '../config';
+import type { ClassAbilitySlot } from '../data/classes';
 import { FORMATIONS, STARTING_TRADITIONS, type StartingTraditionId } from '../data/clan';
 import type { SuccessorTrait } from '../data/successors';
 import { createDeveloperTools, executeDeveloperCommand } from '../dev/commands';
@@ -128,7 +129,12 @@ export class ArenaScene extends Phaser.Scene {
   );
   private readonly combat = this.createCombat();
   private readonly riderHost = new RiderHost(this.arena, this.combat);
-  private readonly animator = new CharacterAnimator(this.arena, this.khan, this.riderHost);
+  private readonly animator = new CharacterAnimator(
+    this.arena,
+    this.khan,
+    this.riderHost,
+    this.combat,
+  );
   private readonly campDefences = new CampDefences(this.arena, this.combat);
   private readonly fieldObjectives = new FieldObjectiveDirector(this.arena, this.enemyDirector);
   private readonly enemyBehaviour = this.createEnemyBehaviour();
@@ -329,6 +335,7 @@ export class ArenaScene extends Phaser.Scene {
     this.utilityReturnPhase = 'ready';
     this.riderHost.reset();
     this.khan.reset();
+    this.combat.reset();
     this.enemyDirector.reset();
     this.hazardSystem.reset();
     this.facing.set(0, 1);
@@ -392,6 +399,7 @@ export class ArenaScene extends Phaser.Scene {
       toggleDeveloperConsole: () => this.toggleDeveloperConsole(),
       changeZoom: (steps) => this.changeZoom(steps),
       dash: () => this.dash(),
+      useAbility: (slot) => this.useAbility(slot),
       menuInput: (action) => this.callbacks?.onMenuInput(action),
     });
     this.game.events.on(Phaser.Core.Events.BLUR, this.pauseOnBlur, this);
@@ -512,7 +520,7 @@ export class ArenaScene extends Phaser.Scene {
     this.input.keyboard!.resetKeys();
     this.persistence.started = true;
     this.guidanceEnabled = run.guidance.enabled;
-    Object.assign(this.timers, { closeDefenseTimer: 0 }, world.timers);
+    Object.assign(this.timers, world.timers);
     this.areaCombat.restore(world);
     this.landscape.setLocation(currentLocation(run));
     this.applyLandscapeBounds();
@@ -953,8 +961,9 @@ export class ArenaScene extends Phaser.Scene {
     }
     if (advanceSuccession(this.run, dt)) this.khan.returnKhan();
     advanceMountedCombat(this.run, dt, this.player, this.timers.dashRemaining > 0);
+    const aim = this.controls.aimPoint(this.player, this.facing);
     if (isKhanActive(this.run)) {
-      this.khan.move(dt, this.controls.movement());
+      this.khan.move(dt, this.controls.movement(this.player));
       this.controls.drawJoystick();
     } else this.player.setPosition(this.camp.x, this.camp.y + GAME.khan.campOffset);
     this.audio.update(dt, {
@@ -991,7 +1000,12 @@ export class ArenaScene extends Phaser.Scene {
     }
     this.spatial.rebuild(this.enemies.getChildren() as Enemy[]);
     this.campDefences.update(dt);
-    this.combat.tickFire(dt);
+    this.combat.tickKhanCombat(
+      dt,
+      this.controls.lightAttackHeld(),
+      this.controls.heavyAttackHeld(),
+      aim,
+    );
     this.riderHost.fire();
     this.enemyDirector.tickSpawns(dt);
     this.combat.updateProjectiles(dt);
@@ -1015,6 +1029,10 @@ export class ArenaScene extends Phaser.Scene {
     if (!chooseSuccessor(this.run, trait)) return;
     this.audio.play('ui');
     this.callbacks?.onHud(this.snapshot());
+  }
+
+  useAbility(slot: ClassAbilitySlot): void {
+    this.combat.useAbility(slot, this.controls.aimPoint(this.player, this.facing));
   }
 
   private finish(phase: 'dead'): void {
@@ -1067,6 +1085,8 @@ export class ArenaScene extends Phaser.Scene {
         busy: this.persistence.busy,
         message: this.persistence.message,
       },
+      abilities: this.combat.abilityStates(),
+      spiritCaller: this.combat.spiritStatus(),
     });
   }
   private publishPhase(): void {
