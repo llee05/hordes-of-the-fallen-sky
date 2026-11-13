@@ -6,7 +6,7 @@ import type { CameraOptions } from '../../src/game/dev/gameControls';
 // Repeatable Altai Tavan Bogd terrain captures for visual diagnosis (not a regression test:
 // nothing is compared). Run only when browser capture is explicitly approved. Every view uses
 // the seeded checkpoint, the normal 48-degree camera, full resolution and frozen simulation.
-const at = (x: number, y: number) => ({ x: 3200 + x, y: 3200 + y });
+const at = (x: number, y: number) => ({ x: 4000 + x, y: 4000 + y });
 
 interface Shot {
   name: string;

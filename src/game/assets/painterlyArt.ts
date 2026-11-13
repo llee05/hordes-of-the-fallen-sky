@@ -39,6 +39,7 @@ import {
 } from '../world3d/belukhaPaintedGround';
 import {
   ALTAI_TAVAN_BOGD_PAINTED_GROUND,
+  ALTAI_TAVAN_BOGD_SCREE_FALLBACK,
   altaiTavanBogdPaintedGroundEnabled,
 } from '../world3d/altaiTavanBogdPaintedGround';
 import {
@@ -162,6 +163,14 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
   scene.load.image(
     EEJ_KHAIRKHAN_GRANITE_FALLBACK.texture,
     `${root}${EEJ_KHAIRKHAN_PAINTED_GROUND.directory}${EEJ_KHAIRKHAN_GRANITE_FALLBACK.file}`,
+  );
+  scene.load.image(
+    ALTAI_TAVAN_BOGD_SCREE_FALLBACK.texture,
+    `${root}${ALTAI_TAVAN_BOGD_PAINTED_GROUND.directory}${ALTAI_TAVAN_BOGD_SCREE_FALLBACK.file}`,
+  );
+  scene.load.image(
+    'altai-tavan-bogd-north-ridge',
+    `${root}${ALTAI_TAVAN_BOGD_PAINTED_GROUND.directory}north-ridge.png`,
   );
   const orkhon = `${root}orkhon-valley/`;
   for (const tile of Object.keys(ORKHON_TILES) as OrkhonTile[])

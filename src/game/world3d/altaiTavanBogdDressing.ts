@@ -103,7 +103,7 @@ function buildDressing(seed: string | number): SceneDressing[] {
       heightScale: 1,
       texture: landmark.texture,
       frame: landmark.frame,
-      shadow: landmark.role !== 'glacier',
+      shadow: landmark.role !== 'glacier' && landmark.role !== 'ridge-frame',
     });
   for (const landmark of ALTAI_TAVAN_BOGD.landmarks) placeLandmark(landmark);
 

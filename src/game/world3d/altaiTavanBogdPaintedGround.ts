@@ -6,6 +6,12 @@ import {
   type PaintedGroundDefinition,
 } from './paintedGround';
 
+export const ALTAI_TAVAN_BOGD_SCREE_FALLBACK = {
+  texture: 'altai-tavan-bogd-northern-scree',
+  file: 'ground/northern-scree.png',
+  pixels: 1024,
+} as const;
+
 /** Four manuscript paintings over the authored valley, plus close paper and brush grain. */
 export const ALTAI_TAVAN_BOGD_PAINTED_GROUND = {
   query: 'altaiTavanBogdPaintedGround',

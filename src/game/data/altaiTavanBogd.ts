@@ -16,12 +16,12 @@ export interface AltaiTavanBogdPlateau {
 
 export interface AltaiTavanBogdLandmark {
   id: string;
-  texture: 'steppe-scenery' | 'orkhon-valley-sprites';
-  frame: 'pyramid' | 'snow-dome' | 'glacier' | 'small_boulder' | 'loose_pebbles';
+  texture: 'steppe-scenery' | 'orkhon-valley-sprites' | 'altai-tavan-bogd-north-ridge';
+  frame: 'pyramid' | 'snow-dome' | 'glacier' | 'small_boulder' | 'loose_pebbles' | '__BASE';
   x: number;
   y: number;
   width: number;
-  role: 'peak-frame' | 'glacier' | 'moraine' | 'meadow';
+  role: 'ridge-frame' | 'peak-frame' | 'glacier' | 'moraine' | 'meadow';
   footprint?: number;
   flip?: boolean;
 }
@@ -155,60 +155,13 @@ export const ALTAI_TAVAN_BOGD: AltaiTavanBogdLayout = {
   },
   landmarks: [
     {
-      id: 'peak-west-outer',
-      texture: 'steppe-scenery',
-      frame: 'pyramid',
-      x: -2550,
-      y: -2260,
-      width: 520,
-      role: 'peak-frame',
-    },
-    {
-      id: 'peak-west',
-      texture: 'steppe-scenery',
-      frame: 'snow-dome',
-      x: -1650,
-      y: -2310,
-      width: 600,
-      role: 'peak-frame',
-      flip: true,
-    },
-    {
-      id: 'peak-khuiten',
-      texture: 'steppe-scenery',
-      frame: 'pyramid',
-      x: -650,
-      y: -2340,
-      width: 700,
-      role: 'peak-frame',
-    },
-    {
-      id: 'peak-east',
-      texture: 'steppe-scenery',
-      frame: 'snow-dome',
-      x: 320,
-      y: -2300,
-      width: 600,
-      role: 'peak-frame',
-    },
-    {
-      id: 'peak-east-outer',
-      texture: 'steppe-scenery',
-      frame: 'pyramid',
-      x: 1180,
-      y: -2240,
-      width: 520,
-      role: 'peak-frame',
-      flip: true,
-    },
-    {
-      id: 'potanin-glacier',
-      texture: 'steppe-scenery',
-      frame: 'glacier',
-      x: 300,
-      y: -2110,
-      width: 700,
-      role: 'glacier',
+      id: 'five-peak-north-ridge',
+      texture: 'altai-tavan-bogd-north-ridge',
+      frame: '__BASE',
+      x: 0,
+      y: -2650,
+      width: 6900,
+      role: 'ridge-frame',
     },
     {
       id: 'west-ramp-cap-north',

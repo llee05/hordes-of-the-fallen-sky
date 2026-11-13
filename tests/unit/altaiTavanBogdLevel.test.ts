@@ -58,13 +58,16 @@ describe('Altai Tavan Bogd authored level', () => {
     expect(region.terrainSize! - terrain.playBounds.y - terrain.playBounds.height).toBe(2000);
   });
 
-  it('frames the playable valley with distant peaks and rock-finished ramp shoulders', () => {
-    const peaks = ALTAI_TAVAN_BOGD.landmarks.filter(({ role }) => role === 'peak-frame');
-    expect(peaks).toHaveLength(5);
-    for (const peak of peaks) expect(peak.y).toBeLessThan(ALTAI_TAVAN_BOGD.world.minY);
-    expect(ALTAI_TAVAN_BOGD.landmarks.find(({ role }) => role === 'glacier')!.y).toBeLessThan(
-      ALTAI_TAVAN_BOGD.world.minY,
-    );
+  it('frames the playable valley with one distant ridge and rock-finished ramp shoulders', () => {
+    const ridges = ALTAI_TAVAN_BOGD.landmarks.filter(({ role }) => role === 'ridge-frame');
+    expect(ridges).toHaveLength(1);
+    expect(ridges[0]).toMatchObject({
+      texture: 'altai-tavan-bogd-north-ridge',
+      frame: '__BASE',
+      width: 6900,
+    });
+    expect(ridges[0]!.y).toBeLessThan(ALTAI_TAVAN_BOGD.world.minY);
+    expect(ALTAI_TAVAN_BOGD.landmarks.some(({ role }) => role === 'peak-frame')).toBe(false);
     expect(ALTAI_TAVAN_BOGD.landmarks.filter(({ id }) => id.includes('ramp-cap'))).toHaveLength(4);
   });
 
@@ -131,6 +134,14 @@ describe('Altai Tavan Bogd authored level', () => {
       1024, 1024, 0,
     ]);
     expect(altaiTavanBogdPaintedGroundGpuBytes()).toBe(39_724_100);
+    const fallback = readFileSync(resolve('public/art/altai-tavan-bogd/ground/northern-scree.png'));
+    expect([fallback.readUInt32BE(16), fallback.readUInt32BE(20), fallback.readUInt8(25)]).toEqual([
+      1024, 1024, 2,
+    ]);
+    const ridge = readFileSync(resolve('public/art/altai-tavan-bogd/north-ridge.png'));
+    expect([ridge.readUInt32BE(16), ridge.readUInt32BE(20), ridge.readUInt8(25)]).toEqual([
+      2172, 683, 6,
+    ]);
   });
 
   it('builds deterministic sparse authored dressing with all named landmarks', () => {

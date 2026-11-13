@@ -10,6 +10,7 @@ import { terrainShaderSource } from './terrainShader';
 import type { ScenePalette } from '../data/worldRegions';
 import type { ComposedTerrain } from './ComposedTerrain';
 import { ALTAN_OVOO_GRASS_FALLBACK } from './altanOvooPaintedGround';
+import { ALTAI_TAVAN_BOGD_SCREE_FALLBACK } from './altaiTavanBogdPaintedGround';
 import { EEJ_KHAIRKHAN_GRANITE_FALLBACK } from './eejKhairkhanPaintedGround';
 import { bakeOrkhonGroundMask, ORKHON_GROUND_MASK, orkhonRampUniforms } from './orkhonGround';
 import {
@@ -81,7 +82,7 @@ export class MountainMaterials {
       ? localFallback
         ? texture(localFallback.texture)
         : altai
-          ? texture('ground-altai-tavan-bogd')
+          ? texture(ALTAI_TAVAN_BOGD_SCREE_FALLBACK.texture)
           : otgontenger
             ? texture('ground-mount-otgontenger')
             : belukha

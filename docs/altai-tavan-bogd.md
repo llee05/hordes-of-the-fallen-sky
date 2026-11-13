@@ -15,7 +15,7 @@ Ovoo.
   seams, with a 520-unit spawn-safe clearing.
 - One irregular northern moraine terrace forms the upper tier, 240 units above the valley.
 - Broad west and east ramp cuts complete a loop across the moraine and back to the lower valley.
-- Five existing snowy-peak cutouts and a glacier cutout form a distant wall beyond the impassable northern play bound.
+- One continuous five-peak panorama and glacier tongue forms a distant wall beyond the impassable northern play bound; no isolated peak cutout stands on the ground.
 - An impassable calm turquoise glacial channel broadens into the long lake along the eastern edge.
 - The main circuit joins camp, both ramps, the western moraine pass, Potanin overlook, lake shore
   and lower-valley junction. Lower branches join the boulder meadow and southern lake meadow.
@@ -27,7 +27,8 @@ moraine centre and ramp approaches remain broad horde-combat spaces.
 
 The existing authored-level renderer owns elevation, cliff walls, graded ramps, water, collision,
 navigation, props and shadows. Four 1,600 × 1,000 ground paintings project over the 3,200 × 2,000
-NW, NE, SW and SE quadrants. They contain horizontal ground only: silver-green gravel, muted sage,
+NW, NE, SW and SE quadrants. One whole-level source painting is split into those quadrants so every
+track and material crosses both seams without a restart. They contain horizontal ground only: silver-green gravel, muted sage,
 tracks, angular scree, sharp snow patches, glacier silt and pale lake banks. Crisp, visible gouache
 strokes keep gravel, grass and tracks legible at play scale. The raised moraine uses the same matte
 manuscript language as the lower valley, shifted cooler and darker.
@@ -37,9 +38,13 @@ buffers and 2,000-unit north/south buffers, so the angled camera never exposes a
 edge. The painted quadrants still project only over the playable rectangle; the buffer uses the
 matching tiled fallback.
 
-The shared 1,024² grayscale detail layer restores close paper and brush grain in world space.
+The shared 1,024² grayscale detail layer restores close paper and brush grain in world space. A
+separate 1,024² crisp scree-and-snow tile covers the terrain buffer beyond the painted rectangle,
+replacing the old noisy grey fallback.
 The four paintings occupy 34,131,696 bytes (32.55 MiB) with complete mip chains; including the
-detail layer they occupy 39,724,100 bytes (37.88 MiB).
+detail layer they occupy 39,724,100 bytes (37.88 MiB). The northern fallback adds 5,592,404 bytes
+(5.33 MiB) with mips. The continuous ridge uses 5,933,904 bytes (5.66 MiB) without mips, for
+51,250,408 bytes (48.88 MiB) across Altai's new ground and ridge textures.
 
 Development-only `?altaiTavanBogdPaintedGround=0` keeps the authored geometry on its tiled
 fallback. `?altaiTavanBogdLevel=generated` restores the former generated composition.
@@ -63,9 +68,9 @@ ritual, archaeological, sacred-site, threat or reward interpretation.
 
 ## Existing-art mapping and follow-ups
 
-The northern frame reuses `pyramid`, `snow-dome` and `glacier` scenery. Existing Orkhon rocks,
-pebbles, scree and restrained shrubs provide sparse edge dressing. No new gameplay system or
-dedicated sprite was added.
+The northern frame uses one dedicated transparent five-peak panorama instead of separate peak
+cutouts. Existing Orkhon rocks, pebbles, scree and restrained shrubs provide sparse edge dressing.
+No new gameplay system was added.
 
 Possible follow-ups remain separate:
 
@@ -73,6 +78,6 @@ Possible follow-ups remain separate:
 - lake crossing, boats, fishing, water gathering or lake rewards;
 - wildlife behaviour for argali, ibex, snowcocks or golden eagles;
 - a glacier-overlook objective, encounter, boon or resource node;
-- dedicated five-peak panorama, glacier-tongue or long-lake-shore art.
+- additional long-lake-shore variants.
 
 Camera, combat, class kits, saves, UI and migration rules are unchanged.
