@@ -187,9 +187,9 @@ function buildDressing(seed: string | number): SceneDressing[] {
     });
 
   // Existing mountain cutouts make the sacred summit a distant frame, never a walkable site.
-  placeRegional('snow-dome', -1780, -1910, 920, false, 'crag');
-  placeRegional('snow-dome', -180, -1950, 1180, false, 'crag');
-  placeRegional('snow-dome', 1650, -1900, 900, true, 'crag');
+  placeRegional('snow-dome', -1780, -1910, 540, false, 'crag');
+  placeRegional('snow-dome', -180, -1950, 680, false, 'crag');
+  placeRegional('snow-dome', 1650, -1900, 530, true, 'crag');
   placeRegional('foothill', -2900, -1740, 520, false, 'crag');
   placeRegional('foothill', 2860, -1710, 540, true, 'crag');
 

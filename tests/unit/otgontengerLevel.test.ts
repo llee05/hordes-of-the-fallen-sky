@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ORKHON_SPRITES } from '../../src/game/assets/orkhonValleyArt';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
@@ -19,6 +21,13 @@ import {
   otgontengerLandmarkAt,
 } from '../../src/game/world3d/otgontengerDressing';
 import { sceneDressing } from '../../src/game/world3d/sceneDressing';
+import {
+  OTGONTENGER_PAINTED_GROUND,
+  otgontengerPaintedGroundEnabled,
+  otgontengerPaintedGroundGpuBytes,
+  otgontengerPaintedGroundWorldBounds,
+} from '../../src/game/world3d/otgontengerPaintedGround';
+import { PAINTED_GROUND_QUADRANTS } from '../../src/game/world3d/paintedGround';
 
 const bench = OTGONTENGER.plateaus[0]!;
 const samePoint = (a: TerrainPoint, b: TerrainPoint) => a.x === b.x && a.y === b.y;
@@ -166,6 +175,35 @@ describe('Mount Otgontenger runtime terrain', () => {
     expect(fallback.scene.shelves.slice(1).map(({ id }) => id)).toEqual(
       OTGONTENGER_GENERATED_REGION.shelves.map(({ id }) => id),
     );
+  });
+});
+
+describe('Mount Otgontenger painted ground', () => {
+  it('ships enabled with a development-only tiled fallback', () => {
+    expect(otgontengerPaintedGroundEnabled('', true)).toBe(true);
+    expect(otgontengerPaintedGroundEnabled('?otgontengerPaintedGround=0', true)).toBe(false);
+    expect(otgontengerPaintedGroundEnabled('?otgontengerPaintedGround=1', true)).toBe(true);
+    expect(otgontengerPaintedGroundEnabled('?otgontengerPaintedGround=0', false)).toBe(true);
+  });
+
+  it('maps four opaque paintings and the grayscale detail layer over the playable rectangle', () => {
+    expect(otgontengerPaintedGroundWorldBounds(6400)).toEqual([0, 1200, 6400, 4000]);
+    expect(OTGONTENGER_PAINTED_GROUND.outerFeather).toBe(700);
+    for (const quadrant of PAINTED_GROUND_QUADRANTS) {
+      const painting = OTGONTENGER_PAINTED_GROUND.quadrants[quadrant];
+      const png = readFileSync(resolve(`public/art/otgontenger/${painting.file}`));
+      expect(png.subarray(1, 4).toString()).toBe('PNG');
+      expect([png.readUInt32BE(16), png.readUInt32BE(20), png.readUInt8(25)]).toEqual([
+        1600, 1000, 2,
+      ]);
+    }
+    const detail = readFileSync(
+      resolve(`public/art/otgontenger/${OTGONTENGER_PAINTED_GROUND.detail.file}`),
+    );
+    expect([detail.readUInt32BE(16), detail.readUInt32BE(20), detail.readUInt8(25)]).toEqual([
+      1024, 1024, 0,
+    ]);
+    expect(otgontengerPaintedGroundGpuBytes()).toBe(39_724_100);
   });
 });
 

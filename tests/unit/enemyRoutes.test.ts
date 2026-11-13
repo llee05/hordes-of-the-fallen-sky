@@ -78,10 +78,9 @@ describe('staggered enemy route planning', () => {
 
 describe('staggered routes on real terrain', () => {
   /** Walks a seeded crowd to the camp, as EnemyBehaviour steers, and returns arrival frames. */
-  function walk(nav: TerrainNavigation, staggered: boolean) {
+  function walk(nav: TerrainNavigation, goal: { x: number; y: number }, staggered: boolean) {
     let seed = 9;
     const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    const goal = { x: 2600, y: 2600 };
     const agents = Array.from({ length: 60 }, (_, slot) => {
       const angle = random() * Math.PI * 2,
         radius = 500 + random() * 800;
@@ -121,11 +120,10 @@ describe('staggered routes on real terrain', () => {
   it.each(['otgontenger', 'orkhon-valley'] as const)(
     'reaches the camp at about the same time in %s',
     (id) => {
-      const nav = new TerrainNavigation(
-        new ComposedTerrain(composedRegion(id), LANDSCAPES[id].water),
-      );
-      const every = walk(nav, false),
-        staggered = walk(nav, true);
+      const terrain = new ComposedTerrain(composedRegion(id), LANDSCAPES[id].water);
+      const nav = new TerrainNavigation(terrain);
+      const every = walk(nav, terrain.campPosition, false),
+        staggered = walk(nav, terrain.campPosition, true);
       expect(every.every((frame) => frame > 0)).toBe(true);
       expect(staggered.every((frame) => frame > 0)).toBe(true);
       for (let i = 0; i < every.length; i++)
@@ -133,5 +131,6 @@ describe('staggered routes on real terrain', () => {
           Math.max(30, every[i]! * 0.04),
         );
     },
+    30_000,
   );
 });

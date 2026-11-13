@@ -20,6 +20,10 @@ import { OrkhonOverlay } from './orkhonOverlay';
 import { initialRenderScale, stepRenderScale, type RenderResolution } from './renderScale';
 import { orkhonPaintedGroundEnabled } from './orkhonPaintedGround';
 import { ALTAN_OVOO_PAINTED_GROUND, altanOvooPaintedGroundEnabled } from './altanOvooPaintedGround';
+import {
+  OTGONTENGER_PAINTED_GROUND,
+  otgontengerPaintedGroundEnabled,
+} from './otgontengerPaintedGround';
 import { ORKHON_PAINTED_GROUND } from './orkhonPaintedGround';
 import type { PaintedGroundDefinition } from './paintedGround';
 import { StaticDressing3D } from './StaticDressing3D';
@@ -136,6 +140,13 @@ export class World3DRenderer {
         import.meta.env.DEV,
       )
         ? ALTAN_OVOO_PAINTED_GROUND
+        : undefined;
+    if (authored?.region.scene.id === 'otgontenger')
+      paintedGround = otgontengerPaintedGroundEnabled(
+        globalThis.location?.search ?? '',
+        import.meta.env.DEV,
+      )
+        ? OTGONTENGER_PAINTED_GROUND
         : undefined;
     this.materials = new MountainMaterials(
       scene,

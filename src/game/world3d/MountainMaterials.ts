@@ -63,15 +63,22 @@ export class MountainMaterials {
     // Orkhon Valley uses the terrain kit tiles untinted, at one shared painted scale.
     const authored = authoredTerrain !== undefined;
     const altan = authoredTerrain?.region.scene.id === 'altan-ovoo';
+    const otgontenger = authoredTerrain?.region.scene.id === 'otgontenger';
     const tile = (name: OrkhonTile) => texture(orkhonTileKey(name));
     // Authored channels: calm valley grass with regions of the olive variant, rare sun-cured
     // straw, the darker plateau moss on top, trail dirt on paths and ramps, scree at cliff feet.
     const meadowTex = authored
       ? altan
         ? texture(ALTAN_OVOO_GRASS_FALLBACK.texture)
-        : tile('valleyCalm')
+        : otgontenger
+          ? texture('ground-mount-otgontenger')
+          : tile('valleyCalm')
       : texture(palette ? 'tapestry-meadow' : MOUNTAIN_TERRAIN_ART.materials.grassland.texture!);
-    const dryMeadowTex = authored ? (altan ? meadowTex : tile('valleyStraw')) : texture('ground');
+    const dryMeadowTex = authored
+      ? altan || otgontenger
+        ? meadowTex
+        : tile('valleyStraw')
+      : texture('ground');
     const soilTex = authored
       ? tile('trailDirt')
       : texture(MOUNTAIN_TERRAIN_ART.materials['rocky-soil'].texture!);
@@ -79,14 +86,20 @@ export class MountainMaterials {
       ? tile('screeGravel')
       : texture(palette ? 'tapestry-stone' : MOUNTAIN_TERRAIN_ART.materials.stone.texture!);
     const gravelTex = authored ? stoneTex : soilTex;
-    // Authored channel 4 is the upper-tier ground; Altan stays in warm olive manuscript grass
-    // rather than inheriting Orkhon's pale plateau moss. Channel 5 is unused; neither has snow.
+    // Authored channel 4 is the upper-tier ground. Altan remains warm olive; Otgontenger uses
+    // its existing alpine swatch for lower ground and the bundled snow swatch on the high bench.
     const snowTex = authored
       ? altan
         ? meadowTex
-        : tile('plateauMoss')
+        : otgontenger
+          ? texture('ground-khan-tengri')
+          : tile('plateauMoss')
       : texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!);
-    const meadowAltTex = authored ? (altan ? meadowTex : tile('valleyOlive')) : meadowTex;
+    const meadowAltTex = authored
+      ? altan || otgontenger
+        ? meadowTex
+        : tile('valleyOlive')
+      : meadowTex;
     const paintedGroundTextures =
       authored && paintedGround
         ? {
