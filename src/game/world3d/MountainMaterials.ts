@@ -67,6 +67,7 @@ export class MountainMaterials {
     const otgontenger = authoredTerrain?.region.scene.id === 'otgontenger';
     const eejKhairkhan = authoredTerrain?.region.scene.id === 'eej-khairkhan';
     const belukha = authoredTerrain?.region.scene.id === 'belukha';
+    const khanTengri = authoredTerrain?.region.scene.id === 'khan-tengri';
     const localFallback = altan
       ? ALTAN_OVOO_GRASS_FALLBACK
       : eejKhairkhan
@@ -82,10 +83,12 @@ export class MountainMaterials {
           ? texture('ground-mount-otgontenger')
           : belukha
             ? texture('ground-mount-belukha')
-            : tile('valleyCalm')
+            : khanTengri
+              ? texture('ground-khan-tengri')
+              : tile('valleyCalm')
       : texture(palette ? 'tapestry-meadow' : MOUNTAIN_TERRAIN_ART.materials.grassland.texture!);
     const dryMeadowTex = authored
-      ? localFallback || otgontenger
+      ? localFallback || otgontenger || khanTengri
         ? meadowTex
         : tile('valleyStraw')
       : texture('ground');
@@ -99,14 +102,14 @@ export class MountainMaterials {
     // Authored channel 4 is the upper-tier ground. Altan remains warm olive; Otgontenger uses
     // its existing alpine swatch for lower ground and the bundled snow swatch on the high bench.
     const snowTex = authored
-      ? localFallback
+      ? localFallback || khanTengri
         ? meadowTex
         : otgontenger
           ? texture('ground-khan-tengri')
           : tile('plateauMoss')
       : texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!);
     const meadowAltTex = authored
-      ? localFallback || otgontenger
+      ? localFallback || otgontenger || khanTengri
         ? meadowTex
         : tile('valleyOlive')
       : meadowTex;

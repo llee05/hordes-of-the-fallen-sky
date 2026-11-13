@@ -28,6 +28,10 @@ import {
   EEJ_KHAIRKHAN_PAINTED_GROUND,
   eejKhairkhanPaintedGroundEnabled,
 } from './eejKhairkhanPaintedGround';
+import {
+  KHAN_TENGRI_PAINTED_GROUND,
+  khanTengriPaintedGroundEnabled,
+} from './khanTengriPaintedGround';
 import { ORKHON_PAINTED_GROUND } from './orkhonPaintedGround';
 import type { PaintedGroundDefinition } from './paintedGround';
 import { StaticDressing3D } from './StaticDressing3D';
@@ -172,6 +176,13 @@ export class World3DRenderer {
         import.meta.env.DEV,
       )
         ? BELUKHA_PAINTED_GROUND
+        : undefined;
+    if (authored?.region.scene.id === 'khan-tengri')
+      paintedGround = khanTengriPaintedGroundEnabled(
+        globalThis.location?.search ?? '',
+        import.meta.env.DEV,
+      )
+        ? KHAN_TENGRI_PAINTED_GROUND
         : undefined;
     this.materials = new MountainMaterials(
       scene,

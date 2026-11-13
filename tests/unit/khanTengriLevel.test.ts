@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ORKHON_SPRITES } from '../../src/game/assets/orkhonValleyArt';
 import {
@@ -18,6 +20,13 @@ import {
   khanTengriDressingClear,
   khanTengriLandmarkAt,
 } from '../../src/game/world3d/khanTengriDressing';
+import {
+  KHAN_TENGRI_PAINTED_GROUND,
+  khanTengriPaintedGroundEnabled,
+  khanTengriPaintedGroundGpuBytes,
+  khanTengriPaintedGroundWorldBounds,
+} from '../../src/game/world3d/khanTengriPaintedGround';
+import { PAINTED_GROUND_QUADRANTS } from '../../src/game/world3d/paintedGround';
 import { sceneDressing } from '../../src/game/world3d/sceneDressing';
 
 const terrace = KHAN_TENGRI.plateaus[0]!;
@@ -131,6 +140,35 @@ describe('Khan Tengri runtime terrain', () => {
     expect(fallback.scene.shelves.slice(1).map(({ id }) => id)).toEqual(
       KHAN_TENGRI_GENERATED_REGION.shelves.map(({ id }) => id),
     );
+  });
+});
+
+describe('Khan Tengri painted ground', () => {
+  it('ships enabled with the same development-only fallback contract as the established levels', () => {
+    expect(khanTengriPaintedGroundEnabled('', true)).toBe(true);
+    expect(khanTengriPaintedGroundEnabled('?khanTengriPaintedGround=0', true)).toBe(false);
+    expect(khanTengriPaintedGroundEnabled('?khanTengriPaintedGround=1', true)).toBe(true);
+    expect(khanTengriPaintedGroundEnabled('?khanTengriPaintedGround=0', false)).toBe(true);
+  });
+
+  it('maps four opaque paintings and the grayscale detail layer over the playable rectangle', () => {
+    expect(khanTengriPaintedGroundWorldBounds(6400)).toEqual([0, 1200, 6400, 4000]);
+    expect(KHAN_TENGRI_PAINTED_GROUND.outerFeather).toBe(700);
+    for (const quadrant of PAINTED_GROUND_QUADRANTS) {
+      const painting = KHAN_TENGRI_PAINTED_GROUND.quadrants[quadrant];
+      const png = readFileSync(resolve(`public/art/khan-tengri/${painting.file}`));
+      expect(png.subarray(1, 4).toString()).toBe('PNG');
+      expect([png.readUInt32BE(16), png.readUInt32BE(20), png.readUInt8(25)]).toEqual([
+        1600, 1000, 2,
+      ]);
+    }
+    const detail = readFileSync(
+      resolve(`public/art/khan-tengri/${KHAN_TENGRI_PAINTED_GROUND.detail.file}`),
+    );
+    expect([detail.readUInt32BE(16), detail.readUInt32BE(20), detail.readUInt8(25)]).toEqual([
+      1024, 1024, 0,
+    ]);
+    expect(khanTengriPaintedGroundGpuBytes()).toBe(39_724_100);
   });
 });
 
