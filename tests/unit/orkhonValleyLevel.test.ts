@@ -747,7 +747,9 @@ describe('Orkhon Valley landmark systems', () => {
               ? 'granite-terrace'
               : id === 'belukha'
                 ? 'twin-summit-headwall'
-                : 'camp-shelf',
+                : id === 'khan-tengri'
+                  ? 'lateral-moraine-terrace'
+                  : 'camp-shelf',
       );
     }
   });

@@ -287,7 +287,8 @@ describe('terrain shader programs', () => {
           id === 'altan-ovoo' ||
           id === 'otgontenger' ||
           id === 'eej-khairkhan' ||
-          id === 'belukha',
+          id === 'belukha' ||
+          id === 'khan-tengri',
       );
     }
   });
