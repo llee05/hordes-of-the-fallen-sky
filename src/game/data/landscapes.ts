@@ -3,6 +3,7 @@ import type { MountainRegion } from '../terrain/types';
 import { ALTAN_OVOO } from './altanOvoo';
 import { OTGONTENGER } from './otgontenger';
 import { EEJ_KHAIRKHAN } from './eejKhairkhan';
+import { BELUKHA } from './belukha';
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
 import { ORKHON_VALLEY } from './orkhonValley';
 
@@ -199,11 +200,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       landmark('pine', 470, 325, 160),
     ],
     water: {
-      kind: 'glacial',
-      width: 78,
-      color: 0xb6cccb,
-      bank: 0xd3d7bf,
-      course: [-2600, -470, -900, -340, 0, -330, 950, -460, 2600, -320],
+      ...BELUKHA.water,
     },
     air: { color: 0xb5c9ce, alpha: 0.055, particles: 'mist' },
   },

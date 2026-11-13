@@ -31,6 +31,7 @@ import {
 import { ORKHON_PAINTED_GROUND } from './orkhonPaintedGround';
 import type { PaintedGroundDefinition } from './paintedGround';
 import { StaticDressing3D } from './StaticDressing3D';
+import { BELUKHA_PAINTED_GROUND, belukhaPaintedGroundEnabled } from './belukhaPaintedGround';
 
 interface RenderChunk {
   group: THREE.Group;
@@ -131,7 +132,8 @@ export class World3DRenderer {
       (terrain.region.scene.id === 'orkhon-valley' ||
         terrain.region.scene.id === 'altan-ovoo' ||
         terrain.region.scene.id === 'otgontenger' ||
-        terrain.region.scene.id === 'eej-khairkhan')
+        terrain.region.scene.id === 'eej-khairkhan' ||
+        terrain.region.scene.id === 'belukha')
         ? terrain
         : undefined;
     let paintedGround: PaintedGroundDefinition | undefined;
@@ -162,6 +164,13 @@ export class World3DRenderer {
         import.meta.env.DEV,
       )
         ? EEJ_KHAIRKHAN_PAINTED_GROUND
+        : undefined;
+    if (authored?.region.scene.id === 'belukha')
+      paintedGround = belukhaPaintedGroundEnabled(
+        globalThis.location?.search ?? '',
+        import.meta.env.DEV,
+      )
+        ? BELUKHA_PAINTED_GROUND
         : undefined;
     this.materials = new MountainMaterials(
       scene,
@@ -194,7 +203,10 @@ export class World3DRenderer {
     }
     if (
       terrain instanceof ComposedTerrain &&
-      (terrain.region.scene.id === 'altan-ovoo' || terrain.region.scene.id === 'otgontenger')
+      (terrain.region.scene.id === 'altan-ovoo' ||
+        terrain.region.scene.id === 'otgontenger' ||
+        terrain.region.scene.id === 'eej-khairkhan' ||
+        terrain.region.scene.id === 'belukha')
     ) {
       this.staticDressing = new StaticDressing3D(
         scene,
@@ -558,7 +570,9 @@ export class World3DRenderer {
       !backdrop &&
       this.terrain instanceof ComposedTerrain &&
       this.terrain.region.scene.id !== 'altan-ovoo' &&
-      this.terrain.region.scene.id !== 'otgontenger'
+      this.terrain.region.scene.id !== 'otgontenger' &&
+      this.terrain.region.scene.id !== 'eej-khairkhan' &&
+      this.terrain.region.scene.id !== 'belukha'
     )
       for (const prop of sceneDressing(this.terrain, bounds)) {
         const image = this.scene.add
