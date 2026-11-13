@@ -8,7 +8,7 @@ models. Existing cultural context remains in `data/clan.ts` and
 | Location         | Landscape and scenery                                                 |
 | ---------------- | --------------------------------------------------------------------- |
 | Otgontenger      | Authored alpine bench, snow overlook, glacial tarn and larch valley   |
-| Bogd Khan Uul    | Sheltered green foothills with golden larch and deep sage pine groves |
+| Bogd Khan Uul    | Authored Tuul-side meadow, woodland shoulder, larch and pine groves   |
 | Altai Tavan Bogd | Five snowy crests, turquoise glacier seams, silver-green gravel       |
 | Khan Tengri      | Authored glacier margin, lavender scree, blue ice and northern ridge  |
 | Belukha          | Authored twin-height glacial valley, milky lake, meadow and conifers  |
@@ -99,6 +99,10 @@ exposed alpine rock, the glacier tongue and its calm water surface across both e
 An off-playfield terrain ridge frames the northern peaks while cliffs, crags, collision and sparse
 rock dressing remain separate. See [the level guide](khan-tengri.md) for the layout, rendering
 boundary, memory budget, and deferred gameplay features.
+
+## Bogd Khan Uul level
+
+Bogd Khan Uul is authored as a 6,400 × 4,000-unit Tuul-side foothill battlefield with an open lower camp meadow, a northern riverbank and one raised southern woodland shoulder joined by two ramps. Connected tracks reach five named terrain sites while dense pine and golden-larch groves frame broad combat ground. Four hand-painted ground quadrants follow the same terrain, tracks and dry riverbanks; water, cliffs, vegetation, landmarks and collision remain separate runtime layers. See [the level guide](bogd-khan-uul.md) for the layout, hybrid boundary, memory cost and deferred gameplay ideas.
 
 ## Rivers and shores
 
