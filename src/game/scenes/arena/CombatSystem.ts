@@ -37,6 +37,7 @@ export interface CombatHost {
   readonly campBarrier: CampBarrier;
   takeDamage(amount: number): void;
   hurtPlayer(enemy: Enemy): void;
+  faceTarget(x: number, y: number): void;
 }
 
 /**
@@ -129,11 +130,7 @@ export class CombatSystem extends ArenaSystem {
     );
     if (isKhanActive(this.run) && target) {
       this.host.playerMotion.attack();
-      if (this.player.body!.velocity.lengthSq() < 4)
-        this.player.setFlipX(
-          (this.landscape.world3d?.screenX(target.x - this.player.x, target.y - this.player.y) ??
-            target.x - this.player.x) < 0,
-        );
+      if (this.player.body!.velocity.lengthSq() < 4) this.host.faceTarget(target.x, target.y);
       const charged = this.run.combat.ready;
       const cls = classDefinition(this.run.character?.classId);
       const retreat = retreatShot(this.run, this.player, this.camp, target, this.facing);

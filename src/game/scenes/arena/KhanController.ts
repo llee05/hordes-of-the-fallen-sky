@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { effectAmount } from '../../../shared/visualSettings';
 import { CharacterMotion } from '../../animation/CharacterMotion';
-import { renderCharacter } from '../../animation/CharacterVisuals';
+import { renderCharacter, renderCharacterLayers } from '../../animation/CharacterVisuals';
 import { GAME } from '../../config';
 import { classDefinition, khanGallopSpeed, khanTargetingRange } from '../../data/classes';
 import type { Enemy } from '../../entities/actors';
@@ -31,6 +31,7 @@ export class KhanController extends ArenaSystem {
   readonly playerMotion = new CharacterMotion('player');
   shadow!: Phaser.GameObjects.Image;
   private aura!: Phaser.GameObjects.Arc;
+  private upper?: Phaser.GameObjects.Image;
   private dustTimer = 0;
 
   constructor(
@@ -43,6 +44,8 @@ export class KhanController extends ArenaSystem {
   reset(): void {
     this.playerMotion.reset('player');
     this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
+    this.upper?.destroy();
+    this.upper = undefined;
     this.dustTimer = 0;
   }
 
@@ -87,6 +90,8 @@ export class KhanController extends ArenaSystem {
 
   /** Rides along `movement` (the input intent, rotated here into world space). */
   move(dt: number, movement: Phaser.Math.Vector2): void {
+    const inputMoving = movement.lengthSq() > 0.01;
+    if (inputMoving) this.playerMotion.face(movement.x, movement.y);
     if (this.landscape.world3d) {
       const rotated = this.landscape.world3d.movement(movement.x, movement.y);
       movement.set(rotated.x, rotated.y);
@@ -105,7 +110,8 @@ export class KhanController extends ArenaSystem {
       );
     this.player.setVelocity(movement.x, movement.y);
     const faceX = this.landscape.world3d?.screenX(this.facing.x, this.facing.y) ?? this.facing.x;
-    if (Math.abs(faceX) > 0.01) this.player.setFlipX(faceX < 0);
+    if (this.playerMotion.directional) this.player.setFlipX(false);
+    else if (Math.abs(faceX) > 0.01) this.player.setFlipX(faceX < 0);
     this.player.setAlpha(
       this.timers.invulnerable > 0 ? (Math.floor(this.run.elapsed * 20) % 2 ? 0.5 : 0.85) : 1,
     );
@@ -147,6 +153,7 @@ export class KhanController extends ArenaSystem {
   /** Disables the fallen Khan's body and attachments; the camera follows the camp. */
   hideFallenKhan(): void {
     this.player.setVelocity(0, 0).disableBody(true, true);
+    this.upper?.setVisible(false);
     this.shadow.setVisible(false);
     this.aura.setVisible(false);
     this.timers.dashRemaining = 0;
@@ -158,8 +165,37 @@ export class KhanController extends ArenaSystem {
 
   renderPlayerVisual(): void {
     this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
-    renderCharacter(this.player, this.playerMotion);
-    this.player.setTint(this.playerMotion.hurt ? 0xffd3b2 : 0xffffff);
+    const tint = this.playerMotion.hurt ? 0xffd3b2 : 0xffffff;
+    this.player.setTint(tint);
+    if (this.playerMotion.upperFrame && !this.upper) {
+      this.upper = this.add
+        .image(
+          this.player.x,
+          this.player.y,
+          this.playerMotion.texture,
+          this.playerMotion.upperFrame,
+        )
+        .setName('khan-upper')
+        .setData('billboardLayer', 0.1);
+    }
+    if (this.upper) renderCharacterLayers(this.player, this.upper, this.playerMotion);
+    else renderCharacter(this.player, this.playerMotion);
+    this.upper?.setTint(tint);
+  }
+
+  /** Turns presentation toward an attack target without changing movement or targeting rules. */
+  faceTarget(x: number, y: number): void {
+    let dx = x - this.player.x;
+    let dy = y - this.player.y;
+    if (this.landscape.world3d) {
+      const from = this.landscape.world3d.screenPoint(this.player);
+      const to = this.landscape.world3d.screenPoint({ x, y });
+      dx = to.x - from.x;
+      dy = to.y - from.y;
+    }
+    this.playerMotion.face(dx, dy);
+    if (this.playerMotion.directional) this.player.setFlipX(false);
+    else if (Math.abs(dx) > 0.01) this.player.setFlipX(dx < 0);
   }
 
   /** Brings an active successor back at camp with fresh motion and return protection. */
@@ -192,6 +228,7 @@ export class KhanController extends ArenaSystem {
       .setVisible(true);
     this.aura.setPosition(x, y).setVisible(true);
     this.facing.set(1, 0);
+    this.playerMotion.face(1, 0);
     this.timers.dashRemaining = this.timers.dashTimer = 0;
     this.timers.attackTimer = this.dustTimer = 0;
     this.timers.invulnerable = GAME.khan.returnProtection;
@@ -226,6 +263,7 @@ export class KhanController extends ArenaSystem {
     this.player.setVelocity(world.player.vx, world.player.vy).setFlipX(world.player.flip);
     this.facing.set(world.facing.x, world.facing.y);
     this.playerMotion.restore(world.player.motion);
+    this.faceTarget(this.player.x + this.facing.x, this.player.y + this.facing.y);
     this.renderPlayerVisual();
     this.player.setDepth(100 + this.player.y);
     this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);

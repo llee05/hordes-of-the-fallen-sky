@@ -118,3 +118,19 @@ the profile class in `CharacterMotion`, applies the class atlas frame through
 `renderCharacter`, and preserves the brief hurt flash. The original shared rider
 class tints are superseded by the paintings' authored palettes. Independent
 clothing and mount recolouring still requires separate painted masks.
+
+### Directional class layers
+
+The Mounted Archer additionally uses `steppe-classes-directional-motion.png` as
+the first eight-direction class repaint. Its eight screen facings each have four
+lower movement frames, four matching neutral rider-upper frames, and draw/release
+upper frames. `CharacterMotion` keeps the lower gait clock advancing while the
+upper layer changes attack pose, so an automatic volley no longer freezes the
+horse's canter. `KhanController` supplies screen-relative movement and stationary
+target facings; combat timing and targeting remain unchanged. The upper image
+shares the Khan's logical 256 × 360 canvas, ground anchor, scale, alpha and tint.
+`SpriteBridge` gives it only a camera-depth bias, avoiding z-fighting without a
+visible screen offset. The existing separate olive ground shadow remains in use.
+
+The Lancer, Iron Pagoda and Spirit Caller retain their six-frame class-atlas clips
+until their directional sheets pass the same staged visual review.

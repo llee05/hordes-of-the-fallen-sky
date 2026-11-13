@@ -280,6 +280,7 @@ export class ArenaScene extends Phaser.Scene {
         },
         takeDamage: (amount) => scene.khan.takeDamage(amount),
         hurtPlayer: (enemy) => scene.khan.hurtPlayer(enemy),
+        faceTarget: (x, y) => scene.khan.faceTarget(x, y),
       },
       this.enemyDirector,
       this.clanDamage,

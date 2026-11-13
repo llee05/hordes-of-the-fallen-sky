@@ -11,6 +11,31 @@ export function renderCharacter(actor: PaintedActor, motion: CharacterMotion): v
   if (actor.frame.name !== frame) actor.setFrame(frame, false, false);
 }
 
+/** Draws a directional rider above an independently cycling mount/lower-body frame. */
+export function renderCharacterLayers(
+  actor: PaintedActor,
+  upper: Phaser.GameObjects.Image,
+  motion: CharacterMotion,
+): void {
+  renderCharacter(actor, motion);
+  const frame = motion.upperFrame;
+  if (!frame) {
+    upper.setVisible(false);
+    return;
+  }
+  if (upper.texture.key !== motion.texture) upper.setTexture(motion.texture, frame);
+  if (upper.frame.name !== frame) upper.setFrame(frame, false, false);
+  upper
+    .setVisible(actor.visible)
+    .setPosition(actor.x, actor.y)
+    .setOrigin(actor.originX, actor.originY)
+    .setScale(actor.scaleX, actor.scaleY)
+    .setFlip(actor.flipX, actor.flipY)
+    .setAlpha(actor.alpha)
+    .setDepth(actor.depth)
+    .setTint(actor.tintTopLeft);
+}
+
 class DefeatEcho extends Phaser.GameObjects.Image {
   elapsed = 0;
   restScaleX = 1;
