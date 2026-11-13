@@ -286,7 +286,8 @@ describe('terrain shader programs', () => {
         id === 'orkhon-valley' ||
           id === 'altan-ovoo' ||
           id === 'otgontenger' ||
-          id === 'eej-khairkhan',
+          id === 'eej-khairkhan' ||
+          id === 'belukha',
       );
     }
   });

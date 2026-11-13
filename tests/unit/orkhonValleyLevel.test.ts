@@ -745,7 +745,9 @@ describe('Orkhon Valley landmark systems', () => {
             ? 'alpine-bench'
             : id === 'eej-khairkhan'
               ? 'granite-terrace'
-              : 'camp-shelf',
+              : id === 'belukha'
+                ? 'twin-summit-headwall'
+                : 'camp-shelf',
       );
     }
   });
