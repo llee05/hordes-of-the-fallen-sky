@@ -138,6 +138,11 @@ export class CharacterMotion {
     return `${this.playerClass}-${this.direction}-upper-move-${this.moveFrame}`;
   }
 
+  /** Attack paintings replace the complete neutral rider while its gait clock keeps advancing. */
+  get upperReplacesBase(): boolean {
+    return this.directional && (this.windingUp || this.releaseRemaining > 0);
+  }
+
   get frame(): string {
     const kind = this.kind === 'player' && this.playerClass ? this.playerClass : this.kind;
     if (this.directional) return `${kind}-${this.direction}-move-${this.moveFrame}`;

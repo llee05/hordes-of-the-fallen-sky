@@ -23,6 +23,7 @@ export function renderCharacterLayers(
     upper.setVisible(false);
     return;
   }
+  const alpha = actor.alpha;
   if (upper.texture.key !== motion.texture) upper.setTexture(motion.texture, frame);
   if (upper.frame.name !== frame) upper.setFrame(frame, false, false);
   upper
@@ -31,9 +32,12 @@ export function renderCharacterLayers(
     .setOrigin(actor.originX, actor.originY)
     .setScale(actor.scaleX, actor.scaleY)
     .setFlip(actor.flipX, actor.flipY)
-    .setAlpha(actor.alpha)
+    .setAlpha(alpha)
     .setDepth(actor.depth)
     .setTint(actor.tintTopLeft);
+  // Full attack overlays avoid a projection seam through the horse. Movement still advances
+  // the base frame underneath, and KhanController restores its gameplay alpha each update.
+  if (motion.upperReplacesBase) actor.setAlpha(0);
 }
 
 class DefeatEcho extends Phaser.GameObjects.Image {

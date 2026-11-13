@@ -114,6 +114,7 @@ describe('character presentation clocks', () => {
     motion.face(1, 0);
     motion.advance(0.01, 175, true);
     expect(motion.upperFrame).toBe('mounted-archer-e-upper-attack-0');
+    expect(motion.upperReplacesBase).toBe(true);
     motion.attack();
     const gait = new Set<string>();
     for (let i = 0; i < 3; i++) {
@@ -122,6 +123,7 @@ describe('character presentation clocks', () => {
       expect(motion.upperFrame).toBe('mounted-archer-e-upper-attack-1');
     }
     expect(gait.size).toBeGreaterThan(1);
+    expect(motion.upperReplacesBase).toBe(true);
     const saved = motion.capture();
     motion.advance(0, 0);
     expect(motion.capture()).toEqual(saved);

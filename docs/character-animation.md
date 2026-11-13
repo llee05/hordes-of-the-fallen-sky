@@ -123,12 +123,13 @@ clothing and mount recolouring still requires separate painted masks.
 
 The Mounted Archer additionally uses `steppe-classes-directional-motion.png` as
 the first eight-direction class repaint. Its eight screen facings each have four
-lower movement frames, four matching neutral rider-upper frames, and draw/release
-upper frames. `CharacterMotion` keeps the lower gait clock advancing while the
-upper layer changes attack pose, so an automatic volley no longer freezes the
-horse's canter. `KhanController` supplies screen-relative movement and stationary
-target facings; combat timing and targeting remain unchanged. The upper image
-shares the Khan's logical 256 × 360 canvas, ground anchor, scale, alpha and tint.
+lower movement frames, four transparent neutral overlays, and complete draw/release
+overlays. `CharacterMotion` keeps the lower gait clock advancing during attacks;
+the complete attack painting replaces the neutral sprite for that brief pose so
+there is no projection seam through the horse. `KhanController` supplies
+screen-relative movement and stationary target facings; combat timing and
+targeting remain unchanged. The upper image shares the Khan's logical 256 × 360
+canvas, ground anchor, scale, alpha and tint.
 `SpriteBridge` gives it only a camera-depth bias, avoiding z-fighting without a
 visible screen offset. The existing separate olive ground shadow remains in use.
 
