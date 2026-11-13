@@ -21,6 +21,8 @@ import {
   otgontengerLandmarkAt,
 } from '../../src/game/world3d/otgontengerDressing';
 import { sceneDressing } from '../../src/game/world3d/sceneDressing';
+import { cameraZoomLimits } from '../../src/game/systems/CameraView';
+import { groundView, WORLD_3D } from '../../src/game/world3d/worldProjection';
 import {
   OTGONTENGER_PAINTED_GROUND,
   otgontengerPaintedGroundEnabled,
@@ -42,7 +44,7 @@ describe('Mount Otgontenger authored layout', () => {
     expect(OTGONTENGER.world).toMatchObject({
       width: 6400,
       height: 4000,
-      terrainSize: 6400,
+      terrainSize: 8704,
       minX: -3200,
       minY: -2000,
       camp: { x: -1900, y: 900 },
@@ -128,8 +130,8 @@ describe('Mount Otgontenger authored layout', () => {
 
 describe('Mount Otgontenger runtime terrain', () => {
   it('registers the approved world, camp, bench, paths, obstacles and tarn', () => {
-    expect(terrain.worldSize).toBe(6400);
-    expect(terrain.playBounds).toEqual({ x: 0, y: 1200, width: 6400, height: 4000 });
+    expect(terrain.worldSize).toBe(8704);
+    expect(terrain.playBounds).toEqual({ x: 1152, y: 2352, width: 6400, height: 4000 });
     expect(terrain.campPosition).toEqual(world(OTGONTENGER_SITES.camp));
     expect(WORLD_REGIONS.otgontenger.shelves).toHaveLength(1);
     expect(WORLD_REGIONS.otgontenger.ground?.paths).toEqual(OTGONTENGER.paths);
@@ -163,8 +165,46 @@ describe('Mount Otgontenger runtime terrain', () => {
   });
 
   it('routes authored dressing through the shared scene entry point', () => {
-    const bounds = { x: 0, y: 1200, width: 6400, height: 4000 };
+    const bounds = { x: 1152, y: 2352, width: 6400, height: 4000 };
     expect(sceneDressing(terrain, bounds)).toEqual(otgontengerDressing(terrain.seed, bounds));
+  });
+
+  it('keeps the angled camera footprint on padded terrain at every play-bound edge', () => {
+    const bounds = terrain.playBounds;
+    for (const [width, height] of [
+      [960, 540],
+      [1920, 1080],
+      [3840, 2160],
+      [768, 1024],
+    ] as const) {
+      const limits = cameraZoomLimits(width, height, bounds);
+      for (const zoom of [limits.min, limits.max]) {
+        const halfWidth = width / zoom / 2;
+        const halfHeight = height / zoom / 2;
+        const yaw = (WORLD_3D.yaw * Math.PI) / 180;
+        for (const cameraX of [bounds.x + halfWidth, bounds.x + bounds.width - halfWidth])
+          for (const cameraY of [bounds.y + halfHeight, bounds.y + bounds.height - halfHeight]) {
+            const view = groundView(
+              cameraX - Math.sin(yaw) * WORLD_3D.lookAhead,
+              cameraY - Math.cos(yaw) * WORLD_3D.lookAhead,
+              width,
+              height,
+              zoom,
+              terrain.reliefHeight,
+              WORLD_3D.angle,
+              WORLD_3D.yaw,
+            );
+            expect(view.x, `${width}x${height}@${zoom}: west`).toBeGreaterThanOrEqual(0);
+            expect(view.y, `${width}x${height}@${zoom}: north`).toBeGreaterThanOrEqual(0);
+            expect(view.x + view.width, `${width}x${height}@${zoom}: east`).toBeLessThanOrEqual(
+              terrain.worldSize,
+            );
+            expect(view.y + view.height, `${width}x${height}@${zoom}: south`).toBeLessThanOrEqual(
+              terrain.worldSize,
+            );
+          }
+      }
+    }
   });
 
   it('retains the former generated composition as a development fallback', () => {
@@ -187,7 +227,7 @@ describe('Mount Otgontenger painted ground', () => {
   });
 
   it('maps four opaque paintings and the grayscale detail layer over the playable rectangle', () => {
-    expect(otgontengerPaintedGroundWorldBounds(6400)).toEqual([0, 1200, 6400, 4000]);
+    expect(otgontengerPaintedGroundWorldBounds(8704)).toEqual([1152, 2352, 6400, 4000]);
     expect(OTGONTENGER_PAINTED_GROUND.outerFeather).toBe(700);
     for (const quadrant of PAINTED_GROUND_QUADRANTS) {
       const painting = OTGONTENGER_PAINTED_GROUND.quadrants[quadrant];

@@ -101,7 +101,8 @@ export const OTGONTENGER: OtgontengerLayout = {
   world: {
     width: 6400,
     height: 4000,
-    terrainSize: 6400,
+    // Tiled off-playfield ground pads the angled camera footprint at 4K and minimum zoom.
+    terrainSize: 8704,
     minX: -3200,
     minY: -2000,
     camp: OTGONTENGER_SITES.camp,
