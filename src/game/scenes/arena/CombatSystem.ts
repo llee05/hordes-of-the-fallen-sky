@@ -335,8 +335,7 @@ export class CombatSystem extends ArenaSystem {
     const direction = aimedDirection(this.player, aim, this.facing);
     this.facing.x = direction.x;
     this.facing.y = direction.y;
-    const faceX = this.landscape.world3d?.screenX(direction.x, direction.y) ?? direction.x;
-    if (Math.abs(faceX) > 0.01) this.player.setFlipX(faceX < 0);
+    this.host.faceTarget(aim.x, aim.y);
     if (release) this.host.playerMotion.attack();
     return direction;
   }

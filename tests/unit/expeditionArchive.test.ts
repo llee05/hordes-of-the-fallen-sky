@@ -512,7 +512,6 @@ describe('full expedition snapshots', () => {
     run.khan.trait = 'outrider';
     run.combat.previous = { x: 2600, y: 2700 };
     const runtime = world();
-    runtime.timers.closeDefenseTimer = 0.73;
     syncAreaEncounter(runtime.areaEncounter, run);
     const save = captureExpedition(run, runtime);
     const restored = decodeExpedition(JSON.parse(JSON.stringify(save)));
@@ -520,6 +519,13 @@ describe('full expedition snapshots', () => {
     expect(restored.world).toEqual(runtime);
     restored.run.clan.food = 0;
     expect(save.run.clan).not.toEqual(restored.run.clan);
+  });
+  it('accepts and ignores the retired close-defense timer in older version 1 saves', () => {
+    const save = captureExpedition(createRun(), world()) as Record<string, any>;
+    save.world.timers.closeDefenseTimer = 0.73;
+    const restored = decodeExpedition(save);
+    expect(restored.world.timers.closeDefenseTimer).toBe(0.73);
+    expect(createArenaTimers()).not.toHaveProperty('closeDefenseTimer');
   });
   it('moves legacy Orkhon actors into the wide terrain once and marks the new coordinates', () => {
     const run = createRun();

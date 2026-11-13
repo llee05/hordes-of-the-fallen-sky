@@ -108,6 +108,7 @@ export interface WorldArchive {
   timers: {
     spawnTimer: number;
     attackTimer: number;
+    /** Retired manual-combat predecessor; accepted so old version 1 saves still load. */
     closeDefenseTimer?: number;
     abilityCooldowns?: { q: number; w: number; e: number; r: number };
     spiritCaller?: SpiritCallerCombatState;

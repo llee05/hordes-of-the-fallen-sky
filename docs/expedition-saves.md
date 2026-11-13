@@ -27,9 +27,9 @@ Snapshots preserve the entire run, including already-applied camp/stat effects a
 Version 1 accepts an optional validated `run.character` profile. Saves without it
 receive the default Mounted Archer identity while retaining stored stats and
 effects; loading never reapplies class, background, oath, or progression bonuses.
-The optional `world.timers.closeDefenseTimer` preserves the close-defense cooldown;
-older saves without it start with close defense ready. `profile.json` separately
-accepts an optional validated character profile for new expeditions; see
+Version 1 saves may still contain the retired optional `world.timers.closeDefenseTimer`;
+it is accepted and ignored so those expeditions remain loadable. New snapshots do not
+create that timer. `profile.json` separately accepts an optional validated character profile for new expeditions; see
 [developer class testing](developer-mode.md#playable-class-testing) for picker behavior.
 
 Enemy pool slots and incarnation counters survive hydration, including inactive pool entries. Projectile hit references and enemy-owned warnings therefore continue to reference the same incarnation. Loading initializes actors directly rather than using spawn placement rules, which would reject existing nearby enemies. Terrain/navigation are reconstructed from the current real location. Zoom is restored within the current viewport's limits. Non-gameplay defeat copies, dust, packing transitions, and ambient voices are recreated rather than persisted.

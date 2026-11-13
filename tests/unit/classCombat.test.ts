@@ -63,7 +63,9 @@ describe('playable class combat', () => {
 
   it('fires the Mounted Archer basic as a fast aimed arrow', () => {
     const arena = setup('mounted-archer');
+    const faceTarget = vi.spyOn(arena.host, 'faceTarget');
     expect(arena.combat.fireBasic({ x: 1400, y: 1000 })).toBe(true);
+    expect(faceTarget).toHaveBeenCalledWith(1400, 1000);
     const arrow = arena.projectiles.getFirstAlive()!;
     expect(arrow.body!.velocity.x).toBeGreaterThan(0);
     expect(arrow.body!.velocity.y).toBeCloseTo(0);

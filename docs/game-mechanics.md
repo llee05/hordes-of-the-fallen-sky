@@ -292,14 +292,12 @@ independent rules live in their corresponding state modules.
 
 ### Mounted skill and enemy roles
 
-Actual travelled ground, rather than movement input, now builds momentum at 0.28
-per second. Stopping, reversing abruptly, or pressing into a cliff loses momentum.
-After 3.5 seconds of sustained riding, the next successfully released Khan volley
-gains the [class's charged-attack bonuses](#close-defense-and-charged-attacks);
-a full projectile pool does not consume the charge. The HUD shows its charge.
-Feigned retreat adds 15% Khan volley damage
-when shooting behind while riding away from camp. Gallops push nearby enemies once
-per charge, sweeping against terrain rather than displacing them through walls.
+Actual travelled ground, rather than movement input, builds formation momentum at
+0.28 per second. Stopping, reversing abruptly, or pressing into a cliff loses
+momentum. The old sustained-riding charged volley has been removed; Khan attacks are
+the manual light, heavy, and class-ability actions described above. Gallops push
+nearby enemies once per charge, sweeping against terrain rather than displacing them
+through walls.
 
 Wolves take alternating flanking approaches before committing at close range.
 Hulks absorb 20% damage while unpinned. Ghost riders mark a fixed charge direction
