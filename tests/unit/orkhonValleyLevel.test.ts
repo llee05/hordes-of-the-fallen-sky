@@ -751,7 +751,9 @@ describe('Orkhon Valley landmark systems', () => {
                   ? 'lateral-moraine-terrace'
                   : id === 'bogd-khan-uul'
                     ? 'southern-woodland-shoulder'
-                    : 'camp-shelf',
+                    : id === 'altai-tavan-bogd'
+                      ? 'northern-moraine'
+                      : 'camp-shelf',
       );
     }
   });

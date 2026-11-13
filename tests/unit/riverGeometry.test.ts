@@ -4,7 +4,6 @@ import {
   isRiverWater,
   riverChannels,
   riverOutline,
-  riverPoint,
   riverSectionAt,
 } from '../../src/game/assets/riverGeometry';
 
@@ -85,7 +84,10 @@ describe('river shorelines', () => {
       for (const section of channels[0]!.sections.filter((_, index) => index % 12 === 0)) {
         expect(isRiverWater(channels, section.x, section.y)).toBe(true);
         if (definition.water.kind !== 'braided') {
-          const dry = riverPoint(section, 1, 35);
+          const dry = {
+            x: section.x + section.nx * (Math.max(section.left, section.right) + 35),
+            y: section.y + section.ny * (Math.max(section.left, section.right) + 35),
+          };
           expect(isRiverWater(channels, dry.x, dry.y)).toBe(false);
         }
       }

@@ -40,6 +40,10 @@ import {
   BOGD_KHAN_UUL_PAINTED_GROUND,
   bogdKhanUulPaintedGroundEnabled,
 } from './bogdKhanUulPaintedGround';
+import {
+  ALTAI_TAVAN_BOGD_PAINTED_GROUND,
+  altaiTavanBogdPaintedGroundEnabled,
+} from './altaiTavanBogdPaintedGround';
 
 interface RenderChunk {
   group: THREE.Group;
@@ -143,6 +147,7 @@ export class World3DRenderer {
         terrain.region.scene.id === 'eej-khairkhan' ||
         terrain.region.scene.id === 'belukha' ||
         terrain.region.scene.id === 'khan-tengri' ||
+        terrain.region.scene.id === 'altai-tavan-bogd' ||
         terrain.region.scene.id === 'bogd-khan-uul')
         ? terrain
         : undefined;
@@ -196,6 +201,13 @@ export class World3DRenderer {
       )
         ? BOGD_KHAN_UUL_PAINTED_GROUND
         : undefined;
+    if (authored?.region.scene.id === 'altai-tavan-bogd')
+      paintedGround = altaiTavanBogdPaintedGroundEnabled(
+        globalThis.location?.search ?? '',
+        import.meta.env.DEV,
+      )
+        ? ALTAI_TAVAN_BOGD_PAINTED_GROUND
+        : undefined;
     this.materials = new MountainMaterials(
       scene,
       palette,
@@ -233,6 +245,7 @@ export class World3DRenderer {
         terrain.region.scene.id === 'otgontenger' ||
         terrain.region.scene.id === 'eej-khairkhan' ||
         terrain.region.scene.id === 'belukha' ||
+        terrain.region.scene.id === 'altai-tavan-bogd' ||
         terrain.region.scene.id === 'khan-tengri')
     ) {
       this.staticDressing = new StaticDressing3D(
@@ -599,6 +612,7 @@ export class World3DRenderer {
       this.terrain.region.scene.id !== 'altan-ovoo' &&
       this.terrain.region.scene.id !== 'otgontenger' &&
       this.terrain.region.scene.id !== 'eej-khairkhan' &&
+      this.terrain.region.scene.id !== 'altai-tavan-bogd' &&
       this.terrain.region.scene.id !== 'belukha'
     )
       for (const prop of sceneDressing(this.terrain, bounds)) {

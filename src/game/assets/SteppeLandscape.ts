@@ -40,7 +40,8 @@ export class SteppeLandscape {
         (id === 'eej-khairkhan' && query.get('eejKhairkhanLevel') === 'generated') ||
         (id === 'belukha' && query.get('belukhaLevel') === 'generated') ||
         (id === 'khan-tengri' && query.get('khanTengriLevel') === 'generated') ||
-        (id === 'bogd-khan-uul' && query.get('bogdKhanUulLevel') === 'generated'));
+        (id === 'bogd-khan-uul' && query.get('bogdKhanUulLevel') === 'generated') ||
+        (id === 'altai-tavan-bogd' && query.get('altaiTavanBogdLevel') === 'generated'));
     const terrain = new ComposedTerrain(
       composedRegion(id, generatedAuthoredLevel),
       generatedAuthoredLevel ? undefined : LANDSCAPES[id].water,
