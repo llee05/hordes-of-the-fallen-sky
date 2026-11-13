@@ -7,7 +7,7 @@ import type { CameraOptions } from '../../src/game/dev/gameControls';
 // compared). Run only when browser capture is explicitly approved. Every view uses the seeded
 // checkpoint, normal camera angle, full resolution, frozen simulation, and hidden HUD.
 
-const at = (x: number, y: number) => ({ x: 3200 + x, y: 3200 + y });
+const at = (x: number, y: number) => ({ x: 4400 + x, y: 4400 + y });
 
 interface Shot {
   name: string;

@@ -42,7 +42,7 @@ describe('Khan Tengri authored layout', () => {
     expect(KHAN_TENGRI.world).toMatchObject({
       width: 6400,
       height: 4000,
-      terrainSize: 6400,
+      terrainSize: 8800,
       minX: -3200,
       minY: -2000,
       camp: { x: -2050, y: 1050 },
@@ -91,23 +91,27 @@ describe('Khan Tengri authored layout', () => {
       ).toBe(true);
   });
 
-  it('uses only bundled scenery and keeps the single pyramid as an edge frame', () => {
-    const peaks = KHAN_TENGRI.landmarks.filter((landmark) => landmark.role === 'peak-frame');
-    expect(peaks).toHaveLength(1);
-    expect(peaks[0]).toMatchObject({ frame: 'pyramid', y: -2050 });
+  it('uses only bundled ground scenery and leaves peaks outside the playable dressing', () => {
+    expect(KHAN_TENGRI.landmarks.map(({ frame }) => frame)).not.toContain('pyramid');
+    expect(KHAN_TENGRI.landmarks.map(({ frame }) => frame)).not.toContain('glacier');
     for (const landmark of KHAN_TENGRI.landmarks)
-      if (landmark.texture === 'steppe-scenery')
-        expect(['pyramid', 'glacier', 'crag']).toContain(landmark.frame);
+      if (landmark.texture === 'steppe-scenery') expect(['crag']).toContain(landmark.frame);
       else expect(ORKHON_SPRITES, landmark.id).toHaveProperty(landmark.frame);
   });
 });
 
 describe('Khan Tengri runtime terrain', () => {
   it('registers the approved bounds, camp, terrace, paths, obstacles and meltwater', () => {
-    expect(terrain.worldSize).toBe(6400);
-    expect(terrain.playBounds).toEqual({ x: 0, y: 1200, width: 6400, height: 4000 });
+    expect(terrain.worldSize).toBe(8800);
+    expect(terrain.playBounds).toEqual({ x: 1200, y: 2400, width: 6400, height: 4000 });
     expect(terrain.campPosition).toEqual(world(KHAN_TENGRI_SITES.camp));
-    expect(WORLD_REGIONS['khan-tengri'].shelves).toHaveLength(1);
+    expect(WORLD_REGIONS['khan-tengri'].shelves).toHaveLength(2);
+    expect(WORLD_REGIONS['khan-tengri'].shelves[1]).toMatchObject({
+      id: 'northern-peak-wall',
+      z: -3200,
+      depth: 800,
+    });
+    expect(-3200 + 800).toBeLessThan(KHAN_TENGRI.world.minY);
     expect(WORLD_REGIONS['khan-tengri'].ground?.paths).toEqual(KHAN_TENGRI.paths);
     expect(WORLD_REGIONS['khan-tengri'].obstacles).toHaveLength(KHAN_TENGRI_FOOTPRINTS.length);
     expect(terrain.river?.definition.kind).toBe('glacial');
@@ -152,7 +156,7 @@ describe('Khan Tengri painted ground', () => {
   });
 
   it('maps four opaque paintings and the grayscale detail layer over the playable rectangle', () => {
-    expect(khanTengriPaintedGroundWorldBounds(6400)).toEqual([0, 1200, 6400, 4000]);
+    expect(khanTengriPaintedGroundWorldBounds(8800)).toEqual([1200, 2400, 6400, 4000]);
     expect(KHAN_TENGRI_PAINTED_GROUND.outerFeather).toBe(700);
     for (const quadrant of PAINTED_GROUND_QUADRANTS) {
       const painting = KHAN_TENGRI_PAINTED_GROUND.quadrants[quadrant];

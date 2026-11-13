@@ -207,6 +207,7 @@ export class World3DRenderer {
         this.materials.bedTexture,
         this.materials.waterTextures,
         terrain.region.scene.id !== 'khan-tengri',
+        terrain.region.scene.id !== 'khan-tengri' || paintedGround === undefined,
       );
       this.world.add(this.water.group);
     }

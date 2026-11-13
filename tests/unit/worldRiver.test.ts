@@ -52,6 +52,19 @@ describe('integrated organic rivers', () => {
     bed.dispose();
   });
 
+  it('can retain authored river carving while a registered ground painting supplies the surface', () => {
+    const terrain = new ComposedTerrain(
+      composedRegion('khan-tengri'),
+      LANDSCAPES['khan-tengri'].water,
+    );
+    const bed = new THREE.Texture();
+    const water = new Water3D(terrain.river!, terrain, bed, undefined, false, false);
+    expect(water.group.getObjectByName('river-water')).toBeUndefined();
+    expect(terrain.river?.definition.kind).toBe('glacial');
+    water.destroy();
+    bed.dispose();
+  });
+
   it('answers bucketed shore queries exactly as a scan of every segment', () => {
     for (const water of [
       MEADOW_STREAM,

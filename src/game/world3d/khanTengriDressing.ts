@@ -128,11 +128,9 @@ function buildDressing(seed: string | number): SceneDressing[] {
       frame: landmark.frame,
       shadow: landmark.shadow ?? false,
       originY:
-        landmark.role === 'peak-frame'
-          ? 1
-          : landmark.texture === 'steppe-scenery'
-            ? 0.9
-            : ORKHON_SPRITES[landmark.frame as OrkhonSprite]?.anchorY,
+        landmark.texture === 'steppe-scenery'
+          ? 0.9
+          : ORKHON_SPRITES[landmark.frame as OrkhonSprite]?.anchorY,
     });
 
   // One quiet candidate per 250-unit cell preserves broad combat lanes while breaking up the

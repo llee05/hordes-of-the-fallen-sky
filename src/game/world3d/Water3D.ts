@@ -16,6 +16,7 @@ export class Water3D {
     /** Supplied flow and rapids tiles. Authored rivers show them directly and draw no plank decks. */
     waterTextures?: readonly [THREE.Texture, THREE.Texture],
     crossings = waterTextures === undefined,
+    surface = true,
   ) {
     this.group.name = 'world-river';
     const data = waterGeometry(river, terrain);
@@ -110,7 +111,7 @@ export class Water3D {
       bankMesh.name = 'source-pool-bank';
       this.group.add(bankMesh);
     }
-    this.group.add(mesh);
+    if (surface) this.group.add(mesh);
     const matrices: THREE.Matrix4[] = [];
     const colors: THREE.Color[] = [];
     const dummy = new THREE.Object3D();

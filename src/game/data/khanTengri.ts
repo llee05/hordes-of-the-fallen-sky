@@ -17,8 +17,7 @@ export interface KhanTengriPlateau {
   ramps: readonly KhanTengriRamp[];
 }
 
-export type KhanTengriLandmarkRole =
-  'peak-frame' | 'overlook' | 'gap' | 'glacier' | 'erratic-field' | 'scenery';
+export type KhanTengriLandmarkRole = 'overlook' | 'gap' | 'glacier' | 'erratic-field' | 'scenery';
 
 /** Existing bundled scenery placed at an authored terrain site. */
 export interface KhanTengriLandmark {
@@ -89,14 +88,14 @@ const EAST_RAMP: KhanTengriRamp = {
 
 /**
  * Authored Khan Tengri glacier-margin level. Coordinates are level-centre-relative: +x east,
- * +y south. The distant peak is blocked scenery at the northern edge, while the playable
- * battlefield stays on the lower moraine floor and one raised lateral-moraine terrace.
+ * +y south. A terrain ridge walls off the distant northern peaks, while the playable battlefield
+ * stays on the lower moraine floor and one raised lateral-moraine terrace.
  */
 export const KHAN_TENGRI: KhanTengriLayout = {
   world: {
     width: 6400,
     height: 4000,
-    terrainSize: 6400,
+    terrainSize: 8800,
     minX: -3200,
     minY: -2000,
     camp: KHAN_TENGRI_SITES.camp,
@@ -170,20 +169,10 @@ export const KHAN_TENGRI: KhanTengriLayout = {
     width: 58,
     color: 0x78aabc,
     bank: 0xa7a5ad,
-    course: [2500, -2000, 2450, -1300, 2520, -600, 2700, 50, 2650, 600, 2820, 1250, 3050, 2000],
+    course: [1800, -2000, 1850, -1300, 2000, -600, 2200, 50, 2350, 600, 2650, 1250, 3000, 2000],
     gorge: { rapids: 0, bridges: [] },
   },
   landmarks: [
-    {
-      id: 'khan-tengri-pyramid',
-      texture: 'steppe-scenery',
-      frame: 'pyramid',
-      x: -450,
-      y: -2050,
-      width: 480,
-      role: 'peak-frame',
-      footprint: 180,
-    },
     {
       id: 'western-overlook-stone',
       texture: 'orkhon-valley-sprites',

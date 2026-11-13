@@ -24,19 +24,23 @@ and +y is south.
   combat lanes.
 
 Every authored trail either reaches a named terrain place or joins another trail. The summit is
-not a climbable objective: one distant pyramid and the upper glacier frame the northern edge while
-the playable ground stays on moraine terraces and outwash.
+not a climbable objective: a high terrain ridge beyond the northern play boundary forms the
+impassable distant peak wall while the playable ground stays on moraine terraces and outwash. The
+8,800-unit terrain canvas leaves at least 1,200 units between every camera clamp and the map edge.
 
 ## Hybrid terrain and scenery
 
 The shared hybrid renderer projects painted ground over elevation geometry while cliffs, ramps,
-water, landmarks, actors, collision, and shadows remain separate. The upper moraine therefore
-uses the same lavender scree, snow, and blue-grey rock language as the lower floor rather than a
-smooth generic material.
+landmarks, actors, collision, and shadows remain separate. The river system still carves the
+glacial course, while the registered ground painting supplies its calm surface across both terrain
+tiers without a detached valley-floor water mesh. The upper moraine therefore uses the same
+lavender scree, snow, and blue-grey rock language as the lower floor rather than a smooth generic
+material.
 
-Existing bundled scenery supplies a small marble-pyramid edge frame, angular crags, standing
-stone, and boulders. The glacier tongue stays in the ground painting because the available large
-glacier cutout does not register cleanly against this elevation geometry. Sparse deterministic
+Existing bundled scenery supplies angular crags, a standing stone, and boulders. Peaks remain in
+the off-playfield northern terrain wall rather than appearing as cutout sprites on walkable ground.
+The glacier tongue stays in the ground painting because the available large glacier cutout does
+not register cleanly against this elevation geometry. Sparse deterministic
 rock groups frame the outer battlefield without trees or alpine vegetation; the camp clearing,
 trails, ramps, water edge, and broad horde lanes remain open. `world3d/khanTengriDressing.ts`
 builds this dressing for the whole level before clipping it into render chunks, keeping placement

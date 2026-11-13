@@ -314,7 +314,20 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
       y,
       radius: footprint,
     })),
-    shelves: KHAN_TENGRI.plateaus.map((source) => plateau(source, KHAN_TENGRI.rise)),
+    shelves: [
+      ...KHAN_TENGRI.plateaus.map((source) => plateau(source, KHAN_TENGRI.rise)),
+      {
+        id: 'northern-peak-wall',
+        x: 0,
+        z: -3200,
+        width: 3800,
+        depth: 800,
+        rise: 430,
+        turn: 0,
+        fracture: 150,
+        peak: 280,
+      },
+    ],
   },
   belukha: {
     id: 'belukha',
