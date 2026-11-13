@@ -121,17 +121,14 @@ clothing and mount recolouring still requires separate painted masks.
 
 ### Directional class layers
 
-The Mounted Archer additionally uses `steppe-classes-directional-motion.png` as
-the first eight-direction class repaint. Its eight screen facings each have four
-lower movement frames, four transparent neutral overlays, and complete draw/release
-overlays. `CharacterMotion` keeps the lower gait clock advancing during attacks;
-the complete attack painting replaces the neutral sprite for that brief pose so
-there is no projection seam through the horse. `KhanController` supplies
+All four playable classes use `steppe-classes-directional-motion.png` for their
+eight-direction repaints. Each screen facing has four lower movement frames, four
+transparent neutral overlays, and two complete class-specific attack overlays.
+`CharacterMotion` keeps the lower gait clock advancing during attacks; the complete
+attack painting replaces the neutral sprite for that brief pose so there is no
+projection seam through the horse. `KhanController` supplies
 screen-relative movement and stationary target facings; combat timing and
 targeting remain unchanged. The upper image shares the Khan's logical 256 × 360
 canvas, ground anchor, scale, alpha and tint.
-`SpriteBridge` gives it only a camera-depth bias, avoiding z-fighting without a
+`SpriteBridge` gives the overlay only a camera-depth bias, avoiding z-fighting without a
 visible screen offset. The existing separate olive ground shadow remains in use.
-
-The Lancer, Iron Pagoda and Spirit Caller retain their six-frame class-atlas clips
-until their directional sheets pass the same staged visual review.

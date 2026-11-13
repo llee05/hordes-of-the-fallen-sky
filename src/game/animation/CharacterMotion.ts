@@ -66,7 +66,7 @@ export class CharacterMotion {
 
   /** Directional class art keeps the horse gait and rider upper body on independent layers. */
   get directional(): boolean {
-    return this.kind === 'player' && this.playerClass === 'mounted-archer';
+    return this.kind === 'player' && this.playerClass !== undefined;
   }
 
   constructor(kind: CharacterKind, offset = 0) {

@@ -32,23 +32,26 @@ it('registers all four class clips to the existing rider canvas and ground ancho
   expect(Object.keys(atlas.frames).filter((name) => !name.startsWith('banner-'))).toHaveLength(24);
 });
 
-it('registers the directional Mounted Archer lower and upper layers to one rider canvas', () => {
+it('registers every directional class lower and upper layer to one rider canvas', () => {
   const atlas = JSON.parse(directionalClassesSource);
-  for (const direction of CHARACTER_DIRECTIONS) {
-    for (let i = 0; i < 4; i++) {
-      for (const name of [
-        `mounted-archer-${direction}-move-${i}`,
-        `mounted-archer-${direction}-upper-move-${i}`,
-      ]) {
-        const entry = atlas.frames[name];
-        expect(entry.sourceSize).toEqual({ w: 256, h: 360 });
-        expect(entry.spriteSourceSize).toEqual({ x: 0, y: 68, w: 256, h: 256 });
+  for (const classId of CHARACTER_CLASSES) {
+    for (const direction of CHARACTER_DIRECTIONS) {
+      for (let i = 0; i < 4; i++) {
+        for (const name of [
+          `${classId}-${direction}-move-${i}`,
+          `${classId}-${direction}-upper-move-${i}`,
+        ]) {
+          const entry = atlas.frames[name];
+          expect(entry.sourceSize).toEqual({ w: 256, h: 360 });
+          expect(entry.spriteSourceSize).toEqual({ x: 0, y: 68, w: 256, h: 256 });
+        }
       }
+      for (let i = 0; i < 2; i++)
+        expect(atlas.frames[`${classId}-${direction}-upper-attack-${i}`]).toBeDefined();
     }
-    for (let i = 0; i < 2; i++)
-      expect(atlas.frames[`mounted-archer-${direction}-upper-attack-${i}`]).toBeDefined();
   }
-  expect(Object.keys(atlas.frames)).toHaveLength(80);
+  expect(Object.keys(atlas.frames)).toHaveLength(320);
+  expect(atlas.meta.size).toEqual({ w: 4096, h: 5120 });
 });
 
 const mounted = JSON.parse(
@@ -61,13 +64,13 @@ const creatures = JSON.parse(
 ) as typeof import('../../public/art/steppe-creature-motion.json');
 
 describe('character presentation clocks', () => {
-  it.each(CHARACTER_CLASSES.filter((classId) => classId !== 'mounted-archer'))(
+  it.each(CHARACTER_CLASSES)(
     'selects %s art through gait, attack, pause, restore and succession',
     (classId) => {
       const motion = new CharacterMotion('player');
       motion.setPlayerClass(classId);
-      expect(motion.texture).toBe('steppe-classes-motion');
-      expect(motion.frame).toBe(`${classId}-move-0`);
+      expect(motion.texture).toBe('steppe-classes-directional-motion');
+      expect(motion.frame).toBe(`${classId}-e-move-0`);
       const frames = new Set<string>();
       for (let i = 0; i < 20; i++) {
         motion.advance(0.05, 175);
@@ -75,62 +78,65 @@ describe('character presentation clocks', () => {
       }
       expect(frames.size).toBe(4);
       motion.advance(0.01, 0, true);
-      expect(motion.frame).toBe(`${classId}-attack-0`);
+      expect(motion.upperFrame).toBe(`${classId}-e-upper-attack-0`);
       motion.attack();
       const saved = motion.capture();
       motion.advance(0, 200);
       expect(motion.capture()).toEqual(saved);
-      expect(motion.frame).toBe(`${classId}-attack-1`);
+      expect(motion.upperFrame).toBe(`${classId}-e-upper-attack-1`);
       motion.reset('player');
-      expect(motion.frame).toBe(`${classId}-move-0`);
+      expect(motion.frame).toBe(`${classId}-e-move-0`);
       motion.restore(saved);
-      expect(motion.frame).toBe(`${classId}-attack-1`);
+      expect(motion.upperFrame).toBe(`${classId}-e-upper-attack-1`);
     },
   );
 
-  it('keeps the directional Mounted Archer gait moving beneath independent attack poses', () => {
-    const motion = new CharacterMotion('player');
-    motion.setPlayerClass('mounted-archer');
-    expect(motion.texture).toBe('steppe-classes-directional-motion');
-    expect(motion.frame).toBe('mounted-archer-e-move-0');
-    expect(motion.upperFrame).toBe('mounted-archer-e-upper-move-0');
+  it.each(CHARACTER_CLASSES)(
+    'keeps the directional %s gait moving beneath independent attack poses',
+    (classId) => {
+      const motion = new CharacterMotion('player');
+      motion.setPlayerClass(classId);
+      expect(motion.texture).toBe('steppe-classes-directional-motion');
+      expect(motion.frame).toBe(`${classId}-e-move-0`);
+      expect(motion.upperFrame).toBe(`${classId}-e-upper-move-0`);
 
-    const directions = new Map([
-      ['e', [1, 0]],
-      ['se', [1, 1]],
-      ['s', [0, 1]],
-      ['sw', [-1, 1]],
-      ['w', [-1, 0]],
-      ['nw', [-1, -1]],
-      ['n', [0, -1]],
-      ['ne', [1, -1]],
-    ] as const);
-    for (const [direction, [x, y]] of directions) {
-      motion.face(x, y);
-      expect(motion.frame).toContain(`-${direction}-`);
-      expect(motion.upperFrame).toContain(`-${direction}-`);
-    }
+      const directions = new Map([
+        ['e', [1, 0]],
+        ['se', [1, 1]],
+        ['s', [0, 1]],
+        ['sw', [-1, 1]],
+        ['w', [-1, 0]],
+        ['nw', [-1, -1]],
+        ['n', [0, -1]],
+        ['ne', [1, -1]],
+      ] as const);
+      for (const [direction, [x, y]] of directions) {
+        motion.face(x, y);
+        expect(motion.frame).toContain(`-${direction}-`);
+        expect(motion.upperFrame).toContain(`-${direction}-`);
+      }
 
-    motion.face(1, 0);
-    motion.advance(0.01, 175, true);
-    expect(motion.upperFrame).toBe('mounted-archer-e-upper-attack-0');
-    expect(motion.upperReplacesBase).toBe(true);
-    motion.attack();
-    const gait = new Set<string>();
-    for (let i = 0; i < 3; i++) {
-      motion.advance(0.05, 175);
-      gait.add(motion.frame);
-      expect(motion.upperFrame).toBe('mounted-archer-e-upper-attack-1');
-    }
-    expect(gait.size).toBeGreaterThan(1);
-    expect(motion.upperReplacesBase).toBe(true);
-    const saved = motion.capture();
-    motion.advance(0, 0);
-    expect(motion.capture()).toEqual(saved);
-    motion.reset('player');
-    motion.setPlayerClass('mounted-archer');
-    expect(motion.frame).toBe('mounted-archer-e-move-0');
-  });
+      motion.face(1, 0);
+      motion.advance(0.01, 175, true);
+      expect(motion.upperFrame).toBe(`${classId}-e-upper-attack-0`);
+      expect(motion.upperReplacesBase).toBe(true);
+      motion.attack();
+      const gait = new Set<string>();
+      for (let i = 0; i < 3; i++) {
+        motion.advance(0.05, 175);
+        gait.add(motion.frame);
+        expect(motion.upperFrame).toBe(`${classId}-e-upper-attack-1`);
+      }
+      expect(gait.size).toBeGreaterThan(1);
+      expect(motion.upperReplacesBase).toBe(true);
+      const saved = motion.capture();
+      motion.advance(0, 0);
+      expect(motion.capture()).toEqual(saved);
+      motion.reset('player');
+      motion.setPlayerClass(classId);
+      expect(motion.frame).toBe(`${classId}-e-move-0`);
+    },
+  );
   it('cycles distinct locomotion frames, accelerates for gallop, and holds a grounded idle', () => {
     const rider = new CharacterMotion('player');
     const walking = new Set<string>();
