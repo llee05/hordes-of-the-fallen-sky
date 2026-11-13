@@ -1,6 +1,7 @@
 import type { LocationId } from '../types';
 import type { MountainRegion } from '../terrain/types';
 import { ALTAN_OVOO } from './altanOvoo';
+import { ALTAI_TAVAN_BOGD } from './altaiTavanBogd';
 import { OTGONTENGER } from './otgontenger';
 import { EEJ_KHAIRKHAN } from './eejKhairkhan';
 import { BELUKHA } from './belukha';
@@ -131,7 +132,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
   'altai-tavan-bogd': {
     title: 'The five-peak glacier',
     description:
-      'Five snowy crests and turquoise glacial seams overlook a silver-green gravel plain.',
+      'Five snowy crests and the Potanin glacier frame a silver-green moraine valley and long turquoise lake.',
     surface: 'scree',
     groundTile: 'altai-tavan-bogd',
     ground: 0xb4bbb0,
@@ -152,13 +153,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       landmark('pyramid', 470, -90, 195),
       landmark('glacier', -410, 340, 350),
     ],
-    water: {
-      kind: 'glacial',
-      width: 64,
-      color: 0x92bbbc,
-      bank: 0xd0d5bf,
-      course: [-2600, -540, -900, -390, -150, -270, 950, -350, 2600, -570],
-    },
+    water: ALTAI_TAVAN_BOGD.lake,
     air: { color: 0xb0cbca, alpha: 0.05, particles: 'mist' },
   },
   'khan-tengri': {

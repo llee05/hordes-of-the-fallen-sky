@@ -8,6 +8,7 @@ import { eejKhairkhanDressing } from './eejKhairkhanDressing';
 import { belukhaDressing } from './belukhaDressing';
 import { khanTengriDressing } from './khanTengriDressing';
 import { bogdKhanUulDressing } from './bogdKhanUulDressing';
+import { altaiTavanBogdDressing } from './altaiTavanBogdDressing';
 import type { ComposedTerrain } from './ComposedTerrain';
 
 export type SceneProp =
@@ -65,6 +66,8 @@ export function sceneDressing(terrain: ComposedTerrain, bounds: TerrainBounds): 
     return khanTengriDressing(terrain.seed, bounds);
   if (terrain.region.scene.id === 'bogd-khan-uul' && terrain.region.scene.ground)
     return bogdKhanUulDressing(terrain.seed, bounds);
+  if (terrain.region.scene.id === 'altai-tavan-bogd' && terrain.region.scene.ground)
+    return altaiTavanBogdDressing(terrain.seed, bounds);
   const vegetation = terrain.region.scene.vegetation;
   const within = (x: number, z: number) =>
     x >= bounds.x && z >= bounds.y && x < bounds.x + bounds.width && z < bounds.y + bounds.height;

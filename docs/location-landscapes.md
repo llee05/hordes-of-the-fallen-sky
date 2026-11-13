@@ -5,16 +5,16 @@ select terrain, vegetation, landforms, water, and ambient particles. These are s
 models. Existing cultural context remains in `data/clan.ts` and
 [migration destinations](migration-locations.md).
 
-| Location         | Landscape and scenery                                                 |
-| ---------------- | --------------------------------------------------------------------- |
-| Otgontenger      | Authored alpine bench, snow overlook, glacial tarn and larch valley   |
-| Bogd Khan Uul    | Authored Tuul-side meadow, woodland shoulder, larch and pine groves   |
-| Altai Tavan Bogd | Five snowy crests, turquoise glacier seams, silver-green gravel       |
-| Khan Tengri      | Authored glacier margin, lavender scree, blue ice and northern ridge  |
-| Belukha          | Authored twin-height glacial valley, milky lake, meadow and conifers  |
-| Altan Ovoo       | Authored two-tier cinder cone, amber grass, charcoal basalt; no lava  |
-| Eej Khairkhan    | Authored granite terrace, rock pools, pale sand, sparse dry grasses   |
-| Orkhon Valley    | Authored two-level basalt gorge, eastern falls and river, open steppe |
+| Location         | Landscape and scenery                                                   |
+| ---------------- | ----------------------------------------------------------------------- |
+| Otgontenger      | Authored alpine bench, snow overlook, glacial tarn and larch valley     |
+| Bogd Khan Uul    | Authored Tuul-side meadow, woodland shoulder, larch and pine groves     |
+| Altai Tavan Bogd | Authored moraine terrace, five-peak glacier frame and long glacial lake |
+| Khan Tengri      | Authored glacier margin, lavender scree, blue ice and northern ridge    |
+| Belukha          | Authored twin-height glacial valley, milky lake, meadow and conifers    |
+| Altan Ovoo       | Authored two-tier cinder cone, amber grass, charcoal basalt; no lava    |
+| Eej Khairkhan    | Authored granite terrace, rock pools, pale sand, sparse dry grasses     |
+| Orkhon Valley    | Authored two-level basalt gorge, eastern falls and river, open steppe   |
 
 The shared cutouts are bundled in `public/art/steppe-scenery-v2.png` and its atlas JSON.
 The atlas retains transparent gutters and a common ground registration; it adds no
@@ -103,6 +103,15 @@ boundary, memory budget, and deferred gameplay features.
 ## Bogd Khan Uul level
 
 Bogd Khan Uul is authored as a 6,400 × 4,000-unit Tuul-side foothill battlefield with an open lower camp meadow, a broad northern river channel and one clearly raised southern woodland shoulder joined by two ramps. Connected tracks reach five named terrain sites while dense pine and golden-larch groves frame broad combat ground. Four hand-painted ground quadrants follow the same terrain, tracks and dry riverbanks; water, cliffs, vegetation, landmarks and collision remain separate runtime layers. See [the level guide](bogd-khan-uul.md) for the layout, hybrid boundary, memory cost and deferred gameplay ideas.
+
+## Altai Tavan Bogd level
+
+Altai Tavan Bogd is authored as a 6,400 × 4,000-unit glacial-valley battlefield. One raised
+northern moraine terrace and two broad ramps frame an open lower gravel valley; five snowy peaks
+and the Potanin glacier occupy the impassable northern edge, while a long turquoise glacial lake
+runs along the east. Four hand-painted ground quadrants align with the roads, moraine, snow and
+lake-bank geometry. See [the level guide](altai-tavan-bogd.md) for the compressed real-landscape
+sources, traversal, renderer boundary, memory budget and deferred gameplay features.
 
 ## Rivers and shores
 

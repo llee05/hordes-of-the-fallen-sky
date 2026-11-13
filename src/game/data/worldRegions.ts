@@ -7,6 +7,7 @@ import { EEJ_KHAIRKHAN, EEJ_KHAIRKHAN_FOOTPRINTS } from './eejKhairkhan';
 import { BELUKHA } from './belukha';
 import { KHAN_TENGRI, KHAN_TENGRI_FOOTPRINTS } from './khanTengri';
 import { BOGD_KHAN_UUL, BOGD_KHAN_UUL_FOOTPRINTS } from './bogdKhanUul';
+import { ALTAI_TAVAN_BOGD, ALTAI_TAVAN_BOGD_FOOTPRINTS } from './altaiTavanBogd';
 import { ORKHON_FOOTPRINTS, ORKHON_VALLEY, type OrkhonPlateau } from './orkhonValley';
 
 export interface SceneShelf {
@@ -173,6 +174,21 @@ export const EEJ_KHAIRKHAN_GENERATED_REGION: RegionComposition = {
   ],
 };
 
+/** The pre-authored Altai Tavan Bogd composition, retained as a development fallback. */
+export const ALTAI_TAVAN_BOGD_GENERATED_REGION: RegionComposition = {
+  id: 'altai-tavan-bogd',
+  floor: 85,
+  snowLine: 240,
+  vegetation: 'alpine',
+  palette: { ...alpine, rock: 0x8fa2ae },
+  shelves: [
+    shelf('glacial-shelf', -120, -820, 1300, 470, 270, -6),
+    shelf('western-summit', -700, -1250, 430, 380, 300, 8, 140),
+    shelf('eastern-summit', 470, -1330, 470, 400, 330, -9, 160),
+    shelf('distant-five-peaks', 0, -2170, 2400, 700, 450, 0, 220),
+  ],
+};
+
 /** The pre-authored Mount Belukha composition, retained as a development fallback. */
 export const BELUKHA_GENERATED_REGION: RegionComposition = {
   id: 'belukha',
@@ -309,15 +325,31 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
   'altai-tavan-bogd': {
     id: 'altai-tavan-bogd',
     floor: 85,
-    snowLine: 240,
+    snowLine: 10000,
     vegetation: 'alpine',
-    palette: { ...alpine, rock: 0x8fa2ae },
-    shelves: [
-      shelf('glacial-shelf', -120, -820, 1300, 470, 270, -6),
-      shelf('western-summit', -700, -1250, 430, 380, 300, 8, 140),
-      shelf('eastern-summit', 470, -1330, 470, 400, 330, -9, 160),
-      shelf('distant-five-peaks', 0, -2170, 2400, 700, 450, 0, 220),
-    ],
+    palette: { ...alpine, grass: 0x969b83, soil: 0xafa78f, rock: 0x89969b, fog: 0xb7c4c1 },
+    campShelf: false,
+    relief: 0.35,
+    terrainSize: ALTAI_TAVAN_BOGD.world.terrainSize,
+    playBounds: {
+      x: ALTAI_TAVAN_BOGD.world.minX,
+      y: ALTAI_TAVAN_BOGD.world.minY,
+      width: ALTAI_TAVAN_BOGD.world.width,
+      height: ALTAI_TAVAN_BOGD.world.height,
+    },
+    camp: ALTAI_TAVAN_BOGD.world.camp,
+    campClearRadius: ALTAI_TAVAN_BOGD.world.campClearRadius,
+    ground: {
+      paths: ALTAI_TAVAN_BOGD.paths,
+      width: ALTAI_TAVAN_BOGD.pathWidth,
+      ramps: ALTAI_TAVAN_BOGD.plateaus.flatMap((source) => source.ramps),
+    },
+    obstacles: ALTAI_TAVAN_BOGD_FOOTPRINTS.map(({ x, y, footprint }) => ({
+      x,
+      y,
+      radius: footprint,
+    })),
+    shelves: ALTAI_TAVAN_BOGD.plateaus.map((source) => plateau(source, ALTAI_TAVAN_BOGD.rise)),
   },
   'khan-tengri': {
     id: 'khan-tengri',
@@ -484,7 +516,9 @@ export function composedRegion(id: LocationId, generatedFallback = false): Compo
               ? KHAN_TENGRI_GENERATED_REGION
               : id === 'bogd-khan-uul'
                 ? BOGD_KHAN_UUL_GENERATED_REGION
-                : undefined;
+                : id === 'altai-tavan-bogd'
+                  ? ALTAI_TAVAN_BOGD_GENERATED_REGION
+                  : undefined;
   const composition = generatedFallback && fallback ? fallback : WORLD_REGIONS[id];
   return {
     seed: `living-steppe-scenes-v3:${id}`,

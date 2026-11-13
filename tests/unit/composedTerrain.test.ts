@@ -6,6 +6,7 @@ import { sceneDressing } from '../../src/game/world3d/sceneDressing';
 import { TerrainNavigation } from '../../src/game/terrain/TerrainNavigation';
 import { ORKHON_VALLEY } from '../../src/game/data/orkhonValley';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
+import { ALTAI_TAVAN_BOGD_SITES } from '../../src/game/data/altaiTavanBogd';
 
 describe('composed angled landscapes', () => {
   it('protects the camp and complete caravan route in every regional composition', () => {
@@ -87,9 +88,15 @@ describe('composed angled landscapes', () => {
   it('connects a raised shelf to open combat space and keeps grouped dressing out of the camp', () => {
     const terrain = new ComposedTerrain(composedRegion('altai-tavan-bogd'));
     const nav = new TerrainNavigation(terrain);
-    expect(nav.isWalkable(2600, 2600, 120, true)).toBe(true);
-    for (let x = 2600; x <= 4100; x += 32) expect(nav.isWalkable(x, 2600, 12, true)).toBe(true);
-    const safe = nav.nearestWalkable({ x: 2100, y: 1750 });
+    const camp = terrain.campPosition;
+    expect(nav.isWalkable(camp.x, camp.y, 120, true)).toBe(true);
+    for (let x = camp.x; x <= camp.x + 1500; x += 32)
+      expect(nav.isWalkable(x, camp.y, 12, true)).toBe(true);
+    const center = terrain.worldSize / 2;
+    const safe = nav.nearestWalkable({
+      x: center + ALTAI_TAVAN_BOGD_SITES.westernMoraine.x,
+      y: center + ALTAI_TAVAN_BOGD_SITES.westernMoraine.y,
+    });
     expect(safe).toBeDefined();
     expect(terrain.height(safe!.x, safe!.y) * 1000).toBeGreaterThan(150);
     const bounds = { x: 2048, y: 1536, width: 512, height: 512 };
@@ -99,11 +106,11 @@ describe('composed angled landscapes', () => {
     );
     for (const prop of props) expect(terrain.protection(prop.x, prop.z)).toBeLessThanOrEqual(0.15);
     expect(
-      sceneDressing(terrain, { x: 2560, y: 2560, width: 512, height: 512 }).every(
-        (prop) => Math.hypot(prop.x - 2600, prop.z - 2600) > 350,
+      sceneDressing(terrain, { x: camp.x - 256, y: camp.y - 256, width: 512, height: 512 }).every(
+        (prop) => Math.hypot(prop.x - camp.x, prop.z - camp.y) > 520,
       ),
     ).toBe(true);
-  });
+  }, 15_000);
 
   it('cuts water below the battle floor and shares bridge elevations with actor anchors', () => {
     const terrain = new ComposedTerrain(

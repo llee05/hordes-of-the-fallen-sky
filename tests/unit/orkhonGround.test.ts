@@ -289,6 +289,7 @@ describe('terrain shader programs', () => {
           id === 'eej-khairkhan' ||
           id === 'belukha' ||
           id === 'khan-tengri' ||
+          id === 'altai-tavan-bogd' ||
           id === 'bogd-khan-uul',
       );
     }

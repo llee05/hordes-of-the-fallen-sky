@@ -10,6 +10,7 @@ import { terrainShaderSource } from './terrainShader';
 import type { ScenePalette } from '../data/worldRegions';
 import type { ComposedTerrain } from './ComposedTerrain';
 import { ALTAN_OVOO_GRASS_FALLBACK } from './altanOvooPaintedGround';
+import { ALTAI_TAVAN_BOGD_SCREE_FALLBACK } from './altaiTavanBogdPaintedGround';
 import { EEJ_KHAIRKHAN_GRANITE_FALLBACK } from './eejKhairkhanPaintedGround';
 import { bakeOrkhonGroundMask, ORKHON_GROUND_MASK, orkhonRampUniforms } from './orkhonGround';
 import {
@@ -64,6 +65,7 @@ export class MountainMaterials {
     // Orkhon Valley uses the terrain kit tiles untinted, at one shared painted scale.
     const authored = authoredTerrain !== undefined;
     const altan = authoredTerrain?.region.scene.id === 'altan-ovoo';
+    const altai = authoredTerrain?.region.scene.id === 'altai-tavan-bogd';
     const otgontenger = authoredTerrain?.region.scene.id === 'otgontenger';
     const eejKhairkhan = authoredTerrain?.region.scene.id === 'eej-khairkhan';
     const belukha = authoredTerrain?.region.scene.id === 'belukha';
@@ -79,16 +81,18 @@ export class MountainMaterials {
     const meadowTex = authored
       ? localFallback
         ? texture(localFallback.texture)
-        : otgontenger
-          ? texture('ground-mount-otgontenger')
-          : belukha
-            ? texture('ground-mount-belukha')
-            : khanTengri
-              ? texture('ground-khan-tengri')
-              : tile('valleyCalm')
+        : altai
+          ? texture(ALTAI_TAVAN_BOGD_SCREE_FALLBACK.texture)
+          : otgontenger
+            ? texture('ground-mount-otgontenger')
+            : belukha
+              ? texture('ground-mount-belukha')
+              : khanTengri
+                ? texture('ground-khan-tengri')
+                : tile('valleyCalm')
       : texture(palette ? 'tapestry-meadow' : MOUNTAIN_TERRAIN_ART.materials.grassland.texture!);
     const dryMeadowTex = authored
-      ? localFallback || otgontenger || khanTengri
+      ? localFallback || altai || otgontenger || khanTengri
         ? meadowTex
         : tile('valleyStraw')
       : texture('ground');
@@ -104,12 +108,14 @@ export class MountainMaterials {
     const snowTex = authored
       ? localFallback || khanTengri
         ? meadowTex
-        : otgontenger
+        : altai
           ? texture('ground-khan-tengri')
-          : tile('plateauMoss')
+          : otgontenger
+            ? texture('ground-khan-tengri')
+            : tile('plateauMoss')
       : texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!);
     const meadowAltTex = authored
-      ? localFallback || otgontenger || khanTengri
+      ? localFallback || altai || otgontenger || khanTengri
         ? meadowTex
         : tile('valleyOlive')
       : meadowTex;
