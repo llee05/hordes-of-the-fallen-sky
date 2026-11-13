@@ -2,6 +2,7 @@ import type { LocationId } from '../types';
 import type { MountainRegion, TerrainBounds, TerrainPoint } from '../terrain/types';
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
 import { ALTAN_OVOO, ALTAN_OVOO_FOOTPRINTS } from './altanOvoo';
+import { OTGONTENGER, OTGONTENGER_FOOTPRINTS } from './otgontenger';
 import { ORKHON_FOOTPRINTS, ORKHON_VALLEY, type OrkhonPlateau } from './orkhonValley';
 
 export interface SceneShelf {
@@ -123,6 +124,21 @@ const desert: ScenePalette = {
   fog: 0xcebc9f,
 };
 
+/** The pre-authored Otgontenger composition, retained as a development fallback. */
+export const OTGONTENGER_GENERATED_REGION: RegionComposition = {
+  id: 'otgontenger',
+  floor: 80,
+  snowLine: 320,
+  vegetation: 'alpine',
+  palette: alpine,
+  shelves: [
+    shelf('alpine-shelf', -50, -830, 1200, 450, 260, -8),
+    shelf('white-crown', -350, -1220, 740, 410, 280, 10, 80),
+    shelf('eastern-granite', 940, 620, 450, 390, 200, -20),
+    shelf('connected-range', 100, -2190, 2390, 670, 420, 5, 190),
+  ],
+};
+
 /** The pre-authored Altan Ovoo composition, retained as a development fallback. */
 export const ALTAN_OVOO_GENERATED_REGION: RegionComposition = {
   id: 'altan-ovoo',
@@ -171,15 +187,31 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
   otgontenger: {
     id: 'otgontenger',
     floor: 80,
-    snowLine: 320,
+    snowLine: 265,
     vegetation: 'alpine',
-    palette: alpine,
-    shelves: [
-      shelf('alpine-shelf', -50, -830, 1200, 450, 260, -8),
-      shelf('white-crown', -350, -1220, 740, 410, 280, 10, 80),
-      shelf('eastern-granite', 940, 620, 450, 390, 200, -20),
-      shelf('connected-range', 100, -2190, 2390, 670, 420, 5, 190),
-    ],
+    palette: { ...alpine, grass: 0x8f9d72, soil: 0xb2a98d, rock: 0x8b9290 },
+    campShelf: false,
+    relief: 0.35,
+    terrainSize: OTGONTENGER.world.terrainSize,
+    playBounds: {
+      x: OTGONTENGER.world.minX,
+      y: OTGONTENGER.world.minY,
+      width: OTGONTENGER.world.width,
+      height: OTGONTENGER.world.height,
+    },
+    camp: OTGONTENGER.world.camp,
+    campClearRadius: OTGONTENGER.world.campClearRadius,
+    ground: {
+      paths: OTGONTENGER.paths,
+      width: OTGONTENGER.pathWidth,
+      ramps: OTGONTENGER.plateaus.flatMap((source) => source.ramps),
+    },
+    obstacles: OTGONTENGER_FOOTPRINTS.map(({ x, y, footprint }) => ({
+      x,
+      y,
+      radius: footprint,
+    })),
+    shelves: OTGONTENGER.plateaus.map((source) => plateau(source, OTGONTENGER.rise)),
   },
   'bogd-khan-uul': {
     id: 'bogd-khan-uul',
@@ -303,8 +335,13 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
 };
 
 export function composedRegion(id: LocationId, generatedFallback = false): ComposedRegion {
-  const composition =
-    id === 'altan-ovoo' && generatedFallback ? ALTAN_OVOO_GENERATED_REGION : WORLD_REGIONS[id];
+  const fallback =
+    id === 'altan-ovoo'
+      ? ALTAN_OVOO_GENERATED_REGION
+      : id === 'otgontenger'
+        ? OTGONTENGER_GENERATED_REGION
+        : undefined;
+  const composition = generatedFallback && fallback ? fallback : WORLD_REGIONS[id];
   return {
     seed: `living-steppe-scenes-v3:${id}`,
     biome: {

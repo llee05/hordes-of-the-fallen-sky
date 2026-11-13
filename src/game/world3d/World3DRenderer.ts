@@ -117,7 +117,9 @@ export class World3DRenderer {
     const authored =
       terrain instanceof ComposedTerrain &&
       terrain.region.scene.ground !== undefined &&
-      (terrain.region.scene.id === 'orkhon-valley' || terrain.region.scene.id === 'altan-ovoo')
+      (terrain.region.scene.id === 'orkhon-valley' ||
+        terrain.region.scene.id === 'altan-ovoo' ||
+        terrain.region.scene.id === 'otgontenger')
         ? terrain
         : undefined;
     let paintedGround: PaintedGroundDefinition | undefined;
@@ -164,7 +166,10 @@ export class World3DRenderer {
       this.overlay = new OrkhonOverlay(scene, terrain);
       this.world.add(this.overlay.group);
     }
-    if (terrain instanceof ComposedTerrain && terrain.region.scene.id === 'altan-ovoo') {
+    if (
+      terrain instanceof ComposedTerrain &&
+      (terrain.region.scene.id === 'altan-ovoo' || terrain.region.scene.id === 'otgontenger')
+    ) {
       this.staticDressing = new StaticDressing3D(
         scene,
         terrain,
@@ -506,7 +511,8 @@ export class World3DRenderer {
     if (
       !backdrop &&
       this.terrain instanceof ComposedTerrain &&
-      this.terrain.region.scene.id !== 'altan-ovoo'
+      this.terrain.region.scene.id !== 'altan-ovoo' &&
+      this.terrain.region.scene.id !== 'otgontenger'
     )
       for (const prop of sceneDressing(this.terrain, bounds)) {
         const image = this.scene.add

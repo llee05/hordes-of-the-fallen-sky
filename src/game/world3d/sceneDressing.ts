@@ -3,6 +3,7 @@ import { terrainSeed } from '../terrain/noise';
 import { terrainHabitat } from './terrainHabitat';
 import { orkhonDressing } from './orkhonDressing';
 import { altanOvooDressing } from './altanOvooDressing';
+import { otgontengerDressing } from './otgontengerDressing';
 import type { ComposedTerrain } from './ComposedTerrain';
 
 export type SceneProp =
@@ -31,7 +32,7 @@ export interface SceneDressing {
   frame: string;
   shadow: boolean;
   /** Authored exception placed intentionally inside a protected site. */
-  site?: 'spring-bank';
+  site?: 'spring-bank' | 'tarn-bank';
   /** Vertical anchor of the painted ground contact; defaults to 0.9. */
   originY?: number;
 }
@@ -49,6 +50,8 @@ export function sceneDressing(terrain: ComposedTerrain, bounds: TerrainBounds): 
   if (terrain.region.scene.id === 'orkhon-valley') return orkhonDressing(terrain, bounds);
   if (terrain.region.scene.id === 'altan-ovoo' && terrain.region.scene.ground)
     return altanOvooDressing(terrain.seed, bounds);
+  if (terrain.region.scene.id === 'otgontenger' && terrain.region.scene.ground)
+    return otgontengerDressing(terrain.seed, bounds);
   const vegetation = terrain.region.scene.vegetation;
   const within = (x: number, z: number) =>
     x >= bounds.x && z >= bounds.y && x < bounds.x + bounds.width && z < bounds.y + bounds.height;

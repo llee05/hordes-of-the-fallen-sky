@@ -31,7 +31,9 @@ describe('clustered landscape ecology', () => {
       expect(terrain.river!.sample(p.x, p.z).shoreDistance).toBeGreaterThanOrEqual(5);
       expect(terrain.sample(p.x, p.z).slope).toBeLessThanOrEqual(0.62);
     }
-    const high = new ComposedTerrain(composedRegion('otgontenger'));
+    // The authored Otgontenger level intentionally places its distant white-crown cutouts in the
+    // snow band. Keep this generic ecology assertion on the retained generated fallback.
+    const high = new ComposedTerrain(composedRegion('otgontenger', true));
     for (const p of sceneDressing(high, { x: 1024, y: 1024, width: 3072, height: 3072 }))
       expect(high.snowAt(high.height(p.x, p.z) * 1000, 1)).toBeLessThanOrEqual(0.65);
   });

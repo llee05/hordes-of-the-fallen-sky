@@ -1,6 +1,7 @@
 import type { LocationId } from '../types';
 import type { MountainRegion } from '../terrain/types';
 import { ALTAN_OVOO } from './altanOvoo';
+import { OTGONTENGER } from './otgontenger';
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
 import { ORKHON_VALLEY } from './orkhonValley';
 
@@ -95,6 +96,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       landmark('larch', 415, -160, 160),
       landmark('foothill', -410, -110, 245),
     ],
+    water: OTGONTENGER.tarn.outflow,
     air: { color: 0xc2d0c5, alpha: 0.04, particles: 'mist' },
   },
   'bogd-khan-uul': {
