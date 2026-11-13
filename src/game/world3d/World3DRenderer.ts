@@ -24,6 +24,10 @@ import {
   OTGONTENGER_PAINTED_GROUND,
   otgontengerPaintedGroundEnabled,
 } from './otgontengerPaintedGround';
+import {
+  EEJ_KHAIRKHAN_PAINTED_GROUND,
+  eejKhairkhanPaintedGroundEnabled,
+} from './eejKhairkhanPaintedGround';
 import { ORKHON_PAINTED_GROUND } from './orkhonPaintedGround';
 import type { PaintedGroundDefinition } from './paintedGround';
 import { StaticDressing3D } from './StaticDressing3D';
@@ -123,7 +127,8 @@ export class World3DRenderer {
       terrain.region.scene.ground !== undefined &&
       (terrain.region.scene.id === 'orkhon-valley' ||
         terrain.region.scene.id === 'altan-ovoo' ||
-        terrain.region.scene.id === 'otgontenger')
+        terrain.region.scene.id === 'otgontenger' ||
+        terrain.region.scene.id === 'eej-khairkhan')
         ? terrain
         : undefined;
     let paintedGround: PaintedGroundDefinition | undefined;
@@ -147,6 +152,13 @@ export class World3DRenderer {
         import.meta.env.DEV,
       )
         ? OTGONTENGER_PAINTED_GROUND
+        : undefined;
+    if (authored?.region.scene.id === 'eej-khairkhan')
+      paintedGround = eejKhairkhanPaintedGroundEnabled(
+        globalThis.location?.search ?? '',
+        import.meta.env.DEV,
+      )
+        ? EEJ_KHAIRKHAN_PAINTED_GROUND
         : undefined;
     this.materials = new MountainMaterials(
       scene,

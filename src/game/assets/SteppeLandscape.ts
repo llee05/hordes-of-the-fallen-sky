@@ -36,7 +36,8 @@ export class SteppeLandscape {
     const generatedAuthoredLevel =
       import.meta.env.DEV &&
       ((id === 'altan-ovoo' && query.get('altanOvooLevel') === 'generated') ||
-        (id === 'otgontenger' && query.get('otgontengerLevel') === 'generated'));
+        (id === 'otgontenger' && query.get('otgontengerLevel') === 'generated') ||
+        (id === 'eej-khairkhan' && query.get('eejKhairkhanLevel') === 'generated'));
     const terrain = new ComposedTerrain(
       composedRegion(id, generatedAuthoredLevel),
       generatedAuthoredLevel ? undefined : LANDSCAPES[id].water,

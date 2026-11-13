@@ -13,7 +13,7 @@ models. Existing cultural context remains in `data/clan.ts` and
 | Khan Tengri      | Single sharp white pyramid, lavender scree, angular blue-grey crags   |
 | Belukha          | Paired white heights, milky glacial water, cool meadow and conifers   |
 | Altan Ovoo       | Authored two-tier cinder cone, amber grass, charcoal basalt; no lava  |
-| Eej Khairkhan    | Sculpted peach granite, pale sand ribbons, sparse dry grasses         |
+| Eej Khairkhan    | Authored granite terrace, rock pools, pale sand, sparse dry grasses   |
 | Orkhon Valley    | Authored two-level basalt gorge, eastern falls and river, open steppe |
 
 The shared cutouts are bundled in `public/art/steppe-scenery-v2.png` and its atlas JSON.
@@ -75,6 +75,13 @@ tarn and outflow. Four hand-painted ground quadrants follow the geometry while c
 larch, moraines, landmarks, actors, and collision remain separate. See
 [the level guide](otgontenger.md) for the layout, painted-ground boundary, performance, fallbacks,
 and deferred gameplay ideas.
+
+## Eej Khairkhan level
+
+Eej Khairkhan is authored as a 6,400 × 4,000-unit granite-desert battlefield with one raised terrace, two broad ramps, a south-west camp, a western rock-basin site and a small south-east spring hollow.
+The impassable sculpted massif frames the northern edge while pale sand-and-gravel ground leaves wide combat lanes below.
+Four hand-painted ground quadrants follow the routes and elevation geometry; cliffs, water, sparse granite dressing, actors and shadows remain separate.
+See [the level guide](eej-khairkhan.md) for the real-place translation, layout, renderer boundary, GPU cost and deferred features.
 
 ## Rivers and shores
 

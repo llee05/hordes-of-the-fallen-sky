@@ -35,7 +35,13 @@ describe('river shorelines', () => {
         // Authored pools and outflows start at named sites rather than opposite world edges.
         const shortAuthoredCourse =
           definition === LANDSCAPES['altan-ovoo'] || definition === LANDSCAPES.otgontenger;
-        const minimum = water.gorge ? 4000 : shortAuthoredCourse ? 750 : 5000;
+        const minimum = water.gorge
+          ? 4000
+          : shortAuthoredCourse
+            ? 750
+            : definition === LANDSCAPES['eej-khairkhan']
+              ? 120
+              : 5000;
         expect(channel.length).toBeGreaterThan(minimum);
         let previous = -1;
         for (const section of channel.sections) {
