@@ -94,7 +94,9 @@ export const EEJ_KHAIRKHAN: EejKhairkhanLayout = {
   world: {
     width: 6400,
     height: 4000,
-    terrainSize: 6400,
+    // Keep a tiled fallback perimeter outside the playable painting. The angled 3D camera sees
+    // beyond Phaser's 2D camera rectangle at minimum zoom, especially in the screen corners.
+    terrainSize: 8800,
     minX: -3200,
     minY: -2000,
     camp: EEJ_KHAIRKHAN_SITES.camp,

@@ -27,6 +27,7 @@ import {
 } from '../../src/game/world3d/eejKhairkhanPaintedGround';
 import { PAINTED_GROUND_QUADRANTS } from '../../src/game/world3d/paintedGround';
 import { sceneDressing } from '../../src/game/world3d/sceneDressing';
+import { groundView, WORLD_3D } from '../../src/game/world3d/worldProjection';
 
 const terrace = EEJ_KHAIRKHAN.plateaus[0]!;
 const samePoint = (a: TerrainPoint, b: TerrainPoint) => a.x === b.x && a.y === b.y;
@@ -44,7 +45,7 @@ describe('Eej Khairkhan authored layout', () => {
     expect(EEJ_KHAIRKHAN.world).toMatchObject({
       width: 6400,
       height: 4000,
-      terrainSize: 6400,
+      terrainSize: 8800,
       minX: -3200,
       minY: -2000,
       camp: { x: -2150, y: 1050 },
@@ -115,8 +116,8 @@ describe('Eej Khairkhan authored layout', () => {
 
 describe('Eej Khairkhan runtime terrain', () => {
   it('registers the authored bounds, camp, terrace, paths, obstacles and spring', () => {
-    expect(terrain.worldSize).toBe(6400);
-    expect(terrain.playBounds).toEqual({ x: 0, y: 1200, width: 6400, height: 4000 });
+    expect(terrain.worldSize).toBe(8800);
+    expect(terrain.playBounds).toEqual({ x: 1200, y: 2400, width: 6400, height: 4000 });
     expect(terrain.campPosition).toEqual(world(EEJ_KHAIRKHAN_SITES.camp));
     expect(WORLD_REGIONS['eej-khairkhan'].shelves).toHaveLength(1);
     expect(WORLD_REGIONS['eej-khairkhan'].ground?.paths).toEqual(EEJ_KHAIRKHAN.paths);
@@ -124,6 +125,32 @@ describe('Eej Khairkhan runtime terrain', () => {
     expect(terrain.river).toBeDefined();
     const spring = world(EEJ_KHAIRKHAN_SITES.spring);
     expect(terrain.river!.sample(spring.x, spring.y).shoreDistance).toBeLessThan(0);
+  });
+
+  it('keeps the angled camera over textured terrain at the play bounds and minimum zoom', () => {
+    const viewport = { width: 3840, height: 2160 };
+    const zoom = 0.6;
+    const bounds = terrain.playBounds;
+    const halfWidth = viewport.width / zoom / 2;
+    const halfHeight = viewport.height / zoom / 2;
+    const cameraX = [bounds.x + halfWidth, bounds.x + bounds.width - halfWidth];
+    const cameraY = [bounds.y + halfHeight, bounds.y + bounds.height - halfHeight];
+    for (const x of cameraX)
+      for (const y of cameraY) {
+        const view = groundView(
+          x,
+          y,
+          viewport.width,
+          viewport.height,
+          zoom,
+          terrain.reliefHeight,
+          WORLD_3D.angle,
+        );
+        expect(view.x).toBeGreaterThanOrEqual(0);
+        expect(view.y).toBeGreaterThanOrEqual(0);
+        expect(view.x + view.width).toBeLessThanOrEqual(terrain.worldSize);
+        expect(view.y + view.height).toBeLessThanOrEqual(terrain.worldSize);
+      }
   });
 
   it('keeps camp flat, raises one terrace tier and grades both ramps', () => {
@@ -141,7 +168,7 @@ describe('Eej Khairkhan runtime terrain', () => {
   });
 
   it('routes its authored desert dressing through the shared scene entry point', () => {
-    const bounds = { x: 0, y: 1200, width: 6400, height: 4000 };
+    const bounds = { x: 1200, y: 2400, width: 6400, height: 4000 };
     expect(sceneDressing(terrain, bounds)).toEqual(eejKhairkhanDressing(terrain.seed, bounds));
   });
 
@@ -164,7 +191,7 @@ describe('Eej Khairkhan painted ground', () => {
   });
 
   it('maps four opaque paintings and the grayscale detail layer over the playable rectangle', () => {
-    expect(eejKhairkhanPaintedGroundWorldBounds(6400)).toEqual([0, 1200, 6400, 4000]);
+    expect(eejKhairkhanPaintedGroundWorldBounds(8800)).toEqual([1200, 2400, 6400, 4000]);
     for (const quadrant of PAINTED_GROUND_QUADRANTS) {
       const painting = EEJ_KHAIRKHAN_PAINTED_GROUND.quadrants[quadrant];
       const png = readFileSync(resolve(`public/art/eej-khairkhan/${painting.file}`));

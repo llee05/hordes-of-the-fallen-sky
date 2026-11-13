@@ -2,6 +2,7 @@
 
 Eej Khairkhan (Govi-Altai) is an authored granite-desert battlefield at the foot of an isolated sculpted massif.
 Its 6,400 × 4,000-unit playable rectangle matches Orkhon Valley and Altan Ovoo while leaving the camera, combat, saves, interface and shared elevation system unchanged.
+An 8,800-unit tiled terrain square surrounds that rectangle, keeping the angled camera over painted or fallback ground even at minimum zoom and the play-bound corners.
 Run `npm run dev` or `npm run dev:web`, press **F8**, and choose **Eej Khairkhan**.
 
 ## Layout
