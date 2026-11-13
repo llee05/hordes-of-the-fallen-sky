@@ -10,6 +10,7 @@ import { terrainShaderSource } from './terrainShader';
 import type { ScenePalette } from '../data/worldRegions';
 import type { ComposedTerrain } from './ComposedTerrain';
 import { ALTAN_OVOO_GRASS_FALLBACK } from './altanOvooPaintedGround';
+import { EEJ_KHAIRKHAN_GRANITE_FALLBACK } from './eejKhairkhanPaintedGround';
 import { bakeOrkhonGroundMask, ORKHON_GROUND_MASK, orkhonRampUniforms } from './orkhonGround';
 import {
   PAINTED_GROUND_QUADRANTS,
@@ -64,18 +65,24 @@ export class MountainMaterials {
     const authored = authoredTerrain !== undefined;
     const altan = authoredTerrain?.region.scene.id === 'altan-ovoo';
     const otgontenger = authoredTerrain?.region.scene.id === 'otgontenger';
+    const eejKhairkhan = authoredTerrain?.region.scene.id === 'eej-khairkhan';
+    const localFallback = altan
+      ? ALTAN_OVOO_GRASS_FALLBACK
+      : eejKhairkhan
+        ? EEJ_KHAIRKHAN_GRANITE_FALLBACK
+        : undefined;
     const tile = (name: OrkhonTile) => texture(orkhonTileKey(name));
     // Authored channels: calm valley grass with regions of the olive variant, rare sun-cured
     // straw, the darker plateau moss on top, trail dirt on paths and ramps, scree at cliff feet.
     const meadowTex = authored
-      ? altan
-        ? texture(ALTAN_OVOO_GRASS_FALLBACK.texture)
+      ? localFallback
+        ? texture(localFallback.texture)
         : otgontenger
           ? texture('ground-mount-otgontenger')
           : tile('valleyCalm')
       : texture(palette ? 'tapestry-meadow' : MOUNTAIN_TERRAIN_ART.materials.grassland.texture!);
     const dryMeadowTex = authored
-      ? altan || otgontenger
+      ? localFallback || otgontenger
         ? meadowTex
         : tile('valleyStraw')
       : texture('ground');
@@ -89,14 +96,14 @@ export class MountainMaterials {
     // Authored channel 4 is the upper-tier ground. Altan remains warm olive; Otgontenger uses
     // its existing alpine swatch for lower ground and the bundled snow swatch on the high bench.
     const snowTex = authored
-      ? altan
+      ? localFallback
         ? meadowTex
         : otgontenger
           ? texture('ground-khan-tengri')
           : tile('plateauMoss')
       : texture(MOUNTAIN_TERRAIN_ART.materials.snow.texture!);
     const meadowAltTex = authored
-      ? altan || otgontenger
+      ? localFallback || otgontenger
         ? meadowTex
         : tile('valleyOlive')
       : meadowTex;
@@ -172,7 +179,7 @@ export class MountainMaterials {
       material.customProgramCacheKey = () =>
         authored
           ? paintedGroundTextures
-            ? `authored-terrain-painted-v2-${paintedGround?.query}-${wall}`
+            ? `authored-terrain-painted-v3-${paintedGround?.query}-${wall}`
             : `authored-terrain-v5-${wall}`
           : `living-steppe-materials-v7-${wall}`;
       return material;
@@ -211,6 +218,12 @@ export class MountainMaterials {
       meadowAlt: { value: meadowAlt },
       tileSize: { value: ORKHON_TILE_WORLD_SIZE },
       ...cliffs,
+      cliffTint: {
+        value:
+          ground.id === 'eej-khairkhan'
+            ? new THREE.Vector3(1.3, 0.88, 0.72)
+            : new THREE.Vector3(1, 1, 1),
+      },
       groundMask: { value: mask },
       worldSize: { value: terrain.worldSize },
       floorHeight: { value: ground.floor },

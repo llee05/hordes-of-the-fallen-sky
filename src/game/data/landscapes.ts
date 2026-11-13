@@ -2,6 +2,7 @@ import type { LocationId } from '../types';
 import type { MountainRegion } from '../terrain/types';
 import { ALTAN_OVOO } from './altanOvoo';
 import { OTGONTENGER } from './otgontenger';
+import { EEJ_KHAIRKHAN } from './eejKhairkhan';
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
 import { ORKHON_VALLEY } from './orkhonValley';
 
@@ -248,6 +249,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       landmark('granite', 410, -30, 350),
       landmark('granite', -450, 360, 270),
     ],
+    water: EEJ_KHAIRKHAN.spring.water,
     air: { color: 0xe3bd8c, alpha: 0.045, particles: 'dust' },
   },
   'orkhon-valley': {

@@ -739,7 +739,13 @@ describe('Orkhon Valley landmark systems', () => {
       expect(angle).toBeCloseTo(Math.PI / 2);
       expect(draws).toBe(1);
       expect(composedRegion(id).scene.shelves[0]!.id).toBe(
-        id === 'altan-ovoo' ? 'cinder-cone' : id === 'otgontenger' ? 'alpine-bench' : 'camp-shelf',
+        id === 'altan-ovoo'
+          ? 'cinder-cone'
+          : id === 'otgontenger'
+            ? 'alpine-bench'
+            : id === 'eej-khairkhan'
+              ? 'granite-terrace'
+              : 'camp-shelf',
       );
     }
   });

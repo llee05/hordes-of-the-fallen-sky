@@ -23,6 +23,11 @@ import {
   OTGONTENGER_PAINTED_GROUND,
   otgontengerPaintedGroundEnabled,
 } from '../world3d/otgontengerPaintedGround';
+import {
+  EEJ_KHAIRKHAN_GRANITE_FALLBACK,
+  EEJ_KHAIRKHAN_PAINTED_GROUND,
+  eejKhairkhanPaintedGroundEnabled,
+} from '../world3d/eejKhairkhanPaintedGround';
 import { PAINTED_GROUND_QUADRANTS, type PaintedGroundDefinition } from '../world3d/paintedGround';
 
 export { playerVisualConfig };
@@ -116,9 +121,17 @@ export function preloadPainterlyArt(scene: Phaser.Scene): void {
     OTGONTENGER_PAINTED_GROUND,
     otgontengerPaintedGroundEnabled(search, import.meta.env.DEV),
   );
+  paintedGround(
+    EEJ_KHAIRKHAN_PAINTED_GROUND,
+    eejKhairkhanPaintedGroundEnabled(search, import.meta.env.DEV),
+  );
   scene.load.image(
     ALTAN_OVOO_GRASS_FALLBACK.texture,
     `${root}${ALTAN_OVOO_PAINTED_GROUND.directory}${ALTAN_OVOO_GRASS_FALLBACK.file}`,
+  );
+  scene.load.image(
+    EEJ_KHAIRKHAN_GRANITE_FALLBACK.texture,
+    `${root}${EEJ_KHAIRKHAN_PAINTED_GROUND.directory}${EEJ_KHAIRKHAN_GRANITE_FALLBACK.file}`,
   );
   const orkhon = `${root}orkhon-valley/`;
   for (const tile of Object.keys(ORKHON_TILES) as OrkhonTile[])

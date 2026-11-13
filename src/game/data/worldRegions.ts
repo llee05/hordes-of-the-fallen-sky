@@ -3,6 +3,7 @@ import type { MountainRegion, TerrainBounds, TerrainPoint } from '../terrain/typ
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
 import { ALTAN_OVOO, ALTAN_OVOO_FOOTPRINTS } from './altanOvoo';
 import { OTGONTENGER, OTGONTENGER_FOOTPRINTS } from './otgontenger';
+import { EEJ_KHAIRKHAN, EEJ_KHAIRKHAN_FOOTPRINTS } from './eejKhairkhan';
 import { ORKHON_FOOTPRINTS, ORKHON_VALLEY, type OrkhonPlateau } from './orkhonValley';
 
 export interface SceneShelf {
@@ -154,6 +155,21 @@ export const ALTAN_OVOO_GENERATED_REGION: RegionComposition = {
   ],
 };
 
+/** The pre-authored Eej Khairkhan composition, retained as a development fallback. */
+export const EEJ_KHAIRKHAN_GENERATED_REGION: RegionComposition = {
+  id: 'eej-khairkhan',
+  floor: 65,
+  snowLine: 10000,
+  vegetation: 'desert',
+  palette: desert,
+  shelves: [
+    shelf('granite-shelter', -160, -810, 1170, 450, 245, -8),
+    shelf('sculpted-granite', -550, -1220, 650, 400, 200, 14, 75),
+    shelf('eastern-stone', 940, 620, 480, 410, 200, -22),
+    shelf('distant-granite', 0, -2180, 2400, 650, 320, 0, 120),
+  ],
+};
+
 /** One authored level-1 plateau, sharing the ramp mechanics of the composed shelves. */
 function plateau(
   source: Pick<OrkhonPlateau, 'id' | 'outline' | 'ramps'>,
@@ -299,13 +315,29 @@ export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
     floor: 65,
     snowLine: 10000,
     vegetation: 'desert',
-    palette: desert,
-    shelves: [
-      shelf('granite-shelter', -160, -810, 1170, 450, 245, -8),
-      shelf('sculpted-granite', -550, -1220, 650, 400, 200, 14, 75),
-      shelf('eastern-stone', 940, 620, 480, 410, 200, -22),
-      shelf('distant-granite', 0, -2180, 2400, 650, 320, 0, 120),
-    ],
+    palette: { ...desert, grass: 0xb79c72, soil: 0xd1a174, rock: 0xb97862, fog: 0xd5b991 },
+    campShelf: false,
+    relief: 0.28,
+    terrainSize: EEJ_KHAIRKHAN.world.terrainSize,
+    playBounds: {
+      x: EEJ_KHAIRKHAN.world.minX,
+      y: EEJ_KHAIRKHAN.world.minY,
+      width: EEJ_KHAIRKHAN.world.width,
+      height: EEJ_KHAIRKHAN.world.height,
+    },
+    camp: EEJ_KHAIRKHAN.world.camp,
+    campClearRadius: EEJ_KHAIRKHAN.world.campClearRadius,
+    ground: {
+      paths: EEJ_KHAIRKHAN.paths,
+      width: EEJ_KHAIRKHAN.pathWidth,
+      ramps: EEJ_KHAIRKHAN.plateaus.flatMap((source) => source.ramps),
+    },
+    obstacles: EEJ_KHAIRKHAN_FOOTPRINTS.map(({ x, y, footprint }) => ({
+      x,
+      y,
+      radius: footprint,
+    })),
+    shelves: EEJ_KHAIRKHAN.plateaus.map((source) => plateau(source, EEJ_KHAIRKHAN.rise)),
   },
   'orkhon-valley': {
     id: 'orkhon-valley',
@@ -340,7 +372,9 @@ export function composedRegion(id: LocationId, generatedFallback = false): Compo
       ? ALTAN_OVOO_GENERATED_REGION
       : id === 'otgontenger'
         ? OTGONTENGER_GENERATED_REGION
-        : undefined;
+        : id === 'eej-khairkhan'
+          ? EEJ_KHAIRKHAN_GENERATED_REGION
+          : undefined;
   const composition = generatedFallback && fallback ? fallback : WORLD_REGIONS[id];
   return {
     seed: `living-steppe-scenes-v3:${id}`,
