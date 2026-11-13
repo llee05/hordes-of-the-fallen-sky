@@ -19,6 +19,7 @@ import {
 } from '../../src/game/world3d/belukhaPaintedGround';
 import { PAINTED_GROUND_QUADRANTS } from '../../src/game/world3d/paintedGround';
 import { sceneDressing } from '../../src/game/world3d/sceneDressing';
+import { groundView, WORLD_3D } from '../../src/game/world3d/worldProjection';
 
 const terrain = new ComposedTerrain(composedRegion('belukha'), LANDSCAPES.belukha.water);
 const world = (point: TerrainPoint): TerrainPoint => ({
@@ -32,7 +33,7 @@ describe('Mount Belukha authored layout', () => {
     expect(BELUKHA.world).toMatchObject({
       width: 6400,
       height: 4000,
-      terrainSize: 6400,
+      terrainSize: 9216,
       minX: -3200,
       minY: -2000,
       camp: { x: -2100, y: 1050 },
@@ -92,8 +93,8 @@ describe('Mount Belukha authored layout', () => {
 
 describe('Mount Belukha runtime terrain', () => {
   it('registers authored bounds, camp, tiers, paths and water', () => {
-    expect(terrain.worldSize).toBe(6400);
-    expect(terrain.playBounds).toEqual({ x: 0, y: 1200, width: 6400, height: 4000 });
+    expect(terrain.worldSize).toBe(9216);
+    expect(terrain.playBounds).toEqual({ x: 1408, y: 2608, width: 6400, height: 4000 });
     expect(terrain.campPosition).toEqual(world(BELUKHA_SITES.camp));
     expect(WORLD_REGIONS.belukha.shelves).toHaveLength(3);
     expect(WORLD_REGIONS.belukha.ground?.paths).toEqual(BELUKHA.paths);
@@ -118,11 +119,42 @@ describe('Mount Belukha runtime terrain', () => {
     expect(composedRegion('belukha').scene.ground).toBeDefined();
     expect(BELUKHA_GENERATED_REGION.ground).toBeUndefined();
   });
+
+  it('keeps the yawed low-zoom view over terrain at every play-bound corner', () => {
+    const bounds = terrain.playBounds;
+    const viewport = { width: 1920, height: 1080 };
+    const sourceZoom = 0.6;
+    const renderZoom = sourceZoom * WORLD_3D.worldScale;
+    const halfWidth = viewport.width / sourceZoom / 2;
+    const halfHeight = viewport.height / sourceZoom / 2;
+    const yaw = (WORLD_3D.yaw * Math.PI) / 180;
+    for (const source of [
+      { x: bounds.x + halfWidth, y: bounds.y + halfHeight },
+      { x: bounds.x + bounds.width - halfWidth, y: bounds.y + halfHeight },
+      { x: bounds.x + halfWidth, y: bounds.y + bounds.height - halfHeight },
+      { x: bounds.x + bounds.width - halfWidth, y: bounds.y + bounds.height - halfHeight },
+    ]) {
+      const view = groundView(
+        source.x - Math.sin(yaw) * WORLD_3D.lookAhead,
+        source.y - Math.cos(yaw) * WORLD_3D.lookAhead,
+        viewport.width,
+        viewport.height,
+        renderZoom,
+        terrain.reliefHeight,
+        WORLD_3D.angle,
+        WORLD_3D.yaw,
+      );
+      expect(view.x).toBeGreaterThanOrEqual(0);
+      expect(view.y).toBeGreaterThanOrEqual(0);
+      expect(view.x + view.width).toBeLessThanOrEqual(terrain.worldSize);
+      expect(view.y + view.height).toBeLessThanOrEqual(terrain.worldSize);
+    }
+  });
 });
 
 describe('Mount Belukha painted ground and dressing', () => {
   it('projects four 1600 x 1000 paintings over the 6400 x 4000 play rectangle', () => {
-    expect(belukhaPaintedGroundWorldBounds(6400)).toEqual([0, 1200, 6400, 4000]);
+    expect(belukhaPaintedGroundWorldBounds(9216)).toEqual([1408, 2608, 6400, 4000]);
     expect(belukhaPaintedGroundGpuBytes()).toBe(39_724_100);
     expect(belukhaPaintedGroundEnabled('', false)).toBe(true);
     expect(belukhaPaintedGroundEnabled('?belukhaPaintedGround=0', true)).toBe(false);

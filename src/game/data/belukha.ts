@@ -82,7 +82,9 @@ export const BELUKHA: BelukhaLayout = {
   world: {
     width: 6400,
     height: 4000,
-    terrainSize: 6400,
+    // The renderer's yawed view extends beyond the 2D camera rectangle at low zoom. This larger
+    // square keeps painted fallback terrain beneath every legal view of the 6,400 × 4,000 arena.
+    terrainSize: 9216,
     minX: -3200,
     minY: -2000,
     camp: BELUKHA_SITES.camp,
