@@ -133,7 +133,8 @@ export class World3DRenderer {
         terrain.region.scene.id === 'altan-ovoo' ||
         terrain.region.scene.id === 'otgontenger' ||
         terrain.region.scene.id === 'eej-khairkhan' ||
-        terrain.region.scene.id === 'belukha')
+        terrain.region.scene.id === 'belukha' ||
+        terrain.region.scene.id === 'khan-tengri')
         ? terrain
         : undefined;
     let paintedGround: PaintedGroundDefinition | undefined;
@@ -206,7 +207,8 @@ export class World3DRenderer {
       (terrain.region.scene.id === 'altan-ovoo' ||
         terrain.region.scene.id === 'otgontenger' ||
         terrain.region.scene.id === 'eej-khairkhan' ||
-        terrain.region.scene.id === 'belukha')
+        terrain.region.scene.id === 'belukha' ||
+        terrain.region.scene.id === 'khan-tengri')
     ) {
       this.staticDressing = new StaticDressing3D(
         scene,

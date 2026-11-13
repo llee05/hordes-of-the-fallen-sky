@@ -4,6 +4,7 @@ import { ALTAN_OVOO } from './altanOvoo';
 import { OTGONTENGER } from './otgontenger';
 import { EEJ_KHAIRKHAN } from './eejKhairkhan';
 import { BELUKHA } from './belukha';
+import { KHAN_TENGRI } from './khanTengri';
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
 import { ORKHON_VALLEY } from './orkhonValley';
 
@@ -176,6 +177,7 @@ export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
       landmark('crag', 450, -100, 230),
       landmark('crag', 510, 335, 255),
     ],
+    water: KHAN_TENGRI.meltwater,
     air: { color: 0xb3b6ce, alpha: 0.065, particles: 'snow' },
   },
   belukha: {
