@@ -26,10 +26,6 @@ export function characterCreatorContent(
       <div class="creator-column creator-left">
         <!-- Section: Name -->
         <div class="creator-section creator-name-section">
-          <div class="creator-section-header">
-            <span class="creator-header-knot" aria-hidden="true">❖</span>
-            <span class="creator-header-label">Name</span>
-          </div>
           <div class="creator-framed-input">
             ${framedCornerFrets()}
             <input
@@ -76,10 +72,6 @@ export function characterCreatorContent(
 
         <!-- Section: Gender -->
         <div class="creator-section creator-gender-section">
-          <div class="creator-section-header">
-            <span class="creator-header-knot" aria-hidden="true">❖</span>
-            <span class="creator-header-label">Gender</span>
-          </div>
           <div class="creator-gender-options" role="radiogroup" aria-label="Gender">
             <button
               type="button"
@@ -122,10 +114,6 @@ export function characterCreatorContent(
 
         <!-- Section: Class -->
         <div class="creator-section creator-class-section">
-          <div class="creator-section-header">
-            <span class="creator-header-knot" aria-hidden="true">❖</span>
-            <span class="creator-header-label">Class</span>
-          </div>
           <div class="creator-classes-grid" role="radiogroup" aria-label="Combat class">
             ${CLASSES.map((c) => {
               const selected = p.classId === c.id;

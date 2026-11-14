@@ -89,6 +89,7 @@ export class GameUI {
   private creatorAbilityId?: string;
   private readonly creatorPreviewState = createRiderPreviewState();
   private creatorClassFeedback = false;
+  private creatorBackground?: HTMLImageElement;
 
   constructor(
     private readonly root: HTMLElement,
@@ -699,6 +700,7 @@ export class GameUI {
     else if (run.phase === 'saves')
       this.overlay.innerHTML = saveMenu(snapshot, this.saveConfirmation);
     else if (run.phase === 'ready') {
+      this.preloadCreatorBackground();
       this.overlay.innerHTML = titleMenuContent({
         latestSaveSlot: latestSave?.slot,
         hasCamp: Boolean(this.platform.profile.camp),
@@ -1361,6 +1363,12 @@ export class GameUI {
       const description = row.querySelector<HTMLElement>('.creator-ability-desc');
       if (description) description.hidden = !expanded;
     }
+  }
+
+  private preloadCreatorBackground(): void {
+    if (this.creatorBackground) return;
+    this.creatorBackground = new Image();
+    this.creatorBackground.src = `${import.meta.env.BASE_URL}art/creator-scroll-bg.webp`;
   }
 
   private stopCreatorPreview(): void {
