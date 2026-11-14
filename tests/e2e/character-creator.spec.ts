@@ -7,6 +7,34 @@ test.beforeEach(() => test.setTimeout(90000));
 
 test.use({ viewport: { width: 1280, height: 800 } });
 
+test('creator content fits the painted scroll at every supported size', async ({ page }) => {
+  await openTitle(page);
+  await page.getByRole('button', { name: /NEW GAME/ }).click();
+
+  const sizes = [
+    { width: 1280, height: 800 },
+    { width: 1366, height: 768 },
+    { width: 1920, height: 1080 },
+    { width: 3840, height: 2160 },
+  ];
+  const classes = ['Mounted Archer', 'Lancer', 'Iron Pagoda', 'Spirit Caller'];
+
+  for (const size of sizes) {
+    await page.setViewportSize(size);
+    for (const className of classes) {
+      await page.getByRole('radio', { name: className, exact: true }).click();
+      const fit = await page.locator('.creator-right').evaluate((panel) => ({
+        horizontal: panel.scrollWidth <= panel.clientWidth + 1,
+        vertical: panel.scrollHeight <= panel.clientHeight + 1,
+      }));
+      expect(fit, `${className} at ${size.width}x${size.height}`).toEqual({
+        horizontal: true,
+        vertical: true,
+      });
+    }
+  }
+});
+
 test(
   'creator starts the selected class and remembers the last profile',
   { tag: '@core' },
