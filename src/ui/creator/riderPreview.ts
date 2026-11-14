@@ -131,13 +131,13 @@ export function startRiderPreview(
     ctx.clearRect(0, 0, 512, 720);
     ctx.fillStyle = 'rgba(74, 50, 25, 0.28)';
     ctx.beginPath();
-    ctx.ellipse(256, 622, 142, 27, 0, 0, Math.PI * 2);
+    ctx.ellipse(256, 595, 138, 25, 0, 0, Math.PI * 2);
     ctx.fill();
 
     if (!image?.complete || image.naturalWidth <= 0) return;
-    const scale = 1.9;
+    const scale = 1.84;
     const offsetX = (512 - 256 * scale) / 2;
-    const offsetY = 4;
+    const offsetY = -8;
     ctx.drawImage(
       image,
       frame.x,
