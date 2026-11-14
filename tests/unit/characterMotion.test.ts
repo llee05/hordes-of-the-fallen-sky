@@ -11,47 +11,58 @@ import creatureSource from '/art/steppe-creature-motion.json?raw';
 import { CHARACTER_CLASSES } from '../../src/shared/characterProfile';
 import classesSource from '/art/steppe-classes-motion.json?raw';
 import directionalClassesSource from '/art/steppe-classes-directional-motion.json?raw';
+import femaleClassesSource from '/art/steppe-classes-female-motion.json?raw';
+import femaleDirectionalClassesSource from '/art/steppe-classes-female-directional-motion.json?raw';
 
 it('registers all four class clips to the existing rider canvas and ground anchor', () => {
-  const atlas = JSON.parse(classesSource);
-  for (const classId of CHARACTER_CLASSES) {
-    for (const [action, count] of [
-      ['move', 4],
-      ['attack', 2],
-    ] as const) {
-      for (let i = 0; i < count; i++) {
-        const entry = atlas.frames[`${classId}-${action}-${i}`];
-        expect(entry.sourceSize).toEqual({ w: 256, h: 360 });
-        expect(entry.spriteSourceSize.y + entry.spriteSourceSize.h).toBe(324);
-        expect(entry.frame.x + entry.frame.w).toBeLessThanOrEqual(1536);
-        expect(entry.frame.y + entry.frame.h).toBeLessThanOrEqual(1024);
-        expect(entry.spriteSourceSize.x + entry.spriteSourceSize.w).toBeLessThanOrEqual(256);
+  for (const source of [classesSource, femaleClassesSource]) {
+    const atlas = JSON.parse(source);
+    for (const classId of CHARACTER_CLASSES) {
+      for (const [action, count] of [
+        ['move', 4],
+        ['attack', 2],
+      ] as const) {
+        for (let i = 0; i < count; i++) {
+          const entry = atlas.frames[`${classId}-${action}-${i}`];
+          expect(entry.sourceSize).toEqual({ w: 256, h: 360 });
+          expect(entry.spriteSourceSize.y + entry.spriteSourceSize.h).toBe(324);
+          expect(entry.frame.x + entry.frame.w).toBeLessThanOrEqual(1536);
+          expect(entry.frame.y + entry.frame.h).toBeLessThanOrEqual(1024);
+          expect(entry.spriteSourceSize.x + entry.spriteSourceSize.w).toBeLessThanOrEqual(256);
+        }
       }
     }
+    expect(Object.keys(atlas.frames).filter((name) => !name.startsWith('banner-'))).toHaveLength(
+      24,
+    );
   }
-  expect(Object.keys(atlas.frames).filter((name) => !name.startsWith('banner-'))).toHaveLength(24);
 });
 
 it('registers every directional class lower and upper layer to one rider canvas', () => {
-  const atlas = JSON.parse(directionalClassesSource);
-  for (const classId of CHARACTER_CLASSES) {
-    for (const direction of CHARACTER_DIRECTIONS) {
-      for (let i = 0; i < 4; i++) {
-        for (const name of [
-          `${classId}-${direction}-move-${i}`,
-          `${classId}-${direction}-upper-move-${i}`,
-        ]) {
-          const entry = atlas.frames[name];
-          expect(entry.sourceSize).toEqual({ w: 256, h: 360 });
-          expect(entry.spriteSourceSize).toEqual({ x: 0, y: 68, w: 256, h: 256 });
+  for (const [source, expectedSize] of [
+    [directionalClassesSource, { w: 4096, h: 5120 }],
+    [femaleDirectionalClassesSource, { w: 4096, h: 3328 }],
+  ] as const) {
+    const atlas = JSON.parse(source);
+    for (const classId of CHARACTER_CLASSES) {
+      for (const direction of CHARACTER_DIRECTIONS) {
+        for (let i = 0; i < 4; i++) {
+          for (const name of [
+            `${classId}-${direction}-move-${i}`,
+            `${classId}-${direction}-upper-move-${i}`,
+          ]) {
+            const entry = atlas.frames[name];
+            expect(entry.sourceSize).toEqual({ w: 256, h: 360 });
+            expect(entry.spriteSourceSize).toEqual({ x: 0, y: 68, w: 256, h: 256 });
+          }
         }
+        for (let i = 0; i < 2; i++)
+          expect(atlas.frames[`${classId}-${direction}-upper-attack-${i}`]).toBeDefined();
       }
-      for (let i = 0; i < 2; i++)
-        expect(atlas.frames[`${classId}-${direction}-upper-attack-${i}`]).toBeDefined();
     }
+    expect(Object.keys(atlas.frames)).toHaveLength(320);
+    expect(atlas.meta.size).toEqual(expectedSize);
   }
-  expect(Object.keys(atlas.frames)).toHaveLength(320);
-  expect(atlas.meta.size).toEqual({ w: 4096, h: 5120 });
 });
 
 const mounted = JSON.parse(
@@ -64,6 +75,22 @@ const creatures = JSON.parse(
 ) as typeof import('../../public/art/steppe-creature-motion.json');
 
 describe('character presentation clocks', () => {
+  it.each(CHARACTER_CLASSES)(
+    'selects the female %s rider without changing frame names',
+    (classId) => {
+      const motion = new CharacterMotion('player');
+      motion.setPlayerClass(classId);
+      motion.setPlayerGender('woman');
+      expect(motion.texture).toBe('steppe-classes-female-directional-motion');
+      expect(motion.frame).toBe(`${classId}-e-move-0`);
+      motion.advance(0.01, 0, true);
+      expect(motion.upperFrame).toBe(`${classId}-e-upper-attack-0`);
+      motion.attack();
+      expect(motion.upperFrame).toBe(`${classId}-e-upper-attack-1`);
+      expect(motion.capture()).not.toHaveProperty('gender');
+    },
+  );
+
   it.each(CHARACTER_CLASSES)(
     'selects %s art through gait, attack, pause, restore and succession',
     (classId) => {

@@ -57,8 +57,9 @@ The built-in image_gen tool created this sheet. The final source and cutout prom
 
 ## Playable class riders
 
-`public/art/steppe-classes-motion.png` and its JSON atlas contain original painted
-riders for `mounted-archer`, `lancer`, `iron-pagoda`, and `spirit-caller`. Each has
+`public/art/steppe-classes-motion.png` and `steppe-classes-female-motion.png`, with
+their JSON atlases, contain original painted riders for `mounted-archer`, `lancer`,
+`iron-pagoda`, and `spirit-caller`. Each has
 four canter phases, a grounded idle using the first gait pose, and two weapon attack
 poses. Archer carries a recurve bow and quiver; Lancer has a long lance and rust
 cape; Iron Pagoda has heavy horse barding, a round shield and saber; Spirit Caller
@@ -74,8 +75,8 @@ alpha where cell spacing allows. All classes share one added texture and one
 sprite batch, independent of class count. Existing allied and enemy sheets remain
 in use.
 
-`CharacterMotion.setPlayerClass` selects the rider skin from
-`run.character.classId`; `KhanController` reapplies it on reset, active animation,
+`CharacterMotion.setPlayerClass` and `setPlayerGender` select the rider skin from
+`run.character`; `KhanController` reapplies it on reset, active animation,
 restore, terrain reconciliation, and succession. Motion archives remain unchanged:
 the saved character profile owns appearance. `CharacterVisuals` switches the
 texture while retaining the shared canvas, scale, origin, and physics body. Gait,
@@ -100,12 +101,22 @@ combat events. The Spirit Caller's projectile uses its own painted wisp cutout; 
 effects are bounded procedural strokes so they follow gameplay timing without adding large
 atlases. Remaining art: separate idle loops, ability-specific rider poses beyond the shared
 weapon release, dedicated hurt and death poses, and original close portrait assets. Existing
-hit flashes and succession visibility continue unchanged. The combined rider/horse paintings have
-no separate clothing or mount mask, so profile clothing colours, coat variants,
-gender, hair and headgear are not yet represented in the battlefield art. Separate
+hit flashes and succession visibility continue unchanged. The selected woman or man
+is represented in both the creator preview and battlefield art. The combined rider/horse
+paintings have no separate clothing or mount mask, so profile clothing colours, coat variants,
+individual hairstyles and headgear are not yet represented in the battlefield art. Separate
 painted layers or masks are needed to recolour clothing without tinting skin,
-weapons and horse together. Additional front/back view clips are also future work;
-current gameplay uses right-facing poses and left-facing mirroring.
+weapons and horse together.
+
+The built-in `image_gen` tool created the female counterparts from the approved
+class masters and directional review strips. Each class source used an eight-column,
+three-row brief: E/SE/S/SW/W/NW/N/NE neutral poses, class-specific windups, and
+class-specific releases on transparent alpha. The brief fixed the existing horse,
+costume, weapon, palette, high three-quarter camera and ground registration while
+requesting a consistent adult woman in practical, historically inspired dress and
+explicitly excluding sexualised armour. The packed atlases retain the established
+256 × 360 canvas; shared transparent overlays keep the female directional texture
+within a GPU-safe 4,096 × 3,328 canvas.
 
 ### Class atlas generation prompt
 
@@ -124,8 +135,9 @@ clothing and mount recolouring still requires separate painted masks.
 
 ### Directional class layers
 
-All four playable classes use `steppe-classes-directional-motion.png` for their
-eight-direction repaints. Each screen facing has four lower movement frames, four
+All four playable classes use `steppe-classes-directional-motion.png` or
+`steppe-classes-female-directional-motion.png`, selected from the saved profile gender,
+for their eight-direction repaints. Each screen facing has four lower movement frames, four
 transparent neutral overlays, and two complete class-specific attack overlays.
 `CharacterMotion` keeps the lower gait clock advancing during attacks; the complete
 attack painting replaces the neutral sprite for that brief pose so there is no

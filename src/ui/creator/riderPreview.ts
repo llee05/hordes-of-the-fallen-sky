@@ -44,7 +44,7 @@ const CLASS_IDS: readonly CharacterClassId[] = [
   'spirit-caller',
 ];
 
-let cachedMotionAsset: Promise<MotionAsset> | undefined;
+const cachedMotionAssets: Partial<Record<CharacterGender, Promise<MotionAsset>>> = {};
 
 export function createRiderPreviewState(): RiderPreviewState {
   return { mode: 'move', modeTime: 0, runCycles: 0 };
@@ -74,20 +74,22 @@ export function classMotionFromAtlas(
   return { move: collect('move', 4), attack: collect('attack', 2) };
 }
 
-async function loadMotionAsset(_gender: CharacterGender): Promise<MotionAsset> {
-  // Both genders use the shared atlas until the separately commissioned female atlas lands.
-  if (!cachedMotionAsset) {
-    cachedMotionAsset = (async () => {
-      const response = await fetch(`${import.meta.env.BASE_URL}art/steppe-classes-motion.json`);
+async function loadMotionAsset(gender: CharacterGender): Promise<MotionAsset> {
+  if (!cachedMotionAssets[gender]) {
+    cachedMotionAssets[gender] = (async () => {
+      const suffix = gender === 'woman' ? '-female' : '';
+      const response = await fetch(
+        `${import.meta.env.BASE_URL}art/steppe-classes${suffix}-motion.json`,
+      );
       if (!response.ok) throw new Error(`Unable to load creator rider atlas (${response.status})`);
       const atlas = (await response.json()) as MotionAtlas;
       for (const classId of CLASS_IDS) classMotionFromAtlas(atlas, classId);
       const image = new Image();
-      image.src = `${import.meta.env.BASE_URL}art/steppe-classes-motion.png`;
+      image.src = `${import.meta.env.BASE_URL}art/steppe-classes${suffix}-motion.png`;
       return { atlas, image };
     })();
   }
-  return cachedMotionAsset;
+  return cachedMotionAssets[gender]!;
 }
 
 /** Animates the selected rider on horseback inside the creator arched preview frame. */
@@ -111,7 +113,6 @@ export function startRiderPreview(
     state.modeTime = 0;
     state.runCycles = 0;
   }
-
   const bounds = canvas.getBoundingClientRect();
   const pixelRatio = Math.max(1, window.devicePixelRatio || 1);
   canvas.width = Math.max(1, Math.round(bounds.width * pixelRatio));

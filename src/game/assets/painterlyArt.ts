@@ -49,7 +49,7 @@ import {
 
 export { playerVisualConfig };
 
-/** Two motion atlases and one prop atlas keep painted actors on shared textures. */
+/** Shared motion atlases and one prop atlas keep painted actors on bounded textures. */
 const PROPS = new Set(['ger', 'cart', 'banner', 'sheep', 'rock', 'pillar']);
 /** Scales the camp presentation around its world anchor, independently of combat. */
 export const CAMP_VISUAL_SCALE = GAME.camp.visualScale;

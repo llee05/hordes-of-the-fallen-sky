@@ -18,7 +18,8 @@ The profile contract still retains legacy appearance, background, oath, mount,
 and banner fields for save compatibility. The scroll does not currently expose
 those fields, so a new profile uses their shared defaults and a remembered profile
 keeps its stored values. Character creation never changes or overwrites an existing
-saved expedition.
+saved expedition. Class and gender select matching rider art in the creator and
+battlefield.
 
 The last profile used to begin a journey is remembered through `GamePlatform`.
 Old profiles without character data open with shared defaults. Simulation and
