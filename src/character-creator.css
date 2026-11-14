@@ -361,12 +361,10 @@
 .creator-right {
   position: absolute;
   left: 67.2%;
-  top: 37.6%;
+  top: 36.6%;
   width: 19.5%;
-  height: 38.5%;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #8c673d transparent;
+  max-height: 32.2%;
+  overflow: hidden;
   padding-left: 2px;
   padding-right: 4px;
 }
@@ -374,66 +372,67 @@
 .creator-class-details {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .creator-detail-header {
   border-bottom: 1px solid rgba(139, 90, 43, 0.4);
-  padding-bottom: 3px;
+  padding-bottom: 2px;
 }
 
 .creator-detail-title {
   margin: 0;
-  font-size: clamp(16px, 1.4cqw, 22px);
+  font-size: clamp(15px, 1.3cqw, 20px);
   font-weight: bold;
   color: #341d0e;
   line-height: 1.1;
 }
 
 .creator-detail-subtitle {
-  margin: 2px 0 0;
-  font-size: clamp(10.5px, 0.82cqw, 12.5px);
+  margin: 1px 0 0;
+  font-size: clamp(10px, 0.78cqw, 12px);
   font-style: italic;
   color: #6a492f;
 }
 
 .creator-detail-summary {
   margin: 0;
-  font-size: clamp(10.5px, 0.78cqw, 12px);
-  line-height: 1.32;
+  font-size: clamp(9.5px, 0.72cqw, 11px);
+  line-height: 1.24;
   color: #3d2617;
 }
 
 .creator-detail-traits {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
 }
 
 .creator-trait-badge {
-  font-size: clamp(9px, 0.68cqw, 10.5px);
+  font-size: clamp(8.5px, 0.62cqw, 9.8px);
   font-weight: bold;
   background: #e3c79a;
   color: #422613;
-  padding: 1px 6px;
+  padding: 0.5px 5px;
   border-radius: 2px;
   border: 1px solid #9c754b;
+  line-height: 1.2;
 }
 
 .creator-abilities-panel {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 2px;
+  gap: 3px;
+  margin-top: 1px;
 }
 
 .creator-abilities-heading {
   margin: 0;
-  font-size: clamp(10.5px, 0.82cqw, 12.5px);
+  font-size: clamp(9.5px, 0.72cqw, 11px);
   font-weight: bold;
   color: #4a2d18;
   border-bottom: 1px solid rgba(168, 129, 85, 0.6);
-  padding-bottom: 2px;
+  padding-bottom: 1px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -441,23 +440,23 @@
 .creator-abilities-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2.5px;
 }
 
 .creator-ability-item {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   align-items: flex-start;
   background: rgba(244, 226, 196, 0.42);
-  padding: 3px 6px;
+  padding: 2px 5px;
   border-radius: 2px;
   border: 1px solid rgba(168, 132, 94, 0.4);
 }
 
 .creator-ability-badge {
   position: relative;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -468,20 +467,20 @@
 }
 
 .creator-ability-badge svg {
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
   color: #432b1a;
 }
 
 .creator-ability-key {
   position: absolute;
-  bottom: -2px;
-  right: -2px;
+  bottom: -1px;
+  right: -1px;
   background: #4a2811;
   color: #fae8bd;
-  font-size: 8px;
+  font-size: 7.5px;
   font-weight: bold;
-  padding: 0 3px;
+  padding: 0 2.5px;
   border-radius: 2px;
   line-height: 1.1;
 }
@@ -493,15 +492,15 @@
 
 .creator-ability-name {
   display: block;
-  font-size: clamp(10px, 0.78cqw, 11.5px);
+  font-size: clamp(9.5px, 0.72cqw, 11px);
   color: #2e1a0e;
   line-height: 1.15;
 }
 
 .creator-ability-desc {
   margin: 1px 0 0;
-  font-size: clamp(9px, 0.69cqw, 10.5px);
-  line-height: 1.25;
+  font-size: clamp(8.5px, 0.64cqw, 9.8px);
+  line-height: 1.2;
   color: #4b3422;
 }
 
