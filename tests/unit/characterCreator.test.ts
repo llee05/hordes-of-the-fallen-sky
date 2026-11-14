@@ -120,5 +120,15 @@ describe('character creator profile mapping', () => {
     expect(changed).toContain('creator-portrait-lancer-woman.webp');
     expect(changed).toContain('creator-portrait-outgoing');
     expect(changed).toContain('creator-portrait-incoming');
+
+    changeCreatorOption(state, 'classId', 'iron-pagoda');
+    const ironPagoda = characterCreatorContent(state);
+    expect(ironPagoda).toContain('creator-class-symbol');
+    expect(ironPagoda).not.toContain('creator-class-iron-pagoda.png');
+
+    changeCreatorOption(state, 'classId', 'spirit-caller');
+    const spiritCaller = characterCreatorContent(state);
+    expect(spiritCaller).toContain('creator-class-symbol');
+    expect(spiritCaller).not.toContain('creator-class-spirit-caller.png');
   });
 });

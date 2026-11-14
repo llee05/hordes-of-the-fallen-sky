@@ -9,6 +9,26 @@ function portraitSource(selection: CreatorPortraitSelection): string {
   return `${import.meta.env.BASE_URL}art/creator-portrait-${selection.classId}-${selection.gender}.webp`;
 }
 
+function classEmblem(classId: CharacterCreatorState['profile']['classId']): string {
+  if (classId === 'iron-pagoda') {
+    return `<svg class="creator-class-symbol" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M32 8v6M27 14h10M18 39c0-13 5-22 14-25 9 3 14 12 14 25" />
+      <path d="M15 39h34l-3 8H18l-3-8ZM19 47h26l-3 8H22l-3-8Z" />
+      <path d="M24 39V25m16 14V25M32 39V19" />
+      <circle cx="24" cy="34" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="32" cy="28" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="40" cy="34" r="1.5" fill="currentColor" stroke="none" />
+    </svg>`;
+  }
+  if (classId === 'spirit-caller') {
+    return `<svg class="creator-class-symbol" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M36 6c2 10-7 14-4 24 2-7 8-10 11-17 8 9 12 19 8 29-4 10-12 15-22 15S12 51 12 40c0-10 5-18 15-28-2 9 1 14 5 18 1-10 0-17 4-24Z" />
+      <path d="M31 51c-5 0-8-4-8-9 0-5 3-8 8-14-1 7 6 9 6 15 0 4-2 7-6 8Z" />
+    </svg>`;
+  }
+  return `<img src="${import.meta.env.BASE_URL}art/creator-class-${classId}.png" alt="" aria-hidden="true" />`;
+}
+
 export function characterCreatorContent(
   state: CharacterCreatorState,
   previousPortrait?: CreatorPortraitSelection,
@@ -150,7 +170,7 @@ export function characterCreatorContent(
                 title="${escapeHtml(classItem.title)}: ${escapeHtml(classItem.subtitle)}"
               >
                 <span class="creator-class-emblem">
-                  <img src="${import.meta.env.BASE_URL}art/creator-class-${classItem.id}.png" alt="" aria-hidden="true" />
+                  ${classEmblem(classItem.id)}
                 </span>
                 <span class="creator-class-title">${escapeHtml(classItem.title)}</span>
               </button>`;

@@ -22,7 +22,8 @@ cross-fade, disabled by the reduced-motion media query.
 All art ships locally and no runtime request leaves the application. Decorative
 images are hidden from assistive technology; the portrait stage has a live text
 alternative and the controls keep their live names, radio state, and keyboard
-focus.
+focus. Name, section, description, and action lettering uses the locally bundled
+italic Cormorant Garamond face to match the manuscript reference.
 
 ## Background generation brief
 
