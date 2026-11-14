@@ -1096,6 +1096,18 @@ export class GameUI {
     ].filter((el) => el.getClientRects().length > 0);
   }
   private handleMenuKey(event: KeyboardEvent): void {
+    if (
+      this.phase === 'character' &&
+      event.target instanceof HTMLInputElement &&
+      event.target.matches('[data-creator-name]') &&
+      event.key === 'Enter'
+    ) {
+      event.preventDefault();
+      this.overlay
+        .querySelector<HTMLButtonElement>('[data-action="begin-journey"]:not(:disabled)')
+        ?.focus({ preventScroll: true });
+      return;
+    }
     if (event.target instanceof HTMLInputElement && event.target.matches('[data-audio-channel]')) {
       const input = event.target;
       if (
@@ -1150,11 +1162,14 @@ export class GameUI {
     if (
       ['building', 'route', 'developer', 'character'].includes(this.phase) &&
       ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) &&
-      !(event.target instanceof HTMLInputElement)
+      (!(event.target instanceof HTMLInputElement) ||
+        (this.phase === 'character' && ['ArrowUp', 'ArrowDown'].includes(event.key)))
     ) {
       event.preventDefault();
       event.stopPropagation();
-      if (!this.navigateGraph(event.key))
+      if (this.phase === 'character') {
+        this.navigateMenu(event.key.slice(5).toLowerCase() as 'up' | 'down' | 'left' | 'right');
+      } else if (!this.navigateGraph(event.key))
         this.navigateMenu(['ArrowLeft', 'ArrowUp'].includes(event.key) ? 'previous' : 'next');
       return;
     }
@@ -1190,7 +1205,9 @@ export class GameUI {
       first?.focus();
     }
   }
-  private navigateMenu(action: 'next' | 'previous' | 'confirm'): void {
+  private navigateMenu(
+    action: 'next' | 'previous' | 'up' | 'down' | 'left' | 'right' | 'confirm',
+  ): void {
     const buttons = this.menuButtons();
     if (!buttons.length) return;
     const index = Math.max(
@@ -1198,12 +1215,40 @@ export class GameUI {
       buttons.findIndex((button) => button === document.activeElement),
     );
     if (action === 'confirm') buttons[index]?.click();
+    else if (
+      this.phase === 'character' &&
+      ['up', 'down', 'left', 'right'].includes(action) &&
+      this.navigateCreator(action as 'up' | 'down' | 'left' | 'right')
+    )
+      return;
     else {
       const target =
-        buttons[(index + (action === 'next' ? 1 : -1) + buttons.length) % buttons.length];
+        buttons[
+          (index + (['next', 'down', 'right'].includes(action) ? 1 : -1) + buttons.length) %
+            buttons.length
+        ];
       target?.focus();
       target?.scrollIntoView({ block: 'nearest' });
     }
+  }
+
+  private navigateCreator(direction: 'up' | 'down' | 'left' | 'right'): boolean {
+    const current = document.activeElement as HTMLElement | null;
+    const directionName = `${direction[0]!.toUpperCase()}${direction.slice(1)}`;
+    const focusKey = current?.dataset[`nav${directionName}`];
+    if (!focusKey) return false;
+    const target = [...this.overlay.querySelectorAll<HTMLElement>('[data-focus-key]')].find(
+      (entry) => entry.dataset.focusKey === focusKey,
+    );
+    if (!target) return false;
+    if (target.getAttribute('role') === 'radio') {
+      const group = target.closest('[role="radiogroup"]');
+      group
+        ?.querySelectorAll<HTMLElement>('[role="radio"]')
+        .forEach((radio) => (radio.tabIndex = radio === target ? 0 : -1));
+    }
+    target.focus({ preventScroll: true });
+    return true;
   }
 
   /** Directional focus uses the graph's real edges, without buying a rank. Tab reaches the inspector. */

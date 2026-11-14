@@ -48,6 +48,12 @@ test(
     await expect(
       page.getByRole('radiogroup', { name: 'Combat class' }).getByRole('radio'),
     ).toHaveCount(4);
+    await expect(
+      page.getByRole('radiogroup', { name: 'Gender' }).locator('[tabindex="0"]'),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole('radiogroup', { name: 'Combat class' }).locator('[tabindex="0"]'),
+    ).toHaveCount(1);
     await expectFrozen(page, () => page.evaluate(() => (window as any).__gloam.scene.run.elapsed));
 
     await page.getByRole('radio', { name: 'Male' }).click();
@@ -123,6 +129,16 @@ test('creator supports keyboard focus, Back, and frozen gameplay time', async ({
     'aria-checked',
     'true',
   );
+  await page.getByLabel('Name', { exact: true }).focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('radio', { name: 'Male' })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('radio', { name: 'Mounted Archer' })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('radio', { name: 'Iron Pagoda' })).toBeFocused();
+  await page.getByLabel('Name', { exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: 'Begin Journey', exact: true })).toBeFocused();
   await page.getByRole('button', { name: 'Begin Journey', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog')).toBeHidden();

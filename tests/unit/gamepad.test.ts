@@ -65,8 +65,19 @@ describe('controller input', () => {
 
   it('handles digital navigation and disconnecting without stuck movement', () => {
     const input = new GamepadInput();
-    expect(input.poll([pad(0, 0, [15])])).toMatchObject({ x: 0, y: 0, next: true });
+    expect(input.poll([pad(0, 0, [15])])).toMatchObject({
+      x: 0,
+      y: 0,
+      next: true,
+      menuDirection: 'right',
+    });
     expect(input.poll([pad(0, 0, [15])]).next).toBe(false);
+    input.poll([pad()]);
+    expect(input.poll([pad(0, 0, [12])]).menuDirection).toBe('up');
+    input.poll([pad()]);
+    expect(input.poll([pad(-1, 0)]).menuDirection).toBe('left');
+    input.poll([pad()]);
+    expect(input.poll([pad(0, 1)]).menuDirection).toBe('down');
     expect(input.poll([])).toMatchObject({ x: 0, y: 0, confirm: false });
     expect(input.poll([pad(0, 0, [9])]).pause).toBe(true);
   });

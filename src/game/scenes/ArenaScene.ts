@@ -88,7 +88,7 @@ import { RiderHost } from './arena/RiderHost';
 export interface ArenaCallbacks {
   onHud: (snapshot: HudSnapshot) => void;
   onPhase: (snapshot: HudSnapshot) => void;
-  onMenuInput: (action: 'next' | 'previous' | 'confirm') => void;
+  onMenuInput: (action: 'next' | 'previous' | 'up' | 'down' | 'left' | 'right' | 'confirm') => void;
   onSaveError: () => void;
   onCampBack?: () => boolean;
 }

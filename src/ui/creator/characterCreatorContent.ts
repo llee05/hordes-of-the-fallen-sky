@@ -37,6 +37,9 @@ export function characterCreatorContent(
               class="creator-name-field"
               data-creator-name
               data-focus-key="creator-name"
+              data-nav-up="creator-back"
+              data-nav-down="gender-man"
+              data-nav-right="creator-random"
               value="${escapeHtml(p.name)}"
               maxlength="${MAX_CHARACTER_NAME_LENGTH}"
               autocomplete="off"
@@ -51,6 +54,8 @@ export function characterCreatorContent(
               class="creator-random-btn"
               data-creator-random
               data-focus-key="creator-random"
+              data-nav-left="creator-name"
+              data-nav-down="gender-woman"
               aria-label="Random name"
               title="Random name"
             >
@@ -82,9 +87,12 @@ export function characterCreatorContent(
               data-creator-field="gender"
               data-creator-value="man"
               data-focus-key="gender-man"
-              aria-pressed="${isMan}"
+              data-nav-up="creator-name"
+              data-nav-right="gender-woman"
+              data-nav-down="class-mounted-archer"
               role="radio"
               aria-checked="${isMan}"
+              tabindex="${isMan ? '0' : '-1'}"
               aria-label="Male"
             >
               ${framedCornerFrets()}
@@ -97,9 +105,12 @@ export function characterCreatorContent(
               data-creator-field="gender"
               data-creator-value="woman"
               data-focus-key="gender-woman"
-              aria-pressed="${isWoman}"
+              data-nav-up="creator-random"
+              data-nav-left="gender-man"
+              data-nav-down="class-lancer"
               role="radio"
               aria-checked="${isWoman}"
+              tabindex="${isWoman ? '0' : '-1'}"
               aria-label="Female"
             >
               ${framedCornerFrets()}
@@ -118,15 +129,45 @@ export function characterCreatorContent(
           <div class="creator-classes-grid" role="radiogroup" aria-label="Combat class">
             ${CLASSES.map((c) => {
               const selected = p.classId === c.id;
+              const navigation = {
+                'mounted-archer': {
+                  up: 'gender-man',
+                  right: 'class-lancer',
+                  down: 'class-iron-pagoda',
+                  left: 'creator-back',
+                },
+                lancer: {
+                  up: 'gender-woman',
+                  right: `ability-${tradition.abilities[0]?.id ?? ''}`,
+                  down: 'class-spirit-caller',
+                  left: 'class-mounted-archer',
+                },
+                'iron-pagoda': {
+                  up: 'class-mounted-archer',
+                  right: 'class-spirit-caller',
+                  down: 'creator-back',
+                  left: 'creator-back',
+                },
+                'spirit-caller': {
+                  up: 'class-lancer',
+                  right: `ability-${tradition.abilities.at(-1)?.id ?? ''}`,
+                  down: 'creator-begin',
+                  left: 'class-iron-pagoda',
+                },
+              }[c.id];
               return `<button
                 type="button"
                 class="creator-class-tile creator-framed-tile"
                 data-creator-field="classId"
                 data-creator-value="${c.id}"
                 data-focus-key="class-${c.id}"
-                aria-pressed="${selected}"
+                data-nav-up="${navigation.up}"
+                data-nav-right="${navigation.right}"
+                data-nav-down="${navigation.down}"
+                data-nav-left="${navigation.left}"
                 role="radio"
                 aria-checked="${selected}"
+                tabindex="${selected ? '0' : '-1'}"
                 aria-label="${escapeHtml(c.title)}"
                 title="${escapeHtml(c.title)}: ${escapeHtml(c.subtitle)}"
               >
@@ -172,13 +213,17 @@ export function characterCreatorContent(
             <h4 class="sr-only">Class abilities</h4>
             <div class="creator-abilities-list">
               ${tradition.abilities
-                .map((ability) => {
+                .map((ability, index) => {
                   const expanded = abilityDetailsMode === 'all' || ability.id === activeAbilityId;
                   return `<button
                 type="button"
                 class="creator-ability-item"
                 data-creator-ability="${ability.id}"
                 data-focus-key="ability-${ability.id}"
+                data-nav-up="${index === 0 ? 'gender-woman' : `ability-${tradition.abilities[index - 1]!.id}`}"
+                data-nav-right="creator-begin"
+                data-nav-down="${index === tradition.abilities.length - 1 ? 'creator-begin' : `ability-${tradition.abilities[index + 1]!.id}`}"
+                data-nav-left="${index < 2 ? 'class-lancer' : 'class-spirit-caller'}"
                 aria-expanded="${expanded}"
                 aria-controls="creator-ability-description-${ability.id}"
               >
@@ -209,6 +254,8 @@ export function characterCreatorContent(
           class="creator-plaque-btn creator-btn-back"
           data-action="back"
           data-focus-key="creator-back"
+          data-nav-up="class-iron-pagoda"
+          data-nav-right="creator-begin"
           aria-label="Back to title"
         >
           <span>‹ Back</span>
@@ -218,6 +265,8 @@ export function characterCreatorContent(
           class="creator-plaque-btn creator-btn-begin"
           data-action="begin-journey"
           data-focus-key="creator-begin"
+          data-nav-up="ability-${tradition.abilities.at(-1)?.id ?? ''}"
+          data-nav-left="creator-back"
           ${nameValid ? '' : 'disabled'}
           aria-label="Begin Journey"
         >
