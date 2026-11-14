@@ -267,7 +267,7 @@ export function characterCreatorContent(
           data-focus-key="creator-begin"
           data-nav-up="ability-${tradition.abilities.at(-1)?.id ?? ''}"
           data-nav-left="creator-back"
-          ${nameValid ? '' : 'disabled'}
+          aria-disabled="${!nameValid}"
           aria-label="Begin Journey"
         >
           <span>Begin ›</span>

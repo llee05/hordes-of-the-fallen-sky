@@ -71,7 +71,9 @@ test(
 
     const begin = page.getByRole('button', { name: 'Begin Journey', exact: true });
     await page.getByLabel('Name', { exact: true }).fill('');
-    await expect(begin).toBeDisabled();
+    await expect(begin).toHaveAttribute('aria-disabled', 'true');
+    await begin.click();
+    await expect(page.getByLabel('Name', { exact: true })).toBeFocused();
     await page.getByRole('button', { name: 'Random name', exact: true }).click();
     await expect(page.getByLabel('Name', { exact: true })).not.toHaveValue('');
     const preview = await page.locator('#creator-rider-canvas').elementHandle();

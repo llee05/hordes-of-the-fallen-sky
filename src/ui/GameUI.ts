@@ -823,8 +823,9 @@ export class GameUI {
 
   private handleMenuClick(event: MouseEvent): void {
     const button = (event.target as Element).closest<HTMLButtonElement>('button');
-    if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
+    if (!button || button.disabled) return;
     const action = button.dataset.action;
+    if (button.getAttribute('aria-disabled') === 'true' && action !== 'begin-journey') return;
     if (
       button.dataset.audioReference &&
       AUDIO_REFERENCE_CUES.includes(
@@ -998,8 +999,14 @@ export class GameUI {
       }
       this.scene.changeCharacterOption(button.dataset.creatorField, button.dataset.creatorValue);
     } else if (button.hasAttribute('data-creator-random')) this.scene.randomCharacterName();
-    else if (action === 'begin-journey') this.scene.beginJourney();
-    else if (action === 'begin') this.scene.startRun();
+    else if (action === 'begin-journey') {
+      if (button.getAttribute('aria-disabled') === 'true') {
+        this.overlay
+          .querySelector<HTMLInputElement>('[data-creator-name]')
+          ?.focus({ preventScroll: true });
+        this.text('creator-status', 'Enter a name to begin your journey.');
+      } else this.scene.beginJourney();
+    } else if (action === 'begin') this.scene.startRun();
     else if (action === 'saves') {
       this.saveConfirmation = undefined;
       this.scene.openSaves();
@@ -1130,7 +1137,7 @@ export class GameUI {
     ) {
       event.preventDefault();
       this.overlay
-        .querySelector<HTMLButtonElement>('[data-action="begin-journey"]:not(:disabled)')
+        .querySelector<HTMLButtonElement>('[data-action="begin-journey"][aria-disabled="false"]')
         ?.focus({ preventScroll: true });
       return;
     }
@@ -1340,7 +1347,7 @@ export class GameUI {
         : 'Enter a name to begin your journey.';
     }
     const begin = this.overlay.querySelector<HTMLButtonElement>('[data-action="begin-journey"]');
-    if (begin) begin.disabled = !valid;
+    begin?.setAttribute('aria-disabled', String(!valid));
   }
 
   private selectCreatorAbility(id: string): void {

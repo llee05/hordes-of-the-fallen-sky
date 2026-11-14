@@ -8,9 +8,11 @@ Escape, controller B, or **Back to title** returns without starting simulation.
 The current draft remains available until the scene restarts.
 
 The name accepts up to 28 characters. **Random name** chooses from the local
-gender-specific name list, and an empty or whitespace-only name prevents the
-journey from starting. The four classes are Mounted Archer, Lancer, Iron Pagoda,
-and Spirit Caller. Class choice determines the initial combat kit and progression.
+gender-specific name list. A default or newly randomized name follows a gender
+change; a name the player typed does not. An empty or whitespace-only name keeps
+Begin Journey focusable so it can return focus to the field and announce the
+problem. The four classes are Mounted Archer, Lancer, Iron Pagoda, and Spirit
+Caller. Class choice determines the initial combat kit and progression.
 
 The profile contract still retains legacy appearance, background, oath, mount,
 and banner fields for save compatibility. The scroll does not currently expose

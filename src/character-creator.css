@@ -128,6 +128,7 @@
 .creator-framed-tile:hover {
   background: #eccea1;
   border-color: #5a3418;
+  opacity: 1;
 }
 
 .creator-framed-tile:focus-visible,
@@ -140,14 +141,41 @@
 .creator-framed-tile.selected {
   background: var(--creator-parchment-active);
   border-color: #49260e;
-  border-width: calc(1.8 * var(--u));
+  border-width: calc(2 * var(--u));
   box-shadow:
-    inset 0 0 0 calc(1 * var(--u)) var(--creator-gold),
+    inset 0 0 0 calc(2 * var(--u)) var(--creator-gold),
     0 calc(2 * var(--u)) calc(5 * var(--u)) rgba(60, 30, 10, 0.22);
+  opacity: 1;
 }
 
 .creator-framed-tile[aria-checked='true'] .creator-corner {
-  color: #3b1c07;
+  color: var(--creator-rust);
+}
+
+.creator-framed-tile[aria-checked='false'] {
+  opacity: 0.78;
+}
+
+.creator-framed-tile[aria-checked='false']:focus-visible {
+  opacity: 1;
+}
+
+.creator-framed-tile[aria-checked='true']::after {
+  content: '';
+  position: absolute;
+  top: calc(4 * var(--u));
+  right: calc(4 * var(--u));
+  width: calc(7 * var(--u));
+  height: calc(7 * var(--u));
+  background: var(--creator-rust);
+  border: calc(1 * var(--u)) solid var(--creator-gold-highlight);
+  rotate: 45deg;
+  box-shadow: 0 0 calc(3 * var(--u)) rgba(80, 35, 18, 0.45);
+}
+
+.creator-framed-tile:active {
+  transform: scale(0.98);
+  background: #d9b982;
 }
 
 /* LEFT COLUMN: Name, Gender, Class */
@@ -257,7 +285,7 @@
 }
 
 .creator-name-hint {
-  font-size: calc(10.4 * var(--u));
+  font-size: calc(13.5 * var(--u));
   color: #6d5036;
   font-style: italic;
   margin-top: calc(3 * var(--u));
@@ -593,6 +621,20 @@
 .creator-plaque-btn.creator-btn-begin {
   left: 74.4%;
   width: 12.8%;
+}
+
+.creator-plaque-btn[aria-disabled='true'] {
+  cursor: not-allowed;
+  color: #e2d4bb !important;
+  background: rgba(48, 42, 36, 0.42);
+  clip-path: polygon(8% 0, 92% 0, 100% 50%, 92% 100%, 8% 100%, 0 50%);
+  filter: grayscale(0.7) saturate(0.45);
+  text-shadow: 0 calc(2 * var(--u)) calc(4 * var(--u)) rgba(0, 0, 0, 0.95);
+}
+
+.creator-plaque-btn[aria-disabled='true']:hover {
+  color: #e2d4bb !important;
+  transform: none;
 }
 
 /* Screen reader only utility */
