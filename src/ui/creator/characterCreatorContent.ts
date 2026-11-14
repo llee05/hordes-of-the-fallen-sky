@@ -192,7 +192,7 @@ export function characterCreatorContent(
           role="img"
           aria-label="${escapeHtml(p.gender === 'woman' ? 'Female' : 'Male')} ${escapeHtml(tradition.title)} on horseback"
         ></canvas>
-        <div class="creator-preview-caption sr-only" aria-live="polite">
+        <div class="creator-preview-caption sr-only">
           <strong>${escapeHtml(tradition.title)}</strong>
           <span>${escapeHtml(p.gender === 'woman' ? 'Female Rider' : 'Male Rider')}</span>
         </div>

@@ -74,7 +74,14 @@ test(
     await expect(begin).toBeDisabled();
     await page.getByRole('button', { name: 'Random name', exact: true }).click();
     await expect(page.getByLabel('Name', { exact: true })).not.toHaveValue('');
+    const preview = await page.locator('#creator-rider-canvas').elementHandle();
     await page.getByLabel('Name', { exact: true }).fill('Jebe');
+    expect(
+      await preview!.evaluate(
+        (canvas) =>
+          canvas.isConnected && document.querySelector('#creator-rider-canvas') === canvas,
+      ),
+    ).toBe(true);
     await begin.click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await page.keyboard.press('Escape');

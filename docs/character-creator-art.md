@@ -8,8 +8,9 @@ field, selection, class description, and accessible control.
 Four small transparent class marks live at
 `public/art/creator-class-{class-id}.png`. The mounted preview draws registered
 frames from `public/art/steppe-classes-motion.png` and its JSON atlas metadata, the
-same original class paintings used by the battlefield. It preserves the atlas's
-256 × 360 logical registration while scaling into the arched creator frame.
+same original class paintings used by the battlefield. The metadata is fetched
+once and preserves the atlas's 256 × 360 logical registration while the DPR-aware
+canvas scales it into the arched creator frame.
 
 All art ships locally and no runtime request leaves the application. Decorative
 images are hidden from assistive technology; the canvas has a text alternative and

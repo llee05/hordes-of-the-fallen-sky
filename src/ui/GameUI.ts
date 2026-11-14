@@ -1,5 +1,5 @@
 import { characterCreatorContent } from './creator/characterCreatorContent';
-import { startRiderPreview } from './creator/riderPreview';
+import { createRiderPreviewState, startRiderPreview } from './creator/riderPreview';
 import { AUDIO_REFERENCE_CUES, type SoundKind } from '../game/audio/soundPalette';
 import { GAME } from '../game/config';
 import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
@@ -29,6 +29,7 @@ import type { BuildingId, HudSnapshot, RunPhase } from '../game/types';
 import type { GamePlatform } from '../platform/GamePlatform';
 import { AUDIO_CHANNELS, normalizeAudioMix, type AudioChannel } from '../shared/audioSettings';
 import { isSaveSlot } from '../shared/expeditionSave';
+import { isValidCharacterName } from '../shared/characterProfile';
 import type { NomadicBuildingId } from '../shared/nomadicCamp.js';
 import { normalizeVisualSettings, resolutionLabel } from '../shared/visualSettings';
 import { clanMark } from './artwork';
@@ -86,6 +87,8 @@ export class GameUI {
   private toastTimer?: number;
   private creatorPreviewCleanup?: () => void;
   private creatorAbilityId?: string;
+  private readonly creatorPreviewState = createRiderPreviewState();
+  private creatorClassFeedback = false;
 
   constructor(
     private readonly root: HTMLElement,
@@ -138,6 +141,7 @@ export class GameUI {
           <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><div><p id="clan-message"></p></div></div>
         </div>
         <div id="overlay" class="overlay ready-screen" role="dialog" aria-modal="true" aria-labelledby="overlay-title" tabindex="-1"></div>
+        <p id="creator-status" class="sr-only" aria-live="polite"></p>
         <div id="menu-record" class="menu-record"><span>LONGEST JOURNEY</span><strong id="best">— — : — —</strong></div>
         <div id="save-alert" class="save-alert" role="alert" hidden>Progress could not be saved.</div>
         <p id="run-status" class="sr-only" role="status">THE SKY IS WAITING</p>
@@ -186,6 +190,7 @@ export class GameUI {
       const input = event.target as HTMLInputElement;
       if (input.matches('[data-creator-name]')) {
         this.scene.changeCharacterOption('name', input.value);
+        this.updateCreatorNameValidity(input);
         return;
       }
       if (input.matches('[data-audio-channel]')) {
@@ -590,6 +595,7 @@ export class GameUI {
 
   destroy(): void {
     window.clearTimeout(this.toastTimer);
+    this.stopCreatorPreview();
     this.motion.destroy();
   }
 
@@ -674,6 +680,20 @@ export class GameUI {
         this.scene.characterCreator,
         this.creatorAbilityId,
       );
+      const profile = this.scene.characterCreator.profile;
+      this.text(
+        'creator-status',
+        `${profile.gender === 'woman' ? 'Female' : 'Male'} ${classDefinition(profile.classId).title}`,
+      );
+      if (this.creatorClassFeedback) {
+        this.overlay
+          .querySelector('.creator-rider-canvas')
+          ?.classList.add('creator-choice-feedback');
+        this.overlay
+          .querySelector('.creator-class-details')
+          ?.classList.add('creator-choice-feedback');
+        this.creatorClassFeedback = false;
+      }
       this.updateCreatorPreview();
     } else if (run.phase === 'traditions') this.overlay.innerHTML = startingTraditionMenu(run);
     else if (run.phase === 'saves')
@@ -969,7 +989,13 @@ export class GameUI {
     else if (button.dataset.creatorAbility)
       this.selectCreatorAbility(button.dataset.creatorAbility);
     else if (button.dataset.creatorField && button.dataset.creatorValue) {
-      if (button.dataset.creatorField === 'classId') this.creatorAbilityId = undefined;
+      if (
+        button.dataset.creatorField === 'classId' &&
+        button.dataset.creatorValue !== this.scene.characterCreator.profile.classId
+      ) {
+        this.creatorAbilityId = undefined;
+        this.creatorClassFeedback = true;
+      }
       this.scene.changeCharacterOption(button.dataset.creatorField, button.dataset.creatorValue);
     } else if (button.hasAttribute('data-creator-random')) this.scene.randomCharacterName();
     else if (action === 'begin-journey') this.scene.beginJourney();
@@ -1294,8 +1320,27 @@ export class GameUI {
     const canvas = this.overlay.querySelector<HTMLCanvasElement>('#creator-rider-canvas');
     if (canvas) {
       const p = this.scene.characterCreator.profile;
-      this.creatorPreviewCleanup = startRiderPreview(canvas, p.classId, p.gender);
+      this.creatorPreviewCleanup = startRiderPreview(
+        canvas,
+        p.classId,
+        p.gender,
+        this.creatorPreviewState,
+      );
     }
+  }
+
+  private updateCreatorNameValidity(input: HTMLInputElement): void {
+    const valid = isValidCharacterName(input.value);
+    input.setAttribute('aria-invalid', String(!valid));
+    const hint = this.overlay.querySelector<HTMLElement>('#creator-name-hint');
+    if (hint) {
+      hint.className = `creator-name-hint ${valid ? 'sr-only' : 'invalid'}`;
+      hint.textContent = valid
+        ? 'The name your clan will remember.'
+        : 'Enter a name to begin your journey.';
+    }
+    const begin = this.overlay.querySelector<HTMLButtonElement>('[data-action="begin-journey"]');
+    if (begin) begin.disabled = !valid;
   }
 
   private selectCreatorAbility(id: string): void {

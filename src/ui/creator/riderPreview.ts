@@ -1,5 +1,15 @@
 import type { CharacterClassId, CharacterGender } from '../../shared/characterProfile';
 
+interface AtlasFrame {
+  frame: { x: number; y: number; w: number; h: number };
+  spriteSourceSize: { x: number; y: number; w: number; h: number };
+  sourceSize: { w: number; h: number };
+}
+
+export interface MotionAtlas {
+  frames: Record<string, AtlasFrame>;
+}
+
 interface FrameRect {
   x: number;
   y: number;
@@ -9,175 +19,209 @@ interface FrameRect {
   sy: number;
 }
 
-interface ClassMotionData {
+export interface ClassMotionData {
   move: FrameRect[];
   attack: FrameRect[];
 }
 
-/** Pre-extracted atlas coordinates for the four playable mounted classes from steppe-classes-motion.json. */
-const CLASS_FRAMES: Record<CharacterClassId, ClassMotionData> = {
-  'mounted-archer': {
-    move: [
-      { x: 10, y: 13, w: 239, h: 242, sx: 10, sy: 82 },
-      { x: 265, y: 17, w: 239, h: 238, sx: 9, sy: 86 },
-      { x: 518, y: 15, w: 239, h: 240, sx: 6, sy: 84 },
-      { x: 771, y: 10, w: 246, h: 245, sx: 3, sy: 79 },
-    ],
-    attack: [
-      { x: 1027, y: 1, w: 242, h: 254, sx: 3, sy: 70 },
-      { x: 1283, y: 0, w: 244, h: 255, sx: 3, sy: 69 },
-    ],
-  },
-  lancer: {
-    move: [
-      { x: 11, y: 257, w: 225, h: 235, sx: 11, sy: 89 },
-      { x: 274, y: 261, w: 212, h: 236, sx: 18, sy: 88 },
-      { x: 522, y: 259, w: 246, h: 231, sx: 10, sy: 93 },
-      { x: 768, y: 264, w: 233, h: 228, sx: 0, sy: 96 },
-    ],
-    attack: [
-      { x: 1037, y: 258, w: 212, h: 238, sx: 13, sy: 86 },
-      { x: 1287, y: 274, w: 242, h: 220, sx: 7, sy: 104 },
-    ],
-  },
-  'iron-pagoda': {
-    move: [
-      { x: 10, y: 519, w: 223, h: 233, sx: 10, sy: 91 },
-      { x: 274, y: 522, w: 215, h: 234, sx: 18, sy: 90 },
-      { x: 521, y: 523, w: 222, h: 229, sx: 9, sy: 95 },
-      { x: 768, y: 524, w: 234, h: 227, sx: 0, sy: 97 },
-    ],
-    attack: [
-      { x: 1037, y: 512, w: 219, h: 246, sx: 13, sy: 78 },
-      { x: 1291, y: 527, w: 238, h: 230, sx: 11, sy: 94 },
-    ],
-  },
-  'spirit-caller': {
-    move: [
-      { x: 9, y: 768, w: 235, h: 235, sx: 9, sy: 89 },
-      { x: 266, y: 779, w: 229, h: 227, sx: 10, sy: 97 },
-      { x: 518, y: 776, w: 230, h: 229, sx: 6, sy: 95 },
-      { x: 768, y: 777, w: 238, h: 226, sx: 0, sy: 98 },
-    ],
-    attack: [
-      { x: 1027, y: 768, w: 228, h: 237, sx: 3, sy: 87 },
-      { x: 1283, y: 795, w: 246, h: 210, sx: 3, sy: 114 },
-    ],
-  },
-};
+export interface RiderPreviewState {
+  classId?: CharacterClassId;
+  gender?: CharacterGender;
+  mode: 'move' | 'attack';
+  modeTime: number;
+  runCycles: number;
+}
 
-let cachedMotionImage: HTMLImageElement | null = null;
+interface MotionAsset {
+  atlas: MotionAtlas;
+  image: HTMLImageElement;
+}
 
-function getMotionImage(): HTMLImageElement {
-  if (!cachedMotionImage) {
-    cachedMotionImage = new Image();
-    cachedMotionImage.src = `${import.meta.env.BASE_URL}art/steppe-classes-motion.png`;
+const CLASS_IDS: readonly CharacterClassId[] = [
+  'mounted-archer',
+  'lancer',
+  'iron-pagoda',
+  'spirit-caller',
+];
+
+let cachedMotionAsset: Promise<MotionAsset> | undefined;
+
+export function createRiderPreviewState(): RiderPreviewState {
+  return { mode: 'move', modeTime: 0, runCycles: 0 };
+}
+
+function frameRect(frame: AtlasFrame): FrameRect {
+  return {
+    ...frame.frame,
+    sx: frame.spriteSourceSize.x,
+    sy: frame.spriteSourceSize.y,
+  };
+}
+
+/** Resolve registered motion frames from the shipped atlas instead of duplicating coordinates. */
+export function classMotionFromAtlas(
+  atlas: MotionAtlas,
+  classId: CharacterClassId,
+): ClassMotionData {
+  const collect = (kind: 'move' | 'attack', count: number): FrameRect[] =>
+    Array.from({ length: count }, (_, index) => {
+      const frame = atlas.frames[`${classId}-${kind}-${index}`];
+      if (!frame || frame.sourceSize.w !== 256 || frame.sourceSize.h !== 360) {
+        throw new Error(`Invalid creator rider frame: ${classId}-${kind}-${index}`);
+      }
+      return frameRect(frame);
+    });
+  return { move: collect('move', 4), attack: collect('attack', 2) };
+}
+
+async function loadMotionAsset(_gender: CharacterGender): Promise<MotionAsset> {
+  // Both genders use the shared atlas until the separately commissioned female atlas lands.
+  if (!cachedMotionAsset) {
+    cachedMotionAsset = (async () => {
+      const response = await fetch(`${import.meta.env.BASE_URL}art/steppe-classes-motion.json`);
+      if (!response.ok) throw new Error(`Unable to load creator rider atlas (${response.status})`);
+      const atlas = (await response.json()) as MotionAtlas;
+      for (const classId of CLASS_IDS) classMotionFromAtlas(atlas, classId);
+      const image = new Image();
+      image.src = `${import.meta.env.BASE_URL}art/steppe-classes-motion.png`;
+      return { atlas, image };
+    })();
   }
-  return cachedMotionImage;
+  return cachedMotionAsset;
 }
 
 /** Animates the selected rider on horseback inside the creator arched preview frame. */
 export function startRiderPreview(
   canvas: HTMLCanvasElement,
   classId: CharacterClassId,
-  _gender: CharacterGender,
+  gender: CharacterGender,
+  state: RiderPreviewState = createRiderPreviewState(),
 ): () => void {
-  if (typeof window === 'undefined' || !canvas.getContext) {
-    return () => {};
-  }
+  if (typeof window === 'undefined' || !canvas.getContext) return () => {};
 
   const ctx = canvas.getContext('2d');
   if (!ctx) return () => {};
 
-  const img = getMotionImage();
-  const motion = CLASS_FRAMES[classId] ?? CLASS_FRAMES['mounted-archer'];
+  const selectionChanged =
+    state.classId !== undefined && (state.classId !== classId || state.gender !== gender);
+  state.classId = classId;
+  state.gender = gender;
+  if (selectionChanged) {
+    state.mode = 'attack';
+    state.modeTime = 0;
+    state.runCycles = 0;
+  }
 
+  const bounds = canvas.getBoundingClientRect();
+  const pixelRatio = Math.max(1, window.devicePixelRatio || 1);
+  canvas.width = Math.max(1, Math.round(bounds.width * pixelRatio));
+  canvas.height = Math.max(1, Math.round(bounds.height * pixelRatio));
+  ctx.setTransform(canvas.width / 512, 0, 0, canvas.height / 720, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
   let active = true;
   let rafId = 0;
   let lastTime = 0;
-  let elapsed = 0;
-  let mode: 'move' | 'attack' = 'move';
-  let modeTime = 0;
-  let runCycles = 0;
+  let motion: ClassMotionData | undefined;
+  let image: HTMLImageElement | undefined;
 
-  const renderFrame = (frame?: FrameRect) => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Ground shadow beneath the horse
+  const renderFrame = (frame: FrameRect) => {
+    ctx.clearRect(0, 0, 512, 720);
     ctx.fillStyle = 'rgba(74, 50, 25, 0.28)';
     ctx.beginPath();
-    ctx.ellipse(256, 635, 150, 30, 0, 0, Math.PI * 2);
+    ctx.ellipse(256, 622, 142, 27, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const f = frame ?? motion.move[0]!;
-    // Draw sprite scaled 2x to match 512x720 canvas
-    if (img.complete && img.naturalWidth > 0 && f) {
-      ctx.drawImage(img, f.x, f.y, f.w, f.h, f.sx * 2, f.sy * 2, f.w * 2, f.h * 2);
+    if (!image?.complete || image.naturalWidth <= 0) return;
+    const scale = 1.9;
+    const offsetX = (512 - 256 * scale) / 2;
+    const offsetY = 4;
+    ctx.drawImage(
+      image,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      offsetX + frame.sx * scale,
+      offsetY + frame.sy * scale,
+      frame.w * scale,
+      frame.h * scale,
+    );
+  };
+
+  const currentFrame = (): FrameRect => {
+    const readyMotion = motion!;
+    if (preference.matches) return readyMotion.move[0]!;
+    if (state.mode === 'attack') {
+      return state.modeTime < 0.22
+        ? (readyMotion.attack[0] ?? readyMotion.move[0]!)
+        : (readyMotion.attack[1] ?? readyMotion.move[0]!);
     }
+    const moveIndex = Math.max(0, Math.min(3, Math.floor((state.modeTime / 0.16) % 4)));
+    return readyMotion.move[moveIndex] ?? readyMotion.move[0]!;
   };
-
-  const drawInitial = () => {
-    renderFrame(motion.move[0]!);
-  };
-
-  if (!img.complete) {
-    img.addEventListener('load', drawInitial, { once: true });
-  } else {
-    drawInitial();
-  }
 
   const loop = (now: number) => {
-    if (!active) return;
+    if (!active || !motion) return;
     if (!canvas.isConnected) {
       active = false;
+      return;
+    }
+    if (preference.matches) {
+      renderFrame(motion.move[0]!);
       return;
     }
 
     const dt = lastTime > 0 ? Math.max(0, Math.min(0.1, (now - lastTime) / 1000)) : 0;
     lastTime = now;
-    elapsed += dt;
-    modeTime = Math.max(0, modeTime + dt);
-
-    let currentFrame: FrameRect = motion.move[0]!;
-
-    if (mode === 'move') {
-      // 4 move frames at 0.16s each = 0.64s per cycle
-      const frameDuration = 0.16;
-      const moveIndex = Math.max(0, Math.min(3, Math.floor((modeTime / frameDuration) % 4)));
-      currentFrame = motion.move[moveIndex] ?? motion.move[0]!;
-
-      // Track completed gallop cycles
-      const completedCycles = Math.floor(modeTime / (frameDuration * 4));
-      if (completedCycles > runCycles) {
-        runCycles = completedCycles;
-        // After 4 gallop cycles, perform a weapon attack
-        if (runCycles >= 4) {
-          mode = 'attack';
-          modeTime = 0;
-          runCycles = 0;
+    state.modeTime += dt;
+    if (state.mode === 'move') {
+      const completedCycles = Math.floor(state.modeTime / (0.16 * 4));
+      if (completedCycles > state.runCycles) {
+        state.runCycles = completedCycles;
+        if (state.runCycles >= 4) {
+          state.mode = 'attack';
+          state.modeTime = 0;
+          state.runCycles = 0;
         }
       }
-    } else {
-      // Attack animation: windup (0.22s) -> release (0.28s) -> back to move
-      if (modeTime < 0.22) {
-        currentFrame = motion.attack[0] ?? motion.move[0]!;
-      } else if (modeTime < 0.5) {
-        currentFrame = motion.attack[1] ?? motion.move[0]!;
-      } else {
-        mode = 'move';
-        modeTime = 0;
-        currentFrame = motion.move[0]!;
-      }
+    } else if (state.modeTime >= 0.5) {
+      state.mode = 'move';
+      state.modeTime = 0;
     }
-
-    renderFrame(currentFrame);
+    renderFrame(currentFrame());
     rafId = requestAnimationFrame(loop);
   };
 
-  rafId = requestAnimationFrame(loop);
+  const restartForPreference = () => {
+    cancelAnimationFrame(rafId);
+    lastTime = 0;
+    if (!active || !motion) return;
+    if (preference.matches) renderFrame(motion.move[0]!);
+    else rafId = requestAnimationFrame(loop);
+  };
+  preference.addEventListener('change', restartForPreference);
+
+  void loadMotionAsset(gender)
+    .then((asset) => {
+      if (!active) return;
+      motion = classMotionFromAtlas(asset.atlas, classId);
+      image = asset.image;
+      const redraw = () =>
+        motion && renderFrame(preference.matches ? motion.move[0]! : currentFrame());
+      if (!image.complete) image.addEventListener('load', redraw, { once: true });
+      redraw();
+      if (!preference.matches) rafId = requestAnimationFrame(loop);
+    })
+    .catch(() => {
+      // A missing local asset leaves the decorative preview blank without blocking the form.
+    });
 
   return () => {
     active = false;
     cancelAnimationFrame(rafId);
+    preference.removeEventListener('change', restartForPreference);
   };
 }
