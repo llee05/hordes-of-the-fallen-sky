@@ -71,7 +71,9 @@ describe('character creator profile mapping', () => {
     changeCreatorOption(state, 'name', '');
     changeCreatorOption(state, 'mount', 'white');
     expect(isValidCharacterName(state.profile.name)).toBe(false);
-    expect(characterCreatorContent(state)).toMatch(/data-action="begin-journey"[^>]*disabled/);
+    expect(characterCreatorContent(state)).toMatch(
+      /data-action="begin-journey"[^>]*aria-disabled="true"/,
+    );
     changeCreatorOption(state, 'name', '<script>');
     expect(characterCreatorContent(state)).toContain('&lt;script&gt;');
   });
@@ -87,5 +89,18 @@ describe('character creator profile mapping', () => {
       expect(state.profile.name).not.toBe(before);
     }
     expect(characterCreatorContent(state)).not.toContain('data-creator-field="face"');
+  });
+  it('changes generated names with gender but preserves a typed name', () => {
+    const state = createCharacterCreator();
+    expect(state.profile.name).toBe('Altani');
+    changeCreatorOption(state, 'gender', 'man');
+    expect(state.profile.name).toBe(STEPPE_NAMES.man[0]);
+    randomizeCreatorName(state, () => 0.5);
+    changeCreatorOption(state, 'gender', 'woman');
+    expect(state.profile.name).toBe(STEPPE_NAMES.woman[0]);
+
+    changeCreatorOption(state, 'name', 'Jebe the Swift');
+    changeCreatorOption(state, 'gender', 'man');
+    expect(state.profile.name).toBe('Jebe the Swift');
   });
 });

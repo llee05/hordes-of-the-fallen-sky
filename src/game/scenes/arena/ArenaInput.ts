@@ -21,7 +21,7 @@ export interface ArenaActions {
   changeZoom(steps: number): void;
   dash(): void;
   useAbility(slot: ClassAbilitySlot): void;
-  menuInput(action: 'next' | 'previous' | 'confirm'): void;
+  menuInput(action: 'next' | 'previous' | 'up' | 'down' | 'left' | 'right' | 'confirm'): void;
 }
 
 /** Phases where a controller Back press acts like Escape. */
@@ -263,8 +263,9 @@ export class ArenaInput {
       else if (controller.journal) actions.toggleJournal();
     } else {
       if (controller.journal && this.arena.run.phase === 'journal') actions.toggleJournal();
-      if (controller.next) actions.menuInput('next');
-      if (controller.previous) actions.menuInput('previous');
+      if (controller.menuDirection) actions.menuInput(controller.menuDirection);
+      else if (controller.next) actions.menuInput('next');
+      else if (controller.previous) actions.menuInput('previous');
       if (controller.confirm) actions.menuInput('confirm');
     }
     return this.arena.run.phase === phaseBeforeInput;

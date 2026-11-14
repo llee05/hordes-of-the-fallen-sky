@@ -15,6 +15,7 @@ export interface ControllerFrame {
   pause: boolean;
   previous: boolean;
   next: boolean;
+  menuDirection?: 'up' | 'down' | 'left' | 'right';
   build: boolean;
   migrate: boolean;
   formation: boolean;
@@ -29,7 +30,7 @@ export type ControllerDevice = Pick<Gamepad, 'connected' | 'mapping' | 'axes' | 
 /** Standard Gamepad mapping also accepts Steam Input's emulated Xbox controller. */
 export class GamepadInput {
   private previousButtons = 0;
-  private previousDirection = 0;
+  private previousDirection = '';
 
   poll(
     pads: readonly (ControllerDevice | null)[] = navigator.getGamepads?.() ?? [],
@@ -64,7 +65,7 @@ export class GamepadInput {
     };
     if (!pad) {
       this.previousButtons = 0;
-      this.previousDirection = 0;
+      this.previousDirection = '';
       return frame;
     }
     let buttons = 0;
@@ -107,14 +108,27 @@ export class GamepadInput {
       frame.aimX = (aimX / aimLength) * strength;
       frame.aimY = (aimY / aimLength) * strength;
     }
-    const direction =
-      pressed(15) || pressed(13) || x > 0.55 || y > 0.55
-        ? 1
-        : pressed(14) || pressed(12) || x < -0.55 || y < -0.55
-          ? -1
-          : 0;
-    frame.next = direction === 1 && this.previousDirection !== direction;
-    frame.previous = direction === -1 && this.previousDirection !== direction;
+    const direction = pressed(15)
+      ? 'right'
+      : pressed(14)
+        ? 'left'
+        : pressed(13)
+          ? 'down'
+          : pressed(12)
+            ? 'up'
+            : Math.abs(x) > Math.abs(y) && Math.abs(x) > 0.55
+              ? x > 0
+                ? 'right'
+                : 'left'
+              : Math.abs(y) > 0.55
+                ? y > 0
+                  ? 'down'
+                  : 'up'
+                : '';
+    const directionTapped = direction !== '' && this.previousDirection !== direction;
+    if (directionTapped) frame.menuDirection = direction;
+    frame.next = directionTapped && (direction === 'right' || direction === 'down');
+    frame.previous = directionTapped && (direction === 'left' || direction === 'up');
     this.previousDirection = direction;
     return frame;
   }

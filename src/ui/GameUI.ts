@@ -1,5 +1,5 @@
 import { characterCreatorContent } from './creator/characterCreatorContent';
-import { startRiderPreview } from './creator/riderPreview';
+import { createRiderPreviewState, startRiderPreview } from './creator/riderPreview';
 import { AUDIO_REFERENCE_CUES, type SoundKind } from '../game/audio/soundPalette';
 import { GAME } from '../game/config';
 import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
@@ -29,6 +29,7 @@ import type { BuildingId, HudSnapshot, RunPhase } from '../game/types';
 import type { GamePlatform } from '../platform/GamePlatform';
 import { AUDIO_CHANNELS, normalizeAudioMix, type AudioChannel } from '../shared/audioSettings';
 import { isSaveSlot } from '../shared/expeditionSave';
+import { isValidCharacterName } from '../shared/characterProfile';
 import type { NomadicBuildingId } from '../shared/nomadicCamp.js';
 import { normalizeVisualSettings, resolutionLabel } from '../shared/visualSettings';
 import { clanMark } from './artwork';
@@ -85,6 +86,10 @@ export class GameUI {
   private commandHistoryDraft = '';
   private toastTimer?: number;
   private creatorPreviewCleanup?: () => void;
+  private creatorAbilityId?: string;
+  private readonly creatorPreviewState = createRiderPreviewState();
+  private creatorClassFeedback = false;
+  private creatorBackground?: HTMLImageElement;
 
   constructor(
     private readonly root: HTMLElement,
@@ -137,6 +142,7 @@ export class GameUI {
           <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><div><p id="clan-message"></p></div></div>
         </div>
         <div id="overlay" class="overlay ready-screen" role="dialog" aria-modal="true" aria-labelledby="overlay-title" tabindex="-1"></div>
+        <p id="creator-status" class="sr-only" aria-live="polite"></p>
         <div id="menu-record" class="menu-record"><span>LONGEST JOURNEY</span><strong id="best">— — : — —</strong></div>
         <div id="save-alert" class="save-alert" role="alert" hidden>Progress could not be saved.</div>
         <p id="run-status" class="sr-only" role="status">THE SKY IS WAITING</p>
@@ -171,10 +177,21 @@ export class GameUI {
     });
     this.overlay.addEventListener('click', (event) => this.handleMenuClick(event));
     this.overlay.addEventListener('keydown', (event) => this.handleMenuKey(event));
+    this.overlay.addEventListener('focusin', (event) => {
+      const ability = (event.target as Element).closest<HTMLElement>('[data-creator-ability]');
+      if (ability?.dataset.creatorAbility)
+        this.selectCreatorAbility(ability.dataset.creatorAbility);
+    });
+    this.overlay.addEventListener('pointerover', (event) => {
+      const ability = (event.target as Element).closest<HTMLElement>('[data-creator-ability]');
+      if (ability?.dataset.creatorAbility)
+        this.selectCreatorAbility(ability.dataset.creatorAbility);
+    });
     this.overlay.addEventListener('input', (event) => {
       const input = event.target as HTMLInputElement;
       if (input.matches('[data-creator-name]')) {
         this.scene.changeCharacterOption('name', input.value);
+        this.updateCreatorNameValidity(input);
         return;
       }
       if (input.matches('[data-audio-channel]')) {
@@ -579,6 +596,7 @@ export class GameUI {
 
   destroy(): void {
     window.clearTimeout(this.toastTimer);
+    this.stopCreatorPreview();
     this.motion.destroy();
   }
 
@@ -659,12 +677,30 @@ export class GameUI {
     }
 
     if (run.phase === 'character') {
-      this.overlay.innerHTML = characterCreatorContent(this.scene.characterCreator);
+      this.overlay.innerHTML = characterCreatorContent(
+        this.scene.characterCreator,
+        this.creatorAbilityId,
+      );
+      const profile = this.scene.characterCreator.profile;
+      this.text(
+        'creator-status',
+        `${profile.gender === 'woman' ? 'Female' : 'Male'} ${classDefinition(profile.classId).title}`,
+      );
+      if (this.creatorClassFeedback) {
+        this.overlay
+          .querySelector('.creator-rider-canvas')
+          ?.classList.add('creator-choice-feedback');
+        this.overlay
+          .querySelector('.creator-class-details')
+          ?.classList.add('creator-choice-feedback');
+        this.creatorClassFeedback = false;
+      }
       this.updateCreatorPreview();
     } else if (run.phase === 'traditions') this.overlay.innerHTML = startingTraditionMenu(run);
     else if (run.phase === 'saves')
       this.overlay.innerHTML = saveMenu(snapshot, this.saveConfirmation);
     else if (run.phase === 'ready') {
+      this.preloadCreatorBackground();
       this.overlay.innerHTML = titleMenuContent({
         latestSaveSlot: latestSave?.slot,
         hasCamp: Boolean(this.platform.profile.camp),
@@ -789,8 +825,9 @@ export class GameUI {
 
   private handleMenuClick(event: MouseEvent): void {
     const button = (event.target as Element).closest<HTMLButtonElement>('button');
-    if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
+    if (!button || button.disabled) return;
     const action = button.dataset.action;
+    if (button.getAttribute('aria-disabled') === 'true' && action !== 'begin-journey') return;
     if (
       button.dataset.audioReference &&
       AUDIO_REFERENCE_CUES.includes(
@@ -952,11 +989,26 @@ export class GameUI {
     else if (action === 'starting-traditions') this.scene.openStartingTraditions();
     else if (button.dataset.startingTradition)
       this.scene.selectStartingTradition(button.dataset.startingTradition);
-    else if (button.dataset.creatorField && button.dataset.creatorValue)
+    else if (button.dataset.creatorAbility)
+      this.selectCreatorAbility(button.dataset.creatorAbility);
+    else if (button.dataset.creatorField && button.dataset.creatorValue) {
+      if (
+        button.dataset.creatorField === 'classId' &&
+        button.dataset.creatorValue !== this.scene.characterCreator.profile.classId
+      ) {
+        this.creatorAbilityId = undefined;
+        this.creatorClassFeedback = true;
+      }
       this.scene.changeCharacterOption(button.dataset.creatorField, button.dataset.creatorValue);
-    else if (button.hasAttribute('data-creator-random')) this.scene.randomCharacterName();
-    else if (action === 'begin-journey') this.scene.beginJourney();
-    else if (action === 'begin') this.scene.startRun();
+    } else if (button.hasAttribute('data-creator-random')) this.scene.randomCharacterName();
+    else if (action === 'begin-journey') {
+      if (button.getAttribute('aria-disabled') === 'true') {
+        this.overlay
+          .querySelector<HTMLInputElement>('[data-creator-name]')
+          ?.focus({ preventScroll: true });
+        this.text('creator-status', 'Enter a name to begin your journey.');
+      } else this.scene.beginJourney();
+    } else if (action === 'begin') this.scene.startRun();
     else if (action === 'saves') {
       this.saveConfirmation = undefined;
       this.scene.openSaves();
@@ -1079,6 +1131,18 @@ export class GameUI {
     ].filter((el) => el.getClientRects().length > 0);
   }
   private handleMenuKey(event: KeyboardEvent): void {
+    if (
+      this.phase === 'character' &&
+      event.target instanceof HTMLInputElement &&
+      event.target.matches('[data-creator-name]') &&
+      event.key === 'Enter'
+    ) {
+      event.preventDefault();
+      this.overlay
+        .querySelector<HTMLButtonElement>('[data-action="begin-journey"][aria-disabled="false"]')
+        ?.focus({ preventScroll: true });
+      return;
+    }
     if (event.target instanceof HTMLInputElement && event.target.matches('[data-audio-channel]')) {
       const input = event.target;
       if (
@@ -1133,11 +1197,14 @@ export class GameUI {
     if (
       ['building', 'route', 'developer', 'character'].includes(this.phase) &&
       ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) &&
-      !(event.target instanceof HTMLInputElement)
+      (!(event.target instanceof HTMLInputElement) ||
+        (this.phase === 'character' && ['ArrowUp', 'ArrowDown'].includes(event.key)))
     ) {
       event.preventDefault();
       event.stopPropagation();
-      if (!this.navigateGraph(event.key))
+      if (this.phase === 'character') {
+        this.navigateMenu(event.key.slice(5).toLowerCase() as 'up' | 'down' | 'left' | 'right');
+      } else if (!this.navigateGraph(event.key))
         this.navigateMenu(['ArrowLeft', 'ArrowUp'].includes(event.key) ? 'previous' : 'next');
       return;
     }
@@ -1173,7 +1240,9 @@ export class GameUI {
       first?.focus();
     }
   }
-  private navigateMenu(action: 'next' | 'previous' | 'confirm'): void {
+  private navigateMenu(
+    action: 'next' | 'previous' | 'up' | 'down' | 'left' | 'right' | 'confirm',
+  ): void {
     const buttons = this.menuButtons();
     if (!buttons.length) return;
     const index = Math.max(
@@ -1181,12 +1250,40 @@ export class GameUI {
       buttons.findIndex((button) => button === document.activeElement),
     );
     if (action === 'confirm') buttons[index]?.click();
+    else if (
+      this.phase === 'character' &&
+      ['up', 'down', 'left', 'right'].includes(action) &&
+      this.navigateCreator(action as 'up' | 'down' | 'left' | 'right')
+    )
+      return;
     else {
       const target =
-        buttons[(index + (action === 'next' ? 1 : -1) + buttons.length) % buttons.length];
+        buttons[
+          (index + (['next', 'down', 'right'].includes(action) ? 1 : -1) + buttons.length) %
+            buttons.length
+        ];
       target?.focus();
       target?.scrollIntoView({ block: 'nearest' });
     }
+  }
+
+  private navigateCreator(direction: 'up' | 'down' | 'left' | 'right'): boolean {
+    const current = document.activeElement as HTMLElement | null;
+    const directionName = `${direction[0]!.toUpperCase()}${direction.slice(1)}`;
+    const focusKey = current?.dataset[`nav${directionName}`];
+    if (!focusKey) return false;
+    const target = [...this.overlay.querySelectorAll<HTMLElement>('[data-focus-key]')].find(
+      (entry) => entry.dataset.focusKey === focusKey,
+    );
+    if (!target) return false;
+    if (target.getAttribute('role') === 'radio') {
+      const group = target.closest('[role="radiogroup"]');
+      group
+        ?.querySelectorAll<HTMLElement>('[role="radio"]')
+        .forEach((radio) => (radio.tabIndex = radio === target ? 0 : -1));
+    }
+    target.focus({ preventScroll: true });
+    return true;
   }
 
   /** Directional focus uses the graph's real edges, without buying a rank. Tab reaches the inspector. */
@@ -1232,8 +1329,46 @@ export class GameUI {
     const canvas = this.overlay.querySelector<HTMLCanvasElement>('#creator-rider-canvas');
     if (canvas) {
       const p = this.scene.characterCreator.profile;
-      this.creatorPreviewCleanup = startRiderPreview(canvas, p.classId, p.gender);
+      this.creatorPreviewCleanup = startRiderPreview(
+        canvas,
+        p.classId,
+        p.gender,
+        this.creatorPreviewState,
+      );
     }
+  }
+
+  private updateCreatorNameValidity(input: HTMLInputElement): void {
+    const valid = isValidCharacterName(input.value);
+    input.setAttribute('aria-invalid', String(!valid));
+    const hint = this.overlay.querySelector<HTMLElement>('#creator-name-hint');
+    if (hint) {
+      hint.className = `creator-name-hint ${valid ? 'sr-only' : 'invalid'}`;
+      hint.textContent = valid
+        ? 'The name your clan will remember.'
+        : 'Enter a name to begin your journey.';
+    }
+    const begin = this.overlay.querySelector<HTMLButtonElement>('[data-action="begin-journey"]');
+    begin?.setAttribute('aria-disabled', String(!valid));
+  }
+
+  private selectCreatorAbility(id: string): void {
+    if (this.phase !== 'character') return;
+    const rows = [...this.overlay.querySelectorAll<HTMLButtonElement>('[data-creator-ability]')];
+    if (!rows.some((row) => row.dataset.creatorAbility === id)) return;
+    this.creatorAbilityId = id;
+    for (const row of rows) {
+      const expanded = row.dataset.creatorAbility === id;
+      row.setAttribute('aria-expanded', String(expanded));
+      const description = row.querySelector<HTMLElement>('.creator-ability-desc');
+      if (description) description.hidden = !expanded;
+    }
+  }
+
+  private preloadCreatorBackground(): void {
+    if (this.creatorBackground) return;
+    this.creatorBackground = new Image();
+    this.creatorBackground.src = `${import.meta.env.BASE_URL}art/creator-scroll-bg.webp`;
   }
 
   private stopCreatorPreview(): void {

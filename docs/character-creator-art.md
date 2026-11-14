@@ -1,57 +1,34 @@
 # Character creator illustrations
 
-The creator bundles three original painted PNG atlases under `public/art/`.
-These illustrations are separate from battlefield character animation. Their
-antique ink and matte gouache treatment follows the supplied concept sheets and
-the Living Steppe Tapestry palette. All assets ship locally; there are no runtime
-image requests to external services.
+The character creator is a fixed-aspect illuminated parchment scroll. Its locally
+bundled background supplies the parchment, section banners, arched preview frame,
+cloud ornament, and Back/Begin plaques; live HTML supplies every readable label,
+field, selection, class description, and accessible control.
 
-`src/ui/creator/components.ts` preserves whole cells and their painted gutters.
-`src/ui/creator/characterCreatorContent.ts` selects the cells using the shared
-content IDs. Rows and columns below are numbered from one.
+`public/art/creator-scroll-bg.webp` is the 1448 × 1086 opaque scroll painting,
+encoded at WebP quality 90 (about 0.4 MB). The title screen preloads it so opening
+the creator does not expose an unpainted frame.
 
-| Atlas                  | Grid  | Contents                                                                                                                                                                      |
-| ---------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `creator-figures.png`  | 4 × 2 | Columns: Mounted Archer, Lancer, Iron Pagoda, Spirit Caller. Rows: woman, man.                                                                                                |
-| `creator-choices.png`  | 5 × 5 | Rows: woman's five hairstyles, man's five hairstyles, five headgear options, five mount coats, five origin vignettes. Columns follow the content arrays in `data/classes.ts`. |
-| `creator-insignia.png` | 5 × 3 | Rows: three oath vignettes (last two cells unused), five emblems, five trim patterns.                                                                                         |
+Four small transparent class marks live at
+`public/art/creator-class-{class-id}.png`. The mounted preview draws registered
+frames from `public/art/steppe-classes-motion.png` and its JSON atlas metadata, the
+same original class paintings used by the battlefield. The metadata is fetched
+once and preserves the atlas's 256 × 360 logical registration while the DPR-aware
+canvas scales it into the arched creator frame.
 
-Each gender has one predefined face; hairstyle portraits repeat that face.
-Selected headgear appears in a portrait inset. The central figure reflects class
-and gender; the selected cloth colour appears as a painted palette swatch beneath
-it. Full garment recolouring and composited headgear on the figure are future
-art improvements. Mount coats, banner emblems, fields, and trims all have previews.
+All art ships locally and no runtime request leaves the application. Decorative
+images are hidden from assistive technology; the canvas has a text alternative and
+the controls keep their live names, radio state, and keyboard focus.
 
-## Generation briefs
+## Background generation brief
 
-All three atlases used the built-in `image_gen` tool, without API/CLI fallback.
-The source PNGs are bundled unchanged. The final prompt set requested:
+The built-in `image_gen` tool produced the scroll background source as an original
+1448 × 1086 composition in the Living Steppe Tapestry style: warm parchment on a
+dark desk, rust woven section banners, brass and umber fretwork, an empty arched
+mounted-rider frame, a right-hand manuscript text area, and painted Back/Begin
+plaques. The prompt excluded live names, class descriptions, ability text, control
+labels, and character paintings so the application can render those accessibly.
 
-- **Figures:** a production sheet exactly four equal columns by two equal rows,
-  antique Central Asian manuscript miniatures, standing adult Mongolian-inspired
-  warriors with full boots visible, warm parchment, no frames or text. Top row:
-  women with one shared predefined face and dark braids. Bottom row: men with one
-  shared predefined face and short moustache. Columns: ivory/vermilion bow bearer
-  with quiver and recurved bow; lapis/vermilion lamellar lancer with long vertical
-  lance and fur mantle; heavily armoured Iron Pagoda with brass-edged charcoal
-  lamellar, shield and saber; lapis/ivory Spirit Caller with ribboned staff and
-  restrained turquoise light. Original designs, ink contours, matte gouache,
-  warm upper-left light, ochre/brass/rust/lapis, consistent registration, no horse,
-  scenery, typography, UI, or watermark. Landscape 1536 × 1024.
-- **Choices:** a production atlas exactly five equal columns by five equal rows,
-  isolated manuscript miniatures on pale parchment, no borders or labels. Row one:
-  the same woman's face with warrior plaits, topknot, twin braids, flowing locks,
-  shaved tresses. Row two: the same man's face with those hairstyles. Row three:
-  sable cap, felt kalpak, plumed cap, lamellar helmet, wolfskin hood. Row four:
-  complete saddled steppe horses in bay, white, black, dun, piebald. Row five:
-  herds/ger, retainer/courtyard, artisan/loom, caravan/path, fantasy apprentice/cairn.
-  Ink and matte gouache, ochre/rust/lapis/sage, warm upper-left light, original
-  painted chronicle style, no modern graphics, text, numbers, UI, or watermark.
-- **Insignia:** exactly five equal columns by three equal rows on pale parchment,
-  no grid or labels. Row one: horse/sun/mountains, palace gate/vermilion banners,
-  snowy peaks/clouds/stars, two empty cells. Row two: flame/sun/crescent, wolf head,
-  spread-wing hawk, coiling cloud, endless geometric knot. Row three: horizontal
-  ornamental strips of steppe key fret, cloud scroll, ram-horn curls, braided cord,
-  diamond lattice. Warm brass/umber heraldry and rust/ochre/lapis ornament, original
-  ink contours and hand-painted matte gouache, readable silhouettes and gutters,
-  no digital icons, mockup, letters, or watermark. Landscape 1536 × 1024.
+Legacy `creator-figures.png`, `creator-choices.png`, and `creator-insignia.png`
+atlases came from the removed multi-panel creator and are not loaded by the current
+screen. Their deletion or archival remains a separate product decision.

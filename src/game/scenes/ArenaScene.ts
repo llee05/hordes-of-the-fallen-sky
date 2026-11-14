@@ -88,7 +88,7 @@ import { RiderHost } from './arena/RiderHost';
 export interface ArenaCallbacks {
   onHud: (snapshot: HudSnapshot) => void;
   onPhase: (snapshot: HudSnapshot) => void;
-  onMenuInput: (action: 'next' | 'previous' | 'confirm') => void;
+  onMenuInput: (action: 'next' | 'previous' | 'up' | 'down' | 'left' | 'right' | 'confirm') => void;
   onSaveError: () => void;
   onCampBack?: () => boolean;
 }
@@ -587,6 +587,8 @@ export class ArenaScene extends Phaser.Scene {
   changeCharacterOption(field: string, value: string): void {
     if (this.run.phase !== 'character') return;
     changeCreatorOption(this.characterCreator, field, value);
+    // Name typing is reflected in place so the preview animation and input caret stay uninterrupted.
+    if (field === 'name') return;
     this.publishPhase();
   }
 
