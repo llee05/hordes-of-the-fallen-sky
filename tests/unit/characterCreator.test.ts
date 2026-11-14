@@ -103,4 +103,22 @@ describe('character creator profile mapping', () => {
     changeCreatorOption(state, 'gender', 'man');
     expect(state.profile.name).toBe('Jebe the Swift');
   });
+
+  it('renders one selected portrait and cross-fades from the prior class or gender', () => {
+    const state = createCharacterCreator();
+    const initial = characterCreatorContent(state);
+    expect(initial).toContain('creator-portrait-mounted-archer-woman.webp');
+    expect(initial).not.toContain('creator-portrait-outgoing');
+    expect(initial).not.toContain('data-creator-ability');
+
+    changeCreatorOption(state, 'classId', 'lancer');
+    const changed = characterCreatorContent(state, {
+      classId: 'mounted-archer',
+      gender: 'woman',
+    });
+    expect(changed).toContain('creator-portrait-mounted-archer-woman.webp');
+    expect(changed).toContain('creator-portrait-lancer-woman.webp');
+    expect(changed).toContain('creator-portrait-outgoing');
+    expect(changed).toContain('creator-portrait-incoming');
+  });
 });

@@ -23,13 +23,26 @@ test('creator content fits the painted scroll at every supported size', async ({
     await page.setViewportSize(size);
     for (const className of classes) {
       await page.getByRole('radio', { name: className, exact: true }).click();
-      const fit = await page.locator('.creator-right').evaluate((panel) => ({
-        horizontal: panel.scrollWidth <= panel.clientWidth + 1,
-        vertical: panel.scrollHeight <= panel.clientHeight + 1,
-      }));
+      const fit = await page.locator('.creator-scroll-surface').evaluate((scroll) => {
+        const controls = scroll.querySelector('.creator-controls')!.getBoundingClientRect();
+        const portrait = scroll.querySelector('.creator-portrait-stage')!.getBoundingClientRect();
+        const bounds = scroll.getBoundingClientRect();
+        return {
+          horizontal: scroll.scrollWidth <= scroll.clientWidth + 1,
+          vertical: scroll.scrollHeight <= scroll.clientHeight + 1,
+          controlsInsidePaper:
+            controls.top > bounds.top + bounds.height * 0.09 &&
+            controls.bottom < bounds.bottom - bounds.height * 0.09,
+          portraitInsidePaper:
+            portrait.top > bounds.top + bounds.height * 0.09 &&
+            portrait.bottom < bounds.bottom - bounds.height * 0.09,
+        };
+      });
       expect(fit, `${className} at ${size.width}x${size.height}`).toEqual({
         horizontal: true,
         vertical: true,
+        controlsInsidePaper: true,
+        portraitInsidePaper: true,
       });
     }
   }
@@ -58,16 +71,13 @@ test(
 
     await page.getByRole('radio', { name: 'Male' }).click();
     await page.getByRole('radio', { name: 'Lancer' }).click();
-    await expect(page.locator('.creator-right')).toContainText(classDefinition('lancer').summary);
-    await expect(page.locator('.creator-right')).toContainText(
-      classDefinition('lancer').keyTraits[0],
+    await expect(page.locator('.creator-class-description')).toContainText(
+      classDefinition('lancer').summary,
     );
-    const abilityRows = page.locator('[data-creator-ability]');
-    await expect(abilityRows).toHaveCount(4);
-    await expect(abilityRows.first()).toHaveAttribute('aria-expanded', 'true');
-    await abilityRows.nth(2).focus();
-    await expect(abilityRows.nth(2)).toHaveAttribute('aria-expanded', 'true');
-    await expect(abilityRows.first()).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('[data-creator-ability]')).toHaveCount(0);
+    await expect(page.locator('[data-creator-portrait]')).toHaveAttribute('data-class', 'lancer');
+    await expect(page.locator('[data-creator-portrait]')).toHaveAttribute('data-gender', 'man');
+    await expect(page.locator('.creator-portrait-outgoing')).toHaveCount(1);
 
     const begin = page.getByRole('button', { name: 'Begin Journey', exact: true });
     await page.getByLabel('Name', { exact: true }).fill('');
@@ -76,14 +86,7 @@ test(
     await expect(page.getByLabel('Name', { exact: true })).toBeFocused();
     await page.getByRole('button', { name: 'Random name', exact: true }).click();
     await expect(page.getByLabel('Name', { exact: true })).not.toHaveValue('');
-    const preview = await page.locator('#creator-rider-canvas').elementHandle();
     await page.getByLabel('Name', { exact: true }).fill('Jebe');
-    expect(
-      await preview!.evaluate(
-        (canvas) =>
-          canvas.isConnected && document.querySelector('#creator-rider-canvas') === canvas,
-      ),
-    ).toBe(true);
     await begin.click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await page.keyboard.press('Escape');
@@ -123,7 +126,7 @@ test('creator supports keyboard focus, Back, and frozen gameplay time', async ({
   ).toBe(true);
 
   await page.getByRole('radio', { name: 'Spirit Caller' }).click();
-  await expect(page.locator('.creator-right')).toContainText(
+  await expect(page.locator('.creator-class-description')).toContainText(
     classDefinition('spirit-caller').summary,
   );
   await page.getByRole('button', { name: 'Begin Journey', exact: true }).focus();
@@ -140,10 +143,12 @@ test('creator supports keyboard focus, Back, and frozen gameplay time', async ({
   );
   await page.getByLabel('Name', { exact: true }).focus();
   await page.keyboard.press('ArrowDown');
-  await expect(page.getByRole('radio', { name: 'Male' })).toBeFocused();
+  await expect(page.getByRole('radio', { name: 'Female' })).toBeFocused();
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('radio', { name: 'Mounted Archer' })).toBeFocused();
-  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('radio', { name: 'Lancer' })).toBeFocused();
+  await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('radio', { name: 'Iron Pagoda' })).toBeFocused();
   await page.getByLabel('Name', { exact: true }).focus();
   await page.keyboard.press('Enter');

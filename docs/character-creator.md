@@ -1,9 +1,13 @@
 # Character creation
 
-Run `npm run dev` and choose **New Game** on the title screen. The parchment-scroll
-creator chooses the Khan's name, gender, and one of four combat classes. The class
-details show its role, key traits, and four numbered abilities beside an animated
-mounted preview. **Begin Journey** starts the expedition at Mount Otgontenger;
+Run `npm run dev` and choose **New Game** on the title screen. The wide
+parchment-scroll creator chooses the Khan's name, gender, and one of four combat
+classes. A large painted half-length portrait on the left changes with both gender
+and class; the live controls and short class description stay on the right. The
+portrait cross-fades briefly, unless reduced motion is requested. The four ability
+rows are deliberately left to the in-game HUD so the creator stays close to its
+single-page manuscript reference without crowding the scroll. **Begin Journey**
+starts the expedition at Mount Otgontenger;
 Escape, controller B, or **Back to title** returns without starting simulation.
 The current draft remains available until the scene restarts.
 
@@ -36,16 +40,16 @@ renders it and sends actions. Begin Journey creates a fresh run through
 `createRun(tradition, profile)`, applies the class and legacy default loadout once,
 saves the profile, then begins normal gameplay and checkpointing.
 
-The creator reads class descriptions, ability text, option IDs, and profile values
-from `data/classes.ts` and the shared character contract. Its DOM lives in
-`src/ui/creator/characterCreatorContent.ts`; shared ornament and ability marks live
-in `src/ui/creator/components.ts`; the canvas preview lives in
-`src/ui/creator/riderPreview.ts`. See [the illustration record](character-creator-art.md)
-for the bundled art and presentation limits.
+The creator reads class descriptions, option IDs, and profile values from
+`data/classes.ts` and the shared character contract. Its DOM lives in
+`src/ui/creator/characterCreatorContent.ts`; the scroll construction and safe paper
+area live in `src/character-creator.css`. See [the illustration
+record](character-creator-art.md) for the bundled art and presentation limits.
 
 `tests/unit/characterCreator.test.ts` checks mapping, independent snapshots,
 defaults, invalid IDs and names, random names, and loadout integration.
-`tests/e2e/character-creator.spec.ts` selects the visible controls, starts a
-non-default class, checks the actual run profile, reloads the remembered profile,
-and covers focus, Back, and frozen gameplay time. The desktop creator spec checks
-the same screen through the native save bridge at 1280×800.
+`tests/e2e/character-creator.spec.ts` selects the visible controls, checks the
+portrait/class pairing and paper-safe bounds, starts a non-default class, checks
+the actual run profile, reloads the remembered profile, and covers focus, Back,
+and frozen gameplay time. The desktop creator spec checks the same screen through
+the native save bridge at 1280×800.
