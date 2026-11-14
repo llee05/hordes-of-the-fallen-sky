@@ -48,7 +48,7 @@ builds once the repository's Pages source is set to **GitHub Actions**.
 
 ## Desktop presentation
 
-The game opens at the title menu. **New Game** opens [character creation](docs/character-creator.md). Choose identity, appearance, origin, combat tradition, oath, mount, banner and name, then **Begin Journey** starts the expedition at Mount Otgontenger. The last character profile is remembered.
+The game opens at the title menu. **New Game** opens [character creation](docs/character-creator.md). Choose the Khan's name, gender, and one of four combat classes on the parchment scroll, then **Begin Journey** starts the expedition at Mount Otgontenger. The last character profile is remembered; legacy appearance and loadout fields remain save-compatible with their shared defaults.
 
 The title sits on an indigo manuscript cartouche over a full-screen painted steppe chronicle. Ornate parchment plaques, rust-red selection, brass clan symbols, and warm manuscript pages carry the world's art into the interface. Camp cards reuse the painted gers, riders, and wagons from the battlefield; migration choices have illustrated landscape vignettes. All UI materials and artwork ship locally.
 

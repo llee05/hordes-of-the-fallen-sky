@@ -1,55 +1,49 @@
 # Character creation
 
-Run `npm run dev` and choose **New Game** on the title screen. **Begin Journey**
-starts the expedition at Mount Otgontenger with the chosen profile. Starting clan
-traditions still select the clan's opening arrangement before character creation.
-Escape, controller B, or **Back to title** returns without starting simulation;
-the current draft remains available until the scene restarts.
+Run `npm run dev` and choose **New Game** on the title screen. The parchment-scroll
+creator chooses the Khan's name, gender, and one of four combat classes. The class
+details show its role, key traits, and four numbered abilities beside an animated
+mounted preview. **Begin Journey** starts the expedition at Mount Otgontenger;
+Escape, controller B, or **Back to title** returns without starting simulation.
+The current draft remains available until the scene restarts.
 
-The creator uses manuscript panels around a painted figure:
+The name accepts up to 28 characters. **Random name** chooses from the local
+gender-specific name list, and an empty or whitespace-only name prevents the
+journey from starting. The four classes are Mounted Archer, Lancer, Iron Pagoda,
+and Spirit Caller. Class choice determines the initial combat kit and progression.
 
-- **Identity:** woman or man, with one predefined face for each gender.
-- **Appearance:** five hairstyles, five headgear options, seven clothing colours.
-  The portrait updates with gender and hairstyle; selected headgear appears in an
-  inset. The figure updates with class and gender, with a cloth-colour sample.
-- **Background (Origin):** five origins, each with its description and starting bonus.
-- **Class / Combat Tradition:** four class cards with descriptions and key traits.
-- **Oath:** three oaths with their descriptions and benefits.
-- **Mount:** five painted coat previews.
-- **Banner:** five emblems, six field colours, and five trim patterns with a preview.
-- **Name:** a name up to 28 characters and a gender-appropriate random-name button.
-  Empty or whitespace-only names disable Begin Journey.
+The profile contract still retains legacy appearance, background, oath, mount,
+and banner fields for save compatibility. The scroll does not currently expose
+those fields, so a new profile uses their shared defaults and a remembered profile
+keeps its stored values. Character creation never changes or overwrites an existing
+saved expedition.
 
-The last profile used to begin a journey is remembered by `GamePlatform`. Old
-profiles without character data open with the shared defaults. Character creation
-never changes or overwrites an existing saved expedition. Cosmetic choices are
-stored with the run; their battlefield presentation is owned by the class artwork
-workstream.
+The last profile used to begin a journey is remembered through `GamePlatform`.
+Old profiles without character data open with shared defaults. Simulation and
+physics remain stopped throughout character creation.
 
-On desktop, identity and origin sit left, the figure and name in the center, and
-combat tradition, oath, mount and banner right. Each side column can scroll if
-needed. On narrow viewports the panels stack in one scroll area while Begin Journey
-stays visible. Buttons support pointer/touch, Tab and arrow navigation, and existing
-controller menu navigation (D-pad/stick to browse, A to activate, B to return).
+## Controls and ownership
 
-## Ownership and reuse
+Pointer, touch, Tab, arrow-key/controller navigation, Enter/controller confirm,
+and Escape/controller back share the scene-owned menu actions. The creator keeps
+all controls inside the fixed-aspect painted scroll at supported desktop sizes.
 
-`state/characterCreator.ts` owns draft-to-profile mapping, validated option changes,
-and random names. `ArenaScene.characterCreator` owns the draft; the DOM renders it
-and sends actions. Simulation and physics remain stopped in the `character` phase.
-Begin Journey creates a fresh run through `createRun(tradition, profile)`, applies
-its class/origin/oath loadout once, saves the profile through the platform, then
-begins normal gameplay and checkpointing.
+`state/characterCreator.ts` owns the draft-to-profile mapping, validated option
+changes, and random names. `ArenaScene.characterCreator` owns the draft; `GameUI`
+renders it and sends actions. Begin Journey creates a fresh run through
+`createRun(tradition, profile)`, applies the class and legacy default loadout once,
+saves the profile, then begins normal gameplay and checkpointing.
 
-The creator reads all descriptions, bonuses, option IDs, colour values, and class
-traits from `data/classes.ts` and the shared character contract. No balance values
-or profile IDs are defined in UI code. Reusable panel frames, option carousels,
-radio-style button lists, swatch rows, and painted atlas cells live in
-`src/ui/creator/components.ts`. See [the illustration record](character-creator-art.md)
-for atlas registration, generation briefs, and presentation limits.
+The creator reads class descriptions, ability text, option IDs, and profile values
+from `data/classes.ts` and the shared character contract. Its DOM lives in
+`src/ui/creator/characterCreatorContent.ts`; shared ornament and ability marks live
+in `src/ui/creator/components.ts`; the canvas preview lives in
+`src/ui/creator/riderPreview.ts`. See [the illustration record](character-creator-art.md)
+for the bundled art and presentation limits.
 
-`tests/unit/characterCreator.test.ts` checks mapping, independent snapshots, legacy
-defaults, invalid IDs/names, random names, and loadout integration.
-`tests/e2e/character-creator.spec.ts` walks every option, starts a non-default class,
-checks the actual run profile and stats, reloads the remembered profile, and tests
-narrow layout, focus, keyboard start, Back, and frozen gameplay time.
+`tests/unit/characterCreator.test.ts` checks mapping, independent snapshots,
+defaults, invalid IDs and names, random names, and loadout integration.
+`tests/e2e/character-creator.spec.ts` selects the visible controls, starts a
+non-default class, checks the actual run profile, reloads the remembered profile,
+and covers focus, Back, and frozen gameplay time. The desktop creator spec checks
+the same screen through the native save bridge at 1280×800.

@@ -25,7 +25,8 @@ test('native character creation fits 1280x800 and persists the selected characte
     expect(
       await page.locator('.character-creator').evaluate((el) => el.scrollWidth <= el.clientWidth),
     ).toBe(true);
-    await page.locator('[data-creator-field="classId"][data-creator-value="iron-pagoda"]').click();
+    await page.getByRole('radio', { name: 'Iron Pagoda' }).click();
+    await expect(page.locator('.creator-right')).toContainText('Armoured bulwark');
     await page.getByLabel('Name', { exact: true }).fill('Mandukhai');
     await page.getByRole('button', { name: /Begin Journey/ }).click();
     await expect(page.getByRole('dialog')).toBeHidden();

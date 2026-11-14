@@ -200,7 +200,7 @@ export function characterCreatorContent(state: CharacterCreatorState): string {
           data-action="begin-journey"
           data-focus-key="creator-begin"
           ${nameValid ? '' : 'disabled'}
-          aria-label="Begin"
+          aria-label="Begin Journey"
         >
           <span>Begin ›</span>
         </button>
