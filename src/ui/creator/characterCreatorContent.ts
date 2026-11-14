@@ -5,12 +5,19 @@ import { clanMark } from '../artwork';
 import { escapeHtml } from '../progressionTree';
 import { ABILITY_MARKS, framedCornerFrets } from './components';
 
-export function characterCreatorContent(state: CharacterCreatorState): string {
+export function characterCreatorContent(
+  state: CharacterCreatorState,
+  expandedAbilityId?: string,
+  abilityDetailsMode: 'accordion' | 'all' = 'accordion',
+): string {
   const p = state.profile;
   const tradition = classDefinition(p.classId);
   const nameValid = isValidCharacterName(p.name);
   const isMan = p.gender === 'man';
   const isWoman = p.gender === 'woman';
+  const activeAbilityId = tradition.abilities.some((ability) => ability.id === expandedAbilityId)
+    ? expandedAbilityId
+    : tradition.abilities[0]?.id;
 
   return `<section class="character-creator" aria-label="Character creation">
     <h2 id="overlay-title" class="sr-only">Character Creation</h2>
@@ -162,21 +169,33 @@ export function characterCreatorContent(state: CharacterCreatorState): string {
             ${tradition.keyTraits.map((t) => `<span class="creator-trait-badge">${escapeHtml(t)}</span>`).join('')}
           </div>
           <div class="creator-abilities-panel">
-            <h4 class="creator-abilities-heading">Class Abilities</h4>
+            <h4 class="sr-only">Class abilities</h4>
             <div class="creator-abilities-list">
               ${tradition.abilities
-                .map(
-                  (ability) => `<div class="creator-ability-item">
+                .map((ability) => {
+                  const expanded = abilityDetailsMode === 'all' || ability.id === activeAbilityId;
+                  return `<button
+                type="button"
+                class="creator-ability-item"
+                data-creator-ability="${ability.id}"
+                data-focus-key="ability-${ability.id}"
+                aria-expanded="${expanded}"
+                aria-controls="creator-ability-description-${ability.id}"
+              >
                 <div class="creator-ability-badge">
                   <span class="creator-ability-key">${escapeHtml(ability.slotLabel)}</span>
                   ${clanMark(ABILITY_MARKS[ability.id] ?? 'spirit')}
                 </div>
                 <div class="creator-ability-body">
                   <strong class="creator-ability-name">${escapeHtml(ability.name)}</strong>
-                  <p class="creator-ability-desc">${escapeHtml(ability.description)}</p>
+                  <p
+                    id="creator-ability-description-${ability.id}"
+                    class="creator-ability-desc"
+                    ${expanded ? '' : 'hidden'}
+                  >${escapeHtml(ability.description)}</p>
                 </div>
-              </div>`,
-                )
+              </button>`;
+                })
                 .join('')}
             </div>
           </div>

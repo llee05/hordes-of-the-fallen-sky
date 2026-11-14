@@ -85,6 +85,7 @@ export class GameUI {
   private commandHistoryDraft = '';
   private toastTimer?: number;
   private creatorPreviewCleanup?: () => void;
+  private creatorAbilityId?: string;
 
   constructor(
     private readonly root: HTMLElement,
@@ -171,6 +172,16 @@ export class GameUI {
     });
     this.overlay.addEventListener('click', (event) => this.handleMenuClick(event));
     this.overlay.addEventListener('keydown', (event) => this.handleMenuKey(event));
+    this.overlay.addEventListener('focusin', (event) => {
+      const ability = (event.target as Element).closest<HTMLElement>('[data-creator-ability]');
+      if (ability?.dataset.creatorAbility)
+        this.selectCreatorAbility(ability.dataset.creatorAbility);
+    });
+    this.overlay.addEventListener('pointerover', (event) => {
+      const ability = (event.target as Element).closest<HTMLElement>('[data-creator-ability]');
+      if (ability?.dataset.creatorAbility)
+        this.selectCreatorAbility(ability.dataset.creatorAbility);
+    });
     this.overlay.addEventListener('input', (event) => {
       const input = event.target as HTMLInputElement;
       if (input.matches('[data-creator-name]')) {
@@ -659,7 +670,10 @@ export class GameUI {
     }
 
     if (run.phase === 'character') {
-      this.overlay.innerHTML = characterCreatorContent(this.scene.characterCreator);
+      this.overlay.innerHTML = characterCreatorContent(
+        this.scene.characterCreator,
+        this.creatorAbilityId,
+      );
       this.updateCreatorPreview();
     } else if (run.phase === 'traditions') this.overlay.innerHTML = startingTraditionMenu(run);
     else if (run.phase === 'saves')
@@ -952,9 +966,12 @@ export class GameUI {
     else if (action === 'starting-traditions') this.scene.openStartingTraditions();
     else if (button.dataset.startingTradition)
       this.scene.selectStartingTradition(button.dataset.startingTradition);
-    else if (button.dataset.creatorField && button.dataset.creatorValue)
+    else if (button.dataset.creatorAbility)
+      this.selectCreatorAbility(button.dataset.creatorAbility);
+    else if (button.dataset.creatorField && button.dataset.creatorValue) {
+      if (button.dataset.creatorField === 'classId') this.creatorAbilityId = undefined;
       this.scene.changeCharacterOption(button.dataset.creatorField, button.dataset.creatorValue);
-    else if (button.hasAttribute('data-creator-random')) this.scene.randomCharacterName();
+    } else if (button.hasAttribute('data-creator-random')) this.scene.randomCharacterName();
     else if (action === 'begin-journey') this.scene.beginJourney();
     else if (action === 'begin') this.scene.startRun();
     else if (action === 'saves') {
@@ -1233,6 +1250,19 @@ export class GameUI {
     if (canvas) {
       const p = this.scene.characterCreator.profile;
       this.creatorPreviewCleanup = startRiderPreview(canvas, p.classId, p.gender);
+    }
+  }
+
+  private selectCreatorAbility(id: string): void {
+    if (this.phase !== 'character') return;
+    const rows = [...this.overlay.querySelectorAll<HTMLButtonElement>('[data-creator-ability]')];
+    if (!rows.some((row) => row.dataset.creatorAbility === id)) return;
+    this.creatorAbilityId = id;
+    for (const row of rows) {
+      const expanded = row.dataset.creatorAbility === id;
+      row.setAttribute('aria-expanded', String(expanded));
+      const description = row.querySelector<HTMLElement>('.creator-ability-desc');
+      if (description) description.hidden = !expanded;
     }
   }
 

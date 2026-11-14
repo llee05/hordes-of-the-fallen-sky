@@ -56,6 +56,12 @@ test(
     await expect(page.locator('.creator-right')).toContainText(
       classDefinition('lancer').keyTraits[0],
     );
+    const abilityRows = page.locator('[data-creator-ability]');
+    await expect(abilityRows).toHaveCount(4);
+    await expect(abilityRows.first()).toHaveAttribute('aria-expanded', 'true');
+    await abilityRows.nth(2).focus();
+    await expect(abilityRows.nth(2)).toHaveAttribute('aria-expanded', 'true');
+    await expect(abilityRows.first()).toHaveAttribute('aria-expanded', 'false');
 
     const begin = page.getByRole('button', { name: 'Begin Journey', exact: true });
     await page.getByLabel('Name', { exact: true }).fill('');
