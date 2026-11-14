@@ -53,6 +53,7 @@ export class KhanController extends ArenaSystem {
   reset(): void {
     this.playerMotion.reset('player');
     this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
+    this.playerMotion.setPlayerGender(this.run.character?.gender ?? 'man');
     this.upper?.destroy();
     this.upper = undefined;
     this.dustTimer = 0;
@@ -191,6 +192,7 @@ export class KhanController extends ArenaSystem {
 
   renderPlayerVisual(): void {
     this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
+    this.playerMotion.setPlayerGender(this.run.character?.gender ?? 'man');
     const tint = this.playerMotion.hurt
       ? 0xffd3b2
       : isKhanGuarded(khanStatusOf(this.timers))
@@ -247,6 +249,7 @@ export class KhanController extends ArenaSystem {
       .setDepth(100 + y);
     this.playerMotion.reset('player', 0);
     this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
+    this.playerMotion.setPlayerGender(this.run.character?.gender ?? 'man');
     this.run.combat.previous = undefined;
     this.run.combat.heading = undefined;
     this.run.combat.rideSeconds = 0;
@@ -275,6 +278,7 @@ export class KhanController extends ArenaSystem {
   animate(dt: number, preparingVolley: boolean): void {
     if (isKhanActive(this.run)) {
       this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
+      this.playerMotion.setPlayerGender(this.run.character?.gender ?? 'man');
       this.playerMotion.advance(dt, this.player.body!.velocity.length(), preparingVolley);
       this.renderPlayerVisual();
     }

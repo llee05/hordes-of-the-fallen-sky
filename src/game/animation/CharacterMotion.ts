@@ -1,4 +1,4 @@
-import type { CharacterClassId } from '../../shared/characterProfile';
+import type { CharacterClassId, CharacterGender } from '../../shared/characterProfile';
 
 const PROFILES = {
   worker: { sheet: 'clan', stride: 30, idleFps: 1, recovery: 0.18, resting: true },
@@ -21,6 +21,8 @@ export const MOTION_SHEETS = [
   'clan',
   'classes',
   'classes-directional',
+  'classes-female',
+  'classes-female-directional',
 ] as const;
 export const CHARACTER_DIRECTIONS = ['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'] as const;
 export type CharacterDirection = (typeof CHARACTER_DIRECTIONS)[number];
@@ -50,6 +52,7 @@ export class CharacterMotion {
   private moving = false;
   private windingUp = false;
   private playerClass?: CharacterClassId;
+  private playerGender: CharacterGender = 'man';
   private direction: CharacterDirection = 'e';
 
   /** Appearance comes from the profile, never from the motion save archive. */
@@ -57,10 +60,20 @@ export class CharacterMotion {
     this.playerClass = classId;
   }
 
+  /** Gender selects presentation only; it is owned by the character profile, not motion saves. */
+  setPlayerGender(gender: CharacterGender): void {
+    this.playerGender = gender;
+  }
+
   get texture(): string {
-    if (this.directional) return 'steppe-classes-directional-motion';
+    if (this.directional)
+      return this.playerGender === 'woman'
+        ? 'steppe-classes-female-directional-motion'
+        : 'steppe-classes-directional-motion';
     return this.kind === 'player' && this.playerClass
-      ? 'steppe-classes-motion'
+      ? this.playerGender === 'woman'
+        ? 'steppe-classes-female-motion'
+        : 'steppe-classes-motion'
       : characterTexture(this.kind)[0];
   }
 
