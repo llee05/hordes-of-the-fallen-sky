@@ -1,4 +1,5 @@
 import { characterCreatorContent } from './creator/characterCreatorContent';
+import { startRiderPreview } from './creator/riderPreview';
 import { AUDIO_REFERENCE_CUES, type SoundKind } from '../game/audio/soundPalette';
 import { GAME } from '../game/config';
 import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
@@ -83,6 +84,7 @@ export class GameUI {
   private commandHistoryOffset = 0;
   private commandHistoryDraft = '';
   private toastTimer?: number;
+  private creatorPreviewCleanup?: () => void;
 
   constructor(
     private readonly root: HTMLElement,
@@ -620,7 +622,7 @@ export class GameUI {
     // Transfer focus before hiding or removing the focused menu control.
     if (run.phase === 'playing') this.get('arena-wrap').focus({ preventScroll: true });
     this.overlay.hidden = run.phase === 'playing';
-    this.overlay.className = `overlay ${run.phase === 'console' ? 'console-screen' : run.phase === 'building' ? 'planning camp-planning' : run.phase === 'ready' ? 'ready-screen' : ['route', 'journal', 'settings', 'help', 'developer', 'saves', 'traditions'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
+    this.overlay.className = `overlay ${run.phase === 'character' ? 'character-creation-screen' : run.phase === 'console' ? 'console-screen' : run.phase === 'building' ? 'planning camp-planning' : run.phase === 'ready' ? 'ready-screen' : ['route', 'journal', 'settings', 'help', 'developer', 'saves', 'traditions'].includes(run.phase) ? 'planning' : 'pause-screen'}`;
     const labels: Record<RunPhase, string> = {
       ready: 'THE SKY IS WAITING',
       traditions: 'STARTING CLAN TRADITION',
@@ -652,9 +654,14 @@ export class GameUI {
     const developer = import.meta.env.DEV
       ? '<button class="menu-button" data-action="developer">Developer mode <kbd>F8</kbd></button>'
       : '';
-    if (run.phase === 'character')
+    if (run.phase !== 'character') {
+      this.stopCreatorPreview();
+    }
+
+    if (run.phase === 'character') {
       this.overlay.innerHTML = characterCreatorContent(this.scene.characterCreator);
-    else if (run.phase === 'traditions') this.overlay.innerHTML = startingTraditionMenu(run);
+      this.updateCreatorPreview();
+    } else if (run.phase === 'traditions') this.overlay.innerHTML = startingTraditionMenu(run);
     else if (run.phase === 'saves')
       this.overlay.innerHTML = saveMenu(snapshot, this.saveConfirmation);
     else if (run.phase === 'ready') {
@@ -1218,5 +1225,19 @@ export class GameUI {
       refreshed?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     }
     return true;
+  }
+
+  private updateCreatorPreview(): void {
+    this.stopCreatorPreview();
+    const canvas = this.overlay.querySelector<HTMLCanvasElement>('#creator-rider-canvas');
+    if (canvas) {
+      const p = this.scene.characterCreator.profile;
+      this.creatorPreviewCleanup = startRiderPreview(canvas, p.classId, p.gender);
+    }
+  }
+
+  private stopCreatorPreview(): void {
+    this.creatorPreviewCleanup?.();
+    this.creatorPreviewCleanup = undefined;
   }
 }
