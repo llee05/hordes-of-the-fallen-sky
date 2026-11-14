@@ -198,7 +198,6 @@ export function characterCreatorContent(state: CharacterCreatorState): string {
           type="button"
           class="creator-plaque-btn creator-btn-begin"
           data-action="begin-journey"
-          data-primary
           data-focus-key="creator-begin"
           ${nameValid ? '' : 'disabled'}
           aria-label="Begin"

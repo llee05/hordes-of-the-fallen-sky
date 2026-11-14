@@ -130,8 +130,7 @@
 }
 
 .creator-framed-tile:focus-visible,
-.creator-framed-input input:focus-visible,
-.creator-plaque-btn:focus-visible {
+.creator-framed-input input:focus-visible {
   outline: 3px solid #1a5675;
   outline-offset: 2px;
 }
@@ -154,23 +153,34 @@
 .creator-left {
   position: absolute;
   left: 11.2%;
-  top: 25.8%;
+  top: 0;
   width: 23.4%;
-  display: flex;
-  flex-direction: column;
+  height: 100%;
+  pointer-events: none;
+}
+
+.creator-left > * {
+  pointer-events: auto;
 }
 
 .creator-section {
+  position: absolute;
+  left: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
 }
 
+.creator-name-section {
+  top: 25.8%;
+}
+
 .creator-gender-section {
-  margin-top: 4.8cqh;
+  top: 39.6%;
 }
 
 .creator-class-section {
-  margin-top: 4.8cqh;
+  top: 53.4%;
 }
 
 /* Section label matches the background banner position */
@@ -535,10 +545,14 @@
   transform: translateY(-1px);
 }
 
+.creator-plaque-btn:focus-visible,
 .character-creator .creator-plaque-btn:focus-visible {
-  outline: 2px solid var(--creator-gold);
-  outline-offset: 1px;
-  border-radius: 4px;
+  outline: none !important;
+  color: #ffffff !important;
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.95),
+    0 0 16px rgba(245, 212, 135, 0.85);
+  transform: translateY(-1px);
 }
 
 .creator-plaque-btn.creator-btn-back {
