@@ -154,12 +154,10 @@
 .creator-left {
   position: absolute;
   left: 11.2%;
-  top: 25.5%;
+  top: 25.8%;
   width: 23.4%;
-  height: 52%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 }
 
 .creator-section {
@@ -167,9 +165,17 @@
   flex-direction: column;
 }
 
+.creator-gender-section {
+  margin-top: 4.8cqh;
+}
+
+.creator-class-section {
+  margin-top: 4.8cqh;
+}
+
 /* Section label matches the background banner position */
 .creator-section-header {
-  height: 5.8cqh;
+  height: 4.6cqh;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -344,13 +350,14 @@
 /* RIGHT COLUMN: Class Details & Abilities */
 .creator-right {
   position: absolute;
-  left: 66.8%;
-  top: 35.8%;
-  width: 22%;
+  left: 67.2%;
+  top: 37.6%;
+  width: 19.5%;
   height: 38.5%;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #8c673d transparent;
+  padding-left: 2px;
   padding-right: 4px;
 }
 
@@ -498,8 +505,7 @@
   pointer-events: auto;
   position: absolute !important;
   top: 80.3%;
-  height: 5.5%;
-  width: 12%;
+  height: 5%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -531,16 +537,18 @@
 
 .character-creator .creator-plaque-btn:focus-visible {
   outline: 2px solid var(--creator-gold);
-  outline-offset: 4px;
+  outline-offset: 1px;
   border-radius: 4px;
 }
 
 .creator-plaque-btn.creator-btn-back {
-  left: 12.3%;
+  left: 11.2%;
+  width: 12%;
 }
 
 .creator-plaque-btn.creator-btn-begin {
-  left: 72.4%;
+  left: 74.4%;
+  width: 12.8%;
 }
 
 /* Screen reader only utility */

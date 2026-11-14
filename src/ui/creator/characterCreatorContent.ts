@@ -57,7 +57,7 @@ export function characterCreatorContent(state: CharacterCreatorState): string {
               </svg>
             </button>
           </div>
-          <small id="creator-name-hint" class="creator-name-hint ${nameValid ? '' : 'invalid'}">
+          <small id="creator-name-hint" class="creator-name-hint ${nameValid ? 'sr-only' : 'invalid'}">
             ${nameValid ? 'The name your clan will remember.' : 'Enter a name to begin your journey.'}
           </small>
         </div>
@@ -201,9 +201,9 @@ export function characterCreatorContent(state: CharacterCreatorState): string {
           data-primary
           data-focus-key="creator-begin"
           ${nameValid ? '' : 'disabled'}
-          aria-label="Begin Journey"
+          aria-label="Begin"
         >
-          <span>Begin Journey ›</span>
+          <span>Begin ›</span>
         </button>
       </div>
     </div>
