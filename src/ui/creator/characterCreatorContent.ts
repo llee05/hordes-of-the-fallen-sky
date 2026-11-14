@@ -1,103 +1,211 @@
-import {
-  BACKGROUNDS,
-  BANNER_COLOURS,
-  BANNER_EMBLEMS,
-  BANNER_TRIMS,
-  CLASSES,
-  CLOTHING_COLOURS,
-  HAIRSTYLES,
-  HEADGEAR_OPTIONS,
-  MOUNTS,
-  OATHS,
-  backgroundDefinition,
-  classDefinition,
-  oathDefinition,
-  clothingColourDefinition,
-  bannerColourDefinition,
-} from '../../game/data/classes';
+import { CLASSES, classDefinition } from '../../game/data/classes';
 import type { CharacterCreatorState } from '../../game/state/characterCreator';
 import { isValidCharacterName, MAX_CHARACTER_NAME_LENGTH } from '../../shared/characterProfile';
+import { clanMark } from '../artwork';
 import { escapeHtml } from '../progressionTree';
-import { optionCarousel, paintedCell, panelFrame, radioList, swatchRow } from './components';
+import { ABILITY_MARKS, framedCornerFrets } from './components';
 
 export function characterCreatorContent(state: CharacterCreatorState): string {
   const p = state.profile;
-  const background = backgroundDefinition(p.background);
   const tradition = classDefinition(p.classId);
-  const oath = oathDefinition(p.oath);
-  const genderRow = p.gender === 'woman' ? 0 : 1;
-  const figure = (index: number) => paintedCell('figures', index, genderRow, 4, 2);
-  const choices = <T extends { id: string; title: string }>(options: readonly T[], row: number) =>
-    options.map((option, i) => ({ ...option, art: paintedCell('choices', i, row, 5, 5) }));
-  const insignia = <T extends { id: string; title: string }>(options: readonly T[], row: number) =>
-    options.map((option, i) => ({ ...option, art: paintedCell('insignia', i, row, 5, 3) }));
   const nameValid = isValidCharacterName(p.name);
+  const isMan = p.gender === 'man';
+  const isWoman = p.gender === 'woman';
+
   return `<section class="character-creator" aria-label="Character creation">
-    <header class="creator-heading"><div><p>Hordes of the Fallen Sky</p><h2 id="overlay-title">Character Creation</h2></div><button class="creator-back" data-action="back">Back to title</button></header>
-    <div class="creator-layout" data-scroll-key="creator-page">
+    <h2 id="overlay-title" class="sr-only">Character Creation</h2>
+    <div class="creator-scroll-surface" data-scroll-key="creator-page">
+      <!-- Left Column: Identity & Tradition -->
       <div class="creator-column creator-left">
-        ${panelFrame(
-          'Identity',
-          `<div class="creator-identity"><div class="creator-portrait">${paintedCell(
-            'choices',
-            HAIRSTYLES.findIndex((v) => v.id === p.hairstyle),
-            genderRow,
-            5,
-            5,
-          )}<span class="creator-portrait-hat">${paintedCell(
-            'choices',
-            HEADGEAR_OPTIONS.findIndex((v) => v.id === p.headgear),
-            2,
-            5,
-            5,
-          )}</span></div><div><h4>Gender</h4>${radioList(
-            'gender',
-            'Gender',
-            [
-              { id: 'woman', title: 'Woman' },
-              { id: 'man', title: 'Man' },
-            ],
-            p.gender,
-          )}</div></div>`,
-        )}
-        ${panelFrame('Appearance', `${optionCarousel('hairstyle', 'Hairstyle', choices(HAIRSTYLES, genderRow), p.hairstyle)}${optionCarousel('headgear', 'Headgear', choices(HEADGEAR_OPTIONS, 2), p.headgear)}${swatchRow('clothingColour', 'Clothing colour', CLOTHING_COLOURS, p.clothingColour)}`)}
-        ${panelFrame('Background (Origin)', `<div class="creator-origin">${radioList('background', 'Origin', choices(BACKGROUNDS, 4), p.background, 'creator-origins')}<div class="creator-description" aria-live="polite"><h4>${escapeHtml(background.title)}</h4><p>${escapeHtml(background.summary)}</p><strong>Starting bonus</strong><p>${escapeHtml(background.bonusLabel)}</p></div></div>`)}
+        <!-- Section: Name -->
+        <div class="creator-section creator-name-section">
+          <div class="creator-section-header">
+            <span class="creator-header-knot" aria-hidden="true">❖</span>
+            <span class="creator-header-label">Name</span>
+          </div>
+          <div class="creator-framed-input">
+            ${framedCornerFrets()}
+            <input
+              id="character-name"
+              class="creator-name-field"
+              data-creator-name
+              data-focus-key="creator-name"
+              value="${escapeHtml(p.name)}"
+              maxlength="${MAX_CHARACTER_NAME_LENGTH}"
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="Name"
+              aria-describedby="creator-name-hint"
+              aria-invalid="${!nameValid}"
+              placeholder="Enter rider name..."
+            />
+            <button
+              type="button"
+              class="creator-random-btn"
+              data-creator-random
+              data-focus-key="creator-random"
+              aria-label="Random name"
+              title="Random name"
+            >
+              <svg class="creator-dice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="3" stroke-width="2"/>
+                <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
+                <circle cx="16" cy="8" r="1.5" fill="currentColor"/>
+                <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+                <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
+                <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
+              </svg>
+            </button>
+          </div>
+          <small id="creator-name-hint" class="creator-name-hint ${nameValid ? '' : 'invalid'}">
+            ${nameValid ? 'The name your clan will remember.' : 'Enter a name to begin your journey.'}
+          </small>
+        </div>
+
+        <!-- Section: Gender -->
+        <div class="creator-section creator-gender-section">
+          <div class="creator-section-header">
+            <span class="creator-header-knot" aria-hidden="true">❖</span>
+            <span class="creator-header-label">Gender</span>
+          </div>
+          <div class="creator-gender-options" role="radiogroup" aria-label="Gender">
+            <button
+              type="button"
+              class="creator-gender-btn creator-framed-tile"
+              data-creator-field="gender"
+              data-creator-value="man"
+              data-focus-key="gender-man"
+              aria-pressed="${isMan}"
+              role="radio"
+              aria-checked="${isMan}"
+              aria-label="Male"
+            >
+              ${framedCornerFrets()}
+              <span class="gender-sym" aria-hidden="true">♂</span>
+              <span class="gender-text">Male</span>
+            </button>
+            <button
+              type="button"
+              class="creator-gender-btn creator-framed-tile"
+              data-creator-field="gender"
+              data-creator-value="woman"
+              data-focus-key="gender-woman"
+              aria-pressed="${isWoman}"
+              role="radio"
+              aria-checked="${isWoman}"
+              aria-label="Female"
+            >
+              ${framedCornerFrets()}
+              <span class="gender-sym" aria-hidden="true">♀</span>
+              <span class="gender-text">Female</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Section: Class -->
+        <div class="creator-section creator-class-section">
+          <div class="creator-section-header">
+            <span class="creator-header-knot" aria-hidden="true">❖</span>
+            <span class="creator-header-label">Class</span>
+          </div>
+          <div class="creator-classes-grid" role="radiogroup" aria-label="Combat class">
+            ${CLASSES.map((c) => {
+              const selected = p.classId === c.id;
+              return `<button
+                type="button"
+                class="creator-class-tile creator-framed-tile"
+                data-creator-field="classId"
+                data-creator-value="${c.id}"
+                data-focus-key="class-${c.id}"
+                aria-pressed="${selected}"
+                role="radio"
+                aria-checked="${selected}"
+                aria-label="${escapeHtml(c.title)}"
+                title="${escapeHtml(c.title)}: ${escapeHtml(c.subtitle)}"
+              >
+                ${framedCornerFrets()}
+                <img src="${import.meta.env.BASE_URL}art/creator-class-${c.id}.png" class="creator-tile-icon" alt="" aria-hidden="true" />
+                <span class="creator-tile-title">${escapeHtml(c.title)}</span>
+              </button>`;
+            }).join('')}
+          </div>
+        </div>
       </div>
-      <div class="creator-center">
-        <div class="creator-hero" role="img" aria-label="${escapeHtml(p.gender === 'woman' ? 'Woman' : 'Man')} · ${escapeHtml(tradition.title)}">${figure(CLASSES.findIndex((v) => v.id === p.classId))}<div class="creator-hero-caption"><strong>${escapeHtml(tradition.title)}</strong><span>${escapeHtml(tradition.subtitle)}</span><span class="creator-cloth-sample" style="--swatch:${clothingColourDefinition(p.clothingColour).hex}">Cloth · ${escapeHtml(clothingColourDefinition(p.clothingColour).title)}</span></div></div>
-        <div class="creator-name"><label for="character-name">Name</label><input id="character-name" data-creator-name data-focus-key="creator-name" value="${escapeHtml(p.name)}" maxlength="${MAX_CHARACTER_NAME_LENGTH}" autocomplete="off" spellcheck="false" aria-describedby="creator-name-hint" aria-invalid="${!nameValid}"><button data-creator-random data-focus-key="creator-random" aria-label="Random name" title="Random name">↻</button><small id="creator-name-hint">${nameValid ? 'The name your clan will remember.' : 'Enter a name to begin your journey.'}</small></div>
+
+      <!-- Centre: Arched Rider Preview -->
+      <div class="creator-center-zone" aria-label="Mounted character preview">
+        <canvas
+          id="creator-rider-canvas"
+          class="creator-rider-canvas"
+          data-class="${p.classId}"
+          data-gender="${p.gender}"
+          width="512"
+          height="720"
+          role="img"
+          aria-label="${escapeHtml(p.gender === 'woman' ? 'Female' : 'Male')} ${escapeHtml(tradition.title)} on horseback"
+        ></canvas>
+        <div class="creator-preview-caption sr-only" aria-live="polite">
+          <strong>${escapeHtml(tradition.title)}</strong>
+          <span>${escapeHtml(p.gender === 'woman' ? 'Female Rider' : 'Male Rider')}</span>
+        </div>
       </div>
-      <div class="creator-column creator-right">
-        ${panelFrame(
-          'Class / Combat Tradition',
-          `${radioList(
-            'classId',
-            'Combat tradition',
-            CLASSES.map((c, i) => ({ id: c.id, title: c.title, art: figure(i) })),
-            p.classId,
-            'creator-classes',
-          )}<div class="creator-class-description" aria-live="polite"><div><h4>${escapeHtml(tradition.title)}</h4><p>${escapeHtml(tradition.summary)}</p></div><div><strong>Key traits</strong><ul>${tradition.keyTraits.map((trait) => `<li>${escapeHtml(trait)}</li>`).join('')}</ul></div></div>`,
-        )}
-        ${panelFrame('Oath', `${radioList('oath', 'Oath', insignia(OATHS, 0), p.oath, 'creator-oaths')}<p class="creator-description creator-oath-description" aria-live="polite">${escapeHtml(oath.summary)} <strong>${escapeHtml(oath.bonusLabel)}</strong></p>`)}
-        ${panelFrame('Mount', optionCarousel('mount', 'Mount coat', choices(MOUNTS, 3), p.mount))}
-        ${panelFrame(
-          'Banner (Clan Standard)',
-          `<div class="creator-banner-layout"><div class="creator-banner-preview" style="--banner-field:${bannerColourDefinition(p.banner.fieldColour).hex}" aria-label="Clan banner preview">${paintedCell(
-            'insignia',
-            BANNER_EMBLEMS.findIndex((v) => v.id === p.banner.emblem),
-            1,
-            5,
-            3,
-          )}${paintedCell(
-            'insignia',
-            BANNER_TRIMS.findIndex((v) => v.id === p.banner.trim),
-            2,
-            5,
-            3,
-          )}</div><div>${optionCarousel('emblem', 'Emblem', insignia(BANNER_EMBLEMS, 1), p.banner.emblem)}${swatchRow('fieldColour', 'Field colour', BANNER_COLOURS, p.banner.fieldColour)}${optionCarousel('trim', 'Trim / pattern', insignia(BANNER_TRIMS, 2), p.banner.trim)}</div></div>`,
-        )}
+
+      <!-- Right Column: Description & Abilities -->
+      <div class="creator-column creator-right" aria-label="Class traits and abilities">
+        <div class="creator-class-details">
+          <div class="creator-detail-header">
+            <h3 class="creator-detail-title">${escapeHtml(tradition.title)}</h3>
+            <p class="creator-detail-subtitle">${escapeHtml(tradition.subtitle)}</p>
+          </div>
+          <p class="creator-detail-summary">${escapeHtml(tradition.summary)}</p>
+          <div class="creator-detail-traits" aria-label="Key traits">
+            ${tradition.keyTraits.map((t) => `<span class="creator-trait-badge">${escapeHtml(t)}</span>`).join('')}
+          </div>
+          <div class="creator-abilities-panel">
+            <h4 class="creator-abilities-heading">Class Abilities</h4>
+            <div class="creator-abilities-list">
+              ${tradition.abilities
+                .map(
+                  (ability) => `<div class="creator-ability-item">
+                <div class="creator-ability-badge">
+                  <span class="creator-ability-key">${escapeHtml(ability.slotLabel)}</span>
+                  ${clanMark(ABILITY_MARKS[ability.id] ?? 'spirit')}
+                </div>
+                <div class="creator-ability-body">
+                  <strong class="creator-ability-name">${escapeHtml(ability.name)}</strong>
+                  <p class="creator-ability-desc">${escapeHtml(ability.description)}</p>
+                </div>
+              </div>`,
+                )
+                .join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom: Back & Begin plaque buttons -->
+      <div class="creator-bottom-bar">
+        <button
+          type="button"
+          class="creator-plaque-btn creator-btn-back"
+          data-action="back"
+          data-focus-key="creator-back"
+          aria-label="Back to title"
+        >
+          <span>‹ Back</span>
+        </button>
+        <button
+          type="button"
+          class="creator-plaque-btn creator-btn-begin"
+          data-action="begin-journey"
+          data-primary
+          data-focus-key="creator-begin"
+          ${nameValid ? '' : 'disabled'}
+          aria-label="Begin Journey"
+        >
+          <span>Begin Journey ›</span>
+        </button>
       </div>
     </div>
-    <footer class="creator-footer"><span>Choose who carries the banner.</span><button class="creator-begin" data-action="begin-journey" data-primary data-focus-key="creator-begin" ${nameValid ? '' : 'disabled'}>Begin Journey <span>→</span></button><small>Tab / arrows to browse · Enter / A to choose · Esc / B to return</small></footer>
   </section>`;
 }
