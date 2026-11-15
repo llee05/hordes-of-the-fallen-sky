@@ -75,78 +75,80 @@ export function characterCreatorContent(
           <h2 id="overlay-title">Choose your Khan</h2>
         </header>
 
-        <div class="creator-field creator-name-section">
-          <label class="creator-label" for="character-name">Name</label>
-          <div class="creator-name-frame">
-            <input
-              id="character-name"
-              class="creator-name-field"
-              data-creator-name
-              data-focus-key="creator-name"
-              data-nav-up="creator-back"
-              data-nav-down="gender-woman"
-              data-nav-right="creator-random"
-              value="${escapeHtml(profile.name)}"
-              maxlength="${MAX_CHARACTER_NAME_LENGTH}"
-              autocomplete="off"
-              spellcheck="false"
-              aria-label="Name"
-              aria-describedby="creator-name-hint"
-              aria-invalid="${!nameValid}"
-              placeholder="Enter a name..."
-            />
-            <button
-              type="button"
-              class="creator-random-btn"
-              data-creator-random
-              data-focus-key="creator-random"
-              data-nav-left="creator-name"
-              data-nav-down="gender-man"
-              aria-label="Random name"
-              title="Random name"
-            >
-              <svg class="creator-dice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="3" />
-                <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-                <circle cx="16" cy="8" r="1.5" fill="currentColor" />
-                <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-                <circle cx="8" cy="16" r="1.5" fill="currentColor" />
-                <circle cx="16" cy="16" r="1.5" fill="currentColor" />
-              </svg>
-            </button>
+        <div class="creator-identity-panel">
+          <div class="creator-field creator-name-section">
+            <label class="creator-label" for="character-name">Name</label>
+            <div class="creator-name-frame">
+              <input
+                id="character-name"
+                class="creator-name-field"
+                data-creator-name
+                data-focus-key="creator-name"
+                data-nav-up="creator-back"
+                data-nav-down="gender-woman"
+                data-nav-right="creator-random"
+                value="${escapeHtml(profile.name)}"
+                maxlength="${MAX_CHARACTER_NAME_LENGTH}"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="Name"
+                aria-describedby="creator-name-hint"
+                aria-invalid="${!nameValid}"
+                placeholder="Enter a name..."
+              />
+              <button
+                type="button"
+                class="creator-random-btn"
+                data-creator-random
+                data-focus-key="creator-random"
+                data-nav-left="creator-name"
+                data-nav-down="gender-man"
+                aria-label="Random name"
+                title="Random name"
+              >
+                <svg class="creator-dice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <rect x="3" y="3" width="18" height="18" rx="3" />
+                  <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+                  <circle cx="16" cy="8" r="1.5" fill="currentColor" />
+                  <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+                  <circle cx="8" cy="16" r="1.5" fill="currentColor" />
+                  <circle cx="16" cy="16" r="1.5" fill="currentColor" />
+                </svg>
+              </button>
+            </div>
+            <small id="creator-name-hint" class="creator-name-hint ${nameValid ? 'sr-only' : 'invalid'}">
+              ${nameValid ? 'The name your clan will remember.' : 'Enter a name to begin your journey.'}
+            </small>
           </div>
-          <small id="creator-name-hint" class="creator-name-hint ${nameValid ? 'sr-only' : 'invalid'}">
-            ${nameValid ? 'The name your clan will remember.' : 'Enter a name to begin your journey.'}
-          </small>
-        </div>
 
-        <div class="creator-field creator-gender-section">
-          <span class="creator-label" id="creator-gender-label">Gender</span>
-          <div class="creator-gender-options" role="radiogroup" aria-labelledby="creator-gender-label">
-            ${(
-              [
-                ['woman', 'Female', '♀', 'creator-name', 'gender-man', 'class-mounted-archer'],
-                ['man', 'Male', '♂', 'creator-random', 'gender-woman', 'class-iron-pagoda'],
-              ] as const
-            )
-              .map(([gender, label, symbol, up, horizontal, down]) => {
-                const selected = profile.gender === gender;
-                return `<button
-                  type="button"
-                  class="creator-gender-btn"
-                  data-creator-field="gender"
-                  data-creator-value="${gender}"
-                  data-focus-key="gender-${gender}"
-                  data-nav-up="${up}"
-                  data-nav-${gender === 'woman' ? 'right' : 'left'}="${horizontal}"
-                  data-nav-down="${down}"
-                  role="radio"
-                  aria-checked="${selected}"
-                  tabindex="${selected ? '0' : '-1'}"
-                  aria-label="${label}"
-                ><span aria-hidden="true">${symbol}</span><span class="gender-text">${label}</span></button>`;
-              })
-              .join('')}
+          <div class="creator-field creator-gender-section">
+            <span class="creator-label" id="creator-gender-label">Gender</span>
+            <div class="creator-gender-options" role="radiogroup" aria-labelledby="creator-gender-label">
+              ${(
+                [
+                  ['woman', 'Female', '♀', 'creator-name', 'gender-man', 'class-mounted-archer'],
+                  ['man', 'Male', '♂', 'creator-random', 'gender-woman', 'class-iron-pagoda'],
+                ] as const
+              )
+                .map(([gender, label, symbol, up, horizontal, down]) => {
+                  const selected = profile.gender === gender;
+                  return `<button
+                    type="button"
+                    class="creator-gender-btn"
+                    data-creator-field="gender"
+                    data-creator-value="${gender}"
+                    data-focus-key="gender-${gender}"
+                    data-nav-up="${up}"
+                    data-nav-${gender === 'woman' ? 'right' : 'left'}="${horizontal}"
+                    data-nav-down="${down}"
+                    role="radio"
+                    aria-checked="${selected}"
+                    tabindex="${selected ? '0' : '-1'}"
+                    aria-label="${label}"
+                  ><span aria-hidden="true">${symbol}</span><span class="gender-text">${label}</span></button>`;
+                })
+                .join('')}
+            </div>
           </div>
         </div>
 
@@ -186,10 +188,14 @@ export function characterCreatorContent(
         </div>
 
         <div class="creator-class-description" aria-live="polite">
-          <span class="creator-divider" aria-hidden="true"></span>
-          <h3>${escapeHtml(selectedClass.title)}</h3>
-          <p>${escapeHtml(selectedClass.summary)}</p>
-          <span class="creator-divider" aria-hidden="true"></span>
+          <span class="creator-description-mark" aria-hidden="true">
+            ${classEmblem(profile.classId)}
+          </span>
+          <div class="creator-description-copy">
+            <span class="creator-description-kicker">Way of the clan</span>
+            <h3>${escapeHtml(selectedClass.title)}</h3>
+            <p>${escapeHtml(selectedClass.summary)}</p>
+          </div>
         </div>
 
         <div class="creator-actions">
