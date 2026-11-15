@@ -1344,9 +1344,20 @@ export class GameUI {
     const scenes = ['mounted-archer', 'lancer', 'iron-pagoda', 'spirit-caller'].flatMap((classId) =>
       ['woman', 'man'].map((gender) => `creator-scene-${classId}-${gender}.webp`),
     );
+    const classCards = ['mounted-archer', 'lancer', 'iron-pagoda', 'spirit-caller'].map(
+      (classId) => `creator-class-card-${classId}.webp`,
+    );
+    const oaths = ['steppe', 'khan', 'spirits'].map((oath) => `creator-oath-${oath}.webp`);
+    const bannerEmblems = ['flame-sun', 'wolf', 'hawk', 'cloud', 'knot'].map(
+      (emblem) => `creator-banner-emblem-${emblem}.webp`,
+    );
     for (const filename of [
       ...scenes,
+      ...classCards,
+      ...oaths,
+      ...bannerEmblems,
       'creator-header-frieze.webp',
+      'creator-bottom-ornament.webp',
       'creator-selector-atlas.webp',
       'creator-vignette-atlas.webp',
     ]) {

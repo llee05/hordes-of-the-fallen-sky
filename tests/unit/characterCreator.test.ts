@@ -146,4 +146,26 @@ describe('character creator profile mapping', () => {
       }
     }
   });
+
+  it('keeps manuscript selectors interactive and uses isolated card artwork', () => {
+    const content = characterCreatorContent(createCharacterCreator());
+    for (const field of [
+      'face',
+      'hairstyle',
+      'headgear',
+      'clothingColour',
+      'oath',
+      'mount',
+      'emblem',
+      'fieldColour',
+      'trim',
+    ]) {
+      expect(content).toContain(`data-focus-key="${field}-previous"`);
+      expect(content).toContain(`data-focus-key="${field}-next"`);
+    }
+    expect(content).toContain('creator-class-card-mounted-archer.webp');
+    expect(content).toContain('creator-oath-steppe.webp');
+    expect(content).toContain('creator-bottom-ornament.webp');
+    expect(content).toContain('creator-banner-pole');
+  });
 });
