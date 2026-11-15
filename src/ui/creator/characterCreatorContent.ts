@@ -42,7 +42,6 @@ export function characterCreatorContent(
   const portraitLabel = `${profile.gender === 'woman' ? 'Female' : 'Male'} ${selectedClass.title}`;
 
   return `<section class="character-creator" aria-label="Character creation">
-    <h2 id="overlay-title" class="sr-only">Character Creation</h2>
     <div class="creator-scroll-surface" data-scroll-key="creator-page">
       <figure class="creator-portrait-stage" role="img" aria-label="${escapeHtml(portraitLabel)} portrait">
         ${
@@ -64,10 +63,18 @@ export function characterCreatorContent(
           alt=""
           aria-hidden="true"
         />
-        <figcaption class="sr-only">${escapeHtml(portraitLabel)}, shown in class regalia.</figcaption>
+        <figcaption class="creator-portrait-caption">
+          <span>${escapeHtml(selectedClass.title)}</span>
+          <small>${profile.gender === 'woman' ? 'Woman' : 'Man'} · Chosen Khan</small>
+        </figcaption>
       </figure>
 
       <div class="creator-controls">
+        <header class="creator-heading">
+          <p>The clan chronicle</p>
+          <h2 id="overlay-title">Choose your Khan</h2>
+        </header>
+
         <div class="creator-field creator-name-section">
           <label class="creator-label" for="character-name">Name</label>
           <div class="creator-name-frame">

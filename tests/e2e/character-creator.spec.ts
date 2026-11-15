@@ -12,6 +12,7 @@ test('creator content fits the manuscript folio at every supported size', async 
   await page.getByRole('button', { name: /NEW GAME/ }).click();
 
   const sizes = [
+    { width: 390, height: 844 },
     { width: 1280, height: 800 },
     { width: 1366, height: 768 },
     { width: 1920, height: 1080 },
@@ -24,15 +25,19 @@ test('creator content fits the manuscript folio at every supported size', async 
     for (const className of classes) {
       await page.getByRole('radio', { name: className, exact: true }).click();
       const fit = await page.locator('.creator-scroll-surface').evaluate((scroll) => {
-        const controls = scroll.querySelector('.creator-controls')!.getBoundingClientRect();
+        const heading = scroll.querySelector('.creator-heading')!.getBoundingClientRect();
+        const classes = scroll.querySelector('.creator-class-section')!.getBoundingClientRect();
+        const actions = scroll.querySelector('.creator-actions')!.getBoundingClientRect();
         const portrait = scroll.querySelector('.creator-portrait-stage')!.getBoundingClientRect();
         const bounds = scroll.getBoundingClientRect();
         return {
           horizontal: scroll.scrollWidth <= scroll.clientWidth + 1,
           vertical: scroll.scrollHeight <= scroll.clientHeight + 1,
           controlsInsidePaper:
-            controls.top > bounds.top + bounds.height * 0.03 &&
-            controls.bottom < bounds.bottom - bounds.height * 0.03,
+            heading.top > bounds.top + bounds.height * 0.01 &&
+            classes.left > bounds.left + bounds.width * 0.01 &&
+            classes.right < bounds.right - bounds.width * 0.01 &&
+            actions.bottom < bounds.bottom - bounds.height * 0.01,
           portraitInsidePaper:
             portrait.top > bounds.top + bounds.height * 0.03 &&
             portrait.bottom < bounds.bottom - bounds.height * 0.025,

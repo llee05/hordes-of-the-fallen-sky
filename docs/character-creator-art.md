@@ -1,11 +1,12 @@
 # Character creator illustrations
 
-The character creator is a single wide manuscript folio laid on a dark wooden
-desk. The parchment, irregular paper edge, faint fibre grain, sparse corner rules,
-and central dividing line are CSS rather than a baked interface painting. This
-keeps the composition quiet and lets it scale cleanly at 1280×800, 1920×1080, and
-3840×2160. There are no wooden rollers, tassels, horses, buildings, fantasy
-plaques, or full ornamental frame.
+The character creator is a full-screen interactive chronicle page. Parchment fills
+the viewport instead of floating as a beige panel over black. Fibre grain, warm
+paint washes, a continuous double ink rule, a central divider, portrait caption,
+section anchors, and gilt selection details are CSS rather than a baked interface
+painting. The horizontal composition scales through 1366×768 and 1920×1080; a
+dedicated portrait composition keeps every control visible at 390×844. There are
+no wooden rollers, tassels, horses, buildings, or fantasy plaques.
 
 Four small transparent class marks live at
 `public/art/creator-class-{class-id}.png`. Eight transparent 1086 × 1448 WebP
@@ -17,8 +18,11 @@ cross-fade, disabled by the reduced-motion media query.
 Every name, label, class description, selection state, and action remains live
 HTML. Decorative images are hidden from assistive technology; the portrait stage
 has a text alternative and the controls keep their live names, radio semantics,
-and keyboard focus. Cormorant Garamond is bundled locally and used at readable
-weights, with italics reserved for the short class description.
+and keyboard focus. Focus uses a high-contrast gilt-and-ink ring rather than the
+browser's blue outline. Cormorant Garamond is bundled locally and used at readable
+weights, with italics reserved for the short class description. Class marks are
+the dominant control group: large framed emblems, full tiles, and a vermilion and
+gilt selected state.
 
 ## Portrait generation brief
 
