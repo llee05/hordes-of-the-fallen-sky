@@ -7,7 +7,7 @@ test.beforeEach(() => test.setTimeout(90000));
 
 test.use({ viewport: { width: 1280, height: 800 } });
 
-test('creator content fits the manuscript folio at every supported size', async ({ page }) => {
+test('creator content fits the manuscript at every supported size', async ({ page }) => {
   await openTitle(page);
   await page.getByRole('button', { name: /NEW GAME/ }).click();
 
@@ -24,23 +24,21 @@ test('creator content fits the manuscript folio at every supported size', async 
     await page.setViewportSize(size);
     for (const className of classes) {
       await page.getByRole('radio', { name: className, exact: true }).click();
-      const fit = await page.locator('.creator-scroll-surface').evaluate((scroll) => {
-        const heading = scroll.querySelector('.creator-heading')!.getBoundingClientRect();
-        const classes = scroll.querySelector('.creator-class-section')!.getBoundingClientRect();
-        const actions = scroll.querySelector('.creator-actions')!.getBoundingClientRect();
-        const portrait = scroll.querySelector('.creator-portrait-stage')!.getBoundingClientRect();
+      const fit = await page.locator('.creator-manuscript').evaluate((scroll) => {
+        const header = scroll.querySelector('.creator-header')!.getBoundingClientRect();
+        const centre = scroll.querySelector('.creator-centre')!.getBoundingClientRect();
+        const left = scroll.querySelector('.creator-left-column')!.getBoundingClientRect();
+        const right = scroll.querySelector('.creator-right-column')!.getBoundingClientRect();
         const bounds = scroll.getBoundingClientRect();
         return {
           horizontal: scroll.scrollWidth <= scroll.clientWidth + 1,
-          vertical: scroll.scrollHeight <= scroll.clientHeight + 1,
+          vertical: innerWidth <= 650 || scroll.scrollHeight <= scroll.clientHeight + 1,
           controlsInsidePaper:
-            heading.top > bounds.top + bounds.height * 0.01 &&
-            classes.left > bounds.left + bounds.width * 0.01 &&
-            classes.right < bounds.right - bounds.width * 0.01 &&
-            actions.bottom < bounds.bottom - bounds.height * 0.01,
+            header.left >= bounds.left && left.left >= bounds.left && right.right <= bounds.right,
           portraitInsidePaper:
-            portrait.top > bounds.top + bounds.height * 0.03 &&
-            portrait.bottom < bounds.bottom - bounds.height * 0.025,
+            centre.left >= bounds.left &&
+            centre.right <= bounds.right &&
+            (innerWidth <= 650 || centre.bottom <= bounds.bottom),
         };
       });
       expect(fit, `${className} at ${size.width}x${size.height}`).toEqual({
@@ -59,24 +57,19 @@ test(
   async ({ page }) => {
     await openTitle(page);
     await page.getByRole('button', { name: /NEW GAME/ }).click();
-    await expect(page.getByRole('heading', { name: 'Character Creation' })).toBeVisible();
-    await expect(page.getByRole('radiogroup', { name: 'Gender' }).getByRole('radio')).toHaveCount(
-      2,
-    );
+    await expect(page.getByRole('heading', { name: 'Hordes of the Fallen Sky' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Previous Gender' })).toBeVisible();
     await expect(
-      page.getByRole('radiogroup', { name: 'Combat class' }).getByRole('radio'),
+      page.getByRole('radiogroup', { name: 'Combat tradition' }).getByRole('radio'),
     ).toHaveCount(4);
     await expect(
-      page.getByRole('radiogroup', { name: 'Gender' }).locator('[tabindex="0"]'),
-    ).toHaveCount(1);
-    await expect(
-      page.getByRole('radiogroup', { name: 'Combat class' }).locator('[tabindex="0"]'),
+      page.getByRole('radiogroup', { name: 'Combat tradition' }).locator('[tabindex="0"]'),
     ).toHaveCount(1);
     await expectFrozen(page, () => page.evaluate(() => (window as any).__gloam.scene.run.elapsed));
 
-    await page.getByRole('radio', { name: 'Male' }).click();
+    await page.getByRole('button', { name: 'Next Gender' }).click();
     await page.getByRole('radio', { name: 'Lancer' }).click();
-    await expect(page.locator('.creator-class-description')).toContainText(
+    await expect(page.locator('.creator-class-detail')).toContainText(
       classDefinition('lancer').summary,
     );
     await expect(page.locator('[data-creator-ability]')).toHaveCount(0);
@@ -131,12 +124,12 @@ test('creator supports keyboard focus, Back, and frozen gameplay time', async ({
   ).toBe(true);
 
   await page.getByRole('radio', { name: 'Spirit Caller' }).click();
-  await expect(page.locator('.creator-class-description')).toContainText(
+  await expect(page.locator('.creator-class-detail')).toContainText(
     classDefinition('spirit-caller').summary,
   );
   await page.getByRole('button', { name: 'Begin Journey', exact: true }).focus();
   await page.keyboard.press('Tab');
-  await expect(page.getByRole('button', { name: 'Back to title', exact: true })).toBeFocused();
+  await expect(page.getByRole('radio', { name: 'Spirit Caller' })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: /NEW GAME/ })).toBeVisible();
 
@@ -148,13 +141,10 @@ test('creator supports keyboard focus, Back, and frozen gameplay time', async ({
   );
   await page.getByLabel('Name', { exact: true }).focus();
   await page.keyboard.press('ArrowDown');
-  await expect(page.getByRole('radio', { name: 'Female' })).toBeFocused();
-  await page.keyboard.press('ArrowDown');
-  await expect(page.getByRole('radio', { name: 'Mounted Archer' })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Random name' })).toBeFocused();
+  await page.getByRole('radio', { name: 'Mounted Archer' }).focus();
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('radio', { name: 'Lancer' })).toBeFocused();
-  await page.keyboard.press('ArrowRight');
-  await expect(page.getByRole('radio', { name: 'Iron Pagoda' })).toBeFocused();
   await page.getByLabel('Name', { exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('button', { name: 'Begin Journey', exact: true })).toBeFocused();

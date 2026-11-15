@@ -12,7 +12,7 @@ import {
   STEPPE_NAMES,
 } from '../../src/shared/characterProfile';
 import { createRun } from '../../src/game/state/run';
-import { classDefinition, oathDefinition } from '../../src/game/data/classes';
+import { classDefinition } from '../../src/game/data/classes';
 import { characterCreatorContent } from '../../src/ui/creator/characterCreatorContent';
 
 describe('character creator profile mapping', () => {
@@ -29,6 +29,9 @@ describe('character creator profile mapping', () => {
     const fields = {
       name: '  Jebe  ',
       gender: 'man',
+      age: 'seasoned',
+      voice: 'voice-b',
+      face: 'face-4',
       hairstyle: 'topknot',
       headgear: 'lamellar-helm',
       clothingColour: 'vermilion',
@@ -45,6 +48,9 @@ describe('character creator profile mapping', () => {
     expect(profile).toEqual({
       name: 'Jebe',
       gender: 'man',
+      age: 'seasoned',
+      voice: 'voice-b',
+      face: 'face-4',
       hairstyle: 'topknot',
       headgear: 'lamellar-helm',
       clothingColour: 'vermilion',
@@ -57,10 +63,7 @@ describe('character creator profile mapping', () => {
     expect(isCharacterProfile(profile)).toBe(true);
     const run = createRun('shared-hearth', profile);
     expect(run.character).toEqual(profile);
-    expect(run.stats.damage).toBe(
-      classDefinition('lancer').stats.damage +
-        (oathDefinition('oath-of-the-khan').statBonuses?.damage ?? 0),
-    );
+    expect(run.stats.damage).toBe(classDefinition('lancer').stats.damage);
     changeCreatorOption(state, 'trim', 'lattice-band');
     expect(run.character!.banner.trim).toBe('cloud-scroll');
   });
@@ -88,7 +91,7 @@ describe('character creator profile mapping', () => {
       expect(STEPPE_NAMES[gender]).toContain(state.profile.name);
       expect(state.profile.name).not.toBe(before);
     }
-    expect(characterCreatorContent(state)).not.toContain('data-creator-field="face"');
+    expect(characterCreatorContent(state)).toContain('data-creator-field="face"');
   });
   it('changes generated names with gender but preserves a typed name', () => {
     const state = createCharacterCreator();
@@ -107,7 +110,7 @@ describe('character creator profile mapping', () => {
   it('renders one selected portrait and cross-fades from the prior class or gender', () => {
     const state = createCharacterCreator();
     const initial = characterCreatorContent(state);
-    expect(initial).toContain('creator-portrait-mounted-archer-woman.webp');
+    expect(initial).toContain('creator-scene-mounted-archer-woman.webp');
     expect(initial).not.toContain('creator-portrait-outgoing');
     expect(initial).not.toContain('data-creator-ability');
 
@@ -116,20 +119,18 @@ describe('character creator profile mapping', () => {
       classId: 'mounted-archer',
       gender: 'woman',
     });
-    expect(changed).toContain('creator-portrait-mounted-archer-woman.webp');
-    expect(changed).toContain('creator-portrait-lancer-woman.webp');
+    expect(changed).toContain('creator-scene-mounted-archer-woman.webp');
+    expect(changed).toContain('creator-scene-lancer-woman.webp');
     expect(changed).toContain('creator-portrait-outgoing');
     expect(changed).toContain('creator-portrait-incoming');
 
     changeCreatorOption(state, 'classId', 'iron-pagoda');
     const ironPagoda = characterCreatorContent(state);
-    expect(ironPagoda).toContain('creator-class-symbol');
-    expect(ironPagoda).not.toContain('creator-class-iron-pagoda.png');
+    expect(ironPagoda).toContain('creator-vignette-atlas');
 
     changeCreatorOption(state, 'classId', 'spirit-caller');
     const spiritCaller = characterCreatorContent(state);
-    expect(spiritCaller).toContain('creator-class-symbol');
-    expect(spiritCaller).not.toContain('creator-class-spirit-caller.png');
+    expect(spiritCaller).toContain('creator-vignette-atlas');
   });
 
   it('maps every class and gender to its own live portrait asset', () => {
@@ -139,7 +140,7 @@ describe('character creator profile mapping', () => {
       for (const gender of ['woman', 'man'] as const) {
         changeCreatorOption(state, 'gender', gender);
         const content = characterCreatorContent(state);
-        expect(content).toContain(`creator-portrait-${classId}-${gender}.webp`);
+        expect(content).toContain(`creator-scene-${classId}-${gender}.webp`);
         expect(content).toContain(`data-class="${classId}"`);
         expect(content).toContain(`data-gender="${gender}"`);
       }

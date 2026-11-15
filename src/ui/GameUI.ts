@@ -978,6 +978,11 @@ export class GameUI {
       }
       this.scene.changeCharacterOption(button.dataset.creatorField, button.dataset.creatorValue);
     } else if (button.hasAttribute('data-creator-random')) this.scene.randomCharacterName();
+    else if (button.hasAttribute('data-creator-voice-preview'))
+      this.text(
+        'creator-status',
+        `${this.scene.characterCreator.profile.voice.replace('-', ' ')} selected.`,
+      );
     else if (action === 'begin-journey') {
       if (button.getAttribute('aria-disabled') === 'true') {
         this.overlay
@@ -1248,6 +1253,25 @@ export class GameUI {
     const current = document.activeElement as HTMLElement | null;
     const directionName = `${direction[0]!.toUpperCase()}${direction.slice(1)}`;
     const focusKey = current?.dataset[`nav${directionName}`];
+    if (
+      !focusKey &&
+      current?.getAttribute('role') === 'radio' &&
+      ['left', 'right'].includes(direction)
+    ) {
+      const radios = [
+        ...(current
+          .closest('[role="radiogroup"]')
+          ?.querySelectorAll<HTMLElement>('[role="radio"]') ?? []),
+      ];
+      if (radios.length < 2) return false;
+      const currentIndex = Math.max(0, radios.indexOf(current));
+      const target =
+        radios[(currentIndex + (direction === 'right' ? 1 : -1) + radios.length) % radios.length]!;
+      radios.forEach((radio) => (radio.tabIndex = radio === target ? 0 : -1));
+      target.focus({ preventScroll: true });
+      target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      return true;
+    }
     if (!focusKey) return false;
     const target = [...this.overlay.querySelectorAll<HTMLElement>('[data-focus-key]')].find(
       (entry) => entry.dataset.focusKey === focusKey,
@@ -1306,7 +1330,7 @@ export class GameUI {
     input.setAttribute('aria-invalid', String(!valid));
     const hint = this.overlay.querySelector<HTMLElement>('#creator-name-hint');
     if (hint) {
-      hint.className = `creator-name-hint ${valid ? 'sr-only' : 'invalid'}`;
+      hint.className = valid ? 'sr-only' : 'creator-name-error';
       hint.textContent = valid
         ? 'The name your clan will remember.'
         : 'Enter a name to begin your journey.';
@@ -1317,10 +1341,15 @@ export class GameUI {
 
   private preloadCreatorAssets(): void {
     if (this.creatorPreloads.length > 0) return;
-    const portraits = ['mounted-archer', 'lancer', 'iron-pagoda', 'spirit-caller'].flatMap(
-      (classId) => ['woman', 'man'].map((gender) => `creator-portrait-${classId}-${gender}.webp`),
+    const scenes = ['mounted-archer', 'lancer', 'iron-pagoda', 'spirit-caller'].flatMap((classId) =>
+      ['woman', 'man'].map((gender) => `creator-scene-${classId}-${gender}.webp`),
     );
-    for (const filename of portraits) {
+    for (const filename of [
+      ...scenes,
+      'creator-header-frieze.webp',
+      'creator-selector-atlas.webp',
+      'creator-vignette-atlas.webp',
+    ]) {
       const image = new Image();
       image.src = `${import.meta.env.BASE_URL}art/${filename}`;
       this.creatorPreloads.push(image);

@@ -139,12 +139,12 @@ describe('character classes and character profile', () => {
     expect(BANNER_TRIMS).toHaveLength(5);
   });
 
-  it('validates and normalizes character profiles while omitting face, age, and voice fields', () => {
+  it('validates and normalizes character profiles including visual-only identity fields', () => {
     const profile = defaultCharacterProfile();
     expect(isCharacterProfile(profile)).toBe(true);
-    expect(profile).not.toHaveProperty('face');
-    expect(profile).not.toHaveProperty('age');
-    expect(profile).not.toHaveProperty('voice');
+    expect(profile.face).toBe('face-2');
+    expect(profile.age).toBe('young-adult');
+    expect(profile.voice).toBe('voice-a');
 
     expect(isCharacterProfile({ ...profile, name: '' })).toBe(false);
     expect(isCharacterProfile({ ...profile, name: 'Bad\nName' })).toBe(false);
@@ -176,7 +176,7 @@ describe('character classes and character profile', () => {
     });
   });
 
-  it('applies distinct starting loadouts, background bonuses, oath bonuses, and level progression for each class', () => {
+  it('applies distinct class loadouts while keeping creator flavor choices cosmetic', () => {
     const archerProfile: CharacterProfile = {
       ...defaultCharacterProfile(),
       classId: 'mounted-archer',
@@ -187,15 +187,15 @@ describe('character classes and character profile', () => {
     expect(archerRun.character?.classId).toBe('mounted-archer');
     expect(archerRun.stats).toEqual({
       maxHealth: 100,
-      speed: 204, // 196 base + 8 Oath of the Steppe
+      speed: 196,
       damage: 16,
       attackInterval: 0.64,
       pickupRadius: 84,
       projectiles: 1,
       pierce: 1,
     });
-    expect(archerRun.clan.food).toBe(82); // 70 base + 12 Steppe Herder
-    expect(archerRun.clan.herd).toBe(5); // 3 base + 2 Steppe Herder
+    expect(archerRun.clan.food).toBe(70);
+    expect(archerRun.clan.herd).toBe(3);
     expect(archerRun.clan.campEffects.bonuses.range).toBe(0);
     expect(khanBasicRange(archerRun)).toBe(500);
 
@@ -211,13 +211,13 @@ describe('character classes and character profile', () => {
     expect(lancerRun.stats).toEqual({
       maxHealth: 120,
       speed: 192,
-      damage: 27, // 24 base + 3 Oath of the Khan
+      damage: 24,
       attackInterval: 0.78,
       pickupRadius: 84,
       projectiles: 1,
       pierce: 2,
     });
-    expect(lancerRun.clan.materials).toBe(68); // 50 base + 18 Artisan
+    expect(lancerRun.clan.materials).toBe(50);
     expect(lancerRun.clan.campEffects.bonuses.range).toBe(0);
     expect(khanBasicRange(lancerRun)).toBe(230);
 
@@ -229,15 +229,15 @@ describe('character classes and character profile', () => {
     };
     const pagodaRun = createRun('shared-hearth', pagodaProfile);
     expect(pagodaRun.stats).toEqual({
-      maxHealth: 170, // 155 base + 15 Imperial Retainer
+      maxHealth: 155,
       speed: 162,
-      damage: 25, // 22 base + 3 Oath of the Khan
+      damage: 22,
       attackInterval: 0.82,
       pickupRadius: 88,
       projectiles: 2,
       pierce: 2,
     });
-    expect(pagodaRun.health).toBe(170);
+    expect(pagodaRun.health).toBe(155);
     expect(pagodaRun.clan.campEffects.multipliers.clanProtection).toBeLessThan(0.9);
     expect(pagodaRun.clan.campEffects.bonuses.range).toBe(0);
     expect(khanBasicRange(pagodaRun)).toBe(126);
@@ -258,8 +258,8 @@ describe('character classes and character profile', () => {
       projectiles: 2,
       pierce: 2,
     });
-    expect(callerRun.clan.spirit).toBe(18); // 0 base + 10 Ritual Apprentice + 8 Oath of the Spirits
-    expect(callerRun.clan.campEffects.bonuses.resolveRecovery).toBeCloseTo(0.14); // 0.02 starting hearth + 0.12 Oath of the Spirits
+    expect(callerRun.clan.spirit).toBe(0);
+    expect(callerRun.clan.campEffects.bonuses.resolveRecovery).toBeCloseTo(0.02);
     expect(callerRun.clan.campEffects.bonuses.range).toBe(0);
     expect(khanBasicRange(callerRun)).toBe(440);
 
@@ -268,7 +268,7 @@ describe('character classes and character profile', () => {
     expect(archerRun.stats.projectiles).toBe(2);
     expect(archerRun.stats.attackInterval).toBe(0.6);
     expect(archerRun.stats.damage).toBe(19);
-    expect(archerRun.stats.speed).toBe(216);
+    expect(archerRun.stats.speed).toBe(208);
 
     const damageBefore = lancerRun.stats.damage;
     const pierceBefore = lancerRun.stats.pierce;
@@ -281,8 +281,8 @@ describe('character classes and character profile', () => {
     expect(lancerRun.stats.speed).toBe(202);
 
     while (pagodaRun.level < 6) gainExperience(pagodaRun, pagodaRun.nextLevelXp);
-    expect(pagodaRun.stats.maxHealth).toBe(195);
-    expect(pagodaRun.stats.damage).toBe(28);
+    expect(pagodaRun.stats.maxHealth).toBe(180);
+    expect(pagodaRun.stats.damage).toBe(25);
     expect(pagodaRun.stats.pierce).toBe(3);
     expect(pagodaRun.stats.projectiles).toBe(3);
 
