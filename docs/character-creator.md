@@ -1,12 +1,13 @@
 # Character creation
 
-Run `npm run dev` and choose **New Game** on the title screen. The wide
-parchment-scroll creator chooses the Khan's name, gender, and one of four combat
-classes. A large painted half-length portrait on the left changes with both gender
-and class; the live controls and short class description stay on the right. The
-portrait cross-fades briefly, unless reduced motion is requested. The four ability
-rows are deliberately left to the in-game HUD so the creator stays close to its
-single-page manuscript reference without crowding the scroll. **Begin Journey**
+Run `npm run dev` and choose **New Game** on the title screen. The wide manuscript
+folio chooses the Khan's name, gender, and one of four combat classes. A large
+painted half-length portrait on the left changes with both gender and class; the
+live controls and short class description stay on the right. The portraits use
+restrained historical clothing and practical class equipment rather than fantasy
+concept-art poses. They cross-fade briefly, unless reduced motion is requested.
+The four ability rows are deliberately left to the in-game HUD so every selection
+fits on the folio without clutter. **Begin Journey**
 starts the expedition at Mount Otgontenger;
 Escape, controller B, or **Back to title** returns without starting simulation.
 The current draft remains available until the scene restarts.
@@ -19,7 +20,7 @@ problem. The four classes are Mounted Archer, Lancer, Iron Pagoda, and Spirit
 Caller. Class choice determines the initial combat kit and progression.
 
 The profile contract still retains legacy appearance, background, oath, mount,
-and banner fields for save compatibility. The scroll does not currently expose
+and banner fields for save compatibility. The folio does not currently expose
 those fields, so a new profile uses their shared defaults and a remembered profile
 keeps its stored values. Character creation never changes or overwrites an existing
 saved expedition.
@@ -32,7 +33,7 @@ physics remain stopped throughout character creation.
 
 Pointer, touch, Tab, arrow-key/controller navigation, Enter/controller confirm,
 and Escape/controller back share the scene-owned menu actions. The creator keeps
-all controls inside the fixed-aspect painted scroll at supported desktop sizes.
+all controls inside the fixed-aspect folio at supported desktop sizes.
 
 `state/characterCreator.ts` owns the draft-to-profile mapping, validated option
 changes, and random names. `ArenaScene.characterCreator` owns the draft; `GameUI`
@@ -42,7 +43,7 @@ saves the profile, then begins normal gameplay and checkpointing.
 
 The creator reads class descriptions, option IDs, and profile values from
 `data/classes.ts` and the shared character contract. Its DOM lives in
-`src/ui/creator/characterCreatorContent.ts`; the scroll construction and safe paper
+`src/ui/creator/characterCreatorContent.ts`; the folio construction and safe paper
 area live in `src/character-creator.css`. See [the illustration
 record](character-creator-art.md) for the bundled art and presentation limits.
 

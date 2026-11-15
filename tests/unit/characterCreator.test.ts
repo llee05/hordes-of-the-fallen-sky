@@ -131,4 +131,18 @@ describe('character creator profile mapping', () => {
     expect(spiritCaller).toContain('creator-class-symbol');
     expect(spiritCaller).not.toContain('creator-class-spirit-caller.png');
   });
+
+  it('maps every class and gender to its own live portrait asset', () => {
+    const state = createCharacterCreator();
+    for (const classId of ['mounted-archer', 'lancer', 'iron-pagoda', 'spirit-caller'] as const) {
+      changeCreatorOption(state, 'classId', classId);
+      for (const gender of ['woman', 'man'] as const) {
+        changeCreatorOption(state, 'gender', gender);
+        const content = characterCreatorContent(state);
+        expect(content).toContain(`creator-portrait-${classId}-${gender}.webp`);
+        expect(content).toContain(`data-class="${classId}"`);
+        expect(content).toContain(`data-gender="${gender}"`);
+      }
+    }
+  });
 });

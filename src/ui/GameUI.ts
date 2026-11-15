@@ -1320,7 +1320,7 @@ export class GameUI {
     const portraits = ['mounted-archer', 'lancer', 'iron-pagoda', 'spirit-caller'].flatMap(
       (classId) => ['woman', 'man'].map((gender) => `creator-portrait-${classId}-${gender}.webp`),
     );
-    for (const filename of ['creator-scroll-wide.webp', ...portraits]) {
+    for (const filename of portraits) {
       const image = new Image();
       image.src = `${import.meta.env.BASE_URL}art/${filename}`;
       this.creatorPreloads.push(image);

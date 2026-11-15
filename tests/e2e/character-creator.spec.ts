@@ -7,7 +7,7 @@ test.beforeEach(() => test.setTimeout(90000));
 
 test.use({ viewport: { width: 1280, height: 800 } });
 
-test('creator content fits the painted scroll at every supported size', async ({ page }) => {
+test('creator content fits the manuscript folio at every supported size', async ({ page }) => {
   await openTitle(page);
   await page.getByRole('button', { name: /NEW GAME/ }).click();
 
@@ -31,11 +31,11 @@ test('creator content fits the painted scroll at every supported size', async ({
           horizontal: scroll.scrollWidth <= scroll.clientWidth + 1,
           vertical: scroll.scrollHeight <= scroll.clientHeight + 1,
           controlsInsidePaper:
-            controls.top > bounds.top + bounds.height * 0.09 &&
-            controls.bottom < bounds.bottom - bounds.height * 0.09,
+            controls.top > bounds.top + bounds.height * 0.03 &&
+            controls.bottom < bounds.bottom - bounds.height * 0.03,
           portraitInsidePaper:
-            portrait.top > bounds.top + bounds.height * 0.09 &&
-            portrait.bottom < bounds.bottom - bounds.height * 0.09,
+            portrait.top > bounds.top + bounds.height * 0.03 &&
+            portrait.bottom < bounds.bottom - bounds.height * 0.025,
         };
       });
       expect(fit, `${className} at ${size.width}x${size.height}`).toEqual({
