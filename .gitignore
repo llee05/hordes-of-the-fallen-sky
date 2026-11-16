@@ -13,3 +13,6 @@ playwright-report/
 
 # Playwright MCP screenshots and snapshots (docs/visual-workflow.md)
 .playwright-mcp/
+
+# Headless Chromium profiles for local HUD captures
+.chrome-profile*/

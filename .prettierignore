@@ -13,3 +13,6 @@ package-lock.json
 .codex/
 .opencode/
 .playwright-mcp/
+
+# Headless Chromium profiles for local HUD captures
+.chrome-profile*/
