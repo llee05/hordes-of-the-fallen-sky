@@ -167,7 +167,8 @@ describe('character creator profile mapping', () => {
     expect(content).toContain('creator-oath-steppe.webp');
     expect(content).toContain('creator-bottom-ornament.webp');
     expect(content).toContain('creator-banner-pole');
-    expect(content).toContain('creator-headgear-layer');
+    expect(content).toContain('creator-identity-woman.webp');
+    expect(content).toContain('creator-identity-portrait');
     expect(content).toContain('creator-banner-colours');
     expect(content).toContain('creator-status sr-only');
   });

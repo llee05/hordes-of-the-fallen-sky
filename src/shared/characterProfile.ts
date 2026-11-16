@@ -165,7 +165,7 @@ export function defaultCharacterProfile(): CharacterProfile {
     mount: 'bay',
     banner: {
       emblem: 'flame-sun',
-      fieldColour: 'ivory',
+      fieldColour: 'lapis',
       trim: 'steppe-fret',
     },
   };

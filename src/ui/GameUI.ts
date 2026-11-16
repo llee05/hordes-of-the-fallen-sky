@@ -1356,6 +1356,8 @@ export class GameUI {
       ...classCards,
       ...oaths,
       ...bannerEmblems,
+      'creator-identity-woman.webp',
+      'creator-identity-man.webp',
       'creator-header-frieze.webp',
       'creator-bottom-ornament.webp',
       'creator-selector-atlas.webp',

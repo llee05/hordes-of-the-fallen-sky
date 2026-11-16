@@ -177,8 +177,7 @@ export function characterCreatorContent(
             ${sectionTitle('Identity')}
             <div class="creator-identity-body">
               <div class="creator-face-preview" aria-hidden="true">
-                <span class="creator-atlas creator-selector-atlas creator-face-layer" style="${atlasStyle(faceIndex, 0)}"></span>
-                <span class="creator-atlas creator-selector-atlas creator-headgear-layer" style="${atlasStyle(headgearIndex, 2)}"></span>
+                <span class="creator-identity-portrait" style="${atlasStyle(headgearIndex, faceIndex)};background-image:url('${BASE}art/creator-identity-${profile.gender}.webp')"></span>
               </div>
               <div class="creator-identity-controls">
                 ${cycleRow('gender', 'Gender', CHARACTER_GENDERS, profile.gender, (value) => (value === 'woman' ? 'Woman' : 'Man'))}
