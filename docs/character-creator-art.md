@@ -25,7 +25,8 @@ captain's character-creation concept and four class sheets as references:
   scenes. Each class/gender pairing has its own figure, equipment, horse, and camp
   illustration. The pair cross-fades in 180 ms; reduced motion disables it.
 - `public/art/creator-selector-atlas.webp`: a 5×4 atlas of faces, hairstyles,
-  headgear, and mounts.
+  headgear, and mounts. The identity portrait composites its selected face and
+  headgear cells, so the large preview follows the live headgear choice.
 - `public/art/creator-vignette-atlas.webp`: a 5×5 atlas of origins, mounted class
   cards, oaths, banner emblems, and trim patterns.
 - `public/art/creator-class-card-*.webp` and `creator-oath-*.webp`: clean standalone

@@ -21,7 +21,7 @@
   height: 100%;
   color: var(--creator-ink);
   background: #d6ad72;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--creator-serif);
   user-select: none;
 }
 
@@ -53,9 +53,21 @@
   outline: calc(3 * var(--u)) solid #d4a54d;
   outline-offset: calc(-13 * var(--u));
   background:
-    repeating-linear-gradient(8deg, rgba(93, 55, 31, 0.025) 0 1px, transparent 1px 8px),
-    radial-gradient(circle at 50% 35%, rgba(255, 235, 190, 0.52), transparent 48%), #e5c590;
-  box-shadow: inset 0 0 calc(34 * var(--u)) rgba(70, 37, 20, 0.35);
+    radial-gradient(circle at 8% 14%, rgba(118, 65, 31, 0.13) 0 1px, transparent 2px),
+    radial-gradient(circle at 77% 68%, rgba(255, 240, 197, 0.23) 0 1px, transparent 2px),
+    repeating-linear-gradient(8deg, rgba(93, 55, 31, 0.045) 0 1px, transparent 1px 7px),
+    radial-gradient(ellipse at 50% 36%, rgba(255, 238, 196, 0.62), transparent 48%),
+    radial-gradient(ellipse at 50% 50%, transparent 54%, rgba(111, 62, 31, 0.2) 100%), #e2bf84;
+  background-size:
+    7px 9px,
+    11px 13px,
+    auto,
+    auto,
+    auto,
+    auto;
+  box-shadow:
+    inset 0 0 calc(34 * var(--u)) rgba(70, 37, 20, 0.39),
+    inset 0 0 0 calc(2 * var(--u)) rgba(248, 222, 169, 0.42);
   container-type: size;
 }
 
@@ -77,9 +89,7 @@
 }
 
 .creator-manuscript::after {
-  right: calc(12 * var(--u));
-  bottom: calc(12 * var(--u));
-  transform: rotate(180deg);
+  display: none;
 }
 
 .creator-header {
@@ -119,8 +129,11 @@
   clip-path: polygon(6% 0, 94% 0, 100% 50%, 94% 100%, 6% 100%, 0 50%);
   font-family: var(--creator-serif);
   font-size: calc(36 * var(--u));
+  font-style: italic;
   font-weight: 600;
+  letter-spacing: 0.015em;
   line-height: 0.95;
+  text-shadow: 0 calc(1 * var(--u)) rgba(113, 61, 31, 0.25);
 }
 
 .creator-title-cartouche p {
@@ -186,8 +199,15 @@
   overflow: hidden;
   border: calc(4 * var(--u)) double rgba(101, 43, 32, 0.78);
   background:
-    repeating-linear-gradient(6deg, rgba(91, 52, 28, 0.018) 0 1px, transparent 1px 7px),
-    rgba(241, 216, 171, 0.88);
+    radial-gradient(circle at 18% 26%, rgba(113, 63, 34, 0.1) 0 0.8px, transparent 1.5px),
+    radial-gradient(circle at 82% 73%, rgba(255, 239, 201, 0.22) 0 1px, transparent 1.7px),
+    repeating-linear-gradient(6deg, rgba(91, 52, 28, 0.035) 0 1px, transparent 1px 7px),
+    linear-gradient(105deg, rgba(247, 224, 183, 0.91), rgba(229, 195, 139, 0.91));
+  background-size:
+    8px 10px,
+    12px 15px,
+    auto,
+    auto;
   box-shadow:
     inset 0 0 0 calc(3 * var(--u)) rgba(201, 145, 52, 0.23),
     inset 0 0 calc(13 * var(--u)) rgba(111, 66, 34, 0.08);
@@ -215,6 +235,8 @@
 .creator-panel-heading h3 {
   margin: 0;
   font-size: calc(21 * var(--u));
+  font-weight: 600;
+  letter-spacing: 0.018em;
   line-height: 1;
 }
 
@@ -254,6 +276,7 @@
 }
 
 .creator-face-preview {
+  position: relative;
   overflow: hidden;
   border: calc(2 * var(--u)) solid var(--creator-red-dark);
   background: var(--creator-paper-light);
@@ -261,8 +284,17 @@
 }
 
 .creator-face-preview .creator-atlas {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.creator-face-preview .creator-headgear-layer {
+  filter: contrast(1.08) saturate(1.03);
+  mix-blend-mode: multiply;
+  transform: translateY(-30%) scale(0.84);
+  transform-origin: center;
 }
 
 .creator-identity-controls {
@@ -522,7 +554,7 @@
 
 .creator-scene-stage {
   position: absolute;
-  inset: calc(5 * var(--u)) calc(5 * var(--u)) calc(104 * var(--u));
+  inset: calc(5 * var(--u));
   margin: 0;
   overflow: hidden;
 }
@@ -576,6 +608,9 @@
   font-family: var(--creator-serif);
   font-size: calc(19 * var(--u));
   font-weight: 700;
+  box-shadow:
+    inset 0 0 0 calc(3 * var(--u)) rgba(211, 158, 62, 0.45),
+    0 calc(3 * var(--u)) calc(8 * var(--u)) rgba(62, 35, 22, 0.23);
 }
 
 .creator-name-frame {
@@ -827,6 +862,7 @@
 .creator-banner-preview {
   position: relative;
   min-width: 0;
+  overflow: visible;
 }
 
 .creator-banner-pole {
@@ -854,21 +890,52 @@
 .creator-banner-flag {
   position: absolute;
   top: calc(19 * var(--u));
-  right: calc(6 * var(--u));
-  bottom: calc(14 * var(--u));
+  right: calc(2 * var(--u));
+  bottom: auto;
   left: calc(23 * var(--u));
+  height: 74%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: calc(4 * var(--u)) double #6c321f;
-  clip-path: polygon(0 0, 100% 0, 91% 25%, 100% 50%, 91% 75%, 100% 100%, 0 100%);
-  box-shadow: inset 0 0 0 calc(3 * var(--u)) rgba(242, 211, 153, 0.42);
+  border: calc(3 * var(--u)) solid #6c321f;
+  clip-path: polygon(
+    0 3%,
+    76% 0,
+    98% 10%,
+    80% 25%,
+    100% 39%,
+    80% 52%,
+    98% 68%,
+    78% 81%,
+    96% 94%,
+    72% 100%,
+    0 94%
+  );
+  filter: drop-shadow(
+    calc(2 * var(--u)) calc(3 * var(--u)) calc(2 * var(--u)) rgba(66, 35, 20, 0.25)
+  );
+  box-shadow:
+    inset 0 0 0 calc(3 * var(--u)) rgba(242, 211, 153, 0.52),
+    inset 0 0 calc(12 * var(--u)) rgba(59, 39, 26, 0.2);
+  transform: rotate(1.5deg);
+  transform-origin: left top;
+}
+
+.creator-banner-flag::before {
+  position: absolute;
+  inset: calc(6 * var(--u)) calc(14 * var(--u)) calc(6 * var(--u)) calc(6 * var(--u));
+  border: calc(2 * var(--u)) dashed rgba(238, 205, 142, 0.8);
+  content: '';
+  pointer-events: none;
 }
 
 .creator-banner-flag img {
+  position: relative;
+  z-index: 1;
   width: 68%;
   height: 68%;
   object-fit: cover;
+  filter: grayscale(0.15) contrast(2.3) brightness(1.35);
   mix-blend-mode: multiply;
 }
 
@@ -916,6 +983,10 @@
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: calc(4 * var(--u));
+}
+
+.creator-banner-option-row > .creator-banner-colours {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .creator-banner-choice {
@@ -1035,7 +1106,7 @@
   }
 
   .creator-scene-stage {
-    inset: 5px 5px 104px;
+    inset: 5px;
   }
   .creator-scene {
     object-position: center top;
@@ -1173,6 +1244,12 @@
     height: 280px;
     grid-template-columns: 34% 66%;
     padding: 0 8px 8px;
+  }
+  .creator-banner-flag {
+    top: 35px;
+    right: 1px;
+    left: 21px;
+    height: 118px;
   }
   .creator-banner-controls > div {
     grid-template-columns: 66px 1fr;

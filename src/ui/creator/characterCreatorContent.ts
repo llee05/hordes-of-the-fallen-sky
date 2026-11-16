@@ -143,6 +143,7 @@ export function characterCreatorContent(
     previousPortrait !== undefined &&
     (previousPortrait.classId !== profile.classId || previousPortrait.gender !== profile.gender);
   const faceIndex = CHARACTER_FACES.indexOf(profile.face);
+  const headgearIndex = CHARACTER_HEADGEAR.indexOf(profile.headgear);
   const [previousClothing, nextClothing] = selectorNeighbours(
     CHARACTER_CLOTHING_COLOURS,
     profile.clothingColour,
@@ -175,7 +176,10 @@ export function characterCreatorContent(
           <section class="creator-panel creator-identity-panel">
             ${sectionTitle('Identity')}
             <div class="creator-identity-body">
-              <div class="creator-face-preview" aria-hidden="true"><span class="creator-atlas creator-selector-atlas" style="${atlasStyle(faceIndex, 0)}"></span></div>
+              <div class="creator-face-preview" aria-hidden="true">
+                <span class="creator-atlas creator-selector-atlas creator-face-layer" style="${atlasStyle(faceIndex, 0)}"></span>
+                <span class="creator-atlas creator-selector-atlas creator-headgear-layer" style="${atlasStyle(headgearIndex, 2)}"></span>
+              </div>
               <div class="creator-identity-controls">
                 ${cycleRow('gender', 'Gender', CHARACTER_GENDERS, profile.gender, (value) => (value === 'woman' ? 'Woman' : 'Man'))}
                 ${cycleRow('age', 'Age', CHARACTER_AGES, profile.age, (value) => CREATOR_AGE_LABELS[value as keyof typeof CREATOR_AGE_LABELS])}
@@ -272,7 +276,7 @@ export function characterCreatorContent(
               </div>
               <div class="creator-banner-controls">
                 <div><span>Emblem</span><div class="creator-banner-option-row">${selectorArrow('emblem', previousEmblem, 'previous', 'banner emblem')}<div role="radiogroup" aria-label="Banner emblem">${CHARACTER_BANNER_EMBLEMS.map((emblem, index) => choiceButton('emblem', emblem, emblem, profile.banner.emblem === emblem, `<span class="creator-atlas creator-vignette-atlas" style="${atlasStyle(index, 3)}" aria-hidden="true"></span>`, 'creator-banner-choice')).join('')}</div>${selectorArrow('emblem', nextEmblem, 'next', 'banner emblem')}</div></div>
-                <div><span>Field Colour</span><div class="creator-banner-option-row">${selectorArrow('fieldColour', previousField, 'previous', 'banner field colour')}<div role="radiogroup" aria-label="Banner field colour">${CHARACTER_BANNER_COLOURS.map((colour) => choiceButton('fieldColour', colour, colour, profile.banner.fieldColour === colour, `<span class="creator-colour creator-colour-${colour}" aria-hidden="true"></span>`, 'creator-banner-choice creator-banner-colour')).join('')}</div>${selectorArrow('fieldColour', nextField, 'next', 'banner field colour')}</div></div>
+                <div><span>Field Colour</span><div class="creator-banner-option-row">${selectorArrow('fieldColour', previousField, 'previous', 'banner field colour')}<div class="creator-banner-colours" role="radiogroup" aria-label="Banner field colour">${CHARACTER_BANNER_COLOURS.map((colour) => choiceButton('fieldColour', colour, colour, profile.banner.fieldColour === colour, `<span class="creator-colour creator-colour-${colour}" aria-hidden="true"></span>`, 'creator-banner-choice creator-banner-colour')).join('')}</div>${selectorArrow('fieldColour', nextField, 'next', 'banner field colour')}</div></div>
                 <div><span>Trim / Pattern</span><div class="creator-banner-option-row">${selectorArrow('trim', previousTrim, 'previous', 'banner trim')}<div role="radiogroup" aria-label="Banner trim">${CHARACTER_BANNER_TRIMS.map((trim, index) => choiceButton('trim', trim, trim, profile.banner.trim === trim, `<span class="creator-atlas creator-vignette-atlas creator-trim-atlas" style="${atlasStyle(index, 4)}" aria-hidden="true"></span>`, 'creator-banner-choice creator-banner-trim')).join('')}</div>${selectorArrow('trim', nextTrim, 'next', 'banner trim')}</div></div>
               </div>
             </div>
@@ -281,7 +285,7 @@ export function characterCreatorContent(
       </main>
       <img class="creator-bottom-ornament" src="${BASE}art/creator-bottom-ornament.webp" alt="" aria-hidden="true" />
       <button type="button" class="creator-journey-button" data-action="begin-journey" data-focus-key="creator-begin" aria-disabled="${!nameValid}" aria-label="Begin Journey"><span aria-hidden="true">◆</span> Begin Journey <span aria-hidden="true">◆</span></button>
-      <p id="creator-status" class="creator-status" aria-live="polite"></p>
+      <p id="creator-status" class="creator-status sr-only" aria-live="polite"></p>
     </article>
   </section>`;
 }
