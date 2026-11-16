@@ -29,5 +29,9 @@ export function arrivalLocation(run: RunState): MigrationLocation {
 /** While camped, the clan may migrate to any other real place, including ones it left before. */
 export function availableDestinations(run: RunState): readonly MigrationLocation[] {
   if (run.clan.stage !== 'camp') return [];
+  if (run.prologue && run.legacy.crossings.length === 0)
+    return run.prologue.routesOpened
+      ? DESTINATIONS.filter((location) => location.id === 'orkhon-valley')
+      : [];
   return DESTINATIONS.filter((location) => location.id !== currentLocation(run).id);
 }

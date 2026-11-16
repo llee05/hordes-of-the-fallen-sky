@@ -7,8 +7,10 @@ import {
 import { GAME } from '../config';
 import { classDefinition } from '../data/classes';
 import { LOCATIONS, type StartingTraditionId } from '../data/clan';
+import { PROLOGUE_STAGES, type PrologueStageId } from '../data/prologue';
 import type { LocationId, RunState } from '../types';
 import { advanceClan } from '../state/clan';
+import { createPrologueRun, setPrologueStage } from '../state/prologue';
 import { createRun, gainExperience } from '../state/run';
 
 export interface DeveloperLevel {
@@ -16,6 +18,13 @@ export interface DeveloperLevel {
   title: string;
   description: string;
   locationId: LocationId;
+}
+
+export interface DeveloperPrologueLevel {
+  id: string;
+  title: string;
+  description: string;
+  stage: PrologueStageId;
 }
 
 /** One fresh camp at each real place. */
@@ -26,11 +35,46 @@ export const DEVELOPER_LEVELS: readonly DeveloperLevel[] = LOCATIONS.map((locati
   locationId: location.id,
 }));
 
+export const DEVELOPER_PROLOGUE_LEVELS: readonly DeveloperPrologueLevel[] = PROLOGUE_STAGES.map(
+  (stage) => ({
+    id: `prologue:${stage.id}`,
+    title: `${stage.numeral} · ${stage.title}`,
+    description: stage.summary,
+    stage: stage.id,
+  }),
+);
+
+function developerProfile(
+  classId?: string,
+  baseProfile?: CharacterProfile,
+): CharacterProfile | undefined {
+  if (classId === undefined) return baseProfile;
+  if (!CHARACTER_CLASSES.includes(classId as CharacterClassId)) return;
+  return {
+    ...normalizeCharacterProfile(baseProfile),
+    classId: classId as CharacterClassId,
+  };
+}
+
 /** Fresh test expeditions use the real camp rules; only the scene may activate them in DEV. */
-export function createDeveloperRun(id: string): RunState | undefined {
+export function createDeveloperRun(
+  id: string,
+  classId?: string,
+  baseProfile?: CharacterProfile,
+): RunState | undefined {
+  const profile = developerProfile(classId, baseProfile);
+  if (classId !== undefined && !profile) return;
+  const prologue = DEVELOPER_PROLOGUE_LEVELS.find((entry) => entry.id === id);
+  if (prologue) {
+    const run = createPrologueRun('shared-hearth', profile);
+    setPrologueStage(run, prologue.stage);
+    run.phase = 'playing';
+    run.clan.message = `Developer prologue · ${prologue.title}. Stages II–V pass through in Phase 2.`;
+    return run;
+  }
   const level = DEVELOPER_LEVELS.find((entry) => entry.id === id);
   if (!level) return undefined;
-  const run = createRun();
+  const run = createRun('shared-hearth', profile);
   run.phase = 'playing';
   run.guidance.enabled = false;
   Object.assign(run.clan, {
@@ -59,11 +103,8 @@ export function createDeveloperClassRun(
   tradition: StartingTraditionId = 'shared-hearth',
   baseProfile?: CharacterProfile,
 ): RunState | undefined {
-  if (!CHARACTER_CLASSES.includes(classId as CharacterClassId)) return undefined;
-  const profile: CharacterProfile = {
-    ...normalizeCharacterProfile(baseProfile),
-    classId: classId as CharacterClassId,
-  };
+  const profile = developerProfile(classId, baseProfile);
+  if (!profile) return undefined;
   const cls = classDefinition(profile.classId);
   const run = createRun(tradition, profile);
   run.phase = 'playing';

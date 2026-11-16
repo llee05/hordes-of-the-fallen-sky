@@ -114,6 +114,23 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
 
   const scene = {
     add: {
+      graphics: () => {
+        const graphics: Record<string, any> = {};
+        for (const method of [
+          'setName',
+          'setDepth',
+          'setVisible',
+          'setPosition',
+          'clear',
+          'fillStyle',
+          'fillCircle',
+          'lineStyle',
+          'strokeCircle',
+          'lineBetween',
+        ])
+          graphics[method] = () => graphics;
+        return graphics;
+      },
       image: (x = 0, y = 0) => {
         const img = new Projectile({} as any, x, y, 'shadow');
         return img;

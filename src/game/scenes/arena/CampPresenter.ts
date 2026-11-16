@@ -47,6 +47,17 @@ export class CampPresenter {
   refresh(): void {
     const { scene, run, camp } = this.arena;
     camp.removeAll(true);
+    const established = !run.prologue || run.prologue.campEstablished;
+    camp.setVisible(established);
+    if (!established) {
+      this.population = run.clan.population;
+      this.herd = run.clan.herd;
+      for (const hurdle of this.campBarrier.hurdles) {
+        hurdle.image.setVisible(false);
+        hurdle.shadow.setVisible(false);
+      }
+      return;
+    }
     const migrating = run.clan.stage === 'migration';
     const add = (x: number, y: number, key: string, scale = 2.5) => {
       const width = ((ART_WIDTH[key] ?? 60) * scale) / 2.5;
@@ -102,6 +113,12 @@ export class CampPresenter {
    */
   update(dt: number): void {
     const { run, camp } = this.arena;
+    if (run.prologue && !run.prologue.campEstablished) {
+      camp.setVisible(false);
+      this.label.setVisible(false);
+      return;
+    }
+    camp.setVisible(true);
     const clan = run.clan;
     const center = this.arena.landscape.campPosition.x;
     if (clan.population !== this.population || clan.herd !== this.herd) this.refresh();
@@ -162,6 +179,7 @@ export class CampPresenter {
   private placeLabel(): void {
     const { run, camp } = this.arena;
     this.label
+      .setVisible(!run.prologue || run.prologue.campEstablished)
       .setPosition(camp.x, camp.y - 112 * CAMP_VISUAL_SCALE)
       .setText(run.clan.stage === 'migration' ? 'PROTECT THE CARAVAN  →' : 'YOUR CLAN');
   }

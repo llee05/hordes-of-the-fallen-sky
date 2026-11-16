@@ -28,6 +28,7 @@ export interface SpawnDirective {
   angle?: number;
   objectiveId?: number;
   campOnly?: boolean;
+  anchor?: 'camp' | 'khan';
 }
 
 /** Scene state the director reads but does not own yet. */
@@ -63,7 +64,14 @@ export class EnemyDirector {
     const plan = encounterPlan(run);
     const camera = scene.cameras.main;
     const anchor =
-      directive?.campOnly || !isKhanActive(run) || Math.random() < 0.45 ? camp : player;
+      directive?.anchor === 'khan'
+        ? player
+        : directive?.anchor === 'camp' ||
+            directive?.campOnly ||
+            !isKhanActive(run) ||
+            Math.random() < 0.45
+          ? camp
+          : player;
     const area = AREA_ENCOUNTERS[currentLocation(run).id];
     const base =
       area.pattern === 'banks'
@@ -196,6 +204,7 @@ export class EnemyDirector {
   /** The encounter spawn timer: spawn when due, then schedule the next arrival. */
   tickSpawns(dt: number): void {
     const { run, timers } = this.arena;
+    if (run.prologue && !run.prologue.completed) return;
     timers.spawnTimer -= dt;
     if (timers.spawnTimer <= 0) {
       const spawned = this.spawn();
