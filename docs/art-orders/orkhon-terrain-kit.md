@@ -247,7 +247,7 @@ Every element on the sheet must adhere strictly to [docs/art-spec.md](../art-spe
 
 1. **Master Concept Reference:** `/home/amicablepigeon/Projects/firstmate/data/bh-65-orkhon-level-v2/pack/orkhon_valley_texture_pack_v2/reference/orkhon_level_layout.png`
    - _Why:_ This hand-painted manuscript map exhibits the exact desired chronicle line art, warm parchment paper, muted mineral washes, and basalt gorge structures.
-2. **Approved Style & Linework Reference:** `public/art/steppe-props.png` or `public/art/creator-figures.png`
+2. **Approved Style & Linework Reference:** `public/art/steppe-props.png` or `public/art/steppe-classes-motion.png`
    - _Why:_ Demonstrates approved ink outline weight, ivory felt rendering, and mineral pigment saturation.
 
 ### 6.2 Grey Shape Guide Specification

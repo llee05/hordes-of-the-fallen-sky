@@ -1,266 +1,290 @@
 import { CLASSES, classDefinition } from '../../game/data/classes';
 import type { CharacterCreatorState } from '../../game/state/characterCreator';
-import { isValidCharacterName, MAX_CHARACTER_NAME_LENGTH } from '../../shared/characterProfile';
-import { clanMark } from '../artwork';
+import {
+  CHARACTER_AGES,
+  CHARACTER_BACKGROUNDS,
+  CHARACTER_BANNER_COLOURS,
+  CHARACTER_BANNER_EMBLEMS,
+  CHARACTER_BANNER_TRIMS,
+  CHARACTER_CLOTHING_COLOURS,
+  CHARACTER_FACES,
+  CHARACTER_GENDERS,
+  CHARACTER_HAIRSTYLES,
+  CHARACTER_HEADGEAR,
+  CHARACTER_MOUNTS,
+  CHARACTER_OATHS,
+  CHARACTER_VOICES,
+  isValidCharacterName,
+  MAX_CHARACTER_NAME_LENGTH,
+  type CharacterProfile,
+} from '../../shared/characterProfile';
 import { escapeHtml } from '../progressionTree';
-import { ABILITY_MARKS, framedCornerFrets } from './components';
+import {
+  CREATOR_AGE_LABELS,
+  CREATOR_CLASS_TRAITS,
+  CREATOR_ORIGINS,
+  CREATOR_OATHS,
+  CREATOR_VOICE_LABELS,
+} from './characterCreatorOptions';
+
+export type CreatorPortraitSelection = Pick<CharacterCreatorState['profile'], 'classId' | 'gender'>;
+
+const BASE = import.meta.env.BASE_URL;
+
+function sceneSource(selection: CreatorPortraitSelection): string {
+  return `${BASE}art/creator-scene-${selection.classId}-${selection.gender}.webp`;
+}
+
+function oathSource(oath: CharacterProfile['oath']): string {
+  return `${BASE}art/creator-oath-${oath.replace('oath-of-the-', '')}.webp`;
+}
+
+function atlasStyle(column: number, row: number): string {
+  return `--atlas-column:${column};--atlas-row:${row}`;
+}
+
+function sectionTitle(title: string, subtitle?: string): string {
+  return `<header class="creator-panel-heading">
+    <span aria-hidden="true">◈</span>
+    <h3>${escapeHtml(title)}</h3>
+    ${subtitle ? `<small>${escapeHtml(subtitle)}</small>` : ''}
+    <span aria-hidden="true">◈</span>
+  </header>`;
+}
+
+function choiceButton(
+  field: string,
+  value: string,
+  label: string,
+  selected: boolean,
+  content: string,
+  className: string,
+): string {
+  return `<button type="button" class="${className}" data-creator-field="${field}" data-creator-value="${value}" data-focus-key="${field}-${value}" role="radio" aria-checked="${selected}" tabindex="${selected ? '0' : '-1'}" aria-label="${escapeHtml(label)}">${content}</button>`;
+}
+
+function cycleRow(
+  field: string,
+  label: string,
+  values: readonly string[],
+  selectedValue: string,
+  display: (value: string) => string,
+  extra = '',
+): string {
+  const selectedIndex = values.indexOf(selectedValue);
+  const previous = values[(selectedIndex - 1 + values.length) % values.length]!;
+  const next = values[(selectedIndex + 1) % values.length]!;
+  return `<div class="creator-cycle-row">
+    <span>${escapeHtml(label)}</span>
+    <button type="button" class="creator-arrow" data-creator-field="${field}" data-creator-value="${previous}" data-focus-key="${field}-previous" aria-label="Previous ${escapeHtml(label)}">‹</button>
+    <strong>${escapeHtml(display(selectedValue))}</strong>
+    <button type="button" class="creator-arrow" data-creator-field="${field}" data-creator-value="${next}" data-focus-key="${field}-next" aria-label="Next ${escapeHtml(label)}">›</button>
+    ${extra}
+  </div>`;
+}
+
+function selectorArrow(
+  field: string,
+  value: string,
+  direction: 'previous' | 'next',
+  label: string,
+): string {
+  return `<button type="button" class="creator-arrow creator-selector-arrow" data-creator-field="${field}" data-creator-value="${value}" data-focus-key="${field}-${direction}" aria-label="${direction === 'previous' ? 'Previous' : 'Next'} ${escapeHtml(label)}">${direction === 'previous' ? '‹' : '›'}</button>`;
+}
+
+function selectorNeighbours(values: readonly string[], selectedValue: string): [string, string] {
+  const selectedIndex = values.indexOf(selectedValue);
+  return [
+    values[(selectedIndex - 1 + values.length) % values.length]!,
+    values[(selectedIndex + 1) % values.length]!,
+  ];
+}
+
+function thumbnailRow(
+  profile: CharacterProfile,
+  field: 'face' | 'hairstyle' | 'headgear',
+  label: string,
+  values: readonly string[],
+  atlasRow: number,
+): string {
+  const selected = profile[field];
+  const [previous, next] = selectorNeighbours(values, selected);
+  return `<div class="creator-thumbnail-row">
+    <span>${escapeHtml(label)}</span>
+    ${selectorArrow(field, previous, 'previous', label)}
+    <div class="creator-thumbnail-options" role="radiogroup" aria-label="${escapeHtml(label)}">
+      ${values
+        .map((value, index) =>
+          choiceButton(
+            field,
+            value,
+            `${label} ${index + 1}`,
+            selected === value,
+            `<span class="creator-atlas creator-selector-atlas" style="${atlasStyle(index, atlasRow)}" aria-hidden="true"></span>`,
+            'creator-thumbnail-choice',
+          ),
+        )
+        .join('')}
+    </div>
+    ${selectorArrow(field, next, 'next', label)}
+  </div>`;
+}
 
 export function characterCreatorContent(
   state: CharacterCreatorState,
-  expandedAbilityId?: string,
-  abilityDetailsMode: 'accordion' | 'all' = 'accordion',
+  previousPortrait?: CreatorPortraitSelection,
 ): string {
-  const p = state.profile;
-  const tradition = classDefinition(p.classId);
-  const nameValid = isValidCharacterName(p.name);
-  const isMan = p.gender === 'man';
-  const isWoman = p.gender === 'woman';
-  const activeAbilityId = tradition.abilities.some((ability) => ability.id === expandedAbilityId)
-    ? expandedAbilityId
-    : tradition.abilities[0]?.id;
+  const profile = state.profile;
+  const selectedClass = classDefinition(profile.classId);
+  const selectedOrigin = CREATOR_ORIGINS[profile.background];
+  const selectedOath = CREATOR_OATHS[profile.oath];
+  const nameValid = isValidCharacterName(profile.name);
+  const portraitChanged =
+    previousPortrait !== undefined &&
+    (previousPortrait.classId !== profile.classId || previousPortrait.gender !== profile.gender);
+  const faceIndex = CHARACTER_FACES.indexOf(profile.face);
+  const headgearIndex = CHARACTER_HEADGEAR.indexOf(profile.headgear);
+  const [previousClothing, nextClothing] = selectorNeighbours(
+    CHARACTER_CLOTHING_COLOURS,
+    profile.clothingColour,
+  );
+  const [previousOath, nextOath] = selectorNeighbours(CHARACTER_OATHS, profile.oath);
+  const [previousMount, nextMount] = selectorNeighbours(CHARACTER_MOUNTS, profile.mount);
+  const [previousEmblem, nextEmblem] = selectorNeighbours(
+    CHARACTER_BANNER_EMBLEMS,
+    profile.banner.emblem,
+  );
+  const [previousField, nextField] = selectorNeighbours(
+    CHARACTER_BANNER_COLOURS,
+    profile.banner.fieldColour,
+  );
+  const [previousTrim, nextTrim] = selectorNeighbours(CHARACTER_BANNER_TRIMS, profile.banner.trim);
 
   return `<section class="character-creator" aria-label="Character creation">
-    <h2 id="overlay-title" class="sr-only">Character Creation</h2>
-    <div class="creator-scroll-surface" data-scroll-key="creator-page">
-      <!-- Left Column: Identity & Tradition -->
-      <div class="creator-column creator-left">
-        <!-- Section: Name -->
-        <div class="creator-section creator-name-section">
-          <div class="creator-framed-input">
-            ${framedCornerFrets()}
-            <input
-              id="character-name"
-              class="creator-name-field"
-              data-creator-name
-              data-focus-key="creator-name"
-              data-nav-up="creator-back"
-              data-nav-down="gender-man"
-              data-nav-right="creator-random"
-              value="${escapeHtml(p.name)}"
-              maxlength="${MAX_CHARACTER_NAME_LENGTH}"
-              autocomplete="off"
-              spellcheck="false"
-              aria-label="Name"
-              aria-describedby="creator-name-hint"
-              aria-invalid="${!nameValid}"
-              placeholder="Enter rider name..."
-            />
-            <button
-              type="button"
-              class="creator-random-btn"
-              data-creator-random
-              data-focus-key="creator-random"
-              data-nav-left="creator-name"
-              data-nav-down="gender-woman"
-              aria-label="Random name"
-              title="Random name"
-            >
-              <svg class="creator-dice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="3" stroke-width="2"/>
-                <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
-                <circle cx="16" cy="8" r="1.5" fill="currentColor"/>
-                <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
-                <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
-                <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
-              </svg>
-            </button>
-          </div>
-          <small id="creator-name-hint" class="creator-name-hint ${nameValid ? 'sr-only' : 'invalid'}">
-            ${nameValid ? 'The name your clan will remember.' : 'Enter a name to begin your journey.'}
-          </small>
+    <article class="creator-manuscript" data-scroll-key="creator-page">
+      <header class="creator-header">
+        <img src="${BASE}art/creator-header-frieze.webp" alt="" aria-hidden="true" />
+        <div class="creator-title-cartouche">
+          <h2 id="overlay-title">Hordes of the Fallen Sky</h2>
+          <p><span aria-hidden="true">◆</span> Character Creation <span aria-hidden="true">◆</span></p>
         </div>
+        <button type="button" class="creator-back" data-action="back" data-focus-key="creator-back" aria-label="Back to title">‹ Back</button>
+      </header>
 
-        <!-- Section: Gender -->
-        <div class="creator-section creator-gender-section">
-          <div class="creator-gender-options" role="radiogroup" aria-label="Gender">
-            <button
-              type="button"
-              class="creator-gender-btn creator-framed-tile"
-              data-creator-field="gender"
-              data-creator-value="man"
-              data-focus-key="gender-man"
-              data-nav-up="creator-name"
-              data-nav-right="gender-woman"
-              data-nav-down="class-mounted-archer"
-              role="radio"
-              aria-checked="${isMan}"
-              tabindex="${isMan ? '0' : '-1'}"
-              aria-label="Male"
-            >
-              ${framedCornerFrets()}
-              <span class="gender-sym" aria-hidden="true">♂</span>
-              <span class="gender-text">Male</span>
-            </button>
-            <button
-              type="button"
-              class="creator-gender-btn creator-framed-tile"
-              data-creator-field="gender"
-              data-creator-value="woman"
-              data-focus-key="gender-woman"
-              data-nav-up="creator-random"
-              data-nav-left="gender-man"
-              data-nav-down="class-lancer"
-              role="radio"
-              aria-checked="${isWoman}"
-              tabindex="${isWoman ? '0' : '-1'}"
-              aria-label="Female"
-            >
-              ${framedCornerFrets()}
-              <span class="gender-sym" aria-hidden="true">♀</span>
-              <span class="gender-text">Female</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Section: Class -->
-        <div class="creator-section creator-class-section">
-          <div class="creator-classes-grid" role="radiogroup" aria-label="Combat class">
-            ${CLASSES.map((c) => {
-              const selected = p.classId === c.id;
-              const navigation = {
-                'mounted-archer': {
-                  up: 'gender-man',
-                  right: 'class-lancer',
-                  down: 'class-iron-pagoda',
-                  left: 'creator-back',
-                },
-                lancer: {
-                  up: 'gender-woman',
-                  right: `ability-${tradition.abilities[0]?.id ?? ''}`,
-                  down: 'class-spirit-caller',
-                  left: 'class-mounted-archer',
-                },
-                'iron-pagoda': {
-                  up: 'class-mounted-archer',
-                  right: 'class-spirit-caller',
-                  down: 'creator-back',
-                  left: 'creator-back',
-                },
-                'spirit-caller': {
-                  up: 'class-lancer',
-                  right: `ability-${tradition.abilities.at(-1)?.id ?? ''}`,
-                  down: 'creator-begin',
-                  left: 'class-iron-pagoda',
-                },
-              }[c.id];
-              return `<button
-                type="button"
-                class="creator-class-tile creator-framed-tile"
-                data-creator-field="classId"
-                data-creator-value="${c.id}"
-                data-focus-key="class-${c.id}"
-                data-nav-up="${navigation.up}"
-                data-nav-right="${navigation.right}"
-                data-nav-down="${navigation.down}"
-                data-nav-left="${navigation.left}"
-                role="radio"
-                aria-checked="${selected}"
-                tabindex="${selected ? '0' : '-1'}"
-                aria-label="${escapeHtml(c.title)}"
-                title="${escapeHtml(c.title)}: ${escapeHtml(c.subtitle)}"
-              >
-                ${framedCornerFrets()}
-                <img src="${import.meta.env.BASE_URL}art/creator-class-${c.id}.png" class="creator-tile-icon" alt="" aria-hidden="true" />
-                <span class="creator-tile-title">${escapeHtml(c.title)}</span>
-              </button>`;
-            }).join('')}
-          </div>
-        </div>
-      </div>
-
-      <!-- Centre: Arched Rider Preview -->
-      <div class="creator-center-zone" aria-label="Mounted character preview">
-        <canvas
-          id="creator-rider-canvas"
-          class="creator-rider-canvas"
-          data-class="${p.classId}"
-          data-gender="${p.gender}"
-          width="512"
-          height="720"
-          role="img"
-          aria-label="${escapeHtml(p.gender === 'woman' ? 'Female' : 'Male')} ${escapeHtml(tradition.title)} on horseback"
-        ></canvas>
-        <div class="creator-preview-caption sr-only">
-          <strong>${escapeHtml(tradition.title)}</strong>
-          <span>${escapeHtml(p.gender === 'woman' ? 'Female Rider' : 'Male Rider')}</span>
-        </div>
-      </div>
-
-      <!-- Right Column: Description & Abilities -->
-      <div class="creator-column creator-right" aria-label="Class traits and abilities">
-        <div class="creator-class-details">
-          <div class="creator-detail-header">
-            <h3 class="creator-detail-title">${escapeHtml(tradition.title)}</h3>
-            <p class="creator-detail-subtitle">${escapeHtml(tradition.subtitle)}</p>
-          </div>
-          <p class="creator-detail-summary">${escapeHtml(tradition.summary)}</p>
-          <div class="creator-detail-traits" aria-label="Key traits">
-            ${tradition.keyTraits.map((t) => `<span class="creator-trait-badge">${escapeHtml(t)}</span>`).join('')}
-          </div>
-          <div class="creator-abilities-panel">
-            <h4 class="sr-only">Class abilities</h4>
-            <div class="creator-abilities-list">
-              ${tradition.abilities
-                .map((ability, index) => {
-                  const expanded = abilityDetailsMode === 'all' || ability.id === activeAbilityId;
-                  return `<button
-                type="button"
-                class="creator-ability-item"
-                data-creator-ability="${ability.id}"
-                data-focus-key="ability-${ability.id}"
-                data-nav-up="${index === 0 ? 'gender-woman' : `ability-${tradition.abilities[index - 1]!.id}`}"
-                data-nav-right="creator-begin"
-                data-nav-down="${index === tradition.abilities.length - 1 ? 'creator-begin' : `ability-${tradition.abilities[index + 1]!.id}`}"
-                data-nav-left="${index < 2 ? 'class-lancer' : 'class-spirit-caller'}"
-                aria-expanded="${expanded}"
-                aria-controls="creator-ability-description-${ability.id}"
-              >
-                <div class="creator-ability-badge">
-                  <span class="creator-ability-key">${escapeHtml(ability.slotLabel)}</span>
-                  ${clanMark(ABILITY_MARKS[ability.id] ?? 'spirit')}
-                </div>
-                <div class="creator-ability-body">
-                  <strong class="creator-ability-name">${escapeHtml(ability.name)}</strong>
-                  <p
-                    id="creator-ability-description-${ability.id}"
-                    class="creator-ability-desc"
-                    ${expanded ? '' : 'hidden'}
-                  >${escapeHtml(ability.description)}</p>
-                </div>
-              </button>`;
-                })
-                .join('')}
+      <main class="creator-layout">
+        <aside class="creator-column creator-left-column">
+          <section class="creator-panel creator-identity-panel">
+            ${sectionTitle('Identity')}
+            <div class="creator-identity-body">
+              <div class="creator-face-preview" aria-hidden="true">
+                <span class="creator-identity-portrait" style="${atlasStyle(headgearIndex, faceIndex)};background-image:url('${BASE}art/creator-identity-${profile.gender}.webp')"></span>
+              </div>
+              <div class="creator-identity-controls">
+                ${cycleRow('gender', 'Gender', CHARACTER_GENDERS, profile.gender, (value) => (value === 'woman' ? 'Woman' : 'Man'))}
+                ${cycleRow('age', 'Age', CHARACTER_AGES, profile.age, (value) => CREATOR_AGE_LABELS[value as keyof typeof CREATOR_AGE_LABELS])}
+                ${cycleRow('voice', 'Voice', CHARACTER_VOICES, profile.voice, (value) => CREATOR_VOICE_LABELS[value as keyof typeof CREATOR_VOICE_LABELS], `<button type="button" class="creator-voice-preview" data-creator-voice-preview data-focus-key="voice-preview" aria-label="Preview ${escapeHtml(CREATOR_VOICE_LABELS[profile.voice])}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm11.5 3a4 4 0 0 0-2-3.46v6.92A4 4 0 0 0 15.5 12zm0-7.08v2.06a6 6 0 0 1 0 10.04v2.06a8 8 0 0 0 0-14.16z"/></svg></button>`)}
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </section>
 
-      <!-- Bottom: Back & Begin plaque buttons -->
-      <div class="creator-bottom-bar">
-        <button
-          type="button"
-          class="creator-plaque-btn creator-btn-back"
-          data-action="back"
-          data-focus-key="creator-back"
-          data-nav-up="class-iron-pagoda"
-          data-nav-right="creator-begin"
-          aria-label="Back to title"
-        >
-          <span>‹ Back</span>
-        </button>
-        <button
-          type="button"
-          class="creator-plaque-btn creator-btn-begin"
-          data-action="begin-journey"
-          data-focus-key="creator-begin"
-          data-nav-up="ability-${tradition.abilities.at(-1)?.id ?? ''}"
-          data-nav-left="creator-back"
-          aria-disabled="${!nameValid}"
-          aria-label="Begin Journey"
-        >
-          <span>Begin ›</span>
-        </button>
-      </div>
-    </div>
+          <section class="creator-panel creator-appearance-panel">
+            ${sectionTitle('Appearance')}
+            ${thumbnailRow(profile, 'face', 'Face', CHARACTER_FACES, 0)}
+            ${thumbnailRow(profile, 'hairstyle', 'Hairstyle', CHARACTER_HAIRSTYLES, 1)}
+            ${thumbnailRow(profile, 'headgear', 'Headgear', CHARACTER_HEADGEAR, 2)}
+            <div class="creator-swatch-row">
+              <span>Clothing Colour</span>
+              ${selectorArrow('clothingColour', previousClothing, 'previous', 'clothing colour')}
+              <div role="radiogroup" aria-label="Clothing colour">
+                ${CHARACTER_CLOTHING_COLOURS.map((colour) => choiceButton('clothingColour', colour, colour, profile.clothingColour === colour, `<span class="creator-colour creator-colour-${colour}" aria-hidden="true"></span>`, 'creator-swatch-choice')).join('')}
+              </div>
+              ${selectorArrow('clothingColour', nextClothing, 'next', 'clothing colour')}
+            </div>
+          </section>
+
+          <section class="creator-panel creator-origin-panel">
+            ${sectionTitle('Background (Origin)')}
+            <div class="creator-origin-body">
+              <div class="creator-origin-list" role="radiogroup" aria-label="Background origin">
+                ${CHARACTER_BACKGROUNDS.map((origin, index) => choiceButton('background', origin, CREATOR_ORIGINS[origin].title, profile.background === origin, `<span class="creator-choice-dot" aria-hidden="true"></span><span>${escapeHtml(CREATOR_ORIGINS[origin].title)}</span><span class="creator-atlas creator-vignette-atlas" style="${atlasStyle(index, 0)}" aria-hidden="true"></span>`, 'creator-origin-choice')).join('')}
+              </div>
+              <div class="creator-origin-detail" aria-live="polite">
+                <h4>${escapeHtml(selectedOrigin.title)}</h4><p>${escapeHtml(selectedOrigin.description)}</p>
+                <strong>Starting Bonus</strong><ul>${selectedOrigin.bonuses.map((bonus, index) => `<li><span class="creator-detail-icon" aria-hidden="true">${['✦', '▲', '●'][index % 3]}</span>${escapeHtml(bonus)}</li>`).join('')}</ul>
+              </div>
+            </div>
+          </section>
+        </aside>
+
+        <section class="creator-centre" aria-label="Character illustration">
+          <figure class="creator-scene-stage" role="img" aria-label="${profile.gender === 'woman' ? 'Female' : 'Male'} ${escapeHtml(selectedClass.title)} in the clan camp">
+            ${portraitChanged ? `<img src="${sceneSource(previousPortrait)}" class="creator-scene creator-portrait-outgoing" alt="" aria-hidden="true" />` : ''}
+            <img src="${sceneSource(profile)}" class="creator-scene${portraitChanged ? ' creator-portrait-incoming' : ''}" data-creator-portrait data-class="${profile.classId}" data-gender="${profile.gender}" alt="" aria-hidden="true" />
+          </figure>
+          <div class="creator-name-panel">
+            <label for="character-name">Name</label>
+            <div class="creator-name-frame">
+              <input id="character-name" class="creator-name-field" data-creator-name data-focus-key="creator-name" value="${escapeHtml(profile.name)}" maxlength="${MAX_CHARACTER_NAME_LENGTH}" autocomplete="off" spellcheck="false" aria-describedby="creator-name-hint" aria-invalid="${!nameValid}" placeholder="Enter Name..." />
+              <button type="button" class="creator-random-btn" data-creator-random data-focus-key="creator-random" aria-label="Random name" title="Random name">⚄</button>
+            </div>
+            <small id="creator-name-hint" class="${nameValid ? 'sr-only' : 'creator-name-error'}">${nameValid ? 'The name your clan will remember.' : 'Enter a name to begin your journey.'}</small>
+          </div>
+        </section>
+
+        <aside class="creator-column creator-right-column">
+          <section class="creator-panel creator-class-panel">
+            ${sectionTitle('Class / Combat Tradition')}
+            <div class="creator-class-cards" role="radiogroup" aria-label="Combat tradition">
+              ${CLASSES.map((classItem) => choiceButton('classId', classItem.id, classItem.title, profile.classId === classItem.id, `<img src="${BASE}art/creator-class-card-${classItem.id}.webp" alt="" aria-hidden="true" /><span>${escapeHtml(classItem.title)}</span>`, 'creator-class-card')).join('')}
+            </div>
+            <div class="creator-class-detail" aria-live="polite">
+              <div><h4>${escapeHtml(selectedClass.title)}</h4><p>${escapeHtml(selectedClass.summary)}</p></div>
+              <div><strong>Key Traits</strong><ul>${CREATOR_CLASS_TRAITS[profile.classId].map((trait, index) => `<li><span class="creator-detail-icon" aria-hidden="true">${['➶', '◆', '✦'][index % 3]}</span>${escapeHtml(trait)}</li>`).join('')}</ul></div>
+            </div>
+          </section>
+
+          <section class="creator-panel creator-oath-panel">
+            ${sectionTitle('Oath')}
+            <div class="creator-oath-selector">
+              ${selectorArrow('oath', previousOath, 'previous', 'oath')}
+              <div class="creator-oath-options" role="radiogroup" aria-label="Oath">
+                ${CHARACTER_OATHS.map((oath) => choiceButton('oath', oath, CREATOR_OATHS[oath].title, profile.oath === oath, `<img src="${oathSource(oath)}" alt="" aria-hidden="true" /><span class="creator-choice-dot" aria-hidden="true"></span><span>${escapeHtml(CREATOR_OATHS[oath].title.replace('Oath of the ', ''))}</span>`, 'creator-oath-choice')).join('')}
+              </div>
+              ${selectorArrow('oath', nextOath, 'next', 'oath')}
+            </div>
+            <p class="creator-oath-description"><em>${escapeHtml(selectedOath.title)}:</em> ${escapeHtml(selectedOath.description)}</p>
+          </section>
+
+          <section class="creator-panel creator-mount-panel">
+            ${sectionTitle('Mount')}
+            <div class="creator-mount-selector">
+              ${selectorArrow('mount', previousMount, 'previous', 'mount')}
+              <div class="creator-mount-options" role="radiogroup" aria-label="Mount">
+                ${CHARACTER_MOUNTS.map((mount, index) => choiceButton('mount', mount, mount, profile.mount === mount, `<span class="creator-atlas creator-selector-atlas" style="${atlasStyle(index, 3)}" aria-hidden="true"></span>`, 'creator-mount-choice')).join('')}
+              </div>
+              ${selectorArrow('mount', nextMount, 'next', 'mount')}
+            </div>
+          </section>
+
+          <section class="creator-panel creator-banner-panel">
+            ${sectionTitle('Banner (Clan Standard)')}
+            <div class="creator-banner-body">
+              <div class="creator-banner-preview" aria-label="Live clan standard preview">
+                <span class="creator-banner-pole" aria-hidden="true"><span></span></span>
+                <span class="creator-banner-flag banner-field-${profile.banner.fieldColour} banner-trim-${profile.banner.trim}" aria-hidden="true"><img src="${BASE}art/creator-banner-emblem-${profile.banner.emblem}.webp" alt="" /></span>
+              </div>
+              <div class="creator-banner-controls">
+                <div><span>Emblem</span><div class="creator-banner-option-row">${selectorArrow('emblem', previousEmblem, 'previous', 'banner emblem')}<div role="radiogroup" aria-label="Banner emblem">${CHARACTER_BANNER_EMBLEMS.map((emblem, index) => choiceButton('emblem', emblem, emblem, profile.banner.emblem === emblem, `<span class="creator-atlas creator-vignette-atlas" style="${atlasStyle(index, 3)}" aria-hidden="true"></span>`, 'creator-banner-choice')).join('')}</div>${selectorArrow('emblem', nextEmblem, 'next', 'banner emblem')}</div></div>
+                <div><span>Field Colour</span><div class="creator-banner-option-row">${selectorArrow('fieldColour', previousField, 'previous', 'banner field colour')}<div class="creator-banner-colours" role="radiogroup" aria-label="Banner field colour">${CHARACTER_BANNER_COLOURS.map((colour) => choiceButton('fieldColour', colour, colour, profile.banner.fieldColour === colour, `<span class="creator-colour creator-colour-${colour}" aria-hidden="true"></span>`, 'creator-banner-choice creator-banner-colour')).join('')}</div>${selectorArrow('fieldColour', nextField, 'next', 'banner field colour')}</div></div>
+                <div><span>Trim / Pattern</span><div class="creator-banner-option-row">${selectorArrow('trim', previousTrim, 'previous', 'banner trim')}<div role="radiogroup" aria-label="Banner trim">${CHARACTER_BANNER_TRIMS.map((trim, index) => choiceButton('trim', trim, trim, profile.banner.trim === trim, `<span class="creator-atlas creator-vignette-atlas creator-trim-atlas" style="${atlasStyle(index, 4)}" aria-hidden="true"></span>`, 'creator-banner-choice creator-banner-trim')).join('')}</div>${selectorArrow('trim', nextTrim, 'next', 'banner trim')}</div></div>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </main>
+      <img class="creator-bottom-ornament" src="${BASE}art/creator-bottom-ornament.webp" alt="" aria-hidden="true" />
+      <button type="button" class="creator-journey-button" data-action="begin-journey" data-focus-key="creator-begin" aria-disabled="${!nameValid}" aria-label="Begin Journey"><span aria-hidden="true">◆</span> Begin Journey <span aria-hidden="true">◆</span></button>
+      <p id="creator-status" class="creator-status sr-only" aria-live="polite"></p>
+    </article>
   </section>`;
 }
