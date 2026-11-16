@@ -13,6 +13,15 @@ export interface AreaEncounterDefinition {
 }
 /** These are fictional unreturned shaped by terrain, never the honoured powers of real sacred places. */
 export const AREA_ENCOUNTERS: Readonly<Record<LocationId, AreaEncounterDefinition>> = {
+  karakorum: {
+    title: 'Beyond the western gate',
+    warning: 'Ash-grey shapes are gathering along the patrol road.',
+    rule: 'Prowlers close across the open pasture while shades fire from the flanks.',
+    counter: 'Keep moving across the broad road and break one flank before the pack closes.',
+    natives: ['ash-maned-prowler', 'westward-shade'],
+    habitat: 'open',
+    pattern: 'flanks',
+  },
   otgontenger: {
     title: 'Below the white ridge',
     warning: 'Snowline hunters are coming down from the shelves.',

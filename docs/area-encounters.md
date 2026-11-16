@@ -4,8 +4,8 @@ Location identity follows `clan.locationId`. During a migration the physical dep
 landscape supplies its roster; choosing a destination does not import its monsters early.
 
 `data/enemies.ts` retains seven shared enemies and adds two native variants for each
-of the eight real places. `ENEMIES` is the shared catalogue; `AREA_ENEMIES` holds the
-16 exclusive locals; `ALL_ENEMIES` is their combined registry. Local definitions
+of the eight migration destinations plus prologue-only Karakorum. `ENEMIES` is the shared catalogue; `AREA_ENEMIES` holds the
+18 exclusive locals; `ALL_ENEMIES` is their combined registry. Local definitions
 include a stable ID, display name, home, arrival-time unlock, painted animation,
 palette accent, tactical role, and optional volley/ability metadata. The roster
 selector admits a local only in its home. Normal encounters favour locals at 70%
@@ -19,7 +19,7 @@ native a readable introduction. Menus cannot advance these clocks. Existing enem
 pool and projectile limits still apply.
 
 This pass reuses the existing registered painted animation clips with palette
-accents and varied scale; it does not supply 16 new creature paintings. Native
+accents and varied scale; it does not supply 18 new creature paintings. Native
 prowlers flank, local bulwarks retain armour, and skirmishers/callers fire spaced
 fans. `data/areaEncounters.ts` authors the local terrain-rule catalogue. Runtime modules
 consume its habitat, attack and warning metadata. These are invented
@@ -28,6 +28,7 @@ unreturned, distinct from the traditions and honoured local powers described in
 
 | Location         | Native enemies                        |
 | ---------------- | ------------------------------------- |
+| Karakorum        | Ash-maned prowler; Westward shade     |
 | Otgontenger      | Snowline hunter; White-ridge sentinel |
 | Bogd Khan Uul    | Rootshade stalker; Canopy whisperer   |
 | Altai Tavan Bogd | Glacier skimmer; Moraine breaker      |

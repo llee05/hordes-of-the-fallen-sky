@@ -19,7 +19,11 @@ describe('composed angled landscapes', () => {
             terrain.region.scene.floor + (terrain.region.scene.campShelf === false ? 0 : 150),
             6,
           );
-      const high = terrain.region.scene.shelves[0]!;
+      const high = terrain.region.scene.shelves[0];
+      if (!high) {
+        expect(id).toBe('karakorum');
+        continue;
+      }
       const center = terrain.worldSize / 2;
       expect(terrain.height(center + high.x, center + high.z) * 1000).toBeGreaterThan(
         terrain.region.scene.floor + 90,

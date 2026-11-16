@@ -2,7 +2,7 @@
 
 A Mongolian-inspired nomadic civilization builder × mounted bullet heaven. **TypeScript + Phaser 3 + Electron + Vite.** The cities have fallen, the sky is going dark, and a small clan survives by moving. Build a people, defend their temporary home, and protect the caravan on its journey between the sacred places of the steppe.
 
-This playable prototype contains eight real places to camp at and migrate between, with a journey results summary when the clan is lost. Journey chapters, crossing encounters and the final stand have been removed while a new run structure is designed. Its civilization systems include five permanent camp households and five optional workplaces chosen from fourteen building types, abstracted population and workers, three resources, five shared standard enemies, two shared elites, and 16 local enemy variants. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and broader campaign unlocks remain future work.
+This playable prototype contains eight real places to camp at and migrate between, plus the prologue-only city of Karakorum, with a journey results summary when the clan is lost. The Karakorum battlefield is available in Developer mode while its prologue flow is built in later phases. Journey chapters, crossing encounters and the final stand have been removed while a new run structure is designed. Its civilization systems include five permanent camp households and five optional workplaces chosen from fourteen building types, abstracted population and workers, three resources, five shared standard enemies, two shared elites, and 18 local enemy variants. The supernatural calamity and its creatures are original fantasy. A larger historical campaign, thousands of individually simulated units, and broader campaign unlocks remain future work.
 
 Archived narrative documentation from the earlier story prototype is kept in [`docs/archive/story/`](docs/archive/story/README.md) as reference for a future story rework, including [the world lore](docs/archive/story/lore.md).
 
@@ -20,7 +20,7 @@ npm start           # Play the offline desktop build
 
 Development builds include **Developer mode** in the title and pause menus. Press
 **F8** from any screen to open the level selector: jump to a fresh camp at any of
-the eight real places. Each choice starts a fresh test expedition with supplies.
+the eight migration destinations or the prologue-only city of Karakorum. Each choice starts a fresh test expedition with supplies.
 Escape / F8 closes the selector and returns to the previous screen. Developer runs
 do not change your saved longest journey.
 Start a new run to return to normal play. The selector is absent from production
@@ -75,7 +75,7 @@ rock shelves, snowy summits, and broad winding passes. Full cliff faces, contact
 occlusion, and cast shadows communicate height around open camp and caravan space.
 Rubble gathers below cliffs, scrub occupies shelves, and sparse conifers stay low.
 
-Angled 2.5D scenes render across all eight destinations. An orthographic
+Angled 2.5D scenes render across all eight destinations and Karakorum. An orthographic
 Three.js world supplies raised shelves, vertical cliff faces, snowfields,
 shadows, river gorges, and timber crossings. Existing painted characters and camps
 stand on the terrain while Phaser retains physics, combat, and animation. Riding
@@ -197,7 +197,7 @@ src/game/state/camp.ts         Typed camp effects, neutral defaults, and once-on
 src/game/data/clan.ts          Legacy crafts, routes, regions, formations
 src/game/data/nomadicCamp.ts   Current camp building registry and level effects
 src/game/state/nomadicCamp.ts  Validated building purchases and compatibility projections
-src/game/data/landscapes.ts    Eight location palettes, landmarks, vegetation, water, weather
+src/game/data/landscapes.ts    Destination and prologue-city palettes, landmarks, water, weather
 src/game/data/enemies.ts       Five enemies, two elites, and local variants
 src/game/assets/painterlyArt.ts Shared painted atlases, sizing, collision alignment, effects
 src/game/assets/SteppeLandscape.ts Painterly ground, riverbanks, weather, regional scenery

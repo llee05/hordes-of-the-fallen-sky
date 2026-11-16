@@ -180,6 +180,17 @@ function native(
 }
 /** Local variants reuse registered painted clips; their identity and rules are independent of artwork. */
 export const AREA_ENEMIES: readonly EnemyDefinition[] = [
+  native('karakorum', 'ash-maned-prowler', 'Ash-maned prowler', 'prowler', 0xaeb4a4, 'open'),
+  native(
+    'karakorum',
+    'westward-shade',
+    'Westward shade',
+    'skirmisher',
+    0x8e9aaa,
+    'open',
+    undefined,
+    true,
+  ),
   native('otgontenger', 'snowline-hunter', 'Snowline hunter', 'prowler', 0xd8e5db, 'snow'),
   native(
     'otgontenger',

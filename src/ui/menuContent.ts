@@ -1,8 +1,8 @@
 import { GAME } from '../game/config';
 import {
   BUILDINGS,
+  DESTINATIONS,
   FORMATIONS,
-  LOCATIONS,
   STARTING_TRADITIONS,
   startingTradition,
 } from '../game/data/clan';
@@ -36,7 +36,7 @@ export function journalMenu(run: RunState, tab: JournalTab): string {
   if (tab === 'journey') {
     const reached = new Set(run.legacy.crossings.map((crossing) => crossing.locationId));
     const destination = clan.stage === 'migration' ? arrivalLocation(run).id : undefined;
-    content = `<div class="journal-chapter"><span class="eyebrow">CAMP ${completedMigrations(run) + 1}</span><h3>${region.name}</h3><p>${description}</p>${areaIntel(region.id)}<div class="journey-map" aria-label="Journey progress">${LOCATIONS.map((place) => `<div class="journey-stop ${place.id === region.id ? 'current' : reached.has(place.id) ? 'passed' : ''}"><span>${clanMark(place.terrain === 'peaks' ? 'mountain' : place.terrain === 'river' ? 'river' : 'ger')}</span><div><strong>${place.name}</strong><small>${place.id === region.id ? 'YOUR CLAN IS HERE' : place.id === destination ? 'ON THE ROAD' : reached.has(place.id) ? 'REACHED' : place.area.toUpperCase()}</small></div></div>`).join('')}</div><div class="journal-callout">${clan.stage === 'migration' ? `The caravan is on the road to ${arrivalLocation(run).name}. Ride with your people until it arrives.` : 'The grass thins as the calamity grows. You choose when to pack up and go.'}</div>${!run.legacy.outcome && canMigrate(run) ? '<button class="primary-button" data-action="routes">Choose a migration route <span>→</span></button>' : ''}</div>`;
+    content = `<div class="journal-chapter"><span class="eyebrow">CAMP ${completedMigrations(run) + 1}</span><h3>${region.name}</h3><p>${description}</p>${areaIntel(region.id)}<div class="journey-map" aria-label="Journey progress">${DESTINATIONS.map((place) => `<div class="journey-stop ${place.id === region.id ? 'current' : reached.has(place.id) ? 'passed' : ''}"><span>${clanMark(place.terrain === 'peaks' ? 'mountain' : place.terrain === 'river' ? 'river' : 'ger')}</span><div><strong>${place.name}</strong><small>${place.id === region.id ? 'YOUR CLAN IS HERE' : place.id === destination ? 'ON THE ROAD' : reached.has(place.id) ? 'REACHED' : place.area.toUpperCase()}</small></div></div>`).join('')}</div><div class="journal-callout">${clan.stage === 'migration' ? `The caravan is on the road to ${arrivalLocation(run).name}. Ride with your people until it arrives.` : 'The grass thins as the calamity grows. You choose when to pack up and go.'}</div>${!run.legacy.outcome && canMigrate(run) ? '<button class="primary-button" data-action="routes">Choose a migration route <span>→</span></button>' : ''}</div>`;
   } else {
     content = `<div class="journal-chapter"><span class="eyebrow">YOUR LIVING CIVILIZATION</span><h3>${clanDoctrine(run)}</h3><p class="journal-callout">Starting tradition: <strong>${startingTradition(run.startingTradition).title}</strong>. ${startingTradition(run.startingTradition).role}</p><div class="clan-facts"><div><strong>${clan.population}</strong><span>People</span></div><div><strong>${riderCount(run)}</strong><span>Mounted riders</span></div><div><strong>${assignedWorkers(run)} / ${clan.population}</strong><span>Assigned workers</span></div><div><strong>${clan.herd}</strong><span>Livestock</span></div></div>${khanRecords(run)}${clanMemories(run)}${expeditionMetricsContent(run)}<p class="formation-detail"><strong>${FORMATIONS[clan.formation].title}</strong><br>${FORMATIONS[clan.formation].description}</p><div class="clan-buildings">${
       run.clan.nomadicCamp

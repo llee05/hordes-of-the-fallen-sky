@@ -8,7 +8,7 @@ The player commands a mounted Khan protecting the Blue Banner clan. Ride, dodge,
 
 The intended rhythm is **build → defend → choose when to leave → escort → rebuild**. Camps have no forced departure time. Waiting provides gathering time at the cost of pasture and increasing enemy pressure.
 
-The game currently contains only the eight real places listed in [migration locations](migration-locations.md). There are no journey chapters, no crossing encounters and no final stand; the run shape is deliberately open while a new structure is designed.
+The game currently contains the eight migration destinations listed in [migration locations](migration-locations.md) plus the prologue-only city of Karakorum. Karakorum is available as a developer checkpoint but excluded from ordinary routes until later prologue phases add its flow. There are no journey chapters, no crossing encounters and no final stand; the run shape is deliberately open while a new structure is designed.
 
 | Stage     | Rules                                                                                                                                                                                        |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -189,7 +189,7 @@ The starting barricade has a 108-unit ground radius, with enemies stopping withi
 | Frost mare, elite    | `frost-mare`    | 250         | 82    | 20     | 22 / 8.8             | 210          | Charges             |
 | Eclipse giant, elite | `eclipse-giant` | 400         | 34    | 24     | 30 / 12              | 330          | Ranged              |
 
-The seven shared enemies use unlock score `total elapsed seconds`. Unlocks are not fixed real-time timestamps across all runs. The legacy shared-only picker uses weights 6, 3, 2, 3, 2, 1, 1 in the table order. Normal encounter phases mix their shared composition with a 70% preference for eligible natives of the current physical location. Each area has two exclusive local variants; the second enters after 35 active seconds in the stage. The first camp’s first 18 seconds retain introductory wolves. Local types never enter another area’s pool, including when a future destination is being previewed. See [area encounters](area-encounters.md) for all 16 names, terrain rules, abilities and the provisional art contract. Elites join that random pool rather than appear as unique scheduled encounters.
+The seven shared enemies use unlock score `total elapsed seconds`. Unlocks are not fixed real-time timestamps across all runs. The legacy shared-only picker uses weights 6, 3, 2, 3, 2, 1, 1 in the table order. Normal encounter phases mix their shared composition with a 70% preference for eligible natives of the current physical location. Each area has two exclusive local variants; the second enters after 35 active seconds in the stage. The first camp’s first 18 seconds retain introductory wolves. Local types never enter another area’s pool, including when a future destination is being previewed. See [area encounters](area-encounters.md) for all 18 names, terrain rules, abilities and the provisional art contract. Elites join that random pool rather than appear as unique scheduled encounters.
 
 Normal enemy health is multiplied by `1 + total elapsed / 1200`. Base spawn interval is `max(0.14, 0.85 − 0.004 × stage time)`, divided by route danger during migration. The first 18 seconds of the first camp override the interval to 2 seconds. Afterwards, encounter phase and remaining pasture multiply this base interval (see encounter rhythm below). Rejected placements or a full pool retry after 0.2 active seconds, without banking a burst. Up to 350 enemies may be active; 45% of spawn attempts anchor around camp and the rest around the Khan. During succession, all spawn attempts anchor around camp. In the angled renderer, arrivals use the actual orthographic camera edge and sampled terrain height, then require connected walkable ground and at least 200 units from the living Khan. Terrain-streaming bounds are not spawn bounds. Enemies farther than 1,600 units from both Khan and camp are retired only when also outside the camera’s 640-unit projected arrival margin; visible and approaching enemies survive at wide views.
 
@@ -325,7 +325,7 @@ stack across successors. Inherited camp progression stays intact. Menus freeze t
 
 ### Local terrain and enemy identity
 
-All eight locations have two native variants plus the shared unreturned roster.
+All eight destinations and prologue-only Karakorum have two native variants plus the shared unreturned roster.
 Groves and reeds conceal approaching stalkers as visible muted silhouettes; riding
 near them reveals their full colour. Local creatures prefer connected approaches
 suited to their habitat and move modestly faster there. River areas split bank

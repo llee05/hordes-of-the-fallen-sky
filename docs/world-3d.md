@@ -1,6 +1,6 @@
 # Angled Living Steppe scenes
 
-The angled 2.5D world is the only terrain presentation across all eight destinations.
+The angled 2.5D world is the only terrain presentation across all eight destinations and prologue-only Karakorum.
 Run `npm run dev` or `npm run dev:web`; no developer flag is required.
 Hardware and software WebGL use the same world renderer. WebGL is required;
 initialization failures do not switch to a flat presentation. Resolution still adapts
@@ -94,7 +94,7 @@ favor bullet-heaven movement over exact landscape realism. GPU performance and
 longer combat balance still require target-hardware playtesting; software GPU
 rendering is substantially slower and is not a frame-rate certification.
 
-Browser scene regressions exercise all eight locations, screen-relative ramp
+Browser scene regressions exercise all eight destinations, screen-relative ramp
 movement, elevated combat, real terrain occlusion, console debug views, water pause
 behavior, resource budgets, and renderer teardown. All gameplay regressions now use
 the angled world. Electron scene checks cover offline production launch, migration,

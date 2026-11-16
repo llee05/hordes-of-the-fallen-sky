@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
-import { LOCATIONS } from '../../src/game/data/clan';
+import { DESTINATIONS } from '../../src/game/data/clan';
 import { LANDSCAPES } from '../../src/game/data/landscapes';
 import { advanceClan, beginMigration } from '../../src/game/state/clan';
 import { damageKhan, advanceSuccession } from '../../src/game/state/khan';
@@ -23,7 +23,7 @@ describe('destination planning and remembered places', () => {
     expect(routeMenu(run, 'orkhon-valley')).toContain('Food needed en route ~14.7');
     expect(routeMenu(run, 'retired-place')).toContain('Bogd Khan Uul');
     expect(run).toEqual(before);
-    for (const place of LOCATIONS.filter((location) => location.id !== 'otgontenger')) {
+    for (const place of DESTINATIONS.filter((location) => location.id !== 'otgontenger')) {
       const menu = routeMenu(run, place.id);
       expect(menu).toContain(place.name);
       expect(menu).toContain(`data-landscape="${place.id}"`);
