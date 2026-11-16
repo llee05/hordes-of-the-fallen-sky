@@ -216,6 +216,11 @@ export class GamePlatform {
     return this.save();
   }
 
+  savePrologueCompleted(completed = true): Promise<void> {
+    this.profile.prologueCompleted = completed;
+    return this.save();
+  }
+
   private save(): Promise<void> {
     const snapshot = structuredClone(this.profile);
     // Serialize snapshots; an older write must never replace a newer score/setting.

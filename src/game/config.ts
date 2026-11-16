@@ -575,6 +575,13 @@ export const GAME = {
     outriderSpeed: 1.05,
     hearthguardProtection: 0.92,
   },
+  prologue: {
+    startingSupplies: { food: 0, materials: 0, spirit: 0 },
+    establishedSupplies: { food: 70, materials: 50 },
+    knockdownHealth: 0.35,
+    knockdownProtection: 3,
+    markerPulseSeconds: 1.6,
+  },
   locations: {
     karakorum: { food: 1.1, materials: 1.05, mobility: 1, travel: 0.95 },
     otgontenger: { food: 0.85, materials: 1.25, mobility: 0.9, travel: 1.15 },

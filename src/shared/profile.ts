@@ -21,6 +21,7 @@ export interface PlayerProfile {
   developerCommandHistory?: string[];
   camp?: CampArchive;
   character?: CharacterProfile;
+  prologueCompleted?: boolean;
 }
 
 export function defaultProfile(): PlayerProfile {
@@ -38,6 +39,9 @@ export function isProfile(value: unknown): value is PlayerProfile {
     (!('character' in value) ||
       value.character === undefined ||
       isCharacterProfile(value.character)) &&
+    (!('prologueCompleted' in value) ||
+      value.prologueCompleted === undefined ||
+      typeof value.prologueCompleted === 'boolean') &&
     (!('developerCommandHistory' in value) ||
       value.developerCommandHistory === undefined ||
       isDeveloperHistory(value.developerCommandHistory))
@@ -80,5 +84,8 @@ export function normalizeProfile(value: unknown): PlayerProfile {
     ...(history.length ? { developerCommandHistory: history } : {}),
     ...(camp ? { camp } : {}),
     ...(character ? { character } : {}),
+    ...('prologueCompleted' in value && typeof value.prologueCompleted === 'boolean'
+      ? { prologueCompleted: value.prologueCompleted }
+      : {}),
   };
 }

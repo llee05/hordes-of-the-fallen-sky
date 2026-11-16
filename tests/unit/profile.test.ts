@@ -91,4 +91,12 @@ describe('native save files', () => {
     expect(isProfile({ version: 1, bestSeconds: Infinity, muted: false })).toBe(false);
     expect(normalizeProfile({ version: 99 })).toEqual(defaultProfile());
   });
+
+  it('round-trips the optional prologue completion flag without changing legacy defaults', () => {
+    expect(defaultProfile()).not.toHaveProperty('prologueCompleted');
+    const completed = { ...defaultProfile(), prologueCompleted: true };
+    expect(isProfile(completed)).toBe(true);
+    expect(normalizeProfile(completed)).toEqual(completed);
+    expect(isProfile({ ...defaultProfile(), prologueCompleted: 'yes' })).toBe(false);
+  });
 });

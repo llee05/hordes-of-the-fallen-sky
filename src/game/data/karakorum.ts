@@ -62,6 +62,24 @@ export const KARAKORUM_SITES = {
   reportPost: p(1470, -260),
 } as const;
 
+export type KarakorumSiteId =
+  Exclude<keyof typeof KARAKORUM_SITES, 'westTrack'> | `westTrack${0 | 1 | 2}`;
+
+/** Resolves a stable authored site without exposing the west-track tuple shape to directors. */
+export function karakorumSite(id: KarakorumSiteId): TerrainPoint {
+  if (id === 'westTrack0') return KARAKORUM_SITES.westTrack[0];
+  if (id === 'westTrack1') return KARAKORUM_SITES.westTrack[1];
+  if (id === 'westTrack2') return KARAKORUM_SITES.westTrack[2];
+  return KARAKORUM_SITES[id];
+}
+
+/** Authored Karakorum points are centre-relative; Phaser actors use terrain coordinates. */
+export function karakorumWorldSite(id: KarakorumSiteId): TerrainPoint {
+  const point = karakorumSite(id);
+  const centre = KARAKORUM.world.terrainSize / 2;
+  return { x: centre + point.x, y: centre + point.y };
+}
+
 /**
  * Karakorum at the city edge: a broad playable pasture with a compact north-eastern settlement
  * footprint. The dedicated city kit is a later art phase; these placements reuse the Orkhon pack.
