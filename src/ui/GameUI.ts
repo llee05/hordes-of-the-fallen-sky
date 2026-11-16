@@ -10,6 +10,7 @@ import { FORMATIONS } from '../game/data/clan';
 import { AREA_ENEMIES } from '../game/data/enemies';
 import { FIELD_OBJECTIVES } from '../game/data/fieldObjectives';
 import { NOMADIC_BUILDINGS } from '../game/data/nomadicCamp';
+import { prologueStage } from '../game/data/prologue';
 import { SUCCESSORS } from '../game/data/successors';
 import type { ArenaScene } from '../game/scenes/ArenaScene';
 import {
@@ -26,6 +27,7 @@ import { clanWarning, currentGuidance } from '../game/state/guidance';
 import { arrivalLocation, availableDestinations, currentLocation } from '../game/state/journey';
 import { isKhanActive } from '../game/state/khan';
 import { journeyResults } from '../game/state/legacy';
+import { currentPrologueBeat } from '../game/state/prologue';
 import { formatTime } from '../game/state/run';
 import type { BuildingId, HudSnapshot, RunPhase } from '../game/types';
 import type { GamePlatform } from '../platform/GamePlatform';
@@ -285,6 +287,8 @@ export class GameUI {
       snapshot.run.phase !== 'playing' || snapshot.zoom >= snapshot.maxZoom - 0.0001;
     (this.get('zoom-reset') as HTMLButtonElement).disabled = snapshot.run.phase !== 'playing';
     const { run, dashReady, dashCooldown, best, clanBearing } = snapshot;
+    const prologueUnestablished = !!run.prologue && !run.prologue.campEstablished;
+    this.get('game-hud').classList.toggle('prologue-unestablished', prologueUnestablished);
     this.motion.setPlaying(run.phase === 'playing');
     const combatVisible = run.phase === 'playing';
     const warningMarkup = combatVisible
@@ -381,7 +385,10 @@ export class GameUI {
       `${encounter.title}${['warning', 'assault', 'elite'].includes(encounter.phase) ? ` · ${approach}` : ''} · ${Math.ceil(encounter.remaining)}s`,
     );
     const objective = run.field.objective;
-    const visibleObjective = !!objective && ['available', 'returning'].includes(objective.status);
+    const visibleObjective =
+      (!run.prologue || run.prologue.completed) &&
+      !!objective &&
+      ['available', 'returning'].includes(objective.status);
     this.get('field-objective').hidden = !visibleObjective;
     if (visibleObjective)
       this.text(
@@ -462,17 +469,35 @@ export class GameUI {
     this.meter('pasture-fill', clan.pasture);
     this.text('threat', `${Math.round(clan.threat)}%`);
     this.meter('threat-fill', clan.threat);
-    this.text('location', region.short);
+    const prologueBeat = currentPrologueBeat(run);
+    const prologue = run.prologue && prologueBeat ? prologueStage(run.prologue.stage) : undefined;
+    this.text(
+      'location',
+      prologue ? `${prologue.numeral} · ${prologue.title.toUpperCase()}` : region.short,
+    );
     this.text(
       'camp-age',
-      clan.stage === 'migration' ? 'ON THE MOVE' : `DAY ${1 + Math.floor(clan.stageTime / 30)}`,
+      prologue
+        ? 'PROLOGUE'
+        : clan.stage === 'migration'
+          ? 'ON THE MOVE'
+          : `DAY ${1 + Math.floor(clan.stageTime / 30)}`,
     );
-    this.text('stage-label', clan.stage === 'migration' ? 'THE GREAT FLIGHT' : 'ENCAMPMENT');
+    this.text(
+      'stage-label',
+      prologue
+        ? prologue.title.toUpperCase()
+        : clan.stage === 'migration'
+          ? 'THE GREAT FLIGHT'
+          : 'ENCAMPMENT',
+    );
     this.text(
       'objective',
-      clan.stage === 'migration'
-        ? `Escort the caravan to ${arrivalLocation(run).name}.`
-        : 'Grow the camp. Keep your people alive.',
+      prologueBeat
+        ? `${prologueBeat.objective}${snapshot.fieldBearing ? ` · ${snapshot.fieldBearing}` : ''}`
+        : clan.stage === 'migration'
+          ? `Escort the caravan to ${arrivalLocation(run).name}.`
+          : 'Grow the camp. Keep your people alive.',
     );
     this.get('migration-progress').hidden = clan.stage === 'camp';
     const progress = clan.migrationProgress;
@@ -480,11 +505,15 @@ export class GameUI {
     this.meter('migration-fill', progress * 100);
     this.text(
       'migration-hint',
-      clan.stage === 'migration'
-        ? 'Guard the wagons on the road east.'
-        : canMigrate(run)
-          ? 'The roads are open. Pack up with M.'
-          : `Routes open in ${Math.ceil(GAME.clan.minimumCamp - clan.stageTime)}s. Build up the camp with B.`,
+      prologueBeat
+        ? prologueBeat.rule.kind === 'hold-site'
+          ? `Hold position · ${run.prologue!.holdTime.toFixed(1)} / ${prologueBeat.rule.seconds.toFixed(1)}s`
+          : 'Follow the brass marker.'
+        : clan.stage === 'migration'
+          ? 'Guard the wagons on the road east.'
+          : canMigrate(run)
+            ? 'The roads are open. Pack up with M.'
+            : `Routes open in ${Math.ceil(GAME.clan.minimumCamp - clan.stageTime)}s. Build up the camp with B.`,
     );
     const formationTitle = FORMATIONS[clan.formation].title;
     if (this.get('formation-name').textContent !== formationTitle) {
@@ -492,7 +521,7 @@ export class GameUI {
       this.motion.notice(this.get('formation').querySelector<HTMLElement>('.command-icon')!);
     }
     (this.get('build') as HTMLButtonElement).disabled =
-      run.phase !== 'playing' || clan.stage === 'migration';
+      run.phase !== 'playing' || clan.stage === 'migration' || prologueUnestablished;
     const migrate = this.get('migrate') as HTMLButtonElement;
     const routeAvailable = canMigrate(run);
     if (routeAvailable && migrate.dataset.available === 'false')
@@ -664,6 +693,7 @@ export class GameUI {
       this.overlay.innerHTML = characterCreatorContent(
         this.scene.characterCreator,
         this.creatorPortraitPrevious,
+        this.platform.profile.prologueCompleted === true,
       );
       this.creatorPortraitPrevious = undefined;
       const profile = this.scene.characterCreator.profile;
@@ -683,7 +713,11 @@ export class GameUI {
         desktop: Boolean(this.platform.desktop),
       });
     } else if (run.phase === 'paused') {
-      this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">The steppe holds still until you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button><button class="menu-button" data-action="restart">Start a new run</button>${savedMenu}<button class="menu-button" data-action="save-title">${snapshot.developerRun ? 'Return to title' : 'Save and return to title'}</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${developer}${quit}</nav></section>`;
+      const skipPrologue =
+        run.prologue && !run.prologue.completed
+          ? '<button class="menu-button" data-action="skip-prologue">Skip prologue</button>'
+          : '';
+      this.overlay.innerHTML = `<section class="pause-menu"><p class="eyebrow">EXPEDITION PAUSED</p><h2 id="overlay-title">A quiet moment.</h2><p class="panel-intro">The steppe holds still until you return.</p><nav class="main-menu" aria-label="Pause menu"><button class="menu-button featured" data-action="resume" data-primary>RETURN TO THE STEPPE <span>→</span></button>${skipPrologue}<button class="menu-button" data-action="restart">Start a new run</button>${savedMenu}<button class="menu-button" data-action="save-title">${snapshot.developerRun ? 'Return to title' : 'Save and return to title'}</button><button class="menu-button" data-action="settings">Settings</button><button class="menu-button" data-action="help">How to play</button>${developer}${quit}</nav></section>`;
     } else if (run.phase === 'building')
       this.overlay.innerHTML = buildingMenu(run, this.treeView(), this.campSelection);
     else if (run.phase === 'route') {
@@ -978,6 +1012,7 @@ export class GameUI {
       }
       this.scene.changeCharacterOption(button.dataset.creatorField, button.dataset.creatorValue);
     } else if (button.hasAttribute('data-creator-random')) this.scene.randomCharacterName();
+    else if (action === 'toggle-prologue') this.scene.toggleCharacterPrologueSkip();
     else if (button.hasAttribute('data-creator-voice-preview'))
       this.text(
         'creator-status',
@@ -1021,6 +1056,7 @@ export class GameUI {
       this.renderPhase(this.lastSnapshot!);
     } else if (action === 'continue-camp') this.scene.continueCamp();
     else if (action === 'guidance') this.scene.toggleGuidance();
+    else if (action === 'skip-prologue') this.scene.skipPrologue();
     else if (action === 'resume') this.scene.togglePause();
     else if (action === 'restart') this.scene.restart();
     else if (action === 'settings' || action === 'help') this.scene.openUtilityMenu(action);

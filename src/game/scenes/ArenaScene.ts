@@ -3,6 +3,7 @@ import {
   creatorProfile,
   changeCreatorOption,
   randomizeCreatorName,
+  toggleCreatorPrologueSkip,
 } from '../state/characterCreator';
 import { isValidCharacterName } from '../../shared/characterProfile';
 import Phaser from 'phaser';
@@ -609,6 +610,12 @@ export class ArenaScene extends Phaser.Scene {
   randomCharacterName(): void {
     if (this.run.phase !== 'character') return;
     randomizeCreatorName(this.characterCreator);
+    this.publishPhase();
+  }
+
+  toggleCharacterPrologueSkip(): void {
+    if (this.run.phase !== 'character' || !this.platform.profile.prologueCompleted) return;
+    toggleCreatorPrologueSkip(this.characterCreator);
     this.publishPhase();
   }
 

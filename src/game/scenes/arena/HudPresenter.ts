@@ -11,6 +11,8 @@ import {
   type ScreenDanger,
 } from '../../systems/combatReadability';
 import type { HudSnapshot } from '../../types';
+import { karakorumWorldSite } from '../../data/karakorum';
+import { currentPrologueBeat } from '../../state/prologue';
 import { projectGround } from '../../world3d/worldProjection';
 import type { ArenaContext } from './ArenaContext';
 
@@ -48,7 +50,14 @@ export class HudPresenter {
     const dx = camp.x - player.x;
     const dy = camp.y - player.y;
     const direction = bearingArrow(dx, dy);
-    const objective = run.field.objective;
+    const fieldObjective = run.field.objective;
+    const prologueRule = currentPrologueBeat(run)?.rule;
+    const prologuePoint =
+      prologueRule?.kind === 'reach-site' || prologueRule?.kind === 'hold-site'
+        ? (landscape.navigation?.nearestWalkable(karakorumWorldSite(prologueRule.site)) ??
+          karakorumWorldSite(prologueRule.site))
+        : undefined;
+    const objective = prologuePoint ?? fieldObjective;
     const offset = objective
       ? projectGround(
           objective.x - player.x,
@@ -79,7 +88,10 @@ export class HudPresenter {
       dashReady: Math.max(0, 1 - this.arena.timers.dashTimer / gallopCooldown(run)),
       dashCooldown: gallopCooldown(run),
       best: session.best,
-      clanBearing: `${direction} CLAN · ${Math.round(Math.hypot(dx, dy))} PACES`,
+      clanBearing:
+        run.prologue && !run.prologue.campEstablished
+          ? ''
+          : `${direction} CLAN · ${Math.round(Math.hypot(dx, dy))} PACES`,
     };
   }
 

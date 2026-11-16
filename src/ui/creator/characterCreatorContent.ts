@@ -133,6 +133,7 @@ function thumbnailRow(
 export function characterCreatorContent(
   state: CharacterCreatorState,
   previousPortrait?: CreatorPortraitSelection,
+  allowPrologueSkip = false,
 ): string {
   const profile = state.profile;
   const selectedClass = classDefinition(profile.classId);
@@ -283,6 +284,7 @@ export function characterCreatorContent(
         </aside>
       </main>
       <img class="creator-bottom-ornament" src="${BASE}art/creator-bottom-ornament.webp" alt="" aria-hidden="true" />
+      ${allowPrologueSkip ? `<button type="button" class="creator-prologue-option" data-action="toggle-prologue" aria-pressed="${state.skipPrologue}"><span aria-hidden="true">${state.skipPrologue ? '✓' : '◇'}</span> Skip prologue</button>` : ''}
       <button type="button" class="creator-journey-button" data-action="begin-journey" data-focus-key="creator-begin" aria-disabled="${!nameValid}" aria-label="Begin Journey"><span aria-hidden="true">◆</span> Begin Journey <span aria-hidden="true">◆</span></button>
       <p id="creator-status" class="creator-status sr-only" aria-live="polite"></p>
     </article>

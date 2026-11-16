@@ -4,6 +4,7 @@ import {
   createCharacterCreator,
   creatorProfile,
   randomizeCreatorName,
+  toggleCreatorPrologueSkip,
 } from '../../src/game/state/characterCreator';
 import {
   defaultCharacterProfile,
@@ -79,6 +80,15 @@ describe('character creator profile mapping', () => {
     );
     changeCreatorOption(state, 'name', '<script>');
     expect(characterCreatorContent(state)).toContain('&lt;script&gt;');
+  });
+  it('offers an explicit prologue skip only after the caller unlocks it', () => {
+    const state = createCharacterCreator();
+    expect(characterCreatorContent(state)).not.toContain('Skip prologue');
+    expect(characterCreatorContent(state, undefined, true)).toContain('Skip prologue');
+    expect(characterCreatorContent(state, undefined, true)).toContain('aria-pressed="false"');
+    toggleCreatorPrologueSkip(state);
+    expect(state.skipPrologue).toBe(true);
+    expect(characterCreatorContent(state, undefined, true)).toContain('aria-pressed="true"');
   });
   it('uses only supported option ids and gender-specific names', () => {
     const state = createCharacterCreator();

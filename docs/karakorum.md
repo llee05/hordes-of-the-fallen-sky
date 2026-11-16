@@ -1,9 +1,12 @@
 # Karakorum level
 
-Karakorum is a prologue-only authored battlefield at the edge of the imperial city. Phase 1 makes
-the place independently playable through Developer mode; it does not yet add the prologue flow,
-tutorial beats, scripted omen, boss, report scene, or route lock. Run `npm run dev` or
-`npm run dev:web`, press **F8**, and choose **Karakorum**.
+Karakorum is a prologue-only authored battlefield at the edge of the imperial city. New Game now
+lands at the western gate: Arrival teaches riding, a short hold reports to the gate captain, and the
+training-yard marker completes Stage I. Phase 2 passes the future training, patrol, omen and boss
+stages straight through, then sends the rider to the camp site. Reaching it establishes the Blue
+Banner camp and opens only Orkhon Valley. Those middle-stage mechanics and the final report scene
+remain later phases. Run `npm run dev` or `npm run dev:web`, press **F8**, and choose any Karakorum
+place or prologue checkpoint.
 
 Karakorum is a ninth valid location for checkpoints, saves, area encounters, and world rendering.
 It is flagged `prologueOnly`, excluded from `DESTINATIONS`, and therefore never appears in normal
@@ -46,10 +49,10 @@ hitching rail that will replace the most conspicuous placeholders in the later a
 
 ## Content boundaries
 
-Karakorum has a local area encounter and two palette variants so the Phase 1 checkpoint follows the
-same complete data contract as every other place. These are ordinary developer-camp encounters,
-not the scripted prologue omen. Prologue-specific spawn control and narrative logic belong to later
-phases.
+Karakorum has a local area encounter and two palette variants so its ordinary place checkpoint follows
+the same complete data contract as every other place. Ambient encounters, field objectives, area
+threats, economy and camp presentation are held while the Phase 2 prologue is active. The authored
+scripted omen and boss remain later phases.
 
 The setting presents Karakorum as the player's home city at the height of the Mongol Empire. It
 does not name or depict a historical ruler, court ritual, or real tradition as supernatural. The

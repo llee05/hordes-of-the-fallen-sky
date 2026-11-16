@@ -2,6 +2,8 @@ import { GAME } from '../config';
 import type { RunState } from '../types';
 import { availableFormations, canMigrate } from './clan';
 import { economyForecast, type EconomyForecast } from './economy';
+import { prologueStage } from '../data/prologue';
+import { currentPrologueBeat } from './prologue';
 
 export type GuidanceStep = 'ride' | 'build' | 'shards' | 'formation' | 'depart' | 'journey';
 export interface GuidanceState {
@@ -9,7 +11,8 @@ export interface GuidanceState {
   completed: GuidanceStep[];
 }
 export interface Guidance {
-  id: GuidanceStep | 'prepare' | 'succession';
+  id: string;
+  eyebrow?: string;
   title: string;
   text: string;
   action?: 'build' | 'formation' | 'migrate';
@@ -22,6 +25,16 @@ export function completeGuidance(run: RunState, step: GuidanceStep): void {
 
 /** A single suggestion follows real actions; reading it never pauses or changes the expedition. */
 export function currentGuidance(run: RunState): Guidance | undefined {
+  const prologueBeat = currentPrologueBeat(run);
+  if (run.guidance.enabled && run.prologue && prologueBeat) {
+    const stage = prologueStage(run.prologue.stage);
+    return {
+      id: `prologue:${prologueBeat.id}`,
+      eyebrow: `${stage.numeral} · ${stage.title.toUpperCase()}`,
+      title: prologueBeat.guidanceTitle,
+      text: prologueBeat.guidanceText,
+    };
+  }
   if (
     !run.guidance.enabled ||
     run.legacy.crossings.length > 0 ||
