@@ -25,6 +25,7 @@ describe('location scenery content', () => {
       'altan-ovoo': 'altan-ovoo',
       'bogd-khan-uul': 'bogd-khan-uul',
       'eej-khairkhan': 'eej-khairkhan',
+      karakorum: 'orkhon-valley',
       'khan-tengri': 'khan-tengri',
       'orkhon-valley': 'orkhon-valley',
       otgontenger: 'mount-otgontenger',

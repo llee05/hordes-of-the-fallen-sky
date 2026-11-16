@@ -25,6 +25,7 @@ export type BuildingId =
 export type Formation = 'guard' | 'encircle' | 'wedge' | 'retreat';
 export type Doctrine = 'iron' | 'sky' | 'wander';
 export type LocationId =
+  | 'karakorum'
   | 'otgontenger'
   | 'bogd-khan-uul'
   | 'altai-tavan-bogd'

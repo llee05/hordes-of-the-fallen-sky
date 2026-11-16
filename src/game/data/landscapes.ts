@@ -7,6 +7,7 @@ import { EEJ_KHAIRKHAN } from './eejKhairkhan';
 import { BELUKHA } from './belukha';
 import { KHAN_TENGRI } from './khanTengri';
 import { BOGD_KHAN_UUL } from './bogdKhanUul';
+import { KARAKORUM } from './karakorum';
 import { OTGONTENGER_MOUNTAINS } from './terrainBiomes';
 import { ORKHON_VALLEY } from './orkhonValley';
 
@@ -79,6 +80,30 @@ const landmark = (prop: SceneryProp, x: number, y: number, width: number): Lands
 
 /** Location identity is independent of economic balance and cultural context. */
 export const LANDSCAPES: Readonly<Record<LocationId, LandscapeDefinition>> = {
+  karakorum: {
+    title: 'The imperial pasture',
+    description:
+      'Worn roads leave the walled city edge for a broad sage-and-ochre pasture beside the upper Orkhon.',
+    surface: 'meadow',
+    groundTile: 'orkhon-valley',
+    ground: 0xa8a878,
+    wash: 0.47,
+    patch: 0x7d9168,
+    grass: 0xd5c88e,
+    grassCount: 720,
+    flowers: true,
+    cover: [
+      { prop: 'willow', count: 38, width: [80, 130] },
+      { prop: 'larch', count: 28, width: [75, 120] },
+    ],
+    landmarks: [
+      landmark('foothill', -470, 300, 215),
+      landmark('willow', 430, -160, 190),
+      landmark('larch', 500, 300, 170),
+    ],
+    water: KARAKORUM.river,
+    air: { color: 0xc8c7a5, alpha: 0.025, particles: 'seeds' },
+  },
   otgontenger: {
     title: 'The white crown',
     description:

@@ -9,6 +9,7 @@ import { KHAN_TENGRI, KHAN_TENGRI_FOOTPRINTS } from './khanTengri';
 import { BOGD_KHAN_UUL, BOGD_KHAN_UUL_FOOTPRINTS } from './bogdKhanUul';
 import { ALTAI_TAVAN_BOGD, ALTAI_TAVAN_BOGD_FOOTPRINTS } from './altaiTavanBogd';
 import { ORKHON_FOOTPRINTS, ORKHON_VALLEY, type OrkhonPlateau } from './orkhonValley';
+import { KARAKORUM, KARAKORUM_FOOTPRINTS } from './karakorum';
 
 export interface SceneShelf {
   id: string;
@@ -264,6 +265,31 @@ function plateau(
 
 /** Hand-composed terrain masses surround an open, continuous combat and caravan floor. */
 export const WORLD_REGIONS: Readonly<Record<LocationId, RegionComposition>> = {
+  karakorum: {
+    id: 'karakorum',
+    floor: 60,
+    snowLine: 10000,
+    vegetation: 'river',
+    palette: { ...meadow, grass: 0x9da06e, soil: 0xb59b70, rock: 0x8f8d78, fog: 0xc8c7a5 },
+    campShelf: false,
+    relief: 0.22,
+    terrainSize: KARAKORUM.world.terrainSize,
+    playBounds: {
+      x: KARAKORUM.world.minX,
+      y: KARAKORUM.world.minY,
+      width: KARAKORUM.world.width,
+      height: KARAKORUM.world.height,
+    },
+    camp: KARAKORUM.world.camp,
+    campClearRadius: KARAKORUM.world.campClearRadius,
+    ground: { paths: KARAKORUM.paths, width: KARAKORUM.pathWidth },
+    obstacles: KARAKORUM_FOOTPRINTS.map(({ x, y, footprint }) => ({
+      x,
+      y,
+      radius: footprint,
+    })),
+    shelves: [],
+  },
   otgontenger: {
     id: 'otgontenger',
     floor: 80,

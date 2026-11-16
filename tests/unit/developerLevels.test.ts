@@ -8,8 +8,9 @@ import { availableDestinations, currentLocation } from '../../src/game/state/jou
 import { createRun } from '../../src/game/state/run';
 
 describe('developer level checkpoints', () => {
-  it('lists exactly the eight real places, one entry each, and nothing else', () => {
+  it('lists all eight destinations plus the prologue-only city, one entry each', () => {
     expect(DEVELOPER_LEVELS.map((level) => level.locationId)).toEqual([
+      'karakorum',
       'otgontenger',
       'bogd-khan-uul',
       'altai-tavan-bogd',
@@ -20,6 +21,7 @@ describe('developer level checkpoints', () => {
       'orkhon-valley',
     ]);
     expect(DEVELOPER_LEVELS.map((level) => level.title)).toEqual([
+      'Karakorum',
       'Mount Otgontenger',
       'Bogd Khan Uul',
       'Altai Tavan Bogd',
@@ -29,7 +31,7 @@ describe('developer level checkpoints', () => {
       'Eej Khairkhan',
       'Orkhon Valley',
     ]);
-    expect(new Set(DEVELOPER_LEVELS.map((level) => level.id)).size).toBe(8);
+    expect(new Set(DEVELOPER_LEVELS.map((level) => level.id)).size).toBe(9);
     for (const level of DEVELOPER_LEVELS) {
       expect(level.id).toBe(`place:${level.locationId}`);
       expect(`${level.title} ${level.description}`).not.toMatch(/chapter|crossing/i);

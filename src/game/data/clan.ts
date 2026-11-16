@@ -568,6 +568,8 @@ export const BUILDINGS: readonly BuildingDefinition[] = ORIGINAL_BUILDINGS.map(e
 
 export interface MigrationLocation {
   id: LocationId;
+  /** Authored places that can hold a run but never appear in ordinary route choices. */
+  prologueOnly?: boolean;
   name: string;
   short: string;
   area: string;
@@ -581,6 +583,21 @@ export interface MigrationLocation {
 
 /** Real place context is separate from the game's invented weather, combat, and balance. */
 export const LOCATIONS: readonly MigrationLocation[] = [
+  {
+    id: 'karakorum',
+    prologueOnly: true,
+    name: 'Karakorum',
+    short: 'KARAKORUM',
+    area: 'Orkhon Valley · Mongolia',
+    terrain: 'river',
+    peaks: 0,
+    color: 0xaaa77d,
+    description:
+      'The imperial city stands beside broad pasture and the upper Orkhon, with its western road open to the valley.',
+    context:
+      'Karakorum was the capital of the Mongol Empire and is part of the Orkhon Valley Cultural Landscape.',
+    balance: GAME.locations.karakorum,
+  },
   {
     id: 'otgontenger',
     name: 'Mount Otgontenger',
@@ -692,6 +709,11 @@ export const LOCATIONS: readonly MigrationLocation[] = [
     balance: GAME.locations['orkhon-valley'],
   },
 ];
+
+/** Ordinary migration choices; prologue-only places remain valid for saves and checkpoints. */
+export const DESTINATIONS: readonly MigrationLocation[] = LOCATIONS.filter(
+  (location) => !location.prologueOnly,
+);
 
 export const ROUTES = [
   {

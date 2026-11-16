@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
-import { BUILDINGS, LOCATIONS, type BuildingDefinition } from '../../src/game/data/clan';
+import { BUILDINGS, DESTINATIONS, type BuildingDefinition } from '../../src/game/data/clan';
 import { availableDestinations } from '../../src/game/state/journey';
 import {
   advanceClan,
@@ -293,7 +293,7 @@ describe('a civilization that moves', () => {
     const run = createRun();
     run.clan.food = 10000;
     const start = run.clan.locationId;
-    for (const destination of [...LOCATIONS.slice(1).map((l) => l.id), start]) {
+    for (const destination of [...DESTINATIONS.slice(1).map((l) => l.id), start]) {
       run.phase = 'route';
       run.clan.stageTime = GAME.clan.minimumCamp;
       expect(availableDestinations(run).map((l) => l.id)).not.toContain(run.clan.locationId);
@@ -302,7 +302,7 @@ describe('a civilization that moves', () => {
       expect(advanceClan(run, 200)).toBe('arrived');
       expect(run.clan.locationId).toBe(destination);
     }
-    expect(run.legacy.crossings).toHaveLength(LOCATIONS.length);
+    expect(run.legacy.crossings).toHaveLength(DESTINATIONS.length);
     expect(run.clan.stage).toBe('camp');
     expect(advanceClan(run, 600)).toBeUndefined();
     run.clan.integrity = 0;

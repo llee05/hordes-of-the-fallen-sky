@@ -141,7 +141,8 @@ export class World3DRenderer {
     const authored =
       terrain instanceof ComposedTerrain &&
       terrain.region.scene.ground !== undefined &&
-      (terrain.region.scene.id === 'orkhon-valley' ||
+      (terrain.region.scene.id === 'karakorum' ||
+        terrain.region.scene.id === 'orkhon-valley' ||
         terrain.region.scene.id === 'altan-ovoo' ||
         terrain.region.scene.id === 'otgontenger' ||
         terrain.region.scene.id === 'eej-khairkhan' ||
@@ -241,7 +242,8 @@ export class World3DRenderer {
     }
     if (
       terrain instanceof ComposedTerrain &&
-      (terrain.region.scene.id === 'altan-ovoo' ||
+      (terrain.region.scene.id === 'karakorum' ||
+        terrain.region.scene.id === 'altan-ovoo' ||
         terrain.region.scene.id === 'otgontenger' ||
         terrain.region.scene.id === 'eej-khairkhan' ||
         terrain.region.scene.id === 'belukha' ||

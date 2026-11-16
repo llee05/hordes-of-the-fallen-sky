@@ -576,6 +576,7 @@ export const GAME = {
     hearthguardProtection: 0.92,
   },
   locations: {
+    karakorum: { food: 1.1, materials: 1.05, mobility: 1, travel: 0.95 },
     otgontenger: { food: 0.85, materials: 1.25, mobility: 0.9, travel: 1.15 },
     'bogd-khan-uul': { food: 1.1, materials: 1.15, mobility: 1, travel: 1 },
     'altai-tavan-bogd': { food: 0.8, materials: 1.3, mobility: 0.85, travel: 1.2 },

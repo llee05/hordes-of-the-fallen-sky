@@ -1,4 +1,4 @@
-import { LOCATIONS, type MigrationLocation } from '../data/clan';
+import { DESTINATIONS, LOCATIONS, type MigrationLocation } from '../data/clan';
 import type { LocationId, RunState } from '../types';
 
 /** Normal expeditions begin at Mount Otgontenger, the first real place in the catalogue. */
@@ -29,5 +29,5 @@ export function arrivalLocation(run: RunState): MigrationLocation {
 /** While camped, the clan may migrate to any other real place, including ones it left before. */
 export function availableDestinations(run: RunState): readonly MigrationLocation[] {
   if (run.clan.stage !== 'camp') return [];
-  return LOCATIONS.filter((location) => location.id !== currentLocation(run).id);
+  return DESTINATIONS.filter((location) => location.id !== currentLocation(run).id);
 }

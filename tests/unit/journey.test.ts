@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
-import { LOCATIONS, ROUTES } from '../../src/game/data/clan';
+import { DESTINATIONS, LOCATIONS, ROUTES } from '../../src/game/data/clan';
 import { advanceClan, beginMigration } from '../../src/game/state/clan';
 import { travelForecast, economyRates } from '../../src/game/state/economy';
 import { availableDestinations, currentLocation, locationById } from '../../src/game/state/journey';
 import { advanceSuccession, damageKhan } from '../../src/game/state/khan';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
-const places = LOCATIONS;
+const places = DESTINATIONS;
 
 describe('real places', () => {
-  it('offers exactly the eight real places, with unique stable IDs and cultural context', () => {
+  it('offers exactly the eight ordinary destinations, with unique stable IDs and context', () => {
     expect(places.map((place) => place.name)).toEqual([
       'Mount Otgontenger',
       'Bogd Khan Uul',
@@ -33,6 +33,8 @@ describe('real places', () => {
     ]);
     expect(new Set(LOCATIONS.map((place) => place.id)).size).toBe(LOCATIONS.length);
     expect(LOCATIONS.every((place) => place.context.length > 0)).toBe(true);
+    expect(LOCATIONS.find((place) => place.id === 'karakorum')?.prologueOnly).toBe(true);
+    expect(DESTINATIONS.map((place) => place.id)).not.toContain('karakorum');
     const run = createRun();
     const before = structuredClone(run);
     expect(availableDestinations(run)).toHaveLength(7);
@@ -89,7 +91,9 @@ describe('real places', () => {
         expect(run.legacy.memories.at(-1)?.detail).toContain(place.name);
         run.clan.stageTime = 45;
         expect(availableDestinations(run).map((location) => location.id)).toEqual(
-          LOCATIONS.filter((location) => location.id !== place.id).map((location) => location.id),
+          DESTINATIONS.filter((location) => location.id !== place.id).map(
+            (location) => location.id,
+          ),
         );
       }
   });

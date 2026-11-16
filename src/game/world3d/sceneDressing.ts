@@ -9,6 +9,7 @@ import { belukhaDressing } from './belukhaDressing';
 import { khanTengriDressing } from './khanTengriDressing';
 import { bogdKhanUulDressing } from './bogdKhanUulDressing';
 import { altaiTavanBogdDressing } from './altaiTavanBogdDressing';
+import { karakorumDressing } from './karakorumDressing';
 import type { ComposedTerrain } from './ComposedTerrain';
 
 export type SceneProp =
@@ -53,6 +54,8 @@ const DETAILS = new Set<SceneProp>(['grass', 'dry-grass', 'flowers', 'reeds', 'b
 /** Global cluster parents generate whole neighborhoods before clipping into resident chunks. */
 export function sceneDressing(terrain: ComposedTerrain, bounds: TerrainBounds): SceneDressing[] {
   const result: { id: string; prop: SceneDressing }[] = [];
+  if (terrain.region.scene.id === 'karakorum' && terrain.region.scene.ground)
+    return karakorumDressing(terrain.seed, bounds);
   if (terrain.region.scene.id === 'orkhon-valley') return orkhonDressing(terrain, bounds);
   if (terrain.region.scene.id === 'altan-ovoo' && terrain.region.scene.ground)
     return altanOvooDressing(terrain.seed, bounds);
