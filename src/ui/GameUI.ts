@@ -1,5 +1,7 @@
-import { characterCreatorContent } from './creator/characterCreatorContent';
-import { createRiderPreviewState, startRiderPreview } from './creator/riderPreview';
+import {
+  characterCreatorContent,
+  type CreatorPortraitSelection,
+} from './creator/characterCreatorContent';
 import { AUDIO_REFERENCE_CUES, type SoundKind } from '../game/audio/soundPalette';
 import { GAME } from '../game/config';
 import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
@@ -85,11 +87,8 @@ export class GameUI {
   private commandHistoryOffset = 0;
   private commandHistoryDraft = '';
   private toastTimer?: number;
-  private creatorPreviewCleanup?: () => void;
-  private creatorAbilityId?: string;
-  private readonly creatorPreviewState = createRiderPreviewState();
-  private creatorClassFeedback = false;
-  private creatorBackground?: HTMLImageElement;
+  private creatorPortraitPrevious?: CreatorPortraitSelection;
+  private readonly creatorPreloads: HTMLImageElement[] = [];
 
   constructor(
     private readonly root: HTMLElement,
@@ -177,16 +176,6 @@ export class GameUI {
     });
     this.overlay.addEventListener('click', (event) => this.handleMenuClick(event));
     this.overlay.addEventListener('keydown', (event) => this.handleMenuKey(event));
-    this.overlay.addEventListener('focusin', (event) => {
-      const ability = (event.target as Element).closest<HTMLElement>('[data-creator-ability]');
-      if (ability?.dataset.creatorAbility)
-        this.selectCreatorAbility(ability.dataset.creatorAbility);
-    });
-    this.overlay.addEventListener('pointerover', (event) => {
-      const ability = (event.target as Element).closest<HTMLElement>('[data-creator-ability]');
-      if (ability?.dataset.creatorAbility)
-        this.selectCreatorAbility(ability.dataset.creatorAbility);
-    });
     this.overlay.addEventListener('input', (event) => {
       const input = event.target as HTMLInputElement;
       if (input.matches('[data-creator-name]')) {
@@ -596,7 +585,6 @@ export class GameUI {
 
   destroy(): void {
     window.clearTimeout(this.toastTimer);
-    this.stopCreatorPreview();
     this.motion.destroy();
   }
 
@@ -672,35 +660,22 @@ export class GameUI {
     const developer = import.meta.env.DEV
       ? '<button class="menu-button" data-action="developer">Developer mode <kbd>F8</kbd></button>'
       : '';
-    if (run.phase !== 'character') {
-      this.stopCreatorPreview();
-    }
-
     if (run.phase === 'character') {
       this.overlay.innerHTML = characterCreatorContent(
         this.scene.characterCreator,
-        this.creatorAbilityId,
+        this.creatorPortraitPrevious,
       );
+      this.creatorPortraitPrevious = undefined;
       const profile = this.scene.characterCreator.profile;
       this.text(
         'creator-status',
         `${profile.gender === 'woman' ? 'Female' : 'Male'} ${classDefinition(profile.classId).title}`,
       );
-      if (this.creatorClassFeedback) {
-        this.overlay
-          .querySelector('.creator-rider-canvas')
-          ?.classList.add('creator-choice-feedback');
-        this.overlay
-          .querySelector('.creator-class-details')
-          ?.classList.add('creator-choice-feedback');
-        this.creatorClassFeedback = false;
-      }
-      this.updateCreatorPreview();
     } else if (run.phase === 'traditions') this.overlay.innerHTML = startingTraditionMenu(run);
     else if (run.phase === 'saves')
       this.overlay.innerHTML = saveMenu(snapshot, this.saveConfirmation);
     else if (run.phase === 'ready') {
-      this.preloadCreatorBackground();
+      this.preloadCreatorAssets();
       this.overlay.innerHTML = titleMenuContent({
         latestSaveSlot: latestSave?.slot,
         hasCamp: Boolean(this.platform.profile.camp),
@@ -989,18 +964,25 @@ export class GameUI {
     else if (action === 'starting-traditions') this.scene.openStartingTraditions();
     else if (button.dataset.startingTradition)
       this.scene.selectStartingTradition(button.dataset.startingTradition);
-    else if (button.dataset.creatorAbility)
-      this.selectCreatorAbility(button.dataset.creatorAbility);
     else if (button.dataset.creatorField && button.dataset.creatorValue) {
+      const profile = this.scene.characterCreator.profile;
       if (
-        button.dataset.creatorField === 'classId' &&
-        button.dataset.creatorValue !== this.scene.characterCreator.profile.classId
+        (button.dataset.creatorField === 'classId' &&
+          button.dataset.creatorValue !== profile.classId) ||
+        (button.dataset.creatorField === 'gender' && button.dataset.creatorValue !== profile.gender)
       ) {
-        this.creatorAbilityId = undefined;
-        this.creatorClassFeedback = true;
+        this.creatorPortraitPrevious = {
+          classId: profile.classId,
+          gender: profile.gender,
+        };
       }
       this.scene.changeCharacterOption(button.dataset.creatorField, button.dataset.creatorValue);
     } else if (button.hasAttribute('data-creator-random')) this.scene.randomCharacterName();
+    else if (button.hasAttribute('data-creator-voice-preview'))
+      this.text(
+        'creator-status',
+        `${this.scene.characterCreator.profile.voice.replace('-', ' ')} selected.`,
+      );
     else if (action === 'begin-journey') {
       if (button.getAttribute('aria-disabled') === 'true') {
         this.overlay
@@ -1271,6 +1253,25 @@ export class GameUI {
     const current = document.activeElement as HTMLElement | null;
     const directionName = `${direction[0]!.toUpperCase()}${direction.slice(1)}`;
     const focusKey = current?.dataset[`nav${directionName}`];
+    if (
+      !focusKey &&
+      current?.getAttribute('role') === 'radio' &&
+      ['left', 'right'].includes(direction)
+    ) {
+      const radios = [
+        ...(current
+          .closest('[role="radiogroup"]')
+          ?.querySelectorAll<HTMLElement>('[role="radio"]') ?? []),
+      ];
+      if (radios.length < 2) return false;
+      const currentIndex = Math.max(0, radios.indexOf(current));
+      const target =
+        radios[(currentIndex + (direction === 'right' ? 1 : -1) + radios.length) % radios.length]!;
+      radios.forEach((radio) => (radio.tabIndex = radio === target ? 0 : -1));
+      target.focus({ preventScroll: true });
+      target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      return true;
+    }
     if (!focusKey) return false;
     const target = [...this.overlay.querySelectorAll<HTMLElement>('[data-focus-key]')].find(
       (entry) => entry.dataset.focusKey === focusKey,
@@ -1324,26 +1325,12 @@ export class GameUI {
     return true;
   }
 
-  private updateCreatorPreview(): void {
-    this.stopCreatorPreview();
-    const canvas = this.overlay.querySelector<HTMLCanvasElement>('#creator-rider-canvas');
-    if (canvas) {
-      const p = this.scene.characterCreator.profile;
-      this.creatorPreviewCleanup = startRiderPreview(
-        canvas,
-        p.classId,
-        p.gender,
-        this.creatorPreviewState,
-      );
-    }
-  }
-
   private updateCreatorNameValidity(input: HTMLInputElement): void {
     const valid = isValidCharacterName(input.value);
     input.setAttribute('aria-invalid', String(!valid));
     const hint = this.overlay.querySelector<HTMLElement>('#creator-name-hint');
     if (hint) {
-      hint.className = `creator-name-hint ${valid ? 'sr-only' : 'invalid'}`;
+      hint.className = valid ? 'sr-only' : 'creator-name-error';
       hint.textContent = valid
         ? 'The name your clan will remember.'
         : 'Enter a name to begin your journey.';
@@ -1352,27 +1339,31 @@ export class GameUI {
     begin?.setAttribute('aria-disabled', String(!valid));
   }
 
-  private selectCreatorAbility(id: string): void {
-    if (this.phase !== 'character') return;
-    const rows = [...this.overlay.querySelectorAll<HTMLButtonElement>('[data-creator-ability]')];
-    if (!rows.some((row) => row.dataset.creatorAbility === id)) return;
-    this.creatorAbilityId = id;
-    for (const row of rows) {
-      const expanded = row.dataset.creatorAbility === id;
-      row.setAttribute('aria-expanded', String(expanded));
-      const description = row.querySelector<HTMLElement>('.creator-ability-desc');
-      if (description) description.hidden = !expanded;
+  private preloadCreatorAssets(): void {
+    if (this.creatorPreloads.length > 0) return;
+    const scenes = ['mounted-archer', 'lancer', 'iron-pagoda', 'spirit-caller'].flatMap((classId) =>
+      ['woman', 'man'].map((gender) => `creator-scene-${classId}-${gender}.webp`),
+    );
+    const classCards = ['mounted-archer', 'lancer', 'iron-pagoda', 'spirit-caller'].map(
+      (classId) => `creator-class-card-${classId}.webp`,
+    );
+    const oaths = ['steppe', 'khan', 'spirits'].map((oath) => `creator-oath-${oath}.webp`);
+    const bannerEmblems = ['flame-sun', 'wolf', 'hawk', 'cloud', 'knot'].map(
+      (emblem) => `creator-banner-emblem-${emblem}.webp`,
+    );
+    for (const filename of [
+      ...scenes,
+      ...classCards,
+      ...oaths,
+      ...bannerEmblems,
+      'creator-header-frieze.webp',
+      'creator-bottom-ornament.webp',
+      'creator-selector-atlas.webp',
+      'creator-vignette-atlas.webp',
+    ]) {
+      const image = new Image();
+      image.src = `${import.meta.env.BASE_URL}art/${filename}`;
+      this.creatorPreloads.push(image);
     }
-  }
-
-  private preloadCreatorBackground(): void {
-    if (this.creatorBackground) return;
-    this.creatorBackground = new Image();
-    this.creatorBackground.src = `${import.meta.env.BASE_URL}art/creator-scroll-bg.webp`;
-  }
-
-  private stopCreatorPreview(): void {
-    this.creatorPreviewCleanup?.();
-    this.creatorPreviewCleanup = undefined;
   }
 }

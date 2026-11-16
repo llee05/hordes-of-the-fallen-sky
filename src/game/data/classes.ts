@@ -1259,10 +1259,7 @@ function applyStatDelta(run: RunState, bonuses?: Partial<PlayerStats>): void {
   if (bonuses.pierce) run.stats.pierce += bonuses.pierce;
 }
 
-/**
- * Applies the selected character profile's class stats, background starting bonus,
- * and oath starting bonus to a newly initialized run.
- */
+/** Applies class stats to a newly initialized run. Creator flavor choices stay cosmetic. */
 export function applyCharacterLoadout(run: RunState, rawProfile: CharacterProfile): void {
   const profile = normalizeCharacterProfile(rawProfile);
   run.character = profile;
@@ -1289,33 +1286,6 @@ export function applyCharacterLoadout(run: RunState, rawProfile: CharacterProfil
   if (cls.stats.passiveRegen > 0) {
     run.clan.campEffects.bonuses.commanderRecovery += cls.stats.passiveRegen;
   }
-
-  const background = backgroundDefinition(profile.background);
-  if (background.startingResources) {
-    if (background.startingResources.food) run.clan.food += background.startingResources.food;
-    if (background.startingResources.materials)
-      run.clan.materials += background.startingResources.materials;
-    if (background.startingResources.herd)
-      run.clan.herd = Math.min(
-        GAME.clan.maxHerd,
-        run.clan.herd + background.startingResources.herd,
-      );
-    if (background.startingResources.spirit) run.clan.spirit += background.startingResources.spirit;
-    if (background.startingResources.population)
-      run.clan.population = Math.min(
-        GAME.clan.maxPopulation,
-        run.clan.population + background.startingResources.population,
-      );
-  }
-  applyStatDelta(run, background.statBonuses);
-  applyCampEffects(run.clan.campEffects, background.campEffects);
-
-  const oath = oathDefinition(profile.oath);
-  if (oath.startingResources?.spirit) {
-    run.clan.spirit += oath.startingResources.spirit;
-  }
-  applyStatDelta(run, oath.statBonuses);
-  applyCampEffects(run.clan.campEffects, oath.campEffects);
 }
 
 /**

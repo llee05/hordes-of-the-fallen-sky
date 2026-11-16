@@ -1,6 +1,15 @@
 export const CHARACTER_GENDERS = ['woman', 'man'] as const;
 export type CharacterGender = (typeof CHARACTER_GENDERS)[number];
 
+export const CHARACTER_AGES = ['young-adult', 'seasoned', 'elder'] as const;
+export type CharacterAgeId = (typeof CHARACTER_AGES)[number];
+
+export const CHARACTER_VOICES = ['voice-a', 'voice-b', 'voice-c'] as const;
+export type CharacterVoiceId = (typeof CHARACTER_VOICES)[number];
+
+export const CHARACTER_FACES = ['face-1', 'face-2', 'face-3', 'face-4', 'face-5'] as const;
+export type CharacterFaceId = (typeof CHARACTER_FACES)[number];
+
 export const CHARACTER_HAIRSTYLES = [
   'warrior-plaits',
   'topknot',
@@ -88,6 +97,9 @@ export interface CharacterBanner {
 export interface CharacterProfile {
   name: string;
   gender: CharacterGender;
+  age: CharacterAgeId;
+  voice: CharacterVoiceId;
+  face: CharacterFaceId;
   hairstyle: CharacterHairstyleId;
   headgear: CharacterHeadgearId;
   clothingColour: CharacterClothingColourId;
@@ -141,6 +153,9 @@ export function defaultCharacterProfile(): CharacterProfile {
   return {
     name: DEFAULT_CHARACTER_NAME,
     gender: 'woman',
+    age: 'young-adult',
+    voice: 'voice-a',
+    face: 'face-2',
     hairstyle: 'warrior-plaits',
     headgear: 'sable-cap',
     clothingColour: 'ivory',
@@ -172,6 +187,9 @@ export function isCharacterProfile(value: unknown): value is CharacterProfile {
   return (
     isValidCharacterName(candidate.name) &&
     isOneOf(CHARACTER_GENDERS, candidate.gender) &&
+    (candidate.age === undefined || isOneOf(CHARACTER_AGES, candidate.age)) &&
+    (candidate.voice === undefined || isOneOf(CHARACTER_VOICES, candidate.voice)) &&
+    (candidate.face === undefined || isOneOf(CHARACTER_FACES, candidate.face)) &&
     isOneOf(CHARACTER_HAIRSTYLES, candidate.hairstyle) &&
     isOneOf(CHARACTER_HEADGEAR, candidate.headgear) &&
     isOneOf(CHARACTER_CLOTHING_COLOURS, candidate.clothingColour) &&
@@ -198,6 +216,9 @@ export function normalizeCharacterProfile(value: unknown): CharacterProfile {
       gender === 'man' ? STEPPE_NAMES.man[0]! : defaults.name,
     ),
     gender,
+    age: isOneOf(CHARACTER_AGES, candidate.age) ? candidate.age : defaults.age,
+    voice: isOneOf(CHARACTER_VOICES, candidate.voice) ? candidate.voice : defaults.voice,
+    face: isOneOf(CHARACTER_FACES, candidate.face) ? candidate.face : defaults.face,
     hairstyle: isOneOf(CHARACTER_HAIRSTYLES, candidate.hairstyle)
       ? candidate.hairstyle
       : defaults.hairstyle,

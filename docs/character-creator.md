@@ -1,25 +1,26 @@
 # Character creation
 
-Run `npm run dev` and choose **New Game** on the title screen. The parchment-scroll
-creator chooses the Khan's name, gender, and one of four combat classes. The class
-details show its role, key traits, and four numbered abilities beside an animated
-mounted preview. **Begin Journey** starts the expedition at Mount Otgontenger;
-Escape, controller B, or **Back to title** returns without starting simulation.
-The current draft remains available until the scene restarts.
+Run `npm run dev` and choose **New Game** on the title screen. The creator is a
+full-screen interactive manuscript modeled on the project concept sheet. Its live
+controls select the Khan's name, gender, age, voice, face, hairstyle, headgear,
+clothing colour, origin, combat class, oath, mount, and clan standard. The centre
+illustration changes with the four classes and two genders. **Begin Journey**
+starts the expedition; Escape, controller B, or the small **Back** action returns
+to the title without starting simulation.
 
 The name accepts up to 28 characters. **Random name** chooses from the local
 gender-specific name list. A default or newly randomized name follows a gender
 change; a name the player typed does not. An empty or whitespace-only name keeps
 Begin Journey focusable so it can return focus to the field and announce the
 problem. The four classes are Mounted Archer, Lancer, Iron Pagoda, and Spirit
-Caller. Class choice determines the initial combat kit and progression.
+Caller. Class choice determines the starting combat kit and progression.
 
-The profile contract still retains legacy appearance, background, oath, mount,
-and banner fields for save compatibility. The scroll does not currently expose
-those fields, so a new profile uses their shared defaults and a remembered profile
-keeps its stored values. Character creation never changes or overwrites an existing
-saved expedition. Class and gender select matching rider art in the creator and
-battlefield.
+All other creator choices are currently cosmetic profile data. They are clickable,
+validated, saved, and restored, but do not grant resources, stats, or camp effects.
+The origin's **Starting Bonus** list and the class's **Key Traits** panel are
+descriptive preview copy only. Old profiles that predate age, voice, and face are
+accepted and receive stable defaults during normalization. Character creation
+never changes or overwrites an existing saved expedition.
 
 The last profile used to begin a journey is remembered through `GamePlatform`.
 Old profiles without character data open with shared defaults. Simulation and
@@ -28,25 +29,26 @@ physics remain stopped throughout character creation.
 ## Controls and ownership
 
 Pointer, touch, Tab, arrow-key/controller navigation, Enter/controller confirm,
-and Escape/controller back share the scene-owned menu actions. The creator keeps
-all controls inside the fixed-aspect painted scroll at supported desktop sizes.
+and Escape/controller back share the scene-owned menu actions. Radio groups use
+roving focus, and left/right input moves between visible choices. At desktop sizes
+all panels stay on one page. At 390×844 the central illustration, name, and Begin
+Journey appear first, followed by the panels in a scrollable chronicle.
 
 `state/characterCreator.ts` owns the draft-to-profile mapping, validated option
 changes, and random names. `ArenaScene.characterCreator` owns the draft; `GameUI`
 renders it and sends actions. Begin Journey creates a fresh run through
-`createRun(tradition, profile)`, applies the class and legacy default loadout once,
-saves the profile, then begins normal gameplay and checkpointing.
+`createRun(tradition, profile)`, applies the selected class loadout once, saves the
+full profile, then begins normal gameplay and checkpointing.
 
-The creator reads class descriptions, ability text, option IDs, and profile values
-from `data/classes.ts` and the shared character contract. Its DOM lives in
-`src/ui/creator/characterCreatorContent.ts`; shared ornament and ability marks live
-in `src/ui/creator/components.ts`; the canvas preview lives in
-`src/ui/creator/riderPreview.ts`. See [the illustration record](character-creator-art.md)
-for the bundled art and presentation limits.
+The creator reads class descriptions from `data/classes.ts`, manuscript preview
+copy from `src/ui/creator/characterCreatorOptions.ts`, and option IDs from the
+shared character contract. Its DOM lives in
+`src/ui/creator/characterCreatorContent.ts`; responsive layout and manuscript
+materials live in `src/character-creator.css`. See the
+[illustration record](character-creator-art.md) for the bundled art.
 
 `tests/unit/characterCreator.test.ts` checks mapping, independent snapshots,
-defaults, invalid IDs and names, random names, and loadout integration.
-`tests/e2e/character-creator.spec.ts` selects the visible controls, starts a
-non-default class, checks the actual run profile, reloads the remembered profile,
-and covers focus, Back, and frozen gameplay time. The desktop creator spec checks
-the same screen through the native save bridge at 1280×800.
+defaults, invalid IDs and names, random names, and every class/gender illustration.
+`tests/unit/classesAndProfile.test.ts` covers migration defaults and verifies that
+origin and oath remain cosmetic. `tests/e2e/character-creator.spec.ts` documents
+the affected browser coverage; it is not run without explicit approval.
