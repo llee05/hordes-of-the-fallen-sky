@@ -739,6 +739,24 @@
   filter: grayscale(0.5);
   opacity: 0.6;
 }
+
+.character-creator .creator-prologue-option {
+  position: absolute;
+  z-index: 11;
+  right: calc(36 * var(--u));
+  bottom: calc(25 * var(--u));
+  padding: calc(7 * var(--u)) calc(12 * var(--u));
+  border: calc(1 * var(--u)) solid rgba(111, 43, 33, 0.55);
+  background: rgba(244, 222, 181, 0.9);
+  color: #54261f;
+  font-family: var(--creator-serif);
+  font-size: calc(15 * var(--u));
+}
+
+.character-creator .creator-prologue-option[aria-pressed='true'] {
+  border-color: #315d64;
+  color: #24464b;
+}
 .creator-status {
   position: absolute;
   z-index: 11;
@@ -1177,6 +1195,12 @@
     left: 14%;
     height: 43px;
     font-size: 25px;
+  }
+  .character-creator .creator-prologue-option {
+    top: 674px;
+    right: 14px;
+    bottom: auto;
+    font-size: 14px;
   }
 
   .creator-bottom-ornament {

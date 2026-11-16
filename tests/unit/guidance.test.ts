@@ -2,9 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { advanceClan, beginMigration, buildStructure } from '../../src/game/state/clan';
 import { clanWarning, completeGuidance, currentGuidance } from '../../src/game/state/guidance';
 import { gainExperience } from '../../src/game/state/run';
+import { createPrologueRun } from '../../src/game/state/prologue';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 describe('first-crossing guidance', () => {
+  it('uses the current prologue beat and stage as its guidance eyebrow', () => {
+    const run = createPrologueRun();
+    expect(currentGuidance(run)).toMatchObject({
+      id: 'prologue:arrival-gate',
+      eyebrow: 'I · ARRIVAL IN KARAKORUM',
+      title: 'Ride for Karakorum',
+    });
+  });
   it('follows actual purchases, and collection', () => {
     const run = createRun();
     expect(currentGuidance(run)?.id).toBe('ride');

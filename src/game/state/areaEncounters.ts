@@ -34,6 +34,7 @@ export function advanceAreaEncounter(
   dt: number,
 ): 'lesson' | 'terrain' | undefined {
   if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
+  if (run.prologue && !run.prologue.completed) return;
   syncAreaEncounter(state, run);
   state.clock += dt;
   if (!state.announced && state.clock >= GAME.areaCombat.lessonAt) {

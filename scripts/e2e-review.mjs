@@ -75,6 +75,10 @@ export function needsFullSuite(files) {
 
 export const AREA_SPEC_MAPPINGS = [
   {
+    pattern: /prologue/i,
+    specs: ['tests/e2e/prologue.spec.ts'],
+  },
+  {
     pattern: /audio/i,
     specs: ['tests/e2e/audio.spec.ts'],
   },

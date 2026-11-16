@@ -8,6 +8,7 @@ import {
 export interface CharacterCreatorState {
   profile: CharacterProfile;
   nameSource: 'generated' | 'typed' | 'saved';
+  skipPrologue: boolean;
 }
 export type CreatorField =
   Exclude<keyof CharacterProfile, 'banner'> | 'emblem' | 'fieldColour' | 'trim';
@@ -16,7 +17,12 @@ export function createCharacterCreator(profile?: unknown): CharacterCreatorState
   return {
     profile: normalizeCharacterProfile(profile),
     nameSource: profile === undefined ? 'generated' : 'saved',
+    skipPrologue: false,
   };
+}
+
+export function toggleCreatorPrologueSkip(state: CharacterCreatorState): void {
+  state.skipPrologue = !state.skipPrologue;
 }
 
 export function creatorProfile(state: CharacterCreatorState): CharacterProfile {

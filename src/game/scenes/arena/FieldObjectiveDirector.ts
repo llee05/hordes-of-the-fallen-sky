@@ -41,6 +41,10 @@ export class FieldObjectiveDirector extends ArenaSystem {
   update(dt: number): void {
     const run = this.run,
       nav = this.landscape.navigation;
+    if (run.prologue && !run.prologue.completed) {
+      this.fieldMarkers.update(undefined, dt);
+      return;
+    }
     if (fieldObjectiveDue(run)) {
       // Authored levels host objectives beside landmarks such as ruins and shrines.
       const site = authoredFieldSite(currentLocation(run).id, run.field.issued);

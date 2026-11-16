@@ -123,6 +123,10 @@ export class AreaCombat extends ArenaSystem {
   }
 
   update(dt: number): void {
+    if (this.run.prologue && !this.run.prologue.completed) {
+      this.areaEffects.clear();
+      return;
+    }
     if (syncAreaEncounter(this.areaEncounter, this.run)) {
       this.areaThreats = createAreaThreats();
     }

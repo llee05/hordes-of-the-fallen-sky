@@ -8,11 +8,12 @@ The player commands a mounted Khan protecting the Blue Banner clan. Ride, dodge,
 
 The intended rhythm is **build → defend → choose when to leave → escort → rebuild**. Camps have no forced departure time. Waiting provides gathering time at the cost of pasture and increasing enemy pressure.
 
-The game currently contains the eight migration destinations listed in [migration locations](migration-locations.md) plus the prologue-only city of Karakorum. Karakorum is available as a developer checkpoint but excluded from ordinary routes until later prologue phases add its flow. There are no journey chapters, no crossing encounters and no final stand; the run shape is deliberately open while a new structure is designed.
+The game currently contains the eight migration destinations listed in [migration locations](migration-locations.md) plus the prologue-only city of Karakorum. Every New Game begins at Karakorum's western gate. Phase 2 implements Arrival and temporary camp establishment while the four middle stages pass through pending their focused mechanics. The first migration is locked to Orkhon Valley; all eight real destinations open after that arrival. There are no journey chapters, no crossing encounters and no final stand.
 
 | Stage     | Rules                                                                                                                                                                                        |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Camp      | A new expedition starts at Mount Otgontenger. Routes open after 45 seconds. Introductory spawn pacing applies for the first 18 seconds of the first camp only.                               |
+| Prologue  | A new expedition starts at Karakorum. Economy, ambient spawns and camp systems wait until the temporary Stage VI establishes the camp; only Orkhon Valley opens first.                       |
+| Camp      | After the first arrival, routes open after 45 seconds. Introductory spawn pacing applies for the first 18 seconds of the first ordinary camp only.                                           |
 | Migration | Choose any other real place, including one left earlier, then a river, ridge, or blue-banner route. The caravan moves automatically; there is no gathering or construction while travelling. |
 
 The current camp's gathering and onward mobility modifiers and the target's approach-time modifier follow the selected place; food and material multipliers stack with camp effects. All forecasts use those same rules.

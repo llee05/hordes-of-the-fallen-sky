@@ -96,10 +96,15 @@ to return to the title and begin a normal expedition with the original preferenc
 The checkpoint catalog in `src/game/dev/levels.ts` lists exactly one entry per known
 place, in `LOCATIONS` order, under **Real places**: the eight migration destinations
 plus prologue-only Karakorum. IDs are `place:<location id>`, for example
-`place:karakorum`. There are no chapter or crossing checkpoints.
+`place:karakorum`. It also lists `prologue:arrival`, `prologue:training`,
+`prologue:patrol`, `prologue:omen`, `prologue:beast`, and `prologue:return` under
+**Prologue checkpoints**. A checkpoint keeps the currently selected class; choose a
+class first, reopen F8, then choose the stage to test any class/stage combination.
+Stages II–V pass through to the temporary Return stage in Phase 2 because their
+combat and patrol mechanics belong to later phases. There are no chapter or crossing checkpoints.
 
-`createDeveloperRun(id)` returns a fresh, renderer-independent test expedition camped
-at the chosen place, or `undefined` for an unknown or retired ID. Routes are
+`createDeveloperRun(id, classId?)` returns a fresh, renderer-independent test expedition camped
+at the chosen place or positioned at the requested prologue stage, or `undefined` for an unknown or retired ID. Place-checkpoint routes are
 available immediately; migrations use the normal route and arrival rules.
 
 Test expeditions have a healthy Khan, 24 people and generous supplies. No camp developments are selected automatically.

@@ -98,4 +98,20 @@ describe('platform command-history persistence', () => {
       audioMix: { music: 0, ambience: 0.3, combat: 0.4, ui: 0.5 },
     });
   });
+
+  it('persists prologue completion in the shared profile writer', async () => {
+    const writes: PlayerProfile[] = [];
+    vi.stubGlobal('window', {
+      desktop: {
+        loadProfile: async () => defaultProfile(),
+        saveProfile: async (profile: PlayerProfile) => {
+          writes.push(profile);
+        },
+      },
+    });
+    const platform = await GamePlatform.create();
+    await platform.savePrologueCompleted();
+    expect(platform.profile.prologueCompleted).toBe(true);
+    expect(writes.at(-1)?.prologueCompleted).toBe(true);
+  });
 });

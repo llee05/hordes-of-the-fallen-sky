@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
 import { ROUTES } from '../../src/game/data/clan';
-import { DEVELOPER_LEVELS, createDeveloperRun } from '../../src/game/dev/levels';
+import {
+  DEVELOPER_LEVELS,
+  DEVELOPER_PROLOGUE_LEVELS,
+  createDeveloperRun,
+} from '../../src/game/dev/levels';
 import { advanceClan, beginMigration, canMigrate } from '../../src/game/state/clan';
 import { travelDuration } from '../../src/game/state/economy';
 import { availableDestinations, currentLocation } from '../../src/game/state/journey';
 import { createRun } from '../../src/game/state/run';
+import { skipPrologue } from '../../src/game/state/prologue';
 
 describe('developer level checkpoints', () => {
   it('lists all eight destinations plus the prologue-only city, one entry each', () => {
@@ -73,4 +78,25 @@ describe('developer level checkpoints', () => {
     expect(normal.guidance.enabled).toBe(true);
     expect(normal.clan.locationId).toBe('otgontenger');
   });
+
+  it.each(DEVELOPER_PROLOGUE_LEVELS)(
+    'starts $id at its frozen prologue stage with every class supported',
+    (level) => {
+      for (const classId of ['mounted-archer', 'lancer', 'iron-pagoda', 'spirit-caller'] as const) {
+        const run = createDeveloperRun(level.id, classId)!;
+        expect(run.character?.classId).toBe(classId);
+        expect(run.clan.locationId).toBe('karakorum');
+        expect(run.prologue).toMatchObject({
+          stage: level.stage,
+          campEstablished: false,
+          completed: false,
+        });
+        const stageTime = run.clan.stageTime;
+        advanceClan(run, 10);
+        expect(run.clan.stageTime).toBe(stageTime);
+        expect(skipPrologue(run)).toBe(true);
+        expect(canMigrate(run)).toBe(true);
+      }
+    },
+  );
 });

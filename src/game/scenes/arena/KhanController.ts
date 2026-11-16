@@ -168,7 +168,8 @@ export class KhanController extends ArenaSystem {
     const outcome = damageKhan(this.run, mitigateKhanDamage(khanStatusOf(this.timers), amount));
     if (!outcome) return;
     this.playerMotion.hit();
-    this.timers.invulnerable = GAME.invulnerability;
+    this.timers.invulnerable =
+      outcome === 'knocked-down' ? GAME.prologue.knockdownProtection : GAME.invulnerability;
     if (effectAmount(this.visualSettings) > 0) this.cameras.main.shake(90, 0.003);
     this.audio.play(outcome === 'fallen' ? 'fall' : 'hit');
     this.effects.burst(this.player.x, this.player.y, 0xdd967c, 8);

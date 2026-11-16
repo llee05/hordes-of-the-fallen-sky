@@ -205,6 +205,8 @@ export function buildStructure(
 }
 
 export function canMigrate(run: RunState): boolean {
+  if (run.prologue && run.legacy.crossings.length === 0)
+    return run.clan.stage === 'camp' && run.prologue.campEstablished && run.prologue.routesOpened;
   return run.clan.stage === 'camp' && run.clan.stageTime >= GAME.clan.minimumCamp;
 }
 
@@ -298,6 +300,7 @@ export function advanceClan(
   protectionOptions?: ClanProtection,
 ): 'arrived' | 'lost' | undefined {
   if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
+  if (run.prologue && !run.prologue.campEstablished) return;
   if (run.clan.population <= 0 || run.clan.integrity <= 0) return 'lost';
   metricStage(run);
   const clan = run.clan;

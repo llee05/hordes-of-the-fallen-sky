@@ -45,6 +45,14 @@ export class CampBarrier {
   }
 
   refresh(run: RunState, camp: GroundPoint): void {
+    if (run.prologue && !run.prologue.campEstablished) {
+      this.count = 0;
+      for (const hurdle of this.hurdles) {
+        hurdle.image.setVisible(false);
+        hurdle.shadow.setVisible(false);
+      }
+      return;
+    }
     const radius = campBoundary(run).radius;
     const travelling = run.clan.stage === 'migration';
     const wear = run.clan.integrity < 30 ? 2 : run.clan.integrity < 65 ? 1 : 0;

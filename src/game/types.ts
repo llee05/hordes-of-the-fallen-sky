@@ -124,6 +124,8 @@ export interface CrossingRecord {
 
 export interface RunState {
   metrics?: import('./state/expeditionMetrics').ExpeditionMetrics;
+  /** Present only while an expedition retains the Karakorum prologue destination lock. */
+  prologue?: import('./state/prologue').PrologueState;
   /** Missing only in expeditions saved before starting arrangements were introduced. */
   startingTradition?: keyof typeof import('./config').GAME.clan.starts;
   /** Missing only in expeditions saved before character creation was introduced. */

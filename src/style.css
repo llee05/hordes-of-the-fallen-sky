@@ -273,6 +273,18 @@ canvas {
   width: 296px;
   padding: 15px 17px;
 }
+
+/* Before the Blue Banner camp exists, the prologue is about the rider rather than an economy. */
+.game-hud.prologue-unestablished .resource-hud,
+.game-hud.prologue-unestablished .pressure-row,
+.game-hud.prologue-unestablished .pressure-tracks,
+.game-hud.prologue-unestablished #camp-pressure,
+.game-hud.prologue-unestablished #clan-losses,
+.game-hud.prologue-unestablished #encounter-status,
+.game-hud.prologue-unestablished #clan-warning,
+.game-hud.prologue-unestablished #clan-bearing {
+  display: none;
+}
 .objective-heading {
   display: flex;
   align-items: center;

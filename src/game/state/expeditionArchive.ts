@@ -49,6 +49,7 @@ import type { SpiritCallerCombatState } from './spiritCaller';
 import type { ClassActionState } from './classActions';
 import type { KhanManeuverState } from './khanManeuvers';
 import type { MountedArcherCombatState } from './mountedArcher';
+import { PROLOGUE_STAGE_IDS } from '../data/prologue';
 
 interface Point {
   x: number;
@@ -231,6 +232,25 @@ const optional: Record<string, Record<string, Rule>> = {
     }),
     startingTradition: oneOf(STARTING_TRADITIONS.map((entry) => entry.id)),
     character: isCharacterProfile,
+    prologue: object({
+      stage: oneOf(PROLOGUE_STAGE_IDS),
+      beat: integer,
+      stageTime: positive,
+      beatTime: positive,
+      holdTime: positive,
+      counters: object({
+        lightReleases: integer,
+        heavyReleases: integer,
+        abilityUses: object({ q: integer, w: integer, e: integer, r: integer }),
+        objectivesCompleted: integer,
+        wavesCleared: integer,
+        beastDefeated: boolean,
+        buildingsPurchased: integer,
+      }),
+      campEstablished: boolean,
+      routesOpened: boolean,
+      completed: boolean,
+    }),
   },
   clan: { destinationId: location },
   khan: { candidate: trait, trait },

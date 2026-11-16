@@ -3,6 +3,7 @@ import {
   creatorProfile,
   changeCreatorOption,
   randomizeCreatorName,
+  toggleCreatorPrologueSkip,
 } from '../state/characterCreator';
 import { isValidCharacterName } from '../../shared/characterProfile';
 import Phaser from 'phaser';
@@ -31,9 +32,15 @@ import type { SoundKind } from '../audio/soundPalette';
 import { GAME } from '../config';
 import type { ClassAbilitySlot } from '../data/classes';
 import { FORMATIONS, STARTING_TRADITIONS, type StartingTraditionId } from '../data/clan';
+import { karakorumWorldSite } from '../data/karakorum';
 import type { SuccessorTrait } from '../data/successors';
 import { createDeveloperTools, executeDeveloperCommand } from '../dev/commands';
-import { DEVELOPER_LEVELS, createDeveloperClassRun, createDeveloperRun } from '../dev/levels';
+import {
+  DEVELOPER_LEVELS,
+  DEVELOPER_PROLOGUE_LEVELS,
+  createDeveloperClassRun,
+  createDeveloperRun,
+} from '../dev/levels';
 import { Enemy, Gem, Projectile } from '../entities/actors';
 import { runFromCampArchive } from '../state/campArchive';
 import { advanceCampRecovery, gallopCooldown } from '../state/campCombat';
@@ -56,6 +63,7 @@ import { advanceSuccession, beginSuccession, chooseSuccessor, isKhanActive } fro
 import { advanceMountedCombat } from '../state/mountedCombat';
 import { advanceKhanManeuver } from '../state/khanManeuvers';
 import { purchaseNomadicBuilding } from '../state/nomadicCamp';
+import { createPrologueRun, skipPrologue as skipPrologueState } from '../state/prologue';
 import { createRun } from '../state/run';
 import { ActionKeys } from '../systems/ActionKeys';
 import { GameAudio } from '../systems/Audio';
@@ -83,6 +91,7 @@ import { FieldObjectiveDirector } from './arena/FieldObjectiveDirector';
 import { Hazards, type Hazard } from './arena/Hazards';
 import { HudPresenter } from './arena/HudPresenter';
 import { KhanController } from './arena/KhanController';
+import { PrologueDirector } from './arena/PrologueDirector';
 import { RiderHost } from './arena/RiderHost';
 
 export interface ArenaCallbacks {
@@ -138,6 +147,10 @@ export class ArenaScene extends Phaser.Scene {
   );
   private readonly campDefences = new CampDefences(this.arena, this.combat);
   private readonly fieldObjectives = new FieldObjectiveDirector(this.arena, this.enemyDirector);
+  private readonly prologueDirector = new PrologueDirector(this.arena, {
+    campEstablished: () => this.establishPrologueCamp(),
+    completed: () => this.completePrologue(),
+  });
   private readonly enemyBehaviour = this.createEnemyBehaviour();
   /** Created once with the scene's controller and ActionKeys, so held input survives a restart. */
   private readonly controls = new ArenaInput(this.arena, this.controller, this.actionKeys);
@@ -312,7 +325,11 @@ export class ArenaScene extends Phaser.Scene {
     this.persistence.reset();
     const developerRun =
       import.meta.env.DEV && data?.developerLevel
-        ? createDeveloperRun(data.developerLevel)
+        ? createDeveloperRun(
+            data.developerLevel,
+            data.developerClass,
+            this.platform.profile.character,
+          )
         : import.meta.env.DEV && data?.developerClass
           ? createDeveloperClassRun(
               data.developerClass,
@@ -379,6 +396,7 @@ export class ArenaScene extends Phaser.Scene {
     this.gems = this.physics.add.group({ classType: Gem, maxSize: GAME.maxGems });
     this.hostileShots = this.physics.add.group({ classType: Projectile, maxSize: 180 });
     this.combat.registerOverlaps();
+    this.prologueDirector.create();
     this.cameras.main.startFollow(this.player, true, 0.09, 0.09);
     this.cameras.main.roundPixels = false;
     this.cameras.main.setFollowOffset(120, 0);
@@ -415,11 +433,7 @@ export class ArenaScene extends Phaser.Scene {
     this.physics.pause();
     this.tweens.pauseAll();
     if (developerRun) {
-      this.landscape.setLocation(currentLocation(this.run));
-      this.applyLandscapeBounds();
-      this.relocateToLandscapeCamp();
-      this.reconcileTerrain();
-      this.campBarrier.relocate(this.run, this.camp);
+      this.enterLocation();
       this.timers.invulnerable = GAME.khan.returnProtection;
       this.beginExpedition();
     } else if (data?.expedition) this.restoreExpedition(data.expedition);
@@ -546,6 +560,7 @@ export class ArenaScene extends Phaser.Scene {
     this.cameras.main.centerOn(this.player.x, this.player.y);
     this.areaCombat.update(0);
     this.fieldObjectives.refreshMarkers();
+    this.prologueDirector.refreshMarker();
     this.setPhase('paused');
   }
 
@@ -598,14 +613,22 @@ export class ArenaScene extends Phaser.Scene {
     this.publishPhase();
   }
 
+  toggleCharacterPrologueSkip(): void {
+    if (this.run.phase !== 'character' || !this.platform.profile.prologueCompleted) return;
+    toggleCreatorPrologueSkip(this.characterCreator);
+    this.publishPhase();
+  }
+
   beginJourney(): void {
     if (this.run.phase !== 'character' || !isValidCharacterName(this.characterCreator.profile.name))
       return;
     const profile = creatorProfile(this.characterCreator);
-    this.run = createRun(this.startingTraditionId, profile);
+    this.run = createPrologueRun(this.startingTraditionId, profile);
+    if (this.characterCreator.skipPrologue) skipPrologueState(this.run);
     this.run.guidance.enabled = this.guidanceEnabled;
-    this.campPresenter.refresh();
     this.khan.reset();
+    this.enterLocation();
+    this.campPresenter.refresh();
     void this.platform.saveCharacterProfile(profile).catch(() => this.callbacks?.onSaveError());
     this.audio.unlock();
     this.beginExpedition();
@@ -683,11 +706,14 @@ export class ArenaScene extends Phaser.Scene {
     if (
       !import.meta.env.DEV ||
       this.run.phase !== 'developer' ||
-      !DEVELOPER_LEVELS.some((level) => level.id === id)
+      ![...DEVELOPER_LEVELS, ...DEVELOPER_PROLOGUE_LEVELS].some((level) => level.id === id)
     )
       return;
     this.audio.unlock();
-    this.scene.restart({ developerLevel: id });
+    this.scene.restart({
+      developerLevel: id,
+      developerClass: this.run.character?.classId,
+    });
   }
 
   startDeveloperClass(classId: string): void {
@@ -722,6 +748,7 @@ export class ArenaScene extends Phaser.Scene {
 
   openBuildings(): void {
     if (this.run.legacy.outcome) return;
+    if (this.run.prologue && !this.run.prologue.campEstablished) return;
     if (['playing', 'journal'].includes(this.run.phase) && this.run.clan.stage !== 'migration')
       this.setPhase('building');
     else if (this.run.phase === 'building') this.closePlanning();
@@ -902,6 +929,66 @@ export class ArenaScene extends Phaser.Scene {
     this.spatial.rebuild(this.enemies.getChildren() as Enemy[]);
   }
 
+  private prologueStartPoint(): { x: number; y: number } | undefined {
+    const stage = this.run.prologue?.stage;
+    if (!stage || this.run.prologue?.completed) return;
+    const point =
+      stage === 'arrival'
+        ? karakorumWorldSite('gate')
+        : stage === 'training'
+          ? karakorumWorldSite('yard')
+          : stage === 'patrol'
+            ? karakorumWorldSite('westTrack0')
+            : stage === 'return'
+              ? karakorumWorldSite('rally')
+              : karakorumWorldSite('omen');
+    return stage === 'arrival'
+      ? { x: point.x - 330, y: point.y + 170 }
+      : { x: point.x - 180, y: point.y + 120 };
+  }
+
+  /** Shared location entry for developer starts, prologue starts and migration arrivals. */
+  private enterLocation(): void {
+    this.landscape.setLocation(currentLocation(this.run));
+    this.applyLandscapeBounds();
+    this.relocateToLandscapeCamp();
+    const start = this.prologueStartPoint();
+    if (start) {
+      const safe = this.landscape.navigation?.nearestWalkable(start) ?? start;
+      this.player.setPosition(safe.x, safe.y).setVelocity(0, 0);
+    }
+    this.reconcileTerrain();
+    this.campPresenter.refresh();
+    this.campBarrier.relocate(this.run, this.camp);
+    this.prologueDirector.refreshMarker();
+  }
+
+  private establishPrologueCamp(): void {
+    this.campPresenter.refresh();
+    this.campBarrier.relocate(this.run, this.camp);
+    this.audio.play('build');
+    this.persistence.requestCheckpoint();
+    this.publishPhase();
+  }
+
+  private completePrologue(): void {
+    if (!this.run.prologue?.completed) return;
+    void this.platform.savePrologueCompleted().catch(() => this.callbacks?.onSaveError());
+    this.persistence.requestCheckpoint();
+    this.publishPhase();
+  }
+
+  skipPrologue(): void {
+    if (this.run.phase !== 'paused' || !skipPrologueState(this.run)) return;
+    this.relocateToLandscapeCamp();
+    this.campPresenter.refresh();
+    this.campBarrier.relocate(this.run, this.camp);
+    this.prologueDirector.refreshMarker();
+    this.timers.invulnerable = GAME.prologue.knockdownProtection;
+    this.completePrologue();
+    this.setPhase('playing');
+  }
+
   toggleAudio(): boolean {
     this.audio.muted = !this.audio.muted;
     if (!this.audio.muted) this.audio.unlock();
@@ -997,6 +1084,7 @@ export class ArenaScene extends Phaser.Scene {
     )
       this.audio.play('encounter');
     this.fieldObjectives.update(dt);
+    this.prologueDirector.update(dt);
     this.enemyBehaviour.update(dt);
     if (this.run.clan.integrity <= 0 || this.run.clan.population <= 0) {
       this.finish('dead');
@@ -1115,9 +1203,7 @@ export class ArenaScene extends Phaser.Scene {
     this.persistence.saveCamp();
     // Each migration leads to a new handcrafted arena; structures travel with the clan.
     this.campPresenter.relocate();
-    this.landscape.setLocation(currentLocation(this.run));
-    this.applyLandscapeBounds();
-    this.relocateToLandscapeCamp();
+    this.enterLocation();
     const camp = this.landscape.campPosition;
     for (const group of [this.enemies, this.projectiles, this.hostileShots])
       for (const actor of group.getChildren() as Enemy[]) actor.disableBody(true, true);
@@ -1126,9 +1212,6 @@ export class ArenaScene extends Phaser.Scene {
       if (gem.active) gem.setPosition(camp.x, camp.y + 100);
     this.hazardSystem.clear();
     this.areaCombat.reset();
-    this.reconcileTerrain();
-    this.campPresenter.refresh();
-    this.campBarrier.relocate(this.run, this.camp);
     this.cameras.main.flash(500, 225, 215, 180);
     this.publishPhase();
     this.audio.play('arrive');

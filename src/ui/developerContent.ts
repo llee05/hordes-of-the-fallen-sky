@@ -1,6 +1,6 @@
 import { GAME } from '../game/config';
 import { CLASSES } from '../game/data/classes';
-import { DEVELOPER_LEVELS } from '../game/dev/levels';
+import { DEVELOPER_LEVELS, DEVELOPER_PROLOGUE_LEVELS } from '../game/dev/levels';
 import { DEVELOPER_COMMAND_MAX_LENGTH, type DeveloperConsoleSnapshot } from '../game/dev/commands';
 
 function commandContent(tools?: DeveloperConsoleSnapshot): string {
@@ -41,6 +41,10 @@ export function developerMenu(tools?: DeveloperConsoleSnapshot): string {
             `<button class="developer-level" data-developer-class="${cls.id}"><strong>${cls.title}</strong><span>${cls.subtitle} · ${cls.weapon.hudLabel} ${cls.stats.damage} · ${cls.stats.maxHealth} HP</span></button>`,
         ).join('')}</div>
       </section>
+      <section class="developer-group" aria-label="Prologue checkpoints"><h3>Prologue checkpoints · current class</h3><div class="developer-levels">${DEVELOPER_PROLOGUE_LEVELS.map(
+        (level) =>
+          `<button class="developer-level" data-developer-level="${level.id}"><strong>${level.title}</strong><span>${level.description}</span></button>`,
+      ).join('')}</div></section>
       <section class="developer-group" aria-label="Real places"><h3>Real places</h3><div class="developer-levels">${DEVELOPER_LEVELS.map(
         (level) =>
           `<button class="developer-level" data-developer-level="${level.id}"><strong>${level.title}</strong><span>${level.description}</span></button>`,

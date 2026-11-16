@@ -5,7 +5,8 @@ full-screen interactive manuscript modeled on the project concept sheet. Its liv
 controls select the Khan's name, gender, age, voice, face, hairstyle, headgear,
 clothing colour, origin, combat class, oath, mount, and clan standard. The centre
 illustration changes with the four classes and two genders. **Begin Journey**
-starts the expedition; Escape, controller B, or the small **Back** action returns
+starts the Karakorum prologue. Once the profile has completed it, **Skip prologue**
+can instead begin at the established Karakorum camp. Escape, controller B, or the small **Back** action returns
 to the title without starting simulation.
 
 The name accepts up to 28 characters. **Random name** chooses from the local
@@ -37,7 +38,7 @@ Journey appear first, followed by the panels in a scrollable chronicle.
 `state/characterCreator.ts` owns the draft-to-profile mapping, validated option
 changes, and random names. `ArenaScene.characterCreator` owns the draft; `GameUI`
 renders it and sends actions. Begin Journey creates a fresh run through
-`createRun(tradition, profile)`, applies the selected class loadout once, saves the
+`createPrologueRun(tradition, profile)`, applies the selected class loadout once, saves the
 full profile, then begins normal gameplay and checkpointing.
 
 The creator reads class descriptions from `data/classes.ts`, manuscript preview

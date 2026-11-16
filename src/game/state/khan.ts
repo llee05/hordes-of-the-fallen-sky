@@ -19,7 +19,10 @@ export function beginSuccession(run: RunState): boolean {
   return true;
 }
 
-export function damageKhan(run: RunState, amount: number): 'hit' | 'fallen' | undefined {
+export function damageKhan(
+  run: RunState,
+  amount: number,
+): 'hit' | 'fallen' | 'knocked-down' | undefined {
   if (run.phase !== 'playing' || !isKhanActive(run) || !Number.isFinite(amount) || amount <= 0)
     return;
   const classProtection = classDefinition(run.character?.classId).stats.damageTakenMultiplier;
@@ -30,6 +33,11 @@ export function damageKhan(run: RunState, amount: number): 'hit' | 'fallen' | un
   );
   if (run.health > 0) {
     return 'hit';
+  }
+  if (run.prologue && !run.prologue.completed) {
+    run.health = Math.max(1, run.stats.maxHealth * GAME.prologue.knockdownHealth);
+    run.clan.message = 'Your retinue pulls you clear. Regain the saddle.';
+    return 'knocked-down';
   }
   beginSuccession(run);
   return 'fallen';
