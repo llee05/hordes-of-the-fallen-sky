@@ -728,9 +728,9 @@ describe('Orkhon Valley landmark systems', () => {
     }
   });
 
-  it('keeps every other location on a single uniform bearing draw', () => {
+  it('keeps locations without authored arrivals on a single uniform bearing draw', () => {
     for (const id of Object.keys(WORLD_REGIONS) as (keyof typeof WORLD_REGIONS)[]) {
-      if (id === 'orkhon-valley') continue;
+      if (id === 'orkhon-valley' || id === 'karakorum') continue;
       let draws = 0;
       const angle = ambientArrivalAngle(id, { x: C, y: C }, () => {
         draws++;

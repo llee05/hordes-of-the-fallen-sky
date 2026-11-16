@@ -50,6 +50,7 @@ export async function main(args = process.argv.slice(2)) {
       'khan-tengri',
       'bogd-khan-uul',
       'altai-tavan-bogd',
+      'karakorum',
     ].includes(mode)
   )
     throw new Error(
@@ -125,6 +126,8 @@ export async function main(args = process.argv.slice(2)) {
       'playwright.visual.config.ts',
       'tests/visual/altai-tavan-bogd-capture.spec.ts',
     );
+  if (mode === 'karakorum')
+    playwright('--config', 'playwright.visual.config.ts', 'tests/visual/karakorum-capture.spec.ts');
   if (['local', 'desktop', 'perf'].includes(mode))
     playwright('--config', 'playwright.desktop.config.ts');
 }

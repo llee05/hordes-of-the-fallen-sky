@@ -1,11 +1,13 @@
 # Migration destinations
 
-The game contains eight real places: Mount Otgontenger, Bogd Khan Uul, Altai Tavan
+The ordinary route network contains eight real places: Mount Otgontenger, Bogd Khan Uul, Altai Tavan
 Bogd, Khan Tengri Peak, Mount Belukha (Üch-Sümer), Altan Ovoo, Eej Khairkhan, and
 Orkhon Valley. A new expedition starts at Mount Otgontenger. From any camp the clan
 can migrate to any of the other seven, including places it left earlier. The four
 fictional chapter camps, the crossing encounters, and the final stand have been
-removed; the run shape will be redesigned later.
+removed; the run shape will be redesigned later. Karakorum is a ninth valid location
+reserved for the prologue. It can be loaded through Developer mode and saved normally,
+but never appears in ordinary destination choices or on the journey map.
 
 Destinations are camps in the surrounding landscape, not summit ascents or depictions
 of ceremonies. The journey compresses geography and travel time for a fantasy game;
@@ -24,7 +26,8 @@ Earlier narrative treatments for each named destination are archived in [`docs/a
 context, visual terrain, and gameplay modifiers from `GAME.locations`. Food and
 materials modifiers affect production at the current camp. Mobility affects departures
 from that camp; the chosen destination's travel modifier affects the incoming trip.
-All modifiers stack with camp developments.
+All modifiers stack with camp developments. `DESTINATIONS` filters the prologue-only
+entry for every ordinary route and journey-map consumer.
 
 `state/journey.ts` resolves the current camp, pending arrival, and available
 destinations. `clan.locationId` identifies the actual camp, and `clan.destinationId`
@@ -44,12 +47,13 @@ validates and starts the migration. Inspection preserves focus, scroll, and ever
 simulation value. Keyboard arrows, Tab, mouse, and controller navigation can inspect
 destinations without departing. Escape closes planning. Camp purchase previews use
 the food-cost range across all currently available destination/approach combinations.
-The chronicle lists all eight places, marking the current camp, places already
+The chronicle lists all eight destinations, marking the current camp, places already
 reached, and the chosen destination while travelling. Cultural descriptions and the resource effects are displayed
 separately. All art, fonts, and source context ship locally. Each location has its own terrain,
 vegetation, watercourse (where present), painted landmarks, and atmosphere; migration
 cards preview the same scenery. See [the landscape catalog](location-landscapes.md)
-for the eight compositions and renderer contract.
+for the destination compositions and renderer contract; [the Karakorum level guide](karakorum.md)
+records the prologue city's authored layout and placeholder art boundary.
 
 ## Cultural context and sources
 
@@ -75,4 +79,8 @@ for the eight compositions and renderer contract.
   [Golden Mountains of Altai](https://whc.unesco.org/en/list/768/).
 - **Orkhon Valley:** UNESCO describes the cultural landscape's Turkic and Mongol
   heritage and continuing nomadic pastoralism.
+  [Orkhon Valley Cultural Landscape](https://whc.unesco.org/en/list/1081/).
+- **Karakorum:** the same UNESCO property includes the archaeological remains of the
+  former Mongol imperial capital within the wider Orkhon pastoral landscape. Karakorum
+  is contextual content for the prologue and not an ordinary migration destination.
   [Orkhon Valley Cultural Landscape](https://whc.unesco.org/en/list/1081/).

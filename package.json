@@ -26,6 +26,7 @@
     "visual:khan-tengri": "node scripts/local-tests.mjs khan-tengri",
     "visual:bogd": "node scripts/local-tests.mjs bogd-khan-uul",
     "visual:altai": "node scripts/local-tests.mjs altai-tavan-bogd",
+    "visual:karakorum": "node scripts/local-tests.mjs karakorum",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run format:check && npm run typecheck && npm test && npm run build",

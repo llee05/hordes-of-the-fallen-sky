@@ -7,6 +7,7 @@ models. Existing cultural context remains in `data/clan.ts` and
 
 | Location         | Landscape and scenery                                                   |
 | ---------------- | ----------------------------------------------------------------------- |
+| Karakorum        | Authored city-edge pasture, western road and northern Orkhon bend       |
 | Otgontenger      | Authored alpine bench, snow overlook, glacial tarn and larch valley     |
 | Bogd Khan Uul    | Authored Tuul-side meadow, woodland shoulder, larch and pine groves     |
 | Altai Tavan Bogd | Authored moraine terrace, five-peak glacier frame and long glacial lake |
@@ -34,7 +35,7 @@ Eight user-supplied 1254 × 1254 terrain PNGs are bundled unchanged in `public/a
 | Mount Belukha     | `mount-belukha.png`     | Dark woodland soil, moss, ferns, roots, and stones   |
 | Eej Khairkhan     | `eej-khairkhan.png`     | Warm granite slabs, sandy gravel, sparse dry grass   |
 
-All eight destinations support the [angled scene renderer](world-3d.md).
+All eight destinations and prologue-only Karakorum support the [angled scene renderer](world-3d.md).
 Their geometry, palettes, vegetation, and snow lines live in
 `src/game/data/worldRegions.ts`; `ComposedTerrain` combines their masses with seeded
 relief and broad traversable approaches. The [new quiet paintings](angled-scene-art.md)

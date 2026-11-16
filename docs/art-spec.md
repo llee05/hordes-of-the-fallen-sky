@@ -307,7 +307,7 @@ _Thronefall_ and _The Banner Saga_.
 Orkhon Valley is the reference location for this spec. These other-place differences were measured,
 not changed:
 
-- **Shared scenery in the seven other places** (`world3d/sceneDressing.ts`): trees 92–182
+- **Shared scenery in the eight other places** (`world3d/sceneDressing.ts`): trees 92–182
   units (above `trees`), boulders 18–52 (partly below `rocks`), crags 74–114, small grass,
   flower and pebble accents 9–31 (partly below `shrubs`). Regional palettes tint the paintings,
   which this spec's no-filter rule excludes.

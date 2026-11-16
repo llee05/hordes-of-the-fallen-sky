@@ -93,9 +93,10 @@ effects, camp packing, and succession start fresh. The HUD identifies
 the expedition as **DEVELOPER RUN**. Start a new run from Pause or an outcome menu
 to return to the title and begin a normal expedition with the original preferences.
 
-The checkpoint catalog in `src/game/dev/levels.ts` lists exactly one entry per real
-place, in `LOCATIONS` order, under **Real places**. IDs are `place:<location id>`,
-for example `place:orkhon-valley`. There are no chapter or crossing checkpoints.
+The checkpoint catalog in `src/game/dev/levels.ts` lists exactly one entry per known
+place, in `LOCATIONS` order, under **Real places**: the eight migration destinations
+plus prologue-only Karakorum. IDs are `place:<location id>`, for example
+`place:karakorum`. There are no chapter or crossing checkpoints.
 
 `createDeveloperRun(id)` returns a fresh, renderer-independent test expedition camped
 at the chosen place, or `undefined` for an unknown or retired ID. Routes are
@@ -192,9 +193,13 @@ Not built yet: terrain editing (`setTerrain`) and a headless balance simulation
 `tests/e2e/reference-scenes.spec.ts` compares fixed scenes with committed baseline
 screenshots at 1280×800, so a change's effect on the look can be checked reliably.
 Each scene is loaded with `loadScenario`, `setCamera` and `freezeVisuals`, then
-`captureScene` before `toHaveScreenshot`. Scenes: each of the eight real places near
+`captureScene` before `toHaveScreenshot`. Scenes: each of the eight destinations near
 camp, an Orkhon Valley plateau edge with a ramp, a seeded 200-enemy fight, and the
 title, character creation, saves and camp screens.
+
+Karakorum's local-only diagnostic capture uses `npm run visual:karakorum` for the gate,
+training yard, and west track. It does not add a committed reference baseline in Phase 1;
+that follows when the dedicated city art replaces the placeholder pack.
 
 It is excluded from `npm run test:e2e` and runs only with its own script, which takes
 the shared browser lock:
