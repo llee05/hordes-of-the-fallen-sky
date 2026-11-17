@@ -1,8 +1,9 @@
 import { classDefinition, khanBasicRange } from '../data/classes';
 import { SUCCESSORS } from '../data/successors';
 import type { BuildingId, RunState } from '../types';
-import { gallopCooldown, wagonDefence } from './campCombat';
-import { clanDamageMultiplier, hasDevelopment, riderCount } from './clan';
+import { wagonDefence } from './campCombat';
+import { sprintDrain } from './khanResources';
+import { clanDamageMultiplier } from './clan';
 import { developmentPreview } from './developmentPreview';
 import { economyForecast, migrationMobility, pastureDepletion } from './economy';
 import { khanVolleyFactors } from './volley';
@@ -43,7 +44,7 @@ function metrics(r: RunState): Metric[] {
       context: `${cls.basicAttack.name}; aimed manually`,
     },
     {
-      label: 'Host firing interval',
+      label: 'Khan attack interval',
       value: r.stats.attackInterval * c.multipliers.hostInterval,
       unit: 's',
       lower: true,
@@ -70,7 +71,7 @@ function metrics(r: RunState): Metric[] {
     },
     { label: 'Additional arrow pierces', value: r.stats.pierce },
     { label: 'Riding speed', value: r.stats.speed, unit: ' paces/s' },
-    { label: 'Gallop cooldown', value: gallopCooldown(r), unit: 's', lower: true },
+    { label: 'Gallop Breath cost', value: sprintDrain(r), unit: '/s', lower: true },
     { label: 'Maximum Khan health', value: r.stats.maxHealth },
     { label: 'Khan health now', value: r.health },
     {
@@ -88,15 +89,7 @@ function metrics(r: RunState): Metric[] {
       label: 'Clan damage reduction',
       value: (1 - clanDamageMultiplier(r)) * 100,
       unit: '%',
-      context: `Includes current ${r.clan.formation} formation and learned camp protection`,
-    },
-    { label: 'Accompanying riders', value: riderCount(r) },
-    {
-      label: 'Rider arrow damage',
-      value:
-        r.stats.damage *
-        (0.6 + (hasDevelopment(r, 'archery', 'veteran-riders') ? 0.3 : 0)) *
-        c.multipliers.riderDamage,
+      context: 'Includes the camp guard and learned camp protection',
     },
     {
       label: 'Migration mobility',

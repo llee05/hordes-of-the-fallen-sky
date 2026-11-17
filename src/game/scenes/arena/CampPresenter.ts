@@ -109,7 +109,7 @@ export class CampPresenter {
 
   /**
    * Moves the caravan along its route and animates the camp for one active step.
-   * Riders, terrain and hazards update after this, in that order.
+   * Terrain and hazards update after this, in that order.
    */
   update(dt: number): void {
     const { run, camp } = this.arena;

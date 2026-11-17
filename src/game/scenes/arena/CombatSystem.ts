@@ -12,6 +12,7 @@ import {
   type ClassAbilityDefinition,
   type ClassAbilitySlot,
   type ClassBasicAttackDefinition,
+  type ClassResourceEvent,
 } from '../../data/classes';
 import { Enemy, Gem, Projectile } from '../../entities/actors';
 import { campBoundary } from '../../state/campBarrier';
@@ -28,6 +29,15 @@ import {
 import type { ProjectileArchive, WorldArchive } from '../../state/expeditionArchive';
 import { markExpedition } from '../../state/expeditionMetrics';
 import { isKhanActive } from '../../state/khan';
+import {
+  abilitySpend,
+  affordableCharge,
+  canAffordAbility,
+  earnClassPower,
+  heavyBreathCost,
+  khanResourcesOf,
+  spendBreath,
+} from '../../state/khanResources';
 import { aimedDirection, insideAttackArc, insideAttackLine } from '../../state/khanControls';
 import { gainExperience } from '../../state/run';
 import {
@@ -44,7 +54,7 @@ import {
   type StatusPayload,
 } from '../../state/statusEffects';
 import { khanVolleyFactors, volleyFactors } from '../../state/volley';
-import type { EnemyDefinition } from '../../types';
+import type { EnemyDefinition, HudSnapshot } from '../../types';
 import { projectileTerrainClear } from '../../world3d/projectileTerrain';
 import type { ArenaContext } from './ArenaContext';
 import { ArenaSystem } from './ArenaSystem';
@@ -88,6 +98,15 @@ export class CombatSystem extends ArenaSystem {
   private readonly spiritCaller: SpiritCallerSystem;
   /** Slashes landed in the current chain, and seconds left to land the next one. */
   private combo = { count: 0, remaining: 0 };
+  /** A held heavy attack Breath could not pay for; cleared when the input is released. */
+  private heavyRefused = false;
+  /** The current heavy charge stopped rising because Breath cannot pay for more. */
+  private chargeWinded = false;
+  /** Abilities refused for lack of class resource since the scene was created. */
+  private refusals = 0;
+  private refusedSlot?: ClassAbilitySlot;
+  /** Enemies the latest line strike hit. */
+  private lineStruck = 0;
   private readonly mountedArcher: MountedArcherSystem;
 
   constructor(
@@ -166,6 +185,9 @@ export class CombatSystem extends ArenaSystem {
 
   reset(): void {
     this.attackWindup = undefined;
+    this.heavyRefused = this.chargeWinded = false;
+    this.refusals = 0;
+    this.refusedSlot = undefined;
     this.combo = { count: 0, remaining: 0 };
     this.timers.classAction = undefined;
     this.timers.abilityCooldowns = { q: 0, w: 0, e: 0, r: 0 };
@@ -196,6 +218,8 @@ export class CombatSystem extends ArenaSystem {
     this.spiritCaller.tick(dt);
     this.tickComboAndStance(dt);
     this.tickClassAction(dt);
+    if (!heavyHeld) this.heavyRefused = false;
+    if (this.attackWindup?.kind !== 'heavy') this.chargeWinded = false;
     if (this.attackWindup) {
       const held = this.attackWindup.kind === 'light' ? lightHeld : heavyHeld;
       const cls = classDefinition(this.run.character?.classId);
@@ -216,10 +240,16 @@ export class CombatSystem extends ArenaSystem {
           return;
         }
         this.faceAim(aim, false);
-        this.attackWindup.charge = Math.min(
-          heavyCharge.maxDuration,
-          (this.attackWindup.charge ?? 0) + dt,
-        );
+        // Breath caps the charge at the level it can pay for.
+        const affordable = affordableCharge(cls.heavyAttack, khanResourcesOf(this.timers).stamina);
+        if (affordable === undefined) {
+          this.attackWindup = undefined;
+          this.refuseHeavy();
+          return;
+        }
+        const grown = (this.attackWindup.charge ?? 0) + dt;
+        this.chargeWinded = affordable < heavyCharge.maxDuration && grown >= affordable;
+        this.attackWindup.charge = Math.min(heavyCharge.maxDuration, affordable, grown);
         if (cls.heavyAttack.charge?.kind === 'projectile') {
           this.mountedArcher.showCharge(this.attackWindup.charge, cls.heavyAttack);
           return;
@@ -248,8 +278,15 @@ export class CombatSystem extends ArenaSystem {
         this.fireAttack(kind, aim, 0, usable);
       }
     } else if ((lightHeld || heavyHeld) && this.timers.attackTimer <= 0 && isKhanActive(this.run)) {
-      const kind = heavyHeld ? 'heavy' : 'light';
       const cls = classDefinition(this.run.character?.classId);
+      if (
+        heavyHeld &&
+        !this.heavyRefused &&
+        affordableCharge(cls.heavyAttack, khanResourcesOf(this.timers).stamina) === undefined
+      )
+        this.refuseHeavy();
+      const kind = heavyHeld && !this.heavyRefused ? 'heavy' : 'light';
+      if (kind === 'light' && !lightHeld) return;
       this.attackWindup = {
         kind,
         remaining: kind === 'heavy' ? cls.heavyAttack.windup : (cls.basicAttack.windup ?? 0.12),
@@ -299,16 +336,36 @@ export class CombatSystem extends ArenaSystem {
     return !!this.attackWindup;
   }
 
-  /** Charge information for the HUD; absent for ordinary windups and every idle attack. */
-  chargeStatus(): { name: string; progress: number } | undefined {
-    if (this.attackWindup?.kind !== 'heavy') return;
+  /**
+   * Charge information for the HUD; absent for ordinary windups and every idle attack. `winded`
+   * marks a charge Breath has capped, or a held heavy attack Breath cannot pay for at all.
+   */
+  chargeStatus(): { name: string; progress: number; winded: boolean } | undefined {
     const heavy = classDefinition(this.run.character?.classId).heavyAttack;
+    if (this.heavyRefused && !this.attackWindup)
+      return { name: heavy.name, progress: 0, winded: true };
+    if (this.attackWindup?.kind !== 'heavy') return;
     const tuning = heavy.charge ?? heavy.holdCharge;
     if (!tuning) return;
     return {
       name: heavy.name,
       progress: chargeRatio(this.attackWindup.charge ?? 0, tuning.maxDuration),
+      winded: this.chargeWinded,
     };
+  }
+
+  /** A charged heavy attack is being held, which pauses the Breath refill. */
+  holdsBreath(): boolean {
+    if (this.attackWindup?.kind !== 'heavy') return false;
+    const heavy = classDefinition(this.run.character?.classId).heavyAttack;
+    return !!(heavy.charge ?? heavy.holdCharge);
+  }
+
+  /** Refuses a heavy attack Breath cannot pay for, once per press. */
+  private refuseHeavy(): void {
+    if (this.heavyRefused) return;
+    this.heavyRefused = true;
+    this.audio.play('ui');
   }
 
   fireBasic(aim: { x: number; y: number }): boolean {
@@ -328,6 +385,17 @@ export class CombatSystem extends ArenaSystem {
     if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.timers.attackTimer > 0)
       return false;
     const cls = classDefinition(this.run.character?.classId);
+    const resources = khanResourcesOf(this.timers);
+    if (kind === 'heavy') {
+      // A heavy attack is paid for on release; Breath that ran short shortens or refuses it.
+      const affordable = affordableCharge(cls.heavyAttack, resources.stamina);
+      if (affordable === undefined) {
+        this.refuseHeavy();
+        return false;
+      }
+      charge = Math.min(charge, affordable);
+    }
+    const breathCost = kind === 'heavy' ? heavyBreathCost(cls.heavyAttack, charge) : 0;
     const attack: ClassBasicAttackDefinition = kind === 'heavy' ? cls.heavyAttack : cls.basicAttack;
     let range = kind === 'heavy' ? khanHeavyRange(this.run) : khanBasicRange(this.run);
     const target =
@@ -344,6 +412,7 @@ export class CombatSystem extends ArenaSystem {
       this.timers.attackTimer =
         cls.heavyAttack.cooldown * this.run.clan.campEffects.multipliers.hostInterval;
       if (released) {
+        spendBreath(resources, breathCost);
         this.run.combat.volleys++;
         this.effects.classAttack('spirit-caller:ancestral-drum', {
           x: this.player.x,
@@ -363,6 +432,7 @@ export class CombatSystem extends ArenaSystem {
       this.timers.attackTimer =
         cls.heavyAttack.cooldown * this.run.clan.campEffects.multipliers.hostInterval;
       if (released) {
+        spendBreath(resources, breathCost);
         this.run.combat.volleys++;
         this.effects.classAttack('mounted-archer:piercing-draw', {
           x: this.player.x,
@@ -404,6 +474,7 @@ export class CombatSystem extends ArenaSystem {
         range,
         attack.width,
         cls.id === 'spirit-caller' && kind === 'light' ? 'wisp' : undefined,
+        cls.id === 'mounted-archer' && kind === 'light' ? { earns: 'basicHit' } : undefined,
       );
     } else if (attack.shape === 'line') {
       released = this.strikeLine(direction, range, attack.width, scaledDamage, false, {
@@ -413,6 +484,12 @@ export class CombatSystem extends ArenaSystem {
             ? (enemy) => this.pushImpaledEnemy(enemy, direction, cls.heavyAttack.holdCharge!)
             : undefined,
       });
+      if (this.lineStruck > 0) {
+        if (kind === 'light') {
+          this.earn('basicHit');
+          if (this.lineStruck >= (cls.resource.multiTargets ?? Infinity)) this.earn('basicMulti');
+        } else if (fullImpale) this.earn('fullHeavy');
+      }
     } else if (attack.shape === 'arc') {
       const combo = attack.combo;
       const comboScale = combo ? 1 + combo.damagePerStep * this.combo.count : 1;
@@ -425,6 +502,7 @@ export class CombatSystem extends ArenaSystem {
       );
       released = true;
       if ((attack.combo || attack.payload) && kind === 'heavy') this.effects.shake(110, 0.004);
+      if (kind === 'light' && struck > 0) this.earn('basicHit');
       if (combo && struck > 0) this.advanceCombo(combo, range);
     } else {
       this.strikePulse(range, scaledDamage, false);
@@ -433,6 +511,7 @@ export class CombatSystem extends ArenaSystem {
     this.timers.attackTimer =
       (kind === 'heavy' ? cls.heavyAttack.cooldown : this.run.stats.attackInterval) *
       this.run.clan.campEffects.multipliers.hostInterval;
+    if (released) spendBreath(resources, breathCost);
     if (released) this.run.combat.volleys++;
     if (released) this.showAttackRelease(cls.id, kind, direction, target, range);
     if (released && cls.id === 'mounted-archer' && kind === 'light')
@@ -449,6 +528,7 @@ export class CombatSystem extends ArenaSystem {
     this.combo.remaining = combo.window;
     if (this.combo.count >= combo.steps) {
       this.combo = { count: 0, remaining: 0 };
+      this.earn('finisher');
       this.effects.ring(this.player.x, this.player.y, range, 0xe0bc76);
       this.effects.shake(90, 0.003);
     }
@@ -468,6 +548,16 @@ export class CombatSystem extends ArenaSystem {
       return false;
     const cls = classDefinition(this.run.character?.classId);
     const ability = cls.abilities.find((entry) => entry.slot === slot)!;
+    const resources = khanResourcesOf(this.timers);
+    if (!canAffordAbility(resources, ability)) {
+      // Refused: nothing fires and the cooldown does not start.
+      this.refusals++;
+      this.refusedSlot = slot;
+      this.audio.play('ui');
+      this.arena.hud.refresh();
+      return false;
+    }
+    const power = abilitySpend(resources, ability);
     this.attackWindup = undefined;
     const effect = ability;
     let released = true;
@@ -475,7 +565,7 @@ export class CombatSystem extends ArenaSystem {
       cls.id === 'mounted-archer' &&
       ['parthian', 'rain', 'splinter', 'windstep'].includes(effect.kind)
     ) {
-      released = this.mountedArcher.cast(effect, aim, this.movementDirection(aim));
+      released = this.mountedArcher.cast(effect, aim, this.movementDirection(aim), power);
       if (released) this.host.playerMotion.attack();
     } else if (effect.kind === 'volley') {
       this.faceAim(aim);
@@ -543,10 +633,14 @@ export class CombatSystem extends ArenaSystem {
       this.vault(direction, effect);
     } else if (effect.kind === 'unstoppable') {
       const direction = this.faceAim(aim);
+      const duration = Math.min(
+        effect.maxDuration,
+        effect.duration + power * effect.momentumDuration,
+      );
       this.beginClassAction({
         kind: 'unstoppable',
-        remaining: effect.duration,
-        duration: effect.duration,
+        remaining: duration,
+        duration,
         directionX: direction.x,
         directionY: direction.y,
         speed: effect.speedMultiplier,
@@ -562,7 +656,7 @@ export class CombatSystem extends ArenaSystem {
       });
       khanStatusOf(this.timers).unstoppable = Math.max(
         khanStatusOf(this.timers).unstoppable,
-        effect.duration,
+        duration,
       );
       this.effects.classAttack('lancer:unstoppable-charge', {
         x: this.player.x,
@@ -577,7 +671,7 @@ export class CombatSystem extends ArenaSystem {
       effect.kind === 'veil'
     ) {
       const direction = this.faceAim(aim);
-      released = this.spiritCaller.cast(effect, direction);
+      released = this.spiritCaller.cast(effect, direction, power);
     } else if (effect.kind === 'brace') {
       guardKhan(khanStatusOf(this.timers), {
         duration: effect.duration,
@@ -623,7 +717,10 @@ export class CombatSystem extends ArenaSystem {
       status.fortressTimer = 0.15;
       status.shieldMax = effect.shield.max;
       status.shieldPerSecond = effect.shield.perSecond;
-      status.shield = Math.min(effect.shield.max, effect.shield.start);
+      status.shield = Math.min(
+        effect.shield.max,
+        effect.shield.start + power * effect.shield.perMettle,
+      );
       this.effects.ring(this.player.x, this.player.y, effect.range, 0xe0bc76);
       this.effects.classAttack('iron-pagoda:unbroken-fortress', {
         x: this.player.x,
@@ -643,6 +740,7 @@ export class CombatSystem extends ArenaSystem {
       this.timers.invulnerable = Math.max(this.timers.invulnerable, effect.duration);
     }
     if (!released) return false;
+    resources.classPower = Math.max(0, resources.classPower - power);
     this.host.playerMotion.attack();
     this.cooldowns()[slot] = ability.cooldown;
     this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 7);
@@ -653,15 +751,35 @@ export class CombatSystem extends ArenaSystem {
     return true;
   }
 
-  abilityStates(): (ClassAbilityDefinition & { remaining: number })[] {
+  abilityStates(): (ClassAbilityDefinition & { remaining: number; affordable: boolean })[] {
+    const resources = khanResourcesOf(this.timers);
     return classDefinition(this.run.character?.classId).abilities.map((ability) => ({
       ...ability,
       remaining: this.cooldowns()[ability.slot],
+      affordable: canAffordAbility(resources, ability),
     }));
   }
 
-  spiritStatus(): { energy: number; maximum: number; activeSpirits: number } | undefined {
-    return this.spiritCaller.status();
+  /** The class resource for the HUD, with the latest refused ability so it can be flagged. */
+  classResourceStatus(): HudSnapshot['classResource'] {
+    const cls = classDefinition(this.run.character?.classId);
+    return {
+      name: cls.resource.name,
+      current: khanResourcesOf(this.timers).classPower,
+      maximum: cls.resource.maximum,
+      tint: cls.weapon.projectileTint,
+      activeSpirits: this.spiritCaller.activeSpirits(),
+      refusals: this.refusals,
+      refusedSlot: this.refusedSlot,
+    };
+  }
+
+  /** Earns class resource for the living Khan and refreshes the HUD when it changes. */
+  private earn(event: ClassResourceEvent, times = 1): void {
+    if (!isKhanActive(this.run)) return;
+    const resource = classDefinition(this.run.character?.classId).resource;
+    if (earnClassPower(khanResourcesOf(this.timers), resource, event, times) > 0)
+      this.arena.hud.refresh();
   }
 
   private cooldowns(): Record<ClassAbilitySlot, number> {
@@ -729,6 +847,7 @@ export class CombatSystem extends ArenaSystem {
     } = {},
   ): boolean {
     let struck = false;
+    this.lineStruck = 0;
     this.spatial.forEachNearby(this.player.x, this.player.y, range + width / 2, (enemy) => {
       if (
         !insideAttackLine(this.player, direction, enemy, range, width) ||
@@ -743,6 +862,7 @@ export class CombatSystem extends ArenaSystem {
       options.onHit?.(enemy);
       this.damageEnemy(enemy, this.run.stats.damage * damageMultiplier, options.armorPenetration);
       struck = true;
+      this.lineStruck++;
     });
     this.finishMeleeAttack(struck);
     return true;
@@ -975,7 +1095,7 @@ export class CombatSystem extends ArenaSystem {
     damageOrMultiplier: number,
     ancestral = false,
     charged = false,
-    owner: 'khan' | 'rider' | 'wagon' | 'wagon-ricochet' = 'rider',
+    owner: 'khan' | 'camp' | 'wagon' | 'wagon-ricochet' = 'camp',
     echoIndex?: number,
     ghost = false,
     origin?: Enemy,
@@ -1059,6 +1179,7 @@ export class CombatSystem extends ArenaSystem {
       bolt.setData('ghost', ghost);
       bolt.setData('spirit-source', spiritSource);
       bolt.setData('mounted-kind', mountedOptions?.kind);
+      bolt.setData('class-power', mountedOptions?.earns);
       bolt.remaining = range
         ? range / Math.max(1, baseSpeed * volley.speed)
         : GAME.projectile.lifetime;
@@ -1179,8 +1300,12 @@ export class CombatSystem extends ArenaSystem {
     const spiritSource = bolt.getData('spirit-source') as SpiritProjectileSource | undefined;
     if (spiritSource) this.effects.burst(enemy.x, enemy.y, 0x72e0d1, 5);
     else if (bolt.source === 'khan') this.effects.burst(enemy.x, enemy.y, 0xe2c586, 3);
-    if (spiritSource === 'wisp') {
-      if (this.spiritCaller.gainWispEnergy()) this.arena.hud.refresh();
+    if (spiritSource === 'wisp') this.earn('basicHit');
+    // An arrow earns once, on its first hit, however many enemies it pierces.
+    const earns = bolt.getData('class-power') as ClassResourceEvent | undefined;
+    if (earns) {
+      bolt.setData('class-power', undefined);
+      this.earn(earns);
     }
 
     if (bolt.pierces > 0) {
@@ -1257,9 +1382,7 @@ export class CombatSystem extends ArenaSystem {
     for (const gem of this.gems.getChildren() as Gem[]) {
       if (!gem.active) continue;
       const distance = Phaser.Math.Distance.Between(gem.x, gem.y, this.player.x, this.player.y);
-      const retreat = this.run.clan.formation === 'retreat' && this.run.clan.momentum > 0.4;
-      if (distance < Math.max(this.run.stats.pickupRadius * (retreat ? 1.7 : 1), 0))
-        gem.attracted = true;
+      if (distance < Math.max(this.run.stats.pickupRadius, 0)) gem.attracted = true;
       if (!gem.attracted) continue;
       if (distance < 18) {
         experience += gem.value;

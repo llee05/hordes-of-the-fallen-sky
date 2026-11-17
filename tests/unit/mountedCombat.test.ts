@@ -2,11 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { GAME } from '../../src/game/config';
 import { ENEMIES } from '../../src/game/data/enemies';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
-import {
-  advanceMountedCombat,
-  retreatShot,
-  riderCooldowns,
-} from '../../src/game/state/mountedCombat';
+import { advanceMountedCombat } from '../../src/game/state/mountedCombat';
 import { createRun } from '../../src/game/state/run';
 import {
   advanceCharge,
@@ -15,90 +11,44 @@ import {
 } from '../../src/game/systems/enemyTactics';
 import { world } from './fixtures/expedition';
 
-describe('rider cooldowns', () => {
-  it.each([2, 4, 16])(
-    'keeps %i rider cooldowns saveable when the last rider fires first',
-    (count) => {
-      const run = createRun();
-      const cooldowns = riderCooldowns(run.combat, count);
-      cooldowns[count - 1] = 10;
-      const expected = Array(count - 1)
-        .fill(0)
-        .concat(10);
-      expect(run.combat.riderFireAt).toEqual(expected);
-      const restored = decodeExpedition(captureExpedition(run, world())).run;
-      expect(restored.combat.riderFireAt).toEqual(expected);
-      const resumed = riderCooldowns(restored.combat, count);
-      expect(resumed[count - 1]).toBe(10);
-      resumed[0] = 12;
-      expect(riderCooldowns(restored.combat, count)[0]).toBe(12);
-      expect(resumed[count - 1]).toBe(10);
-    },
-  );
-  it('initializes new riders without resetting existing cooldowns', () => {
-    const run = createRun();
-    riderCooldowns(run.combat, 1)[0] = 12;
-    expect(riderCooldowns(run.combat, 3)).toEqual([12, 0, 0]);
+describe('slowing trails', () => {
+  it('fades saved trails on active time only', () => {
+    const r = createRun();
+    r.combat.trails = [{ x: 2600, y: 2600, remaining: 1 }];
+    advanceMountedCombat(r, 0.5);
+    expect(r.combat.trails[0]!.remaining).toBe(1);
+    r.phase = 'playing';
+    advanceMountedCombat(r, 0.5);
+    expect(r.combat.trails[0]!.remaining).toBeCloseTo(0.5);
+    advanceMountedCombat(r, NaN);
+    expect(r.combat.trails).toHaveLength(1);
+    advanceMountedCombat(r, 0.6);
+    expect(r.combat.trails).toHaveLength(0);
   });
 });
 
-describe('mounted positioning', () => {
-  it('builds formation momentum from real riding without charging an automatic volley', () => {
-    const r = createRun();
-    r.phase = 'playing';
-    for (let i = 0; i < 100; i++) advanceMountedCombat(r, 0.05, { x: 2600, y: 2600 }, false);
-    expect(r.clan.momentum).toBe(0);
-    expect(r.combat.ready).toBe(false);
-    for (let i = 0; i < 80; i++)
-      advanceMountedCombat(r, 0.05, { x: 2600 + i * 9.5, y: 2600 }, false);
-    expect(r.combat.ready).toBe(false);
-    expect(r.combat.rideSeconds).toBe(0);
-    expect(r.clan.momentum).toBe(1);
-    advanceMountedCombat(r, 0.05, { x: 500, y: 500 }, false);
-    expect(r.combat.rideSeconds).toBe(0);
-    const actor = { x: 3000, y: 2600, rendererCallback: () => {} };
-    advanceMountedCombat(r, 0.05, actor, true);
-    expect(() => structuredClone(r)).not.toThrow();
-    const before = structuredClone(r);
-    r.phase = 'paused';
-    const paused = structuredClone(r);
-    advanceMountedCombat(r, 10, { x: 3000, y: 3000 }, true);
-    expect(r).toEqual(paused);
-    expect(before.combat.trails).toHaveLength(0);
-  });
-  it('bounds upgraded slowing wakes, expires them on active time, and rewards an outward retreat shot', () => {
-    const r = createRun();
-    r.phase = 'playing';
-    r.clan.formation = 'retreat';
-    r.clan.momentum = 1;
-    for (let i = 0; i < 100; i++)
-      advanceMountedCombat(r, 0.05, { x: 1000 + i * 25, y: 2600 }, true);
-    expect(r.combat.trails).toHaveLength(0);
-    expect(r.combat.trails.length).toBeLessThanOrEqual(GAME.mounted.maxTrails);
-    expect(
-      retreatShot(
-        r,
-        { x: 3000, y: 2600 },
-        { x: 2600, y: 2600 },
-        { x: 2900, y: 2600 },
-        { x: 1, y: 0 },
-      ),
-    ).toBe(true);
-    expect(
-      retreatShot(
-        r,
-        { x: 3000, y: 2600 },
-        { x: 2600, y: 2600 },
-        { x: 3100, y: 2600 },
-        { x: 1, y: 0 },
-      ),
-    ).toBe(false);
-    advanceMountedCombat(r, 3, { x: 3475, y: 2600 }, false);
-    expect(r.combat.trails).toHaveLength(0);
-    r.health = 0;
-    advanceMountedCombat(r, 0.1, { x: 3500, y: 2600 }, false);
-    expect(r.combat.ready).toBe(false);
-    expect(r.clan.momentum).toBe(0);
+describe('retired allied riders', () => {
+  it('loads an old save carrying rider, formation and momentum fields and drops them', () => {
+    const save = captureExpedition(createRun(), world()) as Record<string, any>;
+    Object.assign(save.run.clan, { formation: 'retreat', momentum: 0.8, rescuedRiders: 2 });
+    save.run.clan.campEffects.multipliers.riderDamage = 1.38;
+    Object.assign(save.run.combat, {
+      riderFireAt: [3, 0, 12],
+      previous: { x: 2600, y: 2700 },
+      heading: { x: 0, y: 1 },
+      rideSeconds: 0,
+      ready: false,
+    });
+    save.run.guidance.completed = ['ride', 'formation'];
+    save.world.riders = [{ x: 2400, y: 2500, flip: false, motion: save.world.player.motion }];
+    const restored = decodeExpedition(save);
+    for (const key of ['formation', 'momentum', 'rescuedRiders'])
+      expect(restored.run.clan).not.toHaveProperty(key);
+    expect(restored.run.clan.campEffects.multipliers).not.toHaveProperty('riderDamage');
+    expect(restored.run.combat).toEqual({ gallopSerial: 0, volleys: 0, trails: [] });
+    expect(restored.world).not.toHaveProperty('riders');
+    expect(restored.run.clan.integrity).toBe(100);
+    expect(() => decodeExpedition(captureExpedition(restored.run, restored.world))).not.toThrow();
   });
 });
 describe('enemy tactical roles', () => {

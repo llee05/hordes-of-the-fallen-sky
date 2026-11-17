@@ -60,7 +60,7 @@ test('HUD feedback stays bounded, cancels on pause, and responds to live reduced
     const initial = Math.floor(scene.run.clan.materials);
     for (let index = 0; index < 8; index++) {
       scene.run.clan.materials += 1;
-      scene.cycleFormation(); // Publishes the actual scene-owned HUD snapshot.
+      scene.changeZoom(0); // Publishes the actual scene-owned HUD snapshot.
     }
     const displayed = Number(value.textContent);
     const running = value.getAnimations().length;
@@ -79,7 +79,7 @@ test('HUD feedback stays bounded, cancels on pause, and responds to live reduced
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.run.clan.materials += 5;
-    scene.cycleFormation();
+    scene.changeZoom(0);
   });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect
@@ -95,7 +95,7 @@ test('HUD feedback stays bounded, cancels on pause, and responds to live reduced
   const reduced = await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     scene.run.clan.materials += 5;
-    scene.cycleFormation();
+    scene.changeZoom(0);
     scene.openBuildings();
     return {
       displayed: Number(document.querySelector('#materials')!.textContent),
@@ -114,7 +114,7 @@ test('HUD feedback stays bounded, cancels on pause, and responds to live reduced
     await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       scene.run.clan.materials += 1;
-      scene.cycleFormation();
+      scene.changeZoom(0);
       return document.querySelector('#materials')!.getAnimations().length;
     }),
   ).toBe(1);

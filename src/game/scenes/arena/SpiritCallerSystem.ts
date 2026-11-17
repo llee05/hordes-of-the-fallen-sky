@@ -1,4 +1,3 @@
-import { GAME } from '../../config';
 import {
   classDefinition,
   type ClassAbilityDefinition,
@@ -6,12 +5,12 @@ import {
 } from '../../data/classes';
 import { Enemy, Projectile } from '../../entities/actors';
 import { isKhanActive } from '../../state/khan';
+import { drumWaveCount } from '../../state/classActions';
 import { insideAttackLine } from '../../state/khanControls';
 import { markExpedition } from '../../state/expeditionMetrics';
 import {
   activeSpiritCount,
   createSpiritCallerCombatState,
-  gainSpiritualEnergy,
   type SpiritCallerCombatState,
 } from '../../state/spiritCaller';
 import type { ArenaContext } from './ArenaContext';
@@ -44,32 +43,19 @@ export class SpiritCallerSystem extends ArenaSystem {
     this.timers.spiritCaller = createSpiritCallerCombatState();
   }
 
-  status(): { energy: number; maximum: number; activeSpirits: number } | undefined {
+  /** Spirits fighting beside the Spirit Caller now; undefined for every other class. */
+  activeSpirits(): number | undefined {
     const cls = classDefinition(this.run.character?.classId);
     if (cls.id !== 'spirit-caller') return;
     const veil = cls.abilities.find((ability) => ability.kind === 'veil')!;
-    const state = this.state();
-    return {
-      energy: state.energy,
-      maximum: GAME.classes['spirit-caller'].spirit.maxEnergy,
-      activeSpirits: activeSpiritCount(state, veil.spiritMultiplier, veil.spectralCopies),
-    };
-  }
-
-  gainWispEnergy(): boolean {
-    if (!isKhanActive(this.run)) return false;
-    const tuning = GAME.classes['spirit-caller'].spirit;
-    return gainSpiritualEnergy(this.state(), tuning.energyPerWispHit, tuning.maxEnergy) > 0;
+    return activeSpiritCount(this.state(), veil.spiritMultiplier, veil.spectralCopies);
   }
 
   releaseDrum(attack: ClassHeavyAttackDefinition, charge: number): boolean {
     const tuning = attack.charge;
     if (!tuning || tuning.kind !== 'waves') return false;
     const held = Math.max(attack.windup, Math.min(tuning.maxDuration, charge));
-    const waves = Math.min(
-      tuning.maxWaves,
-      1 + Math.floor((held - attack.windup) / tuning.waveEvery),
-    );
+    const waves = drumWaveCount(held, attack.windup, tuning.waveEvery, tuning.maxWaves);
     this.state().drumWaves = Array.from({ length: waves }, (_, index) => ({
       delay: index * tuning.waveDelay,
       range: attack.range + index * tuning.rangeStep,
@@ -81,7 +67,8 @@ export class SpiritCallerSystem extends ArenaSystem {
     return true;
   }
 
-  cast(effect: ClassAbilityDefinition, direction: { x: number; y: number }): boolean {
+  /** Casts a spirit ability; `power` is the Spiritual Energy the cast spends. */
+  cast(effect: ClassAbilityDefinition, direction: { x: number; y: number }, power = 0): boolean {
     if (effect.kind === 'guardians') {
       this.state().guardians = {
         remaining: effect.duration,
@@ -111,8 +98,7 @@ export class SpiritCallerSystem extends ArenaSystem {
       });
     } else if (effect.kind === 'veil') {
       const state = this.state();
-      state.veilRemaining = effect.duration + state.energy * effect.energyDuration;
-      state.energy = 0;
+      state.veilRemaining = effect.duration + power * effect.energyDuration;
       state.echoTimer = 0;
       this.effects.classAttack('spirit-caller:veil-between-worlds', {
         x: this.player.x,

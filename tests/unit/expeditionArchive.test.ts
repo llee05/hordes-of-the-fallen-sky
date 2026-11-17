@@ -7,9 +7,11 @@ import { createArenaTimers } from '../../src/game/scenes/arena/ArenaTimers';
 import { syncAreaEncounter } from '../../src/game/state/areaEncounters';
 import { beginMigration } from '../../src/game/state/clan';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
+import { createKhanResources } from '../../src/game/state/khanResources';
 import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
 import { createRun } from '../../src/game/state/run';
 import { GamePlatform } from '../../src/platform/GamePlatform';
+import { defaultCharacterProfile } from '../../src/shared/characterProfile';
 import { clanMemories } from '../../src/ui/legacyContent';
 import { createLegacyCampRun } from '../support/legacyCamp';
 import { world } from './fixtures/expedition';
@@ -51,7 +53,7 @@ describe('full expedition snapshots', () => {
     legacy.clan.campEffects.multipliers.wagonDamage = 20;
     const restored = decodeExpedition(save).run;
     expect(restored.stats).toEqual(run.stats);
-    expect(restored.clan.formation).toBe('guard');
+    expect(restored.clan).not.toHaveProperty('formation');
     expect(restored.clan.campEffects).toEqual(run.clan.campEffects);
     expect(restored.clan.nomadicCamp).toEqual(run.clan.nomadicCamp);
     expect(restored.clan.spirit).toBe(run.clan.spirit);
@@ -510,7 +512,6 @@ describe('full expedition snapshots', () => {
     run.xp = 7;
     run.khan.generation = 2;
     run.khan.trait = 'outrider';
-    run.combat.previous = { x: 2600, y: 2700 };
     const runtime = world();
     syncAreaEncounter(runtime.areaEncounter, run);
     const save = captureExpedition(run, runtime);
@@ -530,8 +531,6 @@ describe('full expedition snapshots', () => {
   it('moves legacy Orkhon actors into the wide terrain once and marks the new coordinates', () => {
     const run = createRun();
     run.clan.locationId = 'orkhon-valley';
-    run.combat.previous = { x: 2600, y: 2700 };
-    run.combat.heading = { x: 0, y: 1 };
     run.combat.trails = [{ x: 2500, y: 2500, remaining: 1 }];
     run.field.objective = {
       id: 1,
@@ -549,9 +548,6 @@ describe('full expedition snapshots', () => {
     runtime.hostileShots = [
       { ...structuredClone(runtime.projectiles[0]!), x: 0, y: 0, previous: { x: 0, y: 0 } },
     ];
-    runtime.riders = [
-      { x: 2400, y: 2500, flip: false, motion: structuredClone(runtime.player.motion) },
-    ];
     const save = captureExpedition(run, runtime);
     delete save.world.orkhonLayout;
     const restored = decodeExpedition(save);
@@ -566,11 +562,8 @@ describe('full expedition snapshots', () => {
     expect(first.hostileShots[0]).toMatchObject({ x: 50, y: 1224 });
     expect(first.hostileShots[0]!.previous).toEqual({ x: 50, y: 1224 });
     expect(first.gems[0]).toMatchObject({ x: 2650, y: 3720 });
-    expect(first.riders[0]).toMatchObject({ x: 2450, y: 3520 });
     expect(first.hazards[0]).toMatchObject({ x: 2750, y: 3720 });
     expect(first.areaThreats.threats[0]).toMatchObject({ x: 2750, y: 3820 });
-    expect(restored.run.combat.previous).toEqual({ x: 2650, y: 3720 });
-    expect(restored.run.combat.heading).toEqual({ x: 0, y: 1 });
     expect(restored.run.combat.trails[0]).toMatchObject({ x: 2550, y: 3520 });
     expect(restored.run.field.objective).toMatchObject({ x: 2850, y: 3920 });
     expect(first.facing).toEqual({ x: 0, y: 1 });
@@ -616,7 +609,7 @@ describe('full expedition snapshots', () => {
         tickTimer: 0.1,
         visualTimer: 0.04,
       },
-      windstep: { remaining: 0.3, shotTimer: 0.05 },
+      windstep: { remaining: 0.3, shotTimer: 0.05, damage: 0.85 },
     };
     runtime.timers.khanManeuver = {
       remaining: 0.3,
@@ -692,10 +685,9 @@ describe('full expedition snapshots', () => {
     expect(restored.world.timers.khanStatus).toEqual(runtime.timers.khanStatus);
     expect(restored.world.timers.classAction).toEqual(runtime.timers.classAction);
   });
-  it('round-trips Spirit Caller energy, summons, areas, veil and pending drum waves', () => {
+  it('round-trips Spirit Caller summons, areas, veil and pending drum waves', () => {
     const runtime = world();
     runtime.timers.spiritCaller = {
-      energy: 7,
       guardians: { remaining: 4, attackTimer: 0.3, count: 2, intercepts: 1 },
       ovoo: { x: 1200, y: 1300, remaining: 5, pulseTimer: 0.2 },
       veilRemaining: 3,
@@ -705,12 +697,39 @@ describe('full expedition snapshots', () => {
     const restored = decodeExpedition(captureExpedition(createRun(), runtime));
     expect(restored.world.timers.spiritCaller).toEqual(runtime.timers.spiritCaller);
   });
+  it('moves Spiritual Energy saved before the shared class resource into it', () => {
+    const profile = { ...defaultCharacterProfile(), classId: 'spirit-caller' as const };
+    const old = captureExpedition(createRun('shared-hearth', profile), world()) as Record<
+      string,
+      any
+    >;
+    delete old.world.timers.khanResources;
+    old.world.timers.spiritCaller = {
+      energy: 7,
+      veilRemaining: 0,
+      echoTimer: 0,
+      drumWaves: [],
+    };
+    const restored = decodeExpedition(old).world.timers;
+    expect(restored.spiritCaller).not.toHaveProperty('energy');
+    expect(restored.khanResources).toEqual({ ...createKhanResources(), classPower: 7 });
+    // Another class never carries stale Spiritual Energy into its own resource.
+    const archer = captureExpedition(createRun(), world()) as Record<string, any>;
+    delete archer.world.timers.khanResources;
+    archer.world.timers.spiritCaller = { energy: 7, veilRemaining: 0, echoTimer: 0, drumWaves: [] };
+    expect(decodeExpedition(archer).world.timers.khanResources).toEqual(createKhanResources());
+    // A current save keeps its own class resource and caps it at the class maximum.
+    const current = captureExpedition(createRun(), world()) as Record<string, any>;
+    current.world.timers.khanResources.classPower = 99;
+    expect(decodeExpedition(current).world.timers.khanResources!.classPower).toBe(12);
+    current.world.timers.khanResources.classPower = 2.5;
+    expect(() => decodeExpedition(current)).toThrow();
+  });
   it('loads saves from before the Spirit Caller resource with empty spiritual energy', () => {
     const save = captureExpedition(createRun(), world()) as Record<string, any>;
     delete save.world.timers.spiritCaller;
     const restored = decodeExpedition(save);
     expect({ ...createArenaTimers(), ...restored.world.timers }.spiritCaller).toEqual({
-      energy: 0,
       veilRemaining: 0,
       echoTimer: 0,
       drumWaves: [],

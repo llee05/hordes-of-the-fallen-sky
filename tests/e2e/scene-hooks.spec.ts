@@ -31,7 +31,6 @@ const LIVE = [
   'areaThreats',
   'areaEffects',
   'joystick',
-  'riders',
   'packedGers',
   'hazards',
 ] as const;
@@ -49,7 +48,6 @@ const READABLE = [
 const TIMERS = [
   'spawnTimer',
   'attackTimer',
-  'dashTimer',
   'dashRemaining',
   'invulnerable',
   'supportTimer',
@@ -101,8 +99,7 @@ const METHODS = [
   'closeCamp',
   'improveNomadicCamp',
   'chooseRoute',
-  'cycleFormation',
-  'dash',
+  'holdGallop',
   'changeZoom',
 ] as const;
 

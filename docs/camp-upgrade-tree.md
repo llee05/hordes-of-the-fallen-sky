@@ -37,7 +37,7 @@ Population is capped at 120. Resolve and Khan recovery respect their maximums. R
 
 ## Archery grounds · bow craft and mounted organisation
 
-**Establish: 24 materials, 3 workers.** Recruit three accompanying riders; unlock Encirclement and Charging wedge.
+**Establish: 24 materials, 3 workers.** Allied riders and formations have been removed from the game, so the rider and formation benefits below are retired; the IDs remain so old saves validate and migrate.
 
 ```mermaid
 flowchart TD
@@ -53,12 +53,12 @@ Fire arrows and Veteran riders are exclusive. Bowyers can accompany either.
 | Development / ID                             | Cost | Requirement    | Effect                                                                                              |
 | -------------------------------------------- | ---- | -------------- | --------------------------------------------------------------------------------------------------- |
 | Fire arrows · `fire-arrows`                  | 36   | Established    | Friendly arrows ignite enemies for 2 seconds, at shared damage ×0.45/second. Hits refresh the burn. |
-| Veteran riders · `veteran-riders`            | 36   | Established    | +3 riders; companion arrow multiplier rises from 0.6 to 0.9.                                        |
-| Horn-and-sinew bowyers · `seasoned-bowyers`  | 28   | Established    | Khan and companion targeting range +30 world units. Does not extend projectile lifetime.            |
+| Veteran riders · `veteran-riders`            | 36   | Established    | Retired with the allied riders; no effect.                                                          |
+| Horn-and-sinew bowyers · `seasoned-bowyers`  | 28   | Established    | Khan targeting range +30 world units. Does not extend projectile lifetime.                          |
 | Prepared resin bundles · `resin-preparation` | 42   | Fire arrows    | Burn damage ×1.3, reaching shared damage ×0.585/second.                                             |
-| Arban drills · `arban-drills`                | 42   | Veteran riders | Companion arrow damage ×1.2; mounted-host firing interval ×0.9.                                     |
+| Arban drills · `arban-drills`                | 42   | Veteran riders | Khan attack interval ×0.9. The former companion arrow damage ×1.2 is retired.                       |
 
-With Arban drills and Sülde's Rallying banner, veteran rider arrows use `0.9 ×1.2 ×1.25 = 1.35` shared damage. Host haste does not change sanctuary, wagon, water-pulse, or ancestral timers. Living riders remain capped at sixteen; “arban” inspires the coordination upgrade rather than requiring a literal ten-rider squad.
+The attack-interval modifier does not change sanctuary, wagon, water-pulse, or ancestral timers. “Arban” inspires the coordination upgrade rather than modelling a literal ten-rider squad.
 
 **Burning Tempest** still requires Fire arrows plus Wind shamans. It adds two curving, burning arrows to each friendly volley. Prepared resin strengthens their burn, while Veteran riders rules out that combination.
 
@@ -221,6 +221,6 @@ This is a fantasy synthesis of motifs from different periods and living communit
 - **Pasture and migration:** UNESCO documents the relationship among herders, livestock, pastures, seasonal movement, and shared knowledge. This informs grazing and scouting. [Mongol nomad migration and its associated practices](https://ich.unesco.org/en/RL/mongol-nomad-migration-and-its-associated-practices-02091).
 - **Food preservation:** Mongolia's cultural heritage inventory describes aaruul and dried/preserved meat including borts. These inform provisions, not their numerical yields. [Mongolian traditional food, ICH Links Mongolia](https://mongolia.ichlinks.com/archive/elements/elementsV.do?contentsI18NCd=en-US&elementsUid=13829896147278001210&nation=MN).
 - **Airag:** UNESCO describes the fermented beverage, equipment, and associated social customs. This informs the shared-table motif. [Traditional technique of making Airag in Khokhuur and its associated customs](https://ich.unesco.org/en/RL/traditional-technique-of-making-airag-in-khokhuur-and-its-associated-customs-01172).
-- **Mounted organisation:** Columbia University's educational account describes units organised around ten and mounted tactics. This informs Arban drills without claiming that the game's sixteen-rider cap models the imperial army. [Chinggis's mastery of organization and military tactics](https://www-1.gsb.columbia.edu/mongols/conquests/conquests_2b.htm).
+- **Mounted organisation:** Columbia University's educational account describes units organised around ten and mounted tactics. This informs Arban drills without claiming that the game models the imperial army. [Chinggis's mastery of organization and military tactics](https://www-1.gsb.columbia.edu/mongols/conquests/conquests_2b.htm).
 - **Relays and horses:** AMNH discusses mounted postal way stations and the wider importance of horses. The portable dispatch point and supply rewards are this game's adaptation. [The horse in Mongolian culture](https://www.amnh.org/explore/videos/biodiversity/takhi-mongolian-horse/horse-mongolian-culture).
 - **Sacred places:** UNESCO documents particular sacred-site traditions and their community context. Remembered ovoos is an invented clan remembrance, not a prescribed ceremony or a model of ritual efficacy. [Mongolian traditional practices of worshipping the sacred sites](https://ich.unesco.org/en/USL/mongolian-traditional-practices-of-worshipping-the-sacred-sites-00871).

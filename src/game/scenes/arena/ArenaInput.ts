@@ -13,13 +13,11 @@ export interface ArenaActions {
   togglePause(): void;
   openBuildings(): void;
   openRoutes(): void;
-  cycleFormation(): void;
   selectSuccessor(trait: SuccessorTrait): void;
   toggleJournal(): void;
   toggleDeveloperMenu(): void;
   toggleDeveloperConsole(): void;
   changeZoom(steps: number): void;
-  dash(): void;
   useAbility(slot: ClassAbilitySlot): void;
   menuInput(action: 'next' | 'previous' | 'up' | 'down' | 'left' | 'right' | 'confirm'): void;
 }
@@ -64,6 +62,10 @@ export class ArenaInput {
   private pointerHeavyAttackHeld = false;
   private controllerLightAttackHeld = false;
   private controllerHeavyAttackHeld = false;
+  private controllerGallopHeld = false;
+  /** The HUD gallop button, held by pointer or touch. */
+  private buttonGallopHeld = false;
+  private gallopKey?: Phaser.Input.Keyboard.Key;
   private wheelZoomDelta = 0;
 
   constructor(
@@ -85,6 +87,8 @@ export class ArenaInput {
     this.pointerHeavyAttackHeld = false;
     this.controllerLightAttackHeld = false;
     this.controllerHeavyAttackHeld = false;
+    this.controllerGallopHeld = false;
+    this.buttonGallopHeld = false;
     this.hasPointerTarget = false;
     this.dragOrigin = undefined;
     this.keys = keyboard.addKeys({
@@ -118,7 +122,6 @@ export class ArenaInput {
     bindAction('P', () => actions.togglePause());
     bindAction('B', () => actions.openBuildings());
     bindAction('M', () => actions.openRoutes());
-    bindAction('F', () => actions.cycleFormation());
     const useNumber = (key: 1 | 2 | 3 | 4): void => {
       const action = combatNumberAction(key, isKhanActive(this.arena.run));
       if (action?.kind === 'ability') actions.useAbility(action.slot);
@@ -187,7 +190,7 @@ export class ArenaInput {
     });
     // Native Space activation remains available to focused menu buttons.
     keyboard.removeCapture('SPACE');
-    bindAction('SPACE', () => actions.dash());
+    this.gallopKey = keyboard.addKey('SPACE', false);
     // Drag anywhere in the arena for analog movement on touch screens.
     this.joystick = scene.add.graphics().setScrollFactor(0).setDepth(10000);
     scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -241,6 +244,7 @@ export class ArenaInput {
     }
     this.controllerLightAttackHeld = controller.lightAttack;
     this.controllerHeavyAttackHeld = controller.heavyAttack;
+    this.controllerGallopHeld = controller.gallop;
     const phaseBeforeInput = this.arena.run.phase;
     if (controller.pause || (controller.back && BACK_PHASES.includes(this.arena.run.phase)))
       actions.togglePause();
@@ -252,14 +256,12 @@ export class ArenaInput {
         if (controller.previous) actions.selectSuccessor('outrider');
         else if (controller.next) actions.selectSuccessor('hearthguard');
       }
-      if (controller.gallop) actions.dash();
       if (controller.abilityQ) actions.useAbility('q');
       if (controller.abilityW) actions.useAbility('w');
       if (controller.abilityE) actions.useAbility('e');
       if (controller.abilityR) actions.useAbility('r');
       if (controller.build) actions.openBuildings();
       else if (controller.migrate) actions.openRoutes();
-      else if (controller.formation) actions.cycleFormation();
       else if (controller.journal) actions.toggleJournal();
     } else {
       if (controller.journal && this.arena.run.phase === 'journal') actions.toggleJournal();
@@ -317,6 +319,16 @@ export class ArenaInput {
     return this.pointerHeavyAttackHeld || this.controllerHeavyAttackHeld;
   }
 
+  /** Whether the gallop is held: Space, the controller left bumper or the HUD button. */
+  gallopHeld(): boolean {
+    return !!this.gallopKey?.isDown || this.controllerGallopHeld || this.buttonGallopHeld;
+  }
+
+  /** The HUD gallop button reports its press and release here. */
+  holdGallopButton(held: boolean): void {
+    this.buttonGallopHeld = held;
+  }
+
   /** Redraws the touch joystick in screen space for the main camera's zoom. */
   drawJoystick(): void {
     // Scroll factor alone does not cancel camera zoom for the screen-space joystick.
@@ -346,6 +358,9 @@ export class ArenaInput {
     this.pointerHeavyAttackHeld = false;
     this.controllerLightAttackHeld = false;
     this.controllerHeavyAttackHeld = false;
+    this.controllerGallopHeld = false;
+    this.buttonGallopHeld = false;
+    this.gallopKey?.reset();
     this.clearTouch();
   }
 

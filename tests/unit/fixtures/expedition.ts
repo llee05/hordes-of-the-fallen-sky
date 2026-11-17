@@ -25,7 +25,7 @@ export function world(): WorldArchive {
         shieldMax: 40,
         shieldPerSecond: 8,
       },
-      dashTimer: 2,
+      khanResources: { stamina: 42.5, classPower: 5, sprinting: false, winded: false },
       dashRemaining: 0.1,
       invulnerable: 0.3,
       supportTimer: 1,
@@ -89,7 +89,6 @@ export function world(): WorldArchive {
     ],
     hostileShots: [],
     gems: [{ ...body, value: 23, attracted: true }],
-    riders: [],
     hazards: [{ x: 2700, y: 2700, remaining: 0.4, radius: 90, damage: 8, source: 'seer' }],
     areaEncounter: createAreaEncounter(),
     areaThreats: {

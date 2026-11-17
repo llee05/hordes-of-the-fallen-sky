@@ -10,28 +10,28 @@ Every building has Basic, Established and Advanced levels. Each level has author
 | --------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | Khan's Ger      | Material gathering, population capacity (40 / 80 / 120); gates the matching level of other buildings | Leadership                                 |
 | Horse Lines     | Migration mobility                                                                                   | Mount speed and effectiveness              |
-| Herding Grounds | Passive food production, existing grazing and retreat formation support                              | Leather and wool                           |
+| Herding Grounds | Passive food production and existing grazing support                                                 | Leather and wool                           |
 | Communal Hearth | Food efficiency, active-time Khan recovery and stationary resolve recovery                           | —                                          |
 | Wagon Yard      | Existing defensive-cart support, migration mobility and materials after a completed migration        | Storage capacity and relocation efficiency |
 
 All five cores start at level 1. They cannot be removed or exchanged, reserve no additional workers, and take no optional location. Each optional building reserves one worker on construction, retained through its upgrades. Casualties do not destroy workplaces or prevent upgrades that reserve no new workers.
 
-| Optional building         | Category             | Current integration                                                                 | Deferred integration                                                      |
-| ------------------------- | -------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Archery Range             | Military             | Existing mounted archers and combat formations; damage, firing cadence and piercing | —                                                                         |
-| Smith's Forge             | Military             | Weapon damage and clan protection                                                   | Equipment crafting and armour effectiveness                               |
-| Warrior's Training Ground | Military             | Existing escort damage                                                              | Companion capacity, strength and abilities                                |
-| Scout's Watchpost         | Military             | Collection radius and materials after migrations                                    | Exploration radius, hidden discoveries and expedition reward improvements |
-| Fletcher's Workshop       | Military             | Additional projectile, firing cadence, piercing and fire-arrow unlock               | —                                                                         |
-| Palisade & Watchfires     | Military             | Clan protection                                                                     | Guard strength                                                            |
-| Hunting Lodge             | Economy & survival   | Food production and food after migrations                                           | Rare animal resources and hunting expeditions                             |
-| Artisan's Ger             | Economy & survival   | Material gathering and food efficiency                                              | Crafting and equipment systems                                            |
-| Trading Post              | Economy & survival   | Materials after migrations                                                          | Trade rates, merchant stock and rare trade goods                          |
-| Healer's Ger              | Economy & survival   | Maximum health and active-time recovery                                             | Healing-effectiveness modifiers                                           |
-| Sacred Ovoo               | Spiritual & cultural | Existing sanctuary lightning, Spirit gain and protection                            |                                                                           |
-| Shaman's Ger              | Spiritual & cultural | Burn damage and the story world's fictional wind-magic unlock                       | Spiritual abilities, rituals and corruption cleansing                     |
-| Ancestral Standard        | Spiritual & cultural | Existing escort damage and resolve recovery                                         | Companion morale                                                          |
-| Storyteller's Hearth      | Spiritual & cultural | Experience and Spirit gain                                                          | Lore discoveries                                                          |
+| Optional building         | Category             | Current integration                                                   | Deferred integration                                                      |
+| ------------------------- | -------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Archery Range             | Military             | Khan weapon damage, attack cadence and piercing                       | —                                                                         |
+| Smith's Forge             | Military             | Weapon damage and clan protection                                     | Equipment crafting and armour effectiveness                               |
+| Warrior's Training Ground | Military             | Khan weapon damage                                                    | Companion capacity, strength and abilities                                |
+| Scout's Watchpost         | Military             | Collection radius and materials after migrations                      | Exploration radius, hidden discoveries and expedition reward improvements |
+| Fletcher's Workshop       | Military             | Additional projectile, firing cadence, piercing and fire-arrow unlock | —                                                                         |
+| Palisade & Watchfires     | Military             | Clan protection                                                       | Guard strength                                                            |
+| Hunting Lodge             | Economy & survival   | Food production and food after migrations                             | Rare animal resources and hunting expeditions                             |
+| Artisan's Ger             | Economy & survival   | Material gathering and food efficiency                                | Crafting and equipment systems                                            |
+| Trading Post              | Economy & survival   | Materials after migrations                                            | Trade rates, merchant stock and rare trade goods                          |
+| Healer's Ger              | Economy & survival   | Maximum health and active-time recovery                               | Healing-effectiveness modifiers                                           |
+| Sacred Ovoo               | Spiritual & cultural | Existing sanctuary lightning, Spirit gain and protection              |                                                                           |
+| Shaman's Ger              | Spiritual & cultural | Burn damage and the story world's fictional wind-magic unlock         | Spiritual abilities, rituals and corruption cleansing                     |
+| Ancestral Standard        | Spiritual & cultural | Resolve recovery                                                      | Companion morale                                                          |
+| Storyteller's Hearth      | Spiritual & cultural | Experience and Spirit gain                                            | Lore discoveries                                                          |
 
 These spiritual benefits describe the fictional Sundering and the game's supernatural calamity; they are not claims about historical Tengri practices. Unsupported mechanics are stored as typed `future` effect data and explicitly labelled **Planned** in the inspector. They do not create pretend merchants, inventories, companion actors, corruption systems or mount simulation.
 
@@ -46,7 +46,7 @@ The Khan's Ger capacity governs new rescued or arriving households. Migration ne
 - `shared/nomadicCamp.ts` defines versioned ownership and validates exactly five cores, five optional slots, unique optional IDs and supported integer levels.
 - `game/data/nomadicCamp.ts` is the reusable 19-building registry. Definitions own categories, descriptions, levels, costs, prerequisites, effects and visual states. Core positions are stable; optional positions belong to slots, not to a building type.
 - `game/state/nomadicCamp.ts` validates and performs a purchase atomically. It applies typed ongoing effects and supported player modifiers once, records a chronicle memory, and preserves camp progression. Future mechanics are derived from the same owned level data.
-- `clan.nomadicCamp` is authoritative. `clan.buildings` and the few remaining craft flags are derived compatibility projections for existing battlefield actors, camp lightning, formations and fire-arrow interactions. They are not a second editable progression model. New runs reject the retired craft/tier purchase APIs.
+- `clan.nomadicCamp` is authoritative. `clan.buildings` and the few remaining craft flags are derived compatibility projections for existing battlefield actors, camp lightning and fire-arrow interactions. They are not a second editable progression model. New runs reject the retired craft/tier purchase APIs.
 - `ui/nomadicCampModel.ts` renders snapshot data using the existing shared parchment content builder and actual purchase previews. `GameUI` retains only selection/search state. `ArenaScene` handles planning transitions and purchase actions; `CampPresenter` draws the battlefield camp, and `CampDefences` runs sanctuary lightning, wagon volleys and ancestral wards. See [the arena module map](arena-scene.md) for scene responsibilities.
 
 The camp keeps one picture, rather than adding permanent navigation or inspector columns. Each location is clickable through its art or nameplate. Hover and visible keyboard focus identify the selected nameplate; Escape/controller Back dismisses its popover before leaving management. Search and Provisions remain available above the painting. Small windows pan the map and retain a bounded popover. No simulation or character clock advances while planning.

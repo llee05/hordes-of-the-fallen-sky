@@ -26,6 +26,8 @@ export interface MountedRainState {
 export interface MountedWindstepState {
   remaining: number;
   shotTimer: number;
+  /** Arrow damage multiplier for this Windstep, scaled by the Focus spent on the cast. */
+  damage?: number;
 }
 
 /** Saved active-time state for the Mounted Archer's delayed combat effects. */

@@ -14,7 +14,6 @@ export function createCampEffects(): CampEffects {
       pastureUse: 1,
       mobility: 1,
       clanProtection: 1,
-      riderDamage: 1,
       hostInterval: 1,
       burnDamage: 1,
       gallopCooldown: 1,

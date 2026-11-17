@@ -1,5 +1,6 @@
 import type { WorldArchive } from '../../state/expeditionArchive';
 import { createSpiritCallerCombatState } from '../../state/spiritCaller';
+import { createKhanResources } from '../../state/khanResources';
 import { createKhanStatus } from '../../state/statusEffects';
 import { createMountedArcherCombatState } from '../../state/mountedArcher';
 
@@ -19,7 +20,7 @@ export function createArenaTimers(): ArenaTimers {
     mountedArcher: createMountedArcherCombatState(),
     spiritCaller: createSpiritCallerCombatState(),
     khanStatus: createKhanStatus(),
-    dashTimer: 0,
+    khanResources: createKhanResources(),
     dashRemaining: 0,
     invulnerable: 0,
     supportTimer: 0,

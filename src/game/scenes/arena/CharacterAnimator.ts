@@ -5,7 +5,6 @@ import type { ArenaContext } from './ArenaContext';
 import { ArenaSystem } from './ArenaSystem';
 import type { CombatSystem } from './CombatSystem';
 import type { KhanController } from './KhanController';
-import type { RiderHost } from './RiderHost';
 
 /** Active-time character poses, enemy hit/burning tints and bounded defeat copies. */
 export class CharacterAnimator extends ArenaSystem {
@@ -14,7 +13,6 @@ export class CharacterAnimator extends ArenaSystem {
   constructor(
     arena: ArenaContext,
     private readonly khan: KhanController,
-    private readonly riderHost: RiderHost,
     private readonly combat: CombatSystem,
   ) {
     super(arena);
@@ -26,7 +24,6 @@ export class CharacterAnimator extends ArenaSystem {
 
   update(dt: number): void {
     this.khan.animate(dt, this.combat.isWindingUp());
-    this.riderHost.animate(dt, false);
     for (const enemy of this.enemies.getChildren() as Enemy[]) {
       if (!enemy.active) continue;
       enemy.motion.advance(dt, enemy.body!.velocity.length(), enemy.preparingAttack);

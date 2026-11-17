@@ -103,7 +103,6 @@ for (const scenario of [
       gem.enableBody(true, point.x, point.y, true, true);
       gem.value = 37;
       gem.attracted = true;
-      s.riders[0].setVisible(true).setPosition(point.x, point.y);
       s.testTerrainSave = captureExpedition(s.run, s.captureWorld());
       return { xp: s.run.xp, points: s.run.xp, spawnId: enemy.spawnId };
     }, blocked);
@@ -113,7 +112,7 @@ for (const scenario of [
         const nav = s.landscape.navigation;
         const enemy = s.enemies.getFirstAlive();
         const gem = s.gems.getFirstAlive();
-        const actors = [s.player, enemy, gem, s.riders[0]];
+        const actors = [s.player, enemy, gem];
         return {
           reachable: actors.every((actor) => actor && nav.isWalkable(actor.x, actor.y, 18, true)),
           bodiesAligned: [s.player, enemy, gem].every((actor) =>

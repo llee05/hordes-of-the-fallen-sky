@@ -4,6 +4,7 @@ import {
   type ClassAbilityDefinition,
   type ClassBasicAttackDefinition,
   type ClassHeavyAttackDefinition,
+  type ClassResourceEvent,
 } from '../../data/classes';
 import type { Enemy, Projectile } from '../../entities/actors';
 import { isKhanActive } from '../../state/khan';
@@ -22,6 +23,8 @@ export interface MountedShotOptions {
   exactCount?: boolean;
   pierces?: number;
   kind?: MountedProjectileKind;
+  /** The class-resource event each arrow raises on its first hit. */
+  earns?: ClassResourceEvent;
   spread?: number;
   /** Enemy already struck by a splitting projectile; fragments must not hit it again. */
   origin?: Enemy;
@@ -104,13 +107,16 @@ export class MountedArcherSystem extends ArenaSystem {
       exactCount: true,
       pierces,
       kind: fullyCharged ? 'piercing-full' : undefined,
+      earns: fullyCharged ? 'fullHeavy' : undefined,
     });
   }
 
+  /** Casts a mounted ability; `power` is the Focus the cast spends. */
   cast(
     ability: ClassAbilityDefinition,
     aim: { x: number; y: number },
     movement: { x: number; y: number },
+    power = 0,
   ): boolean {
     if (ability.kind === 'parthian') {
       const backward = { x: -movement.x, y: -movement.y };
@@ -158,7 +164,11 @@ export class MountedArcherSystem extends ArenaSystem {
         });
       return released;
     } else if (ability.kind === 'windstep') {
-      this.state().windstep = { remaining: ability.duration, shotTimer: 0 };
+      this.state().windstep = {
+        remaining: ability.duration,
+        shotTimer: 0,
+        damage: ability.damage * (1 + power * ability.focusDamage),
+      };
       startKhanManeuver(this.timers, ability.duration, ability.speedMultiplier, movement);
       this.timers.invulnerable = Math.max(this.timers.invulnerable, ability.duration);
       this.facing.set(movement.x, movement.y);
@@ -195,7 +205,7 @@ export class MountedArcherSystem extends ArenaSystem {
           shot.damage,
           shot.range,
           shot.width,
-          { exactCount: true },
+          { exactCount: true, earns: 'basicHit' },
         );
         this.effects.classAttack('mounted-archer:galloping-shot', {
           x: this.player.x,
@@ -345,7 +355,7 @@ export class MountedArcherSystem extends ArenaSystem {
           this.player.y,
           target,
           1,
-          ability.damage,
+          windstep.damage ?? ability.damage,
           ability.range,
           9,
           { exactCount: true },

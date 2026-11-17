@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('phaser', async () => (await import('../support/mockPhaser')).mockPhaser());
+
 import {
   ALL_ENEMIES,
   ENCOUNTER_ENEMIES,
@@ -7,6 +10,17 @@ import {
   chooseEnemy,
 } from '../../src/game/data/enemies';
 import { GAME } from '../../src/game/config';
+import { createDeveloperClassRun } from '../../src/game/dev/levels';
+import type { Enemy } from '../../src/game/entities/actors';
+import { CombatSystem } from '../../src/game/scenes/arena/CombatSystem';
+import {
+  EnemyBehaviour,
+  type EnemyBehaviourHost,
+} from '../../src/game/scenes/arena/EnemyBehaviour';
+import { EnemyDirector } from '../../src/game/scenes/arena/EnemyDirector';
+import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
+import { khanResourcesOf } from '../../src/game/state/khanResources';
+import { createRun } from '../../src/game/state/run';
 import {
   advanceAlmas,
   advanceDeathWorm,
@@ -15,6 +29,8 @@ import {
   muuShuuvuuOrbit,
   type FolkloreEnemyState,
 } from '../../src/game/systems/folkloreEnemies';
+import { createFakeArena } from '../support/fakeArena';
+import { world } from './fixtures/expedition';
 
 const origin = { x: 0, y: 0 };
 
@@ -196,5 +212,58 @@ describe('Almas attacks', () => {
     advanceAlmas(state, 0.01, origin, { x: -500, y: 0 }, true);
     expect(state.phase).toBe('recover');
     expect(state.remaining).toBe(GAME.tactics.almas.recovery);
+  });
+
+  it('held sprint pins and interrupts a committed folklore attack, and saves round-trip both states', () => {
+    const arena = createFakeArena({ run: createDeveloperClassRun('lancer')! });
+    Object.assign(arena.context.landscape, { navigation: undefined });
+    Object.assign(arena.context.camp, { x: 4000, y: 4000 });
+    const director = new EnemyDirector(arena.context, arena.enemyDirectorHost);
+    const combat = new CombatSystem(arena.context, arena.host, director, arena.clanDamage);
+    const warnings = {
+      clear: () => warnings,
+      lineStyle: () => warnings,
+      lineBetween: () => warnings,
+      fillStyle: () => warnings,
+      fillCircle: () => warnings,
+      strokeCircle: () => warnings,
+    };
+    const behaviour = new EnemyBehaviour(
+      arena.context,
+      {
+        fieldMarkers: { warnings },
+        takeDamage: () => {},
+      } as unknown as EnemyBehaviourHost,
+      combat,
+      director,
+      arena.clanDamage,
+    );
+    const almasDef = FOLKLORE_ENEMIES.find((enemy) => enemy.id === 'almas')!;
+    const almas = arena.enemies.create() as Enemy;
+    director.initialize(almas, almasDef, 1040, 1000);
+    almas.folklore.cooldown = 0;
+
+    khanResourcesOf(arena.context.timers).sprinting = true;
+    arena.context.run.combat.gallopSerial = 1;
+    behaviour.update(0.01);
+    expect(almas.pinned).toBe(GAME.mounted.pinSeconds);
+    expect(almas.folklore.phase).toBe('recover');
+    expect(almas.preparingAttack).toBe(false);
+
+    const runtime = world();
+    runtime.enemies[0]!.definition = 'almas';
+    runtime.enemies[0]!.state.folklore = {
+      phase: 'windup',
+      attack: 'slam',
+      remaining: 0.4,
+      cooldown: 1.2,
+      aim: { x: 2650, y: 2700 },
+      direction: { x: 1, y: 0 },
+      hit: false,
+      sequence: 2,
+    };
+    const restored = decodeExpedition(captureExpedition(createRun(), runtime));
+    expect(restored.world.enemies[0]!.state.folklore).toEqual(runtime.enemies[0]!.state.folklore);
+    expect(restored.world.timers.khanResources).toEqual(runtime.timers.khanResources);
   });
 });

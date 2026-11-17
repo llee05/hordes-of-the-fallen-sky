@@ -181,7 +181,6 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect(page.locator('.tree-purchase')).toBeDisabled();
     await expect(page.locator('.node-purchase-status')).toContainText("Khan's Ger level 2");
     await page.screenshot({ path: 'test-results/native-camp-tree.png' });
-    await expect(page.locator('#riders')).toHaveText('4');
     await closeOverlayOrPause(page);
     await expect(page.getByRole('dialog')).toBeHidden();
     for (const size of [
@@ -209,8 +208,9 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.keyboard.down('d');
     await page.waitForTimeout(250);
     await page.keyboard.up('d');
-    await page.keyboard.press('Space');
-    await expect(page.locator('#dash-label')).toContainText('RECHARGING');
+    await page.keyboard.down('Space');
+    await expect(page.locator('#dash-label')).toContainText('GALLOPING');
+    await page.keyboard.up('Space');
     await expect
       .poll(() => page.evaluate(() => (window as any).nativeSoundsPlayed ?? 0))
       .toBeGreaterThan(0);

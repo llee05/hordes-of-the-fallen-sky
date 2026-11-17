@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { STARTING_TRADITIONS } from '../../src/game/data/clan';
 import { captureCampArchive, runFromCampArchive } from '../../src/game/state/campArchive';
-import { clanDamageMultiplier, riderCount } from '../../src/game/state/clan';
+import { clanDamageMultiplier } from '../../src/game/state/clan';
 import { migrationMobility } from '../../src/game/state/economy';
 import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
 import { createRun } from '../../src/game/state/run';
@@ -9,7 +9,6 @@ import { createRun } from '../../src/game/state/run';
 it('keeps the original opening and gives every alternative a real provision or construction cost', () => {
   const baseline = createRun();
   expect(baseline.clan).toMatchObject({ population: 8, herd: 3, food: 70, materials: 50 });
-  expect(riderCount(baseline)).toBe(1);
   for (const entry of STARTING_TRADITIONS.slice(1)) {
     const run = createRun(entry.id);
     expect(run.clan.population).toBe(8);
@@ -17,7 +16,7 @@ it('keeps the original opening and gives every alternative a real provision or c
     expect(run.clan.food + run.clan.materials).toBeLessThan(120);
     expect(run.clan.nomadicCamp).toEqual(baseline.clan.nomadicCamp);
   }
-  expect(riderCount(createRun('outriders'))).toBe(2);
+  expect(createRun('outriders').stats.damage / baseline.stats.damage).toBeCloseTo(1.15, 1);
   expect(
     clanDamageMultiplier(createRun('hearthkeepers')) / clanDamageMultiplier(baseline),
   ).toBeCloseTo(0.85);
@@ -30,12 +29,9 @@ it('keeps the original opening and gives every alternative a real provision or c
 it('stacks camp improvements, and does not grant extra building plots', () => {
   for (const entry of STARTING_TRADITIONS) {
     const run = createRun(entry.id);
-
-    const initial = riderCount(run);
     run.phase = 'building';
     run.clan.materials = 100;
     expect(purchaseNomadicBuilding(run, 'archery-range')).toBe(true);
-    expect(riderCount(run)).toBe(initial + 3);
     run.khan.generation = 3;
     expect(run.startingTradition).toBe(entry.id);
     expect(run.clan.nomadicCamp!.slots).toHaveLength(5);
@@ -46,11 +42,10 @@ it('stacks camp improvements, and does not grant extra building plots', () => {
 it('treats old expeditions and portable camp continuations as the neutral arrangement', () => {
   const legacy = createRun();
   delete legacy.startingTradition;
-  expect(riderCount(legacy)).toBe(1);
   expect(clanDamageMultiplier(legacy)).toBeCloseTo(0.7);
   const source = createRun('outriders');
   const restored = runFromCampArchive(captureCampArchive(source))!;
   expect(restored.clan.food).toBe(source.clan.food);
-  expect(riderCount(restored)).toBe(1);
+  expect(restored.stats.damage).toBe(createRun().stats.damage);
   expect(restored.startingTradition).toBe('shared-hearth');
 });

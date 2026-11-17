@@ -46,6 +46,7 @@ and are absent from production and packaged play.
 | `help`                                  | Lists commands and their usage.                        |
 | `invincible [on\|off]`, `god [on\|off]` | Protects the Khan; no argument toggles.                |
 | `heal`                                  | Restores the living Khan to full health.               |
+| `refill`                                | Fills the living Khan’s Breath and class resource.     |
 | `clan-invincible [on\|off]`             | Protects clan resolve, people, and livestock.          |
 | `status`                                | Displays invincibility, Khan health, and clan resolve. |
 | `clear`                                 | Clears output while keeping command history.           |

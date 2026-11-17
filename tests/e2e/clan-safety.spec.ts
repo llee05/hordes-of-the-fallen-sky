@@ -133,7 +133,7 @@ test('multi-band hits report every person lost in the HUD and survival tallies',
     const s = (window as any).__gloam.scene;
     const r = s.run;
     const population = r.clan.population;
-    r.clan.formation = 'wedge';
+    r.clan.campEffects.multipliers.clanProtection = 1 / 0.7; // cancels the camp guard
     const results = [1, 2, 3].map((bands) => {
       r.clan.integrity = 100;
       r.clan.population = population;

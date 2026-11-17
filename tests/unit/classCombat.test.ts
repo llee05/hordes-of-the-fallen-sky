@@ -13,6 +13,7 @@ import {
   EnemyBehaviour,
   type EnemyBehaviourHost,
 } from '../../src/game/scenes/arena/EnemyBehaviour';
+import { khanResourcesOf } from '../../src/game/state/khanResources';
 import { SpatialHash } from '../../src/game/systems/SpatialHash';
 import type { Enemy } from '../../src/game/entities/actors';
 import { createFakeArena } from '../support/fakeArena';
@@ -45,6 +46,7 @@ describe('playable class combat', () => {
     arena.combat.fireHeavy(aim, charge?.maxDuration ?? 0);
     arena.context.timers.attackTimer = 0;
     for (const ability of definition.abilities) {
+      khanResourcesOf(arena.context.timers).classPower = definition.resource.maximum;
       arena.combat.useAbility(ability.slot, aim);
       if (ability.kind === 'rain')
         arena.combat.tickKhanCombat(ability.delay + 0.01, false, false, aim);
@@ -108,8 +110,13 @@ describe('playable class combat', () => {
     );
     arena.combat.updateProjectiles(0.1);
     expect(bolt.body!.velocity.y).toBeGreaterThan(0);
+    khanResourcesOf(arena.context.timers).classPower = 0;
     arena.combat.hitEnemy(bolt, target);
-    expect(arena.combat.spiritStatus()).toMatchObject({ energy: 1, maximum: 12 });
+    expect(arena.combat.classResourceStatus()).toMatchObject({
+      name: 'Spiritual Energy',
+      current: 1,
+      maximum: 12,
+    });
   });
 
   it('fires the Mounted Archer full Piercing Draw with its full-charge bonus', () => {
@@ -284,7 +291,7 @@ describe('playable class combat', () => {
     arena.combat.tickKhanCombat(0.01, false, false, target);
     expect(arena.hostileShots.countActive()).toBe(2);
     expect(arena.projectiles.countActive()).toBeGreaterThanOrEqual(2);
-    expect(arena.combat.spiritStatus()?.activeSpirits).toBe(2);
+    expect(arena.combat.classResourceStatus().activeSpirits).toBe(2);
   });
 
   it('Wind of Tengri damages enemies and opens a broad corridor by pushing them forward', () => {
@@ -319,12 +326,14 @@ describe('playable class combat', () => {
   it('Veil consumes spiritual energy, multiplies guardians, and repeats Spirit Wisps', () => {
     const arena = setup('spirit-caller');
     const target = arena.spawn(120, 0);
-    arena.context.timers.spiritCaller!.energy = 4;
+    const resources = khanResourcesOf(arena.context.timers);
+    resources.classPower = 12;
     expect(arena.combat.useAbility('q', target)).toBe(true);
+    expect(resources.classPower).toBe(8);
     expect(arena.combat.useAbility('r', target)).toBe(true);
-    expect(arena.context.timers.spiritCaller!.energy).toBe(0);
-    expect(arena.context.timers.spiritCaller!.veilRemaining).toBeCloseTo(6.2);
-    expect(arena.combat.spiritStatus()?.activeSpirits).toBe(6);
+    expect(resources.classPower).toBe(0);
+    expect(arena.context.timers.spiritCaller!.veilRemaining).toBeCloseTo(5 + 8 * 0.3);
+    expect(arena.combat.classResourceStatus().activeSpirits).toBe(6);
     arena.combat.tickKhanCombat(0.01, false, false, target);
     expect(arena.projectiles.countActive()).toBeGreaterThanOrEqual(6);
   });
@@ -381,11 +390,23 @@ describe('playable class combat', () => {
         expect(enemy.lastGallop).toBe(2);
         expect(enemy.x).toBe(1040);
       }
+      // A held gallop pushes each enemy once per gallop as well.
+      khanResourcesOf(arena.context.timers).sprinting = true;
+      behaviour.update(0.1);
+      for (const enemy of enemies) {
+        expect(enemy.lastGallop).toBe(3);
+        expect(enemy.x).not.toBe(1040);
+        enemy.setPosition(1040, 1000);
+      }
+      behaviour.update(0.1);
+      for (const enemy of enemies) expect(enemy.x).toBe(1040);
+      khanResourcesOf(arena.context.timers).sprinting = false;
+      arena.context.run.combat.gallopSerial++;
       arena.context.run.health = 0;
       arena.context.run.khan.successionRemaining = 5;
       arena.context.timers.dashRemaining = 0.4;
       behaviour.update(0.1);
-      for (const enemy of enemies) expect(enemy.lastGallop).toBe(2);
+      for (const enemy of enemies) expect(enemy.lastGallop).toBe(3);
     },
   );
 

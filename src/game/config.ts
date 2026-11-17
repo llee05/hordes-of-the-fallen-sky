@@ -81,11 +81,8 @@ export const GAME = {
   },
   mounted: {
     minimumSpeed: 35,
-    momentumGain: 0.28,
-    momentumLoss: 1.1,
     chargeSeconds: 3.5,
     chargedDamage: 1.35,
-    retreatDamage: 1.15,
     breakthroughPush: 48,
     trailRadius: 80,
     trailSpacing: 38,
@@ -310,6 +307,7 @@ export const GAME = {
         projectiles: 1,
         cooldown: 1.25,
         windup: 0.18,
+        breath: { tap: 8, full: 22 },
         charge: {
           kind: 'projectile',
           maxDuration: 1.05,
@@ -321,9 +319,12 @@ export const GAME = {
           knockback: { distance: 70, seconds: 0.28 },
         },
       },
+      /** Focus: earned by landing arrows, spent only on abilities 1 to 4. */
+      resource: { name: 'Focus', maximum: 12, earn: { basicHit: 1, fullHeavy: 2 } },
       abilities: {
         q: {
           cooldown: 7,
+          cost: 2,
           kind: 'parthian',
           duration: 0.66,
           speedMultiplier: 1.55,
@@ -334,6 +335,7 @@ export const GAME = {
         },
         w: {
           cooldown: 10,
+          cost: 4,
           kind: 'rain',
           range: 620,
           radius: 105,
@@ -344,6 +346,7 @@ export const GAME = {
         },
         e: {
           cooldown: 8,
+          cost: 3,
           kind: 'splinter',
           range: 590,
           damage: 1.35,
@@ -354,12 +357,16 @@ export const GAME = {
         },
         r: {
           cooldown: 13,
+          cost: 4,
+          /** Windstep takes every stored point and hits harder for each. */
+          spendsAll: true,
           kind: 'windstep',
           duration: 0.46,
           speedMultiplier: 3.25,
           shotEvery: 0.115,
           range: 390,
           damage: 0.55,
+          focusDamage: 0.06,
         },
       },
     },
@@ -389,6 +396,7 @@ export const GAME = {
         projectiles: 1,
         cooldown: 1.5,
         windup: 0.18,
+        breath: { tap: 10, full: 26 },
         holdCharge: {
           maxDuration: 1.2,
           maxRangeMultiplier: 1.65,
@@ -399,9 +407,18 @@ export const GAME = {
           terrainBonus: 0.65,
         },
       },
+      /** Momentum: earned by landing thrusts, spent only on abilities 1 to 4. */
+      resource: {
+        name: 'Momentum',
+        maximum: 12,
+        earn: { basicHit: 1, basicMulti: 1, fullHeavy: 2 },
+        /** Enemies one Spear Thrust must strike for the `basicMulti` point. */
+        multiTargets: 3,
+      },
       abilities: {
         q: {
           cooldown: 7,
+          cost: 2,
           kind: 'dash',
           duration: 0.52,
           speed: 620,
@@ -412,6 +429,7 @@ export const GAME = {
         },
         w: {
           cooldown: 6,
+          cost: 2,
           kind: 'arc',
           range: 155,
           angle: Math.PI,
@@ -420,6 +438,7 @@ export const GAME = {
         },
         e: {
           cooldown: 9,
+          cost: 2,
           kind: 'vault',
           distance: 285,
           invulnerability: 0.35,
@@ -428,8 +447,12 @@ export const GAME = {
         },
         r: {
           cooldown: 18,
+          cost: 4,
+          /** Unstoppable Charge takes every stored point and lasts longer for each. */
+          spendsAll: true,
           kind: 'unstoppable',
           duration: 3,
+          momentumDuration: 0.1,
           maxDuration: 4.5,
           extension: 0.18,
           speedMultiplier: 1.45,
@@ -474,15 +497,23 @@ export const GAME = {
         projectiles: 1,
         cooldown: 1.8,
         windup: 0.42,
+        breath: { tap: 14, full: 14 },
         payload: {
           stun: 0.55,
           shred: { bonus: 0.3, seconds: 6 },
           knockback: { distance: 64, seconds: 0.25 },
         },
       },
+      /** Mettle: earned by landing slashes and by being hit, spent only on abilities 1 to 4. */
+      resource: {
+        name: 'Mettle',
+        maximum: 12,
+        earn: { basicHit: 1, finisher: 1, hitTaken: 1 },
+      },
       abilities: {
         q: {
           cooldown: 15,
+          cost: 3,
           kind: 'brace',
           duration: 4,
           damageReduction: 0.65,
@@ -490,6 +521,7 @@ export const GAME = {
         },
         w: {
           cooldown: 12,
+          cost: 3,
           kind: 'shockwave',
           range: 150,
           damage: 1,
@@ -497,6 +529,7 @@ export const GAME = {
         },
         e: {
           cooldown: 10,
+          cost: 2,
           kind: 'snare',
           range: 210,
           damage: 0.7,
@@ -508,6 +541,9 @@ export const GAME = {
         },
         r: {
           cooldown: 24,
+          cost: 5,
+          /** Unbroken Fortress takes every stored point and starts with more shield for each. */
+          spendsAll: true,
           kind: 'fortress',
           duration: 6,
           interval: 0.7,
@@ -515,7 +551,7 @@ export const GAME = {
           damage: 0.8,
           damageReduction: 0.3,
           speedMultiplier: 0.75,
-          shield: { start: 15, max: 40, perSecond: 8, perHit: 2 },
+          shield: { start: 15, perMettle: 2, max: 40, perSecond: 8, perHit: 2 },
           payload: { knockback: { distance: 18, seconds: 0.15 } },
         },
       },
@@ -546,6 +582,8 @@ export const GAME = {
         projectiles: 0,
         cooldown: 1.8,
         windup: 0.2,
+        /** Eight Breath per drum wave. */
+        breath: { tap: 8, full: 24 },
         charge: {
           kind: 'waves',
           maxDuration: 1.1,
@@ -556,9 +594,12 @@ export const GAME = {
           slowDuration: 1.4,
         },
       },
+      /** Spiritual Energy: earned by Spirit Wisp hits, spent only on abilities 1 to 4. */
+      resource: { name: 'Spiritual Energy', maximum: 12, earn: { basicHit: 1 } },
       abilities: {
         q: {
           cooldown: 12,
+          cost: 4,
           kind: 'guardians',
           duration: 10,
           count: 2,
@@ -570,6 +611,7 @@ export const GAME = {
         },
         w: {
           cooldown: 8,
+          cost: 3,
           kind: 'gust',
           range: 310,
           width: 115,
@@ -578,6 +620,7 @@ export const GAME = {
         },
         e: {
           cooldown: 14,
+          cost: 4,
           kind: 'ovoo',
           duration: 9,
           range: 155,
@@ -587,6 +630,9 @@ export const GAME = {
         },
         r: {
           cooldown: 18,
+          cost: 6,
+          /** The veil takes every stored point and lasts longer for each. */
+          spendsAll: true,
           kind: 'veil',
           duration: 5,
           energyDuration: 0.3,
@@ -596,7 +642,7 @@ export const GAME = {
           echoDamage: 0.48,
         },
       },
-      spirit: { maxEnergy: 12, energyPerWispHit: 1, slowMultiplier: 0.55 },
+      spirit: { slowMultiplier: 0.55 },
     },
   },
   backgrounds: {
@@ -608,11 +654,23 @@ export const GAME = {
   },
   oaths: {
     'oath-of-the-steppe': { speed: 8, mobility: 1.08 },
-    'oath-of-the-khan': { damage: 3, riderDamage: 1.1 },
+    'oath-of-the-khan': { damage: 3 },
     'oath-of-the-spirits': { spirit: 8, resolveRecovery: 0.12 },
   },
   projectile: { speed: 440, lifetime: 1.6, range: 440 },
-  dash: { speed: 570, duration: 0.3, cooldown: 3 },
+  /** The forward lunge some class abilities use; the Khan's own gallop is `stamina`. */
+  dash: { speed: 570, duration: 0.3 },
+  /** Breath: the stamina every class shares. Rates are per active second. */
+  stamina: {
+    maximum: 100,
+    refill: 10,
+    /** Breath a gallop drains per second, before the class and camp gallop modifiers. */
+    sprintDrain: 30,
+    /** Riding speed multiplier while galloping, before the class gallop speed modifier. */
+    sprintSpeed: 1.6,
+    /** Breath needed to start a gallop. */
+    sprintMinimum: 10,
+  },
   invulnerability: 0.65,
   khan: {
     successionDelay: 10,
@@ -685,7 +743,6 @@ export const GAME = {
       arrivalFood: 8,
       arrivalMaterials: 6,
       people: 4,
-      riderDamage: 1.15,
       wagonDamage: 1.15,
     },
     visualScale: 0.75,
@@ -699,7 +756,7 @@ export const GAME = {
     archery: {
       bowyers: { materials: 28, range: 30 },
       resin: { materials: 42, damage: 1.3 },
-      arban: { materials: 42, damage: 1.2, interval: 0.9 },
+      arban: { materials: 42, interval: 0.9 },
     },
     herd: {
       grazing: { materials: 24, depletion: 0.85 },
@@ -744,14 +801,14 @@ export const GAME = {
   },
   clan: {
     maxResolve: 100,
-    arrival: { resolve: 12, health: 25, ridgeSpirit: 10, refugeRiders: 2 },
+    arrival: { resolve: 12, health: 25, ridgeSpirit: 10 },
     protection: { guard: 0.7, feltArmor: 0.5, ancestralWard: 0.8 },
     resolveLossBand: 20,
     starts: {
       'shared-hearth': {
         food: 70,
         materials: 50,
-        riders: 0,
+        damage: 1,
         protection: 1,
         speed: 1,
         pickup: 1,
@@ -760,7 +817,7 @@ export const GAME = {
       outriders: {
         food: 45,
         materials: 45,
-        riders: 1,
+        damage: 1.15,
         protection: 1,
         speed: 1,
         pickup: 1,
@@ -769,7 +826,7 @@ export const GAME = {
       hearthkeepers: {
         food: 70,
         materials: 30,
-        riders: 0,
+        damage: 1,
         protection: 0.85,
         speed: 1,
         pickup: 1,
@@ -778,7 +835,7 @@ export const GAME = {
       pathfinders: {
         food: 55,
         materials: 40,
-        riders: 0,
+        damage: 1,
         protection: 1,
         speed: 1.07,
         pickup: 1.15,

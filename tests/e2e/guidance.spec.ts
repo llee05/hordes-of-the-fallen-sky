@@ -8,7 +8,7 @@ import {
 } from './helpers';
 
 test(
-  'guidance follows riding, camp purchases, shards, formations, and the first migration',
+  'guidance follows riding, camp purchases, shards, and the first migration',
   { tag: '@core' },
   async ({ page }) => {
     await openTitle(page);
@@ -32,8 +32,7 @@ test(
       gem.value = scene.run.nextLevelXp;
       gem.attracted = false;
     });
-    await expect(guide).toContainText('Give the riders a purpose');
-    await guide.getByRole('button', { name: /Change formation/ }).click();
+    await expect(guide).toContainText('Keep the people ready');
     await page.evaluate(() => {
       (window as any).__gloam.scene.run.clan.stageTime = 45;
     });

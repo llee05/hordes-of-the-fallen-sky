@@ -46,7 +46,7 @@ export function createRun(
     stats: {
       maxHealth: GAME.player.health,
       speed: GAME.player.speed * balance.speed,
-      damage: GAME.player.damage,
+      damage: Math.round(GAME.player.damage * balance.damage),
       attackInterval: GAME.player.attackInterval,
       pickupRadius: GAME.player.pickupRadius * balance.pickup,
       projectiles: 1,

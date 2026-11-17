@@ -22,7 +22,6 @@ export type RunPhase =
 export type JourneyStage = 'camp' | 'migration';
 export type BuildingId =
   'ger' | 'archery' | 'herd' | 'sanctuary' | 'wagon' | 'felt' | 'provisions' | 'relay';
-export type Formation = 'guard' | 'encircle' | 'wedge' | 'retreat';
 export type Doctrine = 'iron' | 'sky' | 'wander';
 export type LocationId =
   | 'karakorum'
@@ -65,9 +64,6 @@ export interface ClanState {
   buildings: Record<BuildingId, number>;
   paths: Partial<Record<BuildingId, string[]>>;
   identity: Record<Doctrine, number>;
-  formation: Formation;
-  momentum: number;
-  rescuedRiders: number;
   message: string;
 }
 
@@ -79,7 +75,6 @@ export interface CampEffects {
     pastureUse: number;
     mobility: number;
     clanProtection: number;
-    riderDamage: number;
     hostInterval: number;
     burnDamage: number;
     gallopCooldown: number;
@@ -196,8 +191,16 @@ export interface HudSnapshot {
   minZoom: number;
   maxZoom: number;
   run: RunState;
-  dashReady: number;
-  dashCooldown: number;
+  /** Breath, the stamina that pays for the gallop. */
+  stamina: {
+    current: number;
+    maximum: number;
+    /** Breath a gallop drains per second. */
+    sprintDrain: number;
+    sprinting: boolean;
+    /** Too little Breath to start a gallop, or the gallop input must be released first. */
+    winded: boolean;
+  };
   abilities: {
     slot: import('./data/classes').ClassAbilitySlot;
     slotLabel: string;
@@ -205,9 +208,26 @@ export interface HudSnapshot {
     description: string;
     cooldown: number;
     remaining: number;
+    /** Class resource the ability needs; it takes everything stored when `spendsAll`. */
+    cost: number;
+    spendsAll?: boolean;
+    affordable: boolean;
   }[];
-  spiritCaller?: { energy: number; maximum: number; activeSpirits: number };
-  attackCharge?: { name: string; progress: number };
+  /** The class resource earned by fighting and spent on abilities. */
+  classResource: {
+    name: string;
+    current: number;
+    maximum: number;
+    /** The class colour its beads are filled with. */
+    tint: number;
+    /** Spirit Caller only. */
+    activeSpirits?: number;
+    /** Abilities refused for lack of the resource so far, and the latest refused slot. */
+    refusals: number;
+    refusedSlot?: import('./data/classes').ClassAbilitySlot;
+  };
+  /** A held heavy charge; `winded` when Breath caps it or cannot pay for it. */
+  attackCharge?: { name: string; progress: number; winded: boolean };
   best: number;
   clanBearing: string;
   fieldBearing?: string;

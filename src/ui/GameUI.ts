@@ -6,21 +6,13 @@ import { AUDIO_REFERENCE_CUES, type SoundKind } from '../game/audio/soundPalette
 import { GAME } from '../game/config';
 import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
 import { classDefinition } from '../game/data/classes';
-import { FORMATIONS } from '../game/data/clan';
 import { AREA_ENEMIES } from '../game/data/enemies';
 import { FIELD_OBJECTIVES } from '../game/data/fieldObjectives';
 import { NOMADIC_BUILDINGS } from '../game/data/nomadicCamp';
 import { prologueStage } from '../game/data/prologue';
 import { SUCCESSORS } from '../game/data/successors';
 import type { ArenaScene } from '../game/scenes/ArenaScene';
-import {
-  assignedWorkers,
-  availableFormations,
-  burningTempest,
-  canMigrate,
-  clanDoctrine,
-  riderCount,
-} from '../game/state/clan';
+import { assignedWorkers, burningTempest, canMigrate, clanDoctrine } from '../game/state/clan';
 import { economyForecast } from '../game/state/economy';
 import { encounterPlan } from '../game/state/encounters';
 import { clanWarning, currentGuidance } from '../game/state/guidance';
@@ -46,6 +38,13 @@ import { developerConsole, developerMenu } from './developerContent';
 import { foodOutlook, FORECAST_NOTE, signedRate } from './economyContent';
 import { expeditionMetricsContent } from './expeditionMetricsContent';
 import { guidanceContent } from './guidanceContent';
+import {
+  abilityCostLabel,
+  abilityCostTitle,
+  abilityStatus,
+  chargeReadout,
+  gallopLabel,
+} from './khanResourceHud';
 import type { JournalTab } from './menuContent';
 import {
   buildingMenu,
@@ -84,6 +83,7 @@ export class GameUI {
   }
   private lastSnapshot?: HudSnapshot;
   private guideId = '';
+  private seenRefusals = 0;
   private lastMessage = '';
   private developerRevision = -1;
   private commandHistoryOffset = 0;
@@ -99,7 +99,7 @@ export class GameUI {
   ) {
     root.dataset.phase = 'ready';
     root.innerHTML = `<main class="game-shell" aria-label="Hordes of the Fallen Sky game">
-      <div class="arena-wrap" id="arena-wrap" tabindex="0" aria-label="Game arena. Use WASD or arrow keys to ride. Hold left click for a light attack and right click for a heavy attack. Number keys 1, 2, 3 and 4 use class abilities. Space gallops. B builds. M migrates. F changes formation. Tab or J opens the clan chronicle. Escape pauses. Plus and minus zoom; zero resets.">
+      <div class="arena-wrap" id="arena-wrap" tabindex="0" aria-label="Game arena. Use WASD or arrow keys to ride. Hold left click for a light attack and right click for a heavy attack. Number keys 1, 2, 3 and 4 use class abilities. Hold Space to gallop, which spends Breath. B builds. M migrates. Tab or J opens the clan chronicle. Escape pauses. Plus and minus zoom; zero resets.">
         <div id="game-canvas"></div>
         <div class="screen-shade" aria-hidden="true"></div>
         <div class="game-hud" id="game-hud" inert>
@@ -116,7 +116,7 @@ export class GameUI {
                   `<div class="resource" title="${label}"><span class="resource-icon" aria-hidden="true">${icon}</span><div><span>${label}</span><strong id="${id}">${value}</strong></div></div>`,
               )
               .join('')}</div>
-            <div class="host-summary"><span id="doctrine">A people taking shape</span><span><b id="riders">1</b> RIDERS &nbsp; <b id="workers">0 / 8</b> WORKERS</span></div>
+            <div class="host-summary"><span id="doctrine">A people taking shape</span><span><b id="workers">0 / 8</b> WORKERS</span></div>
             <p class="economy-hud" title="${FORECAST_NOTE}"><span id="food-rate"></span><span id="food-outlook"></span></p>
           </section>
           <div class="expedition-clock"><strong id="timer">00:00</strong><span id="stage-label">ENCAMPMENT</span>${import.meta.env.DEV ? '<span id="developer-run" hidden>DEVELOPER RUN · F8</span>' : ''}</div>
@@ -135,11 +135,11 @@ export class GameUI {
             .join(
               '',
             )}</div><small id="successor-selection">1 / 2 · controller left / right</small></aside>
-          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span><span id="weapon-label">BOW</span> <b id="power">16</b></span><span id="momentum">MOMENTUM 0%</span><span id="spirit-energy" hidden>SPIRITUAL ENERGY 0 / 12</span></div></section>
+          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div class="health-heading breath-heading"><span>BREATH</span><b id="breath">100</b></div><div class="track breath-track" id="breath-track"><div id="breath-fill"></div></div><div class="class-resource" id="class-resource" role="meter" aria-valuemin="0"><span id="class-resource-label">FOCUS</span><span class="resource-beads" id="class-resource-beads" aria-hidden="true"></span><b id="class-resource-count">0 / 12</b><small id="class-resource-note" hidden></small></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span><span id="weapon-label">BOW</span> <b id="power">16</b></span><span id="attack-charge">LMB LIGHT · RMB HEAVY</span></div></section>
           <section class="tradition-hud" aria-label="Run progression"><span>LEVEL <b id="level">01</b></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small></section>
-          <section id="ability-dock" class="ability-dock hud-surface" aria-label="Class abilities">${(['q', 'w', 'e', 'r'] as const).map((slot, index) => `<div class="ability-indicator" id="ability-${slot}"><kbd>${index + 1}</kbd><span><strong></strong><small></small></span></div>`).join('')}</section>
-          <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
-          <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="formation" class="command-button" title="Change formation (F)"><span class="command-icon">${clanMark('bow')}</span><span id="formation-name">Caravan guard</span><kbd>F</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
+          <section id="ability-dock" class="ability-dock hud-surface" aria-label="Class abilities">${(['q', 'w', 'e', 'r'] as const).map((slot, index) => `<div class="ability-indicator" id="ability-${slot}"><kbd>${index + 1}</kbd><b class="ability-cost"></b><span><strong></strong><small></small></span></div>`).join('')}</section>
+          <button id="dash" class="dash-button hud-surface" aria-label="Gallop: hold to spend Breath"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">HOLD SPACE</small></div><span class="dash-charge" id="dash-charge"></span></button>
+          <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
           <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><div><p id="clan-message"></p></div></div>
         </div>
         <div id="overlay" class="overlay ready-screen" role="dialog" aria-modal="true" aria-labelledby="overlay-title" tabindex="-1"></div>
@@ -154,7 +154,10 @@ export class GameUI {
     this.motion = new UIMotion(root);
     this.get('pause').addEventListener('click', () => scene.togglePause());
     this.get('journal').addEventListener('click', () => scene.toggleJournal());
-    this.get('dash').addEventListener('click', () => scene.dash());
+    const dash = this.get('dash');
+    dash.addEventListener('pointerdown', () => scene.holdGallop(true));
+    for (const release of ['pointerup', 'pointerleave', 'pointercancel'])
+      dash.addEventListener(release, () => scene.holdGallop(false));
     this.get('build').addEventListener('click', () => scene.openBuildings());
     this.get('migrate').addEventListener('click', () => scene.openRoutes());
     this.get('successor-choice').addEventListener('click', (event) => {
@@ -162,7 +165,6 @@ export class GameUI {
         .successor;
       if (trait === 'outrider' || trait === 'hearthguard') scene.selectSuccessor(trait);
     });
-    this.get('formation').addEventListener('click', () => scene.cycleFormation());
     this.get('zoom-out').addEventListener('click', () => scene.changeZoom(-1));
     this.get('zoom-in').addEventListener('click', () => scene.changeZoom(1));
     this.get('zoom-reset').addEventListener('click', () => scene.changeZoom(0));
@@ -173,7 +175,6 @@ export class GameUI {
         scene.toggleGuidance();
         this.get('arena-wrap').focus();
       } else if (action === 'build') scene.openBuildings();
-      else if (action === 'formation') scene.cycleFormation();
       else if (action === 'migrate') scene.openRoutes();
     });
     this.overlay.addEventListener('click', (event) => this.handleMenuClick(event));
@@ -286,7 +287,7 @@ export class GameUI {
     (this.get('zoom-in') as HTMLButtonElement).disabled =
       snapshot.run.phase !== 'playing' || snapshot.zoom >= snapshot.maxZoom - 0.0001;
     (this.get('zoom-reset') as HTMLButtonElement).disabled = snapshot.run.phase !== 'playing';
-    const { run, dashReady, dashCooldown, best, clanBearing } = snapshot;
+    const { run, stamina, best, clanBearing } = snapshot;
     const prologueUnestablished = !!run.prologue && !run.prologue.campEstablished;
     this.get('game-hud').classList.toggle('prologue-unestablished', prologueUnestablished);
     this.motion.setPlaying(run.phase === 'playing');
@@ -413,45 +414,68 @@ export class GameUI {
     this.meter('health-fill', (run.health / run.stats.maxHealth) * 100);
     this.get('health-fill').classList.toggle('low', run.health < run.stats.maxHealth * 0.3);
     this.meter('xp-fill', (run.xp / run.nextLevelXp) * 100);
-    this.meter('dash-charge', dashReady * 100);
+    const breath = (stamina.current / stamina.maximum) * 100;
+    this.text('breath', Math.floor(stamina.current));
+    this.meter('breath-fill', breath);
+    this.meter('dash-charge', breath);
+    const breathTrack = this.get('breath-track');
+    // Ruled notches mark one second of gallop each.
+    breathTrack.style.setProperty(
+      '--breath-notch',
+      `${Math.max(5, (stamina.sprintDrain / stamina.maximum) * 100)}%`,
+    );
     const dash = this.get('dash');
-    const dashAvailable = khanActive && dashReady >= 1;
+    const dashAvailable = khanActive && !stamina.winded;
     (dash as HTMLButtonElement).disabled = run.phase !== 'playing' || !khanActive;
     if (dashAvailable && dash.dataset.ready === 'false')
       this.motion.notice(dash.querySelector<HTMLElement>('.dash-symbol')!);
+    if (khanActive && stamina.winded && breathTrack.dataset.winded === 'false')
+      this.motion.notice(this.get('breath'));
+    breathTrack.dataset.winded = String(khanActive && stamina.winded);
     dash.dataset.ready = String(dashAvailable);
-    this.text(
-      'dash-label',
-      !khanActive
-        ? 'CHOOSING A KHAN'
-        : dashReady >= 1
-          ? 'SPACE / READY'
-          : `RECHARGING ${((1 - dashReady) * dashCooldown).toFixed(1)}s`,
+    dash.dataset.galloping = String(khanActive && stamina.sprinting);
+    this.text('dash-label', gallopLabel(stamina, khanActive));
+    this.text('attack-charge', chargeReadout(snapshot.attackCharge));
+    const resource = snapshot.classResource;
+    const resourceRow = this.get('class-resource');
+    const beads = this.get('class-resource-beads');
+    if (beads.childElementCount !== resource.maximum)
+      beads.replaceChildren(
+        ...Array.from({ length: resource.maximum }, () => document.createElement('i')),
+      );
+    Array.from(beads.children).forEach((bead, index) =>
+      bead.classList.toggle('filled', index < resource.current),
     );
-    this.text(
-      'momentum',
-      snapshot.attackCharge
-        ? `${snapshot.attackCharge.name.toUpperCase()} ${Math.round(snapshot.attackCharge.progress * 100)}%`
-        : 'LMB LIGHT · RMB HEAVY',
-    );
-    const spiritEnergy = this.get('spirit-energy');
-    spiritEnergy.hidden = !snapshot.spiritCaller;
-    if (snapshot.spiritCaller)
-      spiritEnergy.textContent = `SPIRITUAL ENERGY ${snapshot.spiritCaller.energy} / ${snapshot.spiritCaller.maximum} · ${snapshot.spiritCaller.activeSpirits} ACTIVE SPIRITS`;
+    resourceRow.style.setProperty('--bead-tint', `#${resource.tint.toString(16).padStart(6, '0')}`);
+    resourceRow.setAttribute('aria-label', resource.name);
+    resourceRow.setAttribute('aria-valuemax', String(resource.maximum));
+    resourceRow.setAttribute('aria-valuenow', String(resource.current));
+    this.text('class-resource-label', resource.name.toUpperCase());
+    this.text('class-resource-count', `${resource.current} / ${resource.maximum}`);
+    const note = this.get('class-resource-note');
+    note.hidden = resource.activeSpirits === undefined;
+    if (resource.activeSpirits !== undefined)
+      note.textContent = `${resource.activeSpirits} ACTIVE SPIRITS`;
+    // A refused ability flags the beads and the cost it could not pay.
+    const refused = resource.refusals > this.seenRefusals;
+    this.seenRefusals = resource.refusals;
+    if (refused) this.motion.notice(beads);
     for (const ability of snapshot.abilities) {
       const indicator = this.get(`ability-${ability.slot}`);
-      indicator.title = ability.description;
+      const cost = indicator.querySelector<HTMLElement>('.ability-cost')!;
+      indicator.title = `${ability.description} ${abilityCostTitle(ability, resource.name)}`;
       indicator.querySelector('kbd')!.textContent = ability.slotLabel;
+      cost.textContent = abilityCostLabel(ability);
       indicator.querySelector('strong')!.textContent = ability.name;
-      indicator.querySelector('small')!.textContent =
-        ability.remaining > 0 ? `${ability.remaining.toFixed(1)}s` : 'READY';
+      indicator.querySelector('small')!.textContent = abilityStatus(ability);
       indicator.classList.toggle('cooling', ability.remaining > 0);
+      indicator.classList.toggle('unaffordable', !ability.affordable);
+      if (refused && resource.refusedSlot === ability.slot) this.motion.notice(cost);
     }
     for (const id of ['population', 'herd', 'food', 'materials', 'spirit'] as const)
       this.number(id, Math.floor(clan[id]));
     this.get('food').classList.toggle('danger', clan.food < 15);
     this.text('doctrine', clanDoctrine(run));
-    this.text('riders', riderCount(run));
     this.text('workers', `${assignedWorkers(run)} / ${clan.population}`);
     const activeClass = classDefinition(run.character?.classId);
     this.text('weapon-label', activeClass.weapon.hudLabel);
@@ -515,11 +539,6 @@ export class GameUI {
             ? 'The roads are open. Pack up with M.'
             : `Routes open in ${Math.ceil(GAME.clan.minimumCamp - clan.stageTime)}s. Build up the camp with B.`,
     );
-    const formationTitle = FORMATIONS[clan.formation].title;
-    if (this.get('formation-name').textContent !== formationTitle) {
-      this.text('formation-name', formationTitle);
-      this.motion.notice(this.get('formation').querySelector<HTMLElement>('.command-icon')!);
-    }
     (this.get('build') as HTMLButtonElement).disabled =
       run.phase !== 'playing' || clan.stage === 'migration' || prologueUnestablished;
     const migrate = this.get('migrate') as HTMLButtonElement;
@@ -528,8 +547,6 @@ export class GameUI {
       this.motion.notice(migrate.querySelector<HTMLElement>('.command-icon')!);
     migrate.dataset.available = String(routeAvailable);
     migrate.disabled = run.phase !== 'playing' || !routeAvailable;
-    (this.get('formation') as HTMLButtonElement).disabled =
-      run.phase !== 'playing' || availableFormations(run).length < 2;
     this.get('synergy').hidden = !burningTempest(run);
     this.text('best', best > 0 ? formatTime(best) : '— — : — —');
     this.text('clan-message', clan.message);

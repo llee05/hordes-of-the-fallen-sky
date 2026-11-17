@@ -391,7 +391,7 @@ describe('Unbroken Fortress', () => {
     expect(isKhanUnstoppable(status)).toBe(true);
     expect(status.fortress).toBe(fortress.duration);
     expect(status.reduction).toBe(fortress.damageReduction);
-    expect(status.shield).toBe(fortress.shield.start);
+    expect(status.shield).toBe(fortress.shield.start + 12 * fortress.shield.perMettle);
     expect(status.shieldMax).toBe(fortress.shield.max);
   });
 
@@ -480,7 +480,9 @@ describe('Khan taking damage under guards', () => {
     expect(afterReduction).toBeLessThan(status.shield);
     khan.takeDamage(incoming);
     expect(run.health).toBe(run.stats.maxHealth);
-    expect(status.shield).toBeCloseTo(fortress.shield.start - afterReduction);
+    expect(status.shield).toBeCloseTo(
+      fortress.shield.start + 12 * fortress.shield.perMettle - afterReduction,
+    );
   });
 
   it('ignores the hit entirely when a stunned enemy touches the Khan', () => {

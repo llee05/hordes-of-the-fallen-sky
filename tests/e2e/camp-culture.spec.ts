@@ -151,13 +151,6 @@ test('archery, training, fletching and sacred upgrades alter real volleys and su
     await buyNomadicLevel(page, id, 3);
   await buyNomadicLevel(page, 'shamans-ger');
   await closeOverlayOrPause(page);
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () => (window as any).__gloam.scene.riders.filter((r: any) => r.visible).length,
-      ),
-    )
-    .toBe(4);
   const result = await page.evaluate(() => {
     const s = (window as any).__gloam.scene;
     for (let i = 0; i < 10 && !s.enemies.countActive(true); i++) s.spawnEnemy();
@@ -168,8 +161,6 @@ test('archery, training, fletching and sacred upgrades alter real volleys and su
     for (const shot of s.projectiles.getChildren()) shot.disableBody(true, true);
     s.spatial.rebuild(s.enemies.getChildren());
     s.fire();
-    s.run.combat.riderFireAt = [];
-    s.fireRiders();
     const shots = s.projectiles.getChildren().filter((p: any) => p.active);
     const interval = s.attackTimer;
     const player = shots.filter((p: any) => p.x === s.player.x && p.y === s.player.y);
@@ -193,7 +184,7 @@ test('archery, training, fletching and sacred upgrades alter real volleys and su
   expect(result.fire).toBe(true);
   expect(result.pierce).toBe(2);
   expect(result.interval).toBeCloseTo(0.514425);
-  expect(result.damage.some((damage: number) => Math.abs(damage - 15.1734) < 0.001)).toBe(true);
+  expect(result.damage.some((damage: number) => Math.abs(damage - 22) < 0.001)).toBe(true);
   expect(result.support).toBeCloseTo(1.543275);
-  expect(result.wagon).toEqual([28.5, 28.5, 28.5]);
+  expect(result.wagon).toEqual([33, 33, 33]);
 });

@@ -63,9 +63,10 @@ test(
     expect(await heard(page)).not.toContain('shoot');
     await page.keyboard.down('d');
     await expect.poll(async () => (await heard(page)).includes('hoof')).toBe(true);
-    await page.keyboard.press('Space');
+    await page.keyboard.down('Space');
+    await expect.poll(async () => (await heard(page)).includes('dash')).toBe(true);
+    await page.keyboard.up('Space');
     await page.keyboard.up('d');
-    expect(await heard(page)).toContain('dash');
     const combat = await page.evaluate(() => {
       const scene = (window as any).__gloam.scene;
       scene.player.setPosition(scene.camp.x + 280, scene.camp.y);

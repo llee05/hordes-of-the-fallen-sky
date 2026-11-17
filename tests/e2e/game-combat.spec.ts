@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { openTitle, startExpedition } from './helpers';
+
+/** Abilities need the earned class resource; these tests fill it instead of fighting for it. */
+const fillClassResource = (page: Page): Promise<void> =>
+  page.evaluate(() => {
+    (window as any).__gloam.scene.timers.khanResources.classPower = 12;
+  });
 
 // Each test owns its browser context and game; CI shards may schedule them independently.
 test.describe.configure({ mode: 'parallel' });
@@ -59,6 +66,7 @@ test('right-click charging heavies release on mouse-up and number keys trigger a
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys))
     .toBeGreaterThan(volleys);
 
+  await fillClassResource(page);
   await expect(page.locator('#ability-q')).toContainText('READY');
   await expect(page.locator('#ability-q')).toContainText('Parthian Shot');
   await page.keyboard.press('KeyQ');
@@ -73,7 +81,10 @@ test('Spirit Caller builds spiritual energy and exposes the authored drum and sp
   await openTitle(page);
   await page.getByRole('button', { name: 'Developer mode F8' }).click();
   await page.locator('[data-developer-class="spirit-caller"]').click();
-  await expect(page.locator('#spirit-energy')).toContainText('SPIRITUAL ENERGY 0 / 12');
+  await expect(page.locator('#class-resource-label')).toHaveText('SPIRITUAL ENERGY');
+  await expect(page.locator('#class-resource-count')).toHaveText('0 / 12');
+  await expect(page.locator('#class-resource-beads i')).toHaveCount(12);
+  await expect(page.locator('#class-resource-beads i.filled')).toHaveCount(0);
   await page.evaluate(() => {
     const scene = (window as any).__gloam.scene;
     window.__gloam.hooks.quietBattlefield({ timers: ['spawnTimer'], clearEnemies: true });
@@ -87,7 +98,8 @@ test('Spirit Caller builds spiritual energy and exposes the authored drum and sp
   if (!canvas) throw new Error('Game canvas is unavailable');
   await page.mouse.move(canvas.x + canvas.width / 2 + 100, canvas.y + canvas.height / 2);
   await page.mouse.down({ button: 'left' });
-  await expect(page.locator('#spirit-energy')).not.toContainText('ENERGY 0 / 12');
+  await expect(page.locator('#class-resource-count')).not.toHaveText('0 / 12');
+  await expect(page.locator('#class-resource-beads i.filled')).not.toHaveCount(0);
   await page.mouse.up({ button: 'left' });
 
   await page.mouse.down({ button: 'right' });
@@ -103,13 +115,20 @@ test('Spirit Caller builds spiritual energy and exposes the authored drum and sp
     )
     .toBeGreaterThan(0);
 
+  await fillClassResource(page);
   await page.keyboard.press('Digit1');
-  await expect(page.locator('#spirit-energy')).toContainText('2 ACTIVE SPIRITS');
+  await expect(page.locator('#class-resource-note')).toContainText('2 ACTIVE SPIRITS');
   await page.keyboard.press('Digit2');
   await page.keyboard.press('Digit3');
   await expect(page.locator('#ability-e')).not.toContainText('READY');
+  // Abilities 1 to 3 spent 11 of 12; the veil needs 6 and takes everything stored.
+  await expect(page.locator('#ability-r')).toContainText('NEEDS 6');
   await page.keyboard.press('Digit4');
-  await expect(page.locator('#spirit-energy')).toContainText('6 ACTIVE SPIRITS');
+  await expect(page.locator('#ability-r')).toContainText('NEEDS 6');
+  await fillClassResource(page);
+  await page.keyboard.press('Digit4');
+  await expect(page.locator('#class-resource-note')).toContainText('6 ACTIVE SPIRITS');
+  await expect(page.locator('#class-resource-count')).toHaveText('0 / 12');
 });
 
 test('Iron Pagoda abilities brace, stun and snare through the number keys and the HUD', async ({
@@ -130,6 +149,7 @@ test('Iron Pagoda abilities brace, stun and snare through the number keys and th
   for (const [index, slot] of ['q', 'w', 'e', 'r'].entries())
     await expect(page.locator(`#ability-${slot}`)).toContainText(names[index]!);
 
+  await fillClassResource(page);
   await page.keyboard.press('Digit1');
   await expect
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.timers.khanStatus.guard))
@@ -166,8 +186,8 @@ test('Lancer exposes release-to-fire Impaling Strike progress and its four autho
   if (!canvas) throw new Error('Game canvas is unavailable');
   await page.mouse.move(canvas.x + canvas.width / 2 + 220, canvas.y + canvas.height / 2);
   await page.mouse.down({ button: 'right' });
-  await expect(page.locator('#momentum')).toContainText('IMPALING STRIKE');
-  await expect(page.locator('#momentum')).toContainText('%');
+  await expect(page.locator('#attack-charge')).toContainText('IMPALING STRIKE');
+  await expect(page.locator('#attack-charge')).toContainText('%');
   const volleys = await page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys);
   await page.waitForTimeout(300);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys)).toBe(volleys);
@@ -176,6 +196,7 @@ test('Lancer exposes release-to-fire Impaling Strike progress and its four autho
     .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys))
     .toBeGreaterThan(volleys);
 
+  await fillClassResource(page);
   for (const [key, id, name] of [
     ['Digit1', '#ability-q', 'Breakthrough'],
     ['Digit2', '#ability-w', 'Sweeping Lance'],
@@ -186,19 +207,4 @@ test('Lancer exposes release-to-fire Impaling Strike progress and its four autho
     await page.keyboard.press(key);
     await expect(page.locator(id)).not.toContainText('READY');
   }
-});
-
-test('guard riders fire at camp threats while the commander scouts away', async ({ page }) => {
-  await openTitle(page);
-  await startExpedition(page);
-  await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.player.setPosition(scene.camp.x + 850, scene.camp.y);
-    scene.spawnEnemy();
-    const enemy = scene.enemies.getChildren().find((item: any) => item.active);
-    enemy.setPosition(scene.camp.x + 150, scene.camp.y);
-    enemy.health = 1;
-    window.__gloam.hooks.setTimers({ attackTimer: 0 });
-  });
-  await expect(page.locator('#kills')).not.toHaveText('0');
 });

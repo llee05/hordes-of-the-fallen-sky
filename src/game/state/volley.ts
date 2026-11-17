@@ -8,7 +8,7 @@ export function volleyFactors(run: RunState, count: number) {
     tempest,
     count: count + (tempest ? 2 : 0),
     spacing: tempest ? 0.28 : 0.12,
-    damage: run.clan.formation === 'encircle' && run.clan.momentum > 0.5 ? 1.3 : 1,
+    damage: 1,
     speed: 1,
   };
 }

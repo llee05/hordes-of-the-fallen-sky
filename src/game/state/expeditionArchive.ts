@@ -1,4 +1,3 @@
-import { availableFormations } from './clan';
 import { applyCampEffects } from './camp';
 import { isCharacterProfile, normalizeCharacterProfile } from '../../shared/characterProfile';
 import {
@@ -12,6 +11,7 @@ import { isNomadicCamp } from '../../shared/nomadicCamp.js';
 import type { MotionArchive } from '../animation/CharacterMotion';
 import { GAME } from '../config';
 import { BUILDINGS, LOCATIONS, ROUTES, STARTING_TRADITIONS } from '../data/clan';
+import { classDefinition } from '../data/classes';
 import { ALL_ENEMIES } from '../data/enemies';
 import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
 import { NOMADIC_BUILDINGS } from '../data/nomadicCamp';
@@ -48,6 +48,7 @@ import { createRun } from './run';
 import type { SpiritCallerCombatState } from './spiritCaller';
 import type { ClassActionState } from './classActions';
 import type { KhanManeuverState } from './khanManeuvers';
+import { createKhanResources, type KhanResources } from './khanResources';
 import type { MountedArcherCombatState } from './mountedArcher';
 import { PROLOGUE_STAGE_IDS } from '../data/prologue';
 
@@ -122,7 +123,10 @@ export interface WorldArchive {
     khanManeuver?: KhanManeuverState;
     spiritCaller?: SpiritCallerCombatState;
     classAction?: ClassActionState;
-    dashTimer: number;
+    /** Missing in saves from before Breath; such saves load rested. */
+    khanResources?: KhanResources;
+    /** Retired gallop cooldown; accepted so old version 1 saves still load. */
+    dashTimer?: number;
     dashRemaining: number;
     invulnerable: number;
     supportTimer: number;
@@ -134,7 +138,6 @@ export interface WorldArchive {
   projectiles: ProjectileArchive[];
   hostileShots: ProjectileArchive[];
   gems: (BodyArchive & { value: number; attracted: boolean; secondary?: boolean })[];
-  riders: (Point & { flip: boolean; motion: MotionArchive })[];
   hazards: (Point & {
     remaining: number;
     radius?: number;
@@ -178,7 +181,6 @@ const overrides: Record<string, Rule> = {
   'clan.stage': oneOf(['camp', 'migration']),
   'clan.locationId': location,
   'clan.routeId': oneOf(['', ...ROUTES.map((r) => r.id)]),
-  'clan.formation': oneOf(['guard', 'encircle', 'wedge', 'retreat']),
   'clan.paths': object(
     {},
     Object.fromEntries(BUILDINGS.map((b) => [b.id, list(oneOf(b.paths.map((p) => p.id)), 100)])),
@@ -255,7 +257,6 @@ const optional: Record<string, Record<string, Rule>> = {
   clan: { destinationId: location },
   khan: { candidate: trait, trait },
   encounters: { phase: oneOf(['probing', 'warning', 'assault', 'elite', 'recovery']) },
-  combat: { previous: point, heading: point, riderFireAt: list(number, 16) },
   safety: {
     lastDamage: object(
       {
@@ -434,7 +435,6 @@ const worldShape = object(
       {
         spawnTimer: number,
         attackTimer: number,
-        dashTimer: number,
         dashRemaining: number,
         invulnerable: number,
         supportTimer: number,
@@ -443,6 +443,13 @@ const worldShape = object(
       },
       {
         closeDefenseTimer: number,
+        dashTimer: number,
+        khanResources: object({
+          stamina: positive,
+          classPower: integer,
+          sprinting: boolean,
+          winded: boolean,
+        }),
         abilityCooldowns: object({ q: number, w: number, e: number, r: number }),
         khanStatus,
         khanManeuver: object({ remaining: number, speedMultiplier: number }, { direction: point }),
@@ -466,13 +473,12 @@ const worldShape = object(
               tickTimer: number,
               visualTimer: number,
             }),
-            windstep: object({ remaining: number, shotTimer: number }),
+            windstep: object({ remaining: number, shotTimer: number }, { damage: positive }),
           },
         ),
         classAction,
         spiritCaller: object(
           {
-            energy: positive,
             veilRemaining: positive,
             echoTimer: number,
             drumWaves: list(
@@ -481,6 +487,7 @@ const worldShape = object(
             ),
           },
           {
+            energy: positive,
             guardians: object({
               remaining: positive,
               attackTimer: number,
@@ -509,7 +516,6 @@ const worldShape = object(
       object({ ...bodyFields, value: positive, attracted: boolean }, { secondary: boolean }),
       GAME.maxGems,
     ),
-    riders: list(object({ x: number, y: number, flip: boolean, motion }), 16),
     hazards: list(
       object(
         { x: number, y: number, remaining: number },
@@ -561,26 +567,54 @@ function migrateOrkhonLayout(value: unknown): void {
   };
   const run = value.run;
   if (isRecord(run.combat)) {
-    translate(run.combat.previous);
     if (Array.isArray(run.combat.trails)) for (const trail of run.combat.trails) translate(trail);
   }
   if (isRecord(run.field)) translate(run.field.objective);
   const world = value.world;
   translate(world.player);
   translate(world.camp);
-  for (const key of ['enemies', 'projectiles', 'hostileShots', 'gems', 'riders', 'hazards']) {
+  for (const key of ['enemies', 'projectiles', 'hostileShots', 'gems', 'hazards']) {
     const points = world[key];
     if (Array.isArray(points))
       for (const point of points) {
         translate(point);
         if (isRecord(point)) translate(point.previous);
-        if (isRecord(point) && isRecord(point.state) && isRecord(point.state.tactics))
-          translate(point.state.tactics.aim);
+        if (isRecord(point) && isRecord(point.state)) {
+          if (isRecord(point.state.tactics)) translate(point.state.tactics.aim);
+          if (isRecord(point.state.folklore)) translate(point.state.folklore.aim);
+        }
       }
   }
   if (isRecord(world.areaThreats) && Array.isArray(world.areaThreats.threats))
     for (const point of world.areaThreats.threats) translate(point);
   world.orkhonLayout = 2;
+}
+
+/** Spiritual Energy saved before the shared class resource seeds it; other classes start empty. */
+function migrateSpiritualEnergy(run: RunState, timers: WorldArchive['timers']): void {
+  const energy = timers.spiritCaller?.energy;
+  if (timers.spiritCaller) delete timers.spiritCaller.energy;
+  if (energy === undefined || timers.khanResources) return;
+  timers.khanResources = createKhanResources();
+  if (run.character?.classId === 'spirit-caller')
+    timers.khanResources.classPower = Math.floor(energy);
+}
+
+/** Allied riders, formations and formation momentum are retired; their saved fields are dropped. */
+function stripRetiredRiders(value: Record<string, unknown>): void {
+  const run = value.run;
+  if (isRecord(run)) {
+    if (isRecord(run.clan)) {
+      for (const key of ['formation', 'momentum', 'rescuedRiders']) delete run.clan[key];
+      const effects = run.clan.campEffects;
+      if (isRecord(effects) && isRecord(effects.multipliers))
+        delete effects.multipliers.riderDamage;
+    }
+    if (isRecord(run.combat))
+      for (const key of ['riderFireAt', 'previous', 'heading', 'rideSeconds', 'ready'])
+        delete run.combat[key];
+  }
+  if (isRecord(value.world)) delete value.world.riders;
 }
 
 export function captureExpedition(
@@ -678,6 +712,7 @@ export function decodeExpedition(value: unknown): {
       delete legacy[key];
     if (isRecord(legacy.stats) && legacy.stats.pierce === undefined) legacy.stats.pierce = 0;
     if (isRecord(value.world)) delete value.world.support;
+    stripRetiredRiders(value);
   }
   const retiredJourney = isRecord(value) && migrateRetiredJourney(value);
   migrateOrkhonLayout(value);
@@ -718,6 +753,15 @@ export function decodeExpedition(value: unknown): {
   )
     throw new Error('This expedition contains invalid progression or actor references.');
   const restored = structuredClone({ summary: value.summary, run, world });
+  migrateSpiritualEnergy(restored.run, restored.world.timers);
+  const resources = restored.world.timers.khanResources;
+  if (resources) {
+    resources.stamina = Math.min(GAME.stamina.maximum, resources.stamina);
+    resources.classPower = Math.min(
+      classDefinition(restored.run.character?.classId).resource.maximum,
+      resources.classPower,
+    );
+  }
   restored.run.character = normalizeCharacterProfile(restored.run.character);
   migrateLegacyNomadicCamp(restored.run);
   syncNomadicBuildings(restored.run);
@@ -746,8 +790,6 @@ export function decodeExpedition(value: unknown): {
         if (retiredProgression) applyNomadicBuildingEffects(retained, level.effects);
         else applyCampEffects(retained.clan.campEffects, level.effects.ongoing);
     if (retiredProgression) {
-      if (!availableFormations(retained).includes(retained.clan.formation))
-        retained.clan.formation = 'guard';
       retained.health = Math.min(retained.health, retained.stats.maxHealth);
       retained.combat.trails = [];
     }

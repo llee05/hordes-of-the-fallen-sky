@@ -34,7 +34,7 @@ export const ENCAMPMENT_TIERS = [
   },
   {
     title: 'Great Ordo',
-    description: 'The host fires 5% faster, and the camp packs and travels 6% more easily.',
+    description: 'The Khan attacks 5% faster, and the camp packs and travels 6% more easily.',
     effects: { multipliers: { hostInterval: C.interval, mobility: C.mobility } },
   },
   {
@@ -116,9 +116,9 @@ export const INTERNAL_DEVELOPMENTS: readonly InternalDevelopment[] = [
   internal(
     'war-council',
     'War Council',
-    'Riders drill together. The riders with you deal 15% more damage per rank.',
+    'A retired council for the allied riders. It no longer grants a benefit.',
     'bow',
-    { multipliers: { riderDamage: C.riderDamage } },
+    {},
     2,
   ),
   internal(
@@ -159,8 +159,8 @@ const FACILITIES: Record<
   archery: {
     tier: 1,
     names: ['Mounted archery range', 'Veteran training grounds'],
-    benefits: [{ bonuses: { range: C.range } }, { multipliers: { riderDamage: C.riderDamage } }],
-    flavour: 'Practice travels with the riders; the targets and bow racks fold onto the carts.',
+    benefits: [{ bonuses: { range: C.range } }, {}],
+    flavour: 'Practice travels with the camp; the targets and bow racks fold onto the carts.',
   },
   felt: {
     tier: 2,

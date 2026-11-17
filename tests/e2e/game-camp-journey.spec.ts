@@ -12,7 +12,7 @@ import {
 test.describe.configure({ mode: 'parallel' });
 
 test(
-  'camp planning spends resources, unlocks riders and builds the Burning Tempest',
+  'camp planning spends resources and builds the Burning Tempest',
   { tag: '@core' },
   async ({ page }) => {
     test.setTimeout(process.env.CI ? 90000 : 60000);
@@ -35,14 +35,11 @@ test(
     await buyNomadicLevel(page, 'fletchers-workshop', 3);
     await buyNomadicLevel(page, 'shamans-ger');
     await expect(page.locator('#synergy')).toBeVisible();
-    await expect(page.locator('#riders')).toHaveText('4');
     await expect(page.locator('#workers')).toHaveText('3 / 8');
     await expect(page.locator('#materials')).toHaveText('8');
     await page.screenshot({ path: 'test-results/camp-development.png', fullPage: true });
     await closeOverlayOrPause(page);
     await expect(page.getByRole('dialog')).toBeHidden();
-    await page.keyboard.press('f');
-    await expect(page.locator('#formation-name')).toHaveText('Encirclement');
     await page.screenshot({ path: 'test-results/steppe-playing.png', fullPage: true });
   },
 );
@@ -97,7 +94,6 @@ test(
     expect(
       await page.evaluate(() => (window as any).__gloam.scene.run.clan.buildings.archery),
     ).toBe(1);
-    await expect(page.locator('#riders')).toHaveText('6');
     await expect(page.locator('#migrate')).toBeDisabled();
     await expect(page.locator('#build')).toBeEnabled();
   },

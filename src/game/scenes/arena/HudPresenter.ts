@@ -1,7 +1,8 @@
+import { GAME } from '../../config';
 import type { DeveloperConsoleSnapshot } from '../../dev/commands';
 import type { Enemy, Projectile } from '../../entities/actors';
 import { campBoundary } from '../../state/campBarrier';
-import { gallopCooldown } from '../../state/campCombat';
+import { khanResourcesOf, sprintDrain } from '../../state/khanResources';
 import { isKhanActive } from '../../state/khan';
 import { cameraZoomLimits } from '../../systems/CameraView';
 import {
@@ -36,7 +37,7 @@ export interface HudSession {
   developerConsole?: DeveloperConsoleSnapshot;
   saves: NonNullable<HudSnapshot['saves']>;
   abilities: HudSnapshot['abilities'];
-  spiritCaller: HudSnapshot['spiritCaller'];
+  classResource: HudSnapshot['classResource'];
   attackCharge: HudSnapshot['attackCharge'];
 }
 
@@ -71,6 +72,7 @@ export class HudPresenter {
       ? `${bearingArrow(offset.x, offset.y)} ${Math.round(Math.hypot(objective!.x - player.x, objective!.y - player.y))} paces`
       : undefined;
     const zoomLimits = cameraZoomLimits(camera.width, camera.height);
+    const resources = khanResourcesOf(this.arena.timers);
     return {
       combatReadability: this.combatReadability(),
       saves: session.saves,
@@ -83,10 +85,15 @@ export class HudPresenter {
       maxZoom: zoomLimits.max,
       run,
       abilities: session.abilities,
-      spiritCaller: session.spiritCaller,
+      classResource: session.classResource,
       attackCharge: session.attackCharge,
-      dashReady: Math.max(0, 1 - this.arena.timers.dashTimer / gallopCooldown(run)),
-      dashCooldown: gallopCooldown(run),
+      stamina: {
+        current: resources.stamina,
+        maximum: GAME.stamina.maximum,
+        sprintDrain: sprintDrain(run),
+        sprinting: resources.sprinting,
+        winded: resources.winded || resources.stamina < GAME.stamina.sprintMinimum,
+      },
       best: session.best,
       clanBearing:
         run.prologue && !run.prologue.campEstablished

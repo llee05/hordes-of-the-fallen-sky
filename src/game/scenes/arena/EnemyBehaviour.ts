@@ -7,6 +7,7 @@ import type { Enemy } from '../../entities/actors';
 import { barrierContact, campBoundary } from '../../state/campBarrier';
 import { currentLocation } from '../../state/journey';
 import { isKhanActive } from '../../state/khan';
+import { khanResourcesOf } from '../../state/khanResources';
 import { isEnemyDisabled, statusSpeedMultiplier, tickEnemyStatus } from '../../state/statusEffects';
 import { areaSurface, habitatPreference } from '../../systems/AreaHabitat';
 import { routeDue } from '../../systems/enemyRoutes';
@@ -105,7 +106,6 @@ export class EnemyBehaviour extends ArenaSystem {
       this.castSeer(enemy, aim);
       this.breakthrough(enemy, aim, khanActive);
       this.burn(enemy, dt);
-      this.trample(enemy, aim, dt);
     }
   }
 
@@ -264,21 +264,7 @@ export class EnemyBehaviour extends ArenaSystem {
         enemy.tactics.phase = 'recover';
         enemy.tactics.remaining = GAME.tactics.chargeRecovery;
       }
-      if (
-        ['almas', 'death-worm', 'muu-shuuvuu'].includes(behavior ?? '') &&
-        enemy.folklore.phase !== 'approach'
-      ) {
-        enemy.folklore.phase = 'recover';
-        enemy.folklore.remaining =
-          behavior === 'almas'
-            ? GAME.tactics.almas.recovery
-            : behavior === 'death-worm'
-              ? GAME.tactics.deathWorm.recovery
-              : GAME.tactics.muuShuuvuu.recovery;
-        enemy.folklore.hit = false;
-        enemy.setAlpha(1);
-        this.enemyDirector.shadows.get(enemy)?.setAlpha(1);
-      }
+      this.interruptFolklore(enemy);
       enemy.preparingAttack = false;
     } else if (attackingCamp && !['almas', 'death-worm', 'muu-shuuvuu'].includes(behavior ?? '')) {
       // Hold outside the tents instead of walking (or charging) into their centre.
@@ -738,7 +724,7 @@ export class EnemyBehaviour extends ArenaSystem {
     if (
       enemy.active &&
       khanActive &&
-      this.timers.dashRemaining > 0 &&
+      (this.timers.dashRemaining > 0 || khanResourcesOf(this.timers).sprinting) &&
       playerDistance < 68 &&
       enemy.lastGallop !== this.run.combat.gallopSerial
     ) {
@@ -747,6 +733,8 @@ export class EnemyBehaviour extends ArenaSystem {
       if (cls.id === 'lancer' || cls.id === 'iron-pagoda') {
         enemy.pinned = Math.max(enemy.pinned, GAME.mounted.pinSeconds);
         enemy.setVelocity(0, 0);
+        this.interruptFolklore(enemy);
+        enemy.preparingAttack = false;
       }
       const d = Math.max(1, playerDistance),
         push = GAME.mounted.breakthroughPush;
@@ -762,6 +750,25 @@ export class EnemyBehaviour extends ArenaSystem {
     }
   }
 
+  private interruptFolklore(enemy: Enemy): void {
+    const behavior = enemy.definition.behavior;
+    if (
+      ['almas', 'death-worm', 'muu-shuuvuu'].includes(behavior ?? '') &&
+      enemy.folklore.phase !== 'approach'
+    ) {
+      enemy.folklore.phase = 'recover';
+      enemy.folklore.remaining =
+        behavior === 'almas'
+          ? GAME.tactics.almas.recovery
+          : behavior === 'death-worm'
+            ? GAME.tactics.deathWorm.recovery
+            : GAME.tactics.muuShuuvuu.recovery;
+      enemy.folklore.hit = false;
+      enemy.setAlpha(1);
+      this.enemyDirector.shadows.get(enemy)?.setAlpha(1);
+    }
+  }
+
   /** Burns the enemy while fire arrows keep it alight. */
   private burn(enemy: Enemy, dt: number): void {
     if (enemy.burning > 0) {
@@ -771,18 +778,5 @@ export class EnemyBehaviour extends ArenaSystem {
         dt * this.run.stats.damage * 0.45 * this.run.clan.campEffects.multipliers.burnDamage,
       );
     }
-  }
-
-  /** A wedge-formation gallop tramples enemies it passes. */
-  private trample(enemy: Enemy, aim: EnemyAim, dt: number): void {
-    const clan = this.run.clan;
-    const { playerDistance } = aim;
-    if (
-      enemy.active &&
-      this.timers.dashRemaining > 0 &&
-      clan.formation === 'wedge' &&
-      playerDistance < 64
-    )
-      this.combat.damageEnemy(enemy, dt * this.run.stats.damage * 18);
   }
 }

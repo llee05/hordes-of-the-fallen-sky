@@ -93,7 +93,6 @@ test('@gameplay browser expedition builds, pauses, resumes, and retains its prof
   await expect(page.locator('.camp-popup')).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
-  await expect(page.locator('#riders')).toHaveText('4');
   await expect(page.locator('#app')).toHaveAttribute('data-phase', 'playing');
   // Active time caps each simulation step at 50 ms. Software rendering on CI
   // can need more than five wall-clock seconds to display a full gameplay second.

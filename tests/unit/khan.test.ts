@@ -19,12 +19,10 @@ function expedition() {
 describe('choosing a new Khan', () => {
   it('starts an independent succession after a lethal hit and never restarts it on repeated hits', () => {
     const run = expedition();
-    run.clan.momentum = 1;
     expect(damageKhan(run, 1000)).toBe('fallen');
     expect(run.phase).toBe('playing');
     expect(run.health).toBe(0);
     expect(run.khan).toEqual({ generation: 1, successionRemaining: GAME.khan.successionDelay });
-    expect(run.clan.momentum).toBe(0);
     expect(isKhanActive(run)).toBe(false);
     advanceSuccession(run, 3);
     expect(damageKhan(run, 10)).toBeUndefined();

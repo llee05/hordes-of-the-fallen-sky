@@ -85,6 +85,7 @@ export type ClassAbilityEffect =
   | {
       kind: 'unstoppable';
       duration: number;
+      momentumDuration: number;
       maxDuration: number;
       extension: number;
       speedMultiplier: number;
@@ -155,7 +156,13 @@ export type ClassAbilityEffect =
       damage: number;
       damageReduction: number;
       speedMultiplier: number;
-      shield: { start: number; max: number; perSecond: number; perHit: number };
+      shield: {
+        start: number;
+        perMettle: number;
+        max: number;
+        perSecond: number;
+        perHit: number;
+      };
       payload: StatusPayload;
     }
   | {
@@ -192,6 +199,7 @@ export type ClassAbilityEffect =
       shotEvery: number;
       range: number;
       damage: number;
+      focusDamage: number;
     };
 
 interface ClassAbilityBase {
@@ -201,9 +209,26 @@ interface ClassAbilityBase {
   name: string;
   description: string;
   cooldown: number;
+  /** Class resource the ability needs and spends; without it the ability refuses to fire. */
+  cost: number;
+  /** The ability takes every stored point instead, needing at least `cost`. */
+  spendsAll?: boolean;
 }
 
 export type ClassAbilityDefinition = ClassAbilityBase & ClassAbilityEffect;
+
+/** Ways a class earns its resource. Each class defines the events its own kit can raise. */
+export type ClassResourceEvent = 'basicHit' | 'basicMulti' | 'finisher' | 'fullHeavy' | 'hitTaken';
+
+/** The per-class resource earned by fighting and spent only on abilities 1 to 4. */
+export interface ClassResourceDefinition {
+  name: string;
+  maximum: number;
+  /** Whole points per event. */
+  earn: Partial<Record<ClassResourceEvent, number>>;
+  /** Enemies one basic attack must strike for the `basicMulti` points. */
+  multiTargets?: number;
+}
 
 export interface ClassBasicAttackDefinition {
   name: string;
@@ -237,6 +262,8 @@ export interface AttackCombo {
 export interface ClassHeavyAttackDefinition extends ClassBasicAttackDefinition {
   cooldown: number;
   windup: number;
+  /** Breath paid on release: `tap` at the shortest hold, `full` at a full charge. */
+  breath: { tap: number; full: number };
   charge?:
     | {
         kind: 'waves';
@@ -310,6 +337,7 @@ export interface ClassDefinition {
     clanProtectionMultiplier: number;
   };
   weapon: ClassWeaponDefinition;
+  resource: ClassResourceDefinition;
   basicAttack: ClassBasicAttackDefinition;
   heavyAttack: ClassHeavyAttackDefinition;
   abilities: readonly [
@@ -443,6 +471,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedExtraPierce: GAME.classes['mounted-archer'].chargedExtraPierce,
       chargedDamage: GAME.classes['mounted-archer'].chargedDamage,
     },
+    resource: GAME.classes['mounted-archer'].resource,
     basicAttack: {
       name: 'Galloping Shot',
       description:
@@ -487,7 +516,8 @@ export const CLASSES: readonly ClassDefinition[] = [
         slot: 'r',
         slotLabel: '4',
         name: 'Windstep',
-        description: 'Evade at speed with brief invulnerability while arrows seek nearby enemies.',
+        description:
+          'Evade at speed with brief invulnerability while arrows seek nearby enemies; each point of Focus adds 6% arrow damage.',
         ...GAME.classes['mounted-archer'].abilities.r,
       },
     ],
@@ -559,6 +589,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedExtraPierce: GAME.classes.lancer.chargedExtraPierce,
       chargedDamage: GAME.classes.lancer.chargedDamage,
     },
+    resource: GAME.classes.lancer.resource,
     basicAttack: {
       name: 'Spear Thrust',
       description: 'A long, narrow lance thrust aimed toward the cursor.',
@@ -600,7 +631,8 @@ export const CLASSES: readonly ClassDefinition[] = [
         slot: 'r',
         slotLabel: '4',
         name: 'Unstoppable Charge',
-        description: 'Gains speed and knockback immunity while contact hits extend the charge.',
+        description:
+          'Gains speed and knockback immunity while contact hits extend the charge; each point of Momentum adds 0.1 seconds.',
         ...GAME.classes.lancer.abilities.r,
       },
     ],
@@ -673,6 +705,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedExtraPierce: GAME.classes['iron-pagoda'].chargedExtraPierce,
       chargedDamage: GAME.classes['iron-pagoda'].chargedDamage,
     },
+    resource: GAME.classes['iron-pagoda'].resource,
     basicAttack: {
       name: 'Heavy Sabre',
       description: `Slow, broad sabre slashes strike every enemy in front of the horse. Each slash that lands hits ${pct(IRON.basic.combo.damagePerStep)} harder, up to slash ${IRON.basic.combo.steps}; a pause resets the chain.`,
@@ -714,7 +747,7 @@ export const CLASSES: readonly ClassDefinition[] = [
         slot: 'r',
         slotLabel: '4',
         name: 'Unbroken Fortress',
-        description: `An unstoppable stance for ${IRON.abilities.r.duration} seconds: sweeping blows strike nearby enemies every ${IRON.abilities.r.interval} seconds while a shield rebuilds and damage is cut by ${pct(IRON.abilities.r.damageReduction)}.`,
+        description: `An unstoppable stance for ${IRON.abilities.r.duration} seconds: sweeping blows strike nearby enemies every ${IRON.abilities.r.interval} seconds while a shield rebuilds (starting with +${IRON.abilities.r.shield.perMettle} per Mettle) and damage is cut by ${pct(IRON.abilities.r.damageReduction)}.`,
         ...GAME.classes['iron-pagoda'].abilities.r,
       },
     ],
@@ -788,6 +821,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedExtraPierce: GAME.classes['spirit-caller'].chargedExtraPierce,
       chargedDamage: GAME.classes['spirit-caller'].chargedDamage,
     },
+    resource: GAME.classes['spirit-caller'].resource,
     basicAttack: {
       name: 'Spirit Wisps',
       description: 'Small homing wisps that generate spiritual energy whenever they hit.',
@@ -828,7 +862,8 @@ export const CLASSES: readonly ClassDefinition[] = [
         slot: 'r',
         slotLabel: '4',
         name: 'Veil Between Worlds',
-        description: 'Multiplies active spirits and creates spectral echoes of Spirit Wisps.',
+        description:
+          'Multiplies active spirits and creates spectral echoes of Spirit Wisps; each point of Spiritual Energy extends the veil by 0.3 seconds.',
         ...GAME.classes['spirit-caller'].abilities.r,
       },
     ],
@@ -956,9 +991,8 @@ export const OATHS: readonly OathDefinition[] = [
     title: 'Oath of the Khan',
     summary:
       'Swear to ride first into every ambush and bear the weight of command in iron and blood.',
-    bonusLabel: '+3 Weapon Damage · +10% Rider Host Damage',
+    bonusLabel: '+3 Weapon Damage',
     statBonuses: { damage: GAME.oaths['oath-of-the-khan'].damage },
-    campEffects: { multipliers: { riderDamage: GAME.oaths['oath-of-the-khan'].riderDamage } },
   },
   {
     id: 'oath-of-the-spirits',
@@ -1269,7 +1303,7 @@ export function applyCharacterLoadout(run: RunState, rawProfile: CharacterProfil
   run.stats = {
     maxHealth: cls.stats.maxHealth,
     speed: Math.round(cls.stats.speed * start.speed),
-    damage: cls.stats.damage,
+    damage: Math.round(cls.stats.damage * start.damage),
     attackInterval: cls.stats.attackInterval,
     pickupRadius: Math.round(cls.stats.pickupRadius * start.pickup),
     projectiles: cls.stats.projectiles,

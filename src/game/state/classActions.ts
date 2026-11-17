@@ -28,6 +28,17 @@ export function chargeRatio(held: number, maximum: number): number {
   return Math.max(0, Math.min(1, held / maximum));
 }
 
+/** Drum waves a hold of `held` seconds releases: one at the windup, one more per `waveEvery`. */
+export function drumWaveCount(
+  held: number,
+  windup: number,
+  waveEvery: number,
+  maxWaves: number,
+): number {
+  if (!Number.isFinite(held) || waveEvery <= 0) return 1;
+  return Math.max(1, Math.min(maxWaves, 1 + Math.floor((held - windup) / waveEvery)));
+}
+
 /** Linear scale from an attack's base value to its fully charged multiplier. */
 export function chargedValue(base: number, maximumMultiplier: number, ratio: number): number {
   return base * (1 + (maximumMultiplier - 1) * Math.max(0, Math.min(1, ratio)));

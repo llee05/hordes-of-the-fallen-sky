@@ -14,7 +14,6 @@ export function beginSuccession(run: RunState): boolean {
   rememberFallenKhan(run);
   delete run.khan.candidate;
   run.khan.successionRemaining = GAME.khan.successionDelay;
-  run.clan.momentum = 0;
   run.clan.message = 'The Khan has fallen. The clan is choosing a new Khan.';
   return true;
 }
