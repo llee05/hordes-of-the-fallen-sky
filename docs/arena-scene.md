@@ -21,14 +21,13 @@ call those rules.
 | `arena/EnemyDirector.ts`          | spawning and initialising pooled enemies, their ground shadows, the spawn tick, and enemy-pool capture/restore                                                                                                               | scene, reset in `create`           |
 | `arena/ClanDamage.ts`             | the single path for battlefield damage to the clan and the development clan-invincible cheat; callers pass the impact point, which no rule reads yet                                                                         | scene                              |
 | `arena/CombatSystem.ts`           | Khan volleys and the attack timer, friendly and hostile projectiles, hits, enemy damage and defeat rewards, gem collection, the physics overlaps, and saved projectiles                                                      | scene                              |
-| `arena/RiderHost.ts`              | the 16 rider slots, formation movement, rider volleys, rider animation, terrain reconciliation, and saved rider positions                                                                                                    | scene, reset in `create`           |
 | `arena/KhanController.ts`         | Khan riding, the gallop, taking damage, falling and a successor's return, the ground shadow and aura, Khan animation, and the saved Khan body                                                                                | scene, reset in `create`           |
 | `arena/EnemyBehaviour.ts`         | each enemy's per-frame steps: warnings, barrier contact, timers, despawning, targeting, movement and charges, camp attacks, ranged volleys, abilities, seer marks (drawn and resolved by `Hazards`), gallop and fire effects | scene                              |
 | `arena/AreaCombat.ts`             | the current area's encounter pacing and threats: placing terrain threats, resolving threat hits on the Khan and camp, and drawing threats and high-contrast hostile-shot rings; saved area encounter and threats             | scene, rebuilt in `create`         |
 | `arena/Hazards.ts`                | hollow seers' delayed danger circles, their strikes on the Khan and camp, and saved hazards                                                                                                                                  | scene, reset in `create`           |
 | `arena/CampDefences.ts`           | the camp's own defences on their saved timers: sanctuary lightning, wagon volleys and the ancestral ward                                                                                                                     | scene                              |
 | `arena/FieldObjectiveDirector.ts` | placing field objectives at authored landmark sites or around camp, raising a gathering's guards, escorting returning objectives, and the field marker, whose warning surface the other markers and enemy warnings share     | scene, markers rebuilt in `create` |
-| `arena/CharacterAnimator.ts`      | active-time Khan and rider animation dispatch, enemy frames and tints, and the defeat-copy pool                                                                                                                              | scene, pool rebuilt in `create`    |
+| `arena/CharacterAnimator.ts`      | active-time Khan animation dispatch, enemy frames and tints, and the defeat-copy pool                                                                                                                                        | scene, pool rebuilt in `create`    |
 | `arena/ArenaSystem.ts`            | base class whose getters read the shared context live, so moved code keeps its `this.run`/`this.player` shape                                                                                                                | —                                  |
 
 "Scene" lifetime means one instance for the scene object. Field initialisers run once, but
@@ -53,7 +52,7 @@ saved slot in order, active or not, so restore must rebuild the pool before proj
 `captureWorld` and `restoreExpedition` remain scene compositions over the existing
 `WorldArchive` shape. `AreaCombat` captures the area encounter and threats; `Hazards`
 captures delayed circles without their graphics. Field objectives remain in `run`.
-Restore rebuilds enemies before projectiles, then gems, riders and hazards, reconciles
+Restore rebuilds enemies before projectiles, then gems and hazards, reconciles
 terrain, and redraws area and field-objective markers before returning to a paused phase. Defeat copies are
 transient and unsaved.
 
@@ -62,7 +61,7 @@ transient and unsaved.
 The scene calls `FieldObjectiveDirector` before `EnemyBehaviour`. Its markers share the
 field warning surface.
 `EnemyBehaviour` decides when a seer casts and asks `Hazards.addSeer` to mark the
-circle; `Hazards.update` still runs inside `updateCamp`, after riders and terrain.
+circle; `Hazards.update` still runs inside `updateCamp`, after terrain.
 `EnemyBehaviour` re-plans terrain routes on a staggered cadence
 (`systems/enemyRoutes.ts`, `GAME.enemyRoutes`): enemies within `nearRange` of the
 Khan or their target plan every frame, farther ones every few frames by pool slot,
@@ -70,7 +69,7 @@ and every enemy still steers, attacks, shoots and checks contact each frame. The
 kept waypoint (`Enemy.route`) is transient, reset on spawn, and never saved.
 `CampDefences` uses the rebuilt spatial index and shared saved timers for lightning,
 wagon fire and wards. `CharacterAnimator` runs after combat and the final clan
-integrity check, dispatches Khan and rider poses, then updates enemies and defeat
+integrity check, dispatches the Khan's pose, then updates enemies and defeat
 copies with the same active-time delta.
 
 ## Shared context
@@ -96,11 +95,11 @@ steps below in this order. The order is behaviour: moving a step changes play.
 2. Observe expedition metrics; begin succession if the Khan fell.
 3. Advance elapsed time, camp recovery; decay dash, invulnerability and gallop.
 4. Advance the clan: finish on loss, or arrive at the next camp; stop if the phase changed.
-5. `updateCamp` (camp drawing, then rider formation, terrain and hazards); stop if the phase changed.
+5. `updateCamp` (camp drawing, then terrain and hazards); stop if the phase changed.
 6. Clan integrity check; advance succession and mounted combat; move the Khan or pin him to camp.
 7. Audio; field state and area encounter sync; encounter pacing.
 8. Field objectives, enemy behaviour (each enemy's steps in a fixed order); clan integrity check.
-9. Spatial index rebuild; camp defences; Khan and rider fire; spawning.
+9. Spatial index rebuild; camp defences; Khan fire; spawning.
 10. Projectiles; gem collection; stop if the phase changed; area combat; autosave; clan integrity check.
 11. Character animation; HUD refresh.
 

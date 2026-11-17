@@ -85,7 +85,6 @@ export interface GameStateSnapshot {
     integrity: number;
     pasture: number;
     threat: number;
-    formation: string;
     camp?: { core: Record<string, number>; slots: ({ id: string; level: number } | null)[] };
   };
   upgrades: { level: number; xp: number; nextLevelXp: number; stats: PlayerStats };
@@ -179,7 +178,6 @@ export function snapshotGameState(input: GameStateInput): GameStateSnapshot {
       integrity: round(clan.integrity, 2),
       pasture: round(clan.pasture, 2),
       threat: round(clan.threat, 2),
-      formation: clan.formation,
       camp: camp
         ? {
             core: { ...camp.core },

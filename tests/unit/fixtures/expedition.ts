@@ -89,7 +89,6 @@ export function world(): WorldArchive {
     ],
     hostileShots: [],
     gems: [{ ...body, value: 23, attracted: true }],
-    riders: [],
     hazards: [{ x: 2700, y: 2700, remaining: 0.4, radius: 90, damage: 8, source: 'seer' }],
     areaEncounter: createAreaEncounter(),
     areaThreats: {

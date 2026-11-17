@@ -13,7 +13,6 @@ export interface ArenaActions {
   togglePause(): void;
   openBuildings(): void;
   openRoutes(): void;
-  cycleFormation(): void;
   selectSuccessor(trait: SuccessorTrait): void;
   toggleJournal(): void;
   toggleDeveloperMenu(): void;
@@ -118,7 +117,6 @@ export class ArenaInput {
     bindAction('P', () => actions.togglePause());
     bindAction('B', () => actions.openBuildings());
     bindAction('M', () => actions.openRoutes());
-    bindAction('F', () => actions.cycleFormation());
     const useNumber = (key: 1 | 2 | 3 | 4): void => {
       const action = combatNumberAction(key, isKhanActive(this.arena.run));
       if (action?.kind === 'ability') actions.useAbility(action.slot);
@@ -259,7 +257,6 @@ export class ArenaInput {
       if (controller.abilityR) actions.useAbility('r');
       if (controller.build) actions.openBuildings();
       else if (controller.migrate) actions.openRoutes();
-      else if (controller.formation) actions.cycleFormation();
       else if (controller.journal) actions.toggleJournal();
     } else {
       if (controller.journal && this.arena.run.phase === 'journal') actions.toggleJournal();

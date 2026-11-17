@@ -54,7 +54,7 @@ rescaled places should land inside them.
 | Band             | World units | Riders    | Contents                                                      | Measured on main                        |
 | ---------------- | ----------- | --------- | ------------------------------------------------------------- | --------------------------------------- |
 | `khan`           | 62–65       | 1         | The Khan                                                      | 62.5–64.4                               |
-| `clanRiders`     | 46–53       | 0.7–0.8   | Accompanying riders (`ART_WIDTH.rider` 50)                    | 46.7–52.3                               |
+| `clanRiders`     | 46–53       | 0.7–0.8   | Retired allied archer frames (`ART_WIDTH.rider` 50)           | 46.7–52.3                               |
 | `campLife`       | 25–39       | 0.4–0.6   | Walking workers and packhorses at the camp's 0.75 scale       | workers 25.0–25.5, packhorses 29.5–38.2 |
 | `enemies`        | 25–150      | 0.4–2.4   | Every enemy definition, base and local                        | see below                               |
 | `trees`          | 90–150      | 1.4–2.4   | Groves and rim trees                                          | 94.9–141.9                              |

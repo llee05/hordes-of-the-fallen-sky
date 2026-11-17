@@ -28,7 +28,7 @@ The camp development screen presents a flat illustrated manuscript map. Gers, ho
 
 `src/motion.css` settles the title composition into place, opens manuscript panels in 240ms, and lightly staggers their illustrations. River currents and banner cloth animate inside the migration vignettes. Hover and keyboard focus lift illustrations while keeping their controls in place. Buying a structure or changing chronicle tabs refreshes content without replaying the whole panel entrance. Actions never wait for animation completion. A single reduced-motion rule disables all interface keyframes and transitions, including the older meters and notifications.
 
-`src/ui/Motion.ts` adds short feedback animations to displayed resource and health changes, damage, gallop readiness, formation changes, and unlocked migration. It uses the Web Animations API with at most one transient effect per element; it never stores simulation values or schedules gameplay. Feedback cancels on pause, document hiding, live reduced-motion changes, and renderer destruction. UI values always update immediately to the current scene snapshot.
+`src/ui/Motion.ts` adds short feedback animations to displayed resource and health changes, damage, gallop readiness, and unlocked migration. It uses the Web Animations API with at most one transient effect per element; it never stores simulation values or schedules gameplay. Feedback cancels on pause, document hiding, live reduced-motion changes, and renderer destruction. UI values always update immediately to the current scene snapshot.
 
 ## Local assets and rendering
 

@@ -956,9 +956,8 @@ export const OATHS: readonly OathDefinition[] = [
     title: 'Oath of the Khan',
     summary:
       'Swear to ride first into every ambush and bear the weight of command in iron and blood.',
-    bonusLabel: '+3 Weapon Damage · +10% Rider Host Damage',
+    bonusLabel: '+3 Weapon Damage',
     statBonuses: { damage: GAME.oaths['oath-of-the-khan'].damage },
-    campEffects: { multipliers: { riderDamage: GAME.oaths['oath-of-the-khan'].riderDamage } },
   },
   {
     id: 'oath-of-the-spirits',
@@ -1269,7 +1268,7 @@ export function applyCharacterLoadout(run: RunState, rawProfile: CharacterProfil
   run.stats = {
     maxHealth: cls.stats.maxHealth,
     speed: Math.round(cls.stats.speed * start.speed),
-    damage: cls.stats.damage,
+    damage: Math.round(cls.stats.damage * start.damage),
     attackInterval: cls.stats.attackInterval,
     pickupRadius: Math.round(cls.stats.pickupRadius * start.pickup),
     projectiles: cls.stats.projectiles,

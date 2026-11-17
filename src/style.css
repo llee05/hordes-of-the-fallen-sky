@@ -1280,7 +1280,7 @@ canvas {
 }
 .clan-facts {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 15px;
   margin: 24px 0;
 }
@@ -1296,13 +1296,6 @@ canvas {
   margin-top: 7px;
   color: #918061;
   font-size: 11px;
-}
-.journal-chapter > .formation-detail {
-  font-size: 15px;
-}
-.formation-detail strong {
-  color: #55725a;
-  font-weight: 400;
 }
 .clan-buildings {
   display: grid;

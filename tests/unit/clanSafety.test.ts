@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { GAME } from '../../src/game/config';
 import type { SuccessorTrait } from '../../src/game/data/successors';
 import { advanceClan, damageClan } from '../../src/game/state/clan';
 import {
@@ -13,8 +14,7 @@ describe('readable clan survival', () => {
   it('distinguishes combat, seer marks and starvation without changing protection or counting invincible losses', () => {
     const r = createRun();
     r.phase = 'playing';
-    r.clan.formation = 'encircle';
-    damageClan(r, 25);
+    damageClan(r, 25 / GAME.clan.protection.guard);
     expect(r.safety.combatLosses).toBe(1);
     expect(r.safety.lastDamage).toMatchObject({ cause: 'attack', people: 1, amount: 25 });
     damageClan(r, 25, undefined, 'seer');

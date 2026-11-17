@@ -96,7 +96,6 @@ export class EnemyBehaviour extends ArenaSystem {
       this.castSeer(enemy, aim);
       this.breakthrough(enemy, aim, khanActive);
       this.burn(enemy, dt);
-      this.trample(enemy, aim, dt);
     }
   }
 
@@ -494,18 +493,5 @@ export class EnemyBehaviour extends ArenaSystem {
         dt * this.run.stats.damage * 0.45 * this.run.clan.campEffects.multipliers.burnDamage,
       );
     }
-  }
-
-  /** A wedge-formation gallop tramples enemies it passes. */
-  private trample(enemy: Enemy, aim: EnemyAim, dt: number): void {
-    const clan = this.run.clan;
-    const { playerDistance } = aim;
-    if (
-      enemy.active &&
-      this.timers.dashRemaining > 0 &&
-      clan.formation === 'wedge' &&
-      playerDistance < 64
-    )
-      this.combat.damageEnemy(enemy, dt * this.run.stats.damage * 18);
   }
 }

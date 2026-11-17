@@ -27,8 +27,6 @@ describe('first-crossing guidance', () => {
     expect(buildStructure(run, 'archery')).toBe(true);
     expect(currentGuidance(run)?.id).toBe('shards');
     gainExperience(run, run.nextLevelXp);
-    expect(currentGuidance(run)?.id).toBe('formation');
-    completeGuidance(run, 'formation');
     expect(currentGuidance(run)?.id).toBe('prepare');
     run.clan.stageTime = 45;
     expect(currentGuidance(run)?.id).toBe('depart');
@@ -46,7 +44,7 @@ describe('first-crossing guidance', () => {
     completeGuidance(run, 'ride');
     run.clan.buildings.herd = 1;
     completeGuidance(run, 'build');
-    expect(currentGuidance(run)?.id).toBe('formation');
+    expect(currentGuidance(run)?.id).toBe('prepare');
     run.clan.stageTime = 45;
     expect(currentGuidance(run)?.id).toBe('depart');
     run.guidance.enabled = false;

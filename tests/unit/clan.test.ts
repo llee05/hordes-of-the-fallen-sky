@@ -5,7 +5,6 @@ import { availableDestinations } from '../../src/game/state/journey';
 import {
   advanceClan,
   assignedWorkers,
-  availableFormations,
   beginMigration,
   buildingBlocker,
   buildingCost,
@@ -15,7 +14,6 @@ import {
   clanDoctrine,
   damageClan,
   restoreResolve,
-  riderCount,
 } from '../../src/game/state/clan';
 import type { RunState } from '../../src/game/types';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
@@ -96,8 +94,6 @@ describe('a civilization that moves', () => {
     expect(buildStructure(run, 'archery', 'fire-arrows')).toBe(false);
     expect(buildStructure(run, 'archery')).toBe(true);
     expect(run.clan.materials).toBe(476);
-    expect(riderCount(run)).toBeGreaterThan(1);
-    expect(availableFormations(run)).toContain('wedge');
     expect(buildStructure(run, 'archery')).toBe(false);
     expect(buildStructure(run, 'archery', 'fire-arrows')).toBe(true);
     expect(run.clan.materials).toBe(440);
@@ -178,9 +174,8 @@ describe('a civilization that moves', () => {
 
   it.each([1, 2, 3])('loses one person per resolve band when a hit crosses %i bands', (bands) => {
     const run = createRun();
-    run.clan.formation = 'wedge';
     const population = run.clan.population;
-    damageClan(run, bands * 20);
+    damageClan(run, (bands * 20) / GAME.clan.protection.guard);
     expect(run.clan.integrity).toBe(100 - bands * 20);
     expect(run.clan.population).toBe(population - bands);
     expect(run.legacy.peopleLost).toBe(bands);
@@ -194,7 +189,6 @@ describe('a civilization that moves', () => {
 
   it.each([0, 1, 2, 8])('caps multi-band casualties at a population of %i', (population) => {
     const run = createRun();
-    run.clan.formation = 'wedge';
     run.clan.population = population;
     run.clan.herd = 0;
     damageClan(run, 1000, undefined, 'starvation');
@@ -225,14 +219,11 @@ describe('a civilization that moves', () => {
     expect(run.legacy.peopleLost).toBe(3);
   });
 
-  it('protects the clan through guard formation and caravan armor', () => {
+  it('protects the clan through the camp guard and caravan armor', () => {
     const guard = createRun();
-    const exposed = createRun();
-    exposed.clan.formation = 'wedge';
     damageClan(guard, 10);
-    damageClan(exposed, 10);
     expect(guard.clan.population).toBe(8);
-    expect(guard.clan.integrity).toBeGreaterThan(exposed.clan.integrity);
+    expect(guard.clan.integrity).toBeCloseTo(100 - 10 * GAME.clan.protection.guard);
     const armor = createRun();
     armor.clan.paths.wagon = ['felt-armor'];
     damageClan(armor, 10);

@@ -1,11 +1,11 @@
 import { GAME } from '../config';
 import type { RunState } from '../types';
-import { availableFormations, canMigrate } from './clan';
+import { canMigrate } from './clan';
 import { economyForecast, type EconomyForecast } from './economy';
 import { prologueStage } from '../data/prologue';
 import { currentPrologueBeat } from './prologue';
 
-export type GuidanceStep = 'ride' | 'build' | 'shards' | 'formation' | 'depart' | 'journey';
+export type GuidanceStep = 'ride' | 'build' | 'shards' | 'depart' | 'journey';
 export interface GuidanceState {
   enabled: boolean;
   completed: GuidanceStep[];
@@ -15,7 +15,7 @@ export interface Guidance {
   eyebrow?: string;
   title: string;
   text: string;
-  action?: 'build' | 'formation' | 'migrate';
+  action?: 'build' | 'migrate';
   label?: string;
 }
 
@@ -72,7 +72,7 @@ export function currentGuidance(run: RunState): Guidance | undefined {
     return {
       id: 'build',
       title: 'Your camp is your strength',
-      text: 'B / X opens the camp. Archery grounds add three riders and formations; herding grounds help feed the clan. What you build holds its workers and travels with you.',
+      text: 'B / X opens the camp. The archery range sharpens the Khan’s attacks; the herding grounds help feed the clan. What you build holds its workers and travels with you.',
       action: 'build',
       label: 'Develop camp · B / X',
     };
@@ -81,14 +81,6 @@ export function currentGuidance(run: RunState): Guidance | undefined {
       id: 'shards',
       title: 'Gather what the fallen leave',
       text: 'Ride close to the turquoise spirit shards to gather them. A full experience bar raises your level, and the fight never stops.',
-    };
-  if (availableFormations(run).length > 1 && !done('formation'))
-    return {
-      id: 'formation',
-      title: 'Give the riders a purpose',
-      text: 'F / RB steps through your unlocked formations. Caravan guard keeps riders by your people and softens clan damage; the others favour attacking on the move.',
-      action: 'formation',
-      label: 'Change formation · F / RB',
     };
 
   return {

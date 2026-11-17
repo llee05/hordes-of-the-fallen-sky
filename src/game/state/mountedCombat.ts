@@ -1,82 +1,21 @@
-import { GAME } from '../config';
 import type { RunState } from '../types';
-import { isKhanActive } from './khan';
 export interface GroundPoint {
   x: number;
   y: number;
 }
 export interface MountedCombatState {
-  riderFireAt?: number[];
-  previous?: GroundPoint;
-  heading?: GroundPoint;
-  rideSeconds: number;
-  ready: boolean;
   gallopSerial: number;
   volleys: number;
   trails: (GroundPoint & { remaining: number })[];
 }
 export function createMountedCombat(): MountedCombatState {
-  return { rideSeconds: 0, ready: false, gallopSerial: 0, volleys: 0, trails: [] };
+  return { gallopSerial: 0, volleys: 0, trails: [] };
 }
-export function riderCooldowns(combat: MountedCombatState, count: number): number[] {
-  const cooldowns = (combat.riderFireAt ??= []);
-  while (cooldowns.length < count) cooldowns.push(0);
-  return cooldowns;
-}
-/** Measures real travelled ground for formation momentum; manual abilities replaced charged volleys. */
-export function advanceMountedCombat(
-  run: RunState,
-  dt: number,
-  position: GroundPoint,
-  _galloping: boolean,
-): void {
+/** Fades the remaining slowing trails over active gameplay seconds. */
+export function advanceMountedCombat(run: RunState, dt: number): void {
   if (run.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
   const c = run.combat;
   c.trails = c.trails
     .map((t) => ({ ...t, remaining: t.remaining - dt }))
     .filter((t) => t.remaining > 0);
-  if (!isKhanActive(run)) {
-    c.previous = undefined;
-    c.heading = undefined;
-    c.rideSeconds = 0;
-    c.ready = false;
-    run.clan.momentum = 0;
-    return;
-  }
-  const dx = c.previous ? position.x - c.previous.x : 0,
-    dy = c.previous ? position.y - c.previous.y : 0;
-  const distance = Math.hypot(dx, dy),
-    speed = distance / dt;
-  // Reject terrain relocation and debug teleports as riding skill.
-  const moving = speed > GAME.mounted.minimumSpeed && speed < GAME.dash.speed * 1.6;
-  const heading = moving ? { x: dx / distance, y: dy / distance } : undefined;
-  const turn = heading && c.heading ? heading.x * c.heading.x + heading.y * c.heading.y : 1;
-  const steady = moving && turn > 0.2;
-  run.clan.momentum = Math.max(
-    0,
-    Math.min(
-      1,
-      run.clan.momentum + dt * (steady ? GAME.mounted.momentumGain : -GAME.mounted.momentumLoss),
-    ),
-  );
-  c.rideSeconds = 0;
-  if (turn < 0.2) run.clan.momentum *= 0.8;
-  run.clan.momentum = Math.max(0, run.clan.momentum);
-  c.ready = false;
-
-  c.previous = { x: position.x, y: position.y };
-  c.heading = heading;
-}
-export function retreatShot(
-  run: RunState,
-  player: GroundPoint,
-  camp: GroundPoint,
-  target: GroundPoint,
-  facing: GroundPoint,
-): boolean {
-  if (run.clan.formation !== 'retreat' || run.clan.momentum <= 0.4) return false;
-  return (
-    (target.x - player.x) * facing.x + (target.y - player.y) * facing.y < -40 &&
-    (player.x - camp.x) * facing.x + (player.y - camp.y) * facing.y > 0
-  );
 }

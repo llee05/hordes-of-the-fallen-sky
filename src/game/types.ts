@@ -22,7 +22,6 @@ export type RunPhase =
 export type JourneyStage = 'camp' | 'migration';
 export type BuildingId =
   'ger' | 'archery' | 'herd' | 'sanctuary' | 'wagon' | 'felt' | 'provisions' | 'relay';
-export type Formation = 'guard' | 'encircle' | 'wedge' | 'retreat';
 export type Doctrine = 'iron' | 'sky' | 'wander';
 export type LocationId =
   | 'karakorum'
@@ -65,9 +64,6 @@ export interface ClanState {
   buildings: Record<BuildingId, number>;
   paths: Partial<Record<BuildingId, string[]>>;
   identity: Record<Doctrine, number>;
-  formation: Formation;
-  momentum: number;
-  rescuedRiders: number;
   message: string;
 }
 
@@ -79,7 +75,6 @@ export interface CampEffects {
     pastureUse: number;
     mobility: number;
     clanProtection: number;
-    riderDamage: number;
     hostInterval: number;
     burnDamage: number;
     gallopCooldown: number;

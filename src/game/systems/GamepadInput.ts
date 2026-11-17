@@ -18,7 +18,6 @@ export interface ControllerFrame {
   menuDirection?: 'up' | 'down' | 'left' | 'right';
   build: boolean;
   migrate: boolean;
-  formation: boolean;
   journal: boolean;
   zoomIn: boolean;
   zoomOut: boolean;
@@ -57,7 +56,6 @@ export class GamepadInput {
       next: false,
       build: false,
       migrate: false,
-      formation: false,
       journal: false,
       zoomIn: false,
       zoomOut: false,
@@ -87,7 +85,6 @@ export class GamepadInput {
     frame.heavyAttack = pressed(6);
     frame.build = (tapped & (1 << 12)) !== 0;
     frame.migrate = (tapped & (1 << 13)) !== 0;
-    frame.formation = (tapped & (1 << 5)) !== 0;
     frame.journal = (tapped & (1 << 8)) !== 0;
     frame.zoomIn = (tapped & (1 << 15)) !== 0;
     frame.zoomOut = (tapped & (1 << 14)) !== 0;

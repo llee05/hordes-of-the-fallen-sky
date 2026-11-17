@@ -1,6 +1,6 @@
 import { GAME } from '../config';
 import { BUILDINGS, ROUTES, startingTradition } from '../data/clan';
-import type { BuildingId, ClanState, Formation, RunState } from '../types';
+import type { BuildingId, ClanState, RunState } from '../types';
 import { applyCampEffects, createCampEffects, hasDevelopment } from './camp';
 import { healKhan } from './campCombat';
 import {
@@ -40,9 +40,6 @@ export function createClan(): ClanState {
     ) as Record<BuildingId, number>,
     paths: {},
     identity: { iron: 0, sky: 0, wander: 0 },
-    formation: 'guard',
-    momentum: 0,
-    rescuedRiders: 0,
     message: 'Eight people. Three horses. One last patch of blue sky. Build your clan with B.',
   };
 }
@@ -80,31 +77,11 @@ export function developmentExcluded(run: RunState, id: BuildingId, path: string)
   return visit(path, new Set());
 }
 
-export function riderCount(run: RunState): number {
-  const clan = run.clan;
-  return Math.min(
-    16,
-    1 +
-      startingTradition(run.startingTradition).balance.riders +
-      (clan.buildings.archery ? 3 : 0) +
-      (hasDevelopment(run, 'archery', 'veteran-riders') ? 3 : 0) +
-      clan.rescuedRiders,
-  );
-}
-
 export function burningTempest(run: RunState): boolean {
   return (
     hasDevelopment(run, 'archery', 'fire-arrows') &&
     hasDevelopment(run, 'sanctuary', 'wind-shamans')
   );
-}
-
-export function availableFormations(run: RunState): Formation[] {
-  return [
-    'guard',
-    ...(run.clan.buildings.archery ? (['encircle', 'wedge'] as const) : []),
-    ...(run.clan.buildings.herd ? (['retreat'] as const) : []),
-  ];
 }
 
 export function buildingCost(
@@ -243,7 +220,7 @@ export interface ClanProtection {
 
 export function clanDamageMultiplier(run: RunState): number {
   return (
-    (run.clan.formation === 'guard' ? GAME.clan.protection.guard : 1) *
+    GAME.clan.protection.guard *
     (hasDevelopment(run, 'wagon', 'felt-armor') ? GAME.clan.protection.feltArmor : 1) *
     (hasDevelopment(run, 'sanctuary', 'ancestral-ward') ? GAME.clan.protection.ancestralWard : 1) *
     run.clan.campEffects.multipliers.clanProtection *
@@ -272,7 +249,7 @@ export function damageClan(
     run.legacy.peopleLost += peopleLost;
     clan.population -= peopleLost;
     clan.herd = Math.max(0, clan.herd - 1);
-    clan.message = 'The clan has suffered losses. Bring your riders back to guard.';
+    clan.message = 'The clan has suffered losses. Ride back and guard your people.';
     if (peopleLost > 0) {
       const loss = peopleLost === 1 ? 'a person' : `${peopleLost} people`;
       rememberClan(
@@ -362,7 +339,6 @@ export function advanceClan(
       Math.min(nomadicPopulationCapacity(run) - clan.population, newPeople),
     );
     clan.population += arrivedPeople;
-    if (route.id === 'refuge') clan.rescuedRiders += GAME.clan.arrival.refugeRiders;
     clan.herd = Math.min(GAME.clan.maxHerd, clan.herd + route.herd + bonuses.arrivalHerd);
     completeGuidance(run, 'journey');
     clan.locationId = destination.id;

@@ -1,13 +1,6 @@
 import { GAME } from '../config';
 import { restoreResolve } from '../state/clan';
-import type {
-  BuildingId,
-  CampEffectDefinition,
-  Doctrine,
-  Formation,
-  LocationId,
-  RunState,
-} from '../types';
+import type { BuildingId, CampEffectDefinition, Doctrine, LocationId, RunState } from '../types';
 import { extendCampBuilding } from './campEstate';
 
 export type StartingTraditionId = keyof typeof GAME.clan.starts;
@@ -25,7 +18,7 @@ export const STARTING_TRADITIONS = [
     title: 'Outrider circle',
     icon: 'bow',
     description:
-      'One more rider takes the field, but horsing the escort costs provisions and tools.',
+      'The best horses and gear go to the Khan, who strikes harder, but the outfitting costs provisions and tools.',
     role: 'Fight early, and win back supplies before the journey.',
   },
   {
@@ -168,8 +161,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
     illustration: 'archery',
     title: 'Archery grounds',
     icon: '➶',
-    description:
-      'Train 3 horse archers. The riders can now form the encirclement and the charging wedge.',
+    description: 'Butts and bow racks where the Khan practises the moving shot.',
     materials: 24,
     spirit: 0,
     workers: 3,
@@ -185,14 +177,13 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         id: 'veteran-riders',
         exclusiveGroup: 'specialization',
         title: 'Veteran riders',
-        description: 'Three seasoned archers join you, and their volleys hit harder.',
+        description: 'A retired craft of the allied riders. It no longer grants a benefit.',
       },
       {
         id: 'seasoned-bowyers',
         title: 'Horn-and-sinew bowyers',
         materials: C.archery.bowyers.materials,
-        description:
-          'Carefully fitted bows let the Khan and the riders with you target enemies 30 paces farther out.',
+        description: 'Carefully fitted bows let the Khan target enemies 30 paces farther out.',
         effects: { bonuses: { range: C.archery.bowyers.range } },
       },
       {
@@ -209,13 +200,8 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
         requires: ['veteran-riders'],
         materials: C.archery.arban.materials,
         description:
-          'The riders drill until they move as one. Their arrows deal 20% more damage, and the mounted host’s firing interval is 10% shorter.',
-        effects: {
-          multipliers: {
-            riderDamage: C.archery.arban.damage,
-            hostInterval: C.archery.arban.interval,
-          },
-        },
+          'Drills in tens sharpen the Khan’s timing. The interval between the Khan’s attacks is 10% shorter.',
+        effects: { multipliers: { hostInterval: C.archery.arban.interval } },
       },
     ],
   },
@@ -228,7 +214,7 @@ const ORIGINAL_BUILDINGS: readonly BuildingDefinition[] = [
     },
     title: 'Herding grounds',
     icon: '♧',
-    description: 'Gain 4 horses and more food. The riders can now use the feigned retreat.',
+    description: 'Gain 4 horses and more food.',
     materials: 20,
     spirit: 0,
     workers: 2,
@@ -749,7 +735,7 @@ export const ROUTES = [
     title: 'Answer the blue banners',
     icon: '⚑',
     subtitle: 'SURVIVORS / MORE MOUTHS',
-    description: '+8 people and 2 veteran riders. The rescued need 18 food when they arrive.',
+    description: '+8 people. The rescued need 18 food when they arrive.',
     food: -18,
     materials: 0,
     population: 8,
@@ -759,24 +745,3 @@ export const ROUTES = [
     doctrine: 'iron' as const,
   },
 ] as const;
-
-export const FORMATIONS: Record<Formation, { title: string; description: string }> = {
-  guard: {
-    title: 'Caravan guard',
-    description: 'The riders stay close to the people. The clan takes 30% less damage.',
-  },
-  encircle: {
-    title: 'Encirclement',
-    description:
-      'The riders circle nearby enemies. Volleys loosed on the move deal 30% more damage.',
-  },
-  wedge: {
-    title: 'Charging wedge',
-    description: 'The riders follow your charge, and galloping through enemies hurts them.',
-  },
-  retreat: {
-    title: 'Feigned retreat',
-    description:
-      'A wide, loose formation. Volleys come faster while you move, and nearby shards follow you.',
-  },
-};

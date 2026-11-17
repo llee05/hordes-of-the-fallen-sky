@@ -31,7 +31,7 @@ import { environmentForLocation } from '../audio/mixing';
 import type { SoundKind } from '../audio/soundPalette';
 import { GAME } from '../config';
 import type { ClassAbilitySlot } from '../data/classes';
-import { FORMATIONS, STARTING_TRADITIONS, type StartingTraditionId } from '../data/clan';
+import { STARTING_TRADITIONS, type StartingTraditionId } from '../data/clan';
 import { karakorumWorldSite } from '../data/karakorum';
 import type { SuccessorTrait } from '../data/successors';
 import { createDeveloperTools, executeDeveloperCommand } from '../dev/commands';
@@ -45,19 +45,12 @@ import { Enemy, Gem, Projectile } from '../entities/actors';
 import { runFromCampArchive } from '../state/campArchive';
 import { advanceCampRecovery, gallopCooldown } from '../state/campCombat';
 import { purchaseEstate, type EstatePurchaseKind } from '../state/campEstate';
-import {
-  advanceClan,
-  availableFormations,
-  beginMigration,
-  buildStructure,
-  canMigrate,
-} from '../state/clan';
+import { advanceClan, beginMigration, buildStructure, canMigrate } from '../state/clan';
 import type { ClanDamageCause } from '../state/clanSafety';
 import { advanceEncounters } from '../state/encounters';
 import { decodeExpedition, type WorldArchive } from '../state/expeditionArchive';
 import { metricStage, observeExpedition } from '../state/expeditionMetrics';
 import { syncFieldState } from '../state/fieldObjectives';
-import { completeGuidance } from '../state/guidance';
 import { currentLocation } from '../state/journey';
 import { advanceSuccession, beginSuccession, chooseSuccessor, isKhanActive } from '../state/khan';
 import { advanceMountedCombat } from '../state/mountedCombat';
@@ -92,7 +85,6 @@ import { Hazards, type Hazard } from './arena/Hazards';
 import { HudPresenter } from './arena/HudPresenter';
 import { KhanController } from './arena/KhanController';
 import { PrologueDirector } from './arena/PrologueDirector';
-import { RiderHost } from './arena/RiderHost';
 
 export interface ArenaCallbacks {
   onHud: (snapshot: HudSnapshot) => void;
@@ -138,13 +130,7 @@ export class ArenaScene extends Phaser.Scene {
     this.clanDamage,
   );
   private readonly combat = this.createCombat();
-  private readonly riderHost = new RiderHost(this.arena, this.combat);
-  private readonly animator = new CharacterAnimator(
-    this.arena,
-    this.khan,
-    this.riderHost,
-    this.combat,
-  );
+  private readonly animator = new CharacterAnimator(this.arena, this.khan, this.combat);
   private readonly campDefences = new CampDefences(this.arena, this.combat);
   private readonly fieldObjectives = new FieldObjectiveDirector(this.arena, this.enemyDirector);
   private readonly prologueDirector = new PrologueDirector(this.arena, {
@@ -351,7 +337,6 @@ export class ArenaScene extends Phaser.Scene {
     Object.assign(this.timers, createArenaTimers());
     this.hudTimer = 0;
     this.utilityReturnPhase = 'ready';
-    this.riderHost.reset();
     this.khan.reset();
     this.combat.reset();
     this.enemyDirector.reset();
@@ -372,7 +357,6 @@ export class ArenaScene extends Phaser.Scene {
       .setScale(CAMP_VISUAL_SCALE)
       .setDepth(100 + center.y);
     this.campPresenter = new CampPresenter(this.arena);
-    this.riderHost.createSlots();
     this.khan.createAttachments();
     this.player = this.physics.add
       .sprite(center.x, center.y + 100, ...artTexture('player'))
@@ -411,7 +395,6 @@ export class ArenaScene extends Phaser.Scene {
       togglePause: () => this.togglePause(),
       openBuildings: () => this.openBuildings(),
       openRoutes: () => this.openRoutes(),
-      cycleFormation: () => this.cycleFormation(),
       selectSuccessor: (trait) => this.selectSuccessor(trait),
       toggleJournal: () => this.toggleJournal(),
       toggleDeveloperMenu: () => this.toggleDeveloperMenu(),
@@ -523,7 +506,6 @@ export class ArenaScene extends Phaser.Scene {
           attracted: g.attracted,
           secondary: g.secondary,
         })),
-      riders: this.riderHost.capture(),
       hazards: this.hazardSystem.capture(),
       ...this.areaCombat.capture(),
     };
@@ -552,7 +534,6 @@ export class ArenaScene extends Phaser.Scene {
       gem.attracted = saved.attracted;
       gem.secondary = saved.secondary ?? false;
     }
-    this.riderHost.restore(world.riders);
     this.hazardSystem.restore(world.hazards);
     this.reconcileTerrain();
     this.applyCameraZoom(world.zoom);
@@ -837,16 +818,6 @@ export class ArenaScene extends Phaser.Scene {
     this.audio.play('depart');
   }
 
-  cycleFormation(): void {
-    if (this.run.phase !== 'playing') return;
-    const formations = availableFormations(this.run);
-    if (formations.length > 1) completeGuidance(this.run, 'formation');
-    this.run.clan.formation =
-      formations[(formations.indexOf(this.run.clan.formation) + 1) % formations.length]!;
-    this.run.clan.message = FORMATIONS[this.run.clan.formation].description;
-    this.callbacks?.onHud(this.snapshot());
-  }
-
   changeZoom(steps: number): void {
     if (this.run.phase !== 'playing' || !Number.isFinite(steps)) return;
     this.applyCameraZoom(
@@ -925,7 +896,6 @@ export class ArenaScene extends Phaser.Scene {
     this.khan.syncAttachments();
     for (const [enemy, shadow] of this.enemyDirector.shadows)
       if (enemy.active) shadow.setPosition(enemy.x + 6, enemy.y + 4).setDepth(99 + enemy.y);
-    this.riderHost.reconcile(navigation);
     this.spatial.rebuild(this.enemies.getChildren() as Enemy[]);
   }
 
@@ -1051,7 +1021,7 @@ export class ArenaScene extends Phaser.Scene {
       return;
     }
     if (advanceSuccession(this.run, dt)) this.khan.returnKhan();
-    advanceMountedCombat(this.run, dt, this.player, this.timers.dashRemaining > 0);
+    advanceMountedCombat(this.run, dt);
     const aim = this.controls.aimPoint(this.player, this.facing);
     if (isKhanActive(this.run)) {
       this.khan.move(dt, this.controls.movement(this.player));
@@ -1099,7 +1069,6 @@ export class ArenaScene extends Phaser.Scene {
       aim,
       this.controls.hasUsableAim(),
     );
-    this.riderHost.fire();
     this.enemyDirector.tickSpawns(dt);
     this.combat.updateProjectiles(dt);
     this.combat.collectGems(dt);
@@ -1194,7 +1163,6 @@ export class ArenaScene extends Phaser.Scene {
 
   private updateCamp(dt: number): void {
     this.campPresenter.update(dt);
-    this.riderHost.update(dt);
     this.landscape.update(this.run.elapsed);
     this.hazardSystem.update(dt);
   }
@@ -1323,12 +1291,6 @@ export class ArenaScene extends Phaser.Scene {
   }
   updateEnemies(dt: number): void {
     this.enemyBehaviour.update(dt);
-  }
-  get riders(): Phaser.GameObjects.Image[] {
-    return this.riderHost.riders;
-  }
-  fireRiders(): void {
-    this.riderHost.fire();
   }
   spawnEnemy(forced?: EnemyDefinition, directive?: SpawnDirective): boolean {
     return this.enemyDirector.spawn(forced, directive);

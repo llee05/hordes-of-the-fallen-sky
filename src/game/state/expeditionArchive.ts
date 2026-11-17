@@ -1,4 +1,3 @@
-import { availableFormations } from './clan';
 import { applyCampEffects } from './camp';
 import { isCharacterProfile, normalizeCharacterProfile } from '../../shared/characterProfile';
 import {
@@ -134,7 +133,6 @@ export interface WorldArchive {
   projectiles: ProjectileArchive[];
   hostileShots: ProjectileArchive[];
   gems: (BodyArchive & { value: number; attracted: boolean; secondary?: boolean })[];
-  riders: (Point & { flip: boolean; motion: MotionArchive })[];
   hazards: (Point & {
     remaining: number;
     radius?: number;
@@ -178,7 +176,6 @@ const overrides: Record<string, Rule> = {
   'clan.stage': oneOf(['camp', 'migration']),
   'clan.locationId': location,
   'clan.routeId': oneOf(['', ...ROUTES.map((r) => r.id)]),
-  'clan.formation': oneOf(['guard', 'encircle', 'wedge', 'retreat']),
   'clan.paths': object(
     {},
     Object.fromEntries(BUILDINGS.map((b) => [b.id, list(oneOf(b.paths.map((p) => p.id)), 100)])),
@@ -255,7 +252,6 @@ const optional: Record<string, Record<string, Rule>> = {
   clan: { destinationId: location },
   khan: { candidate: trait, trait },
   encounters: { phase: oneOf(['probing', 'warning', 'assault', 'elite', 'recovery']) },
-  combat: { previous: point, heading: point, riderFireAt: list(number, 16) },
   safety: {
     lastDamage: object(
       {
@@ -490,7 +486,6 @@ const worldShape = object(
       object({ ...bodyFields, value: positive, attracted: boolean }, { secondary: boolean }),
       GAME.maxGems,
     ),
-    riders: list(object({ x: number, y: number, flip: boolean, motion }), 16),
     hazards: list(
       object(
         { x: number, y: number, remaining: number },
@@ -542,14 +537,13 @@ function migrateOrkhonLayout(value: unknown): void {
   };
   const run = value.run;
   if (isRecord(run.combat)) {
-    translate(run.combat.previous);
     if (Array.isArray(run.combat.trails)) for (const trail of run.combat.trails) translate(trail);
   }
   if (isRecord(run.field)) translate(run.field.objective);
   const world = value.world;
   translate(world.player);
   translate(world.camp);
-  for (const key of ['enemies', 'projectiles', 'hostileShots', 'gems', 'riders', 'hazards']) {
+  for (const key of ['enemies', 'projectiles', 'hostileShots', 'gems', 'hazards']) {
     const points = world[key];
     if (Array.isArray(points))
       for (const point of points) {
@@ -562,6 +556,23 @@ function migrateOrkhonLayout(value: unknown): void {
   if (isRecord(world.areaThreats) && Array.isArray(world.areaThreats.threats))
     for (const point of world.areaThreats.threats) translate(point);
   world.orkhonLayout = 2;
+}
+
+/** Allied riders, formations and formation momentum are retired; their saved fields are dropped. */
+function stripRetiredRiders(value: Record<string, unknown>): void {
+  const run = value.run;
+  if (isRecord(run)) {
+    if (isRecord(run.clan)) {
+      for (const key of ['formation', 'momentum', 'rescuedRiders']) delete run.clan[key];
+      const effects = run.clan.campEffects;
+      if (isRecord(effects) && isRecord(effects.multipliers))
+        delete effects.multipliers.riderDamage;
+    }
+    if (isRecord(run.combat))
+      for (const key of ['riderFireAt', 'previous', 'heading', 'rideSeconds', 'ready'])
+        delete run.combat[key];
+  }
+  if (isRecord(value.world)) delete value.world.riders;
 }
 
 export function captureExpedition(
@@ -659,6 +670,7 @@ export function decodeExpedition(value: unknown): {
       delete legacy[key];
     if (isRecord(legacy.stats) && legacy.stats.pierce === undefined) legacy.stats.pierce = 0;
     if (isRecord(value.world)) delete value.world.support;
+    stripRetiredRiders(value);
   }
   const retiredJourney = isRecord(value) && migrateRetiredJourney(value);
   migrateOrkhonLayout(value);
@@ -727,8 +739,6 @@ export function decodeExpedition(value: unknown): {
         if (retiredProgression) applyNomadicBuildingEffects(retained, level.effects);
         else applyCampEffects(retained.clan.campEffects, level.effects.ongoing);
     if (retiredProgression) {
-      if (!availableFormations(retained).includes(retained.clan.formation))
-        retained.clan.formation = 'guard';
       retained.health = Math.min(retained.health, retained.stats.maxHealth);
       retained.combat.trails = [];
     }

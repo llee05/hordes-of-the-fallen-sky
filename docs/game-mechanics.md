@@ -22,23 +22,22 @@ The current camp's gathering and onward mobility modifiers and the target's appr
 
 ## 2. Starting state and resources
 
-| Resource / measure | Start                   | Sources                                                                                    | Uses and consequences                                                                                                                                                                                                      |
-| ------------------ | ----------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Food               | 70                      | Grazing, camp production, river-route arrivals                                             | Consumed by people, including during migration. Blue-banner rescue costs 18 food on arrival. Zero food triggers starvation checks.                                                                                         |
-| Materials          | 50                      | Passive camp gathering, more population, ridge-route arrivals                              | Construct and upgrade camp buildings. No ongoing building maintenance cost.                                                                                                                                                |
-| Spirit             | 0                       | Kills grant `enemy XP ×0.4` times the camp Spirit-gain multiplier; ridge arrival grants 10 | Construct and upgrade spiritual and cultural buildings. It is not consumed by lightning, wards, arrows, or migration.                                                                                                      |
-| Spirit shards / XP | Level 1, 0 XP           | Collect drops from defeated enemies                                                        | Fill the current level's XP threshold and gain a level. Collection does not deduct stored Spirit.                                                                                                                          |
-| People             | 8                       | Blue-banner arrivals, field rescues                                                        | Produce materials, consume food, provide worker capacity. Losses come from starvation and resolve damage. Population gains obey the camp capacity described in [the camp guide](nomadic-camp.md).                          |
-| Workers            | 0 assigned of 8         | Existing population                                                                        | Construction requires sufficient total population for assigned jobs. Workers are reserved by established buildings, not spent. No manual job reassignment or worker production penalty is simulated.                       |
-| Herd / horses      | 3                       | Field rescues (+3); river arrival (+2)                                                     | Each horse increases migration mobility by 1.2% of the base. Starvation and clan losses remove livestock. Route rewards cap herd at 40. Herd size does not independently change grazing income or limit rider recruitment. |
-| Clan resolve       | 100 / 100               | Communal Hearth, Ancestral Standard, arrivals (+12)                                        | Clan-wide survival meter, internally called integrity. Attacks and starvation reduce it; each 20-point damage band can also cost people and livestock.                                                                     |
-| Khan health        | 100 / 100               | Camp recovery and arrivals (+25)                                                           | Personal health; at zero, choose a new Khan after 10 active seconds while the clan fights on. Enemy contact, hostile shots, and seer marks damage it.                                                                      |
-| Pasture            | 100%                    | Refreshed on arrival; camp developments reduce depletion                                   | Scales food and material production. Depletes to zero over 210 stationary seconds. Does not deplete during migration.                                                                                                      |
-| Momentum           | 0–100%                  | Riding builds it; stopping drains it                                                       | Improves Khan arrow damage and targeting range; activates moving formation bonuses.                                                                                                                                        |
-| Threat             | 0–100%                  | Time in the current stage                                                                  | A pressure indicator. Spawn intervals use their own stage-time formula; the displayed threat value is not an additional damage multiplier.                                                                                 |
-| Identity           | Iron 0, Sky 0, Wander 0 | Construction, upgrades, route choices                                                      | Determines the clan's descriptive identity. Grants no additional stat modifiers or technology locks.                                                                                                                       |
+| Resource / measure | Start                   | Sources                                                                                    | Uses and consequences                                                                                                                                                                                |
+| ------------------ | ----------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Food               | 70                      | Grazing, camp production, river-route arrivals                                             | Consumed by people, including during migration. Blue-banner rescue costs 18 food on arrival. Zero food triggers starvation checks.                                                                   |
+| Materials          | 50                      | Passive camp gathering, more population, ridge-route arrivals                              | Construct and upgrade camp buildings. No ongoing building maintenance cost.                                                                                                                          |
+| Spirit             | 0                       | Kills grant `enemy XP ×0.4` times the camp Spirit-gain multiplier; ridge arrival grants 10 | Construct and upgrade spiritual and cultural buildings. It is not consumed by lightning, wards, arrows, or migration.                                                                                |
+| Spirit shards / XP | Level 1, 0 XP           | Collect drops from defeated enemies                                                        | Fill the current level's XP threshold and gain a level. Collection does not deduct stored Spirit.                                                                                                    |
+| People             | 8                       | Blue-banner arrivals, field rescues                                                        | Produce materials, consume food, provide worker capacity. Losses come from starvation and resolve damage. Population gains obey the camp capacity described in [the camp guide](nomadic-camp.md).    |
+| Workers            | 0 assigned of 8         | Existing population                                                                        | Construction requires sufficient total population for assigned jobs. Workers are reserved by established buildings, not spent. No manual job reassignment or worker production penalty is simulated. |
+| Herd / horses      | 3                       | Field rescues (+3); river arrival (+2)                                                     | Each horse increases migration mobility by 1.2% of the base. Starvation and clan losses remove livestock. Route rewards cap herd at 40. Herd size does not independently change grazing income.      |
+| Clan resolve       | 100 / 100               | Communal Hearth, Ancestral Standard, arrivals (+12)                                        | Clan-wide survival meter, internally called integrity. Attacks and starvation reduce it; each 20-point damage band can also cost people and livestock.                                               |
+| Khan health        | 100 / 100               | Camp recovery and arrivals (+25)                                                           | Personal health; at zero, choose a new Khan after 10 active seconds while the clan fights on. Enemy contact, hostile shots, and seer marks damage it.                                                |
+| Pasture            | 100%                    | Refreshed on arrival; camp developments reduce depletion                                   | Scales food and material production. Depletes to zero over 210 stationary seconds. Does not deplete during migration.                                                                                |
+| Threat             | 0–100%                  | Time in the current stage                                                                  | A pressure indicator. Spawn intervals use their own stage-time formula; the displayed threat value is not an additional damage multiplier.                                                           |
+| Identity           | Iron 0, Sky 0, Wander 0 | Construction, upgrades, route choices                                                      | Determines the clan's descriptive identity. Grants no additional stat modifiers or technology locks.                                                                                                 |
 
-The opening camp foundations are described in [the nomadic camp guide](nomadic-camp.md). The default Khan begins with one accompanying rider; personal weapons follow the [playable class rules](#playable-classes).
+The opening camp foundations are described in [the nomadic camp guide](nomadic-camp.md). The Khan rides alone: allied riders, formations and formation momentum have been removed. Personal weapons follow the [playable class rules](#playable-classes).
 
 ### Economy and scarcity
 
@@ -95,37 +94,25 @@ Spirit shards dropped by enemies carry XP. The threshold at level `L` is `8 + (L
 
 See [the nomadic camp guide](nomadic-camp.md) for the current building catalog, construction and upgrade rules, inspector controls, costs, effects, and legacy-save migration. The retired craft catalog and its cultural sources remain in [the legacy camp reference](camp-upgrade-tree.md).
 
-## 5. Mounted combat and formations
+## 5. Mounted combat
 
-### Khan, riders, and arrows
+### The Khan and arrows
 
-Without a supplied character profile, the Khan uses the legacy Mounted Archer opening stats in `GAME.player`. Supplied profiles use `GAME.classes` through the class catalog, with starting-tradition, background, and oath modifiers applied at initialization. The Khan aims manually toward the mouse cursor or controller right stick. Light and heavy attacks use each class's authored range, damage, interval, windup and hit shape; only allied riders and camp defenses choose targets automatically.
+Without a supplied character profile, the Khan uses the legacy Mounted Archer opening stats in `GAME.player`. Supplied profiles use `GAME.classes` through the class catalog, with starting-tradition, background, and oath modifiers applied at initialization. The Khan aims manually toward the mouse cursor or controller right stick. Light and heavy attacks use each class's authored range, damage, interval, windup and hit shape; only camp defenses choose targets automatically.
 
-Momentum rises by 0.28/second of actual sustained riding and falls by 1.1/second while stopped, clamped to 0–1. Full momentum takes about 3.57 seconds; sharp reversals reduce it, and pressing into blocked terrain cannot build it. Momentum remains a formation tactic for accompanying riders and no longer charges or extends a Khan attack.
-
-Accompanying riders use per-rider active-time release clocks and each fire one
-arrow per successful release, at 60% of the shared damage stat before camp modifiers. Each rider has an active-time release clock using the shared attack interval and camp host-interval modifier. Their targeting range starts at 440. They do not have independent health, consume horses, or reserve extra workers. Total accompanying riders are:
-
-```text
-min(16, 1 starting rider
-        + starting-tradition riders
-        + 3 with Archery Range
-        + 2 per completed blue-banner migration)
-```
-
-Friendly projectiles last 1.6 seconds. Khan projectile speed and starting pierce follow the class catalog; allied arrows use `GAME.projectile.speed`. Progression and building upgrades can add piercing. Each arrow hits a pooled enemy incarnation at most once; its hit history resets on reuse. Targeting range determines when a volley is fired, rather than its entire travel distance. The shared projectile pool holds 250 friendly arrows, which can limit very large simultaneous volleys.
+Friendly projectiles last 1.6 seconds. Khan projectile speed and starting pierce follow the class catalog; camp arrows use `GAME.projectile.speed`. Progression and building upgrades can add piercing. Each arrow hits a pooled enemy incarnation at most once; its hit history resets on reuse. Targeting range determines when a volley is fired, rather than its entire travel distance. The shared projectile pool holds 250 friendly arrows, which can limit very large simultaneous volleys.
 
 ### Camp attacks and Burning Tempest
 
-Sacred Ovoo lightning searches within 520 units of the living Khan, then the camp, and deals three times shared damage in a 70-unit radius. Its base interval is 3.5 seconds, or 1.8 with Shaman’s Ger, multiplied by the camp’s sanctuary-interval modifier. The Wagon Yard fires within 520 units every 0.9 seconds, at shared damage ×1.5 while stationary or ×0.7 during migration. These support clocks continue during migration and succession and remain independent of host firing haste.
+Sacred Ovoo lightning searches within 520 units of the living Khan, then the camp, and deals three times shared damage in a 70-unit radius. Its base interval is 3.5 seconds, or 1.8 with Shaman’s Ger, multiplied by the camp’s sanctuary-interval modifier. The Wagon Yard fires within 520 units every 0.9 seconds, at shared damage ×1.5 while stationary or ×0.7 during migration. These support clocks continue during migration and succession and remain independent of the Khan’s attack-interval modifiers.
 
-The building requirements for **Burning Tempest** are listed in [the camp overview](../README.md#build-defend-migrate). Ordinary friendly volleys gain two additional projectiles. Mounted Archer, rider and wagon volleys gain a wider fan and alternating curvature ±0.65 radians/second. Other Khan classes retain their weapon's spread; Spirit Wisps and Spirit Caller summon projectiles home instead of using alternating curvature. Khan, rider and wagon projectiles participate. Fire-arrow hits apply a two-second burn at shared damage ×0.45 per second, multiplied by the camp burn-damage modifier; hits refresh the timer rather than stacking separate burns.
+The building requirements for **Burning Tempest** are listed in [the camp overview](../README.md#build-defend-migrate). Ordinary friendly volleys gain two additional projectiles. Mounted Archer and wagon volleys gain a wider fan and alternating curvature ±0.65 radians/second. Other Khan classes retain their weapon's spread; Spirit Wisps and Spirit Caller summon projectiles home instead of using alternating curvature. Khan and wagon projectiles participate. Fire-arrow hits apply a two-second burn at shared damage ×0.45 per second, multiplied by the camp burn-damage modifier; hits refresh the timer rather than stacking separate burns.
 
 ### Choosing a new Khan
 
 The player character is **the Khan**. A lethal hit normally starts **10 active gameplay seconds of succession**, marked by **Choosing a new Khan** and a live countdown in the health HUD. This does not change the run to its ended `dead` phase. The fallen Khan is hidden and his collision body is disabled immediately. Riding, galloping, his personal arrows, and shard collection stop; already-fired arrows and burns can finish normally.
 
-The world keeps advancing: enemies attack the camp, food is consumed, the caravan moves, and camp weapons and accompanying riders defend it. Riders position around camp during succession. Menus pause the countdown and all other simulation.
+The world keeps advancing: enemies attack the camp, food is consumed, the caravan moves, and camp weapons defend it. Menus pause the countdown and all other simulation.
 
 When the countdown finishes with the clan alive, a successor appears **90 world units below the current camp/caravan center**, at full maximum health with a ready gallop and **3 seconds of invulnerability**. His movement, hit feedback, and attack pose reset. The HUD advances its Khan number. Camp upgrades, max health, resources, workers, buildings, and route progress all carry over. The successor follows the current moving caravan or the new camp if an arrival happened during succession.
 
@@ -135,28 +122,21 @@ Clan population or resolve reaching zero ends the expedition during the countdow
 
 ### Gallop
 
-**Space / controller left bumper** gallops in the current or last facing direction at speed 570 (scaled by the class gallop modifier) for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage. Charging wedge adds contact damage during gallop.
+**Space / controller left bumper** gallops in the current or last facing direction at speed 570 (scaled by the class gallop modifier) for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage.
 
-### Formation tree
+### Camp guard
 
-| Formation       | Unlock                   | Positioning and benefit                                                                                                                                        |
-| --------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Caravan guard   | Starting formation       | Riders stay around camp/caravan. All clan damage ×0.7, regardless of Khan distance.                                                                            |
-| Encirclement    | Construct Archery Range  | Riders circle an enemy near the Khan, or the Khan if none is nearby. At momentum above 0.5, friendly arrow damage ×1.3, including wagon arrows.                |
-| Charging wedge  | Construct Archery Range  | Riders line up behind the Khan. While galloping, enemies within 64 units take `damage stat ×18` per second. This is continuous damage, not one hit per gallop. |
-| Feigned retreat | Starting Herding Grounds | Riders spread around the Khan. At momentum above 0.4, host firing interval ×0.7 and shard attraction radius ×1.7.                                              |
-
-Press **F / right bumper** to cycle unlocked formations during play. Effects replace the previous formation's benefit; changing formation has no resource cost or cooldown. Momentum's personal damage bonus and Encirclement's arrow bonus multiply together.
+All clan damage is multiplied by 0.7 (`GAME.clan.protection.guard`), regardless of the Khan's distance. This was the benefit of the default Caravan guard formation and is now always in effect. The Encirclement, Charging wedge and Feigned retreat formations, their momentum thresholds and the F / right bumper command have been removed with the allied riders.
 
 ## 6. Migration and arrival rewards
 
 After **45 seconds in any camp**, press **M**, choose another real place, and choose a route. You can close the route panel to stay longer. Every migration offers the same three routes; routes change rewards, duration, danger, and identity.
 
-| Route                   | Base duration          | Spawn-rate divisor during migration | Reward / cost on successful arrival                     | Identity  |
-| ----------------------- | ---------------------- | ----------------------------------- | ------------------------------------------------------- | --------- |
-| Follow the river        | 72 seconds (`60 ×1.2`) | 0.9; fewer spawns                   | +35 food, +2 horses                                     | +2 Wander |
-| Ride the high ridge     | 48 seconds (`60 ×0.8`) | 1.5; more spawns                    | +28 materials, +10 Spirit                               | +2 Sky    |
-| Answer the blue banners | 60 seconds             | 1.2; more spawns                    | +8 people, +2 rescued riders, −18 food, floored at zero | +2 Iron   |
+| Route                   | Base duration          | Spawn-rate divisor during migration | Reward / cost on successful arrival  | Identity  |
+| ----------------------- | ---------------------- | ----------------------------------- | ------------------------------------ | --------- |
+| Follow the river        | 72 seconds (`60 ×1.2`) | 0.9; fewer spawns                   | +35 food, +2 horses                  | +2 Wander |
+| Ride the high ridge     | 48 seconds (`60 ×0.8`) | 1.5; more spawns                    | +28 materials, +10 Spirit            | +2 Sky    |
+| Answer the blue banners | 60 seconds             | 1.2; more spawns                    | +8 people, −18 food, floored at zero | +2 Iron   |
 
 Actual migration progress is:
 
@@ -170,9 +150,9 @@ Progress = stage time × Mobility / (route base duration × destination approach
 
 Starting migration forecasts include the three horses, free core benefits, current location, and destination. Population does not directly slow the caravan, but increases provisions needed. Herd losses can reduce calculated progress because mobility uses the current herd.
 
-The caravan moves east automatically across 1,150 world units as progress reaches 100%. It does not wait for the Khan or depend on remaining within an escort radius. Defend it because nearby enemies and hostile shots damage the clan. You can fight, gallop, change formations, and collect shards during travel; construction waits for unpacking.
+The caravan moves east automatically across 1,150 world units as progress reaches 100%. It does not wait for the Khan or depend on remaining within an escort radius. Defend it because nearby enemies and hostile shots damage the clan. You can fight, gallop, and collect shards during travel; construction waits for unpacking.
 
-Rewards are not paid when choosing the route. On successful arrival, route rewards apply, the destination becomes the new camp, pasture resets to 100%, resolve recovers by 12, and Khan health receives 25 base healing plus camp arrival bonuses; resolve and health remain capped at their maxima. Buildings, resources, and riders carry over. Enemies, projectiles, and seer warnings are cleared; uncollected shards move to the new camp. Arrivals reset the stage clock, not total active journey time.
+Rewards are not paid when choosing the route. On successful arrival, route rewards apply, the destination becomes the new camp, pasture resets to 100%, resolve recovers by 12, and Khan health receives 25 base healing plus camp arrival bonuses; resolve and health remain capped at their maxima. Buildings and resources carry over. Enemies, projectiles, and seer warnings are cleared; uncollected shards move to the new camp. Arrivals reset the stage clock, not total active journey time.
 
 ## 7. Enemies, pressure, and hazards
 
@@ -226,7 +206,6 @@ The Last Court, Iron Vow, Sundering, creatures, and refuge are original fantasy;
 | Gallop                         | Space / HUD button                   | Left bumper         |
 | Develop camp                   | B / HUD button                       | D-pad up            |
 | Choose migration route         | M / HUD button                       | D-pad down          |
-| Cycle formations               | F / HUD button                       | Right bumper        |
 | Chronicle                      | Tab / J / HUD button                 | View                |
 | Pause, resume, close a panel   | Escape / P                           | Start / B in menus  |
 | Menu navigation / confirmation | Tab, Shift+Tab / Enter, Space, click | Stick or D-pad / A  |
@@ -249,7 +228,7 @@ The desktop game runs offline with local assets and native, validated, atomic sa
 | Khan damage, presence, succession timing                       | [state/khan.ts](../src/game/state/khan.ts)                                                                       |
 | Starting run and XP thresholds                                 | [state/run.ts](../src/game/state/run.ts)                                                                         |
 | Camp building definitions and purchase rules                   | [data/nomadicCamp.ts](../src/game/data/nomadicCamp.ts), [state/nomadicCamp.ts](../src/game/state/nomadicCamp.ts) |
-| Legacy crafts, formations, routes, regions                     | [data/clan.ts](../src/game/data/clan.ts)                                                                         |
+| Legacy crafts, routes, regions                                 | [data/clan.ts](../src/game/data/clan.ts)                                                                         |
 | Typed camp effects and once-only purchase grants               | [state/camp.ts](../src/game/state/camp.ts)                                                                       |
 | Economy, staffing, purchases, protection, migration, identity  | [state/clan.ts](../src/game/state/clan.ts)                                                                       |
 | Enemy definitions and spawn interval                           | [data/enemies.ts](../src/game/data/enemies.ts)                                                                   |
@@ -293,9 +272,7 @@ independent rules live in their corresponding state modules.
 
 ### Mounted skill and enemy roles
 
-Actual travelled ground, rather than movement input, builds formation momentum at
-0.28 per second. Stopping, reversing abruptly, or pressing into a cliff loses
-momentum. The old sustained-riding charged volley has been removed; Khan attacks are
+The old sustained-riding charged volley and formation momentum have been removed; Khan attacks are
 the manual light, heavy, and class-ability actions described above. Gallops push
 nearby enemies once per charge, sweeping against terrain rather than displacing them
 through walls.
@@ -348,7 +325,7 @@ a preview never changes the simulation's current roster.
 
 ### Starting traditions, pacing and combat feedback
 
-The title's Starting tradition picker offers four preparations with different starting stores, riders, defence or scouting/mobility. Every camp building remains available. Full saves retain the choice; old saves and portable camp continuations use neutral ongoing modifiers. See [the preparation catalog](starting-traditions.md).
+The title's Starting tradition picker offers four preparations with different starting stores, Khan damage, defence or scouting/mobility. Every camp building remains available. Full saves retain the choice; old saves and portable camp continuations use neutral ongoing modifiers. See [the preparation catalog](starting-traditions.md).
 
 The chronicle's Your clan tab and the result screen retain per-stage active-time milestones, resolve damage, casualties and riding/guard/travel observations. Developer `metrics` is read-only; `benchmark` compares twelve fixed-length pressure models. See [the pacing contract](expedition-pacing.md) for assumptions and test scope.
 
@@ -356,12 +333,12 @@ Combat adds bounded elite/armour markers, grouped offscreen warnings and retaine
 
 ## Playable classes
 
-The four playable classes share formations, gallop and succession, but the Khan no
+The four playable classes share the gallop and succession, but the Khan no
 longer attacks automatically. Hold left click for a quick light attack or right click
 for a stronger heavy attack toward the cursor; charging heavies fire on release. Controller aim uses the right
 stick, with right trigger for light and left trigger for heavy. The class atlas supplies
-the weapon-specific windup and release poses. Allied riders and camp defenses keep
-their automatic targeting.
+the weapon-specific windup and release poses. Camp defenses keep their automatic
+targeting.
 
 - **Mounted Archer** fires Galloping Shots at full riding speed, with every third
   release followed by a second arrow. Piercing Draw scales damage and penetration with
@@ -404,7 +381,7 @@ authored in `GAME.classes` and surfaced through `src/game/data/classes.ts`. Abil
 cooldowns advance only during active play, appear in the battlefield HUD and persist
 in full expedition saves; older saves load the four abilities ready. Mounted Archer
 delayed shots, target areas, volleys and maneuvers also use active time and persist in
-full saves. Formation momentum remains for allied rider tactics.
+full saves.
 Spirit bolts steer toward live, unhit enemies at the class turn rate while retaining
 their speed. The class `gallopSpeedMultiplier` still scales the Khan's Space / left-bumper
 gallop, and Lancer and Iron Pagoda gallops retain their existing pinning breakthrough.

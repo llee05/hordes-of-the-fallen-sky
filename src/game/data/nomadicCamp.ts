@@ -173,7 +173,7 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'archery-range',
     'Archery Range',
     'Military',
-    'Riders practice the moving shot, improving ranged damage, firing cadence and piercing.',
+    'The Khan practises the moving shot here, improving weapon damage, attack cadence and piercing.',
     'bow',
     [
       { player: { damage: C.damage }, attackInterval: C.interval },
@@ -197,10 +197,10 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'warriors-training-ground',
     "Warrior's Training Ground",
     'Military',
-    'Train a stronger escort and preserve room for future recruited companions.',
+    'Sparring partners sharpen the Khan’s own strikes and preserve room for future recruited companions.',
     'banner',
     repeat({
-      ongoing: { multipliers: { riderDamage: C.production } },
+      player: { damage: C.damage },
       future: {
         companionCapacity: 1,
         companionStrength: C.futureEfficiency,
@@ -334,10 +334,7 @@ export const NOMADIC_BUILDINGS: readonly NomadicBuildingDefinition[] = [
     'The clan’s ceremonial banner steadies the living host beneath its ancestral colours.',
     'banner',
     repeat({
-      ongoing: {
-        multipliers: { riderDamage: C.production },
-        bonuses: { resolveRecovery: C.recovery },
-      },
+      ongoing: { bonuses: { resolveRecovery: C.recovery } },
       future: { companionMorale: C.futureEfficiency },
     }),
   ),

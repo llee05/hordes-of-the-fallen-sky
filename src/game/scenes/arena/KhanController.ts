@@ -185,7 +185,6 @@ export class KhanController extends ArenaSystem {
     this.timers.dashRemaining = 0;
     this.timers.classAction = undefined;
     this.timers.khanStatus = createKhanStatus();
-    this.run.clan.momentum = 0;
     this.host.clearTouch();
     this.cameras.main.startFollow(this.camp, true, 0.09, 0.09).setFollowOffset(0, 0);
     this.arena.hud.refresh();
@@ -251,10 +250,6 @@ export class KhanController extends ArenaSystem {
     this.playerMotion.reset('player', 0);
     this.playerMotion.setPlayerClass(this.run.character?.classId ?? 'mounted-archer');
     this.playerMotion.setPlayerGender(this.run.character?.gender ?? 'man');
-    this.run.combat.previous = undefined;
-    this.run.combat.heading = undefined;
-    this.run.combat.rideSeconds = 0;
-    this.run.combat.ready = false;
     this.renderPlayerVisual();
     this.shadow
       .setPosition(x + 9, y + 5)

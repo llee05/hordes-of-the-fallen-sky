@@ -81,11 +81,8 @@ export const GAME = {
   },
   mounted: {
     minimumSpeed: 35,
-    momentumGain: 0.28,
-    momentumLoss: 1.1,
     chargeSeconds: 3.5,
     chargedDamage: 1.35,
-    retreatDamage: 1.15,
     breakthroughPush: 48,
     trailRadius: 80,
     trailSpacing: 38,
@@ -562,7 +559,7 @@ export const GAME = {
   },
   oaths: {
     'oath-of-the-steppe': { speed: 8, mobility: 1.08 },
-    'oath-of-the-khan': { damage: 3, riderDamage: 1.1 },
+    'oath-of-the-khan': { damage: 3 },
     'oath-of-the-spirits': { spirit: 8, resolveRecovery: 0.12 },
   },
   projectile: { speed: 440, lifetime: 1.6, range: 440 },
@@ -639,7 +636,6 @@ export const GAME = {
       arrivalFood: 8,
       arrivalMaterials: 6,
       people: 4,
-      riderDamage: 1.15,
       wagonDamage: 1.15,
     },
     visualScale: 0.75,
@@ -653,7 +649,7 @@ export const GAME = {
     archery: {
       bowyers: { materials: 28, range: 30 },
       resin: { materials: 42, damage: 1.3 },
-      arban: { materials: 42, damage: 1.2, interval: 0.9 },
+      arban: { materials: 42, interval: 0.9 },
     },
     herd: {
       grazing: { materials: 24, depletion: 0.85 },
@@ -698,14 +694,14 @@ export const GAME = {
   },
   clan: {
     maxResolve: 100,
-    arrival: { resolve: 12, health: 25, ridgeSpirit: 10, refugeRiders: 2 },
+    arrival: { resolve: 12, health: 25, ridgeSpirit: 10 },
     protection: { guard: 0.7, feltArmor: 0.5, ancestralWard: 0.8 },
     resolveLossBand: 20,
     starts: {
       'shared-hearth': {
         food: 70,
         materials: 50,
-        riders: 0,
+        damage: 1,
         protection: 1,
         speed: 1,
         pickup: 1,
@@ -714,7 +710,7 @@ export const GAME = {
       outriders: {
         food: 45,
         materials: 45,
-        riders: 1,
+        damage: 1.15,
         protection: 1,
         speed: 1,
         pickup: 1,
@@ -723,7 +719,7 @@ export const GAME = {
       hearthkeepers: {
         food: 70,
         materials: 30,
-        riders: 0,
+        damage: 1,
         protection: 0.85,
         speed: 1,
         pickup: 1,
@@ -732,7 +728,7 @@ export const GAME = {
       pathfinders: {
         food: 55,
         materials: 40,
-        riders: 0,
+        damage: 1,
         protection: 1,
         speed: 1.07,
         pickup: 1.15,

@@ -51,7 +51,7 @@ describe('full expedition snapshots', () => {
     legacy.clan.campEffects.multipliers.wagonDamage = 20;
     const restored = decodeExpedition(save).run;
     expect(restored.stats).toEqual(run.stats);
-    expect(restored.clan.formation).toBe('guard');
+    expect(restored.clan).not.toHaveProperty('formation');
     expect(restored.clan.campEffects).toEqual(run.clan.campEffects);
     expect(restored.clan.nomadicCamp).toEqual(run.clan.nomadicCamp);
     expect(restored.clan.spirit).toBe(run.clan.spirit);
@@ -510,7 +510,6 @@ describe('full expedition snapshots', () => {
     run.xp = 7;
     run.khan.generation = 2;
     run.khan.trait = 'outrider';
-    run.combat.previous = { x: 2600, y: 2700 };
     const runtime = world();
     syncAreaEncounter(runtime.areaEncounter, run);
     const save = captureExpedition(run, runtime);
@@ -530,8 +529,6 @@ describe('full expedition snapshots', () => {
   it('moves legacy Orkhon actors into the wide terrain once and marks the new coordinates', () => {
     const run = createRun();
     run.clan.locationId = 'orkhon-valley';
-    run.combat.previous = { x: 2600, y: 2700 };
-    run.combat.heading = { x: 0, y: 1 };
     run.combat.trails = [{ x: 2500, y: 2500, remaining: 1 }];
     run.field.objective = {
       id: 1,
@@ -549,9 +546,6 @@ describe('full expedition snapshots', () => {
     runtime.hostileShots = [
       { ...structuredClone(runtime.projectiles[0]!), x: 0, y: 0, previous: { x: 0, y: 0 } },
     ];
-    runtime.riders = [
-      { x: 2400, y: 2500, flip: false, motion: structuredClone(runtime.player.motion) },
-    ];
     const save = captureExpedition(run, runtime);
     delete save.world.orkhonLayout;
     const restored = decodeExpedition(save);
@@ -566,11 +560,8 @@ describe('full expedition snapshots', () => {
     expect(first.hostileShots[0]).toMatchObject({ x: 50, y: 1224 });
     expect(first.hostileShots[0]!.previous).toEqual({ x: 50, y: 1224 });
     expect(first.gems[0]).toMatchObject({ x: 2650, y: 3720 });
-    expect(first.riders[0]).toMatchObject({ x: 2450, y: 3520 });
     expect(first.hazards[0]).toMatchObject({ x: 2750, y: 3720 });
     expect(first.areaThreats.threats[0]).toMatchObject({ x: 2750, y: 3820 });
-    expect(restored.run.combat.previous).toEqual({ x: 2650, y: 3720 });
-    expect(restored.run.combat.heading).toEqual({ x: 0, y: 1 });
     expect(restored.run.combat.trails[0]).toMatchObject({ x: 2550, y: 3520 });
     expect(restored.run.field.objective).toMatchObject({ x: 2850, y: 3920 });
     expect(first.facing).toEqual({ x: 0, y: 1 });

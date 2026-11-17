@@ -203,8 +203,6 @@ export function createTestHooks(
       ['combat.manual', scene['combat'], 'tickKhanCombat'],
       ['combat.projectiles', scene['combat'], 'updateProjectiles'],
       ['combat.gems', scene['combat'], 'collectGems'],
-      ['riders.fire', scene['riderHost'], 'fire'],
-      ['riders.update', scene['riderHost'], 'update'],
       ['spawns', scene['enemyDirector'], 'tickSpawns'],
       ['areaCombat', scene['areaCombat'], 'update'],
       ['hazards', scene['hazardSystem'], 'update'],

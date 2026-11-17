@@ -975,7 +975,7 @@ export class CombatSystem extends ArenaSystem {
     damageOrMultiplier: number,
     ancestral = false,
     charged = false,
-    owner: 'khan' | 'rider' | 'wagon' | 'wagon-ricochet' = 'rider',
+    owner: 'khan' | 'camp' | 'wagon' | 'wagon-ricochet' = 'camp',
     echoIndex?: number,
     ghost = false,
     origin?: Enemy,
@@ -1257,9 +1257,7 @@ export class CombatSystem extends ArenaSystem {
     for (const gem of this.gems.getChildren() as Gem[]) {
       if (!gem.active) continue;
       const distance = Phaser.Math.Distance.Between(gem.x, gem.y, this.player.x, this.player.y);
-      const retreat = this.run.clan.formation === 'retreat' && this.run.clan.momentum > 0.4;
-      if (distance < Math.max(this.run.stats.pickupRadius * (retreat ? 1.7 : 1), 0))
-        gem.attracted = true;
+      if (distance < Math.max(this.run.stats.pickupRadius, 0)) gem.attracted = true;
       if (!gem.attracted) continue;
       if (distance < 18) {
         experience += gem.value;
