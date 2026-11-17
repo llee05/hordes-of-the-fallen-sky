@@ -1,182 +1,52 @@
-/* The battlefield HUD: a painted manuscript laid over the steppe. Parchment leaves with
-   double vermilion rules, scroll-cut ribbon headers, calligraphic serif titles and ink
-   text share the character creator's palette so the fight and the ledger read as one book. */
+/* Battlefield annotations frame the painted world like notes in a steppe chronicle.
+   Parchment is a wash, not a dashboard: ornament is reserved for the clock and action plaque. */
 .game-hud {
   --hud-paper: #e8c98f;
-  --hud-paper-light: #f4dfb2;
-  --hud-paper-deep: #cfa86f;
-  --hud-ink: #30271f;
-  --hud-ink-soft: #6a4a34;
-  --hud-red: #9a4030;
-  --hud-red-dark: #66281f;
-  --hud-blue: #355e77;
-  --hud-gold: #d59b34;
-  --hud-sage: #5f7a5a;
+  --hud-paper-light: #f6e3ba;
+  --hud-paper-deep: #c99c62;
+  --hud-ink: #30251c;
+  --hud-ink-soft: #684a36;
+  --hud-red: #984433;
+  --hud-red-dark: #622a23;
+  --hud-blue: #365f78;
+  --hud-gold: #c99436;
+  --hud-sage: #637b55;
   --hud-serif: 'Cormorant Garamond', Georgia, serif;
   --hud-sans: 'DM Sans', sans-serif;
-  --hud-gap: 22px;
-  --hud-frame: 6px double rgba(38, 37, 31, 0.96);
-  --hud-parchment:
-    radial-gradient(ellipse at 12% 15%, rgba(255, 240, 201, 0.46), transparent 34%),
-    radial-gradient(ellipse at 84% 86%, rgba(112, 68, 36, 0.18), transparent 38%),
-    linear-gradient(105deg, rgba(244, 220, 174, 0.56), rgba(216, 179, 120, 0.52)),
+  --hud-gap: clamp(12px, 1.2vw, 24px);
+  --paper-wash:
+    radial-gradient(ellipse at 16% 18%, rgba(255, 244, 212, 0.55), transparent 48%),
+    linear-gradient(100deg, rgba(242, 218, 171, 0.95), rgba(221, 184, 125, 0.88)),
     url('/art/ui-felt.png') center / 220px;
   color: var(--hud-ink);
   font-family: var(--hud-sans);
 }
+
+.game-hud button:focus-visible,
+.game-hud summary:focus-visible {
+  outline: 2px solid var(--hud-red);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px rgba(229, 192, 117, 0.65);
+}
+
+.game-hud button:disabled {
+  opacity: 0.42;
+  filter: saturate(0.55);
+}
+
 .game-hud kbd {
   display: inline-block;
+  min-width: 18px;
   padding: 1px 4px;
-  border: 1px solid rgba(101, 43, 32, 0.6);
+  border: 1px solid rgba(98, 42, 35, 0.5);
   border-radius: 2px;
-  background: rgba(255, 243, 214, 0.85);
+  background: rgba(250, 233, 195, 0.74);
   color: var(--hud-red-dark);
-  font: 600 8px/1.3 var(--hud-sans);
-  letter-spacing: 0.4px;
-}
-.game-hud button:focus-visible {
-  outline: 2px solid var(--hud-red);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(213, 155, 52, 0.55);
+  font: 700 8px/1.25 var(--hud-sans);
+  letter-spacing: 0.35px;
+  text-align: center;
 }
 
-/* Parchment leaf with gilt inner rule and knotted corners. */
-.hud-surface {
-  position: absolute;
-  border: var(--hud-frame);
-  background: var(--hud-parchment);
-  box-shadow:
-    inset 0 0 0 2px rgba(124, 55, 39, 0.62),
-    inset 0 0 0 5px rgba(207, 164, 91, 0.58),
-    inset 0 0 20px rgba(71, 48, 31, 0.28),
-    0 4px 10px rgba(32, 20, 10, 0.46);
-}
-.hud-surface::before,
-.hud-surface::after {
-  content: '';
-  position: absolute;
-  z-index: 1;
-  width: 22px;
-  height: 22px;
-  border-color: var(--hud-red) var(--hud-blue) transparent transparent;
-  border-style: double;
-  border-width: 4px;
-  pointer-events: none;
-}
-.hud-surface::before {
-  top: 3px;
-  left: 3px;
-  transform: rotate(-90deg);
-}
-.hud-surface::after {
-  right: 3px;
-  bottom: 3px;
-  transform: rotate(90deg);
-}
-
-/* Scroll-cut ribbon header hanging over the top rule of its leaf. */
-.hud-ribbon {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: max-content;
-  max-width: calc(100% - 8px);
-  min-height: 24px;
-  margin: -17px auto 6px;
-  padding: 2px 22px 3px;
-  border: 4px double rgba(46, 44, 36, 0.94);
-  background:
-    radial-gradient(ellipse at 50% 20%, rgba(255, 239, 198, 0.72), transparent 58%),
-    linear-gradient(rgba(239, 207, 151, 0.84), rgba(213, 169, 108, 0.82)),
-    url('/art/ui-felt.png') center / 180px;
-  box-shadow:
-    inset 0 0 0 2px rgba(211, 157, 61, 0.55),
-    0 2px 3px rgba(74, 37, 23, 0.3);
-  clip-path: polygon(
-    8% 0,
-    92% 0,
-    96% 22%,
-    100% 50%,
-    96% 78%,
-    92% 100%,
-    8% 100%,
-    4% 78%,
-    0 50%,
-    4% 22%
-  );
-  color: var(--hud-ink);
-  font: 600 14px/1.1 var(--hud-serif);
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-.hud-ribbon > * {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.hud-ribbon > span {
-  color: var(--hud-red);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-}
-
-/* Painted meters: an ink channel with a pigment fill. */
-.track,
-.xp-track {
-  height: 6px;
-  overflow: hidden;
-  border: 1px solid rgba(101, 43, 32, 0.55);
-  background: rgba(78, 46, 24, 0.18);
-  box-shadow: inset 0 1px 1px rgba(58, 30, 14, 0.25);
-}
-.track > div,
-#xp-fill {
-  height: 100%;
-  width: 100%;
-  background-color: var(--hud-blue);
-  background-image: repeating-linear-gradient(
-    110deg,
-    rgba(255, 243, 195, 0.14) 0 2px,
-    transparent 2px 5px
-  );
-  transition: width 0.12s linear;
-}
-.health-track > div {
-  background-color: #b24d35;
-  background-image: linear-gradient(90deg, #c8623f, #9f432d);
-}
-.health-track > .low {
-  background-color: #7d1d12;
-  background-image: linear-gradient(90deg, #a8281a, #6a170f);
-  box-shadow: 0 0 6px rgba(168, 40, 26, 0.6);
-}
-.resolve-track > div {
-  background-color: var(--hud-blue);
-  background-image: linear-gradient(90deg, #4c7690, #2d4f66);
-}
-.pasture-track > div {
-  background-color: #8f9a5a;
-  background-image: linear-gradient(90deg, #a4ad66, #76834b);
-}
-.threat-track > div {
-  width: 0;
-  background-color: #7b3a2a;
-  background-image: linear-gradient(90deg, #9a4030, #66281f);
-}
-.track > .low {
-  background-color: #a8281a;
-  background-image: linear-gradient(90deg, #c23b2a, #8a1f13);
-}
-#xp-fill {
-  width: 0;
-  background-color: var(--hud-gold);
-  background-image: linear-gradient(90deg, #e2ad4a, #bf8426);
-}
-
-/* Shared brass glyphs sit in ink on parchment. */
 .game-hud .clan-mark {
   display: block;
   width: 1em;
@@ -184,66 +54,138 @@
   flex-shrink: 0;
   pointer-events: none;
 }
-.resource-icon,
-.command-icon,
-.dash-symbol,
-.hud-menu-button > span {
-  display: inline-flex;
-  flex-shrink: 0;
-  color: var(--hud-red-dark);
-  filter: drop-shadow(0 1px 0 rgba(255, 240, 200, 0.5));
+
+/* Conditional decision leaves may still interrupt the margin annotations. */
+.hud-surface {
+  position: absolute;
+  border: 2px solid rgba(73, 48, 31, 0.85);
+  outline: 1px solid rgba(150, 68, 49, 0.75);
+  outline-offset: -5px;
+  background: var(--paper-wash);
+  box-shadow: 0 4px 13px rgba(38, 23, 13, 0.42);
 }
 
-/* ---------- Top left: the clan ledger, the bearing and the guide's note flow as one column ---------- */
+/* Painted meters are fine manuscript rules rather than widgets. */
+.track,
+.xp-track {
+  height: 5px;
+  overflow: hidden;
+  border-block: 1px solid rgba(72, 45, 27, 0.65);
+  background: rgba(74, 46, 28, 0.2);
+}
+
+.track > div,
+#xp-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--hud-blue);
+}
+
+.health-track > div {
+  background: linear-gradient(90deg, #be6545, #8e3528);
+}
+
+.health-track > .low,
+.track > .low {
+  background: linear-gradient(90deg, #bc3724, #761c16);
+  box-shadow: 0 0 5px rgba(142, 35, 24, 0.55);
+}
+
+.resolve-track > div {
+  background: linear-gradient(90deg, #557f91, #2e5368);
+}
+
+.pasture-track > div {
+  background: linear-gradient(90deg, #a3a869, #73804d);
+}
+
+.threat-track > div {
+  width: 0;
+  background: linear-gradient(90deg, #a24a36, #6d2b22);
+}
+
+#xp-fill {
+  width: 0;
+  background: linear-gradient(90deg, #e2b557, #b77c25);
+}
+
+/* Top left: one resource annotation with details unfolding from its lower rule. */
 .ledger-column {
   position: absolute;
   left: var(--hud-gap);
   top: var(--hud-gap);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  width: 540px;
+  width: clamp(360px, 27vw, 500px);
 }
+
 .resource-hud {
   position: relative;
   width: 100%;
-  padding: 12px 14px 11px;
+  padding: 7px 12px 9px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(244, 220, 174, 0.94) 0%,
+      rgba(231, 199, 145, 0.82) 84%,
+      transparent
+    ),
+    url('/art/ui-felt.png') left center / 210px;
+  border-block: 1px solid rgba(67, 43, 28, 0.7);
+  box-shadow: 0 2px 4px rgba(46, 29, 17, 0.22);
+  clip-path: polygon(0 0, 97% 0, 100% 45%, 97% 100%, 0 100%);
+  transition: opacity 180ms ease;
 }
+
+.resource-hud::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 4%;
+  bottom: 2px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--hud-red), var(--hud-blue) 48%, transparent 92%);
+  opacity: 0.7;
+}
+
 .resource-row {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  padding-top: 5px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
+
 .resource {
   min-width: 0;
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-columns: 25px minmax(0, 1fr);
   grid-template-rows: auto auto;
   align-items: center;
   column-gap: 3px;
-  padding-inline: 4px;
-  border-right: 1px solid rgba(101, 43, 32, 0.28);
+  padding: 0 7px;
 }
-.resource:last-child {
-  border-right: 0;
+
+.resource + .resource {
+  border-left: 1px solid rgba(98, 63, 39, 0.25);
 }
+
 .resource-icon {
   grid-row: 1 / 3;
-  font-size: 24px;
+  display: inline-flex;
   color: var(--hud-red-dark);
-  filter: drop-shadow(0 1px 0 rgba(255, 240, 200, 0.7)) drop-shadow(0 1px 1px rgba(61, 38, 24, 0.3));
+  font-size: 24px;
+  filter: drop-shadow(0 1px rgba(255, 239, 198, 0.7));
 }
+
 .resource-herd .resource-icon,
 .resource-materials .resource-icon {
-  color: #765136;
+  color: #765138;
 }
+
 .resource-food .resource-icon {
-  color: #877a37;
+  color: #7b7337;
 }
+
 .resource-spirit .resource-icon {
   color: var(--hud-blue);
 }
+
 .resource-label {
   overflow: hidden;
   color: var(--hud-ink-soft);
@@ -253,591 +195,724 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
+
 .resource strong {
   display: inline-block;
-  font: 600 21px/1 var(--hud-serif);
-  font-variant-numeric: tabular-nums;
   color: var(--hud-ink);
-}
-.resource strong.danger {
-  color: var(--hud-red);
-}
-.economy-hud {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 4px 10px;
-  margin: 5px 0 0;
-  padding: 5px 0 0;
-  border-top: 1px solid rgba(101, 43, 32, 0.3);
-  font: 500 10.5px/1.4 var(--hud-sans);
-  color: var(--hud-ink-soft);
+  font: 600 20px/0.95 var(--hud-serif);
   font-variant-numeric: tabular-nums;
 }
+
+.resource strong.danger,
 .economy-hud .danger {
   color: var(--hud-red);
-  font-weight: 600;
 }
+
 .hud-disclosure {
   position: absolute;
-  right: 6px;
-  bottom: 5px;
+  z-index: 4;
+  right: 8px;
+  bottom: -9px;
   width: 20px;
   height: 20px;
   padding: 0;
-  border: 1px solid rgba(101, 43, 32, 0.55);
+  border: 1px solid rgba(83, 49, 30, 0.65);
   border-radius: 50%;
-  background: rgba(255, 243, 214, 0.8);
+  background: #ecd09a url('/art/ui-felt.png') center / 110px;
   color: var(--hud-red-dark);
-  font: 600 10px/1 var(--hud-serif);
+  font: 700 10px/1 var(--hud-serif);
 }
-.resource-hud > .hud-disclosure {
-  right: -10px;
-  bottom: -10px;
-}
+
 .hud-disclosure::before {
-  content: '▾';
+  content: '⌄';
 }
+
 .hud-disclosure[aria-expanded='true']::before {
-  content: '▴';
+  content: '⌃';
 }
+
 .hud-disclosure:hover {
-  background: var(--hud-gold);
+  background-color: #d8ab58;
 }
+
 .clan-details {
-  display: grid;
-  gap: 3px;
-  margin: 7px 22px 0 0;
-  padding-top: 6px;
-  border-top: 1px dashed rgba(101, 43, 32, 0.35);
-  font: 500 10.5px/1.4 var(--hud-sans);
+  position: relative;
+  margin: 7px 22px -2px 0;
+  padding: 7px 9px 4px;
+  border-top: 1px dashed rgba(94, 58, 35, 0.42);
   color: var(--hud-ink-soft);
+  font: 500 10px/1.35 var(--hud-sans);
 }
+
 .clan-details > strong {
-  font: 600 13px/1.2 var(--hud-serif);
   color: var(--hud-ink);
+  font: italic 600 13px/1.2 var(--hud-serif);
 }
-.clan-details b {
-  font-weight: 600;
-  color: var(--hud-ink);
-}
+
+.economy-hud,
 .host-summary {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
 }
 
-/* ---------- Top centre: the hour ---------- */
+.economy-hud {
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.host-summary {
+  margin-top: 2px;
+}
+
+.clan-details b {
+  color: var(--hud-ink);
+}
+
+.clan-bearing {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  width: max-content;
+  padding-left: 8px;
+  color: var(--hud-red-dark);
+  font: 700 8px/1.3 var(--hud-sans);
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  text-shadow: 0 1px rgba(250, 229, 183, 0.9);
+  opacity: 0;
+}
+
+.clan-bearing::before {
+  content: '◆';
+  margin-right: 5px;
+  color: var(--hud-gold);
+  font-size: 7px;
+}
+
+.clan-bearing:empty {
+  display: none;
+}
+
+.game-hud[data-context='exploration'] .clan-bearing {
+  opacity: 1;
+}
+
+/* Top centre: a small painted time cartouche and the only cloud ornament at this edge. */
 .expedition-clock {
   position: absolute;
   z-index: 2;
   left: 50%;
-  top: 13px;
+  top: 8px;
+  width: 170px;
+  padding: 5px 20px 7px;
   transform: translateX(-50%);
-  width: max-content;
-  min-width: 220px;
-  padding: 7px 36px 8px;
+  border: 1px solid rgba(80, 51, 31, 0.7);
+  border-top: 0;
+  border-radius: 0 0 13px 13px;
+  background: var(--paper-wash);
+  box-shadow: 0 2px 5px rgba(42, 27, 17, 0.25);
   text-align: center;
-  border: var(--hud-frame);
-  background: var(--hud-parchment);
-  box-shadow:
-    inset 0 0 0 2px rgba(124, 55, 39, 0.48),
-    inset 0 0 0 4px rgba(207, 164, 91, 0.48),
-    0 3px 9px rgba(32, 20, 10, 0.4);
-  border-radius: 3px 3px 14px 14px;
 }
+
 .expedition-clock::before,
 .expedition-clock::after {
   content: '';
   position: absolute;
   z-index: -1;
-  top: 4px;
-  width: 104px;
-  height: 72px;
+  top: 3px;
+  width: 74px;
+  height: 54px;
   background: url('/art/hud-cloud-scroll.webp') center / contain no-repeat;
-  filter: drop-shadow(0 2px 2px rgba(45, 33, 23, 0.35));
+  opacity: 0.85;
   pointer-events: none;
 }
+
 .expedition-clock::before {
-  left: -86px;
-  transform: rotate(-8deg);
+  left: -58px;
+  transform: rotate(-7deg);
 }
+
 .expedition-clock::after {
-  right: -86px;
-  transform: scaleX(-1) rotate(-8deg);
+  right: -58px;
+  transform: scaleX(-1) rotate(-7deg);
 }
+
 .expedition-clock strong {
   display: block;
-  font: 600 34px/0.92 var(--hud-serif);
+  color: var(--hud-ink);
+  font: 600 25px/0.9 var(--hud-serif);
   font-variant-numeric: tabular-nums;
   letter-spacing: 1px;
-  color: var(--hud-ink);
 }
+
 .expedition-clock > span {
   display: block;
   margin-top: 3px;
-  font: 600 8.5px/1.2 var(--hud-sans);
-  letter-spacing: 1.4px;
   color: var(--hud-red-dark);
+  font: 700 7px/1.1 var(--hud-sans);
+  letter-spacing: 1.2px;
 }
 
-/* ---------- Top right: the book and the pause ---------- */
+/* Menu routes are painted marks in one quiet cluster, not two framed cards. */
 .hud-menu {
   position: absolute;
+  z-index: 5;
   top: var(--hud-gap);
   right: var(--hud-gap);
   display: flex;
-  gap: 8px;
-}
-.hud-menu-button {
-  width: 50px;
-  height: 54px;
-  display: grid;
-  justify-items: center;
-  align-content: center;
   gap: 3px;
-  padding: 0;
-  border: var(--hud-frame);
-  background: var(--hud-parchment);
-  box-shadow:
-    inset 0 0 0 2px rgba(201, 145, 52, 0.42),
-    0 3px 9px rgba(32, 20, 10, 0.4);
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(96, 56, 33, 0.5);
 }
+
+.hud-menu::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  right: -2px;
+  bottom: 0;
+  height: 4px;
+  background: url('/art/ui-braid.svg') repeat-x center / 40px 7px;
+  opacity: 0.52;
+  pointer-events: none;
+}
+
+.hud-menu-button {
+  display: grid;
+  width: 40px;
+  height: 38px;
+  place-items: center;
+  padding: 1px 0 0;
+  border: 0;
+  background: transparent;
+  color: var(--hud-red-dark);
+  filter: drop-shadow(0 1px rgba(247, 223, 173, 0.9));
+}
+
 .hud-menu-button > span {
-  font-size: 25px;
+  display: inline-flex;
+  grid-area: 1 / 1;
+  font-size: 24px;
 }
+
+.hud-menu-button kbd {
+  grid-area: 1 / 1;
+  align-self: end;
+  transform: translateY(7px);
+}
+
 .hud-menu-button:first-child > span {
-  width: 29px;
-  height: 29px;
+  width: 27px;
+  height: 27px;
   background: url('/art/ui-icon-journal.png') center / contain no-repeat;
 }
+
 .hud-menu-button:first-child > span .clan-mark {
   opacity: 0;
 }
+
 .hud-menu-button:hover {
-  background-color: var(--hud-gold);
+  color: var(--hud-red);
+  filter: drop-shadow(0 1px rgba(247, 223, 173, 0.9)) drop-shadow(0 0 4px rgba(199, 146, 57, 0.65));
 }
 
-/* ---------- The objective leaf ---------- */
+/* Top right: one current-objective leaf, fading into the world on its open edge. */
 .objective-hud {
-  top: 94px;
+  position: absolute;
+  z-index: 2;
+  top: 72px;
   right: var(--hud-gap);
-  width: 340px;
-  min-height: 126px;
-  padding: 14px 15px 48px;
+  width: clamp(270px, 19vw, 330px);
+  min-height: 98px;
+  padding: 9px 18px 34px 14px;
+  border-block: 1px solid rgba(75, 46, 28, 0.7);
+  border-right: 1px solid rgba(75, 46, 28, 0.58);
+  background:
+    linear-gradient(96deg, transparent, rgba(239, 209, 155, 0.86) 16%, rgba(238, 209, 157, 0.93)),
+    url('/art/ui-felt.png') right center / 220px;
+  box-shadow: 2px 3px 6px rgba(43, 27, 17, 0.2);
+  clip-path: polygon(5% 0, 100% 0, 100% 100%, 3% 100%, 0 86%, 3% 68%, 1% 42%);
+  transition: opacity 180ms ease;
 }
+
 .objective-heading {
-  width: calc(100% + 16px);
-  max-width: none;
+  display: flex;
   justify-content: space-between;
-  padding-inline: 18px;
+  gap: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(153, 66, 48, 0.58);
+  color: var(--hud-red-dark);
+  text-transform: uppercase;
 }
+
 .objective-heading strong {
-  flex: 1;
-  font: 600 12px/1.1 var(--hud-serif);
-  letter-spacing: 0.04em;
-  color: var(--hud-ink);
+  overflow: hidden;
+  font: 700 10px/1.2 var(--hud-serif);
+  letter-spacing: 0.07em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.objective-heading > span {
+
+.objective-heading span {
   flex-shrink: 0;
-  font-size: 10px;
+  font: 700 7px/1.2 var(--hud-sans);
+  letter-spacing: 0.8px;
 }
+
 .objective-text {
-  margin: 2px 0 0;
-  padding-right: 18px;
-  font: 600 italic 16px/1.3 var(--hud-serif);
+  margin-top: 6px;
+  padding-right: 22px;
   color: var(--hud-ink);
+  font: italic 600 16px/1.22 var(--hud-serif);
 }
+
 .objective-vignette {
   position: absolute;
-  z-index: 0;
-  right: 20px;
-  bottom: 4px;
-  width: 112px;
-  height: 48px;
-  opacity: 0.82;
+  right: 15px;
+  bottom: -5px;
+  width: 96px;
+  height: 44px;
   overflow: hidden;
+  opacity: 0.68;
   pointer-events: none;
 }
+
 .objective-vignette::before {
   content: '';
   position: absolute;
-  right: 48px;
-  bottom: -12px;
-  width: 96px;
-  height: 66px;
+  right: 35px;
+  bottom: -16px;
+  width: 79px;
+  height: 57px;
   background: url('/art/hud-cloud-scroll.webp') center / contain no-repeat;
-  opacity: 0.88;
+  opacity: 0.72;
 }
+
 .objective-vignette .camp-illustration {
   position: absolute;
   z-index: 1;
   right: 0;
-  bottom: -8px;
-  width: 76px;
-  height: 62px;
-  filter: sepia(0.2) saturate(0.8) contrast(0.92);
+  bottom: -9px;
+  width: 62px;
+  height: 55px;
+  filter: sepia(0.2) saturate(0.75) contrast(0.92);
 }
+
 .objective-hud > .hud-disclosure {
-  z-index: 3;
+  right: 8px;
+  bottom: -8px;
 }
-.objective-details {
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px dashed rgba(101, 43, 32, 0.35);
-}
+
+.meter-row,
 .pressure-row {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
-  margin-top: 9px;
-  font: 600 8.5px/1.2 var(--hud-sans);
-  letter-spacing: 0.9px;
-  text-transform: uppercase;
+  gap: 8px;
   color: var(--hud-ink-soft);
+  font: 700 7px/1.2 var(--hud-sans);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
+
+.meter-row {
+  margin: 7px 0 3px;
+}
+
+.pressure-row {
+  margin-top: 7px;
+}
+
+.meter-row b,
 .pressure-row b {
-  margin-left: 3px;
-  font-weight: 600;
   color: var(--hud-ink);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+.objective-details {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(99, 59, 35, 0.42);
+}
+
 .pressure-tracks {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 5px;
+  gap: 10px;
+  margin-top: 3px;
 }
-.meter-row {
-  display: flex;
-  justify-content: space-between;
-  margin: 10px 0 5px;
-  font: 600 8.5px/1.2 var(--hud-sans);
-  letter-spacing: 0.9px;
-  text-transform: uppercase;
-  color: var(--hud-ink-soft);
-}
-.meter-row b {
-  font-weight: 600;
-  color: var(--hud-ink);
-}
+
 .objective-hint {
-  margin: 8px 0 0;
-  font: 600 italic 12.5px/1.4 var(--hud-serif);
+  margin-top: 6px;
   color: var(--hud-ink-soft);
+  font: italic 600 11px/1.3 var(--hud-serif);
 }
+
 .field-status {
-  margin: 5px 0 0;
-  padding-left: 11px;
-  text-indent: -11px;
-  font: 500 10.5px/1.4 var(--hud-sans);
+  margin-top: 4px;
+  padding-left: 9px;
   color: var(--hud-ink-soft);
+  font: 500 9px/1.3 var(--hud-sans);
+  text-indent: -9px;
 }
+
 .field-status::before {
-  content: '❖ ';
+  content: '◆ ';
   color: var(--hud-gold);
-  font-size: 7px;
-  vertical-align: 2px;
+  font-size: 6px;
+  vertical-align: 1px;
 }
-.field-status:first-of-type,
-.objective-hint + .field-status {
-  margin-top: 8px;
-  padding-top: 7px;
-  border-top: 1px dashed rgba(101, 43, 32, 0.35);
-}
+
 .major-loss,
 .clan-warning {
-  margin: 8px 0 0;
-  padding: 6px 8px;
-  border: 1px solid rgba(154, 64, 48, 0.75);
-  border-left: 3px solid var(--hud-red);
-  background: rgba(154, 64, 48, 0.1);
+  margin: 6px 0 0;
+  padding: 4px 7px;
+  border-left: 2px solid var(--hud-red);
+  background: rgba(153, 67, 49, 0.12);
   color: var(--hud-red-dark);
-  font: 500 11px/1.4 var(--hud-sans);
+  font: 600 9px/1.35 var(--hud-sans);
 }
 
-/* Before the Blue Banner camp exists, the prologue is about the rider rather than an economy. */
-.game-hud.prologue-unestablished .resource-hud,
-.game-hud.prologue-unestablished .pressure-row,
-.game-hud.prologue-unestablished .pressure-tracks,
-.game-hud.prologue-unestablished #camp-pressure,
-.game-hud.prologue-unestablished #clan-losses,
-.game-hud.prologue-unestablished #encounter-status,
-.game-hud.prologue-unestablished #clan-warning,
-.game-hud.prologue-unestablished #clan-bearing,
-.game-hud.prologue-unestablished #objective-disclosure,
-.game-hud.prologue-unestablished .command-dock,
-.game-hud.prologue-unestablished .dock-rule {
-  display: none;
-}
-
-/* ---------- The guide's note ---------- */
+/* Contextual teaching is a margin note. Later notes remain collapsed in native details. */
 .field-guide {
   position: relative;
-  width: 260px;
-  margin-top: 6px;
-  padding: 10px 12px 9px;
+  width: min(275px, 100%);
+  margin-top: 8px;
+  padding: 6px 11px 7px 14px;
+  border-left: 2px solid rgba(152, 67, 50, 0.76);
+  background: linear-gradient(
+    90deg,
+    rgba(243, 218, 171, 0.9),
+    rgba(234, 204, 151, 0.65) 78%,
+    transparent
+  );
+  color: var(--hud-ink);
   pointer-events: auto;
+  filter: drop-shadow(0 2px 2px rgba(43, 27, 17, 0.18));
 }
+
+.field-guide::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  bottom: 4px;
+  border-left: 1px solid rgba(54, 95, 120, 0.55);
+}
+
 .field-guide .eyebrow {
-  margin: 0 0 3px;
-  font: 600 8.5px/1.2 var(--hud-sans);
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
+  margin-bottom: 1px;
   color: var(--hud-red);
+  font: 700 7px/1.2 var(--hud-sans);
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
+
 .guide-details > summary {
   display: block;
   position: relative;
-  padding-right: 18px;
+  padding-right: 15px;
   cursor: pointer;
-  font: 600 17px/1.15 var(--hud-serif);
   color: var(--hud-ink);
+  font: italic 600 14px/1.15 var(--hud-serif);
 }
-.guide-details > summary::after {
-  content: '▾';
-  position: absolute;
-  right: 2px;
-  color: var(--hud-red-dark);
-}
-.guide-details[open] > summary::after {
-  content: '▴';
-}
+
 .guide-details > summary::-webkit-details-marker {
   display: none;
 }
-.guide-copy {
-  margin: 5px 0 6px;
-  font: 500 10.5px/1.45 var(--hud-sans);
-  color: var(--hud-ink-soft);
+
+.guide-details > summary::after {
+  content: '⌄';
+  position: absolute;
+  right: 0;
+  color: var(--hud-red-dark);
 }
+
+.guide-details[open] > summary::after {
+  content: '⌃';
+}
+
+.guide-copy {
+  margin: 4px 0;
+  color: var(--hud-ink-soft);
+  font: 500 9.5px/1.38 var(--hud-sans);
+}
+
 .guide-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 14px;
-  margin-top: 6px;
+  gap: 4px 13px;
+  margin-top: 4px;
 }
+
 .guide-actions button {
-  padding: 2px 0;
+  padding: 1px 0;
   border: 0;
-  border-bottom: 1px solid rgba(154, 64, 48, 0.6);
+  border-bottom: 1px solid rgba(151, 67, 49, 0.48);
   background: transparent;
   color: var(--hud-red-dark);
-  font: 600 11px/1.3 var(--hud-sans);
+  font: 700 9px/1.25 var(--hud-sans);
 }
+
 .guide-actions button:last-child {
   color: var(--hud-ink-soft);
-  border-bottom-color: rgba(101, 43, 32, 0.4);
-}
-.guide-actions button:hover {
-  color: var(--hud-red);
+  border-bottom-color: rgba(83, 54, 35, 0.34);
 }
 
-/* Small ink notes without a frame. */
-.clan-bearing,
-.synergy {
-  position: relative;
-  padding: 3px 9px;
-  border: 1px solid rgba(101, 43, 32, 0.5);
-  background: rgba(246, 228, 191, 0.9);
-  color: var(--hud-red-dark);
-  font: 600 8.5px/1.3 var(--hud-sans);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-.clan-bearing:empty {
-  display: none;
-}
-.synergy {
-  position: absolute;
-  left: var(--hud-gap);
-  bottom: 150px;
-  background: rgba(154, 64, 48, 0.92);
-  border-color: var(--hud-gold);
-  color: #f9e6bd;
-}
-
-/* ---------- Bottom left: the Khan ---------- */
+/* Bottom left: level, health, resolve, Breath and class resource share one annotation. */
 .khan-hud {
   position: absolute;
+  z-index: 3;
   left: var(--hud-gap);
   bottom: var(--hud-gap);
-  width: 280px;
+  width: clamp(225px, 16vw, 285px);
+  transition: opacity 180ms ease;
 }
-.tradition-hud {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr;
-  align-items: center;
-  gap: 2px 10px;
-  width: 82%;
-  margin: 0 auto -2px;
-  padding: 4px 10px 5px;
-  border: 3px double rgba(101, 43, 32, 0.9);
-  border-bottom: 0;
-  background:
-    linear-gradient(rgba(239, 207, 151, 0.82), rgba(218, 177, 116, 0.78)),
-    url('/art/ui-felt.png') center / 180px;
-  box-shadow: inset 0 0 0 2px rgba(211, 157, 61, 0.45);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-}
-.tradition-hud > span {
-  font: 600 10px/1.2 var(--hud-sans);
-  letter-spacing: 1px;
-  color: var(--hud-red-dark);
-}
-.tradition-hud > small {
-  font: 600 8px/1.2 var(--hud-sans);
-  letter-spacing: 0.8px;
-  color: var(--hud-ink-soft);
-  text-align: right;
-}
-.tradition-hud b {
-  font-weight: 600;
-  color: var(--hud-ink);
-}
-.xp-track {
-  grid-column: 1 / -1;
-  height: 4px;
-}
+
 .vitals-hud {
   position: relative;
   width: 100%;
-  padding: 10px 12px 9px;
+  padding: 7px 12px 8px 15px;
+  border-left: 2px solid rgba(151, 67, 49, 0.78);
+  border-block: 1px solid rgba(72, 46, 29, 0.65);
+  background:
+    linear-gradient(90deg, rgba(242, 215, 168, 0.94), rgba(231, 196, 138, 0.76) 88%, transparent),
+    url('/art/ui-felt.png') left center / 200px;
+  box-shadow: 0 2px 5px rgba(41, 26, 16, 0.2);
+  clip-path: polygon(0 0, 96% 0, 100% 11%, 97% 34%, 100% 67%, 96% 100%, 0 100%);
 }
+
 .vitals-hud::before {
   content: '';
   position: absolute;
-  z-index: 2;
-  left: -65px;
-  top: 50%;
-  width: 140px;
-  height: 14px;
-  border: 1px solid rgba(47, 44, 35, 0.85);
-  background: url('/art/ui-braid.svg') repeat-x center / 84px 14px;
-  box-shadow: 0 1px 2px rgba(46, 28, 17, 0.4);
-  transform: translateY(-50%) rotate(-90deg);
-  pointer-events: none;
+  left: 4px;
+  top: 5px;
+  bottom: 5px;
+  border-left: 1px solid rgba(54, 95, 120, 0.62);
 }
+
+.tradition-hud {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+  color: var(--hud-red-dark);
+  font: 700 8px/1 var(--hud-sans);
+  letter-spacing: 0.7px;
+}
+
+.tradition-hud b {
+  color: var(--hud-ink);
+}
+
+.xp-track {
+  height: 3px;
+}
+
 .health-heading {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 5px;
-  font: 600 11px/1.2 var(--hud-serif);
-  letter-spacing: 0.1em;
+  margin: 4px 0 3px;
   color: var(--hud-ink);
+  font: 700 9px/1.1 var(--hud-serif);
+  letter-spacing: 0.08em;
 }
+
 .health-heading b {
-  display: inline-block;
-  font-weight: 600;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.clan-health {
-  margin-top: 9px;
-  font-size: 10px;
-  color: var(--hud-blue);
-}
-.resolve-track {
+
+.health-track {
   height: 5px;
 }
-.vital-stats {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 4px 8px;
-  margin-top: 9px;
-  font: 600 8px/1.3 var(--hud-sans);
-  letter-spacing: 0.7px;
-  color: var(--hud-ink-soft);
-}
-.vital-stats b {
-  font-weight: 600;
-  color: var(--hud-ink);
-}
-#spirit-energy {
-  flex: 1 0 100%;
-  padding-top: 5px;
-  border-top: 1px dashed rgba(53, 94, 119, 0.5);
+
+.clan-health {
   color: var(--hud-blue);
 }
+
+.resolve-track {
+  height: 4px;
+}
+
+.breath-heading {
+  margin: 5px 0 3px;
+}
+
+.class-resource {
+  margin-top: 6px;
+  font-size: 7px;
+}
+
+.resource-beads {
+  gap: 2px;
+}
+
+.resource-beads i {
+  max-width: 11px;
+}
+
 .khan-succession {
   display: grid;
   gap: 2px;
-  margin-top: 8px;
-  padding-top: 7px;
-  border-top: 1px dashed rgba(101, 43, 32, 0.4);
-  font: 500 11px/1.35 var(--hud-sans);
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px dashed rgba(97, 56, 34, 0.45);
   color: var(--hud-red-dark);
-}
-.khan-succession strong {
-  font: 600 15px/1.2 var(--hud-serif);
-}
-.vitals-hud.choosing-khan {
-  border-color: var(--hud-red);
+  font: 600 10px/1.3 var(--hud-sans);
 }
 
-/* ---------- Bottom centre: the saddle bar ---------- */
+.khan-succession strong {
+  font: 700 14px/1.15 var(--hud-serif);
+}
+
+.vitals-hud.choosing-khan {
+  border-left-color: #b52f21;
+  box-shadow: 0 0 9px rgba(157, 44, 32, 0.34);
+}
+
+/* Bottom centre: one continuous illustrated plaque for every immediate action. */
 .action-dock {
+  position: absolute;
+  z-index: 4;
   left: 50%;
-  bottom: var(--hud-gap);
-  transform: translateX(-50%);
+  bottom: max(8px, calc(var(--hud-gap) - 7px));
   display: flex;
   align-items: stretch;
-  gap: 6px;
-  padding: 13px 7px;
-  border-color: rgba(39, 48, 45, 0.96);
-  box-shadow:
-    inset 0 0 0 2px rgba(148, 69, 49, 0.68),
-    inset 0 0 0 4px rgba(211, 168, 91, 0.58),
-    0 4px 10px rgba(32, 20, 10, 0.45);
+  gap: 0;
+  min-height: 72px;
+  max-width: calc(100% - 570px);
+  padding: 9px 24px 10px;
+  transform: translateX(-50%);
+  background-image:
+    url('/art/ui-plaque-left.png'), url('/art/ui-plaque-right.png'),
+    url('/art/ui-plaque-middle.png');
+  background-position:
+    left center,
+    right center,
+    center;
+  background-repeat: no-repeat;
+  background-size:
+    auto 100%,
+    auto 100%,
+    calc(100% - 78px) 100%;
+  filter: drop-shadow(0 3px 4px rgba(40, 24, 14, 0.42));
+  transition: filter 180ms ease;
 }
-.action-dock::before,
+
 .action-dock::after {
   content: '';
   position: absolute;
-  z-index: 2;
-  left: 4px;
-  width: calc(100% - 8px);
-  height: 8px;
-  border: 0;
-  background: url('/art/ui-braid.svg') repeat-x center / 48px 8px;
-  transform: none;
+  left: 40px;
+  right: 40px;
+  bottom: 7px;
+  height: 5px;
+  background: url('/art/ui-braid.svg') repeat-x center / 40px 7px;
+  opacity: 0.58;
   pointer-events: none;
 }
-.action-dock::before {
-  top: 2px;
+
+.dock-rule {
+  align-self: stretch;
+  width: 1px;
+  margin: 3px 5px 7px;
+  background: linear-gradient(transparent, rgba(99, 57, 34, 0.55) 18% 82%, transparent);
 }
-.action-dock::after {
-  right: auto;
-  bottom: 2px;
+
+.dash-button,
+.command-button {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: var(--hud-ink);
 }
+
+.dash-button {
+  display: grid;
+  grid-template-columns: 42px auto;
+  align-items: center;
+  gap: 2px;
+  width: 112px;
+  min-height: 50px;
+  padding: 2px 5px 7px 0;
+  text-align: left;
+}
+
+.dash-rider {
+  display: block;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dash-rider .camp-illustration {
+  width: 100%;
+  height: 100%;
+  filter: sepia(0.15) saturate(0.78) contrast(0.95) drop-shadow(0 1px 1px rgba(55, 35, 22, 0.3));
+}
+
+.dash-button strong {
+  display: block;
+  font: 700 11px/1.05 var(--hud-serif);
+  letter-spacing: 0.07em;
+}
+
+.dash-button small {
+  display: block;
+  margin-top: 2px;
+  color: var(--hud-ink-soft);
+  font: 700 6.5px/1.2 var(--hud-sans);
+  letter-spacing: 0.4px;
+}
+
+.dash-charge {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  bottom: 7px;
+  width: calc(100% - 6px);
+  height: 2px;
+  background: var(--hud-gold);
+}
+
+.dash-button:hover:not(:disabled),
+.command-button:hover:not(:disabled) {
+  background: radial-gradient(ellipse, rgba(210, 158, 68, 0.22), transparent 72%);
+}
+
 .ability-dock {
   display: grid;
-  grid-template-columns: repeat(4, 138px);
-  gap: 4px;
+  grid-template-columns: repeat(4, minmax(92px, 118px));
+  min-width: 0;
 }
+
 .ability-indicator {
   position: relative;
   min-width: 0;
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-columns: 34px minmax(0, 1fr);
   align-items: center;
-  gap: 5px;
-  padding: 4px 6px 4px 4px;
-  border: 1px solid rgba(101, 43, 32, 0.5);
-  background: rgba(255, 243, 214, 0.55);
+  gap: 4px;
+  padding: 3px 7px 9px;
 }
+
+.ability-indicator + .ability-indicator {
+  border-left: 1px solid rgba(99, 58, 35, 0.28);
+}
+
 .ability-icon {
-  width: 32px;
-  height: 38px;
-  flex: 0 0 32px;
+  width: 34px;
+  height: 39px;
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-  filter: sepia(0.14) saturate(0.86) drop-shadow(0 1px 1px rgba(62, 36, 21, 0.24));
+  filter: sepia(0.12) saturate(0.86) drop-shadow(0 1px 1px rgba(61, 37, 22, 0.24));
 }
+
 .ability-icon-q {
   background-image: url('/art/ui-icon-bow.png');
 }
@@ -850,70 +925,74 @@
 .ability-icon-r {
   background-image: url('/art/ui-icon-knot.png');
 }
+
 .ability-indicator kbd {
   position: absolute;
   z-index: 2;
-  top: 3px;
-  left: 3px;
-  font-size: 10px;
-  padding: 2px 5px;
+  left: 5px;
+  top: 2px;
 }
+
 .ability-indicator .ability-cost {
   position: absolute;
   z-index: 2;
-  top: 3px;
-  right: 3px;
+  top: 2px;
+  right: 5px;
 }
+
 .ability-copy,
 .ability-indicator strong,
 .ability-indicator small {
-  min-width: 0;
   display: block;
+  min-width: 0;
 }
+
 .ability-indicator strong {
-  padding-right: 24px;
-  white-space: normal;
-  font: 600 11.5px/1.05 var(--hud-serif);
+  padding-right: 17px;
   color: var(--hud-ink);
+  font: 700 10px/1.05 var(--hud-serif);
 }
+
 .ability-indicator small {
-  margin-top: 1px;
-  font: 600 7.5px/1.2 var(--hud-sans);
-  letter-spacing: 0.6px;
+  margin-top: 2px;
   color: var(--hud-ink-soft);
+  font: 700 6.5px/1.15 var(--hud-sans);
+  letter-spacing: 0.35px;
 }
+
 .ability-indicator.cooling {
-  opacity: 0.55;
+  opacity: 0.52;
 }
-.dock-rule {
-  width: 0;
-  border-left: 3px double rgba(101, 43, 32, 0.6);
-}
+
 .command-dock {
   display: flex;
-  gap: 4px;
+  min-width: 0;
 }
+
 .command-button {
-  position: relative;
-  width: 100px;
   display: grid;
+  width: 82px;
   justify-items: center;
   align-content: center;
-  gap: 2px;
-  padding: 5px 8px 6px;
-  border: 1px solid rgba(101, 43, 32, 0.5);
-  background: rgba(255, 243, 214, 0.55);
-  color: var(--hud-ink);
-  font: 600 11px/1.2 var(--hud-serif);
+  gap: 1px;
+  padding: 0 4px 8px;
+  font: 700 9px/1.1 var(--hud-serif);
   text-align: center;
 }
+
+.command-button + .command-button {
+  border-left: 1px solid rgba(99, 58, 35, 0.28);
+}
+
 .command-icon {
-  width: 44px;
-  height: 38px;
+  display: inline-flex;
+  width: 34px;
+  height: 32px;
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
 }
+
 #build .command-icon {
   background-image: url('/art/ui-icon-ger.png');
 }
@@ -923,635 +1002,394 @@
 .command-icon .clan-mark {
   opacity: 0;
 }
-.command-button > kbd {
+
+.command-button kbd {
   position: absolute;
-  top: 3px;
+  top: 1px;
   right: 3px;
 }
-.command-button:hover:not(:disabled) {
-  background: rgba(213, 155, 52, 0.4);
-  border-color: var(--hud-red);
-}
-.migrate-button {
-  border-color: rgba(154, 64, 48, 0.75);
-  background: rgba(213, 155, 52, 0.25);
-}
-.game-hud button:disabled {
-  opacity: 0.42;
-  filter: saturate(0.6);
+
+.migrate-button:not(:disabled) {
+  color: var(--hud-red-dark);
 }
 
-/* ---------- Bottom right: the ride ---------- */
-.dash-button {
-  position: absolute;
-  right: var(--hud-gap);
-  bottom: var(--hud-gap);
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 5px;
-  width: 220px;
-  min-height: 78px;
-  padding: 11px 15px 14px 90px;
-  overflow: hidden;
-  text-align: left;
-  color: var(--hud-ink);
-}
-.dash-button::before,
-.dash-button::after {
-  content: '';
-  position: absolute;
-  z-index: 2;
-  left: 4px;
-  display: block;
-  width: calc(100% - 8px);
-  height: 7px;
-  border: 0;
-  background: url('/art/ui-braid.svg') repeat-x center / 44px 7px;
-  transform: none;
-  pointer-events: none;
-}
-.dash-button::before {
-  top: 2px;
-}
-.dash-button::after {
-  right: auto;
-  bottom: 2px;
-}
-.dash-rider {
-  position: absolute;
-  left: 7px;
-  bottom: 5px;
-  width: 78px;
-  height: 70px;
-  pointer-events: none;
-}
-.dash-rider .camp-illustration {
-  width: 100%;
-  height: 100%;
-  filter: sepia(0.12) saturate(0.82) contrast(0.96) drop-shadow(0 2px 1px rgba(55, 35, 22, 0.28));
-}
-.dash-button strong {
-  display: block;
-  font: 600 15px/1.1 var(--hud-serif);
-  letter-spacing: 0.1em;
-}
-.dash-button small {
-  display: block;
-  margin-top: 4px;
-  font: 600 7.5px/1.2 var(--hud-sans);
-  letter-spacing: 0.6px;
-  color: var(--hud-ink-soft);
-}
-.dash-button:hover:not(:disabled) {
-  background-color: rgba(213, 155, 52, 0.45);
-}
-.dash-charge {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: var(--hud-gold);
-  transition: width 160ms linear;
-}
+/* Secondary zoom access recedes until the pointer or keyboard reaches it. */
 .zoom-controls {
   position: absolute;
+  z-index: 4;
   right: var(--hud-gap);
-  bottom: 94px;
-  width: 220px;
-  height: 30px;
+  bottom: var(--hud-gap);
   display: grid;
-  grid-template-columns: 1fr 1.6fr 1fr;
-  border: 4px double rgba(46, 44, 36, 0.9);
-  background:
-    linear-gradient(rgba(244, 222, 180, 0.82), rgba(220, 184, 128, 0.78)),
-    url('/art/ui-felt.png') center / 180px;
-  box-shadow: 0 2px 5px rgba(32, 20, 10, 0.3);
+  grid-template-columns: 24px 42px 24px;
+  height: 24px;
+  border-block: 1px solid rgba(74, 46, 28, 0.55);
+  background: rgba(237, 206, 151, 0.72);
+  opacity: 0.68;
+  transition: opacity 160ms ease;
 }
+
+.zoom-controls:hover,
+.zoom-controls:focus-within {
+  opacity: 1;
+}
+
 .zoom-controls button {
   padding: 0;
   border: 0;
-  border-right: 1px solid rgba(101, 43, 32, 0.4);
+  border-right: 1px solid rgba(93, 55, 33, 0.3);
   background: transparent;
   color: var(--hud-red-dark);
-  font: 600 16px/1 var(--hud-serif);
+  font: 700 14px/1 var(--hud-serif);
 }
+
 .zoom-controls button:last-child {
   border-right: 0;
 }
+
 #zoom-reset {
-  font: 600 9px/1 var(--hud-sans);
-  letter-spacing: 0.6px;
   color: var(--hud-ink);
-}
-.zoom-controls button:hover:not(:disabled) {
-  background: rgba(213, 155, 52, 0.45);
+  font: 700 7px/1 var(--hud-sans);
 }
 
-/* ---------- Chronicle toast ---------- */
+/* Context changes emphasis, never access or simulation. */
+.game-hud[data-context='combat'] .resource-hud,
+.game-hud[data-context='combat'] .objective-hud {
+  opacity: 0.78;
+}
+
+.game-hud[data-context='combat'] .khan-hud {
+  filter: drop-shadow(0 0 5px rgba(145, 48, 33, 0.32));
+}
+
+.game-hud[data-context='combat'] .action-dock {
+  filter: drop-shadow(0 3px 5px rgba(40, 24, 14, 0.5)) saturate(1.08);
+}
+
+.game-hud[data-context='encampment'] .resource-hud {
+  opacity: 1;
+}
+.game-hud[data-context='encampment'] .command-dock {
+  color: var(--hud-red-dark);
+}
+
+.game-hud[data-context='exploration'] .objective-hud,
+.game-hud[data-context='exploration'] .dash-button {
+  filter: saturate(1.08);
+}
+
+/* Critical messages remain fully legible regardless of the quiet context treatment. */
+.game-hud :is(.major-loss, .clan-warning, .danger-edge, .elite-marker, .successor-choice) {
+  opacity: 1;
+}
+
+.game-hud.prologue-unestablished .resource-hud,
+.game-hud.prologue-unestablished .pressure-row,
+.game-hud.prologue-unestablished .pressure-tracks,
+.game-hud.prologue-unestablished #camp-pressure,
+.game-hud.prologue-unestablished #clan-losses,
+.game-hud.prologue-unestablished #encounter-status,
+.game-hud.prologue-unestablished #clan-warning,
+.game-hud.prologue-unestablished #clan-bearing,
+.game-hud.prologue-unestablished #objective-disclosure,
+.game-hud.prologue-unestablished .command-dock,
+.game-hud.prologue-unestablished .command-rule {
+  display: none;
+}
+
+/* Transient chronicle ink. */
 .chronicle-toast {
   position: absolute;
+  z-index: 6;
   left: 50%;
-  bottom: 112px;
-  transform: translate(-50%, 8px);
-  max-width: 560px;
-  width: max-content;
+  bottom: 92px;
   display: flex;
+  width: max-content;
+  max-width: 520px;
   align-items: center;
-  gap: 12px;
-  padding: 9px 18px 10px 12px;
-  border: 3px double rgba(101, 43, 32, 0.9);
-  border-left: 5px solid var(--hud-red);
-  background: var(--hud-parchment);
-  box-shadow: 0 3px 9px rgba(32, 20, 10, 0.4);
+  gap: 8px;
+  padding: 6px 14px 7px 10px;
+  border-left: 3px solid var(--hud-red);
+  background: linear-gradient(90deg, rgba(242, 216, 168, 0.94), rgba(231, 197, 140, 0.78));
+  box-shadow: 0 2px 6px rgba(38, 23, 13, 0.28);
   opacity: 0;
+  transform: translate(-50%, 6px);
   transition:
     opacity 0.3s,
     transform 0.3s;
 }
+
 .chronicle-toast.visible {
   opacity: 1;
   transform: translate(-50%, 0);
 }
+
 .chronicle-toast > span {
   display: inline-flex;
   color: var(--hud-red-dark);
-  font-size: 22px;
+  font-size: 18px;
 }
+
 .chronicle-toast p {
-  font: 600 14px/1.4 var(--hud-serif);
   color: var(--hud-ink);
+  font: italic 600 13px/1.3 var(--hud-serif);
 }
+
 .game-hud:has(.choosing-khan) .chronicle-toast {
   visibility: hidden;
 }
 
-/* ---------- Succession ---------- */
+.synergy {
+  position: absolute;
+  left: var(--hud-gap);
+  bottom: 145px;
+  padding: 3px 8px;
+  border-left: 2px solid var(--hud-gold);
+  background: rgba(132, 51, 39, 0.9);
+  color: #f8e3b5;
+  font: 700 8px/1.3 var(--hud-sans);
+  letter-spacing: 0.9px;
+}
+
+/* Succession is the rare centered leaf because it requires an immediate decision. */
 .successor-choice {
-  bottom: 118px;
+  z-index: 8;
   left: 50%;
-  transform: translateX(-50%);
+  bottom: 94px;
   width: min(430px, calc(100% - 24px));
-  padding: 16px 14px 12px;
+  padding: 14px 13px 11px;
+  transform: translateX(-50%);
   pointer-events: auto;
 }
+
 .successor-choice > strong {
   display: block;
-  font: 600 19px/1.15 var(--hud-serif);
   color: var(--hud-ink);
+  font: 700 18px/1.15 var(--hud-serif);
 }
+
 .successor-choice p,
 .successor-choice > small {
   display: block;
-  margin: 4px 0;
-  font: 500 11px/1.4 var(--hud-sans);
+  margin: 3px 0;
   color: var(--hud-ink-soft);
-}
-.successor-choice > div {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
-}
-.successor-choice button {
-  flex: 1;
-  padding: 8px 9px;
-  border: 1px solid rgba(101, 43, 32, 0.6);
-  background: rgba(255, 243, 214, 0.6);
-  color: var(--hud-ink);
-  font: 600 13px/1.2 var(--hud-serif);
-  text-align: left;
-}
-.successor-choice button small {
-  display: block;
-  margin-top: 4px;
-  font: 500 10.5px/1.35 var(--hud-sans);
-  color: var(--hud-ink-soft);
-}
-.successor-choice button[aria-pressed='true'] {
-  border-color: var(--hud-gold);
-  box-shadow:
-    inset 0 0 0 2px var(--hud-red),
-    0 0 0 1px var(--hud-gold);
+  font: 500 10px/1.35 var(--hud-sans);
 }
 
-/* ---------- Combat readability over the world ---------- */
+.successor-choice > div {
+  display: flex;
+  gap: 7px;
+  margin-top: 5px;
+}
+
+.successor-choice button {
+  flex: 1;
+  padding: 7px 8px;
+  border: 1px solid rgba(98, 57, 34, 0.58);
+  background: rgba(253, 235, 194, 0.54);
+  color: var(--hud-ink);
+  font: 700 12px/1.2 var(--hud-serif);
+  text-align: left;
+}
+
+.successor-choice button small {
+  display: block;
+  margin-top: 3px;
+  color: var(--hud-ink-soft);
+  font: 500 9px/1.3 var(--hud-sans);
+}
+
+.successor-choice button[aria-pressed='true'] {
+  border-color: var(--hud-gold);
+  box-shadow: inset 0 0 0 2px var(--hud-red);
+}
+
+/* Combat annotations over the world use paper chips only where terrain contrast demands it. */
 .danger-edge {
   position: absolute;
-  transform: translate(-50%, -50%);
   display: grid;
-  grid-template-columns: 20px auto;
+  max-width: 150px;
+  grid-template-columns: 18px auto;
   align-items: center;
-  max-width: 160px;
-  padding: 5px 9px;
-  border: 1px solid var(--hud-red-dark);
-  background: rgba(246, 228, 191, 0.95);
+  padding: 4px 8px;
+  transform: translate(-50%, -50%);
+  border-left: 3px solid var(--hud-red);
+  background: rgba(244, 222, 178, 0.94);
   color: var(--hud-ink);
-  box-shadow: 0 2px 6px rgba(32, 20, 10, 0.4);
+  box-shadow: 0 2px 5px rgba(35, 22, 13, 0.34);
 }
+
 .danger-edge > span {
-  grid-row: span 2;
   display: block;
+  grid-row: span 2;
   color: var(--hud-red);
-  font-size: 18px;
+  font-size: 16px;
 }
+
 .danger-edge strong {
-  font: 600 12px/1.2 var(--hud-serif);
+  font: 700 11px/1.2 var(--hud-serif);
 }
 .danger-edge small {
-  font: 600 9px/1.2 var(--hud-sans);
   color: var(--hud-red-dark);
-  font-variant-numeric: tabular-nums;
+  font: 700 8px/1.2 var(--hud-sans);
 }
+
 .elite-marker {
   position: absolute;
-  width: 80px;
+  width: 78px;
   transform: translate(-50%, -100%);
-  text-align: center;
   color: var(--hud-ink);
-  font: 600 10px/1.2 var(--hud-sans);
+  font: 700 9px/1.2 var(--hud-sans);
+  text-align: center;
 }
+
 .elite-marker strong {
   padding: 2px 5px;
-  border: 1px solid var(--hud-red-dark);
-  background: rgba(246, 228, 191, 0.95);
+  border-left: 2px solid var(--hud-red);
+  background: rgba(244, 222, 178, 0.94);
 }
+
 .elite-marker > div {
   height: 3px;
-  margin: 3px 0 0;
-  border: 1px solid rgba(101, 43, 32, 0.6);
-  background: rgba(78, 46, 24, 0.25);
+  margin-top: 3px;
+  background: rgba(75, 46, 28, 0.32);
 }
 .elite-marker i {
   display: block;
   height: 100%;
-  background: #b24d35;
+  background: #aa4934;
 }
 
-/* ---------- Full desktop: broad manuscript cards like the gameplay reference ---------- */
-@media (min-width: 1401px) {
-  .game-hud {
-    --hud-gap: 14px;
-  }
+@media (max-width: 1400px) {
   .ledger-column {
-    width: 600px;
-  }
-  .resource-hud {
-    padding: 20px 20px 17px;
-  }
-  .resource-row {
-    padding-top: 9px;
+    width: 390px;
   }
   .resource {
-    grid-template-columns: 32px minmax(0, 1fr);
-    column-gap: 4px;
-    padding-inline: 2px;
+    grid-template-columns: 21px minmax(0, 1fr);
+    padding-inline: 5px;
   }
   .resource-icon {
-    font-size: 32px;
-  }
-  .resource-label {
-    font-size: 9.5px;
-    letter-spacing: 0.04em;
+    font-size: 20px;
   }
   .resource strong {
-    font-size: 28px;
-  }
-  .resource-hud .hud-ribbon {
-    min-height: 28px;
-    padding-inline: 28px;
     font-size: 17px;
   }
-  .expedition-clock {
-    top: 10px;
-    min-width: 248px;
-    padding: 9px 44px 11px;
-  }
-  .expedition-clock strong {
-    font-size: 39px;
-  }
-  .expedition-clock > span {
-    font-size: 10px;
-  }
-  .expedition-clock::before,
-  .expedition-clock::after {
-    top: 7px;
-    width: 122px;
-    height: 84px;
-  }
-  .expedition-clock::before {
-    left: -101px;
-  }
-  .expedition-clock::after {
-    right: -101px;
-  }
-  .hud-menu-button {
-    width: 58px;
-    height: 64px;
-  }
-  .hud-menu-button > span {
-    font-size: 30px;
-  }
-  .hud-menu-button:first-child > span {
-    width: 34px;
-    height: 34px;
-  }
-  .game-hud kbd {
-    padding: 2px 5px;
-    font-size: 10px;
-  }
   .objective-hud {
-    top: 92px;
-    width: 380px;
-    min-height: 190px;
-    padding: 21px 22px 72px;
-  }
-  .objective-heading {
-    min-height: 30px;
-    padding-inline: 24px;
-  }
-  .objective-heading strong {
-    font-size: 16px;
-  }
-  .objective-heading > span {
-    font-size: 12px;
-  }
-  .objective-text {
-    margin-top: 7px;
-    padding-right: 22px;
-    font-size: 22px;
-    line-height: 1.25;
-  }
-  .objective-vignette {
-    right: 24px;
-    bottom: 7px;
-    width: 164px;
-    height: 70px;
-  }
-  .objective-vignette::before {
-    right: 72px;
-    bottom: -15px;
-    width: 132px;
-    height: 88px;
-  }
-  .objective-vignette .camp-illustration {
-    width: 108px;
-    height: 82px;
-  }
-  .hud-disclosure {
-    width: 25px;
-    height: 25px;
-    font-size: 13px;
+    width: 285px;
   }
   .khan-hud {
-    width: 350px;
-  }
-  .tradition-hud {
-    gap: 4px 12px;
-    padding: 7px 14px 8px;
-  }
-  .tradition-hud > span {
-    font-size: 13px;
-  }
-  .vitals-hud {
-    padding: 16px 19px 15px;
-  }
-  .vitals-hud::before {
-    left: -86px;
-    width: 182px;
-    height: 18px;
-    background-size: 92px 18px;
-  }
-  .health-heading {
-    margin-bottom: 7px;
-    font-size: 15px;
-  }
-  .clan-health {
-    margin-top: 12px;
-    font-size: 13px;
-  }
-  .health-track {
-    height: 8px;
-  }
-  .resolve-track {
-    height: 7px;
-  }
-  .breath-heading {
-    margin: 11px 0 7px;
-    font-size: 12px;
-  }
-  .breath-track {
-    height: 5px;
-  }
-  .class-resource {
-    margin-top: 12px;
-    font-size: 10px;
-  }
-  .resource-beads {
-    gap: 4px;
-  }
-  .resource-beads i {
-    max-width: 18px;
+    width: 235px;
   }
   .action-dock {
-    gap: 8px;
-    padding: 17px 10px;
-  }
-  .action-dock::before,
-  .action-dock::after {
-    height: 10px;
-    background-size: 54px 10px;
+    max-width: calc(100% - 500px);
+    padding-inline: 20px;
   }
   .ability-dock {
-    grid-template-columns: repeat(4, 174px);
-    gap: 6px;
+    grid-template-columns: repeat(4, minmax(82px, 105px));
   }
   .ability-indicator {
-    grid-template-columns: 42px minmax(0, 1fr);
-    gap: 7px;
-    padding: 8px 8px 8px 6px;
+    grid-template-columns: 30px minmax(0, 1fr);
+    padding-inline: 5px;
   }
   .ability-icon {
-    width: 42px;
-    height: 48px;
-    flex-basis: 42px;
-  }
-  .ability-indicator strong {
-    padding-right: 28px;
-    font-size: 15px;
-    line-height: 1.08;
-  }
-  .ability-indicator small {
-    font-size: 9px;
-  }
-  .ability-cost {
-    padding: 2px 4px;
-    font-size: 9px;
-  }
-  .command-button {
-    width: 118px;
-    padding: 7px 10px 8px;
-    font-size: 15px;
-  }
-  .command-icon {
-    width: 52px;
-    height: 46px;
+    width: 30px;
+    height: 35px;
   }
   .dash-button {
-    width: 250px;
-    min-height: 105px;
-    padding: 16px 20px 19px 112px;
-  }
-  .dash-button::before,
-  .dash-button::after {
-    height: 10px;
-    background-size: 54px 10px;
+    grid-template-columns: 36px auto;
+    width: 98px;
   }
   .dash-rider {
-    left: 9px;
-    bottom: 7px;
-    width: 100px;
-    height: 88px;
+    width: 36px;
+    height: 38px;
   }
-  .dash-button strong {
-    font-size: 19px;
-  }
-  .dash-button small {
-    margin-top: 6px;
-    font-size: 9px;
-  }
-  .zoom-controls {
-    bottom: 132px;
-    width: 250px;
-    height: 36px;
-    border-width: 6px;
-  }
-  #zoom-reset {
-    font-size: 11px;
+  .command-button {
+    width: 72px;
+    font-size: 8px;
   }
 }
 
-/* ---------- Laptop widths ---------- */
-@media (max-width: 1400px) {
-  .game-hud {
-    --hud-gap: 18px;
-  }
-  .ledger-column {
-    width: 460px;
-  }
-  .objective-hud {
-    width: 300px;
-    top: 90px;
-  }
-  .field-guide {
-    width: 270px;
-  }
-  .khan-hud {
-    width: 218px;
-  }
-  .ability-dock {
-    grid-template-columns: repeat(4, 150px);
-  }
-  .command-button {
-    width: 86px;
-    font-size: 10.5px;
-  }
-  .dash-button {
-    width: 174px;
-  }
-  .zoom-controls {
-    width: 174px;
-  }
-}
 @media (max-width: 1100px) {
   .ledger-column {
     width: 330px;
   }
-  .resource-icon {
-    font-size: 16px;
-  }
-  .resource strong {
-    font-size: 16px;
-  }
-  .resource {
-    gap: 3px;
-    padding-inline: 2px;
-  }
-  .objective-hud {
-    width: 258px;
-  }
-  .field-guide {
-    width: 238px;
-  }
-  .khan-hud {
-    width: 200px;
-    bottom: 104px;
-  }
-  .dash-button {
-    bottom: 104px;
-  }
-  .zoom-controls {
-    bottom: 172px;
-  }
-  .ability-dock {
-    grid-template-columns: repeat(4, 54px);
-  }
-  .ability-indicator {
-    justify-content: center;
-    padding: 6px 4px;
-  }
-  .ability-icon,
-  .ability-indicator .ability-copy {
+  .resource-label {
     display: none;
   }
-  .command-button {
-    width: 86px;
+  .resource {
+    grid-template-columns: 20px 1fr;
+    grid-template-rows: auto;
   }
-  .chronicle-toast {
-    max-width: 400px;
-  }
-}
-@media (max-width: 850px) {
-  .ledger-column {
-    width: 300px;
-  }
-  .expedition-clock {
-    left: auto;
-    right: 130px;
-    transform: none;
-    min-width: 0;
-    padding: 4px 22px 6px;
-  }
-  .expedition-clock strong {
-    font-size: 24px;
-  }
-}
-@media (max-height: 720px) and (min-width: 601px) {
-  .resource-hud,
-  .objective-hud,
-  .field-guide,
-  .vitals-hud {
-    padding-top: 11px;
-    padding-bottom: 8px;
-  }
-  .guide-copy {
-    font-size: 11px;
-    line-height: 1.4;
-    margin: 4px 0 5px;
+  .resource-icon {
+    grid-row: auto;
+    font-size: 18px;
   }
   .objective-hud {
-    top: 80px;
+    width: 255px;
+  }
+  .objective-text {
+    font-size: 14px;
+  }
+  .khan-hud {
+    width: 205px;
+    bottom: 88px;
+  }
+  .action-dock {
+    max-width: calc(100% - 30px);
+  }
+  .ability-dock {
+    grid-template-columns: repeat(4, 58px);
+  }
+  .ability-indicator {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding-inline: 5px;
+  }
+  .ability-copy {
+    display: none;
+  }
+  .zoom-controls {
+    bottom: 92px;
   }
 }
 
-/* ---------- Phones: a vertical ledger ---------- */
+@media (max-width: 760px) and (min-width: 601px) {
+  .ledger-column {
+    width: 285px;
+  }
+  .expedition-clock {
+    left: auto;
+    right: 116px;
+    width: 112px;
+    transform: none;
+  }
+  .expedition-clock::before,
+  .expedition-clock::after {
+    display: none;
+  }
+  .objective-hud {
+    top: 64px;
+    width: 235px;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 601px) {
+  .field-guide {
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .objective-hud {
+    top: 60px;
+  }
+  .khan-hud {
+    bottom: 78px;
+  }
+}
+
+/* Phones: top annotations stack compactly; the one action plaque remains unified. */
 @media (max-width: 600px) {
   .game-hud {
-    --hud-gap: 10px;
-  }
-  .hud-surface::before,
-  .hud-surface::after {
-    display: none;
+    --hud-gap: 8px;
   }
   .ledger-column {
     position: static;
@@ -1559,234 +1397,280 @@
   }
   .resource-hud {
     position: absolute;
-    left: 10px;
-    top: 10px;
-    width: calc(100% - 20px);
-    padding: 9px 10px 7px;
-  }
-  .resource-hud .hud-ribbon {
-    display: none;
-  }
-  .resource-row {
-    padding-top: 0;
+    left: 8px;
+    top: 8px;
+    width: calc(100% - 16px);
+    padding: 6px 9px 7px;
   }
   .resource {
-    grid-template-columns: 22px minmax(0, 1fr);
-    column-gap: 2px;
-    padding-inline: 2px;
+    grid-template-columns: 18px minmax(0, 1fr);
+    padding-inline: 3px;
   }
   .resource-icon {
-    font-size: 18px;
+    font-size: 17px;
   }
   .resource strong {
-    font-size: 16px;
+    font-size: 15px;
   }
-  .resource-label {
-    font-size: 6px;
-    letter-spacing: 0.04em;
-  }
-  .economy-hud {
-    margin-top: 6px;
-    padding-top: 5px;
-    font-size: 9.5px;
+  .clan-details {
+    position: absolute;
+    z-index: 8;
+    left: 0;
+    right: 8px;
+    top: calc(100% - 2px);
+    margin: 0;
+    padding: 7px 10px 8px;
+    background: var(--paper-wash);
+    box-shadow: 0 3px 7px rgba(39, 24, 14, 0.32);
   }
   .expedition-clock {
-    left: 10px;
-    right: auto;
-    top: 84px;
-    width: 86px;
-    padding: 3px 12px 5px;
+    left: 8px;
+    top: 61px;
+    width: 84px;
+    padding: 3px 7px 5px;
+    transform: none;
   }
   .expedition-clock::before,
   .expedition-clock::after {
     display: none;
   }
   .expedition-clock strong {
-    font-size: 20px;
+    font-size: 18px;
   }
   .expedition-clock > span {
-    font-size: 6.5px;
-    letter-spacing: 0.6px;
+    font-size: 5.5px;
+    letter-spacing: 0.5px;
   }
   #developer-run {
     display: none;
   }
   .hud-menu {
-    top: 82px;
-    gap: 6px;
+    top: 62px;
+    right: 8px;
   }
   .hud-menu-button {
-    width: 36px;
-    height: 38px;
+    width: 34px;
+    height: 31px;
   }
   .hud-menu-button > span {
-    font-size: 18px;
+    font-size: 19px;
   }
   .hud-menu-button:first-child > span {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
+  }
+  .hud-menu-button kbd {
+    font-size: 6px;
+    transform: translateY(6px);
   }
   .objective-hud {
-    top: 158px;
-    left: 10px;
-    right: 10px;
+    top: 106px;
+    left: 8px;
+    right: 8px;
     width: auto;
-    min-height: 0;
-    padding: 12px 10px 8px;
+    min-height: 78px;
+    padding: 7px 13px 25px 12px;
   }
-  .objective-vignette {
-    display: none;
-  }
-  .game-hud.prologue-unestablished .expedition-clock,
-  .game-hud.prologue-unestablished .hud-menu {
-    top: 10px;
-  }
-  .game-hud.prologue-unestablished .objective-hud {
-    top: 82px;
+  .objective-heading strong {
+    font-size: 9px;
   }
   .objective-text {
-    font-size: 14px;
+    margin-top: 4px;
+    font-size: 13px;
+  }
+  .objective-vignette {
+    width: 70px;
+    height: 32px;
+  }
+  .objective-vignette .camp-illustration {
+    width: 46px;
+    height: 41px;
   }
   .objective-hint,
   #camp-pressure,
   #field-objective {
     display: none;
   }
-  .field-status {
-    font-size: 10px;
-  }
-  .clan-details {
-    position: absolute;
-    z-index: 3;
-    left: -4px;
-    right: -4px;
-    top: 100%;
-    margin: 0;
-    padding: 6px 10px 8px;
-    border: var(--hud-frame);
-    border-top: 0;
-    background: var(--hud-parchment);
-    box-shadow: 0 3px 9px rgba(32, 20, 10, 0.4);
-  }
-  .clan-bearing {
-    position: absolute;
-    top: 96px;
-    left: 104px;
-  }
   .field-guide {
     position: absolute;
-    top: 280px;
-    left: 10px;
-    width: calc(100% - 20px);
+    z-index: 4;
+    left: 8px;
+    top: 220px;
+    width: calc(100% - 16px);
     margin: 0;
-    padding: 10px 10px 8px;
-  }
-  .game-hud.prologue-unestablished .field-guide {
-    top: 180px;
+    padding-block: 5px;
   }
   .guide-details > summary {
-    font-size: 16px;
+    font-size: 13px;
   }
   .guide-copy {
-    font-size: 11px;
-    line-height: 1.4;
-    margin: 4px 0 6px;
+    font-size: 9px;
+  }
+  .game-hud.prologue-unestablished .expedition-clock,
+  .game-hud.prologue-unestablished .hud-menu {
+    top: 8px;
+  }
+  .game-hud.prologue-unestablished .objective-hud {
+    top: 55px;
+  }
+  .game-hud.prologue-unestablished .field-guide {
+    top: 150px;
+  }
+  .clan-bearing {
+    left: 8px;
+    top: 45px;
+    font-size: 6px;
   }
   .khan-hud {
-    width: 176px;
-    bottom: 118px;
-  }
-  .tradition-hud {
-    width: 94%;
-    padding: 3px 8px 4px;
+    left: 8px;
+    bottom: 104px;
+    width: 158px;
   }
   .vitals-hud {
-    padding: 9px 10px 7px;
+    padding: 5px 9px 6px 12px;
+  }
+  .tradition-hud {
+    margin-bottom: 3px;
+    font-size: 6px;
   }
   .health-heading {
-    font-size: 10px;
+    margin-block: 3px 2px;
+    font-size: 7.5px;
   }
-  .vital-stats {
-    font-size: 7px;
+  .health-track,
+  .resolve-track {
+    height: 3px;
+  }
+  .breath-heading {
+    margin: 3px 0 2px;
+  }
+  .class-resource {
+    margin-top: 4px;
+  }
+  .resource-beads i {
+    max-width: 8px;
   }
   .action-dock {
-    left: 10px;
-    right: 10px;
+    left: 8px;
+    right: 8px;
+    bottom: 7px;
+    display: grid;
+    grid-template-columns: 65px 1fr;
+    grid-template-rows: 43px auto;
+    min-height: 89px;
+    max-width: none;
+    padding: 7px 17px 9px;
     transform: none;
-    flex-direction: column;
-    gap: 5px;
-    padding: 5px;
+    background-size:
+      auto 100%,
+      auto 100%,
+      calc(100% - 54px) 100%;
   }
-  .ability-dock {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 3px;
+  .action-dock::after {
+    left: 27px;
+    right: 27px;
+    bottom: 5px;
   }
-  .ability-indicator {
-    justify-content: center;
-    padding: 5px 3px;
+  .action-dock:has(.command-dock[hidden]) {
+    grid-template-rows: 55px;
+    min-height: 64px;
   }
-  .ability-indicator .ability-copy {
+  .dash-button {
+    grid-row: 1 / 3;
+    grid-template-columns: 1fr;
+    width: 62px;
+    padding: 0 5px 7px 0;
+    justify-items: center;
+    text-align: center;
+  }
+  .dash-rider {
+    width: 31px;
+    height: 29px;
+  }
+  .dash-button strong {
+    font-size: 8px;
+  }
+  .dash-button small {
+    font-size: 5px;
+  }
+  .dash-charge {
+    bottom: 5px;
+  }
+  .gallop-rule,
+  .command-rule {
     display: none;
   }
-  .ability-icon {
-    display: block;
-    width: 20px;
-    height: 22px;
-    flex-basis: 20px;
+  .ability-dock {
+    grid-column: 2;
+    grid-row: 1;
+    grid-template-columns: repeat(4, 1fr);
   }
-  .dock-rule {
+  .ability-indicator {
+    grid-template-columns: 1fr;
+    padding: 1px 3px 5px;
+  }
+  .ability-icon {
+    width: 26px;
+    height: 29px;
+  }
+  .ability-indicator kbd {
+    left: 2px;
+    top: 0;
+    padding-inline: 2px;
+    font-size: 6px;
+  }
+  .ability-indicator .ability-cost {
+    top: 0;
+    right: 2px;
+  }
+  .ability-copy {
     display: none;
   }
   .command-dock {
-    gap: 3px;
+    grid-column: 2;
+    grid-row: 2;
+    justify-content: stretch;
+    border-top: 1px solid rgba(97, 57, 35, 0.28);
   }
   .command-button {
-    flex: 1;
-    width: auto;
-    min-width: 0;
-    padding: 2px 6px 3px;
-    font-size: 10px;
+    width: 50%;
+    grid-template-columns: 21px auto;
+    justify-content: center;
+    padding: 1px 2px 5px;
+    font-size: 7px;
   }
   .command-icon {
-    width: 34px;
-    height: 26px;
+    width: 21px;
+    height: 18px;
   }
-  .dash-button {
-    bottom: 118px;
-    width: 128px;
-    min-height: 58px;
-    padding: 8px 8px 10px 60px;
-    gap: 8px;
-  }
-  .dash-rider {
-    left: 2px;
-    bottom: 3px;
-    width: 48px;
-    height: 52px;
-  }
-  .dash-button strong {
-    font-size: 13px;
+  .command-button kbd {
+    top: 1px;
+    right: 2px;
+    font-size: 6px;
   }
   .zoom-controls {
-    bottom: 184px;
-    width: 128px;
-    height: 24px;
-  }
-  .successor-choice {
-    top: 280px;
-    bottom: auto;
+    right: 8px;
+    bottom: 105px;
+    grid-template-columns: 22px 38px 22px;
+    height: 21px;
   }
   .chronicle-toast {
-    bottom: 300px;
-    max-width: calc(100% - 40px);
-    padding: 8px 12px 9px 10px;
-    gap: 9px;
+    bottom: 110px;
+    max-width: calc(100% - 32px);
+    padding: 5px 10px;
   }
   .chronicle-toast p {
-    font-size: 13px;
+    font-size: 11px;
+  }
+  .successor-choice {
+    top: 210px;
+    bottom: auto;
+  }
+  .successor-choice > div {
+    flex-direction: column;
   }
   .synergy {
-    bottom: 300px;
-    font-size: 7px;
+    bottom: 198px;
+    font-size: 6px;
   }
 }
