@@ -302,6 +302,21 @@ export const FOLKLORE_ENEMIES: readonly EnemyDefinition[] = [
     scale: 2.5,
     behavior: 'death-worm',
   },
+  {
+    id: 'muu-shuuvuu',
+    title: 'Muu Shuuvuu',
+    texture: 'muu-shuuvuu',
+    navigation: 'ground',
+    tacticalRole: 'skirmisher',
+    health: 75,
+    speed: 72,
+    damage: 10,
+    xp: 9,
+    unlockAt: Number.POSITIVE_INFINITY,
+    weight: 0,
+    scale: 2.2,
+    behavior: 'muu-shuuvuu',
+  },
 ];
 export const ENCOUNTER_ENEMIES: readonly EnemyDefinition[] = [...ENEMIES, ...AREA_ENEMIES];
 export const ALL_ENEMIES: readonly EnemyDefinition[] = [...ENCOUNTER_ENEMIES, ...FOLKLORE_ENEMIES];

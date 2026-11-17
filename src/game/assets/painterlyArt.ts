@@ -82,6 +82,7 @@ export const ART_WIDTH: Readonly<Record<string, number>> = {
   skybreaker: 160,
   almas: 78,
   'death-worm': 76,
+  'muu-shuuvuu': 64,
   ger: 144,
   cart: 110,
   banner: 62,

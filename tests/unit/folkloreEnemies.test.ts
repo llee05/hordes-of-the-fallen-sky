@@ -10,7 +10,9 @@ import { GAME } from '../../src/game/config';
 import {
   advanceAlmas,
   advanceDeathWorm,
+  advanceMuuShuuvuu,
   createFolkloreEnemyState,
+  muuShuuvuuOrbit,
   type FolkloreEnemyState,
 } from '../../src/game/systems/folkloreEnemies';
 
@@ -41,6 +43,62 @@ describe('folklore enemy catalog', () => {
     expect(ALL_ENEMIES).toContain(worm);
     expect(ENCOUNTER_ENEMIES).not.toContain(worm);
     expect(areaRoster('orkhon-valley', Number.MAX_SAFE_INTEGER, 9999)).not.toContain(worm);
+  });
+  it('keeps the Muu Shuuvuu in the developer-only folklore catalog', () => {
+    const bird = FOLKLORE_ENEMIES.find((enemy) => enemy.id === 'muu-shuuvuu');
+    expect(bird).toMatchObject({ behavior: 'muu-shuuvuu', health: 75, speed: 72, damage: 10 });
+    expect(ALL_ENEMIES).toContain(bird);
+    expect(ENCOUNTER_ENEMIES).not.toContain(bird);
+    expect(areaRoster('orkhon-valley', Number.MAX_SAFE_INTEGER, 9999)).not.toContain(bird);
+  });
+});
+
+describe('Muu Shuuvuu attacks and movement', () => {
+  it('circles on a stable per-actor orbit instead of steering straight at the Khan', () => {
+    const target = { x: 100, y: 200 };
+    const first = muuShuuvuuOrbit(target, 0, 0);
+    const later = muuShuuvuuOrbit(target, 1, 0);
+    expect(Math.hypot(first.x - target.x, first.y - target.y)).toBeCloseTo(
+      GAME.tactics.muuShuuvuu.orbitRadius,
+    );
+    expect(later).not.toEqual(first);
+    expect(muuShuuvuuOrbit(target, 0, 1)).not.toEqual(first);
+  });
+
+  it('telegraphs a snapshotted dive before entering its fast attack phase', () => {
+    const state = ready();
+    expect(advanceMuuShuuvuu(state, 0.01, origin, { x: 300, y: 400 }).started).toBe('dive');
+    expect(state.direction?.x).toBeCloseTo(0.6);
+    expect(state.direction?.y).toBeCloseTo(0.8);
+    expect(
+      advanceMuuShuuvuu(state, GAME.tactics.muuShuuvuu.diveWarning, origin, { x: -300, y: 0 })
+        .released,
+    ).toBe('dive');
+    expect(state.phase).toBe('attack');
+    advanceMuuShuuvuu(state, GAME.tactics.muuShuuvuu.diveDuration, origin, { x: -300, y: 0 });
+    expect(state.phase).toBe('recover');
+  });
+
+  it('alternates the next attack to a radius-marked supernatural shriek', () => {
+    const state = { ...ready(), sequence: 1 };
+    expect(advanceMuuShuuvuu(state, 0.01, origin, { x: 250, y: 0 }).started).toBe('shriek');
+    expect(
+      advanceMuuShuuvuu(state, GAME.tactics.muuShuuvuu.shriekWarning, origin, { x: 250, y: 0 })
+        .released,
+    ).toBe('shriek');
+    expect(state.phase).toBe('recover');
+    expect(state.cooldown).toBe(GAME.tactics.muuShuuvuu.cooldown);
+  });
+
+  it('interrupts either committed attack into recovery', () => {
+    const state = ready();
+    advanceMuuShuuvuu(state, 0.01, origin, { x: 250, y: 0 });
+    advanceMuuShuuvuu(state, 0.1, origin, { x: 250, y: 0 }, true);
+    expect(state).toMatchObject({
+      phase: 'recover',
+      remaining: GAME.tactics.muuShuuvuu.recovery,
+      hit: false,
+    });
   });
 });
 

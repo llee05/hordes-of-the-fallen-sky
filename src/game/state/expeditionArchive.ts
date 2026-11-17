@@ -378,7 +378,7 @@ const enemyState = object(
         sequence: integer,
       },
       {
-        attack: oneOf(['claw', 'slam', 'charge', 'bite', 'poison', 'burrow']),
+        attack: oneOf(['claw', 'slam', 'charge', 'bite', 'poison', 'burrow', 'dive', 'shriek']),
         aim: point,
         direction: point,
       },
