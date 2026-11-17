@@ -11,6 +11,13 @@ import { isEnemyDisabled, statusSpeedMultiplier, tickEnemyStatus } from '../../s
 import { areaSurface, habitatPreference } from '../../systems/AreaHabitat';
 import { routeDue } from '../../systems/enemyRoutes';
 import { advanceCharge, createEnemyTactics, tacticalGoal } from '../../systems/enemyTactics';
+import {
+  advanceAlmas,
+  advanceDeathWorm,
+  advanceMuuShuuvuu,
+  muuShuuvuuOrbit,
+  type FolkloreAttack,
+} from '../../systems/folkloreEnemies';
 import type { FieldMarkers } from '../../systems/FieldMarkers';
 import type { EnemyDefinition } from '../../types';
 import type { ArenaContext } from './ArenaContext';
@@ -28,6 +35,8 @@ export interface EnemyBehaviourHost {
   /** Marks a seer's delayed danger circle, which the hazard step draws and resolves. */
   addSeerHazard(target: { x: number; y: number }, definition: EnemyDefinition): void;
   queueAreaThreat(kind: AreaThreatKind, point: { x: number; y: number }, owner?: string): boolean;
+  /** Applies a committed folklore attack to the living Khan. */
+  takeDamage(amount: number): void;
 }
 
 /** What one enemy is going for this frame, worked out once and shared by its steps. */
@@ -161,11 +170,15 @@ export class EnemyBehaviour extends ArenaSystem {
     playerDistance: number,
     boundary: CampBoundary,
   ): EnemyAim {
-    const attackingCamp = campDistance <= boundary.attackRange;
-    const target: { x: number; y: number } =
-      attackingCamp || campDistance < playerDistance * 1.25 ? this.camp : this.player;
-    const distance = Phaser.Math.Distance.Between(enemy.x, enemy.y, target.x, target.y);
     const behavior = enemy.definition.behavior;
+    const khanTargeted = behavior === 'muu-shuuvuu' && Number.isFinite(playerDistance);
+    const attackingCamp = !khanTargeted && campDistance <= boundary.attackRange;
+    const target: { x: number; y: number } = khanTargeted
+      ? this.player
+      : attackingCamp || campDistance < playerDistance * 1.25
+        ? this.camp
+        : this.player;
+    const distance = Phaser.Math.Distance.Between(enemy.x, enemy.y, target.x, target.y);
     const ranged = behavior === 'ranged';
     const clearShot =
       !this.landscape.world3d ||
@@ -251,8 +264,23 @@ export class EnemyBehaviour extends ArenaSystem {
         enemy.tactics.phase = 'recover';
         enemy.tactics.remaining = GAME.tactics.chargeRecovery;
       }
+      if (
+        ['almas', 'death-worm', 'muu-shuuvuu'].includes(behavior ?? '') &&
+        enemy.folklore.phase !== 'approach'
+      ) {
+        enemy.folklore.phase = 'recover';
+        enemy.folklore.remaining =
+          behavior === 'almas'
+            ? GAME.tactics.almas.recovery
+            : behavior === 'death-worm'
+              ? GAME.tactics.deathWorm.recovery
+              : GAME.tactics.muuShuuvuu.recovery;
+        enemy.folklore.hit = false;
+        enemy.setAlpha(1);
+        this.enemyDirector.shadows.get(enemy)?.setAlpha(1);
+      }
       enemy.preparingAttack = false;
-    } else if (attackingCamp) {
+    } else if (attackingCamp && !['almas', 'death-worm', 'muu-shuuvuu'].includes(behavior ?? '')) {
       // Hold outside the tents instead of walking (or charging) into their centre.
       enemy.setVelocity(0, 0);
       enemy.chargeTimer = 0;
@@ -265,7 +293,13 @@ export class EnemyBehaviour extends ArenaSystem {
         enemy.tacticalSlot,
         this.run.elapsed,
       );
-      if (behavior === 'charger') {
+      if (behavior === 'almas') {
+        this.steerAlmas(enemy, aim, speed, dt, warnings);
+      } else if (behavior === 'death-worm') {
+        this.steerDeathWorm(enemy, aim, speed, dt, warnings);
+      } else if (behavior === 'muu-shuuvuu') {
+        this.steerMuuShuuvuu(enemy, aim, speed, dt, warnings);
+      } else if (behavior === 'charger') {
         const state = enemy.tactics;
         const facing = state.aim ?? target;
         const angle = state.direction
@@ -322,6 +356,245 @@ export class EnemyBehaviour extends ArenaSystem {
     }
   }
 
+  /** Burrows to a marked point, spits a poison-coloured hostile shot, or bites up close. */
+  private steerDeathWorm(
+    enemy: Enemy,
+    aim: EnemyAim,
+    speed: number,
+    dt: number,
+    warnings: Phaser.GameObjects.Graphics,
+  ): void {
+    const tuning = GAME.tactics.deathWorm;
+    const step = advanceDeathWorm(enemy.folklore, dt, enemy, aim.target, isEnemyDisabled(enemy));
+    const state = enemy.folklore;
+    const underground = state.phase === 'attack' && state.attack === 'burrow';
+    enemy.setAlpha(underground ? 0.16 : 1);
+    this.enemyDirector.shadows.get(enemy)?.setAlpha(underground ? 0.08 : 1);
+    if (state.phase === 'windup') {
+      enemy.setVelocity(0, 0);
+      enemy.preparingAttack = true;
+      if (state.attack === 'burrow')
+        warnings
+          .fillStyle(0x655544, 0.12)
+          .fillCircle(enemy.x, enemy.y, 48)
+          .lineStyle(3, 0xb8875d, 0.85)
+          .strokeCircle(enemy.x, enemy.y, 48);
+      else if (state.aim)
+        warnings
+          .lineStyle(3, state.attack === 'poison' ? 0x91a56c : 0xc58265, 0.8)
+          .lineBetween(enemy.x, enemy.y, state.aim.x, state.aim.y);
+    } else if (underground) {
+      enemy.setVelocity(0, 0);
+      if (state.aim)
+        warnings
+          .fillStyle(0x755846, 0.14)
+          .fillCircle(state.aim.x, state.aim.y, tuning.emergenceRadius)
+          .lineStyle(3, 0xd09a66, 0.9)
+          .strokeCircle(state.aim.x, state.aim.y, tuning.emergenceRadius);
+    } else {
+      const waypoint = this.routeTo(
+        enemy,
+        aim,
+        () => this.landscape.navigation?.waypoint(enemy, aim.target, 'ground') ?? aim.target,
+      );
+      this.physics.moveTo(
+        enemy,
+        waypoint.x,
+        waypoint.y,
+        speed * (state.phase === 'recover' ? 0.55 : 1),
+      );
+    }
+    if (step.released === 'bite') {
+      this.strikeDeathWorm(enemy, aim, tuning.biteDamage, tuning.biteRange);
+      enemy.motion.attack();
+    } else if (step.released === 'poison') {
+      const angle = Math.atan2(aim.target.y - enemy.y, aim.target.x - enemy.x);
+      const shot = this.combat.fireHostile(enemy, angle);
+      shot?.setVelocity(Math.cos(angle) * tuning.poisonSpeed, Math.sin(angle) * tuning.poisonSpeed);
+      if (shot) shot.damage *= tuning.poisonDamage;
+      enemy.motion.attack();
+    } else if (step.emerged && state.aim) {
+      const direction = state.direction ?? { x: 1, y: 0 };
+      const desired = {
+        x: state.aim.x - direction.x * 42,
+        y: state.aim.y - direction.y * 42,
+      };
+      const point = this.landscape.navigation?.nearestWalkable(desired) ?? desired;
+      if (point) {
+        enemy.setPosition(point.x, point.y);
+        enemy.body?.updateFromGameObject();
+      }
+      const emergedAim = {
+        ...aim,
+        playerDistance: Phaser.Math.Distance.Between(
+          enemy.x,
+          enemy.y,
+          this.player.x,
+          this.player.y,
+        ),
+      };
+      this.strikeDeathWorm(enemy, emergedAim, tuning.emergenceDamage, tuning.emergenceRadius);
+      enemy.motion.attack();
+      this.effects.ring(enemy.x, enemy.y, tuning.emergenceRadius, 0xa97555);
+    }
+  }
+
+  private strikeDeathWorm(enemy: Enemy, aim: EnemyAim, multiplier: number, radius: number): void {
+    const damage = enemy.definition.damage * multiplier;
+    if (aim.attackingCamp) {
+      this.clanDamage.damage(
+        damage * GAME.camp.enemyAttack.damageMultiplier,
+        'attack',
+        enemy.definition.title,
+        enemy,
+      );
+      const impact = this.host.campBarrier.hit(this.camp, enemy);
+      this.effects.burst(impact.x, impact.y - 8, 0x718c58, 4);
+    } else if (aim.playerDistance <= radius) this.host.takeDamage(damage);
+  }
+
+  /** Orbits its target between alternating dive strikes and radius-marked shrieks. */
+  private steerMuuShuuvuu(
+    enemy: Enemy,
+    aim: EnemyAim,
+    speed: number,
+    dt: number,
+    warnings: Phaser.GameObjects.Graphics,
+  ): void {
+    const tuning = GAME.tactics.muuShuuvuu;
+    const step = advanceMuuShuuvuu(enemy.folklore, dt, enemy, aim.target, isEnemyDisabled(enemy));
+    const state = enemy.folklore;
+    if (state.phase === 'windup') {
+      enemy.setVelocity(0, 0);
+      enemy.preparingAttack = true;
+      if (state.attack === 'dive' && state.aim)
+        warnings
+          .lineStyle(4, 0xb76063, 0.85)
+          .lineBetween(enemy.x, enemy.y, state.aim.x, state.aim.y);
+      else
+        warnings
+          .fillStyle(0x66517e, 0.13)
+          .fillCircle(enemy.x, enemy.y, tuning.shriekRadius)
+          .lineStyle(3, 0xb8a0cc, 0.9)
+          .strokeCircle(enemy.x, enemy.y, tuning.shriekRadius);
+    } else if (state.phase === 'attack' && state.attack === 'dive' && state.direction) {
+      enemy.setVelocity(
+        state.direction.x * speed * tuning.diveSpeed,
+        state.direction.y * speed * tuning.diveSpeed,
+      );
+      if (!state.hit && (aim.attackingCamp || aim.playerDistance <= 54)) {
+        this.strikeMuuShuuvuu(enemy, aim, tuning.diveDamage, 54);
+        state.hit = true;
+        state.phase = 'recover';
+        state.remaining = tuning.recovery;
+      }
+    } else {
+      const orbit = muuShuuvuuOrbit(aim.target, this.run.elapsed, enemy.tacticalSlot);
+      this.physics.moveTo(enemy, orbit.x, orbit.y, speed * (state.phase === 'recover' ? 0.65 : 1));
+    }
+    if (step.released === 'shriek') {
+      this.strikeMuuShuuvuu(enemy, aim, tuning.shriekDamage, tuning.shriekRadius);
+      enemy.motion.attack();
+      this.effects.ring(enemy.x, enemy.y, tuning.shriekRadius, 0x806b9a);
+      this.audio.play('spell', enemy);
+    } else if (step.released === 'dive') enemy.motion.attack();
+  }
+
+  private strikeMuuShuuvuu(enemy: Enemy, aim: EnemyAim, multiplier: number, radius: number): void {
+    const damage = enemy.definition.damage * multiplier;
+    if (aim.attackingCamp)
+      this.clanDamage.damage(
+        damage * GAME.camp.enemyAttack.damageMultiplier,
+        'attack',
+        enemy.definition.title,
+        enemy,
+      );
+    else if (aim.playerDistance <= radius) this.host.takeDamage(damage);
+  }
+
+  /** Runs the Almas' claw, slam and charge cycle with static, ground-readable warnings. */
+  private steerAlmas(
+    enemy: Enemy,
+    aim: EnemyAim,
+    speed: number,
+    dt: number,
+    warnings: Phaser.GameObjects.Graphics,
+  ): void {
+    const tuning = GAME.tactics.almas;
+    const { target, attackingCamp } = aim;
+    const step = advanceAlmas(enemy.folklore, dt, enemy, target, isEnemyDisabled(enemy));
+    const state = enemy.folklore;
+    if (state.phase === 'windup') {
+      enemy.setVelocity(0, 0);
+      enemy.preparingAttack = true;
+      const progress = 1 - state.remaining / Math.max(0.01, this.almasWarning(state.attack));
+      if (state.attack === 'charge' && state.aim)
+        warnings
+          .lineStyle(4, 0xc66f55, 0.65 + progress * 0.2)
+          .lineBetween(enemy.x, enemy.y, state.aim.x, state.aim.y);
+      else
+        warnings
+          .fillStyle(0x8d503f, 0.1)
+          .fillCircle(enemy.x, enemy.y, state.attack === 'slam' ? tuning.slamRadius : 52)
+          .lineStyle(3, 0xd18a68, 0.8)
+          .strokeCircle(enemy.x, enemy.y, state.attack === 'slam' ? tuning.slamRadius : 52);
+    } else if (state.phase === 'attack' && state.attack === 'charge' && state.direction) {
+      enemy.setVelocity(
+        state.direction.x * speed * tuning.chargeSpeed,
+        state.direction.y * speed * tuning.chargeSpeed,
+      );
+      if (!state.hit && (attackingCamp || aim.playerDistance <= 58)) {
+        this.strikeAlmas(enemy, aim, tuning.chargeDamage, 58);
+        state.hit = true;
+        state.phase = 'recover';
+        state.remaining = tuning.recovery;
+      }
+    } else {
+      const waypoint = this.routeTo(
+        enemy,
+        aim,
+        () => this.landscape.navigation?.waypoint(enemy, target, 'heavy') ?? target,
+      );
+      this.physics.moveTo(
+        enemy,
+        waypoint.x,
+        waypoint.y,
+        speed * (state.phase === 'recover' ? 0.42 : 1),
+      );
+    }
+    if (step.released === 'claw') this.strikeAlmas(enemy, aim, tuning.clawDamage, 72);
+    if (step.released === 'slam') {
+      this.strikeAlmas(enemy, aim, tuning.slamDamage, tuning.slamRadius);
+      this.effects.ring(enemy.x, enemy.y, tuning.slamRadius, 0xb56f54);
+      this.effects.shake(120, 0.004);
+    }
+    if (step.released) enemy.motion.attack();
+  }
+
+  private almasWarning(attack?: FolkloreAttack): number {
+    const tuning = GAME.tactics.almas;
+    return attack === 'slam'
+      ? tuning.slamWarning
+      : attack === 'charge'
+        ? tuning.chargeWarning
+        : tuning.clawWarning;
+  }
+
+  /** Applies one committed Almas hit either to the Khan or the camp barrier. */
+  private strikeAlmas(enemy: Enemy, aim: EnemyAim, multiplier: number, radius: number): void {
+    const damage = enemy.definition.damage * multiplier;
+    if (aim.attackingCamp) {
+      this.clanDamage.damage(
+        damage * GAME.camp.enemyAttack.damageMultiplier,
+        'attack',
+        enemy.definition.title,
+        enemy,
+      );
+      const impact = this.host.campBarrier.hit(this.camp, enemy);
+      this.effects.burst(impact.x, impact.y - 12, 0xb56f54, 5);
+    } else if (aim.playerDistance <= radius) this.host.takeDamage(damage);
+  }
+
   /**
    * The waypoint the enemy steers toward. Terrain routes are re-planned when
    * `routeDue` says so; between refreshes the enemy keeps heading for the last one.
@@ -364,6 +637,9 @@ export class EnemyBehaviour extends ArenaSystem {
         enemy.attackTimer < 0.25) ||
       (attackingCamp && enemy.clanAttackTimer > 0 && enemy.clanAttackTimer < 0.2) ||
       (behavior === 'charger' && enemy.tactics.phase === 'windup') ||
+      (behavior === 'almas' && enemy.folklore.phase === 'windup') ||
+      (behavior === 'death-worm' && enemy.folklore.phase === 'windup') ||
+      (behavior === 'muu-shuuvuu' && enemy.folklore.phase === 'windup') ||
       (!!enemy.definition.ability &&
         enemy.dangerTimer > 0 &&
         enemy.dangerTimer < 0.4 &&
@@ -373,6 +649,7 @@ export class EnemyBehaviour extends ArenaSystem {
   /** Strikes the camp barrier when in range and ready. */
   private attackCamp(enemy: Enemy, aim: EnemyAim): void {
     const { attackingCamp } = aim;
+    if (['almas', 'death-worm', 'muu-shuuvuu'].includes(enemy.definition.behavior ?? '')) return;
     if (attackingCamp && enemy.clanAttackTimer <= 0 && enemy.status.stun <= 0) {
       enemy.motion.attack();
       this.clanDamage.damage(
