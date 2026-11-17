@@ -208,8 +208,9 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.keyboard.down('d');
     await page.waitForTimeout(250);
     await page.keyboard.up('d');
-    await page.keyboard.press('Space');
-    await expect(page.locator('#dash-label')).toContainText('RECHARGING');
+    await page.keyboard.down('Space');
+    await expect(page.locator('#dash-label')).toContainText('GALLOPING');
+    await page.keyboard.up('Space');
     await expect
       .poll(() => page.evaluate(() => (window as any).nativeSoundsPlayed ?? 0))
       .toBeGreaterThan(0);

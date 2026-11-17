@@ -75,11 +75,16 @@ test(
     });
     expect(waiting.remaining).toBeGreaterThan(9);
     await page.keyboard.down('d');
-    await page.keyboard.press('Space');
+    await page.keyboard.down('Space');
     await expect
       .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.integrity))
       .toBeLessThan(100);
-    expect(await page.evaluate(() => (window as any).__gloam.scene.dashRemaining)).toBe(0);
+    expect(
+      await page.evaluate(
+        () => (window as any).__gloam.scene.captureWorld().timers.khanResources.sprinting,
+      ),
+    ).toBe(false);
+    await page.keyboard.up('Space');
     await page.keyboard.up('d');
     for (const viewport of [
       { width: 1440, height: 1000 },

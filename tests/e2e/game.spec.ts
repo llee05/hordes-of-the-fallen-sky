@@ -46,8 +46,14 @@ test(
         (window as any).testController.axes[0] = 0;
       });
     }
-    await press(0);
-    await expect(page.locator('#dash-label')).toContainText('RECHARGING');
+    await page.evaluate(() => {
+      (window as any).testController.buttons[4].pressed = true;
+    });
+    await expect(page.locator('#dash-label')).toContainText('GALLOPING');
+    await page.evaluate(() => {
+      (window as any).testController.buttons[4].pressed = false;
+    });
+    await expect(page.locator('#dash-label')).not.toContainText('GALLOPING');
     await press(8);
     await expect(page.getByRole('heading', { name: 'A people on the move.' })).toBeVisible();
     await press(1);
@@ -89,8 +95,10 @@ test(
     } finally {
       await page.keyboard.up('d');
     }
-    await page.keyboard.press('Space');
-    await expect(page.locator('#dash-label')).toContainText('RECHARGING');
+    await page.keyboard.down('Space');
+    await expect(page.locator('#dash-label')).toContainText('GALLOPING');
+    await page.keyboard.up('Space');
+    await expect(page.locator('#breath')).not.toHaveText('100');
     await closeOverlayOrPause(page);
     await expect(page.getByRole('heading', { name: 'A quiet moment.' })).toBeVisible();
     await expectFrozen(

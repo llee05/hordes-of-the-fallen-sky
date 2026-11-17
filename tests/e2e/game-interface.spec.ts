@@ -49,8 +49,10 @@ test('mobile layout fits and touch movement works', { tag: '@core' }, async ({ b
   } finally {
     await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   }
-  await page.getByRole('button', { name: 'Dash', exact: true }).click();
-  await expect(page.locator('#dash-label')).toContainText('RECHARGING');
+  await page.locator('#dash').dispatchEvent('pointerdown');
+  await expect(page.locator('#dash-label')).toContainText('GALLOPING');
+  await page.locator('#dash').dispatchEvent('pointerup');
+  await expect(page.locator('#dash-label')).not.toContainText('GALLOPING');
   await context.close();
 });
 

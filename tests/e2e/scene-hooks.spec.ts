@@ -48,7 +48,6 @@ const READABLE = [
 const TIMERS = [
   'spawnTimer',
   'attackTimer',
-  'dashTimer',
   'dashRemaining',
   'invulnerable',
   'supportTimer',
@@ -100,7 +99,7 @@ const METHODS = [
   'closeCamp',
   'improveNomadicCamp',
   'chooseRoute',
-  'dash',
+  'holdGallop',
   'changeZoom',
 ] as const;
 
