@@ -4,17 +4,18 @@ The battlefield HUD frames the painted steppe as a single antique manuscript lea
 
 ## Permanent annotations
 
-| Annotation          | Position      | Content and expansion                                                                                                                                                                                |
-| ------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Clan resources      | top left      | Five newly painted icons with small-caps labels and values on one ruled parchment strip. The disclosure opens doctrine, workers, food net/outlook and the loss tally.                                |
-| Expedition time     | top centre    | Active time and stage on a cloud-winged painted timer plaque.                                                                                                                                        |
-| Chronicle and pause | top right     | Two square painted key plaques retaining Tab/J and Escape.                                                                                                                                           |
-| Current objective   | upper right   | Location/day and the immediate italic objective on a corner-ruled scroll, with migration progress and critical warnings. Its disclosure opens pasture, calamity, route timing and encounter details. |
-| Khan status         | bottom left   | The Khan, level/XP, health, clan resolve, Breath and class-resource beads on one ruled character card.                                                                                               |
-| Action plaque       | bottom centre | A painted galloping rider, Gallop/Space state, four class abilities and relevant camp actions on one ornamented strip.                                                                               |
-| Zoom                | bottom right  | The same three controls, visually subdued until hover or keyboard focus.                                                                                                                             |
+| Annotation          | Position        | Content and expansion                                                                                                                                                                                   |
+| ------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Clan resources      | top left        | Five newly painted icons with small-caps labels and values on one ruled parchment strip. The disclosure opens doctrine, workers, food net/outlook and the loss tally.                                   |
+| Clan resolve        | below resources | One compact clan-wide display, separate from the Khan's personal stats. Low resolve gains critical emphasis and its objective warning remains visible.                                                  |
+| Expedition time     | top centre      | Active time and stage on a cloud-winged painted timer plaque.                                                                                                                                           |
+| Chronicle and pause | top right       | Two square painted key plaques retaining Tab/J and Escape.                                                                                                                                              |
+| Current objective   | upper right     | Location/day and the immediate italic objective on a corner-ruled scroll, with migration progress and critical warnings. Its disclosure opens pasture, calamity, route timing and encounter details.    |
+| Khan status         | bottom left     | The Khan, level/XP, personal health, Breath and class-resource beads on one ruled character card.                                                                                                       |
+| Action plaque       | bottom centre   | A painted galloping rider, Gallop/Space state, four class abilities and relevant camp actions on one wide ornamented strip. Secondary ability state moves to hover text so permanent labels stay large. |
+| Zoom                | bottom right    | The same three controls, visually subdued until hover or keyboard focus.                                                                                                                                |
 
-This is seven visual groups in the normal established-camp view. The earlier layout presented 17 separately framed blocks or tiles: a resource card, clock, two menu cards, objective card, guidance card, level plaque, vitals card, four ability tiles, two camp-action tiles, gallop card, zoom card and bearing chip. The redesign therefore removes 10 of 17 permanent blocks (58.8%) while retaining every route, shortcut and live value.
+This is eight visual groups in the normal established-camp view, including the deliberately separate clan Resolve strip. The earlier layout presented 17 separately framed blocks or tiles: a resource card, clock, two menu cards, objective card, guidance card, level plaque, vitals card, four ability tiles, two camp-action tiles, gallop card, zoom card and bearing chip. The redesign still consolidates the four abilities and two camp actions into one plaque while retaining every route, shortcut and live value.
 
 ## Context priorities
 

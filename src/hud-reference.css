@@ -5,8 +5,8 @@
   --hud-paper: #e8c990;
   --hud-paper-light: #f3ddb0;
   --hud-paper-deep: #c89e67;
-  --hud-ink: #34261b;
-  --hud-ink-soft: #644934;
+  --hud-ink: #241810;
+  --hud-ink-soft: #4f3525;
   --hud-red: #934735;
   --hud-red-dark: #633124;
   --hud-blue: #496d7d;
@@ -106,6 +106,7 @@
 }
 
 .resource-hud,
+.clan-resolve-hud,
 .objective-hud,
 .vitals-hud {
   border: 13px solid transparent;
@@ -123,8 +124,8 @@
 }
 
 .resource-hud {
-  min-height: 68px;
-  padding: 7px 13px 8px;
+  min-height: 74px;
+  padding: 8px 13px 9px;
 }
 
 .resource-hud::after {
@@ -184,13 +185,13 @@
 .resource-label {
   align-self: end;
   color: var(--hud-ink);
-  font: 700 10px/1 var(--hud-serif);
+  font: 700 11px/1 var(--hud-serif);
   letter-spacing: 0.05em;
 }
 
 .resource strong {
   align-self: start;
-  font: 700 17px/1.05 var(--hud-serif);
+  font: 700 19px/1.05 var(--hud-serif);
   text-align: left;
 }
 
@@ -207,6 +208,49 @@
 .clan-details {
   margin-top: 8px;
   border-top-style: solid;
+}
+
+.clan-resolve-hud {
+  position: relative;
+  width: 238px;
+  margin-top: 5px;
+  padding: 5px 12px 7px;
+  border-width: 9px;
+  border-image-width: 9px 11px;
+  box-shadow: 0 2px 5px rgba(44, 28, 17, 0.25);
+}
+
+.resolve-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--hud-ink);
+  font: 700 11px/1 var(--hud-serif);
+  letter-spacing: 0.05em;
+}
+
+.resolve-heading b {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.resolve-heading span {
+  flex-shrink: 0;
+}
+
+.clan-resolve-hud .resolve-track {
+  height: 4px;
+  margin-top: 4px;
+}
+
+.clan-resolve-hud:has(#integrity-fill.low) {
+  filter: drop-shadow(0 0 5px rgba(151, 48, 35, 0.55));
+}
+
+.clan-resolve-hud:has(#integrity-fill.low) .resolve-heading {
+  color: var(--hud-red-dark);
 }
 
 /* Top centre: painted timer plaque and cloud-scroll wings. */
@@ -325,17 +369,17 @@
 }
 
 .objective-heading strong {
-  font: 700 12px/1.1 var(--hud-serif);
+  font: 700 13px/1.1 var(--hud-serif);
 }
 
 .objective-heading span {
-  font: 700 9px/1.1 var(--hud-serif);
+  font: 700 10px/1.1 var(--hud-serif);
 }
 
 .objective-text {
   margin-top: 8px;
   padding-right: 50px;
-  font: italic 600 17px/1.18 var(--hud-serif);
+  font: italic 600 18px/1.18 var(--hud-serif);
 }
 
 .objective-vignette {
@@ -386,11 +430,11 @@
   padding-bottom: 4px;
   border-bottom: 1px solid rgba(91, 54, 34, 0.5);
   color: var(--hud-ink);
-  font: 700 12px/1 var(--hud-serif);
+  font: 700 13px/1 var(--hud-serif);
 }
 
 .tradition-hud > span:first-child {
-  font-size: 15px;
+  font-size: 17px;
   font-style: italic;
 }
 
@@ -401,7 +445,7 @@
 
 .health-heading {
   margin: 4px 0 2px;
-  font: 700 10px/1.05 var(--hud-serif);
+  font: 700 11px/1.05 var(--hud-serif);
 }
 
 .health-track,
@@ -412,7 +456,7 @@
 
 .class-resource {
   margin-top: 5px;
-  font: 700 8px var(--hud-serif);
+  font: 700 9px var(--hud-serif);
 }
 
 .resource-beads {
@@ -428,9 +472,10 @@
 /* Bottom-centre: one continuous ornamented action strip. */
 .action-dock {
   bottom: 8px;
-  min-height: 78px;
-  max-width: calc(100% - 690px);
-  padding: 11px 34px 12px;
+  width: min(1020px, calc(100% - 720px));
+  min-height: 88px;
+  max-width: none;
+  padding: 11px 38px 12px;
   border: 0;
   background-image:
     url('/art/hud-action-ornament.png'), url('/art/hud-action-ornament.png'),
@@ -441,8 +486,8 @@
     center;
   background-repeat: no-repeat;
   background-size:
-    96px 50px,
-    96px 50px,
+    72px 48px,
+    72px 48px,
     100% 100%;
   filter: drop-shadow(0 3px 4px rgba(44, 28, 17, 0.34));
 }
@@ -457,25 +502,25 @@
 }
 
 .dash-button {
-  grid-template-columns: 52px auto;
-  gap: 5px;
-  width: 132px;
-  min-height: 50px;
+  grid-template-columns: 62px auto;
+  gap: 7px;
+  width: 154px;
+  min-height: 58px;
   padding: 2px 7px;
 }
 
 .dash-rider {
-  width: 52px;
-  height: 45px;
+  width: 62px;
+  height: 54px;
   background: url('/art/hud-icon-gallop.png') center / contain no-repeat;
 }
 
 .dash-button strong {
-  font: italic 700 13px/1 var(--hud-serif);
+  font: italic 700 15px/1 var(--hud-serif);
 }
 
 .dash-button small {
-  font: 700 7px/1.2 var(--hud-serif);
+  font: 700 9px/1.2 var(--hud-serif);
   letter-spacing: 0.03em;
   white-space: nowrap;
 }
@@ -496,18 +541,19 @@
 }
 
 .ability-dock {
-  grid-template-columns: repeat(4, minmax(84px, 106px));
+  flex: 1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .ability-indicator {
-  grid-template-columns: 32px minmax(0, 1fr);
-  gap: 4px;
-  padding: 3px 6px 7px;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 6px;
+  padding: 3px 8px 7px;
 }
 
 .ability-icon {
-  width: 32px;
-  height: 36px;
+  width: 44px;
+  height: 48px;
   filter: none;
 }
 
@@ -528,22 +574,33 @@
 }
 
 .ability-indicator strong {
-  font: italic 700 10px/1.05 var(--hud-serif);
+  padding-right: 14px;
+  font: italic 700 12px/1.08 var(--hud-serif);
 }
 
 .ability-indicator small {
-  font: 700 7px/1.1 var(--hud-serif);
+  display: none;
 }
 
 .command-button {
-  width: 72px;
+  width: 88px;
   padding: 1px 4px 7px;
-  font: italic 700 10px/1.05 var(--hud-serif);
+  font: italic 700 12px/1.05 var(--hud-serif);
 }
 
 .command-icon {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
+}
+
+.command-dock {
+  position: relative;
+  z-index: 1;
+  padding-right: 20px;
+}
+
+.game-hud.prologue-unestablished .clan-resolve-hud {
+  display: none;
 }
 
 #build .command-icon {
@@ -601,7 +658,11 @@
   }
 
   .resource strong {
-    font-size: 15px;
+    font-size: 17px;
+  }
+
+  .resolve-heading b {
+    font-size: 10px;
   }
 
   .objective-hud {
@@ -609,7 +670,7 @@
   }
 
   .objective-text {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .khan-hud {
@@ -617,35 +678,36 @@
   }
 
   .action-dock {
-    max-width: calc(100% - 570px);
-    padding-inline: 27px;
+    width: calc(100% - 600px);
+    padding-inline: 28px;
   }
 
   .ability-dock {
-    grid-template-columns: repeat(4, minmax(70px, 88px));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .ability-indicator {
-    grid-template-columns: 28px minmax(0, 1fr);
-    padding-inline: 4px;
+    grid-template-columns: 36px minmax(0, 1fr);
+    padding-inline: 5px;
   }
 
   .ability-icon {
-    width: 28px;
-    height: 32px;
+    width: 36px;
+    height: 41px;
   }
 
   .dash-button {
-    grid-template-columns: 43px auto;
-    width: 116px;
+    grid-template-columns: 48px auto;
+    width: 128px;
   }
 
   .dash-rider {
-    width: 43px;
+    width: 48px;
   }
 
   .command-button {
-    width: 62px;
+    width: 70px;
+    font-size: 10px;
   }
 }
 
@@ -691,7 +753,8 @@
   }
 
   .action-dock {
-    max-width: calc(100% - 34px);
+    width: calc(100% - 34px);
+    max-width: none;
   }
 
   .ability-dock {
@@ -745,6 +808,7 @@
   }
 
   .resource-hud,
+  .clan-resolve-hud,
   .objective-hud,
   .vitals-hud {
     border-width: 9px;
@@ -776,15 +840,35 @@
   }
 
   .resource-label {
-    font-size: 6px;
+    font-size: 6.5px;
   }
 
   .resource strong {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .clan-bearing {
     display: none;
+  }
+
+  .clan-resolve-hud {
+    position: absolute;
+    z-index: 4;
+    left: 7px;
+    bottom: 258px;
+    width: 174px;
+    margin: 0;
+    padding: 4px 8px 6px;
+    border-width: 8px;
+    border-image-width: 8px 9px;
+  }
+
+  .resolve-heading {
+    font-size: 8px;
+  }
+
+  .resolve-heading b {
+    font-size: 8.5px;
   }
 
   .expedition-clock {
@@ -893,6 +977,7 @@
     bottom: 6px;
     left: 7px;
     right: 7px;
+    width: auto;
     grid-template-columns: 64px 1fr;
     grid-template-rows: 45px auto;
     min-height: 108px;
@@ -920,11 +1005,11 @@
   }
 
   .dash-button strong {
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .dash-button small {
-    font-size: 5px;
+    font-size: 5.5px;
   }
 
   .ability-dock {
@@ -943,7 +1028,7 @@
   .command-button {
     width: 50%;
     padding-bottom: 5px;
-    font-size: 7px;
+    font-size: 8px;
   }
 
   .command-icon {
