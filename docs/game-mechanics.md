@@ -408,23 +408,25 @@ Each class earns its own resource by fighting in its own style and spends it onl
 1 to 4. It holds 12 whole points, starts at 0 and never refills by itself. Light attacks, heavy
 attacks and the gallop never spend it; they are free or paid in [Breath](#breath-and-the-gallop).
 
-| Class          | Resource         | Earned by                                                                                                                    | 1   | 2   | 3   | 4   |
-| -------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------- | --- | --- | --- | --- |
-| Mounted Archer | Focus            | +1 for each Galloping Shot arrow that hits (once per arrow, however far it pierces); +2 for a full Piercing Draw that hits   | 2   | 4   | 3   | 4   |
-| Lancer         | Momentum         | +1 for each Spear Thrust that lands, +1 more when it strikes three or more enemies; +2 for a full Impaling Strike that lands | 2   | 2   | 2   | 4   |
-| Iron Pagoda    | Mettle           | +1 for each sabre slash that lands, +1 more on the fourth-slash finisher; +1 for each hit the Khan takes                     | 3   | 3   | 2   | 5   |
-| Spirit Caller  | Spiritual Energy | +1 for each Spirit Wisp hit                                                                                                  | 4   | 3   | 4   | 6   |
+| Class          | Resource         | Earned by                                                                                                                    | 1   | 2   | 3   | 4 (takes all)                           |
+| -------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------- | --- | --- | --- | --------------------------------------- |
+| Mounted Archer | Focus            | +1 for each Galloping Shot arrow that hits (once per arrow, however far it pierces); +2 for a full Piercing Draw that hits   | 2   | 4   | 3   | min 4; +6% Windstep arrow damage each   |
+| Lancer         | Momentum         | +1 for each Spear Thrust that lands, +1 more when it strikes three or more enemies; +2 for a full Impaling Strike that lands | 2   | 2   | 2   | min 4; +0.1 s Unstoppable Charge each   |
+| Iron Pagoda    | Mettle           | +1 for each sabre slash that lands, +1 more on the fourth-slash finisher; +1 for each hit the Khan takes                     | 3   | 3   | 2   | min 5; +2 starting Fortress shield each |
+| Spirit Caller  | Spiritual Energy | +1 for each Spirit Wisp hit                                                                                                  | 4   | 3   | 4   | min 6; +0.3 s Veil duration each        |
 
-An ability keeps its cooldown and also needs its cost. Without the points the ability is
-**refused**: nothing fires, nothing is spent and the cooldown does not start. A refused press
-plays the interface sound and flags the beads and the cost it could not pay. Pressing an ability
-that is still cooling does nothing, as before. The costs are set so that casting everything the
-moment it is ready runs short, and steady basic attacks close the gap.
+Abilities 1 to 3 keep their cooldown and spend their fixed cost. Ability 4 keeps its cooldown,
+needs at least its minimum cost, takes **everything** stored and grows with the points spent.
+Without the needed points an ability is **refused**: nothing fires, nothing is spent and the
+cooldown does not start. A refused press plays the interface sound and flags the beads and the
+cost it could not pay. Pressing an ability that is still cooling does nothing, as before. The
+costs are set so that casting everything the moment it is ready runs short, and steady basic
+attacks close the gap.
 
 The Khan panel shows the resource as a row of twelve brass-ringed beads filled in the class
 colour, with its name and count; the Spirit Caller keeps the active-spirit count beside it.
-Each ability slot shows its cost beside the key badge. A slot the resource cannot pay for dims,
-turns its cost vermilion and reads `NEEDS 3` once its cooldown is over.
+Each ability slot shows its cost beside the key badge (`ALL` on slot 4). A slot the resource
+cannot pay for dims, turns its cost vermilion and reads `NEEDS 3` once its cooldown is over.
 
 The resource changes only during active play. Nothing is earned while the Khan is down,
 including the Iron Pagoda's point for a hit taken. A successor Khan returns with an **empty**
@@ -456,8 +458,9 @@ the push. Breakthrough damages each enemy once along its travelled lane, scaling
 entry speed and distance. Sweeping Lance applies resisted knockback in a forward
 semicircle. Lance Vault uses movement direction when moving and cursor aim while still,
 crosses actors and blocked cells, and chooses the furthest valid in-bounds landing before
-its shockwave. Unstoppable Charge ignores movement-slowing knockback effects, increases
-ride speed, damages each new contact, and gains a capped duration extension per enemy.
+its shockwave. Unstoppable Charge consumes all stored Momentum (at least 4, adding 0.1 s per
+point), ignores movement-slowing knockback effects, increases ride speed, damages each new
+contact, and gains a capped duration extension per enemy (up to 4.5 s).
 These effects use the shared stun, forced-movement, armour and Khan-immunity status
 records, all measured only in active gameplay seconds and retained in full saves.
 
@@ -477,14 +480,14 @@ The Iron Pagoda's attacks and abilities are authored in `GAME.classes['iron-pago
 surfaced by `src/game/data/classes.ts`. All times are active gameplay seconds. Unless noted,
 damage is a multiple of the Khan's damage stat.
 
-| Slot                | Name             | Rules                                                                                                                                                                                                                                                                  |
-| ------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Left click          | Heavy Sabre      | A 150° arc, 126 range, 0.2 s windup and the class attack interval. Every enemy in the arc is struck. Each slash that lands adds 22% damage to the next, up to the fourth slash (+66%), which resets the chain; 1.5 s without a landed slash also resets it.            |
-| Right click         | Sundering Cleave | A 229° arc, 150 range, 0.42 s windup, 1.8 s cooldown, 2.0× damage. Strikes apply **armor shred** (30% more damage taken and no armor reduction for 6 s), a 0.55 s **stun** and a 64-unit **knockback** over 0.25 s.                                                    |
-| 1 Iron Wall         | Brace            | 4 s: 65% less damage taken (before the class's own reduction), immune to knockback, stuns and slowing terrain, but riding at 60% speed. Cooldown 15 s.                                                                                                                 |
-| 2 Crushing Hooves   | Shockwave        | A 150-unit circle around the Khan, 1.0× damage and a 1.4 s stun plus a short shove. Cooldown 12 s.                                                                                                                                                                     |
-| 3 Chain Snare       | Circular sweep   | A 210-unit circle, 0.7× damage. **Small** enemies are pulled up to 160 units toward the Khan (stopping 48 units short) and slowed to 60% for 1.5 s. **Large** enemies are not pulled and are slowed to 45% for 4 s. Cooldown 10 s.                                     |
-| 4 Unbroken Fortress | Stance           | 6 s unstoppable stance: a sweep of everything within 135 units every 0.7 s (0.8× damage, first blow after 0.15 s), 30% less damage taken, riding at 75% speed, and a shield that starts at 15, regenerates 8/s plus 2 per enemy struck, and caps at 40. Cooldown 24 s. |
+| Slot                | Name             | Rules                                                                                                                                                                                                                                                                                                                      |
+| ------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Left click          | Heavy Sabre      | A 150° arc, 126 range, 0.2 s windup and the class attack interval. Every enemy in the arc is struck. Each slash that lands adds 22% damage to the next, up to the fourth slash (+66%), which resets the chain; 1.5 s without a landed slash also resets it.                                                                |
+| Right click         | Sundering Cleave | A 229° arc, 150 range, 0.42 s windup, 1.8 s cooldown, 2.0× damage. Strikes apply **armor shred** (30% more damage taken and no armor reduction for 6 s), a 0.55 s **stun** and a 64-unit **knockback** over 0.25 s.                                                                                                        |
+| 1 Iron Wall         | Brace            | 4 s: 65% less damage taken (before the class's own reduction), immune to knockback, stuns and slowing terrain, but riding at 60% speed. Cooldown 15 s.                                                                                                                                                                     |
+| 2 Crushing Hooves   | Shockwave        | A 150-unit circle around the Khan, 1.0× damage and a 1.4 s stun plus a short shove. Cooldown 12 s.                                                                                                                                                                                                                         |
+| 3 Chain Snare       | Circular sweep   | A 210-unit circle, 0.7× damage. **Small** enemies are pulled up to 160 units toward the Khan (stopping 48 units short) and slowed to 60% for 1.5 s. **Large** enemies are not pulled and are slowed to 45% for 4 s. Cooldown 10 s.                                                                                         |
+| 4 Unbroken Fortress | Stance           | 6 s unstoppable stance (takes all Mettle, at least 5): a sweep of everything within 135 units every 0.7 s (0.8× damage, first blow after 0.15 s), 30% less damage taken, riding at 75% speed, and a shield that starts at 15 + 2 per Mettle spent, regenerates 8/s plus 2 per enemy struck, and caps at 40. Cooldown 24 s. |
 
 Attacks can be used while a stance lasts; using another ability does not end it. Falling,
 or the stance's duration running out, clears the braces and the shield.

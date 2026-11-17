@@ -609,7 +609,7 @@ describe('full expedition snapshots', () => {
         tickTimer: 0.1,
         visualTimer: 0.04,
       },
-      windstep: { remaining: 0.3, shotTimer: 0.05 },
+      windstep: { remaining: 0.3, shotTimer: 0.05, damage: 0.85 },
     };
     runtime.timers.khanManeuver = {
       remaining: 0.3,

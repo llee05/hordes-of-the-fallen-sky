@@ -85,6 +85,7 @@ export type ClassAbilityEffect =
   | {
       kind: 'unstoppable';
       duration: number;
+      momentumDuration: number;
       maxDuration: number;
       extension: number;
       speedMultiplier: number;
@@ -155,7 +156,13 @@ export type ClassAbilityEffect =
       damage: number;
       damageReduction: number;
       speedMultiplier: number;
-      shield: { start: number; max: number; perSecond: number; perHit: number };
+      shield: {
+        start: number;
+        perMettle: number;
+        max: number;
+        perSecond: number;
+        perHit: number;
+      };
       payload: StatusPayload;
     }
   | {
@@ -192,6 +199,7 @@ export type ClassAbilityEffect =
       shotEvery: number;
       range: number;
       damage: number;
+      focusDamage: number;
     };
 
 interface ClassAbilityBase {
@@ -508,7 +516,8 @@ export const CLASSES: readonly ClassDefinition[] = [
         slot: 'r',
         slotLabel: '4',
         name: 'Windstep',
-        description: 'Evade at speed with brief invulnerability while arrows seek nearby enemies.',
+        description:
+          'Evade at speed with brief invulnerability while arrows seek nearby enemies; each point of Focus adds 6% arrow damage.',
         ...GAME.classes['mounted-archer'].abilities.r,
       },
     ],
@@ -622,7 +631,8 @@ export const CLASSES: readonly ClassDefinition[] = [
         slot: 'r',
         slotLabel: '4',
         name: 'Unstoppable Charge',
-        description: 'Gains speed and knockback immunity while contact hits extend the charge.',
+        description:
+          'Gains speed and knockback immunity while contact hits extend the charge; each point of Momentum adds 0.1 seconds.',
         ...GAME.classes.lancer.abilities.r,
       },
     ],
@@ -737,7 +747,7 @@ export const CLASSES: readonly ClassDefinition[] = [
         slot: 'r',
         slotLabel: '4',
         name: 'Unbroken Fortress',
-        description: `An unstoppable stance for ${IRON.abilities.r.duration} seconds: sweeping blows strike nearby enemies every ${IRON.abilities.r.interval} seconds while a shield rebuilds and damage is cut by ${pct(IRON.abilities.r.damageReduction)}.`,
+        description: `An unstoppable stance for ${IRON.abilities.r.duration} seconds: sweeping blows strike nearby enemies every ${IRON.abilities.r.interval} seconds while a shield rebuilds (starting with +${IRON.abilities.r.shield.perMettle} per Mettle) and damage is cut by ${pct(IRON.abilities.r.damageReduction)}.`,
         ...GAME.classes['iron-pagoda'].abilities.r,
       },
     ],
@@ -852,7 +862,8 @@ export const CLASSES: readonly ClassDefinition[] = [
         slot: 'r',
         slotLabel: '4',
         name: 'Veil Between Worlds',
-        description: 'Multiplies active spirits and creates spectral echoes of Spirit Wisps.',
+        description:
+          'Multiplies active spirits and creates spectral echoes of Spirit Wisps; each point of Spiritual Energy extends the veil by 0.3 seconds.',
         ...GAME.classes['spirit-caller'].abilities.r,
       },
     ],

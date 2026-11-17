@@ -312,12 +312,15 @@ export const GAME = {
         r: {
           cooldown: 13,
           cost: 4,
+          /** Windstep takes every stored point and hits harder for each. */
+          spendsAll: true,
           kind: 'windstep',
           duration: 0.46,
           speedMultiplier: 3.25,
           shotEvery: 0.115,
           range: 390,
           damage: 0.55,
+          focusDamage: 0.06,
         },
       },
     },
@@ -399,8 +402,11 @@ export const GAME = {
         r: {
           cooldown: 18,
           cost: 4,
+          /** Unstoppable Charge takes every stored point and lasts longer for each. */
+          spendsAll: true,
           kind: 'unstoppable',
           duration: 3,
+          momentumDuration: 0.1,
           maxDuration: 4.5,
           extension: 0.18,
           speedMultiplier: 1.45,
@@ -490,6 +496,8 @@ export const GAME = {
         r: {
           cooldown: 24,
           cost: 5,
+          /** Unbroken Fortress takes every stored point and starts with more shield for each. */
+          spendsAll: true,
           kind: 'fortress',
           duration: 6,
           interval: 0.7,
@@ -497,7 +505,7 @@ export const GAME = {
           damage: 0.8,
           damageReduction: 0.3,
           speedMultiplier: 0.75,
-          shield: { start: 15, max: 40, perSecond: 8, perHit: 2 },
+          shield: { start: 15, perMettle: 2, max: 40, perSecond: 8, perHit: 2 },
           payload: { knockback: { distance: 18, seconds: 0.15 } },
         },
       },

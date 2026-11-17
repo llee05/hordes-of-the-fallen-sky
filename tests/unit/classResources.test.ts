@@ -50,16 +50,20 @@ function setup(classId: string) {
 const east = { x: 1600, y: 1000 };
 
 describe('class resource rules', () => {
-  it('names each class resource and prices its four abilities', () => {
+  it('names each class resource and prices its four abilities, with ability 4 taking all', () => {
     const table = CHARACTER_CLASSES.map((id) => {
       const cls = classDefinition(id);
-      return [cls.resource.name, cls.resource.maximum, ...cls.abilities.map((a) => a.cost)];
+      return [
+        cls.resource.name,
+        cls.resource.maximum,
+        ...cls.abilities.map((a) => (a.spendsAll ? `${a.cost}+` : a.cost)),
+      ];
     });
     expect(table).toEqual([
-      ['Focus', 12, 2, 4, 3, 4],
-      ['Momentum', 12, 2, 2, 2, 4],
-      ['Mettle', 12, 3, 3, 2, 5],
-      ['Spiritual Energy', 12, 4, 3, 4, 6],
+      ['Focus', 12, 2, 4, 3, '4+'],
+      ['Momentum', 12, 2, 2, 2, '4+'],
+      ['Mettle', 12, 3, 3, 2, '5+'],
+      ['Spiritual Energy', 12, 4, 3, 4, '6+'],
     ]);
   });
 
@@ -222,6 +226,76 @@ describe('spending the class resource', () => {
     arena.combat.fireHeavy(east);
     expect(arena.resources.classPower).toBe(6);
     expect(arena.resources.stamina).toBeLessThan(100);
+  });
+
+  it('ability 4 takes all stored Focus and scales Windstep arrow damage by 6% per point', () => {
+    const minArena = setup('mounted-archer');
+    minArena.spawn(100, 0);
+    minArena.resources.classPower = 3;
+    expect(minArena.combat.useAbility('r', east)).toBe(false);
+    minArena.resources.classPower = 4;
+    expect(minArena.combat.useAbility('r', east)).toBe(true);
+    expect(minArena.resources.classPower).toBe(0);
+    const minDuration = minArena.context.timers.khanManeuver!.remaining;
+    minArena.combat.tickKhanCombat(0.01, false, false, east);
+    const minDamage = minArena.projectiles.getFirstAlive()!.damage;
+
+    const fullArena = setup('mounted-archer');
+    fullArena.spawn(100, 0);
+    fullArena.resources.classPower = 12;
+    expect(fullArena.combat.useAbility('r', east)).toBe(true);
+    expect(fullArena.resources.classPower).toBe(0);
+    expect(fullArena.context.timers.khanManeuver!.remaining).toBeCloseTo(minDuration);
+    fullArena.combat.tickKhanCombat(0.01, false, false, east);
+    const fullDamage = fullArena.projectiles.getFirstAlive()!.damage;
+    const base = fullArena.context.run.stats.damage * 0.55;
+    expect(minDamage).toBeCloseTo(base * (1 + 4 * 0.06));
+    expect(fullDamage).toBeCloseTo(base * (1 + 12 * 0.06));
+  });
+
+  it('ability 4 takes all stored Momentum and adds 0.1s per point to Unstoppable Charge', () => {
+    const arena = setup('lancer');
+    arena.resources.classPower = 3;
+    expect(arena.combat.useAbility('r', east)).toBe(false);
+    arena.resources.classPower = 4;
+    expect(arena.combat.useAbility('r', east)).toBe(true);
+    expect(arena.resources.classPower).toBe(0);
+    expect(arena.context.timers.classAction!.remaining).toBeCloseTo(3 + 4 * 0.1);
+    expect(arena.context.timers.khanStatus!.unstoppable).toBeCloseTo(3 + 4 * 0.1);
+
+    const full = setup('lancer');
+    full.resources.classPower = 12;
+    expect(full.combat.useAbility('r', east)).toBe(true);
+    expect(full.resources.classPower).toBe(0);
+    expect(full.context.timers.classAction!.remaining).toBeCloseTo(3 + 12 * 0.1);
+    expect(full.context.timers.classAction!.remaining).toBeLessThanOrEqual(4.5);
+  });
+
+  it('ability 4 takes all stored Mettle and adds 2 starting Fortress shield per point', () => {
+    const arena = setup('iron-pagoda');
+    arena.resources.classPower = 4;
+    expect(arena.combat.useAbility('r', east)).toBe(false);
+    arena.resources.classPower = 5;
+    expect(arena.combat.useAbility('r', east)).toBe(true);
+    expect(arena.resources.classPower).toBe(0);
+    expect(arena.context.timers.khanStatus!.shield).toBe(15 + 5 * 2);
+
+    const full = setup('iron-pagoda');
+    full.resources.classPower = 12;
+    expect(full.combat.useAbility('r', east)).toBe(true);
+    expect(full.resources.classPower).toBe(0);
+    expect(full.context.timers.khanStatus!.shield).toBe(15 + 12 * 2);
+    expect(full.context.timers.khanStatus!.shield).toBeLessThanOrEqual(40);
+  });
+
+  it('ability 4 takes all stored Spiritual Energy and adds 0.3s per point to Veil Between Worlds', () => {
+    const arena = setup('spirit-caller');
+    arena.resources.classPower = 5;
+    expect(arena.combat.useAbility('r', east)).toBe(false);
+    arena.resources.classPower = 9;
+    expect(arena.combat.useAbility('r', east)).toBe(true);
+    expect(arena.resources.classPower).toBe(0);
+    expect(arena.context.timers.spiritCaller!.veilRemaining).toBeCloseTo(5 + 9 * 0.3);
   });
 
   it('reports the class resource for the HUD in the class colour', () => {

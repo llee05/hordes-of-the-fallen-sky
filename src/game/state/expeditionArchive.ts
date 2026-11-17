@@ -454,7 +454,7 @@ const worldShape = object(
               tickTimer: number,
               visualTimer: number,
             }),
-            windstep: object({ remaining: number, shotTimer: number }),
+            windstep: object({ remaining: number, shotTimer: number }, { damage: positive }),
           },
         ),
         classAction,

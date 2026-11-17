@@ -565,7 +565,7 @@ export class CombatSystem extends ArenaSystem {
       cls.id === 'mounted-archer' &&
       ['parthian', 'rain', 'splinter', 'windstep'].includes(effect.kind)
     ) {
-      released = this.mountedArcher.cast(effect, aim, this.movementDirection(aim));
+      released = this.mountedArcher.cast(effect, aim, this.movementDirection(aim), power);
       if (released) this.host.playerMotion.attack();
     } else if (effect.kind === 'volley') {
       this.faceAim(aim);
@@ -633,10 +633,14 @@ export class CombatSystem extends ArenaSystem {
       this.vault(direction, effect);
     } else if (effect.kind === 'unstoppable') {
       const direction = this.faceAim(aim);
+      const duration = Math.min(
+        effect.maxDuration,
+        effect.duration + power * effect.momentumDuration,
+      );
       this.beginClassAction({
         kind: 'unstoppable',
-        remaining: effect.duration,
-        duration: effect.duration,
+        remaining: duration,
+        duration,
         directionX: direction.x,
         directionY: direction.y,
         speed: effect.speedMultiplier,
@@ -652,7 +656,7 @@ export class CombatSystem extends ArenaSystem {
       });
       khanStatusOf(this.timers).unstoppable = Math.max(
         khanStatusOf(this.timers).unstoppable,
-        effect.duration,
+        duration,
       );
       this.effects.classAttack('lancer:unstoppable-charge', {
         x: this.player.x,
@@ -713,7 +717,10 @@ export class CombatSystem extends ArenaSystem {
       status.fortressTimer = 0.15;
       status.shieldMax = effect.shield.max;
       status.shieldPerSecond = effect.shield.perSecond;
-      status.shield = Math.min(effect.shield.max, effect.shield.start);
+      status.shield = Math.min(
+        effect.shield.max,
+        effect.shield.start + power * effect.shield.perMettle,
+      );
       this.effects.ring(this.player.x, this.player.y, effect.range, 0xe0bc76);
       this.effects.classAttack('iron-pagoda:unbroken-fortress', {
         x: this.player.x,
