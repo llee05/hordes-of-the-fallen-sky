@@ -13,6 +13,7 @@ import {
   EnemyBehaviour,
   type EnemyBehaviourHost,
 } from '../../src/game/scenes/arena/EnemyBehaviour';
+import { khanResourcesOf } from '../../src/game/state/khanResources';
 import { SpatialHash } from '../../src/game/systems/SpatialHash';
 import type { Enemy } from '../../src/game/entities/actors';
 import { createFakeArena } from '../support/fakeArena';
@@ -381,11 +382,23 @@ describe('playable class combat', () => {
         expect(enemy.lastGallop).toBe(2);
         expect(enemy.x).toBe(1040);
       }
+      // A held gallop pushes each enemy once per gallop as well.
+      khanResourcesOf(arena.context.timers).sprinting = true;
+      behaviour.update(0.1);
+      for (const enemy of enemies) {
+        expect(enemy.lastGallop).toBe(3);
+        expect(enemy.x).not.toBe(1040);
+        enemy.setPosition(1040, 1000);
+      }
+      behaviour.update(0.1);
+      for (const enemy of enemies) expect(enemy.x).toBe(1040);
+      khanResourcesOf(arena.context.timers).sprinting = false;
+      arena.context.run.combat.gallopSerial++;
       arena.context.run.health = 0;
       arena.context.run.khan.successionRemaining = 5;
       arena.context.timers.dashRemaining = 0.4;
       behaviour.update(0.1);
-      for (const enemy of enemies) expect(enemy.lastGallop).toBe(2);
+      for (const enemy of enemies) expect(enemy.lastGallop).toBe(3);
     },
   );
 

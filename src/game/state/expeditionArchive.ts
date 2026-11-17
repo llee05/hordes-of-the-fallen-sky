@@ -47,6 +47,7 @@ import { createRun } from './run';
 import type { SpiritCallerCombatState } from './spiritCaller';
 import type { ClassActionState } from './classActions';
 import type { KhanManeuverState } from './khanManeuvers';
+import type { KhanResources } from './khanResources';
 import type { MountedArcherCombatState } from './mountedArcher';
 import { PROLOGUE_STAGE_IDS } from '../data/prologue';
 
@@ -121,7 +122,10 @@ export interface WorldArchive {
     khanManeuver?: KhanManeuverState;
     spiritCaller?: SpiritCallerCombatState;
     classAction?: ClassActionState;
-    dashTimer: number;
+    /** Missing in saves from before Breath; such saves load rested. */
+    khanResources?: KhanResources;
+    /** Retired gallop cooldown; accepted so old version 1 saves still load. */
+    dashTimer?: number;
     dashRemaining: number;
     invulnerable: number;
     supportTimer: number;
@@ -411,7 +415,6 @@ const worldShape = object(
       {
         spawnTimer: number,
         attackTimer: number,
-        dashTimer: number,
         dashRemaining: number,
         invulnerable: number,
         supportTimer: number,
@@ -420,6 +423,8 @@ const worldShape = object(
       },
       {
         closeDefenseTimer: number,
+        dashTimer: number,
+        khanResources: object({ stamina: positive, sprinting: boolean, winded: boolean }),
         abilityCooldowns: object({ q: number, w: number, e: number, r: number }),
         khanStatus,
         khanManeuver: object({ remaining: number, speedMultiplier: number }, { direction: point }),
@@ -711,6 +716,8 @@ export function decodeExpedition(value: unknown): {
   )
     throw new Error('This expedition contains invalid progression or actor references.');
   const restored = structuredClone({ summary: value.summary, run, world });
+  const resources = restored.world.timers.khanResources;
+  if (resources) resources.stamina = Math.min(GAME.stamina.maximum, resources.stamina);
   restored.run.character = normalizeCharacterProfile(restored.run.character);
   migrateLegacyNomadicCamp(restored.run);
   syncNomadicBuildings(restored.run);

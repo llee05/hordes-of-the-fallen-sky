@@ -563,7 +563,19 @@ export const GAME = {
     'oath-of-the-spirits': { spirit: 8, resolveRecovery: 0.12 },
   },
   projectile: { speed: 440, lifetime: 1.6, range: 440 },
-  dash: { speed: 570, duration: 0.3, cooldown: 3 },
+  /** The forward lunge some class abilities use; the Khan's own gallop is `stamina`. */
+  dash: { speed: 570, duration: 0.3 },
+  /** Breath: the stamina every class shares. Rates are per active second. */
+  stamina: {
+    maximum: 100,
+    refill: 10,
+    /** Breath a gallop drains per second, before the class and camp gallop modifiers. */
+    sprintDrain: 30,
+    /** Riding speed multiplier while galloping, before the class gallop speed modifier. */
+    sprintSpeed: 1.6,
+    /** Breath needed to start a gallop. */
+    sprintMinimum: 10,
+  },
   invulnerability: 0.65,
   khan: {
     successionDelay: 10,

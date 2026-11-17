@@ -75,7 +75,6 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
     attackTimer: 0,
     mountedArcher: createMountedArcherCombatState(),
     spiritCaller: createSpiritCallerCombatState(),
-    dashTimer: 0,
     dashRemaining: 0,
     invulnerable: 0,
     supportTimer: 0,

@@ -6,11 +6,17 @@ import { GAME } from '../../config';
 import { classDefinition, khanGallopSpeed } from '../../data/classes';
 import type { Enemy } from '../../entities/actors';
 import { areaMovementMultiplier, type AreaThreatState } from '../../state/areaThreats';
-import { gallopCooldown } from '../../state/campCombat';
 import type { WorldArchive } from '../../state/expeditionArchive';
 import { completeGuidance } from '../../state/guidance';
 import { damageKhan, isKhanActive, khanSpeedMultiplier } from '../../state/khan';
 import { activeKhanManeuver } from '../../state/khanManeuvers';
+import {
+  advanceSprint,
+  khanResourcesOf,
+  restKhan,
+  sprintDrain,
+  sprintSpeedMultiplier,
+} from '../../state/khanResources';
 import {
   createKhanStatus,
   isKhanGuarded,
@@ -80,14 +86,19 @@ export class KhanController extends ArenaSystem {
     this.aura.setPosition(this.player.x, this.player.y);
   }
 
-  dash(): void {
-    if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.timers.dashTimer > 0)
-      return;
+  /**
+   * Advances the gallop and Breath for one active step. The gallop is plain speed: it grants no
+   * invulnerability, and each new gallop lets the Khan push every enemy once more.
+   */
+  updateSprint(dt: number, held: boolean): void {
+    const outcome = advanceSprint(khanResourcesOf(this.timers), dt, {
+      held,
+      able: isKhanActive(this.run),
+      drain: sprintDrain(this.run),
+    });
+    if (outcome === 'refused') this.audio.play('ui');
+    if (outcome !== 'started') return;
     this.run.combat.gallopSerial++;
-
-    this.timers.dashRemaining = GAME.dash.duration;
-    this.timers.dashTimer = gallopCooldown(this.run);
-    this.timers.invulnerable = Math.max(this.timers.invulnerable, GAME.dash.duration);
     this.audio.play('dash');
     const cls = classDefinition(this.run.character?.classId);
     this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 7);
@@ -103,6 +114,9 @@ export class KhanController extends ArenaSystem {
     }
     const maneuver = activeKhanManeuver(this.timers);
     if (maneuver?.direction) movement.set(maneuver.direction.x, maneuver.direction.y);
+    const sprinting = khanResourcesOf(this.timers).sprinting;
+    // A gallop held without a direction rides on along the Khan's facing.
+    if (sprinting && movement.lengthSq() <= 0.01) movement.copy(this.facing);
     const moving = movement.lengthSq() > 0.01;
     const status = khanStatusOf(this.timers);
     const classAction = this.timers.classAction;
@@ -128,7 +142,8 @@ export class KhanController extends ArenaSystem {
           (isKhanUnstoppable(status)
             ? 1
             : areaMovementMultiplier(this.host.areaThreats, this.player)) *
-          (maneuver?.speedMultiplier ?? 1),
+          (maneuver?.speedMultiplier ?? 1) *
+          (sprinting ? sprintSpeedMultiplier(this.run) : 1),
       );
     }
     this.player.setVelocity(movement.x, movement.y);
@@ -142,7 +157,12 @@ export class KhanController extends ArenaSystem {
     this.shadow.setPosition(this.player.x + 9, this.player.y + 5).setDepth(99 + this.player.y);
     this.dustTimer -= dt;
     if ((moving || !!classAction) && effectAmount(this.visualSettings) > 0 && this.dustTimer <= 0) {
-      this.effects.dust(this.player.x, this.player.y, this.facing.x, this.timers.dashRemaining > 0);
+      this.effects.dust(
+        this.player.x,
+        this.player.y,
+        this.facing.x,
+        sprinting || this.timers.dashRemaining > 0,
+      );
       this.dustTimer = 0.12 / Math.max(0.1, effectAmount(this.visualSettings));
     }
     this.aura.setPosition(this.player.x, this.player.y);
@@ -183,6 +203,7 @@ export class KhanController extends ArenaSystem {
     this.shadow.setVisible(false);
     this.aura.setVisible(false);
     this.timers.dashRemaining = 0;
+    khanResourcesOf(this.timers).sprinting = false;
     this.timers.classAction = undefined;
     this.timers.khanStatus = createKhanStatus();
     this.host.clearTouch();
@@ -258,7 +279,8 @@ export class KhanController extends ArenaSystem {
     this.aura.setPosition(x, y).setVisible(true);
     this.facing.set(1, 0);
     this.playerMotion.face(1, 0);
-    this.timers.dashRemaining = this.timers.dashTimer = 0;
+    this.timers.dashRemaining = 0;
+    restKhan(khanResourcesOf(this.timers));
     this.timers.classAction = undefined;
     this.timers.attackTimer = this.dustTimer = 0;
     this.timers.khanStatus = createKhanStatus();

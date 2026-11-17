@@ -191,8 +191,16 @@ export interface HudSnapshot {
   minZoom: number;
   maxZoom: number;
   run: RunState;
-  dashReady: number;
-  dashCooldown: number;
+  /** Breath, the stamina that pays for the gallop. */
+  stamina: {
+    current: number;
+    maximum: number;
+    /** Breath a gallop drains per second. */
+    sprintDrain: number;
+    sprinting: boolean;
+    /** Too little Breath to start a gallop, or the gallop input must be released first. */
+    winded: boolean;
+  };
   abilities: {
     slot: import('./data/classes').ClassAbilitySlot;
     slotLabel: string;

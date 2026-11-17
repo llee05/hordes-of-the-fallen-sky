@@ -17,6 +17,7 @@ import './progression.css';
 import './saves.css';
 import './style.css';
 import './tapestry.css';
+import './khan-resources.css';
 import './traditions.css';
 import { GameUI } from './ui/GameUI';
 if (import.meta.env.DEV) void import('./developer.css');

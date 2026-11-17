@@ -114,15 +114,30 @@ The player character is **the Khan**. A lethal hit normally starts **10 active g
 
 The world keeps advancing: enemies attack the camp, food is consumed, the caravan moves, and camp weapons defend it. Menus pause the countdown and all other simulation.
 
-When the countdown finishes with the clan alive, a successor appears **90 world units below the current camp/caravan center**, at full maximum health with a ready gallop and **3 seconds of invulnerability**. His movement, hit feedback, and attack pose reset. The HUD advances its Khan number. Camp upgrades, max health, resources, workers, buildings, and route progress all carry over. The successor follows the current moving caravan or the new camp if an arrival happened during succession.
+When the countdown finishes with the clan alive, a successor appears **90 world units below the current camp/caravan center**, at full maximum health and full Breath with **3 seconds of invulnerability**. His movement, hit feedback, and attack pose reset. The HUD advances its Khan number. Camp upgrades, max health, resources, workers, buildings, and route progress all carry over. The successor follows the current moving caravan or the new camp if an arrival happened during succession.
 
 Camp recovery and arrival healing cannot end succession early. Building upgrades still increase the successor's maximum health.
 
 Clan population or resolve reaching zero ends the expedition during the countdown. End screens freeze the remaining timer. A new expedition resets the lineage to Khan 1 with no pending succession. Balance lives in `GAME.khan`, with the pure lifecycle in [state/khan.ts](../src/game/state/khan.ts).
 
-### Gallop
+### Breath and the gallop
 
-**Space / controller left bumper** gallops in the current or last facing direction at speed 570 (scaled by the class gallop modifier) for 0.3 seconds, with a 3-second cooldown. Gallop grants invulnerability for its duration. It works from a standstill. Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage.
+**Breath** is the stamina every class shares. It holds 100, refills at 10 per active second whenever the Khan is not galloping, and is shown as a track under Khan health with one ruled notch per second of gallop. Balance lives in `GAME.stamina`, with the pure rules in [state/khanResources.ts](../src/game/state/khanResources.ts).
+
+Holding **Space / controller left bumper / the HUD gallop button** gallops: a continuous sprint at 1.6× riding speed (scaled by the class gallop speed modifier) for as long as the input is held and Breath lasts. The former 0.3-second dash on a 3-second cooldown is gone. The gallop steers like ordinary riding, rides on along the current facing when no direction is held, and still obeys slowing terrain and status effects. It is plain speed: it grants **no invulnerability**.
+
+| Class          | Breath per second | Gallop from a full pool | Gallop speed |
+| -------------- | ----------------- | ----------------------- | ------------ |
+| Mounted Archer | 30.0              | 3.3 s                   | ×1.60        |
+| Lancer         | 24.6              | 4.1 s                   | ×1.79        |
+| Iron Pagoda    | 25.8              | 3.9 s                   | ×1.60        |
+| Spirit Caller  | 27.6              | 3.6 s                   | ×1.60        |
+
+The drain is 30 per second times the camp gallop multiplier, which already carries the class gallop modifier and the legacy Relay development; that multiplier used to scale the cooldown. A gallop needs 10 Breath to start. When Breath runs out the gallop stops and the Khan is **winded**: the input must be released and pressed again, so holding it never stutters. A press without enough Breath is refused with the interface sound. Sustained play affords a gallop about a quarter of the time, the same extra distance per Breath as the old dash.
+
+Each new gallop lets the Khan push every enemy ridden through once (48 units), and Lancer and Iron Pagoda also pin them for 0.65 seconds. A fallen Khan stops galloping, Breath neither drains nor refills during succession, and the successor returns with full Breath. Menus freeze Breath with every other combat clock. Full saves keep Breath in the optional `timers.khanResources` record; older saves load rested, and their retired `dashTimer` is accepted and ignored.
+
+Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage.
 
 ### Camp guard
 
@@ -203,7 +218,7 @@ The Last Court, Iron Vow, Sundering, creatures, and refuge are original fantasy;
 | Light attack                   | Hold left click                      | Right trigger       |
 | Heavy attack                   | Hold right click; release to charge  | Left trigger        |
 | Class abilities                | 1 / 2 / 3 / 4                        | A / B / X / Y       |
-| Gallop                         | Space / HUD button                   | Left bumper         |
+| Gallop (hold)                  | Space / HUD button                   | Left bumper         |
 | Develop camp                   | B / HUD button                       | D-pad up            |
 | Choose migration route         | M / HUD button                       | D-pad down          |
 | Chronicle                      | Tab / J / HUD button                 | View                |
@@ -384,7 +399,8 @@ delayed shots, target areas, volleys and maneuvers also use active time and pers
 full saves.
 Spirit bolts steer toward live, unhit enemies at the class turn rate while retaining
 their speed. The class `gallopSpeedMultiplier` still scales the Khan's Space / left-bumper
-gallop, and Lancer and Iron Pagoda gallops retain their existing pinning breakthrough.
+gallop, and Lancer and Iron Pagoda gallops retain their existing pinning breakthrough,
+once per enemy per gallop.
 
 The Lancer's Impaling Strike keeps charging while right click is held and releases
 when the button is released. Its HUD readout shows charge percentage. Reach, damage,

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDINGS, type BuildingDefinition } from '../../src/game/data/clan';
 import { applyCampEffects } from '../../src/game/state/camp';
-import { advanceCampRecovery, gallopCooldown } from '../../src/game/state/campCombat';
+import { advanceCampRecovery } from '../../src/game/state/campCombat';
+import { sprintDrain } from '../../src/game/state/khanResources';
 import {
   advanceClan,
   beginMigration,
@@ -19,7 +20,7 @@ describe('legacy checkpoint compatibility: portable camp development effects', (
     const second = createRun();
     expect(second.clan.campEffects.multipliers.foodProduction).toBe(1);
     expect(second.clan.campEffects.bonuses.arrivalFood).toBe(0);
-    expect(gallopCooldown(second)).toBe(3);
+    expect(sprintDrain(second)).toBe(30);
   });
 
   it('applies authored establishment and deeper development effects once after valid purchases', () => {
@@ -144,7 +145,7 @@ describe('legacy checkpoint compatibility: portable camp development effects', (
     });
     damageClan(run, 20);
     expect(run.clan.integrity).toBeCloseTo(100 - 20 * 0.7 * 0.9);
-    expect(gallopCooldown(run)).toBeCloseTo(2.7);
+    expect(sprintDrain(run)).toBeCloseTo(27);
     run.phase = 'route';
     run.clan.stageTime = 45;
     beginMigration(run, 'river');

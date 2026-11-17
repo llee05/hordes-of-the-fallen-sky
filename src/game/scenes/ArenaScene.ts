@@ -43,7 +43,7 @@ import {
 } from '../dev/levels';
 import { Enemy, Gem, Projectile } from '../entities/actors';
 import { runFromCampArchive } from '../state/campArchive';
-import { advanceCampRecovery, gallopCooldown } from '../state/campCombat';
+import { advanceCampRecovery } from '../state/campCombat';
 import { purchaseEstate, type EstatePurchaseKind } from '../state/campEstate';
 import { advanceClan, beginMigration, buildStructure, canMigrate } from '../state/clan';
 import type { ClanDamageCause } from '../state/clanSafety';
@@ -55,6 +55,7 @@ import { currentLocation } from '../state/journey';
 import { advanceSuccession, beginSuccession, chooseSuccessor, isKhanActive } from '../state/khan';
 import { advanceMountedCombat } from '../state/mountedCombat';
 import { advanceKhanManeuver } from '../state/khanManeuvers';
+import { khanResourcesOf } from '../state/khanResources';
 import { purchaseNomadicBuilding } from '../state/nomadicCamp';
 import { createPrologueRun, skipPrologue as skipPrologueState } from '../state/prologue';
 import { createRun } from '../state/run';
@@ -400,7 +401,6 @@ export class ArenaScene extends Phaser.Scene {
       toggleDeveloperMenu: () => this.toggleDeveloperMenu(),
       toggleDeveloperConsole: () => this.toggleDeveloperConsole(),
       changeZoom: (steps) => this.changeZoom(steps),
-      dash: () => this.dash(),
       useAbility: (slot) => this.useAbility(slot),
       menuInput: (action) => this.callbacks?.onMenuInput(action),
     });
@@ -799,10 +799,8 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   construct(id: BuildingId, path?: string, slot?: number): void {
-    const previousCooldown = gallopCooldown(this.run);
     if (!buildStructure(this.run, id, path, slot)) return;
     this.persistence.saveCamp();
-    this.timers.dashTimer *= gallopCooldown(this.run) / previousCooldown;
     this.campPresenter.refresh();
     this.audio.play('build');
     this.publishPhase();
@@ -980,8 +978,9 @@ export class ArenaScene extends Phaser.Scene {
     if (this.run.phase === 'settings') this.audio.audition(kind);
   }
 
-  dash(): void {
-    this.khan.dash();
+  /** The HUD gallop button holds and releases the gallop like Space does. */
+  holdGallop(held: boolean): void {
+    this.controls.holdGallopButton(held && this.run.phase === 'playing');
   }
 
   update(_time: number, delta: number): void {
@@ -1003,7 +1002,6 @@ export class ArenaScene extends Phaser.Scene {
     this.run.elapsed += dt;
 
     advanceCampRecovery(this.run, dt);
-    this.timers.dashTimer = Math.max(0, this.timers.dashTimer - dt);
     this.timers.invulnerable = Math.max(0, this.timers.invulnerable - dt);
     this.timers.dashRemaining = Math.max(0, this.timers.dashRemaining - dt);
     advanceKhanManeuver(this.timers, dt);
@@ -1023,13 +1021,14 @@ export class ArenaScene extends Phaser.Scene {
     if (advanceSuccession(this.run, dt)) this.khan.returnKhan();
     advanceMountedCombat(this.run, dt);
     const aim = this.controls.aimPoint(this.player, this.facing);
+    this.khan.updateSprint(dt, this.controls.gallopHeld());
     if (isKhanActive(this.run)) {
       this.khan.move(dt, this.controls.movement(this.player));
       this.controls.drawJoystick();
     } else this.player.setPosition(this.camp.x, this.camp.y + GAME.khan.campOffset);
     this.audio.update(dt, {
       speed: isKhanActive(this.run) ? this.player.body!.velocity.length() : 0,
-      galloping: this.timers.dashRemaining > 0,
+      galloping: this.timers.dashRemaining > 0 || khanResourcesOf(this.timers).sprinting,
       caravan: this.run.clan.stage === 'migration',
       environment: environmentForLocation(currentLocation(this.run)),
       listener: isKhanActive(this.run) ? this.player : this.camp,
@@ -1306,12 +1305,6 @@ export class ArenaScene extends Phaser.Scene {
   }
   set attackTimer(value: number) {
     this.timers.attackTimer = value;
-  }
-  get dashTimer(): number {
-    return this.timers.dashTimer;
-  }
-  set dashTimer(value: number) {
-    this.timers.dashTimer = value;
   }
   get dashRemaining(): number {
     return this.timers.dashRemaining;

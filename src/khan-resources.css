@@ -1,0 +1,56 @@
+/* Breath and class-resource meters on the Khan's vitals panel. */
+.breath-heading {
+  margin: 8px 0 5px;
+  color: #a9c2a0;
+  font-size: 7px;
+}
+.breath-heading b {
+  color: #dfe6c0;
+}
+.breath-track {
+  position: relative;
+  height: 3px;
+}
+.breath-track > div {
+  background-color: #8fae7c;
+  background-image: linear-gradient(90deg, #6f9370, #a9c08a);
+  transition: width 0.1s linear;
+}
+/* Ruled notches: one per second of gallop. */
+.breath-track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 calc(var(--breath-notch, 30%) - 1px),
+    #0e2328 calc(var(--breath-notch, 30%) - 1px) var(--breath-notch, 30%)
+  );
+}
+.breath-track[data-winded='true'] > div {
+  background-color: #c9825c;
+  background-image: linear-gradient(90deg, #b96a48, #d49a6a);
+}
+.dash-button[data-galloping='true'] .dash-charge {
+  background-color: #a9c08a;
+}
+.dash-button[data-ready='false'] strong {
+  color: #cbb98f;
+}
+.dash-button {
+  touch-action: none;
+}
+/* The taller vitals panel pushes the tradition note above it. */
+.tradition-hud {
+  margin-bottom: 20px;
+}
+@media (max-width: 600px) {
+  .breath-heading {
+    font-size: 6px;
+    margin: 6px 0 4px;
+  }
+  .tradition-hud {
+    margin-bottom: 16px;
+  }
+}

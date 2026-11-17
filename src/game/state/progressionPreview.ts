@@ -1,7 +1,8 @@
 import { classDefinition, khanBasicRange } from '../data/classes';
 import { SUCCESSORS } from '../data/successors';
 import type { BuildingId, RunState } from '../types';
-import { gallopCooldown, wagonDefence } from './campCombat';
+import { wagonDefence } from './campCombat';
+import { sprintDrain } from './khanResources';
 import { clanDamageMultiplier } from './clan';
 import { developmentPreview } from './developmentPreview';
 import { economyForecast, migrationMobility, pastureDepletion } from './economy';
@@ -70,7 +71,7 @@ function metrics(r: RunState): Metric[] {
     },
     { label: 'Additional arrow pierces', value: r.stats.pierce },
     { label: 'Riding speed', value: r.stats.speed, unit: ' paces/s' },
-    { label: 'Gallop cooldown', value: gallopCooldown(r), unit: 's', lower: true },
+    { label: 'Gallop Breath cost', value: sprintDrain(r), unit: '/s', lower: true },
     { label: 'Maximum Khan health', value: r.stats.maxHealth },
     { label: 'Khan health now', value: r.health },
     {

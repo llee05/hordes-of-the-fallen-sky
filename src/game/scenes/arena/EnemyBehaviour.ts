@@ -7,6 +7,7 @@ import type { Enemy } from '../../entities/actors';
 import { barrierContact, campBoundary } from '../../state/campBarrier';
 import { currentLocation } from '../../state/journey';
 import { isKhanActive } from '../../state/khan';
+import { khanResourcesOf } from '../../state/khanResources';
 import { isEnemyDisabled, statusSpeedMultiplier, tickEnemyStatus } from '../../state/statusEffects';
 import { areaSurface, habitatPreference } from '../../systems/AreaHabitat';
 import { routeDue } from '../../systems/enemyRoutes';
@@ -460,7 +461,7 @@ export class EnemyBehaviour extends ArenaSystem {
     if (
       enemy.active &&
       khanActive &&
-      this.timers.dashRemaining > 0 &&
+      (this.timers.dashRemaining > 0 || khanResourcesOf(this.timers).sprinting) &&
       playerDistance < 68 &&
       enemy.lastGallop !== this.run.combat.gallopSerial
     ) {

@@ -38,6 +38,7 @@ import { developerConsole, developerMenu } from './developerContent';
 import { foodOutlook, FORECAST_NOTE, signedRate } from './economyContent';
 import { expeditionMetricsContent } from './expeditionMetricsContent';
 import { guidanceContent } from './guidanceContent';
+import { gallopLabel } from './khanResourceHud';
 import type { JournalTab } from './menuContent';
 import {
   buildingMenu,
@@ -91,7 +92,7 @@ export class GameUI {
   ) {
     root.dataset.phase = 'ready';
     root.innerHTML = `<main class="game-shell" aria-label="Hordes of the Fallen Sky game">
-      <div class="arena-wrap" id="arena-wrap" tabindex="0" aria-label="Game arena. Use WASD or arrow keys to ride. Hold left click for a light attack and right click for a heavy attack. Number keys 1, 2, 3 and 4 use class abilities. Space gallops. B builds. M migrates. Tab or J opens the clan chronicle. Escape pauses. Plus and minus zoom; zero resets.">
+      <div class="arena-wrap" id="arena-wrap" tabindex="0" aria-label="Game arena. Use WASD or arrow keys to ride. Hold left click for a light attack and right click for a heavy attack. Number keys 1, 2, 3 and 4 use class abilities. Hold Space to gallop, which spends Breath. B builds. M migrates. Tab or J opens the clan chronicle. Escape pauses. Plus and minus zoom; zero resets.">
         <div id="game-canvas"></div>
         <div class="screen-shade" aria-hidden="true"></div>
         <div class="game-hud" id="game-hud" inert>
@@ -127,10 +128,10 @@ export class GameUI {
             .join(
               '',
             )}</div><small id="successor-selection">1 / 2 · controller left / right</small></aside>
-          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span><span id="weapon-label">BOW</span> <b id="power">16</b></span><span id="attack-charge">LMB LIGHT · RMB HEAVY</span><span id="spirit-energy" hidden>SPIRITUAL ENERGY 0 / 12</span></div></section>
+          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div class="health-heading breath-heading"><span>BREATH</span><b id="breath">100</b></div><div class="track breath-track" id="breath-track"><div id="breath-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span><span id="weapon-label">BOW</span> <b id="power">16</b></span><span id="attack-charge">LMB LIGHT · RMB HEAVY</span><span id="spirit-energy" hidden>SPIRITUAL ENERGY 0 / 12</span></div></section>
           <section class="tradition-hud" aria-label="Run progression"><span>LEVEL <b id="level">01</b></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small></section>
           <section id="ability-dock" class="ability-dock hud-surface" aria-label="Class abilities">${(['q', 'w', 'e', 'r'] as const).map((slot, index) => `<div class="ability-indicator" id="ability-${slot}"><kbd>${index + 1}</kbd><span><strong></strong><small></small></span></div>`).join('')}</section>
-          <button id="dash" class="dash-button hud-surface" aria-label="Dash"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">SPACE / READY</small></div><span class="dash-charge" id="dash-charge"></span></button>
+          <button id="dash" class="dash-button hud-surface" aria-label="Gallop: hold to spend Breath"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">HOLD SPACE</small></div><span class="dash-charge" id="dash-charge"></span></button>
           <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
           <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><div><p id="clan-message"></p></div></div>
         </div>
@@ -146,7 +147,10 @@ export class GameUI {
     this.motion = new UIMotion(root);
     this.get('pause').addEventListener('click', () => scene.togglePause());
     this.get('journal').addEventListener('click', () => scene.toggleJournal());
-    this.get('dash').addEventListener('click', () => scene.dash());
+    const dash = this.get('dash');
+    dash.addEventListener('pointerdown', () => scene.holdGallop(true));
+    for (const release of ['pointerup', 'pointerleave', 'pointercancel'])
+      dash.addEventListener(release, () => scene.holdGallop(false));
     this.get('build').addEventListener('click', () => scene.openBuildings());
     this.get('migrate').addEventListener('click', () => scene.openRoutes());
     this.get('successor-choice').addEventListener('click', (event) => {
@@ -276,7 +280,7 @@ export class GameUI {
     (this.get('zoom-in') as HTMLButtonElement).disabled =
       snapshot.run.phase !== 'playing' || snapshot.zoom >= snapshot.maxZoom - 0.0001;
     (this.get('zoom-reset') as HTMLButtonElement).disabled = snapshot.run.phase !== 'playing';
-    const { run, dashReady, dashCooldown, best, clanBearing } = snapshot;
+    const { run, stamina, best, clanBearing } = snapshot;
     const prologueUnestablished = !!run.prologue && !run.prologue.campEstablished;
     this.get('game-hud').classList.toggle('prologue-unestablished', prologueUnestablished);
     this.motion.setPlaying(run.phase === 'playing');
@@ -403,21 +407,27 @@ export class GameUI {
     this.meter('health-fill', (run.health / run.stats.maxHealth) * 100);
     this.get('health-fill').classList.toggle('low', run.health < run.stats.maxHealth * 0.3);
     this.meter('xp-fill', (run.xp / run.nextLevelXp) * 100);
-    this.meter('dash-charge', dashReady * 100);
+    const breath = (stamina.current / stamina.maximum) * 100;
+    this.text('breath', Math.floor(stamina.current));
+    this.meter('breath-fill', breath);
+    this.meter('dash-charge', breath);
+    const breathTrack = this.get('breath-track');
+    // Ruled notches mark one second of gallop each.
+    breathTrack.style.setProperty(
+      '--breath-notch',
+      `${Math.max(5, (stamina.sprintDrain / stamina.maximum) * 100)}%`,
+    );
     const dash = this.get('dash');
-    const dashAvailable = khanActive && dashReady >= 1;
+    const dashAvailable = khanActive && !stamina.winded;
     (dash as HTMLButtonElement).disabled = run.phase !== 'playing' || !khanActive;
     if (dashAvailable && dash.dataset.ready === 'false')
       this.motion.notice(dash.querySelector<HTMLElement>('.dash-symbol')!);
+    if (khanActive && stamina.winded && breathTrack.dataset.winded === 'false')
+      this.motion.notice(this.get('breath'));
+    breathTrack.dataset.winded = String(khanActive && stamina.winded);
     dash.dataset.ready = String(dashAvailable);
-    this.text(
-      'dash-label',
-      !khanActive
-        ? 'CHOOSING A KHAN'
-        : dashReady >= 1
-          ? 'SPACE / READY'
-          : `RECHARGING ${((1 - dashReady) * dashCooldown).toFixed(1)}s`,
-    );
+    dash.dataset.galloping = String(khanActive && stamina.sprinting);
+    this.text('dash-label', gallopLabel(stamina, khanActive));
     this.text(
       'attack-charge',
       snapshot.attackCharge

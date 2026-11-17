@@ -1,11 +1,7 @@
-import { GAME } from '../config';
 import type { RunState } from '../types';
 import { hasDevelopment } from './camp';
 import { isKhanActive } from './khan';
 
-export function gallopCooldown(run: RunState): number {
-  return GAME.dash.cooldown * run.clan.campEffects.multipliers.gallopCooldown;
-}
 export function healKhan(run: RunState, amount: number): number {
   if (run.phase !== 'playing' || !isKhanActive(run) || !Number.isFinite(amount) || amount <= 0)
     return 0;

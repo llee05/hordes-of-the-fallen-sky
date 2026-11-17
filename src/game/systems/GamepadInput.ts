@@ -80,7 +80,7 @@ export class GamepadInput {
     frame.abilityW = (tapped & (1 << 1)) !== 0;
     frame.abilityE = (tapped & (1 << 2)) !== 0;
     frame.abilityR = (tapped & (1 << 3)) !== 0;
-    frame.gallop = (tapped & (1 << 4)) !== 0;
+    frame.gallop = pressed(4);
     frame.lightAttack = pressed(7);
     frame.heavyAttack = pressed(6);
     frame.build = (tapped & (1 << 12)) !== 0;

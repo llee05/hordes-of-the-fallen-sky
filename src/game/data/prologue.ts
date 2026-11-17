@@ -116,7 +116,8 @@ export const PROLOGUE_STAGES: readonly PrologueStage[] = [
         id: 'training-gallop',
         objective: 'Gallop through the practice ring',
         guidanceTitle: 'Break clear at a gallop',
-        guidanceText: 'Gallop grants a brief moment of protection as your horse surges forward.',
+        guidanceText:
+          'Hold Space or the left bumper to gallop. It spends Breath, which returns when you ease off.',
         rule: { kind: 'galloped' },
       },
     ],

@@ -25,7 +25,7 @@ const EFFECT_LABELS: Record<string, string> = {
   clanProtection: 'Clan damage taken',
   hostInterval: 'Khan attack interval',
   burnDamage: 'Burn damage',
-  gallopCooldown: 'Gallop cooldown',
+  gallopCooldown: 'Gallop Breath cost',
   sanctuaryInterval: 'Lightning interval',
   wagonDamage: 'Wagon damage',
   spiritGain: 'Spirit gained from defeats',
