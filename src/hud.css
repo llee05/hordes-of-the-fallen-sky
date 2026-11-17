@@ -819,11 +819,13 @@
   gap: 4px;
 }
 .ability-indicator {
+  position: relative;
   min-width: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
   align-items: center;
   gap: 5px;
-  padding: 4px 6px 4px 3px;
+  padding: 4px 6px 4px 4px;
   border: 1px solid rgba(101, 43, 32, 0.5);
   background: rgba(255, 243, 214, 0.55);
 }
@@ -849,8 +851,18 @@
   background-image: url('/art/ui-icon-knot.png');
 }
 .ability-indicator kbd {
+  position: absolute;
+  z-index: 2;
+  top: 3px;
+  left: 3px;
   font-size: 10px;
   padding: 2px 5px;
+}
+.ability-indicator .ability-cost {
+  position: absolute;
+  z-index: 2;
+  top: 3px;
+  right: 3px;
 }
 .ability-copy,
 .ability-indicator strong,
@@ -859,6 +871,7 @@
   display: block;
 }
 .ability-indicator strong {
+  padding-right: 24px;
   white-space: normal;
   font: 600 11.5px/1.05 var(--hud-serif);
   color: var(--hud-ink);
@@ -1190,16 +1203,16 @@
     padding-top: 9px;
   }
   .resource {
-    grid-template-columns: 34px minmax(0, 1fr);
-    column-gap: 6px;
-    padding-inline: 6px;
+    grid-template-columns: 32px minmax(0, 1fr);
+    column-gap: 4px;
+    padding-inline: 2px;
   }
   .resource-icon {
-    font-size: 34px;
+    font-size: 32px;
   }
   .resource-label {
     font-size: 9.5px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.04em;
   }
   .resource strong {
     font-size: 28px;
@@ -1350,12 +1363,13 @@
     background-size: 54px 10px;
   }
   .ability-dock {
-    grid-template-columns: repeat(4, 150px);
+    grid-template-columns: repeat(4, 174px);
     gap: 6px;
   }
   .ability-indicator {
+    grid-template-columns: 42px minmax(0, 1fr);
     gap: 7px;
-    padding: 8px 8px 8px 5px;
+    padding: 8px 8px 8px 6px;
   }
   .ability-icon {
     width: 42px;
@@ -1363,6 +1377,7 @@
     flex-basis: 42px;
   }
   .ability-indicator strong {
+    padding-right: 28px;
     font-size: 15px;
     line-height: 1.08;
   }
@@ -1435,7 +1450,7 @@
     width: 218px;
   }
   .ability-dock {
-    grid-template-columns: repeat(4, 130px);
+    grid-template-columns: repeat(4, 150px);
   }
   .command-button {
     width: 86px;
