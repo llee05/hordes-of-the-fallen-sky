@@ -261,6 +261,7 @@ export const GAME = {
         projectiles: 1,
         cooldown: 1.25,
         windup: 0.18,
+        breath: { tap: 8, full: 22 },
         charge: {
           kind: 'projectile',
           maxDuration: 1.05,
@@ -340,6 +341,7 @@ export const GAME = {
         projectiles: 1,
         cooldown: 1.5,
         windup: 0.18,
+        breath: { tap: 10, full: 26 },
         holdCharge: {
           maxDuration: 1.2,
           maxRangeMultiplier: 1.65,
@@ -425,6 +427,7 @@ export const GAME = {
         projectiles: 1,
         cooldown: 1.8,
         windup: 0.42,
+        breath: { tap: 14, full: 14 },
         payload: {
           stun: 0.55,
           shred: { bonus: 0.3, seconds: 6 },
@@ -497,6 +500,8 @@ export const GAME = {
         projectiles: 0,
         cooldown: 1.8,
         windup: 0.2,
+        /** Eight Breath per drum wave. */
+        breath: { tap: 8, full: 24 },
         charge: {
           kind: 'waves',
           maxDuration: 1.1,

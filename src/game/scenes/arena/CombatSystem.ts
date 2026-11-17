@@ -28,6 +28,12 @@ import {
 import type { ProjectileArchive, WorldArchive } from '../../state/expeditionArchive';
 import { markExpedition } from '../../state/expeditionMetrics';
 import { isKhanActive } from '../../state/khan';
+import {
+  affordableCharge,
+  heavyBreathCost,
+  khanResourcesOf,
+  spendBreath,
+} from '../../state/khanResources';
 import { aimedDirection, insideAttackArc, insideAttackLine } from '../../state/khanControls';
 import { gainExperience } from '../../state/run';
 import {
@@ -88,6 +94,10 @@ export class CombatSystem extends ArenaSystem {
   private readonly spiritCaller: SpiritCallerSystem;
   /** Slashes landed in the current chain, and seconds left to land the next one. */
   private combo = { count: 0, remaining: 0 };
+  /** A held heavy attack Breath could not pay for; cleared when the input is released. */
+  private heavyRefused = false;
+  /** The current heavy charge stopped rising because Breath cannot pay for more. */
+  private chargeWinded = false;
   private readonly mountedArcher: MountedArcherSystem;
 
   constructor(
@@ -166,6 +176,7 @@ export class CombatSystem extends ArenaSystem {
 
   reset(): void {
     this.attackWindup = undefined;
+    this.heavyRefused = this.chargeWinded = false;
     this.combo = { count: 0, remaining: 0 };
     this.timers.classAction = undefined;
     this.timers.abilityCooldowns = { q: 0, w: 0, e: 0, r: 0 };
@@ -196,6 +207,8 @@ export class CombatSystem extends ArenaSystem {
     this.spiritCaller.tick(dt);
     this.tickComboAndStance(dt);
     this.tickClassAction(dt);
+    if (!heavyHeld) this.heavyRefused = false;
+    if (this.attackWindup?.kind !== 'heavy') this.chargeWinded = false;
     if (this.attackWindup) {
       const held = this.attackWindup.kind === 'light' ? lightHeld : heavyHeld;
       const cls = classDefinition(this.run.character?.classId);
@@ -216,10 +229,16 @@ export class CombatSystem extends ArenaSystem {
           return;
         }
         this.faceAim(aim, false);
-        this.attackWindup.charge = Math.min(
-          heavyCharge.maxDuration,
-          (this.attackWindup.charge ?? 0) + dt,
-        );
+        // Breath caps the charge at the level it can pay for.
+        const affordable = affordableCharge(cls.heavyAttack, khanResourcesOf(this.timers).stamina);
+        if (affordable === undefined) {
+          this.attackWindup = undefined;
+          this.refuseHeavy();
+          return;
+        }
+        const grown = (this.attackWindup.charge ?? 0) + dt;
+        this.chargeWinded = affordable < heavyCharge.maxDuration && grown >= affordable;
+        this.attackWindup.charge = Math.min(heavyCharge.maxDuration, affordable, grown);
         if (cls.heavyAttack.charge?.kind === 'projectile') {
           this.mountedArcher.showCharge(this.attackWindup.charge, cls.heavyAttack);
           return;
@@ -248,8 +267,15 @@ export class CombatSystem extends ArenaSystem {
         this.fireAttack(kind, aim, 0, usable);
       }
     } else if ((lightHeld || heavyHeld) && this.timers.attackTimer <= 0 && isKhanActive(this.run)) {
-      const kind = heavyHeld ? 'heavy' : 'light';
       const cls = classDefinition(this.run.character?.classId);
+      if (
+        heavyHeld &&
+        !this.heavyRefused &&
+        affordableCharge(cls.heavyAttack, khanResourcesOf(this.timers).stamina) === undefined
+      )
+        this.refuseHeavy();
+      const kind = heavyHeld && !this.heavyRefused ? 'heavy' : 'light';
+      if (kind === 'light' && !lightHeld) return;
       this.attackWindup = {
         kind,
         remaining: kind === 'heavy' ? cls.heavyAttack.windup : (cls.basicAttack.windup ?? 0.12),
@@ -299,16 +325,36 @@ export class CombatSystem extends ArenaSystem {
     return !!this.attackWindup;
   }
 
-  /** Charge information for the HUD; absent for ordinary windups and every idle attack. */
-  chargeStatus(): { name: string; progress: number } | undefined {
-    if (this.attackWindup?.kind !== 'heavy') return;
+  /**
+   * Charge information for the HUD; absent for ordinary windups and every idle attack. `winded`
+   * marks a charge Breath has capped, or a held heavy attack Breath cannot pay for at all.
+   */
+  chargeStatus(): { name: string; progress: number; winded: boolean } | undefined {
     const heavy = classDefinition(this.run.character?.classId).heavyAttack;
+    if (this.heavyRefused && !this.attackWindup)
+      return { name: heavy.name, progress: 0, winded: true };
+    if (this.attackWindup?.kind !== 'heavy') return;
     const tuning = heavy.charge ?? heavy.holdCharge;
     if (!tuning) return;
     return {
       name: heavy.name,
       progress: chargeRatio(this.attackWindup.charge ?? 0, tuning.maxDuration),
+      winded: this.chargeWinded,
     };
+  }
+
+  /** A charged heavy attack is being held, which pauses the Breath refill. */
+  holdsBreath(): boolean {
+    if (this.attackWindup?.kind !== 'heavy') return false;
+    const heavy = classDefinition(this.run.character?.classId).heavyAttack;
+    return !!(heavy.charge ?? heavy.holdCharge);
+  }
+
+  /** Refuses a heavy attack Breath cannot pay for, once per press. */
+  private refuseHeavy(): void {
+    if (this.heavyRefused) return;
+    this.heavyRefused = true;
+    this.audio.play('ui');
   }
 
   fireBasic(aim: { x: number; y: number }): boolean {
@@ -328,6 +374,17 @@ export class CombatSystem extends ArenaSystem {
     if (this.run.phase !== 'playing' || !isKhanActive(this.run) || this.timers.attackTimer > 0)
       return false;
     const cls = classDefinition(this.run.character?.classId);
+    const resources = khanResourcesOf(this.timers);
+    if (kind === 'heavy') {
+      // A heavy attack is paid for on release; Breath that ran short shortens or refuses it.
+      const affordable = affordableCharge(cls.heavyAttack, resources.stamina);
+      if (affordable === undefined) {
+        this.refuseHeavy();
+        return false;
+      }
+      charge = Math.min(charge, affordable);
+    }
+    const breathCost = kind === 'heavy' ? heavyBreathCost(cls.heavyAttack, charge) : 0;
     const attack: ClassBasicAttackDefinition = kind === 'heavy' ? cls.heavyAttack : cls.basicAttack;
     let range = kind === 'heavy' ? khanHeavyRange(this.run) : khanBasicRange(this.run);
     const target =
@@ -344,6 +401,7 @@ export class CombatSystem extends ArenaSystem {
       this.timers.attackTimer =
         cls.heavyAttack.cooldown * this.run.clan.campEffects.multipliers.hostInterval;
       if (released) {
+        spendBreath(resources, breathCost);
         this.run.combat.volleys++;
         this.effects.classAttack('spirit-caller:ancestral-drum', {
           x: this.player.x,
@@ -363,6 +421,7 @@ export class CombatSystem extends ArenaSystem {
       this.timers.attackTimer =
         cls.heavyAttack.cooldown * this.run.clan.campEffects.multipliers.hostInterval;
       if (released) {
+        spendBreath(resources, breathCost);
         this.run.combat.volleys++;
         this.effects.classAttack('mounted-archer:piercing-draw', {
           x: this.player.x,
@@ -433,6 +492,7 @@ export class CombatSystem extends ArenaSystem {
     this.timers.attackTimer =
       (kind === 'heavy' ? cls.heavyAttack.cooldown : this.run.stats.attackInterval) *
       this.run.clan.campEffects.multipliers.hostInterval;
+    if (released) spendBreath(resources, breathCost);
     if (released) this.run.combat.volleys++;
     if (released) this.showAttackRelease(cls.id, kind, direction, target, range);
     if (released && cls.id === 'mounted-archer' && kind === 'light')

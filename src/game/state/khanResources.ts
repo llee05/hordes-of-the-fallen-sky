@@ -1,10 +1,11 @@
 import { GAME } from '../config';
-import { classDefinition } from '../data/classes';
+import { classDefinition, type ClassHeavyAttackDefinition } from '../data/classes';
 import type { RunState } from '../types';
+import { drumWaveCount } from './classActions';
 
 /**
  * The Khan's expedition resources. Breath is the stamina every class shares: it pays for the
- * gallop and refills over active time.
+ * gallop and for heavy attacks, and refills over active time.
  */
 export interface KhanResources {
   /** Breath, from 0 to `GAME.stamina.maximum`. */
@@ -74,6 +75,49 @@ export function advanceSprint(
       resources.stamina + GAME.stamina.refill * dt,
     );
   return outcome;
+}
+
+/** Spends Breath when the pool can pay in full; otherwise spends nothing. */
+export function spendBreath(resources: KhanResources, amount: number): boolean {
+  if (!Number.isFinite(amount) || amount < 0 || resources.stamina + 1e-9 < amount) return false;
+  resources.stamina = Math.max(0, resources.stamina - amount);
+  return true;
+}
+
+/** How far a hold of `charge` seconds is from the shortest release (0) to a full charge (1). */
+function heavyChargeRatio(heavy: ClassHeavyAttackDefinition, charge: number): number {
+  const maximum = (heavy.charge ?? heavy.holdCharge)?.maxDuration;
+  if (maximum === undefined || maximum <= heavy.windup || !Number.isFinite(charge)) return 0;
+  return Math.max(0, Math.min(1, (charge - heavy.windup) / (maximum - heavy.windup)));
+}
+
+/** Breath a heavy attack costs when released after `charge` seconds of hold. */
+export function heavyBreathCost(heavy: ClassHeavyAttackDefinition, charge: number): number {
+  const { tap, full } = heavy.breath;
+  if (heavy.charge?.kind === 'waves')
+    return tap * drumWaveCount(charge, heavy.windup, heavy.charge.waveEvery, heavy.charge.maxWaves);
+  return tap + (full - tap) * heavyChargeRatio(heavy, charge);
+}
+
+/**
+ * The longest hold, in seconds, that `breath` can pay for, or undefined when it cannot pay for
+ * the shortest release. A heavy attack without a charge returns its windup.
+ */
+export function affordableCharge(
+  heavy: ClassHeavyAttackDefinition,
+  breath: number,
+): number | undefined {
+  const { tap, full } = heavy.breath;
+  if (breath + 1e-9 < tap) return undefined;
+  const maximum = (heavy.charge ?? heavy.holdCharge)?.maxDuration;
+  if (maximum === undefined) return heavy.windup;
+  if (breath + 1e-9 >= full) return maximum;
+  if (heavy.charge?.kind === 'waves') {
+    // Hold halfway into the last wave Breath can pay for, clear of the next wave's threshold.
+    const waves = Math.min(heavy.charge.maxWaves, Math.floor((breath + 1e-9) / tap));
+    return Math.min(maximum, heavy.windup + (waves - 0.5) * heavy.charge.waveEvery);
+  }
+  return heavy.windup + ((breath - tap) / (full - tap)) * (maximum - heavy.windup);
 }
 
 /** A successor Khan returns rested. */

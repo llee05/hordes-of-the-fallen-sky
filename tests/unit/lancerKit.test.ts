@@ -13,8 +13,10 @@ import {
   chargeRatio,
   safeVaultLanding,
 } from '../../src/game/state/classActions';
+import { khanResourcesOf } from '../../src/game/state/khanResources';
 import { isKhanUnstoppable } from '../../src/game/state/statusEffects';
 import { SpatialHash } from '../../src/game/systems/SpatialHash';
+import { chargeReadout } from '../../src/ui/khanResourceHud';
 import { createFakeArena } from '../support/fakeArena';
 
 function setup() {
@@ -49,11 +51,73 @@ describe('Lancer kit', () => {
     const aim = { x: 1600, y: 1000 };
     arena.combat.tickKhanCombat(0.01, false, true, aim);
     arena.combat.tickKhanCombat(heavy.holdCharge!.maxDuration, false, true, aim);
-    expect(arena.combat.chargeStatus()).toEqual({ name: 'Impaling Strike', progress: 1 });
+    expect(arena.combat.chargeStatus()).toEqual({
+      name: 'Impaling Strike',
+      progress: 1,
+      winded: false,
+    });
+    expect(arena.combat.holdsBreath()).toBe(true);
     expect(arena.context.run.combat.volleys).toBe(0);
     arena.combat.tickKhanCombat(0.01, false, false, aim);
     expect(arena.combat.chargeStatus()).toBeUndefined();
+    expect(arena.combat.holdsBreath()).toBe(false);
     expect(arena.context.run.combat.volleys).toBe(1);
+    expect(khanResourcesOf(arena.context.timers).stamina).toBeCloseTo(100 - heavy.breath.full);
+  });
+
+  it('Impaling Strike stops charging at the level Breath can pay for and reads WINDED', () => {
+    const arena = setup();
+    const heavy = classDefinition('lancer').heavyAttack;
+    const resources = khanResourcesOf(arena.context.timers);
+    const aim = { x: 1600, y: 1000 };
+    // Enough for a tap and half of the way to a full charge.
+    resources.stamina = (heavy.breath.tap + heavy.breath.full) / 2;
+    arena.combat.tickKhanCombat(0.01, false, true, aim);
+    arena.combat.tickKhanCombat(heavy.holdCharge!.maxDuration, false, true, aim);
+    const status = arena.combat.chargeStatus()!;
+    expect(status.winded).toBe(true);
+    expect(status.progress).toBeGreaterThan(0.5);
+    expect(status.progress).toBeLessThan(0.7);
+    expect(chargeReadout(status)).toMatch(/^IMPALING STRIKE \d+% · WINDED$/);
+    arena.combat.tickKhanCombat(0.01, false, false, aim);
+    expect(arena.context.run.combat.volleys).toBe(1);
+    expect(resources.stamina).toBeCloseTo(0);
+  });
+
+  it('refuses a heavy attack Breath cannot pay for without starting its cooldown', () => {
+    const arena = setup();
+    const heavy = classDefinition('lancer').heavyAttack;
+    const resources = khanResourcesOf(arena.context.timers);
+    const aim = { x: 1600, y: 1000 };
+    resources.stamina = heavy.breath.tap - 1;
+    const play = vi.spyOn(arena.context.audio, 'play');
+    arena.combat.tickKhanCombat(0.01, false, true, aim);
+    expect(arena.combat.isWindingUp()).toBe(false);
+    expect(arena.combat.chargeStatus()).toEqual({
+      name: 'Impaling Strike',
+      progress: 0,
+      winded: true,
+    });
+    expect(arena.combat.fireHeavy(aim)).toBe(false);
+    arena.combat.tickKhanCombat(0.01, false, true, aim);
+    expect(play.mock.calls.filter(([kind]) => kind === 'ui')).toHaveLength(1);
+    expect(arena.context.timers.attackTimer).toBe(0);
+    expect(resources.stamina).toBe(heavy.breath.tap - 1);
+    // Holding on does not start the heavy once Breath returns; a fresh press does.
+    resources.stamina = 100;
+    arena.combat.tickKhanCombat(0.01, false, true, aim);
+    expect(arena.combat.isWindingUp()).toBe(false);
+    arena.combat.tickKhanCombat(0.01, false, false, aim);
+    expect(arena.combat.chargeStatus()).toBeUndefined();
+    arena.combat.tickKhanCombat(0.01, false, true, aim);
+    expect(arena.combat.isWindingUp()).toBe(true);
+    // The light attack stays free while the heavy is refused.
+    const winded = setup();
+    khanResourcesOf(winded.context.timers).stamina = 0;
+    winded.combat.tickKhanCombat(0.01, true, true, aim);
+    winded.combat.tickKhanCombat(0.3, true, true, aim);
+    expect(winded.context.run.combat.volleys).toBe(1);
+    expect(khanResourcesOf(winded.context.timers).stamina).toBe(0);
   });
 
   it('Impaling Strike scales reach, damage, and armour penetration with charge', () => {

@@ -237,6 +237,8 @@ export interface AttackCombo {
 export interface ClassHeavyAttackDefinition extends ClassBasicAttackDefinition {
   cooldown: number;
   windup: number;
+  /** Breath paid on release: `tap` at the shortest hold, `full` at a full charge. */
+  breath: { tap: number; full: number };
   charge?:
     | {
         kind: 'waves';

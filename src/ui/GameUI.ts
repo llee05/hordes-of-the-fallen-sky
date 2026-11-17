@@ -38,7 +38,7 @@ import { developerConsole, developerMenu } from './developerContent';
 import { foodOutlook, FORECAST_NOTE, signedRate } from './economyContent';
 import { expeditionMetricsContent } from './expeditionMetricsContent';
 import { guidanceContent } from './guidanceContent';
-import { gallopLabel } from './khanResourceHud';
+import { chargeReadout, gallopLabel } from './khanResourceHud';
 import type { JournalTab } from './menuContent';
 import {
   buildingMenu,
@@ -428,12 +428,7 @@ export class GameUI {
     dash.dataset.ready = String(dashAvailable);
     dash.dataset.galloping = String(khanActive && stamina.sprinting);
     this.text('dash-label', gallopLabel(stamina, khanActive));
-    this.text(
-      'attack-charge',
-      snapshot.attackCharge
-        ? `${snapshot.attackCharge.name.toUpperCase()} ${Math.round(snapshot.attackCharge.progress * 100)}%`
-        : 'LMB LIGHT · RMB HEAVY',
-    );
+    this.text('attack-charge', chargeReadout(snapshot.attackCharge));
     const spiritEnergy = this.get('spirit-energy');
     spiritEnergy.hidden = !snapshot.spiritCaller;
     if (snapshot.spiritCaller)

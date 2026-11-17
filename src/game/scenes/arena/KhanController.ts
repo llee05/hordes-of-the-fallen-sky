@@ -88,13 +88,15 @@ export class KhanController extends ArenaSystem {
 
   /**
    * Advances the gallop and Breath for one active step. The gallop is plain speed: it grants no
-   * invulnerability, and each new gallop lets the Khan push every enemy once more.
+   * invulnerability, and each new gallop lets the Khan push every enemy once more. Breath does
+   * not refill while `refill` is false (a charged heavy attack is held).
    */
-  updateSprint(dt: number, held: boolean): void {
+  updateSprint(dt: number, held: boolean, refill = true): void {
     const outcome = advanceSprint(khanResourcesOf(this.timers), dt, {
       held,
       able: isKhanActive(this.run),
       drain: sprintDrain(this.run),
+      refill,
     });
     if (outcome === 'refused') this.audio.play('ui');
     if (outcome !== 'started') return;

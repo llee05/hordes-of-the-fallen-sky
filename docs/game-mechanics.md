@@ -137,6 +137,17 @@ The drain is 30 per second times the camp gallop multiplier, which already carri
 
 Each new gallop lets the Khan push every enemy ridden through once (48 units), and Lancer and Iron Pagoda also pin them for 0.65 seconds. A fallen Khan stops galloping, Breath neither drains nor refills during succession, and the successor returns with full Breath. Menus freeze Breath with every other combat clock. Full saves keep Breath in the optional `timers.khanResources` record; older saves load rested, and their retired `dashTimer` is accepted and ignored.
 
+Heavy attacks also cost Breath, paid when the attack is released and scaled by how long it was held (measured from the shortest release to a full charge). Light attacks stay free.
+
+| Heavy attack                   | Shortest hold | Full charge     |
+| ------------------------------ | ------------- | --------------- |
+| Piercing Draw (Mounted Archer) | 8             | 22              |
+| Impaling Strike (Lancer)       | 10            | 26              |
+| Sundering Cleave (Iron Pagoda) | 14            | 14 (no charge)  |
+| Ancestral Drum (Spirit Caller) | 8             | 24 (8 per wave) |
+
+Breath does not refill while a charged heavy attack is held. If Breath cannot pay for a full charge, the charge stops rising at the level it can pay for and the attack readout adds `· WINDED`; galloping during the hold lowers that level. If Breath cannot pay for the shortest release the heavy attack is refused once per press with the interface sound: no windup starts, no cooldown is spent, the readout shows the attack at `0% · WINDED`, and a held light attack still fires. Costs live beside each class's heavy attack in `GAME.classes` as `breath: { tap, full }`.
+
 Ordinary damage grants 0.65 seconds of invulnerability; getting hit does not reduce clan damage.
 
 ### Camp guard

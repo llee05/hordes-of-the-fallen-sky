@@ -2,16 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { defaultCharacterProfile } from '../../src/shared/characterProfile';
 import { GAME } from '../../src/game/config';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
+import { classDefinition } from '../../src/game/data/classes';
 import {
   advanceSprint,
+  affordableCharge,
   createKhanResources,
+  heavyBreathCost,
   khanResourcesOf,
   restKhan,
+  spendBreath,
   sprintDrain,
   sprintSpeedMultiplier,
 } from '../../src/game/state/khanResources';
 import { createRun } from '../../src/game/state/run';
-import { gallopLabel } from '../../src/ui/khanResourceHud';
+import { chargeReadout, gallopLabel } from '../../src/ui/khanResourceHud';
 import { world } from './fixtures/expedition';
 
 const S = GAME.stamina;
@@ -95,6 +99,81 @@ describe('Breath and the gallop', () => {
     expect(gallopLabel({ ...stamina, sprinting: true }, true)).toBe('GALLOPING');
     expect(gallopLabel({ ...stamina, winded: true }, true)).toBe('WINDED');
     expect(gallopLabel(stamina, false)).toBe('CHOOSING A KHAN');
+  });
+});
+
+describe('heavy attack Breath costs', () => {
+  const heavy = (id: Parameters<typeof classDefinition>[0]) => classDefinition(id).heavyAttack;
+
+  it('charges each heavy attack its tap cost at the shortest hold and its full cost at a full charge', () => {
+    const draw = heavy('mounted-archer');
+    expect(heavyBreathCost(draw, 0)).toBe(8);
+    expect(heavyBreathCost(draw, draw.windup)).toBe(8);
+    expect(heavyBreathCost(draw, draw.charge!.maxDuration)).toBeCloseTo(22);
+    const strike = heavy('lancer');
+    expect(heavyBreathCost(strike, strike.windup)).toBe(10);
+    expect(heavyBreathCost(strike, strike.holdCharge!.maxDuration)).toBeCloseTo(26);
+    expect(heavyBreathCost(strike, 99)).toBeCloseTo(26);
+    const half = (strike.windup + strike.holdCharge!.maxDuration) / 2;
+    expect(heavyBreathCost(strike, half)).toBeCloseTo(18);
+    const cleave = heavy('iron-pagoda');
+    expect(heavyBreathCost(cleave, 0)).toBe(14);
+    expect(heavyBreathCost(cleave, 5)).toBe(14);
+  });
+
+  it('charges the Ancestral Drum eight Breath per wave', () => {
+    const drum = heavy('spirit-caller');
+    if (drum.charge?.kind !== 'waves') throw new Error('expected drum waves');
+    const { waveEvery, maxDuration } = drum.charge;
+    expect(heavyBreathCost(drum, drum.windup)).toBe(8);
+    expect(heavyBreathCost(drum, drum.windup + waveEvery * 1.5)).toBe(16);
+    expect(heavyBreathCost(drum, maxDuration)).toBe(24);
+    expect(affordableCharge(drum, 7)).toBeUndefined();
+    for (const [breath, waves] of [
+      [8, 1],
+      [15.9, 1],
+      [16, 2],
+      [23, 2],
+      [24, 3],
+      [100, 3],
+    ] as const)
+      expect(heavyBreathCost(drum, affordableCharge(drum, breath)!)).toBe(waves * 8);
+  });
+
+  it('caps a charge at the level Breath can pay for, or refuses it', () => {
+    const draw = heavy('mounted-archer');
+    const maximum = draw.charge!.maxDuration;
+    expect(affordableCharge(draw, 100)).toBe(maximum);
+    expect(affordableCharge(draw, 22)).toBe(maximum);
+    expect(affordableCharge(draw, 7.9)).toBeUndefined();
+    expect(affordableCharge(draw, 8)).toBeCloseTo(draw.windup);
+    for (const breath of [8, 11, 15, 19, 21.9]) {
+      const charge = affordableCharge(draw, breath)!;
+      expect(charge).toBeLessThan(maximum);
+      expect(heavyBreathCost(draw, charge)).toBeCloseTo(breath);
+    }
+    const cleave = heavy('iron-pagoda');
+    expect(affordableCharge(cleave, 13)).toBeUndefined();
+    expect(affordableCharge(cleave, 14)).toBe(cleave.windup);
+  });
+
+  it('spends Breath only when the pool can pay in full', () => {
+    const r = { stamina: 20, sprinting: false, winded: false };
+    expect(spendBreath(r, 26)).toBe(false);
+    expect(r.stamina).toBe(20);
+    expect(spendBreath(r, 20)).toBe(true);
+    expect(r.stamina).toBe(0);
+    expect(spendBreath(r, NaN)).toBe(false);
+  });
+
+  it('reads out a held charge and marks one Breath has capped', () => {
+    expect(chargeReadout(undefined)).toBe('LMB LIGHT · RMB HEAVY');
+    expect(chargeReadout({ name: 'Piercing Draw', progress: 0.6, winded: false })).toBe(
+      'PIERCING DRAW 60%',
+    );
+    expect(chargeReadout({ name: 'Piercing Draw', progress: 0.6, winded: true })).toBe(
+      'PIERCING DRAW 60% · WINDED',
+    );
   });
 });
 

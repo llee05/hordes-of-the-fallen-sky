@@ -6,6 +6,7 @@ import {
 } from '../../data/classes';
 import { Enemy, Projectile } from '../../entities/actors';
 import { isKhanActive } from '../../state/khan';
+import { drumWaveCount } from '../../state/classActions';
 import { insideAttackLine } from '../../state/khanControls';
 import { markExpedition } from '../../state/expeditionMetrics';
 import {
@@ -66,10 +67,7 @@ export class SpiritCallerSystem extends ArenaSystem {
     const tuning = attack.charge;
     if (!tuning || tuning.kind !== 'waves') return false;
     const held = Math.max(attack.windup, Math.min(tuning.maxDuration, charge));
-    const waves = Math.min(
-      tuning.maxWaves,
-      1 + Math.floor((held - attack.windup) / tuning.waveEvery),
-    );
+    const waves = drumWaveCount(held, attack.windup, tuning.waveEvery, tuning.maxWaves);
     this.state().drumWaves = Array.from({ length: waves }, (_, index) => ({
       delay: index * tuning.waveDelay,
       range: attack.range + index * tuning.rangeStep,

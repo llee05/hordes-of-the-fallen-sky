@@ -1021,7 +1021,7 @@ export class ArenaScene extends Phaser.Scene {
     if (advanceSuccession(this.run, dt)) this.khan.returnKhan();
     advanceMountedCombat(this.run, dt);
     const aim = this.controls.aimPoint(this.player, this.facing);
-    this.khan.updateSprint(dt, this.controls.gallopHeld());
+    this.khan.updateSprint(dt, this.controls.gallopHeld(), !this.combat.holdsBreath());
     if (isKhanActive(this.run)) {
       this.khan.move(dt, this.controls.movement(this.player));
       this.controls.drawJoystick();

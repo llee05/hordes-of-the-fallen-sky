@@ -210,7 +210,8 @@ export interface HudSnapshot {
     remaining: number;
   }[];
   spiritCaller?: { energy: number; maximum: number; activeSpirits: number };
-  attackCharge?: { name: string; progress: number };
+  /** A held heavy charge; `winded` when Breath caps it or cannot pay for it. */
+  attackCharge?: { name: string; progress: number; winded: boolean };
   best: number;
   clanBearing: string;
   fieldBearing?: string;
