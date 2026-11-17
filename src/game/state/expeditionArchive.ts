@@ -375,9 +375,10 @@ const enemyState = object(
         remaining: number,
         cooldown: number,
         hit: boolean,
+        sequence: integer,
       },
       {
-        attack: oneOf(['claw', 'slam', 'charge']),
+        attack: oneOf(['claw', 'slam', 'charge', 'bite', 'poison', 'burrow']),
         aim: point,
         direction: point,
       },

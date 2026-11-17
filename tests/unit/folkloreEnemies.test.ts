@@ -9,6 +9,7 @@ import {
 import { GAME } from '../../src/game/config';
 import {
   advanceAlmas,
+  advanceDeathWorm,
   createFolkloreEnemyState,
   type FolkloreEnemyState,
 } from '../../src/game/systems/folkloreEnemies';
@@ -28,6 +29,68 @@ describe('folklore enemy catalog', () => {
     expect(areaRoster('orkhon-valley', Number.MAX_SAFE_INTEGER, 9999)).not.toContain(almas);
     for (const roll of [0, 0.25, 0.5, 0.75, 0.999])
       expect(chooseEnemy(9999, () => roll)).not.toBe(almas);
+  });
+  it('keeps the Death Worm in the developer-only folklore catalog', () => {
+    const worm = FOLKLORE_ENEMIES.find((enemy) => enemy.id === 'death-worm');
+    expect(worm).toMatchObject({
+      title: 'Olgoi-Khorkhoi',
+      behavior: 'death-worm',
+      health: 110,
+      speed: 40,
+    });
+    expect(ALL_ENEMIES).toContain(worm);
+    expect(ENCOUNTER_ENEMIES).not.toContain(worm);
+    expect(areaRoster('orkhon-valley', Number.MAX_SAFE_INTEGER, 9999)).not.toContain(worm);
+  });
+});
+
+describe('Olgoi-Khorkhoi attacks', () => {
+  it('telegraphs a close bite instead of entering a ranged cycle', () => {
+    const state = ready();
+    expect(advanceDeathWorm(state, 0.01, origin, { x: 50, y: 0 }).started).toBe('bite');
+    expect(state.phase).toBe('windup');
+    expect(
+      advanceDeathWorm(state, GAME.tactics.deathWorm.biteWarning, origin, { x: 50, y: 0 }).released,
+    ).toBe('bite');
+    expect(state.phase).toBe('recover');
+  });
+
+  it('burrows to a snapshotted emergence mark before its damage window', () => {
+    const state = ready();
+    expect(advanceDeathWorm(state, 0.01, origin, { x: 250, y: 0 }).started).toBe('burrow');
+    expect(state.aim).toEqual({ x: 250, y: 0 });
+    expect(
+      advanceDeathWorm(state, GAME.tactics.deathWorm.burrowWarning, origin, { x: 500, y: 0 })
+        .released,
+    ).toBe('burrow');
+    expect(state.phase).toBe('attack');
+    expect(
+      advanceDeathWorm(state, GAME.tactics.deathWorm.burrowDuration, origin, { x: 500, y: 0 })
+        .emerged,
+    ).toBe(true);
+    expect(state.phase).toBe('recover');
+  });
+
+  it('alternates its next mid-range ambush with a poison spit', () => {
+    const state = { ...ready(), sequence: 1 };
+    expect(advanceDeathWorm(state, 0.01, origin, { x: 250, y: 0 }).started).toBe('poison');
+    expect(
+      advanceDeathWorm(state, GAME.tactics.deathWorm.poisonWarning, origin, { x: 250, y: 0 })
+        .released,
+    ).toBe('poison');
+    expect(state.cooldown).toBe(GAME.tactics.deathWorm.cooldown);
+  });
+
+  it('interrupts an underground worm into visible recovery', () => {
+    const state = ready();
+    advanceDeathWorm(state, 0.01, origin, { x: 250, y: 0 });
+    advanceDeathWorm(state, GAME.tactics.deathWorm.burrowWarning, origin, { x: 250, y: 0 });
+    advanceDeathWorm(state, 0.1, origin, { x: 250, y: 0 }, true);
+    expect(state).toMatchObject({
+      phase: 'recover',
+      remaining: GAME.tactics.deathWorm.recovery,
+      hit: false,
+    });
   });
 });
 

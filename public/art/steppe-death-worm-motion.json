@@ -1,0 +1,135 @@
+{
+  "frames": {
+    "death-worm-move-0": {
+      "frame": {
+        "x": 12,
+        "y": 133,
+        "w": 232,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 133,
+        "w": 232,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "death-worm-move-1": {
+      "frame": {
+        "x": 279,
+        "y": 138,
+        "w": 214,
+        "h": 186
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 23,
+        "y": 138,
+        "w": 214,
+        "h": 186
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "death-worm-move-2": {
+      "frame": {
+        "x": 524,
+        "y": 140,
+        "w": 232,
+        "h": 184
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 140,
+        "w": 232,
+        "h": 184
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "death-worm-move-3": {
+      "frame": {
+        "x": 780,
+        "y": 131,
+        "w": 232,
+        "h": 193
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 131,
+        "w": 232,
+        "h": 193
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "death-worm-attack-0": {
+      "frame": {
+        "x": 1045,
+        "y": 154,
+        "w": 183,
+        "h": 170
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 21,
+        "y": 154,
+        "w": 183,
+        "h": 170
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "death-worm-attack-1": {
+      "frame": {
+        "x": 1292,
+        "y": 175,
+        "w": 232,
+        "h": 149
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 175,
+        "w": 232,
+        "h": 149
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    }
+  },
+  "meta": {
+    "app": "built-in imagegen + ImageMagick registration",
+    "version": "1.0",
+    "image": "steppe-death-worm-motion.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1536,
+      "h": 360
+    },
+    "scale": "1"
+  }
+}

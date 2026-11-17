@@ -9,6 +9,7 @@ import mountedSource from '/art/steppe-mounted-motion.json?raw';
 import clanSource from '/art/steppe-clan-motion.json?raw';
 import creatureSource from '/art/steppe-creature-motion.json?raw';
 import almasSource from '/art/steppe-almas-motion.json?raw';
+import deathWormSource from '/art/steppe-death-worm-motion.json?raw';
 import { CHARACTER_CLASSES } from '../../src/shared/characterProfile';
 import classesSource from '/art/steppe-classes-motion.json?raw';
 import directionalClassesSource from '/art/steppe-classes-directional-motion.json?raw';
@@ -228,6 +229,7 @@ it('gives every actor complete clips with a constant canvas and ground registrat
     'steppe-creature-motion': creatures,
     'steppe-clan-motion': clan,
     'steppe-almas-motion': JSON.parse(almasSource),
+    'steppe-death-worm-motion': JSON.parse(deathWormSource),
   } as const;
   for (const kind of CHARACTER_KINDS) {
     const [sheet] = characterTexture(kind);

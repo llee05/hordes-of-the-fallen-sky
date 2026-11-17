@@ -173,6 +173,7 @@ export class EnemyDirector {
     this.shadows
       .get(enemy)!
       .setDisplaySize(width * 0.9, width * 0.3)
+      .setAlpha(1)
       .setVisible(true);
     enemy.definition = definition;
     enemy.elite = !!definition.elite;

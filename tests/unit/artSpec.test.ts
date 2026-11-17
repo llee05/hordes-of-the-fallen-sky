@@ -50,6 +50,7 @@ const SHEET: Record<string, string> = {
   seer: 'creature',
   skybreaker: 'creature',
   almas: 'almas',
+  'death-worm': 'death-worm',
 };
 
 /** Billboard height of a placed Orkhon sprite in world units. */

@@ -288,6 +288,20 @@ export const FOLKLORE_ENEMIES: readonly EnemyDefinition[] = [
     scale: 3.4,
     behavior: 'almas',
   },
+  {
+    id: 'death-worm',
+    title: 'Olgoi-Khorkhoi',
+    texture: 'death-worm',
+    navigation: 'ground',
+    health: 110,
+    speed: 40,
+    damage: 12,
+    xp: 10,
+    unlockAt: Number.POSITIVE_INFINITY,
+    weight: 0,
+    scale: 2.5,
+    behavior: 'death-worm',
+  },
 ];
 export const ENCOUNTER_ENEMIES: readonly EnemyDefinition[] = [...ENEMIES, ...AREA_ENEMIES];
 export const ALL_ENEMIES: readonly EnemyDefinition[] = [...ENCOUNTER_ENEMIES, ...FOLKLORE_ENEMIES];
