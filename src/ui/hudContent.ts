@@ -140,6 +140,20 @@ export interface CommandVisibility {
   dock: boolean;
 }
 
+export type HudContext = 'combat' | 'encampment' | 'exploration';
+
+/** Presentation priority for the battlefield annotations. This never changes simulation state. */
+export function hudContext(run: RunState): HudContext {
+  if (['warning', 'assault', 'elite'].includes(encounterPlan(run).phase)) return 'combat';
+  if (
+    run.clan.stage === 'migration' ||
+    (!!run.prologue && !run.prologue.campEstablished) ||
+    !!run.field.objective
+  )
+    return 'exploration';
+  return 'encampment';
+}
+
 /** Commands that cannot apply right now leave the screen instead of sitting disabled. */
 export function commandVisibility(run: RunState): CommandVisibility {
   const established = !run.prologue || run.prologue.campEstablished;

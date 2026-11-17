@@ -7,6 +7,7 @@ import {
   commandVisibility,
   encounterLine,
   fieldObjectiveLine,
+  hudContext,
   lossReport,
   RECENT_LOSS_SECONDS,
   stageLabels,
@@ -139,5 +140,36 @@ describe('command visibility', () => {
       build: false,
       migrate: false,
     });
+  });
+});
+
+describe('HUD context', () => {
+  it('prioritises camp management during a quiet encampment', () => {
+    const run = createRun();
+    run.clan.stageTime = 0;
+    expect(hudContext(run)).toBe('encampment');
+  });
+  it('prioritises survival during warned and active assaults', () => {
+    const run = createRun();
+    run.clan.stageTime = GAME.spawning.openingDuration;
+    expect(hudContext(run)).toBe('combat');
+  });
+  it('prioritises navigation on the road, at a field objective, and before camp exists', () => {
+    const road = createRun();
+    road.clan.stage = 'migration';
+    expect(hudContext(road)).toBe('exploration');
+    const field = createRun();
+    field.field.objective = {
+      id: 1,
+      kind: 'supplies',
+      x: 0,
+      y: 0,
+      progress: 0,
+      status: 'available',
+      guards: 3,
+      defeated: 0,
+    };
+    expect(hudContext(field)).toBe('exploration');
+    expect(hudContext(createPrologueRun())).toBe('exploration');
   });
 });
