@@ -15,12 +15,12 @@
   --hud-serif: 'Cormorant Garamond', Georgia, serif;
   --hud-sans: 'DM Sans', sans-serif;
   --hud-gap: 22px;
-  --hud-frame: 5px double rgba(46, 44, 36, 0.94);
+  --hud-frame: 6px double rgba(38, 37, 31, 0.96);
   --hud-parchment:
     radial-gradient(ellipse at 12% 15%, rgba(255, 240, 201, 0.46), transparent 34%),
     radial-gradient(ellipse at 84% 86%, rgba(112, 68, 36, 0.18), transparent 38%),
-    linear-gradient(105deg, rgba(244, 220, 174, 0.72), rgba(216, 179, 120, 0.7)),
-    url('/art/ui-felt.png') center / 260px;
+    linear-gradient(105deg, rgba(244, 220, 174, 0.56), rgba(216, 179, 120, 0.52)),
+    url('/art/ui-felt.png') center / 220px;
   color: var(--hud-ink);
   font-family: var(--hud-sans);
 }
@@ -46,21 +46,21 @@
   border: var(--hud-frame);
   background: var(--hud-parchment);
   box-shadow:
-    inset 0 0 0 2px rgba(124, 55, 39, 0.48),
-    inset 0 0 0 4px rgba(207, 164, 91, 0.52),
-    inset 0 0 18px rgba(71, 48, 31, 0.22),
-    0 3px 9px rgba(32, 20, 10, 0.4);
+    inset 0 0 0 2px rgba(124, 55, 39, 0.62),
+    inset 0 0 0 5px rgba(207, 164, 91, 0.58),
+    inset 0 0 20px rgba(71, 48, 31, 0.28),
+    0 4px 10px rgba(32, 20, 10, 0.46);
 }
 .hud-surface::before,
 .hud-surface::after {
   content: '';
   position: absolute;
   z-index: 1;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-color: var(--hud-red) var(--hud-blue) transparent transparent;
   border-style: double;
-  border-width: 3px;
+  border-width: 4px;
   pointer-events: none;
 }
 .hud-surface::before {
@@ -218,11 +218,11 @@
 .resource {
   min-width: 0;
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr);
+  grid-template-columns: 24px minmax(0, 1fr);
   grid-template-rows: auto auto;
   align-items: center;
-  column-gap: 4px;
-  padding-inline: 6px;
+  column-gap: 3px;
+  padding-inline: 4px;
   border-right: 1px solid rgba(101, 43, 32, 0.28);
 }
 .resource:last-child {
@@ -230,7 +230,7 @@
 }
 .resource-icon {
   grid-row: 1 / 3;
-  font-size: 26px;
+  font-size: 24px;
   color: var(--hud-red-dark);
   filter: drop-shadow(0 1px 0 rgba(255, 240, 200, 0.7)) drop-shadow(0 1px 1px rgba(61, 38, 24, 0.3));
 }
@@ -247,8 +247,8 @@
 .resource-label {
   overflow: hidden;
   color: var(--hud-ink-soft);
-  font: 700 7.5px/1 var(--hud-sans);
-  letter-spacing: 0.08em;
+  font: 700 7px/1 var(--hud-sans);
+  letter-spacing: 0.04em;
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
@@ -946,7 +946,24 @@
 }
 .dash-button::before,
 .dash-button::after {
-  display: none;
+  content: '';
+  position: absolute;
+  z-index: 2;
+  left: 4px;
+  display: block;
+  width: calc(100% - 8px);
+  height: 7px;
+  border: 0;
+  background: url('/art/ui-braid.svg') repeat-x center / 44px 7px;
+  transform: none;
+  pointer-events: none;
+}
+.dash-button::before {
+  top: 2px;
+}
+.dash-button::after {
+  right: auto;
+  bottom: 2px;
 }
 .dash-rider {
   position: absolute;
@@ -1156,6 +1173,247 @@
   display: block;
   height: 100%;
   background: #b24d35;
+}
+
+/* ---------- Full desktop: broad manuscript cards like the gameplay reference ---------- */
+@media (min-width: 1401px) {
+  .game-hud {
+    --hud-gap: 14px;
+  }
+  .ledger-column {
+    width: 600px;
+  }
+  .resource-hud {
+    padding: 20px 20px 17px;
+  }
+  .resource-row {
+    padding-top: 9px;
+  }
+  .resource {
+    grid-template-columns: 34px minmax(0, 1fr);
+    column-gap: 6px;
+    padding-inline: 6px;
+  }
+  .resource-icon {
+    font-size: 34px;
+  }
+  .resource-label {
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+  }
+  .resource strong {
+    font-size: 28px;
+  }
+  .resource-hud .hud-ribbon {
+    min-height: 28px;
+    padding-inline: 28px;
+    font-size: 17px;
+  }
+  .expedition-clock {
+    top: 10px;
+    min-width: 248px;
+    padding: 9px 44px 11px;
+  }
+  .expedition-clock strong {
+    font-size: 39px;
+  }
+  .expedition-clock > span {
+    font-size: 10px;
+  }
+  .expedition-clock::before,
+  .expedition-clock::after {
+    top: 7px;
+    width: 122px;
+    height: 84px;
+  }
+  .expedition-clock::before {
+    left: -101px;
+  }
+  .expedition-clock::after {
+    right: -101px;
+  }
+  .hud-menu-button {
+    width: 58px;
+    height: 64px;
+  }
+  .hud-menu-button > span {
+    font-size: 30px;
+  }
+  .hud-menu-button:first-child > span {
+    width: 34px;
+    height: 34px;
+  }
+  .game-hud kbd {
+    padding: 2px 5px;
+    font-size: 10px;
+  }
+  .objective-hud {
+    top: 92px;
+    width: 380px;
+    min-height: 190px;
+    padding: 21px 22px 72px;
+  }
+  .objective-heading {
+    min-height: 30px;
+    padding-inline: 24px;
+  }
+  .objective-heading strong {
+    font-size: 16px;
+  }
+  .objective-heading > span {
+    font-size: 12px;
+  }
+  .objective-text {
+    margin-top: 7px;
+    padding-right: 22px;
+    font-size: 22px;
+    line-height: 1.25;
+  }
+  .objective-vignette {
+    right: 24px;
+    bottom: 7px;
+    width: 164px;
+    height: 70px;
+  }
+  .objective-vignette::before {
+    right: 72px;
+    bottom: -15px;
+    width: 132px;
+    height: 88px;
+  }
+  .objective-vignette .camp-illustration {
+    width: 108px;
+    height: 82px;
+  }
+  .hud-disclosure {
+    width: 25px;
+    height: 25px;
+    font-size: 13px;
+  }
+  .khan-hud {
+    width: 350px;
+  }
+  .tradition-hud {
+    gap: 4px 12px;
+    padding: 7px 14px 8px;
+  }
+  .tradition-hud > span {
+    font-size: 13px;
+  }
+  .vitals-hud {
+    padding: 16px 19px 15px;
+  }
+  .vitals-hud::before {
+    left: -86px;
+    width: 182px;
+    height: 18px;
+    background-size: 92px 18px;
+  }
+  .health-heading {
+    margin-bottom: 7px;
+    font-size: 15px;
+  }
+  .clan-health {
+    margin-top: 12px;
+    font-size: 13px;
+  }
+  .health-track {
+    height: 8px;
+  }
+  .resolve-track {
+    height: 7px;
+  }
+  .breath-heading {
+    margin: 11px 0 7px;
+    font-size: 12px;
+  }
+  .breath-track {
+    height: 5px;
+  }
+  .class-resource {
+    margin-top: 12px;
+    font-size: 10px;
+  }
+  .resource-beads {
+    gap: 4px;
+  }
+  .resource-beads i {
+    max-width: 18px;
+  }
+  .action-dock {
+    gap: 8px;
+    padding: 17px 10px;
+  }
+  .action-dock::before,
+  .action-dock::after {
+    height: 10px;
+    background-size: 54px 10px;
+  }
+  .ability-dock {
+    grid-template-columns: repeat(4, 150px);
+    gap: 6px;
+  }
+  .ability-indicator {
+    gap: 7px;
+    padding: 8px 8px 8px 5px;
+  }
+  .ability-icon {
+    width: 42px;
+    height: 48px;
+    flex-basis: 42px;
+  }
+  .ability-indicator strong {
+    font-size: 15px;
+    line-height: 1.08;
+  }
+  .ability-indicator small {
+    font-size: 9px;
+  }
+  .ability-cost {
+    padding: 2px 4px;
+    font-size: 9px;
+  }
+  .command-button {
+    width: 118px;
+    padding: 7px 10px 8px;
+    font-size: 15px;
+  }
+  .command-icon {
+    width: 52px;
+    height: 46px;
+  }
+  .dash-button {
+    width: 250px;
+    min-height: 105px;
+    padding: 16px 20px 19px 112px;
+  }
+  .dash-button::before,
+  .dash-button::after {
+    height: 10px;
+    background-size: 54px 10px;
+  }
+  .dash-rider {
+    left: 9px;
+    bottom: 7px;
+    width: 100px;
+    height: 88px;
+  }
+  .dash-button strong {
+    font-size: 19px;
+  }
+  .dash-button small {
+    margin-top: 6px;
+    font-size: 9px;
+  }
+  .zoom-controls {
+    bottom: 132px;
+    width: 250px;
+    height: 36px;
+    border-width: 6px;
+  }
+  #zoom-reset {
+    font-size: 11px;
+  }
 }
 
 /* ---------- Laptop widths ---------- */
