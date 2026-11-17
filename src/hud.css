@@ -202,7 +202,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
-  width: 330px;
+  width: 420px;
 }
 .resource-hud {
   position: relative;
@@ -212,14 +212,15 @@
 .resource-row {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  margin-right: 22px;
   padding-top: 4px;
 }
 .resource {
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
+  padding-inline: 5px;
   border-right: 1px solid rgba(101, 43, 32, 0.28);
 }
 .resource:last-child {
@@ -265,6 +266,10 @@
   background: rgba(255, 243, 214, 0.8);
   color: var(--hud-red-dark);
   font: 600 10px/1 var(--hud-serif);
+}
+.resource-hud > .hud-disclosure {
+  right: -10px;
+  bottom: -10px;
 }
 .hud-disclosure::before {
   content: '▾';
@@ -681,7 +686,7 @@
 }
 .ability-dock {
   display: grid;
-  grid-template-columns: repeat(4, 125px);
+  grid-template-columns: repeat(4, 138px);
   gap: 4px;
 }
 .ability-indicator {
@@ -704,10 +709,8 @@
   display: block;
 }
 .ability-indicator strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font: 600 11.5px/1.2 var(--hud-serif);
+  white-space: normal;
+  font: 600 11.5px/1.05 var(--hud-serif);
   color: var(--hud-ink);
 }
 .ability-indicator small {
@@ -984,7 +987,7 @@
     --hud-gap: 18px;
   }
   .ledger-column {
-    width: 310px;
+    width: 390px;
   }
   .objective-hud {
     width: 272px;
@@ -997,7 +1000,7 @@
     width: 218px;
   }
   .ability-dock {
-    grid-template-columns: repeat(4, 112px);
+    grid-template-columns: repeat(4, 130px);
   }
   .command-button {
     width: 86px;
@@ -1015,10 +1018,14 @@
     width: 284px;
   }
   .resource-icon {
-    font-size: 20px;
+    font-size: 16px;
   }
   .resource strong {
-    font-size: 19px;
+    font-size: 16px;
+  }
+  .resource {
+    gap: 3px;
+    padding-inline: 2px;
   }
   .objective-hud {
     width: 238px;
@@ -1113,7 +1120,8 @@
     padding-top: 0;
   }
   .resource {
-    gap: 5px;
+    gap: 4px;
+    padding-inline: 3px;
   }
   .resource-icon {
     font-size: 18px;
