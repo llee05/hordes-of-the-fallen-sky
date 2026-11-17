@@ -1486,9 +1486,10 @@ export class CombatSystem extends ArenaSystem {
 
   private styleHostileProjectile(shot: Projectile): void {
     const high = this.visualSettings.projectileContrast === 'high';
+    const poison = shot.source === 'Olgoi-Khorkhoi';
     shot
       .setScale(high ? 1.45 : 1.1)
-      .setTint(high ? 0xffc36b : 0xb94948)
+      .setTint(high ? 0xffc36b : poison ? 0x718c58 : 0xb94948)
       .setDepth(9200);
     const radius = 5.4 / shot.scaleX;
     shot.setCircle(radius, shot.width / 2 - radius, shot.height / 2 - radius);

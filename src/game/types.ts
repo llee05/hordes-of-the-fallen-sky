@@ -171,7 +171,7 @@ export interface EnemyDefinition {
   weight: number;
   scale: number;
   navigation?: 'ground' | 'pack' | 'heavy';
-  behavior?: 'ranged' | 'charger';
+  behavior?: 'ranged' | 'charger' | 'almas' | 'death-worm' | 'muu-shuuvuu';
 }
 
 export interface HudSnapshot {

@@ -81,7 +81,7 @@ export interface EnemyArchive extends BodyArchive {
     | 'objectiveId'
     | 'preparingAttack'
     | 'tactics'
-  > & { elite?: boolean; status?: EnemyStatus };
+  > & { elite?: boolean; status?: EnemyStatus; folklore?: Enemy['folklore'] };
   motion: MotionArchive;
 }
 export interface ProjectileArchive extends BodyArchive {
@@ -365,7 +365,26 @@ const enemyState = object(
       { aim: point, direction: point },
     ),
   },
-  { objectiveId: integer, elite: boolean, spiritSlow: positive, status: enemyStatus },
+  {
+    objectiveId: integer,
+    elite: boolean,
+    spiritSlow: positive,
+    status: enemyStatus,
+    folklore: object(
+      {
+        phase: oneOf(['approach', 'windup', 'attack', 'recover']),
+        remaining: number,
+        cooldown: number,
+        hit: boolean,
+        sequence: integer,
+      },
+      {
+        attack: oneOf(['claw', 'slam', 'charge', 'bite', 'poison', 'burrow', 'dive', 'shriek']),
+        aim: point,
+        direction: point,
+      },
+    ),
+  },
 );
 const projectile = object(
   {
@@ -560,8 +579,10 @@ function migrateOrkhonLayout(value: unknown): void {
       for (const point of points) {
         translate(point);
         if (isRecord(point)) translate(point.previous);
-        if (isRecord(point) && isRecord(point.state) && isRecord(point.state.tactics))
-          translate(point.state.tactics.aim);
+        if (isRecord(point) && isRecord(point.state)) {
+          if (isRecord(point.state.tactics)) translate(point.state.tactics.aim);
+          if (isRecord(point.state.folklore)) translate(point.state.folklore.aim);
+        }
       }
   }
   if (isRecord(world.areaThreats) && Array.isArray(world.areaThreats.threats))

@@ -4,6 +4,7 @@ import { createEnemyTactics } from '../systems/enemyTactics';
 import Phaser from 'phaser';
 import type { EnemyDefinition } from '../types';
 import { CharacterMotion } from '../animation/CharacterMotion';
+import { createFolkloreEnemyState } from '../systems/folkloreEnemies';
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
   elite = false;
@@ -25,6 +26,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   spiritSlow = 0;
   lastGallop = -1;
   dangerTimer = 3;
+  folklore = createFolkloreEnemyState();
   tacticalSlot = 0;
   /** Last planned waypoint; transient, never saved. See `systems/enemyRoutes.ts`. */
   route?: EnemyRoute;

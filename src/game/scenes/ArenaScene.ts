@@ -264,6 +264,7 @@ export class ArenaScene extends Phaser.Scene {
         },
         addSeerHazard: (target, definition) => scene.hazardSystem.addSeer(target, definition),
         queueAreaThreat: (kind, point, owner) => scene.areaCombat.queueThreat(kind, point, owner),
+        takeDamage: (amount) => scene.khan.takeDamage(amount),
       },
       this.combat,
       this.enemyDirector,
