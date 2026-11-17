@@ -95,7 +95,7 @@ describe('Breath and the gallop', () => {
 
   it('labels the gallop button from the Breath state', () => {
     const stamina = { current: 80, maximum: 100, sprintDrain: 30, sprinting: false, winded: false };
-    expect(gallopLabel(stamina, true)).toBe('HOLD SPACE');
+    expect(gallopLabel(stamina, true)).toBe('READY');
     expect(gallopLabel({ ...stamina, sprinting: true }, true)).toBe('GALLOPING');
     expect(gallopLabel({ ...stamina, winded: true }, true)).toBe('WINDED');
     expect(gallopLabel(stamina, false)).toBe('CHOOSING A KHAN');

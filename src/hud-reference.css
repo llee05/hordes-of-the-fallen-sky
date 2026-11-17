@@ -1,0 +1,958 @@
+/* New-reference recreation -------------------------------------------------
+   The battlefield is framed as one manuscript leaf. Every painted HUD element
+   below comes from the new generated atlas; live values and controls remain DOM. */
+.game-hud {
+  --hud-paper: #e8c990;
+  --hud-paper-light: #f3ddb0;
+  --hud-paper-deep: #c89e67;
+  --hud-ink: #34261b;
+  --hud-ink-soft: #644934;
+  --hud-red: #934735;
+  --hud-red-dark: #633124;
+  --hud-blue: #496d7d;
+  --hud-gold: #b88635;
+  --hud-sage: #667653;
+  --hud-gap: clamp(16px, 1.15vw, 24px);
+}
+
+.hud-frame {
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hud-frame-edge,
+.hud-frame-corner {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.hud-frame-edge-top,
+.hud-frame-edge-bottom {
+  left: 18px;
+  right: 18px;
+  height: 12px;
+  background: url('/art/hud-border-horizontal.png') repeat-x center / 42px 12px;
+}
+
+.hud-frame-edge-top {
+  top: 0;
+}
+
+.hud-frame-edge-bottom {
+  bottom: 0;
+  transform: scaleY(-1);
+}
+
+.hud-frame-edge-left,
+.hud-frame-edge-right {
+  top: 14px;
+  bottom: 14px;
+  width: 10px;
+  background: url('/art/hud-border-vertical.png') repeat-y center / 10px 32px;
+}
+
+.hud-frame-edge-left {
+  left: 0;
+}
+
+.hud-frame-edge-right {
+  right: 0;
+  transform: scaleX(-1);
+}
+
+.hud-frame-corner {
+  width: 30px;
+  height: 23px;
+  background: url('/art/hud-border-corner.png') no-repeat left top / contain;
+}
+
+.hud-frame-corner-tl {
+  top: 0;
+  left: 0;
+}
+
+.hud-frame-corner-tr {
+  top: 0;
+  right: 0;
+  transform: scaleX(-1);
+}
+
+.hud-frame-corner-br {
+  right: 0;
+  bottom: 0;
+  transform: rotate(180deg);
+}
+
+.hud-frame-corner-bl {
+  bottom: 0;
+  left: 0;
+  transform: scaleY(-1);
+}
+
+.game-hud kbd {
+  min-width: 21px;
+  min-height: 18px;
+  padding: 3px 6px 2px;
+  border: 0;
+  border-radius: 0;
+  background: url('/art/hud-keycap-frame.png') center / 100% 100% no-repeat;
+  color: var(--hud-ink);
+  font: 700 8px/1.2 var(--hud-serif);
+  letter-spacing: 0.05em;
+}
+
+.resource-hud,
+.objective-hud,
+.vitals-hud {
+  border: 13px solid transparent;
+  border-image: url('/art/hud-panel-frame.png') 24% 3% fill / 13px 16px stretch;
+  background: none;
+  box-shadow: 0 3px 8px rgba(44, 28, 17, 0.28);
+  clip-path: none;
+}
+
+/* Top left: the single five-column resource strip from the reference. */
+.ledger-column {
+  left: var(--hud-gap);
+  top: var(--hud-gap);
+  width: clamp(480px, 31vw, 610px);
+}
+
+.resource-hud {
+  min-height: 68px;
+  padding: 7px 13px 8px;
+}
+
+.resource-hud::after {
+  display: none;
+}
+
+.resource-row {
+  min-height: 42px;
+  align-items: center;
+}
+
+.resource {
+  grid-template-columns: 38px minmax(0, 1fr);
+  grid-template-rows: 16px 23px;
+  column-gap: 6px;
+  padding: 0 9px;
+}
+
+.resource + .resource {
+  border-left: 1px solid rgba(88, 57, 35, 0.32);
+}
+
+.resource-icon {
+  grid-row: 1 / 3;
+  width: 38px;
+  height: 38px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  filter: none;
+}
+
+.resource-icon .clan-mark {
+  opacity: 0;
+}
+
+.resource-population .resource-icon {
+  background-image: url('/art/hud-icon-people.png');
+}
+
+.resource-herd .resource-icon {
+  background-image: url('/art/hud-icon-herd.png');
+}
+
+.resource-food .resource-icon {
+  background-image: url('/art/hud-icon-food.png');
+}
+
+.resource-materials .resource-icon {
+  background-image: url('/art/hud-icon-materials.png');
+}
+
+.resource-spirit .resource-icon {
+  background-image: url('/art/hud-icon-spirit.png');
+}
+
+.resource-label {
+  align-self: end;
+  color: var(--hud-ink);
+  font: 700 10px/1 var(--hud-serif);
+  letter-spacing: 0.05em;
+}
+
+.resource strong {
+  align-self: start;
+  font: 700 17px/1.05 var(--hud-serif);
+  text-align: left;
+}
+
+.hud-disclosure {
+  right: 7px;
+  bottom: -12px;
+  width: 23px;
+  height: 23px;
+  border: 0;
+  border-radius: 0;
+  background: url('/art/hud-keycap-frame.png') center / 100% 100% no-repeat;
+}
+
+.clan-details {
+  margin-top: 8px;
+  border-top-style: solid;
+}
+
+/* Top centre: painted timer plaque and cloud-scroll wings. */
+.expedition-clock {
+  top: 2px;
+  width: 222px;
+  min-height: 78px;
+  padding: 17px 34px 12px;
+  border: 0;
+  border-radius: 0;
+  background: url('/art/hud-timer-plaque.png') center / 100% 100% no-repeat;
+  box-shadow: none;
+}
+
+.expedition-clock::before,
+.expedition-clock::after {
+  z-index: -1;
+  top: 19px;
+  width: 94px;
+  height: 38px;
+  background: url('/art/hud-cloud-flourish.png') center / contain no-repeat;
+  opacity: 0.95;
+}
+
+.expedition-clock::before {
+  left: -65px;
+  transform: scaleX(-1);
+}
+
+.expedition-clock::after {
+  right: -65px;
+  transform: none;
+}
+
+.expedition-clock strong {
+  font: 600 29px/0.9 var(--hud-serif);
+  letter-spacing: 2px;
+}
+
+.expedition-clock > span {
+  margin-top: 6px;
+  color: var(--hud-ink);
+  font: 700 9px/1 var(--hud-serif);
+  letter-spacing: 0.12em;
+}
+
+/* Top-right square manuscript buttons. */
+.hud-menu {
+  top: var(--hud-gap);
+  right: var(--hud-gap);
+  gap: 5px;
+  padding: 0;
+  border: 0;
+}
+
+.hud-menu::before {
+  display: none;
+}
+
+.hud-menu-button {
+  display: grid;
+  width: 52px;
+  height: 60px;
+  padding: 5px 5px 4px;
+  border: 0;
+  background: url('/art/hud-keycap-frame.png') center / 100% 100% no-repeat;
+  filter: drop-shadow(0 2px 2px rgba(44, 28, 17, 0.28));
+}
+
+.hud-menu-button > span,
+.hud-menu-button:first-child > span {
+  grid-area: auto;
+  width: 28px;
+  height: 28px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  font-size: 0;
+}
+
+.hud-menu-button > span .clan-mark {
+  opacity: 0;
+}
+
+.hud-menu-button:first-child > span {
+  background-image: url('/art/hud-icon-journal.png');
+}
+
+.hud-menu-button:last-child > span {
+  background-image: url('/art/hud-icon-pause.png');
+}
+
+.hud-menu-button kbd {
+  grid-area: auto;
+  align-self: auto;
+  min-height: 0;
+  padding: 0;
+  transform: none;
+  background: none;
+  font-size: 9px;
+}
+
+/* Objective scroll beneath the menu buttons. */
+.objective-hud {
+  top: 94px;
+  right: var(--hud-gap);
+  width: clamp(330px, 21vw, 395px);
+  min-height: 116px;
+  padding: 10px 18px 34px;
+}
+
+.objective-heading {
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(112, 57, 37, 0.55);
+  color: var(--hud-ink);
+}
+
+.objective-heading strong {
+  font: 700 12px/1.1 var(--hud-serif);
+}
+
+.objective-heading span {
+  font: 700 9px/1.1 var(--hud-serif);
+}
+
+.objective-text {
+  margin-top: 8px;
+  padding-right: 50px;
+  font: italic 600 17px/1.18 var(--hud-serif);
+}
+
+.objective-vignette {
+  right: 13px;
+  bottom: 5px;
+  width: 112px;
+  height: 42px;
+  opacity: 0.95;
+}
+
+.objective-vignette::before {
+  right: 0;
+  bottom: 0;
+  width: 112px;
+  height: 42px;
+  background: url('/art/hud-cloud-flourish.png') center / contain no-repeat;
+  opacity: 1;
+}
+
+.objective-vignette .camp-illustration {
+  display: none;
+}
+
+.objective-hud > .hud-disclosure {
+  right: 7px;
+  bottom: -11px;
+}
+
+/* Bottom-left Khan card, ruled like the reference but retaining real mechanics. */
+.khan-hud {
+  left: var(--hud-gap);
+  bottom: var(--hud-gap);
+  width: clamp(292px, 18vw, 348px);
+}
+
+.vitals-hud {
+  padding: 8px 14px 10px;
+}
+
+.vitals-hud::before {
+  display: none;
+}
+
+.tradition-hud {
+  grid-template-columns: 1fr auto;
+  gap: 5px 10px;
+  margin: 0 0 5px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(91, 54, 34, 0.5);
+  color: var(--hud-ink);
+  font: 700 12px/1 var(--hud-serif);
+}
+
+.tradition-hud > span:first-child {
+  font-size: 15px;
+  font-style: italic;
+}
+
+.tradition-hud .xp-track {
+  grid-column: 1 / -1;
+  height: 2px;
+}
+
+.health-heading {
+  margin: 4px 0 2px;
+  font: 700 10px/1.05 var(--hud-serif);
+}
+
+.health-track,
+.resolve-track,
+.breath-track {
+  height: 3px;
+}
+
+.class-resource {
+  margin-top: 5px;
+  font: 700 8px var(--hud-serif);
+}
+
+.resource-beads {
+  gap: 3px;
+}
+
+.resource-beads i {
+  max-width: 12px;
+  background: transparent;
+  border-color: rgba(70, 45, 30, 0.75);
+}
+
+/* Bottom-centre: one continuous ornamented action strip. */
+.action-dock {
+  bottom: 8px;
+  min-height: 78px;
+  max-width: calc(100% - 690px);
+  padding: 11px 34px 12px;
+  border: 0;
+  background-image:
+    url('/art/hud-action-ornament.png'), url('/art/hud-action-ornament.png'),
+    url('/art/hud-panel-frame.png');
+  background-position:
+    left center,
+    right center,
+    center;
+  background-repeat: no-repeat;
+  background-size:
+    96px 50px,
+    96px 50px,
+    100% 100%;
+  filter: drop-shadow(0 3px 4px rgba(44, 28, 17, 0.34));
+}
+
+.action-dock::after {
+  display: none;
+}
+
+.dock-rule {
+  margin: 4px 5px;
+  background: rgba(92, 57, 36, 0.42);
+}
+
+.dash-button {
+  grid-template-columns: 52px auto;
+  gap: 5px;
+  width: 132px;
+  min-height: 50px;
+  padding: 2px 7px;
+}
+
+.dash-rider {
+  width: 52px;
+  height: 45px;
+  background: url('/art/hud-icon-gallop.png') center / contain no-repeat;
+}
+
+.dash-button strong {
+  font: italic 700 13px/1 var(--hud-serif);
+}
+
+.dash-button small {
+  font: 700 7px/1.2 var(--hud-serif);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.dash-button small kbd {
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  font-size: inherit;
+}
+
+.dash-charge {
+  right: 8px;
+  bottom: 4px;
+  left: 8px;
+  width: calc(100% - 16px);
+}
+
+.ability-dock {
+  grid-template-columns: repeat(4, minmax(84px, 106px));
+}
+
+.ability-indicator {
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 4px;
+  padding: 3px 6px 7px;
+}
+
+.ability-icon {
+  width: 32px;
+  height: 36px;
+  filter: none;
+}
+
+.ability-icon-q {
+  background-image: url('/art/hud-icon-move.png');
+}
+
+.ability-icon-w {
+  background-image: url('/art/hud-icon-rally.png');
+}
+
+.ability-icon-e {
+  background-image: url('/art/hud-icon-gather.png');
+}
+
+.ability-icon-r {
+  background-image: url('/art/hud-icon-trade.png');
+}
+
+.ability-indicator strong {
+  font: italic 700 10px/1.05 var(--hud-serif);
+}
+
+.ability-indicator small {
+  font: 700 7px/1.1 var(--hud-serif);
+}
+
+.command-button {
+  width: 72px;
+  padding: 1px 4px 7px;
+  font: italic 700 10px/1.05 var(--hud-serif);
+}
+
+.command-icon {
+  width: 34px;
+  height: 34px;
+}
+
+#build .command-icon {
+  background-image: url('/art/hud-icon-build.png');
+}
+
+#migrate .command-icon {
+  background-image: url('/art/hud-icon-move.png');
+}
+
+.zoom-controls {
+  right: var(--hud-gap);
+  bottom: var(--hud-gap);
+  border: 8px solid transparent;
+  border-image: url('/art/hud-panel-frame.png') 24% 3% fill / 8px 10px stretch;
+  background: none;
+}
+
+.field-guide,
+.chronicle-toast,
+.successor-choice,
+.danger-edge,
+.elite-marker strong {
+  border-image-source: url('/art/hud-panel-frame.png');
+}
+
+.game-hud[data-context='combat'] .resource-hud,
+.game-hud[data-context='combat'] .objective-hud {
+  opacity: 0.9;
+}
+
+@media (max-width: 1450px) {
+  .ledger-column {
+    width: 455px;
+  }
+
+  .resource {
+    grid-template-columns: 31px minmax(0, 1fr);
+    padding-inline: 6px;
+  }
+
+  .resource-icon {
+    width: 31px;
+    height: 33px;
+  }
+
+  .resource-label {
+    font-size: 8px;
+    letter-spacing: 0.025em;
+  }
+
+  .resource-materials .resource-label {
+    font-size: 7px;
+    letter-spacing: -0.02em;
+  }
+
+  .resource strong {
+    font-size: 15px;
+  }
+
+  .objective-hud {
+    width: 330px;
+  }
+
+  .objective-text {
+    font-size: 15px;
+  }
+
+  .khan-hud {
+    width: 280px;
+  }
+
+  .action-dock {
+    max-width: calc(100% - 570px);
+    padding-inline: 27px;
+  }
+
+  .ability-dock {
+    grid-template-columns: repeat(4, minmax(70px, 88px));
+  }
+
+  .ability-indicator {
+    grid-template-columns: 28px minmax(0, 1fr);
+    padding-inline: 4px;
+  }
+
+  .ability-icon {
+    width: 28px;
+    height: 32px;
+  }
+
+  .dash-button {
+    grid-template-columns: 43px auto;
+    width: 116px;
+  }
+
+  .dash-rider {
+    width: 43px;
+  }
+
+  .command-button {
+    width: 62px;
+  }
+}
+
+@media (min-width: 601px) {
+  .resource-materials {
+    grid-template-columns: 24px minmax(0, 1fr);
+    column-gap: 2px;
+    padding-inline: 3px;
+  }
+
+  .resource-materials .resource-icon {
+    width: 26px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .ledger-column {
+    width: 350px;
+  }
+
+  .resource-label {
+    display: block;
+    font-size: 7px;
+  }
+
+  .resource {
+    grid-template-columns: 24px minmax(0, 1fr);
+    padding-inline: 3px;
+  }
+
+  .resource-icon {
+    width: 24px;
+    height: 29px;
+  }
+
+  .objective-hud {
+    width: 280px;
+  }
+
+  .khan-hud {
+    width: 225px;
+    bottom: 92px;
+  }
+
+  .action-dock {
+    max-width: calc(100% - 34px);
+  }
+
+  .ability-dock {
+    grid-template-columns: repeat(4, 62px);
+  }
+
+  .ability-copy {
+    display: none;
+  }
+
+  .zoom-controls {
+    bottom: 94px;
+  }
+}
+
+@media (max-width: 760px) and (min-width: 601px) {
+  .expedition-clock {
+    right: 132px;
+    width: 146px;
+  }
+
+  .objective-hud {
+    top: 88px;
+  }
+}
+
+@media (max-width: 600px) {
+  .game-hud {
+    --hud-gap: 7px;
+  }
+
+  .hud-frame-edge-top,
+  .hud-frame-edge-bottom {
+    left: 10px;
+    right: 10px;
+    height: 7px;
+    background-size: 25px 7px;
+  }
+
+  .hud-frame-edge-left,
+  .hud-frame-edge-right {
+    top: 8px;
+    bottom: 8px;
+    width: 6px;
+    background-size: 6px 20px;
+  }
+
+  .hud-frame-corner {
+    width: 18px;
+    height: 13px;
+  }
+
+  .resource-hud,
+  .objective-hud,
+  .vitals-hud {
+    border-width: 9px;
+    border-image-width: 9px 10px;
+  }
+
+  .resource-hud {
+    top: 7px;
+    left: 7px;
+    width: calc(100% - 14px);
+    min-height: 57px;
+    padding: 4px 7px 5px;
+  }
+
+  .resource-row {
+    min-height: 36px;
+  }
+
+  .resource {
+    grid-template-columns: 22px minmax(0, 1fr);
+    grid-template-rows: 12px 17px;
+    column-gap: 2px;
+    padding-inline: 2px;
+  }
+
+  .resource-icon {
+    width: 22px;
+    height: 27px;
+  }
+
+  .resource-label {
+    font-size: 6px;
+  }
+
+  .resource strong {
+    font-size: 12px;
+  }
+
+  .clan-bearing {
+    display: none;
+  }
+
+  .expedition-clock {
+    top: 66px;
+    left: 7px;
+    width: 112px;
+    min-height: 60px;
+    padding: 12px 15px 8px;
+  }
+
+  .expedition-clock strong {
+    font-size: 20px;
+  }
+
+  .expedition-clock > span {
+    margin-top: 4px;
+    font-size: 6px;
+  }
+
+  .hud-menu {
+    top: 69px;
+    right: 7px;
+  }
+
+  .hud-menu-button {
+    width: 43px;
+    height: 50px;
+    padding: 4px;
+  }
+
+  .hud-menu-button > span,
+  .hud-menu-button:first-child > span {
+    width: 23px;
+    height: 23px;
+  }
+
+  .objective-hud {
+    top: 132px;
+    left: 7px;
+    right: 7px;
+    width: auto;
+    min-height: 92px;
+    padding: 7px 11px 26px;
+  }
+
+  .objective-heading strong {
+    font-size: 10px;
+  }
+
+  .objective-text {
+    padding-right: 38px;
+    font-size: 13px;
+  }
+
+  .objective-vignette {
+    width: 82px;
+    height: 31px;
+  }
+
+  .objective-vignette::before {
+    width: 82px;
+    height: 31px;
+  }
+
+  .field-guide {
+    top: 232px;
+  }
+
+  .game-hud.prologue-unestablished .expedition-clock,
+  .game-hud.prologue-unestablished .hud-menu {
+    top: 7px;
+  }
+
+  .game-hud.prologue-unestablished .objective-hud {
+    top: 64px;
+  }
+
+  .khan-hud {
+    left: 7px;
+    bottom: 124px;
+    width: 174px;
+  }
+
+  .vitals-hud {
+    padding: 5px 8px 6px;
+  }
+
+  .tradition-hud {
+    font-size: 8px;
+  }
+
+  .tradition-hud > span:first-child {
+    font-size: 10px;
+  }
+
+  .health-heading {
+    font-size: 7px;
+  }
+
+  .class-resource {
+    margin-top: 4px;
+    font-size: 6px;
+  }
+
+  .action-dock {
+    bottom: 6px;
+    left: 7px;
+    right: 7px;
+    grid-template-columns: 64px 1fr;
+    grid-template-rows: 45px auto;
+    min-height: 108px;
+    padding: 8px 17px 10px;
+    background-size:
+      70px 38px,
+      70px 38px,
+      100% 100%;
+  }
+
+  .action-dock:has(.command-dock[hidden]) {
+    grid-template-rows: 55px;
+    min-height: 70px;
+  }
+
+  .dash-button {
+    grid-template-columns: 1fr;
+    width: 60px;
+    padding: 0 3px 6px;
+  }
+
+  .dash-rider {
+    width: 34px;
+    height: 30px;
+  }
+
+  .dash-button strong {
+    font-size: 8px;
+  }
+
+  .dash-button small {
+    font-size: 5px;
+  }
+
+  .ability-dock {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .ability-indicator {
+    padding: 1px 3px 5px;
+  }
+
+  .ability-icon {
+    width: 27px;
+    height: 30px;
+  }
+
+  .command-button {
+    width: 50%;
+    padding-bottom: 5px;
+    font-size: 7px;
+  }
+
+  .command-icon {
+    width: 23px;
+    height: 20px;
+  }
+
+  .zoom-controls {
+    right: 7px;
+    bottom: 124px;
+  }
+}
