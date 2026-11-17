@@ -666,6 +666,7 @@ export class ArenaScene extends Phaser.Scene {
       input,
       this.canUseDeveloperCheats(),
       this.landscape.world3d,
+      khanResourcesOf(this.timers),
     );
     if (result.cheated) this.developerRun = true;
     if (this.developerTools.history.at(-1) !== previousCommand)
@@ -1147,7 +1148,7 @@ export class ArenaScene extends Phaser.Scene {
         message: this.persistence.message,
       },
       abilities: this.combat.abilityStates(),
-      spiritCaller: this.combat.spiritStatus(),
+      classResource: this.combat.classResourceStatus(),
       attackCharge: this.combat.chargeStatus(),
     });
   }

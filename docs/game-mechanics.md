@@ -402,6 +402,40 @@ its class loadout. Successors retain the expedition's class and progression.
 | Iron Pagoda    | Heavy Sabre      | Sundering Cleave  | Iron Wall       | Crushing Hooves | Chain Snare       | Unbroken Fortress   |
 | Spirit Caller  | Spirit Wisps     | Ancestral Drum    | Ongod Guardians | Wind of Tengri  | Sacred Ovoo       | Veil Between Worlds |
 
+### Class resources
+
+Each class earns its own resource by fighting in its own style and spends it only on abilities
+1 to 4. It holds 12 whole points, starts at 0 and never refills by itself. Light attacks, heavy
+attacks and the gallop never spend it; they are free or paid in [Breath](#breath-and-the-gallop).
+
+| Class          | Resource         | Earned by                                                                                                                    | 1   | 2   | 3   | 4   |
+| -------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------- | --- | --- | --- | --- |
+| Mounted Archer | Focus            | +1 for each Galloping Shot arrow that hits (once per arrow, however far it pierces); +2 for a full Piercing Draw that hits   | 2   | 4   | 3   | 4   |
+| Lancer         | Momentum         | +1 for each Spear Thrust that lands, +1 more when it strikes three or more enemies; +2 for a full Impaling Strike that lands | 2   | 2   | 2   | 4   |
+| Iron Pagoda    | Mettle           | +1 for each sabre slash that lands, +1 more on the fourth-slash finisher; +1 for each hit the Khan takes                     | 3   | 3   | 2   | 5   |
+| Spirit Caller  | Spiritual Energy | +1 for each Spirit Wisp hit                                                                                                  | 4   | 3   | 4   | 6   |
+
+An ability keeps its cooldown and also needs its cost. Without the points the ability is
+**refused**: nothing fires, nothing is spent and the cooldown does not start. A refused press
+plays the interface sound and flags the beads and the cost it could not pay. Pressing an ability
+that is still cooling does nothing, as before. The costs are set so that casting everything the
+moment it is ready runs short, and steady basic attacks close the gap.
+
+The Khan panel shows the resource as a row of twelve brass-ringed beads filled in the class
+colour, with its name and count; the Spirit Caller keeps the active-spirit count beside it.
+Each ability slot shows its cost beside the key badge. A slot the resource cannot pay for dims,
+turns its cost vermilion and reads `NEEDS 3` once its cooldown is over.
+
+The resource changes only during active play. Nothing is earned while the Khan is down,
+including the Iron Pagoda's point for a hit taken. A successor Khan returns with an **empty**
+class resource and full Breath; previously Spiritual Energy carried over to the successor. A
+prologue knockdown and a migration arrival change nothing. Full saves keep the resource in
+`timers.khanResources.classPower`; older saves start it at 0, except that a Spirit Caller's
+saved Spiritual Energy is carried into it. Names, maxima and earning rules live in each class's
+`resource` entry in `GAME.classes`, costs in each ability's `cost`, and the pure rules in
+[state/khanResources.ts](../src/game/state/khanResources.ts). The developer console's `refill`
+command fills Breath and the class resource for testing.
+
 Light and heavy range, rate, damage and hit shape, plus every ability cooldown and effect, are
 authored in `GAME.classes` and surfaced through `src/game/data/classes.ts`. Ability
 cooldowns advance only during active play, appear in the battlefield HUD and persist
@@ -431,12 +465,11 @@ The current Lancer presentation reuses the release pose, dust, impact bursts, an
 expanding rings. Dedicated lance sweep trails and a readable vault/landing pose are
 the highest-priority art follow-ups; no placeholder runtime art is fetched.
 
-Spirit Wisp hits grant one spiritual energy, capped at 12 and shown in the battlefield
-HUD with the active-spirit count. As a replaceable first-pass spending rule, Veil Between
-Worlds consumes all stored energy and gains 0.3 active seconds per point. Its spectral
-copies repeat Spirit Wisps; Sacred Ovoo empowers guardian and veil projectiles while the
-Khan and following spirits remain inside the cairn's area. Full saves retain energy,
-summons, the Ovoo, Veil duration and pending drum waves; older saves begin with zero energy.
+Spirit Wisp hits earn the Spirit Caller's class resource, Spiritual Energy (see
+[class resources](#class-resources)). Veil Between Worlds consumes all stored energy and gains
+0.3 active seconds per point. Its spectral copies repeat Spirit Wisps; Sacred Ovoo empowers
+guardian and veil projectiles while the Khan and following spirits remain inside the cairn's
+area. Full saves retain summons, the Ovoo, Veil duration and pending drum waves.
 
 ### Iron Pagoda kit
 

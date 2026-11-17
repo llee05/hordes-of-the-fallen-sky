@@ -21,7 +21,8 @@ export interface SpiritOvooState {
 
 /** Active-time Spirit Caller combat state. It is optional in old full saves. */
 export interface SpiritCallerCombatState {
-  energy: number;
+  /** Spiritual Energy from saves before the shared class resource; moved on load. */
+  energy?: number;
   guardians?: SpiritGuardianState;
   ovoo?: SpiritOvooState;
   veilRemaining: number;
@@ -30,17 +31,7 @@ export interface SpiritCallerCombatState {
 }
 
 export function createSpiritCallerCombatState(): SpiritCallerCombatState {
-  return { energy: 0, veilRemaining: 0, echoTimer: 0, drumWaves: [] };
-}
-
-export function gainSpiritualEnergy(
-  state: SpiritCallerCombatState,
-  amount: number,
-  maximum: number,
-): number {
-  const before = state.energy;
-  state.energy = Math.max(0, Math.min(maximum, state.energy + amount));
-  return state.energy - before;
+  return { veilRemaining: 0, echoTimer: 0, drumWaves: [] };
 }
 
 export function activeSpiritCount(

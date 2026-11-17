@@ -1,15 +1,25 @@
 import { GAME } from '../config';
-import { classDefinition, type ClassHeavyAttackDefinition } from '../data/classes';
+import {
+  classDefinition,
+  type ClassAbilityDefinition,
+  type ClassHeavyAttackDefinition,
+  type ClassResourceDefinition,
+  type ClassResourceEvent,
+} from '../data/classes';
 import type { RunState } from '../types';
 import { drumWaveCount } from './classActions';
 
 /**
  * The Khan's expedition resources. Breath is the stamina every class shares: it pays for the
- * gallop and for heavy attacks, and refills over active time.
+ * gallop and for heavy attacks, and refills over active time. The class resource (Focus, Momentum,
+ * Mettle or Spiritual Energy) is earned by fighting, never refills by itself, and is spent only on
+ * abilities 1 to 4.
  */
 export interface KhanResources {
   /** Breath, from 0 to `GAME.stamina.maximum`. */
   stamina: number;
+  /** The class resource, in whole points from 0 to the class maximum. */
+  classPower: number;
   /** A gallop is in progress and draining Breath. */
   sprinting: boolean;
   /** The gallop input must be released before another gallop can start. */
@@ -17,7 +27,7 @@ export interface KhanResources {
 }
 
 export function createKhanResources(): KhanResources {
-  return { stamina: GAME.stamina.maximum, sprinting: false, winded: false };
+  return { stamina: GAME.stamina.maximum, classPower: 0, sprinting: false, winded: false };
 }
 
 /** The Khan's resources in a timers object, created full on first use (older saves lack it). */
@@ -120,9 +130,39 @@ export function affordableCharge(
   return heavy.windup + ((breath - tap) / (full - tap)) * (maximum - heavy.windup);
 }
 
-/** A successor Khan returns rested. */
+/** Earns class resource for `times` occurrences of `event`; returns the points gained. */
+export function earnClassPower(
+  resources: KhanResources,
+  resource: ClassResourceDefinition,
+  event: ClassResourceEvent,
+  times = 1,
+): number {
+  const points = (resource.earn[event] ?? 0) * Math.max(0, Math.floor(times));
+  const before = resources.classPower;
+  resources.classPower = Math.max(0, Math.min(resource.maximum, before + points));
+  return resources.classPower - before;
+}
+
+/** Whether the stored class resource can pay for `ability`. */
+export function canAffordAbility(
+  resources: KhanResources,
+  ability: Pick<ClassAbilityDefinition, 'cost'>,
+): boolean {
+  return resources.classPower >= ability.cost;
+}
+
+/** Points `ability` would spend now: its cost, or everything stored when it takes all. */
+export function abilitySpend(
+  resources: KhanResources,
+  ability: Pick<ClassAbilityDefinition, 'cost' | 'spendsAll'>,
+): number {
+  return ability.spendsAll ? Math.max(ability.cost, resources.classPower) : ability.cost;
+}
+
+/** A successor Khan returns rested, having earned nothing yet. */
 export function restKhan(resources: KhanResources): void {
   resources.stamina = GAME.stamina.maximum;
+  resources.classPower = 0;
   resources.sprinting = false;
   resources.winded = false;
 }

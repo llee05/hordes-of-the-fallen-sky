@@ -46,6 +46,7 @@ describe('playable class combat', () => {
     arena.combat.fireHeavy(aim, charge?.maxDuration ?? 0);
     arena.context.timers.attackTimer = 0;
     for (const ability of definition.abilities) {
+      khanResourcesOf(arena.context.timers).classPower = definition.resource.maximum;
       arena.combat.useAbility(ability.slot, aim);
       if (ability.kind === 'rain')
         arena.combat.tickKhanCombat(ability.delay + 0.01, false, false, aim);
@@ -109,8 +110,13 @@ describe('playable class combat', () => {
     );
     arena.combat.updateProjectiles(0.1);
     expect(bolt.body!.velocity.y).toBeGreaterThan(0);
+    khanResourcesOf(arena.context.timers).classPower = 0;
     arena.combat.hitEnemy(bolt, target);
-    expect(arena.combat.spiritStatus()).toMatchObject({ energy: 1, maximum: 12 });
+    expect(arena.combat.classResourceStatus()).toMatchObject({
+      name: 'Spiritual Energy',
+      current: 1,
+      maximum: 12,
+    });
   });
 
   it('fires the Mounted Archer full Piercing Draw with its full-charge bonus', () => {
@@ -285,7 +291,7 @@ describe('playable class combat', () => {
     arena.combat.tickKhanCombat(0.01, false, false, target);
     expect(arena.hostileShots.countActive()).toBe(2);
     expect(arena.projectiles.countActive()).toBeGreaterThanOrEqual(2);
-    expect(arena.combat.spiritStatus()?.activeSpirits).toBe(2);
+    expect(arena.combat.classResourceStatus().activeSpirits).toBe(2);
   });
 
   it('Wind of Tengri damages enemies and opens a broad corridor by pushing them forward', () => {
@@ -320,12 +326,14 @@ describe('playable class combat', () => {
   it('Veil consumes spiritual energy, multiplies guardians, and repeats Spirit Wisps', () => {
     const arena = setup('spirit-caller');
     const target = arena.spawn(120, 0);
-    arena.context.timers.spiritCaller!.energy = 4;
+    const resources = khanResourcesOf(arena.context.timers);
+    resources.classPower = 12;
     expect(arena.combat.useAbility('q', target)).toBe(true);
+    expect(resources.classPower).toBe(8);
     expect(arena.combat.useAbility('r', target)).toBe(true);
-    expect(arena.context.timers.spiritCaller!.energy).toBe(0);
-    expect(arena.context.timers.spiritCaller!.veilRemaining).toBeCloseTo(6.2);
-    expect(arena.combat.spiritStatus()?.activeSpirits).toBe(6);
+    expect(resources.classPower).toBe(0);
+    expect(arena.context.timers.spiritCaller!.veilRemaining).toBeCloseTo(5 + 8 * 0.3);
+    expect(arena.combat.classResourceStatus().activeSpirits).toBe(6);
     arena.combat.tickKhanCombat(0.01, false, false, target);
     expect(arena.projectiles.countActive()).toBeGreaterThanOrEqual(6);
   });

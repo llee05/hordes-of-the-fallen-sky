@@ -201,9 +201,26 @@ interface ClassAbilityBase {
   name: string;
   description: string;
   cooldown: number;
+  /** Class resource the ability needs and spends; without it the ability refuses to fire. */
+  cost: number;
+  /** The ability takes every stored point instead, needing at least `cost`. */
+  spendsAll?: boolean;
 }
 
 export type ClassAbilityDefinition = ClassAbilityBase & ClassAbilityEffect;
+
+/** Ways a class earns its resource. Each class defines the events its own kit can raise. */
+export type ClassResourceEvent = 'basicHit' | 'basicMulti' | 'finisher' | 'fullHeavy' | 'hitTaken';
+
+/** The per-class resource earned by fighting and spent only on abilities 1 to 4. */
+export interface ClassResourceDefinition {
+  name: string;
+  maximum: number;
+  /** Whole points per event. */
+  earn: Partial<Record<ClassResourceEvent, number>>;
+  /** Enemies one basic attack must strike for the `basicMulti` points. */
+  multiTargets?: number;
+}
 
 export interface ClassBasicAttackDefinition {
   name: string;
@@ -312,6 +329,7 @@ export interface ClassDefinition {
     clanProtectionMultiplier: number;
   };
   weapon: ClassWeaponDefinition;
+  resource: ClassResourceDefinition;
   basicAttack: ClassBasicAttackDefinition;
   heavyAttack: ClassHeavyAttackDefinition;
   abilities: readonly [
@@ -445,6 +463,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedExtraPierce: GAME.classes['mounted-archer'].chargedExtraPierce,
       chargedDamage: GAME.classes['mounted-archer'].chargedDamage,
     },
+    resource: GAME.classes['mounted-archer'].resource,
     basicAttack: {
       name: 'Galloping Shot',
       description:
@@ -561,6 +580,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedExtraPierce: GAME.classes.lancer.chargedExtraPierce,
       chargedDamage: GAME.classes.lancer.chargedDamage,
     },
+    resource: GAME.classes.lancer.resource,
     basicAttack: {
       name: 'Spear Thrust',
       description: 'A long, narrow lance thrust aimed toward the cursor.',
@@ -675,6 +695,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedExtraPierce: GAME.classes['iron-pagoda'].chargedExtraPierce,
       chargedDamage: GAME.classes['iron-pagoda'].chargedDamage,
     },
+    resource: GAME.classes['iron-pagoda'].resource,
     basicAttack: {
       name: 'Heavy Sabre',
       description: `Slow, broad sabre slashes strike every enemy in front of the horse. Each slash that lands hits ${pct(IRON.basic.combo.damagePerStep)} harder, up to slash ${IRON.basic.combo.steps}; a pause resets the chain.`,
@@ -790,6 +811,7 @@ export const CLASSES: readonly ClassDefinition[] = [
       chargedExtraPierce: GAME.classes['spirit-caller'].chargedExtraPierce,
       chargedDamage: GAME.classes['spirit-caller'].chargedDamage,
     },
+    resource: GAME.classes['spirit-caller'].resource,
     basicAttack: {
       name: 'Spirit Wisps',
       description: 'Small homing wisps that generate spiritual energy whenever they hit.',

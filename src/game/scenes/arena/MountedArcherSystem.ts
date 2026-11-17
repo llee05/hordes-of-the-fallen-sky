@@ -4,6 +4,7 @@ import {
   type ClassAbilityDefinition,
   type ClassBasicAttackDefinition,
   type ClassHeavyAttackDefinition,
+  type ClassResourceEvent,
 } from '../../data/classes';
 import type { Enemy, Projectile } from '../../entities/actors';
 import { isKhanActive } from '../../state/khan';
@@ -22,6 +23,8 @@ export interface MountedShotOptions {
   exactCount?: boolean;
   pierces?: number;
   kind?: MountedProjectileKind;
+  /** The class-resource event each arrow raises on its first hit. */
+  earns?: ClassResourceEvent;
   spread?: number;
   /** Enemy already struck by a splitting projectile; fragments must not hit it again. */
   origin?: Enemy;
@@ -104,6 +107,7 @@ export class MountedArcherSystem extends ArenaSystem {
       exactCount: true,
       pierces,
       kind: fullyCharged ? 'piercing-full' : undefined,
+      earns: fullyCharged ? 'fullHeavy' : undefined,
     });
   }
 
@@ -195,7 +199,7 @@ export class MountedArcherSystem extends ArenaSystem {
           shot.damage,
           shot.range,
           shot.width,
-          { exactCount: true },
+          { exactCount: true, earns: 'basicHit' },
         );
         this.effects.classAttack('mounted-archer:galloping-shot', {
           x: this.player.x,

@@ -11,6 +11,7 @@ import { isNomadicCamp } from '../../shared/nomadicCamp.js';
 import type { MotionArchive } from '../animation/CharacterMotion';
 import { GAME } from '../config';
 import { BUILDINGS, LOCATIONS, ROUTES, STARTING_TRADITIONS } from '../data/clan';
+import { classDefinition } from '../data/classes';
 import { ALL_ENEMIES } from '../data/enemies';
 import { FIELD_OBJECTIVES } from '../data/fieldObjectives';
 import { NOMADIC_BUILDINGS } from '../data/nomadicCamp';
@@ -47,7 +48,7 @@ import { createRun } from './run';
 import type { SpiritCallerCombatState } from './spiritCaller';
 import type { ClassActionState } from './classActions';
 import type { KhanManeuverState } from './khanManeuvers';
-import type { KhanResources } from './khanResources';
+import { createKhanResources, type KhanResources } from './khanResources';
 import type { MountedArcherCombatState } from './mountedArcher';
 import { PROLOGUE_STAGE_IDS } from '../data/prologue';
 
@@ -424,7 +425,12 @@ const worldShape = object(
       {
         closeDefenseTimer: number,
         dashTimer: number,
-        khanResources: object({ stamina: positive, sprinting: boolean, winded: boolean }),
+        khanResources: object({
+          stamina: positive,
+          classPower: integer,
+          sprinting: boolean,
+          winded: boolean,
+        }),
         abilityCooldowns: object({ q: number, w: number, e: number, r: number }),
         khanStatus,
         khanManeuver: object({ remaining: number, speedMultiplier: number }, { direction: point }),
@@ -454,7 +460,6 @@ const worldShape = object(
         classAction,
         spiritCaller: object(
           {
-            energy: positive,
             veilRemaining: positive,
             echoTimer: number,
             drumWaves: list(
@@ -463,6 +468,7 @@ const worldShape = object(
             ),
           },
           {
+            energy: positive,
             guardians: object({
               remaining: positive,
               attackTimer: number,
@@ -561,6 +567,16 @@ function migrateOrkhonLayout(value: unknown): void {
   if (isRecord(world.areaThreats) && Array.isArray(world.areaThreats.threats))
     for (const point of world.areaThreats.threats) translate(point);
   world.orkhonLayout = 2;
+}
+
+/** Spiritual Energy saved before the shared class resource seeds it; other classes start empty. */
+function migrateSpiritualEnergy(run: RunState, timers: WorldArchive['timers']): void {
+  const energy = timers.spiritCaller?.energy;
+  if (timers.spiritCaller) delete timers.spiritCaller.energy;
+  if (energy === undefined || timers.khanResources) return;
+  timers.khanResources = createKhanResources();
+  if (run.character?.classId === 'spirit-caller')
+    timers.khanResources.classPower = Math.floor(energy);
 }
 
 /** Allied riders, formations and formation momentum are retired; their saved fields are dropped. */
@@ -716,8 +732,15 @@ export function decodeExpedition(value: unknown): {
   )
     throw new Error('This expedition contains invalid progression or actor references.');
   const restored = structuredClone({ summary: value.summary, run, world });
+  migrateSpiritualEnergy(restored.run, restored.world.timers);
   const resources = restored.world.timers.khanResources;
-  if (resources) resources.stamina = Math.min(GAME.stamina.maximum, resources.stamina);
+  if (resources) {
+    resources.stamina = Math.min(GAME.stamina.maximum, resources.stamina);
+    resources.classPower = Math.min(
+      classDefinition(restored.run.character?.classId).resource.maximum,
+      resources.classPower,
+    );
+  }
   restored.run.character = normalizeCharacterProfile(restored.run.character);
   migrateLegacyNomadicCamp(restored.run);
   syncNomadicBuildings(restored.run);

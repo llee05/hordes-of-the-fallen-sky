@@ -25,7 +25,7 @@ const released = { held: false, able: true, drain: S.sprintDrain };
 describe('Breath and the gallop', () => {
   it('starts rested and drains Breath per second while the gallop is held', () => {
     const r = createKhanResources();
-    expect(r).toEqual({ stamina: S.maximum, sprinting: false, winded: false });
+    expect(r).toEqual({ stamina: S.maximum, classPower: 0, sprinting: false, winded: false });
     expect(advanceSprint(r, 0.1, held)).toBe('started');
     expect(r.sprinting).toBe(true);
     expect(r.stamina).toBeCloseTo(S.maximum - S.sprintDrain * 0.1);
@@ -52,7 +52,7 @@ describe('Breath and the gallop', () => {
   });
 
   it('refuses a press below the starting Breath until the input is released', () => {
-    const r = { stamina: S.sprintMinimum - 1, sprinting: false, winded: false };
+    const r = { ...createKhanResources(), stamina: S.sprintMinimum - 1 };
     expect(advanceSprint(r, 0.05, held)).toBe('refused');
     expect(r).toMatchObject({ sprinting: false, winded: true });
     expect(advanceSprint(r, 1, held)).toBeUndefined();
@@ -60,7 +60,7 @@ describe('Breath and the gallop', () => {
   });
 
   it('refills at the shared rate when not galloping, up to the maximum, unless paused', () => {
-    const r = { stamina: 20, sprinting: false, winded: false };
+    const r = { ...createKhanResources(), stamina: 20 };
     advanceSprint(r, 2, released);
     expect(r.stamina).toBeCloseTo(20 + S.refill * 2);
     advanceSprint(r, 2, { ...released, refill: false });
@@ -70,11 +70,11 @@ describe('Breath and the gallop', () => {
   });
 
   it('stops without draining or refilling while the Khan is down, and ignores bad steps', () => {
-    const r = { stamina: 50, sprinting: true, winded: false };
+    const r = { stamina: 50, classPower: 7, sprinting: true, winded: false };
     advanceSprint(r, 1, { held: true, able: false, drain: S.sprintDrain });
-    expect(r).toEqual({ stamina: 50, sprinting: false, winded: false });
+    expect(r).toEqual({ stamina: 50, classPower: 7, sprinting: false, winded: false });
     for (const dt of [0, -1, NaN, Infinity]) advanceSprint(r, dt, held);
-    expect(r).toEqual({ stamina: 50, sprinting: false, winded: false });
+    expect(r).toEqual({ stamina: 50, classPower: 7, sprinting: false, winded: false });
     restKhan(r);
     expect(r).toEqual(createKhanResources());
   });
@@ -158,7 +158,7 @@ describe('heavy attack Breath costs', () => {
   });
 
   it('spends Breath only when the pool can pay in full', () => {
-    const r = { stamina: 20, sprinting: false, winded: false };
+    const r = { ...createKhanResources(), stamina: 20 };
     expect(spendBreath(r, 26)).toBe(false);
     expect(r.stamina).toBe(20);
     expect(spendBreath(r, 20)).toBe(true);
@@ -182,6 +182,7 @@ describe('saved Breath', () => {
     const saved = decodeExpedition(captureExpedition(createRun(), world()));
     expect(saved.world.timers.khanResources).toEqual({
       stamina: 42.5,
+      classPower: 5,
       sprinting: false,
       winded: false,
     });

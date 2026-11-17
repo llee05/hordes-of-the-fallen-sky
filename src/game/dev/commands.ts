@@ -3,8 +3,11 @@ import {
   DEVELOPER_HISTORY_LIMIT,
   normalizeDeveloperHistory,
 } from '../../shared/developerHistory';
+import { GAME } from '../config';
+import { classDefinition } from '../data/classes';
 import { expeditionMetricLines } from '../state/expeditionMetrics';
 import { isKhanActive } from '../state/khan';
+import type { KhanResources } from '../state/khanResources';
 import type { RunState } from '../types';
 import { WORLD_3D, WORLD_DEBUG_MODES, type WorldDebugMode } from '../world3d/worldProjection';
 import { pacingBenchmarkLines } from './pacingBenchmark';
@@ -38,6 +41,11 @@ export const DEVELOPER_COMMANDS = [
       'Protect clan resolve, people, and livestock from attacks and starvation. No argument toggles.',
   },
   { name: 'heal', usage: 'heal', description: 'Restore the living Khan to full health.' },
+  {
+    name: 'refill',
+    usage: 'refill',
+    description: 'Fill the living Khan’s Breath and class resource.',
+  },
   {
     name: 'status',
     usage: 'status',
@@ -108,6 +116,7 @@ export function executeDeveloperCommand(
   input: string,
   activeExpedition: boolean,
   terrain?: DeveloperTerrainControls,
+  resources?: KhanResources,
 ): { cheated: boolean } {
   const line = input.trim();
   if (!line) return { cheated: false };
@@ -196,6 +205,16 @@ export function executeDeveloperCommand(
     } else {
       run.health = run.stats.maxHealth;
       write(`Khan health restored to ${run.stats.maxHealth}.`);
+      return { cheated: true };
+    }
+  } else if (name === 'refill') {
+    if (!isKhanActive(run) || !resources) {
+      write('The Khan has fallen. Wait for succession before using refill.', 'error');
+    } else {
+      const resource = classDefinition(run.character?.classId).resource;
+      resources.stamina = GAME.stamina.maximum;
+      resources.classPower = resource.maximum;
+      write(`Breath and ${resource.name} filled.`);
       return { cheated: true };
     }
   }

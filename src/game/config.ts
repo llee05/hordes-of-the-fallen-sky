@@ -273,9 +273,12 @@ export const GAME = {
           knockback: { distance: 70, seconds: 0.28 },
         },
       },
+      /** Focus: earned by landing arrows, spent only on abilities 1 to 4. */
+      resource: { name: 'Focus', maximum: 12, earn: { basicHit: 1, fullHeavy: 2 } },
       abilities: {
         q: {
           cooldown: 7,
+          cost: 2,
           kind: 'parthian',
           duration: 0.66,
           speedMultiplier: 1.55,
@@ -286,6 +289,7 @@ export const GAME = {
         },
         w: {
           cooldown: 10,
+          cost: 4,
           kind: 'rain',
           range: 620,
           radius: 105,
@@ -296,6 +300,7 @@ export const GAME = {
         },
         e: {
           cooldown: 8,
+          cost: 3,
           kind: 'splinter',
           range: 590,
           damage: 1.35,
@@ -306,6 +311,7 @@ export const GAME = {
         },
         r: {
           cooldown: 13,
+          cost: 4,
           kind: 'windstep',
           duration: 0.46,
           speedMultiplier: 3.25,
@@ -352,9 +358,18 @@ export const GAME = {
           terrainBonus: 0.65,
         },
       },
+      /** Momentum: earned by landing thrusts, spent only on abilities 1 to 4. */
+      resource: {
+        name: 'Momentum',
+        maximum: 12,
+        earn: { basicHit: 1, basicMulti: 1, fullHeavy: 2 },
+        /** Enemies one Spear Thrust must strike for the `basicMulti` point. */
+        multiTargets: 3,
+      },
       abilities: {
         q: {
           cooldown: 7,
+          cost: 2,
           kind: 'dash',
           duration: 0.52,
           speed: 620,
@@ -365,6 +380,7 @@ export const GAME = {
         },
         w: {
           cooldown: 6,
+          cost: 2,
           kind: 'arc',
           range: 155,
           angle: Math.PI,
@@ -373,6 +389,7 @@ export const GAME = {
         },
         e: {
           cooldown: 9,
+          cost: 2,
           kind: 'vault',
           distance: 285,
           invulnerability: 0.35,
@@ -381,6 +398,7 @@ export const GAME = {
         },
         r: {
           cooldown: 18,
+          cost: 4,
           kind: 'unstoppable',
           duration: 3,
           maxDuration: 4.5,
@@ -434,9 +452,16 @@ export const GAME = {
           knockback: { distance: 64, seconds: 0.25 },
         },
       },
+      /** Mettle: earned by landing slashes and by being hit, spent only on abilities 1 to 4. */
+      resource: {
+        name: 'Mettle',
+        maximum: 12,
+        earn: { basicHit: 1, finisher: 1, hitTaken: 1 },
+      },
       abilities: {
         q: {
           cooldown: 15,
+          cost: 3,
           kind: 'brace',
           duration: 4,
           damageReduction: 0.65,
@@ -444,6 +469,7 @@ export const GAME = {
         },
         w: {
           cooldown: 12,
+          cost: 3,
           kind: 'shockwave',
           range: 150,
           damage: 1,
@@ -451,6 +477,7 @@ export const GAME = {
         },
         e: {
           cooldown: 10,
+          cost: 2,
           kind: 'snare',
           range: 210,
           damage: 0.7,
@@ -462,6 +489,7 @@ export const GAME = {
         },
         r: {
           cooldown: 24,
+          cost: 5,
           kind: 'fortress',
           duration: 6,
           interval: 0.7,
@@ -512,9 +540,12 @@ export const GAME = {
           slowDuration: 1.4,
         },
       },
+      /** Spiritual Energy: earned by Spirit Wisp hits, spent only on abilities 1 to 4. */
+      resource: { name: 'Spiritual Energy', maximum: 12, earn: { basicHit: 1 } },
       abilities: {
         q: {
           cooldown: 12,
+          cost: 4,
           kind: 'guardians',
           duration: 10,
           count: 2,
@@ -526,6 +557,7 @@ export const GAME = {
         },
         w: {
           cooldown: 8,
+          cost: 3,
           kind: 'gust',
           range: 310,
           width: 115,
@@ -534,6 +566,7 @@ export const GAME = {
         },
         e: {
           cooldown: 14,
+          cost: 4,
           kind: 'ovoo',
           duration: 9,
           range: 155,
@@ -543,6 +576,9 @@ export const GAME = {
         },
         r: {
           cooldown: 18,
+          cost: 6,
+          /** The veil takes every stored point and lasts longer for each. */
+          spendsAll: true,
           kind: 'veil',
           duration: 5,
           energyDuration: 0.3,
@@ -552,7 +588,7 @@ export const GAME = {
           echoDamage: 0.48,
         },
       },
-      spirit: { maxEnergy: 12, energyPerWispHit: 1, slowMultiplier: 0.55 },
+      spirit: { slowMultiplier: 0.55 },
     },
   },
   backgrounds: {

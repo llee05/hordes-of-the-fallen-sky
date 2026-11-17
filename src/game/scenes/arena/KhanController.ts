@@ -12,6 +12,7 @@ import { damageKhan, isKhanActive, khanSpeedMultiplier } from '../../state/khan'
 import { activeKhanManeuver } from '../../state/khanManeuvers';
 import {
   advanceSprint,
+  earnClassPower,
   khanResourcesOf,
   restKhan,
   sprintDrain,
@@ -189,6 +190,13 @@ export class KhanController extends ArenaSystem {
     // Guards and the stance shield absorb damage before the class multiplier applies.
     const outcome = damageKhan(this.run, mitigateKhanDamage(khanStatusOf(this.timers), amount));
     if (!outcome) return;
+    // Some classes earn their resource by taking a hit and riding on.
+    if (outcome === 'hit')
+      earnClassPower(
+        khanResourcesOf(this.timers),
+        classDefinition(this.run.character?.classId).resource,
+        'hitTaken',
+      );
     this.playerMotion.hit();
     this.timers.invulnerable =
       outcome === 'knocked-down' ? GAME.prologue.knockdownProtection : GAME.invulnerability;

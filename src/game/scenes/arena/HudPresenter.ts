@@ -37,7 +37,7 @@ export interface HudSession {
   developerConsole?: DeveloperConsoleSnapshot;
   saves: NonNullable<HudSnapshot['saves']>;
   abilities: HudSnapshot['abilities'];
-  spiritCaller: HudSnapshot['spiritCaller'];
+  classResource: HudSnapshot['classResource'];
   attackCharge: HudSnapshot['attackCharge'];
 }
 
@@ -85,7 +85,7 @@ export class HudPresenter {
       maxZoom: zoomLimits.max,
       run,
       abilities: session.abilities,
-      spiritCaller: session.spiritCaller,
+      classResource: session.classResource,
       attackCharge: session.attackCharge,
       stamina: {
         current: resources.stamina,

@@ -7,9 +7,11 @@ import { createArenaTimers } from '../../src/game/scenes/arena/ArenaTimers';
 import { syncAreaEncounter } from '../../src/game/state/areaEncounters';
 import { beginMigration } from '../../src/game/state/clan';
 import { captureExpedition, decodeExpedition } from '../../src/game/state/expeditionArchive';
+import { createKhanResources } from '../../src/game/state/khanResources';
 import { purchaseNomadicBuilding } from '../../src/game/state/nomadicCamp';
 import { createRun } from '../../src/game/state/run';
 import { GamePlatform } from '../../src/platform/GamePlatform';
+import { defaultCharacterProfile } from '../../src/shared/characterProfile';
 import { clanMemories } from '../../src/ui/legacyContent';
 import { createLegacyCampRun } from '../support/legacyCamp';
 import { world } from './fixtures/expedition';
@@ -683,10 +685,9 @@ describe('full expedition snapshots', () => {
     expect(restored.world.timers.khanStatus).toEqual(runtime.timers.khanStatus);
     expect(restored.world.timers.classAction).toEqual(runtime.timers.classAction);
   });
-  it('round-trips Spirit Caller energy, summons, areas, veil and pending drum waves', () => {
+  it('round-trips Spirit Caller summons, areas, veil and pending drum waves', () => {
     const runtime = world();
     runtime.timers.spiritCaller = {
-      energy: 7,
       guardians: { remaining: 4, attackTimer: 0.3, count: 2, intercepts: 1 },
       ovoo: { x: 1200, y: 1300, remaining: 5, pulseTimer: 0.2 },
       veilRemaining: 3,
@@ -696,12 +697,39 @@ describe('full expedition snapshots', () => {
     const restored = decodeExpedition(captureExpedition(createRun(), runtime));
     expect(restored.world.timers.spiritCaller).toEqual(runtime.timers.spiritCaller);
   });
+  it('moves Spiritual Energy saved before the shared class resource into it', () => {
+    const profile = { ...defaultCharacterProfile(), classId: 'spirit-caller' as const };
+    const old = captureExpedition(createRun('shared-hearth', profile), world()) as Record<
+      string,
+      any
+    >;
+    delete old.world.timers.khanResources;
+    old.world.timers.spiritCaller = {
+      energy: 7,
+      veilRemaining: 0,
+      echoTimer: 0,
+      drumWaves: [],
+    };
+    const restored = decodeExpedition(old).world.timers;
+    expect(restored.spiritCaller).not.toHaveProperty('energy');
+    expect(restored.khanResources).toEqual({ ...createKhanResources(), classPower: 7 });
+    // Another class never carries stale Spiritual Energy into its own resource.
+    const archer = captureExpedition(createRun(), world()) as Record<string, any>;
+    delete archer.world.timers.khanResources;
+    archer.world.timers.spiritCaller = { energy: 7, veilRemaining: 0, echoTimer: 0, drumWaves: [] };
+    expect(decodeExpedition(archer).world.timers.khanResources).toEqual(createKhanResources());
+    // A current save keeps its own class resource and caps it at the class maximum.
+    const current = captureExpedition(createRun(), world()) as Record<string, any>;
+    current.world.timers.khanResources.classPower = 99;
+    expect(decodeExpedition(current).world.timers.khanResources!.classPower).toBe(12);
+    current.world.timers.khanResources.classPower = 2.5;
+    expect(() => decodeExpedition(current)).toThrow();
+  });
   it('loads saves from before the Spirit Caller resource with empty spiritual energy', () => {
     const save = captureExpedition(createRun(), world()) as Record<string, any>;
     delete save.world.timers.spiritCaller;
     const restored = decodeExpedition(save);
     expect({ ...createArenaTimers(), ...restored.world.timers }.spiritCaller).toEqual({
-      energy: 0,
       veilRemaining: 0,
       echoTimer: 0,
       drumWaves: [],

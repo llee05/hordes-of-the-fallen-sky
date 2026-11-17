@@ -43,7 +43,7 @@
 }
 /* The taller vitals panel pushes the tradition note above it. */
 .tradition-hud {
-  margin-bottom: 20px;
+  margin-bottom: 52px;
 }
 @media (max-width: 600px) {
   .breath-heading {
@@ -51,6 +51,81 @@
     margin: 6px 0 4px;
   }
   .tradition-hud {
-    margin-bottom: 16px;
+    margin-bottom: 42px;
   }
+  .class-resource {
+    font-size: 6px;
+    margin-top: 7px;
+  }
+  .resource-beads {
+    gap: 2px;
+  }
+  .ability-cost {
+    font-size: 6px;
+    padding: 0 2px;
+  }
+}
+
+/* Class resource: a row of brass-ringed beads filled in the class colour. */
+.class-resource {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 9px;
+  font: 7px var(--mono);
+  letter-spacing: 0.5px;
+  color: #c8c9a6;
+  --bead-tint: #e2c586;
+}
+.class-resource b {
+  font-weight: 400;
+  color: #f3e9c1;
+}
+.resource-beads {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  gap: 3px;
+}
+.resource-beads i {
+  flex: 1 1 0;
+  max-width: 14px;
+  aspect-ratio: 1;
+  box-sizing: border-box;
+  border: 1px solid #c9a86a;
+  border-radius: 50%;
+  background: #0e2328;
+  transition: background-color 0.12s;
+}
+.resource-beads i.filled {
+  background: var(--bead-tint);
+  box-shadow: inset 0 0 0 1px #0e232866;
+}
+.class-resource small {
+  grid-column: 1 / -1;
+  font: inherit;
+  color: #86d9cd;
+}
+
+/* Ability costs and the state of an ability the class resource cannot pay for. */
+.ability-cost {
+  flex: none;
+  min-width: 9px;
+  padding: 1px 3px;
+  border: 1px solid #c9a86a88;
+  border-radius: 7px;
+  text-align: center;
+  font: 400 7px var(--mono);
+  color: #f3e9c1;
+}
+.ability-indicator.unaffordable strong {
+  color: #a9a58d;
+}
+.ability-indicator.unaffordable .ability-cost {
+  border-color: #d9583c;
+  color: #f08467;
+}
+.ability-indicator.unaffordable:not(.cooling) small {
+  color: #f08467;
 }

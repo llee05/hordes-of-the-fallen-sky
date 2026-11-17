@@ -8,6 +8,7 @@ import type { CombatHost } from '../../src/game/scenes/arena/CombatSystem';
 import type { EnemyDirectorHost } from '../../src/game/scenes/arena/EnemyDirector';
 import { ClanDamage } from '../../src/game/scenes/arena/ClanDamage';
 import { createAreaEncounter } from '../../src/game/state/areaEncounters';
+import { createKhanResources } from '../../src/game/state/khanResources';
 import { createSpiritCallerCombatState } from '../../src/game/state/spiritCaller';
 import { createMountedArcherCombatState } from '../../src/game/state/mountedArcher';
 import { createLegacyCampRun as createRun } from './legacyCamp';
@@ -75,6 +76,8 @@ export function createFakeArena(options: FakeArenaOptions = {}) {
     attackTimer: 0,
     mountedArcher: createMountedArcherCombatState(),
     spiritCaller: createSpiritCallerCombatState(),
+    // Kit tests cast abilities freely; resource tests set the class resource themselves.
+    khanResources: { ...createKhanResources(), classPower: 12 },
     dashRemaining: 0,
     invulnerable: 0,
     supportTimer: 0,

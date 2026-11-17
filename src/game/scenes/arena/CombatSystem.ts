@@ -12,6 +12,7 @@ import {
   type ClassAbilityDefinition,
   type ClassAbilitySlot,
   type ClassBasicAttackDefinition,
+  type ClassResourceEvent,
 } from '../../data/classes';
 import { Enemy, Gem, Projectile } from '../../entities/actors';
 import { campBoundary } from '../../state/campBarrier';
@@ -29,7 +30,10 @@ import type { ProjectileArchive, WorldArchive } from '../../state/expeditionArch
 import { markExpedition } from '../../state/expeditionMetrics';
 import { isKhanActive } from '../../state/khan';
 import {
+  abilitySpend,
   affordableCharge,
+  canAffordAbility,
+  earnClassPower,
   heavyBreathCost,
   khanResourcesOf,
   spendBreath,
@@ -50,7 +54,7 @@ import {
   type StatusPayload,
 } from '../../state/statusEffects';
 import { khanVolleyFactors, volleyFactors } from '../../state/volley';
-import type { EnemyDefinition } from '../../types';
+import type { EnemyDefinition, HudSnapshot } from '../../types';
 import { projectileTerrainClear } from '../../world3d/projectileTerrain';
 import type { ArenaContext } from './ArenaContext';
 import { ArenaSystem } from './ArenaSystem';
@@ -98,6 +102,11 @@ export class CombatSystem extends ArenaSystem {
   private heavyRefused = false;
   /** The current heavy charge stopped rising because Breath cannot pay for more. */
   private chargeWinded = false;
+  /** Abilities refused for lack of class resource since the scene was created. */
+  private refusals = 0;
+  private refusedSlot?: ClassAbilitySlot;
+  /** Enemies the latest line strike hit. */
+  private lineStruck = 0;
   private readonly mountedArcher: MountedArcherSystem;
 
   constructor(
@@ -177,6 +186,8 @@ export class CombatSystem extends ArenaSystem {
   reset(): void {
     this.attackWindup = undefined;
     this.heavyRefused = this.chargeWinded = false;
+    this.refusals = 0;
+    this.refusedSlot = undefined;
     this.combo = { count: 0, remaining: 0 };
     this.timers.classAction = undefined;
     this.timers.abilityCooldowns = { q: 0, w: 0, e: 0, r: 0 };
@@ -463,6 +474,7 @@ export class CombatSystem extends ArenaSystem {
         range,
         attack.width,
         cls.id === 'spirit-caller' && kind === 'light' ? 'wisp' : undefined,
+        cls.id === 'mounted-archer' && kind === 'light' ? { earns: 'basicHit' } : undefined,
       );
     } else if (attack.shape === 'line') {
       released = this.strikeLine(direction, range, attack.width, scaledDamage, false, {
@@ -472,6 +484,12 @@ export class CombatSystem extends ArenaSystem {
             ? (enemy) => this.pushImpaledEnemy(enemy, direction, cls.heavyAttack.holdCharge!)
             : undefined,
       });
+      if (this.lineStruck > 0) {
+        if (kind === 'light') {
+          this.earn('basicHit');
+          if (this.lineStruck >= (cls.resource.multiTargets ?? Infinity)) this.earn('basicMulti');
+        } else if (fullImpale) this.earn('fullHeavy');
+      }
     } else if (attack.shape === 'arc') {
       const combo = attack.combo;
       const comboScale = combo ? 1 + combo.damagePerStep * this.combo.count : 1;
@@ -484,6 +502,7 @@ export class CombatSystem extends ArenaSystem {
       );
       released = true;
       if ((attack.combo || attack.payload) && kind === 'heavy') this.effects.shake(110, 0.004);
+      if (kind === 'light' && struck > 0) this.earn('basicHit');
       if (combo && struck > 0) this.advanceCombo(combo, range);
     } else {
       this.strikePulse(range, scaledDamage, false);
@@ -509,6 +528,7 @@ export class CombatSystem extends ArenaSystem {
     this.combo.remaining = combo.window;
     if (this.combo.count >= combo.steps) {
       this.combo = { count: 0, remaining: 0 };
+      this.earn('finisher');
       this.effects.ring(this.player.x, this.player.y, range, 0xe0bc76);
       this.effects.shake(90, 0.003);
     }
@@ -528,6 +548,16 @@ export class CombatSystem extends ArenaSystem {
       return false;
     const cls = classDefinition(this.run.character?.classId);
     const ability = cls.abilities.find((entry) => entry.slot === slot)!;
+    const resources = khanResourcesOf(this.timers);
+    if (!canAffordAbility(resources, ability)) {
+      // Refused: nothing fires and the cooldown does not start.
+      this.refusals++;
+      this.refusedSlot = slot;
+      this.audio.play('ui');
+      this.arena.hud.refresh();
+      return false;
+    }
+    const power = abilitySpend(resources, ability);
     this.attackWindup = undefined;
     const effect = ability;
     let released = true;
@@ -637,7 +667,7 @@ export class CombatSystem extends ArenaSystem {
       effect.kind === 'veil'
     ) {
       const direction = this.faceAim(aim);
-      released = this.spiritCaller.cast(effect, direction);
+      released = this.spiritCaller.cast(effect, direction, power);
     } else if (effect.kind === 'brace') {
       guardKhan(khanStatusOf(this.timers), {
         duration: effect.duration,
@@ -703,6 +733,7 @@ export class CombatSystem extends ArenaSystem {
       this.timers.invulnerable = Math.max(this.timers.invulnerable, effect.duration);
     }
     if (!released) return false;
+    resources.classPower = Math.max(0, resources.classPower - power);
     this.host.playerMotion.attack();
     this.cooldowns()[slot] = ability.cooldown;
     this.effects.burst(this.player.x, this.player.y, cls.weapon.projectileTint, 7);
@@ -713,15 +744,35 @@ export class CombatSystem extends ArenaSystem {
     return true;
   }
 
-  abilityStates(): (ClassAbilityDefinition & { remaining: number })[] {
+  abilityStates(): (ClassAbilityDefinition & { remaining: number; affordable: boolean })[] {
+    const resources = khanResourcesOf(this.timers);
     return classDefinition(this.run.character?.classId).abilities.map((ability) => ({
       ...ability,
       remaining: this.cooldowns()[ability.slot],
+      affordable: canAffordAbility(resources, ability),
     }));
   }
 
-  spiritStatus(): { energy: number; maximum: number; activeSpirits: number } | undefined {
-    return this.spiritCaller.status();
+  /** The class resource for the HUD, with the latest refused ability so it can be flagged. */
+  classResourceStatus(): HudSnapshot['classResource'] {
+    const cls = classDefinition(this.run.character?.classId);
+    return {
+      name: cls.resource.name,
+      current: khanResourcesOf(this.timers).classPower,
+      maximum: cls.resource.maximum,
+      tint: cls.weapon.projectileTint,
+      activeSpirits: this.spiritCaller.activeSpirits(),
+      refusals: this.refusals,
+      refusedSlot: this.refusedSlot,
+    };
+  }
+
+  /** Earns class resource for the living Khan and refreshes the HUD when it changes. */
+  private earn(event: ClassResourceEvent, times = 1): void {
+    if (!isKhanActive(this.run)) return;
+    const resource = classDefinition(this.run.character?.classId).resource;
+    if (earnClassPower(khanResourcesOf(this.timers), resource, event, times) > 0)
+      this.arena.hud.refresh();
   }
 
   private cooldowns(): Record<ClassAbilitySlot, number> {
@@ -789,6 +840,7 @@ export class CombatSystem extends ArenaSystem {
     } = {},
   ): boolean {
     let struck = false;
+    this.lineStruck = 0;
     this.spatial.forEachNearby(this.player.x, this.player.y, range + width / 2, (enemy) => {
       if (
         !insideAttackLine(this.player, direction, enemy, range, width) ||
@@ -803,6 +855,7 @@ export class CombatSystem extends ArenaSystem {
       options.onHit?.(enemy);
       this.damageEnemy(enemy, this.run.stats.damage * damageMultiplier, options.armorPenetration);
       struck = true;
+      this.lineStruck++;
     });
     this.finishMeleeAttack(struck);
     return true;
@@ -1119,6 +1172,7 @@ export class CombatSystem extends ArenaSystem {
       bolt.setData('ghost', ghost);
       bolt.setData('spirit-source', spiritSource);
       bolt.setData('mounted-kind', mountedOptions?.kind);
+      bolt.setData('class-power', mountedOptions?.earns);
       bolt.remaining = range
         ? range / Math.max(1, baseSpeed * volley.speed)
         : GAME.projectile.lifetime;
@@ -1239,8 +1293,12 @@ export class CombatSystem extends ArenaSystem {
     const spiritSource = bolt.getData('spirit-source') as SpiritProjectileSource | undefined;
     if (spiritSource) this.effects.burst(enemy.x, enemy.y, 0x72e0d1, 5);
     else if (bolt.source === 'khan') this.effects.burst(enemy.x, enemy.y, 0xe2c586, 3);
-    if (spiritSource === 'wisp') {
-      if (this.spiritCaller.gainWispEnergy()) this.arena.hud.refresh();
+    if (spiritSource === 'wisp') this.earn('basicHit');
+    // An arrow earns once, on its first hit, however many enemies it pierces.
+    const earns = bolt.getData('class-power') as ClassResourceEvent | undefined;
+    if (earns) {
+      bolt.setData('class-power', undefined);
+      this.earn(earns);
     }
 
     if (bolt.pierces > 0) {

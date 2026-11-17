@@ -38,7 +38,13 @@ import { developerConsole, developerMenu } from './developerContent';
 import { foodOutlook, FORECAST_NOTE, signedRate } from './economyContent';
 import { expeditionMetricsContent } from './expeditionMetricsContent';
 import { guidanceContent } from './guidanceContent';
-import { chargeReadout, gallopLabel } from './khanResourceHud';
+import {
+  abilityCostLabel,
+  abilityCostTitle,
+  abilityStatus,
+  chargeReadout,
+  gallopLabel,
+} from './khanResourceHud';
 import type { JournalTab } from './menuContent';
 import {
   buildingMenu,
@@ -77,6 +83,7 @@ export class GameUI {
   }
   private lastSnapshot?: HudSnapshot;
   private guideId = '';
+  private seenRefusals = 0;
   private lastMessage = '';
   private developerRevision = -1;
   private commandHistoryOffset = 0;
@@ -128,9 +135,9 @@ export class GameUI {
             .join(
               '',
             )}</div><small id="successor-selection">1 / 2 · controller left / right</small></aside>
-          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div class="health-heading breath-heading"><span>BREATH</span><b id="breath">100</b></div><div class="track breath-track" id="breath-track"><div id="breath-fill"></div></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span><span id="weapon-label">BOW</span> <b id="power">16</b></span><span id="attack-charge">LMB LIGHT · RMB HEAVY</span><span id="spirit-energy" hidden>SPIRITUAL ENERGY 0 / 12</span></div></section>
+          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div class="health-heading breath-heading"><span>BREATH</span><b id="breath">100</b></div><div class="track breath-track" id="breath-track"><div id="breath-fill"></div></div><div class="class-resource" id="class-resource" role="meter" aria-valuemin="0"><span id="class-resource-label">FOCUS</span><span class="resource-beads" id="class-resource-beads" aria-hidden="true"></span><b id="class-resource-count">0 / 12</b><small id="class-resource-note" hidden></small></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span><span id="weapon-label">BOW</span> <b id="power">16</b></span><span id="attack-charge">LMB LIGHT · RMB HEAVY</span></div></section>
           <section class="tradition-hud" aria-label="Run progression"><span>LEVEL <b id="level">01</b></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small></section>
-          <section id="ability-dock" class="ability-dock hud-surface" aria-label="Class abilities">${(['q', 'w', 'e', 'r'] as const).map((slot, index) => `<div class="ability-indicator" id="ability-${slot}"><kbd>${index + 1}</kbd><span><strong></strong><small></small></span></div>`).join('')}</section>
+          <section id="ability-dock" class="ability-dock hud-surface" aria-label="Class abilities">${(['q', 'w', 'e', 'r'] as const).map((slot, index) => `<div class="ability-indicator" id="ability-${slot}"><kbd>${index + 1}</kbd><b class="ability-cost"></b><span><strong></strong><small></small></span></div>`).join('')}</section>
           <button id="dash" class="dash-button hud-surface" aria-label="Gallop: hold to spend Breath"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">HOLD SPACE</small></div><span class="dash-charge" id="dash-charge"></span></button>
           <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
           <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><div><p id="clan-message"></p></div></div>
@@ -429,18 +436,41 @@ export class GameUI {
     dash.dataset.galloping = String(khanActive && stamina.sprinting);
     this.text('dash-label', gallopLabel(stamina, khanActive));
     this.text('attack-charge', chargeReadout(snapshot.attackCharge));
-    const spiritEnergy = this.get('spirit-energy');
-    spiritEnergy.hidden = !snapshot.spiritCaller;
-    if (snapshot.spiritCaller)
-      spiritEnergy.textContent = `SPIRITUAL ENERGY ${snapshot.spiritCaller.energy} / ${snapshot.spiritCaller.maximum} · ${snapshot.spiritCaller.activeSpirits} ACTIVE SPIRITS`;
+    const resource = snapshot.classResource;
+    const resourceRow = this.get('class-resource');
+    const beads = this.get('class-resource-beads');
+    if (beads.childElementCount !== resource.maximum)
+      beads.replaceChildren(
+        ...Array.from({ length: resource.maximum }, () => document.createElement('i')),
+      );
+    Array.from(beads.children).forEach((bead, index) =>
+      bead.classList.toggle('filled', index < resource.current),
+    );
+    resourceRow.style.setProperty('--bead-tint', `#${resource.tint.toString(16).padStart(6, '0')}`);
+    resourceRow.setAttribute('aria-label', resource.name);
+    resourceRow.setAttribute('aria-valuemax', String(resource.maximum));
+    resourceRow.setAttribute('aria-valuenow', String(resource.current));
+    this.text('class-resource-label', resource.name.toUpperCase());
+    this.text('class-resource-count', `${resource.current} / ${resource.maximum}`);
+    const note = this.get('class-resource-note');
+    note.hidden = resource.activeSpirits === undefined;
+    if (resource.activeSpirits !== undefined)
+      note.textContent = `${resource.activeSpirits} ACTIVE SPIRITS`;
+    // A refused ability flags the beads and the cost it could not pay.
+    const refused = resource.refusals > this.seenRefusals;
+    this.seenRefusals = resource.refusals;
+    if (refused) this.motion.notice(beads);
     for (const ability of snapshot.abilities) {
       const indicator = this.get(`ability-${ability.slot}`);
-      indicator.title = ability.description;
+      const cost = indicator.querySelector<HTMLElement>('.ability-cost')!;
+      indicator.title = `${ability.description} ${abilityCostTitle(ability, resource.name)}`;
       indicator.querySelector('kbd')!.textContent = ability.slotLabel;
+      cost.textContent = abilityCostLabel(ability);
       indicator.querySelector('strong')!.textContent = ability.name;
-      indicator.querySelector('small')!.textContent =
-        ability.remaining > 0 ? `${ability.remaining.toFixed(1)}s` : 'READY';
+      indicator.querySelector('small')!.textContent = abilityStatus(ability);
       indicator.classList.toggle('cooling', ability.remaining > 0);
+      indicator.classList.toggle('unaffordable', !ability.affordable);
+      if (refused && resource.refusedSlot === ability.slot) this.motion.notice(cost);
     }
     for (const id of ['population', 'herd', 'food', 'materials', 'spirit'] as const)
       this.number(id, Math.floor(clan[id]));
