@@ -264,6 +264,21 @@ export class EnemyBehaviour extends ArenaSystem {
         enemy.tactics.phase = 'recover';
         enemy.tactics.remaining = GAME.tactics.chargeRecovery;
       }
+      if (
+        ['almas', 'death-worm', 'muu-shuuvuu'].includes(behavior ?? '') &&
+        enemy.folklore.phase !== 'approach'
+      ) {
+        enemy.folklore.phase = 'recover';
+        enemy.folklore.remaining =
+          behavior === 'almas'
+            ? GAME.tactics.almas.recovery
+            : behavior === 'death-worm'
+              ? GAME.tactics.deathWorm.recovery
+              : GAME.tactics.muuShuuvuu.recovery;
+        enemy.folklore.hit = false;
+        enemy.setAlpha(1);
+        this.enemyDirector.shadows.get(enemy)?.setAlpha(1);
+      }
       enemy.preparingAttack = false;
     } else if (attackingCamp && !['almas', 'death-worm', 'muu-shuuvuu'].includes(behavior ?? '')) {
       // Hold outside the tents instead of walking (or charging) into their centre.
@@ -634,6 +649,7 @@ export class EnemyBehaviour extends ArenaSystem {
   /** Strikes the camp barrier when in range and ready. */
   private attackCamp(enemy: Enemy, aim: EnemyAim): void {
     const { attackingCamp } = aim;
+    if (['almas', 'death-worm', 'muu-shuuvuu'].includes(enemy.definition.behavior ?? '')) return;
     if (attackingCamp && enemy.clanAttackTimer <= 0 && enemy.status.stun <= 0) {
       enemy.motion.attack();
       this.clanDamage.damage(
