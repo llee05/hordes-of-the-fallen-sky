@@ -7,19 +7,15 @@ import { GAME } from '../game/config';
 import { AREA_ENCOUNTERS } from '../game/data/areaEncounters';
 import { classDefinition } from '../game/data/classes';
 import { AREA_ENEMIES } from '../game/data/enemies';
-import { FIELD_OBJECTIVES } from '../game/data/fieldObjectives';
 import { NOMADIC_BUILDINGS } from '../game/data/nomadicCamp';
-import { prologueStage } from '../game/data/prologue';
 import { SUCCESSORS } from '../game/data/successors';
 import type { ArenaScene } from '../game/scenes/ArenaScene';
 import { assignedWorkers, burningTempest, canMigrate, clanDoctrine } from '../game/state/clan';
 import { economyForecast } from '../game/state/economy';
-import { encounterPlan } from '../game/state/encounters';
 import { clanWarning, currentGuidance } from '../game/state/guidance';
 import { arrivalLocation, availableDestinations, currentLocation } from '../game/state/journey';
 import { isKhanActive } from '../game/state/khan';
 import { journeyResults } from '../game/state/legacy';
-import { currentPrologueBeat } from '../game/state/prologue';
 import { formatTime } from '../game/state/run';
 import type { BuildingId, HudSnapshot, RunPhase } from '../game/types';
 import type { GamePlatform } from '../platform/GamePlatform';
@@ -45,6 +41,14 @@ import {
   chargeReadout,
   gallopLabel,
 } from './khanResourceHud';
+import {
+  campPressureLine,
+  commandVisibility,
+  encounterLine,
+  fieldObjectiveLine,
+  lossReport,
+  stageLabels,
+} from './hudContent';
 import type { JournalTab } from './menuContent';
 import {
   buildingMenu,
@@ -84,6 +88,8 @@ export class GameUI {
   private lastSnapshot?: HudSnapshot;
   private guideId = '';
   private seenRefusals = 0;
+  private clanDetailsOpen = false;
+  private objectiveDetailsOpen = false;
   private lastMessage = '';
   private developerRevision = -1;
   private commandHistoryOffset = 0;
@@ -103,7 +109,8 @@ export class GameUI {
         <div id="game-canvas"></div>
         <div class="screen-shade" aria-hidden="true"></div>
         <div class="game-hud" id="game-hud" inert>
-          <section class="resource-hud hud-surface" aria-label="Clan resources">
+          <div class="ledger-column"><section class="resource-hud hud-surface" aria-label="Clan resources">
+            <header class="hud-ribbon">The Clan</header>
             <div class="resource-row">${[
               ['population', clanMark('people'), 'People', '8'],
               ['herd', clanMark('horse'), 'Herd', '3'],
@@ -113,18 +120,19 @@ export class GameUI {
             ]
               .map(
                 ([id, icon, label, value]) =>
-                  `<div class="resource" title="${label}"><span class="resource-icon" aria-hidden="true">${icon}</span><div><span>${label}</span><strong id="${id}">${value}</strong></div></div>`,
+                  `<div class="resource" title="${label}"><span class="resource-icon" aria-hidden="true">${icon}</span><span class="sr-only">${label}</span><strong id="${id}">${value}</strong></div>`,
               )
               .join('')}</div>
-            <div class="host-summary"><span id="doctrine">A people taking shape</span><span><b id="workers">0 / 8</b> WORKERS</span></div>
-            <p class="economy-hud" title="${FORECAST_NOTE}"><span id="food-rate"></span><span id="food-outlook"></span></p>
+            <button id="clan-disclosure" class="hud-disclosure" aria-expanded="false" aria-controls="clan-details" aria-label="Show clan details" title="Clan details"></button>
+            <div id="clan-details" class="clan-details" hidden><strong id="doctrine">A people taking shape</strong><p class="economy-hud" title="${FORECAST_NOTE}"><span id="food-rate"></span><span id="food-outlook"></span></p><div class="host-summary"><span><b id="workers">0 / 8</b> workers</span><span id="loss-tally"></span></div></div>
           </section>
+          <div id="clan-bearing" class="clan-bearing"></div>
+          <aside id="field-guide" class="field-guide hud-surface" aria-label="Expedition guidance" hidden></aside></div>
           <div class="expedition-clock"><strong id="timer">00:00</strong><span id="stage-label">ENCAMPMENT</span>${import.meta.env.DEV ? '<span id="developer-run" hidden>DEVELOPER RUN · F8</span>' : ''}</div>
           <nav class="hud-menu" aria-label="Game menus"><button id="journal" class="hud-menu-button" title="Clan chronicle (Tab / J)" aria-label="Open clan chronicle" aria-keyshortcuts="Tab J"><span>${clanMark('journal')}</span><kbd>TAB</kbd></button><button id="pause" class="hud-menu-button" aria-label="Pause" title="Pause (Escape)"><span>${clanMark('pause')}</span><kbd>ESC</kbd></button></nav>
-          <section class="objective-hud hud-surface" aria-label="Current objective"><div class="objective-heading"><strong id="location">OTGONTENGER</strong><span id="camp-age">DAY 1</span></div><p id="objective">Grow the camp. Keep your people alive.</p><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Journey</span><b id="migration-percent">0%</b></div><div class="track"><div id="migration-fill"></div></div></div><p class="objective-hint" id="migration-hint">Routes open in 45s.</p><p id="camp-pressure" class="field-status" role="status"></p><p id="clan-losses" class="field-status"></p><p id="major-loss" class="major-loss" role="status" hidden></p><p id="encounter-status" class="field-status" role="status"></p><p id="field-objective" class="field-status"></p><p id="clan-warning" class="clan-warning" role="status" hidden></p></section>
-          <aside id="field-guide" class="field-guide hud-surface" aria-label="Expedition guidance" hidden></aside>
-          <div class="zoom-controls hud-surface" role="group" aria-label="Battlefield zoom"><button id="zoom-out" aria-label="Zoom out" aria-keyshortcuts="-" title="Zoom out (− / D-pad left)">−</button><button id="zoom-reset" aria-label="Reset battlefield zoom to 100%" aria-keyshortcuts="0" title="Reset zoom (0 / Right stick click)"><span id="zoom-level">100%</span></button><button id="zoom-in" aria-label="Zoom in" aria-keyshortcuts="+" title="Zoom in (+ / D-pad right)">+</button></div>
-          <div id="danger-warnings" class="danger-warnings" aria-label="Offscreen danger warnings" role="list"></div><div id="elite-markers" class="elite-markers" aria-label="Elite and armoured enemies" role="list"></div><div id="clan-bearing" class="clan-bearing"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
+          <section class="objective-hud hud-surface" aria-label="Current objective"><header class="hud-ribbon objective-heading"><strong id="location">OTGONTENGER</strong><span id="camp-age">DAY 1</span></header><p id="objective" class="objective-text">Grow the camp. Keep your people alive.</p><div id="migration-progress" hidden><div class="meter-row"><span id="progress-label">Journey</span><b id="migration-percent">0%</b></div><div class="track"><div id="migration-fill"></div></div></div><p id="major-loss" class="major-loss" role="status" hidden></p><p id="clan-warning" class="clan-warning" role="status" hidden></p><button id="objective-disclosure" class="hud-disclosure" aria-expanded="false" aria-controls="objective-details" aria-label="Show expedition details" title="Expedition details"></button><div id="objective-details" class="objective-details" hidden><div class="pressure-row"><span>PASTURE <b id="pasture">100%</b></span><span>CALAMITY <b id="threat">0%</b></span></div><div class="pressure-tracks"><div class="track pasture-track"><div id="pasture-fill"></div></div><div class="track threat-track"><div id="threat-fill"></div></div></div><p class="objective-hint" id="migration-hint">Routes open in 45s.</p><p id="camp-pressure" class="field-status" role="status"></p><p id="clan-losses" class="field-status"></p><p id="encounter-status" class="field-status" role="status"></p><p id="field-objective" class="field-status"></p></div></section>
+          <div class="zoom-controls" role="group" aria-label="Battlefield zoom"><button id="zoom-out" aria-label="Zoom out" aria-keyshortcuts="-" title="Zoom out (− / D-pad left)">−</button><button id="zoom-reset" aria-label="Reset battlefield zoom to 100%" aria-keyshortcuts="0" title="Reset zoom (0 / Right stick click)"><span id="zoom-level">100%</span></button><button id="zoom-in" aria-label="Zoom in" aria-keyshortcuts="+" title="Zoom in (+ / D-pad right)">+</button></div>
+          <div id="danger-warnings" class="danger-warnings" aria-label="Offscreen danger warnings" role="list"></div><div id="elite-markers" class="elite-markers" aria-label="Elite and armoured enemies" role="list"></div><div id="synergy" class="synergy" hidden>ϟ THE BURNING TEMPEST</div>
           <aside id="successor-choice" class="successor-choice hud-surface" aria-label="Choose successor" hidden><strong>Who will carry the banner?</strong><p>The countdown runs on. Choosing is up to you.</p><div>${Object.entries(
             SUCCESSORS,
           )
@@ -135,11 +143,9 @@ export class GameUI {
             .join(
               '',
             )}</div><small id="successor-selection">1 / 2 · controller left / right</small></aside>
-          <section class="vitals-hud hud-surface" aria-label="Khan and clan health"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div class="health-heading breath-heading"><span>BREATH</span><b id="breath">100</b></div><div class="track breath-track" id="breath-track"><div id="breath-fill"></div></div><div class="class-resource" id="class-resource" role="meter" aria-valuemin="0"><span id="class-resource-label">FOCUS</span><span class="resource-beads" id="class-resource-beads" aria-hidden="true"></span><b id="class-resource-count">0 / 12</b><small id="class-resource-note" hidden></small></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="vital-stats"><span><span id="weapon-label">BOW</span> <b id="power">16</b></span><span id="attack-charge">LMB LIGHT · RMB HEAVY</span></div></section>
-          <section class="tradition-hud" aria-label="Run progression"><span>LEVEL <b id="level">01</b></span><div class="xp-track"><div id="xp-fill"></div></div><small><b id="kills">0</b> BANISHED</small></section>
-          <section id="ability-dock" class="ability-dock hud-surface" aria-label="Class abilities">${(['q', 'w', 'e', 'r'] as const).map((slot, index) => `<div class="ability-indicator" id="ability-${slot}"><kbd>${index + 1}</kbd><b class="ability-cost"></b><span><strong></strong><small></small></span></div>`).join('')}</section>
+          <div class="khan-hud"><section class="tradition-hud" aria-label="Run progression"><span>LEVEL <b id="level">01</b></span><div class="xp-track"><div id="xp-fill"></div></div><small class="sr-only"><b id="kills">0</b> banished</small></section><section class="vitals-hud hud-surface" aria-label="Khan, clan and class resources"><div class="health-heading"><span id="khan-title">THE KHAN</span><b id="health">100 / 100</b></div><div class="track health-track"><div id="health-fill"></div></div><div class="health-heading clan-health"><span>CLAN RESOLVE</span><b id="integrity">100%</b></div><div class="track resolve-track"><div id="integrity-fill"></div></div><div class="health-heading breath-heading"><span>BREATH</span><b id="breath">100</b></div><div class="track breath-track" id="breath-track"><div id="breath-fill"></div></div><div class="class-resource" id="class-resource" role="meter" aria-valuemin="0"><span id="class-resource-label">FOCUS</span><span class="resource-beads" id="class-resource-beads" aria-hidden="true"></span><b id="class-resource-count">0 / 12</b><small id="class-resource-note" hidden></small></div><div id="khan-succession" class="khan-succession" role="status" hidden><strong>Choosing a new Khan</strong><span id="khan-succession-countdown"></span></div><div class="sr-only"><span id="weapon-label">BOW</span><b id="power">16</b><span id="attack-charge">LMB LIGHT · RMB HEAVY</span></div></section></div>
+          <div class="action-dock hud-surface"><section id="ability-dock" class="ability-dock" aria-label="Class abilities">${(['q', 'w', 'e', 'r'] as const).map((slot, index) => `<div class="ability-indicator" id="ability-${slot}"><kbd>${index + 1}</kbd><b class="ability-cost"></b><span><strong></strong><small></small></span></div>`).join('')}</section><span class="dock-rule" aria-hidden="true"></span><nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav></div>
           <button id="dash" class="dash-button hud-surface" aria-label="Gallop: hold to spend Breath"><span class="dash-symbol">${clanMark('horse')}</span><div><strong>GALLOP</strong><small id="dash-label">HOLD SPACE</small></div><span class="dash-charge" id="dash-charge"></span></button>
-          <nav class="command-dock" aria-label="Clan commands"><button id="build" class="command-button" title="Develop camp (B)"><span class="command-icon">${clanMark('ger')}</span><span>Develop camp</span><kbd>B</kbd></button><button id="migrate" class="command-button migrate-button" title="Pack & migrate (M)" disabled><span class="command-icon">${clanMark('banner')}</span><span>Pack & migrate</span><kbd>M</kbd></button></nav>
           <div class="chronicle-toast" id="chronicle-toast"><span aria-hidden="true">${clanMark('spirit')}</span><div><p id="clan-message"></p></div></div>
         </div>
         <div id="overlay" class="overlay ready-screen" role="dialog" aria-modal="true" aria-labelledby="overlay-title" tabindex="-1"></div>
@@ -164,6 +170,14 @@ export class GameUI {
       const trait = (event.target as HTMLElement).closest<HTMLElement>('[data-successor]')?.dataset
         .successor;
       if (trait === 'outrider' || trait === 'hearthguard') scene.selectSuccessor(trait);
+    });
+    this.get('clan-disclosure').addEventListener('click', () => {
+      this.toggleHudDetails('clan');
+      this.get('arena-wrap').focus();
+    });
+    this.get('objective-disclosure').addEventListener('click', () => {
+      this.toggleHudDetails('objective');
+      this.get('arena-wrap').focus();
     });
     this.get('zoom-out').addEventListener('click', () => scene.changeZoom(-1));
     this.get('zoom-in').addEventListener('click', () => scene.changeZoom(1));
@@ -344,21 +358,13 @@ export class GameUI {
         ? `${SUCCESSORS[run.khan.candidate].title} chosen · takes up the expedition`
         : '1 / 2 · controller left / right',
     );
-    this.text('camp-pressure', snapshot.campPressure ?? '');
-    const last = run.safety.lastDamage,
-      causes = {
-        attack: 'Enemy attacks',
-        starvation: 'Starvation',
-        seer: 'Seer strike',
-        area: 'Local terrain or spell',
-      };
-    const recent = last && run.elapsed - last.at < 10;
-    this.text(
-      'clan-losses',
-      `Losses: ${run.safety.combatLosses} combat · ${run.safety.starvationLosses} hunger${recent ? ` · ${causes[last.cause]}: −${last.amount.toFixed(1)} resolve${last.people ? ` (${last.people} people)` : ''}` : ''}`,
-    );
-    this.get('clan-losses').hidden =
-      !recent && run.safety.combatLosses + run.safety.starvationLosses === 0;
+    const pressure = campPressureLine(snapshot.campPressure);
+    this.text('camp-pressure', pressure);
+    this.get('camp-pressure').hidden = !pressure;
+    const losses = lossReport(run);
+    this.text('clan-losses', losses.recent);
+    this.get('clan-losses').hidden = !losses.recent;
+    this.text('loss-tally', losses.tally);
     this.text(
       'khan-succession-countdown',
       `Returns ${clan.stage === 'migration' ? 'to the caravan' : 'at camp'} in ${Math.ceil(run.khan.successionRemaining)}s`,
@@ -366,37 +372,19 @@ export class GameUI {
     this.get('khan-succession')
       .closest('.vitals-hud')!
       .classList.toggle('choosing-khan', !khanActive);
-    const encounter = encounterPlan(run);
+    const encounter = encounterLine(run);
     const area = AREA_ENCOUNTERS[currentLocation(run).id];
-    this.get('encounter-status').title = `${area.title}. ${area.rule} ${area.counter}`;
+    this.get('encounter-status').title = encounter.title;
     this.get('location').title = `${area.title}: ${AREA_ENEMIES.filter(
       (e) => e.home === currentLocation(run).id,
     )
       .map((e) => e.title)
       .join(', ')}. The chronicle lists every local threat.`;
-    const approach = {
-      flanks: 'Alternating flanks',
-      banks: 'Both banks',
-      shelves: 'Ridge approaches',
-      shelter: 'Outcrop approaches',
-      crossfire: 'Crossfire approaches',
-    }[area.pattern];
-    this.text(
-      'encounter-status',
-      `${encounter.title}${['warning', 'assault', 'elite'].includes(encounter.phase) ? ` · ${approach}` : ''} · ${Math.ceil(encounter.remaining)}s`,
-    );
-    const objective = run.field.objective;
-    const visibleObjective =
-      (!run.prologue || run.prologue.completed) &&
-      !!objective &&
-      ['available', 'returning'].includes(objective.status);
-    this.get('field-objective').hidden = !visibleObjective;
-    if (visibleObjective)
-      this.text(
-        'field-objective',
-        `Optional ${snapshot.fieldBearing ?? ''}: ${FIELD_OBJECTIVES[objective.kind].title} · ${objective.status === 'returning' ? 'Escort to camp' : FIELD_OBJECTIVES[objective.kind].instruction} ${FIELD_OBJECTIVES[objective.kind].reward}${objective.kind === 'gathering' ? ` · ${objective.defeated}/${GAME.field.guards}` : ''}`,
-      );
-    const region = currentLocation(run);
+    this.text('encounter-status', encounter.text);
+    const fieldObjective = fieldObjectiveLine(run, snapshot.fieldBearing);
+    this.get('field-objective').hidden = !fieldObjective;
+    this.get('field-objective').title = fieldObjective?.title ?? '';
+    if (fieldObjective) this.text('field-objective', fieldObjective.text);
     if (
       snapshot.saves?.message.includes('complete') ||
       snapshot.saves?.message === 'Expedition saved.'
@@ -493,60 +481,29 @@ export class GameUI {
     this.meter('pasture-fill', clan.pasture);
     this.text('threat', `${Math.round(clan.threat)}%`);
     this.meter('threat-fill', clan.threat);
-    const prologueBeat = currentPrologueBeat(run);
-    const prologue = run.prologue && prologueBeat ? prologueStage(run.prologue.stage) : undefined;
-    this.text(
-      'location',
-      prologue ? `${prologue.numeral} · ${prologue.title.toUpperCase()}` : region.short,
-    );
-    this.text(
-      'camp-age',
-      prologue
-        ? 'PROLOGUE'
-        : clan.stage === 'migration'
-          ? 'ON THE MOVE'
-          : `DAY ${1 + Math.floor(clan.stageTime / 30)}`,
-    );
-    this.text(
-      'stage-label',
-      prologue
-        ? prologue.title.toUpperCase()
-        : clan.stage === 'migration'
-          ? 'THE GREAT FLIGHT'
-          : 'ENCAMPMENT',
-    );
-    this.text(
-      'objective',
-      prologueBeat
-        ? `${prologueBeat.objective}${snapshot.fieldBearing ? ` · ${snapshot.fieldBearing}` : ''}`
-        : clan.stage === 'migration'
-          ? `Escort the caravan to ${arrivalLocation(run).name}.`
-          : 'Grow the camp. Keep your people alive.',
-    );
+    const labels = stageLabels(run, snapshot.fieldBearing);
+    this.text('location', labels.location);
+    this.text('camp-age', labels.age);
+    this.text('stage-label', labels.stage);
+    this.text('objective', labels.objective);
     this.get('migration-progress').hidden = clan.stage === 'camp';
     const progress = clan.migrationProgress;
     this.text('migration-percent', `${Math.min(Math.round(progress * 100), 100)}%`);
     this.meter('migration-fill', progress * 100);
-    this.text(
-      'migration-hint',
-      prologueBeat
-        ? prologueBeat.rule.kind === 'hold-site'
-          ? `Hold position · ${run.prologue!.holdTime.toFixed(1)} / ${prologueBeat.rule.seconds.toFixed(1)}s`
-          : 'Follow the brass marker.'
-        : clan.stage === 'migration'
-          ? 'Guard the wagons on the road east.'
-          : canMigrate(run)
-            ? 'The roads are open. Pack up with M.'
-            : `Routes open in ${Math.ceil(GAME.clan.minimumCamp - clan.stageTime)}s. Build up the camp with B.`,
-    );
-    (this.get('build') as HTMLButtonElement).disabled =
-      run.phase !== 'playing' || clan.stage === 'migration' || prologueUnestablished;
+    this.text('migration-hint', labels.hint);
+    const commands = commandVisibility(run);
+    const build = this.get('build') as HTMLButtonElement;
+    build.hidden = !commands.build;
+    build.disabled = run.phase !== 'playing' || clan.stage === 'migration' || prologueUnestablished;
     const migrate = this.get('migrate') as HTMLButtonElement;
     const routeAvailable = canMigrate(run);
     if (routeAvailable && migrate.dataset.available === 'false')
       this.motion.notice(migrate.querySelector<HTMLElement>('.command-icon')!);
     migrate.dataset.available = String(routeAvailable);
+    migrate.hidden = !commands.migrate;
     migrate.disabled = run.phase !== 'playing' || !routeAvailable;
+    this.root.querySelector<HTMLElement>('.command-dock')!.hidden = !commands.dock;
+    this.root.querySelector<HTMLElement>('.dock-rule')!.hidden = !commands.dock;
     this.get('synergy').hidden = !burningTempest(run);
     this.text('best', best > 0 ? formatTime(best) : '— — : — —');
     this.text('clan-message', clan.message);
@@ -555,6 +512,23 @@ export class GameUI {
       this.lastMessage = clan.message;
       this.showMessage();
     }
+  }
+
+  /** Secondary field notes stay one tap away without becoming simulation state. */
+  private toggleHudDetails(kind: 'clan' | 'objective'): void {
+    const expanded =
+      kind === 'clan'
+        ? (this.clanDetailsOpen = !this.clanDetailsOpen)
+        : (this.objectiveDetailsOpen = !this.objectiveDetailsOpen);
+    const details = this.get(`${kind}-details`);
+    const button = this.get(`${kind}-disclosure`);
+    details.hidden = !expanded;
+    button.setAttribute('aria-expanded', String(expanded));
+    button.setAttribute(
+      'aria-label',
+      `${expanded ? 'Hide' : 'Show'} ${kind === 'clan' ? 'clan' : 'expedition'} details`,
+    );
+    this.layoutGuidance();
   }
 
   /** Narrow previews stack variable-height status text before guidance, leaving actions clear. */

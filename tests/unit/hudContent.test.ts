@@ -3,10 +3,8 @@ import { GAME } from '../../src/game/config';
 import { createPrologueRun } from '../../src/game/state/prologue';
 import { createRun } from '../../src/game/state/run';
 import {
-  abilityStatus,
   campPressureLine,
   commandVisibility,
-  dashLabel,
   encounterLine,
   fieldObjectiveLine,
   lossReport,
@@ -118,40 +116,27 @@ describe('stage labels', () => {
   });
 });
 
-describe('ride and ability labels', () => {
-  it('reports gallop readiness and succession', () => {
-    expect(dashLabel(true, 1, 6)).toBe('SPACE / READY');
-    expect(dashLabel(true, 0.5, 6)).toBe('RECHARGING 3.0s');
-    expect(dashLabel(false, 1, 6)).toBe('CHOOSING A KHAN');
-    expect(abilityStatus(0)).toBe('READY');
-    expect(abilityStatus(2.46)).toBe('2.5s');
-  });
-});
-
 describe('command visibility', () => {
   it('hides every camp command until the prologue establishes the camp', () => {
     const run = createPrologueRun();
-    expect(commandVisibility(run, 3)).toEqual({
+    expect(commandVisibility(run)).toEqual({
       dock: false,
       build: false,
-      formation: false,
       migrate: false,
     });
     run.prologue!.campEstablished = true;
-    expect(commandVisibility(run, 1)).toEqual({
+    expect(commandVisibility(run)).toEqual({
       dock: true,
       build: true,
-      formation: false,
       migrate: true,
     });
   });
-  it('keeps only formations while the caravan is on the road', () => {
+  it('hides camp actions while the caravan is on the road', () => {
     const run = createRun();
     run.clan.stage = 'migration';
-    expect(commandVisibility(run, 2)).toEqual({
-      dock: true,
+    expect(commandVisibility(run)).toEqual({
+      dock: false,
       build: false,
-      formation: true,
       migrate: false,
     });
   });

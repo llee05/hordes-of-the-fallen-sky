@@ -1,11 +1,11 @@
 /* Breath and class-resource meters on the Khan's vitals panel. */
 .breath-heading {
   margin: 8px 0 5px;
-  color: #a9c2a0;
-  font-size: 7px;
+  color: var(--hud-sage);
+  font-size: 9px;
 }
 .breath-heading b {
-  color: #dfe6c0;
+  color: var(--hud-ink);
 }
 .breath-track {
   position: relative;
@@ -25,7 +25,7 @@
   background: repeating-linear-gradient(
     90deg,
     transparent 0 calc(var(--breath-notch, 30%) - 1px),
-    #0e2328 calc(var(--breath-notch, 30%) - 1px) var(--breath-notch, 30%)
+    rgba(58, 40, 27, 0.48) calc(var(--breath-notch, 30%) - 1px) var(--breath-notch, 30%)
   );
 }
 .breath-track[data-winded='true'] > div {
@@ -36,22 +36,15 @@
   background-color: #a9c08a;
 }
 .dash-button[data-ready='false'] strong {
-  color: #cbb98f;
+  color: var(--hud-ink-soft);
 }
 .dash-button {
   touch-action: none;
-}
-/* The taller vitals panel pushes the tradition note above it. */
-.tradition-hud {
-  margin-bottom: 52px;
 }
 @media (max-width: 600px) {
   .breath-heading {
     font-size: 6px;
     margin: 6px 0 4px;
-  }
-  .tradition-hud {
-    margin-bottom: 42px;
   }
   .class-resource {
     font-size: 6px;
@@ -73,14 +66,14 @@
   align-items: center;
   gap: 4px 8px;
   margin-top: 9px;
-  font: 7px var(--mono);
+  font: 600 8px var(--hud-sans);
   letter-spacing: 0.5px;
-  color: #c8c9a6;
+  color: var(--hud-ink-soft);
   --bead-tint: #e2c586;
 }
 .class-resource b {
-  font-weight: 400;
-  color: #f3e9c1;
+  font-weight: 600;
+  color: var(--hud-ink);
 }
 .resource-beads {
   grid-column: 1 / -1;
@@ -93,19 +86,20 @@
   max-width: 14px;
   aspect-ratio: 1;
   box-sizing: border-box;
-  border: 1px solid #c9a86a;
+  border: 1px solid rgba(101, 43, 32, 0.55);
   border-radius: 50%;
-  background: #0e2328;
+  background: rgba(78, 46, 24, 0.14);
   transition: background-color 0.12s;
 }
 .resource-beads i.filled {
   background: var(--bead-tint);
-  box-shadow: inset 0 0 0 1px #0e232866;
+  border-color: rgba(101, 43, 32, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(255, 235, 190, 0.5);
 }
 .class-resource small {
   grid-column: 1 / -1;
   font: inherit;
-  color: #86d9cd;
+  color: var(--hud-blue);
 }
 
 /* Ability costs and the state of an ability the class resource cannot pay for. */
@@ -113,19 +107,19 @@
   flex: none;
   min-width: 9px;
   padding: 1px 3px;
-  border: 1px solid #c9a86a88;
+  border: 1px solid rgba(101, 43, 32, 0.45);
   border-radius: 7px;
   text-align: center;
-  font: 400 7px var(--mono);
-  color: #f3e9c1;
+  font: 600 7px var(--hud-sans);
+  color: var(--hud-red-dark);
 }
 .ability-indicator.unaffordable strong {
-  color: #a9a58d;
+  color: var(--hud-ink-soft);
 }
 .ability-indicator.unaffordable .ability-cost {
-  border-color: #d9583c;
-  color: #f08467;
+  border-color: var(--hud-red);
+  color: var(--hud-red);
 }
 .ability-indicator.unaffordable:not(.cooling) small {
-  color: #f08467;
+  color: var(--hud-red);
 }

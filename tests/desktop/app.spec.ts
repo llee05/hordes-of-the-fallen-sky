@@ -183,6 +183,7 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await page.screenshot({ path: 'test-results/native-camp-tree.png' });
     await closeOverlayOrPause(page);
     await expect(page.getByRole('dialog')).toBeHidden();
+    await page.getByRole('button', { name: 'Show clan details' }).click();
     for (const size of [
       { width: 1280, height: 800 },
       { width: 960, height: 600 },

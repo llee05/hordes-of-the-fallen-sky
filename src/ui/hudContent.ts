@@ -133,33 +133,20 @@ export function stageLabels(run: RunState, fieldBearing: string | undefined): St
   };
 }
 
-export function dashLabel(khanActive: boolean, dashReady: number, dashCooldown: number): string {
-  if (!khanActive) return 'CHOOSING A KHAN';
-  return dashReady >= 1
-    ? 'SPACE / READY'
-    : `RECHARGING ${((1 - dashReady) * dashCooldown).toFixed(1)}s`;
-}
-
-export function abilityStatus(remaining: number): string {
-  return remaining > 0 ? `${remaining.toFixed(1)}s` : 'READY';
-}
-
 export interface CommandVisibility {
   build: boolean;
-  formation: boolean;
   migrate: boolean;
   /** The whole command group, hidden before the Blue Banner camp exists. */
   dock: boolean;
 }
 
 /** Commands that cannot apply right now leave the screen instead of sitting disabled. */
-export function commandVisibility(run: RunState, formations: number): CommandVisibility {
+export function commandVisibility(run: RunState): CommandVisibility {
   const established = !run.prologue || run.prologue.campEstablished;
   const migrating = run.clan.stage === 'migration';
   return {
-    dock: established,
+    dock: established && !migrating,
     build: established && !migrating,
-    formation: established && formations > 1,
     migrate: established && !migrating,
   };
 }
