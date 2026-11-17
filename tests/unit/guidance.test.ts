@@ -3,9 +3,18 @@ import { advanceClan, beginMigration, buildStructure } from '../../src/game/stat
 import { clanWarning, completeGuidance, currentGuidance } from '../../src/game/state/guidance';
 import { gainExperience } from '../../src/game/state/run';
 import { createPrologueRun } from '../../src/game/state/prologue';
+import { guidanceContent } from '../../src/ui/guidanceContent';
 import { createLegacyCampRun as createRun } from '../support/legacyCamp';
 
 describe('first-crossing guidance', () => {
+  it('opens prologue notes and collapses later field notes by default', () => {
+    const prologue = currentGuidance(createPrologueRun())!;
+    expect(guidanceContent(prologue)).toContain('<details class="guide-details" open>');
+    expect(guidanceContent(prologue)).toContain('Hide tips');
+    expect(guidanceContent(currentGuidance(createRun())!)).toContain(
+      '<details class="guide-details">',
+    );
+  });
   it('uses the current prologue beat and stage as its guidance eyebrow', () => {
     const run = createPrologueRun();
     expect(currentGuidance(run)).toMatchObject({

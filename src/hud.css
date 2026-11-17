@@ -1,0 +1,1313 @@
+/* The battlefield HUD: a painted manuscript laid over the steppe. Parchment leaves with
+   double vermilion rules, scroll-cut ribbon headers, calligraphic serif titles and ink
+   text share the character creator's palette so the fight and the ledger read as one book. */
+.game-hud {
+  --hud-paper: #ecd4a4;
+  --hud-paper-light: #f6e4bf;
+  --hud-paper-deep: #d9b57c;
+  --hud-ink: #3a281b;
+  --hud-ink-soft: #6a4a34;
+  --hud-red: #9a4030;
+  --hud-red-dark: #66281f;
+  --hud-blue: #355e77;
+  --hud-gold: #d59b34;
+  --hud-sage: #5f7a5a;
+  --hud-serif: 'Cormorant Garamond', Georgia, serif;
+  --hud-sans: 'DM Sans', sans-serif;
+  --hud-gap: 22px;
+  --hud-frame: 4px double rgba(101, 43, 32, 0.88);
+  --hud-parchment:
+    radial-gradient(ellipse at 12% 15%, rgba(255, 240, 201, 0.5), transparent 34%),
+    radial-gradient(ellipse at 84% 86%, rgba(120, 68, 35, 0.14), transparent 38%),
+    repeating-linear-gradient(93deg, rgba(91, 52, 28, 0.028) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(6deg, rgba(91, 52, 28, 0.03) 0 1px, transparent 1px 11px),
+    linear-gradient(105deg, rgba(246, 226, 188, 0.97), rgba(226, 192, 136, 0.96));
+  color: var(--hud-ink);
+  font-family: var(--hud-sans);
+}
+.game-hud kbd {
+  display: inline-block;
+  padding: 1px 4px;
+  border: 1px solid rgba(101, 43, 32, 0.6);
+  border-radius: 2px;
+  background: rgba(255, 243, 214, 0.85);
+  color: var(--hud-red-dark);
+  font: 600 8px/1.3 var(--hud-sans);
+  letter-spacing: 0.4px;
+}
+.game-hud button:focus-visible {
+  outline: 2px solid var(--hud-red);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(213, 155, 52, 0.55);
+}
+
+/* Parchment leaf with gilt inner rule and knotted corners. */
+.hud-surface {
+  position: absolute;
+  border: var(--hud-frame);
+  background: var(--hud-parchment);
+  box-shadow:
+    inset 0 0 0 2px rgba(201, 145, 52, 0.42),
+    inset 0 0 16px rgba(92, 49, 27, 0.16),
+    0 3px 9px rgba(32, 20, 10, 0.4);
+}
+.hud-surface::before,
+.hud-surface::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  border-color: var(--hud-red) var(--hud-gold) transparent transparent;
+  border-style: double;
+  border-width: 3px;
+  pointer-events: none;
+}
+.hud-surface::before {
+  top: 3px;
+  left: 3px;
+  transform: rotate(-90deg);
+}
+.hud-surface::after {
+  right: 3px;
+  bottom: 3px;
+  transform: rotate(90deg);
+}
+
+/* Scroll-cut ribbon header hanging over the top rule of its leaf. */
+.hud-ribbon {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100% - 8px);
+  min-height: 24px;
+  margin: -17px auto 6px;
+  padding: 2px 22px 3px;
+  border: 3px double rgba(101, 43, 32, 0.92);
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(255, 239, 198, 0.8), transparent 58%),
+    linear-gradient(#f1d39e, #dba96c);
+  box-shadow:
+    inset 0 0 0 2px rgba(211, 157, 61, 0.55),
+    0 2px 3px rgba(74, 37, 23, 0.3);
+  clip-path: polygon(
+    8% 0,
+    92% 0,
+    96% 22%,
+    100% 50%,
+    96% 78%,
+    92% 100%,
+    8% 100%,
+    4% 78%,
+    0 50%,
+    4% 22%
+  );
+  color: var(--hud-ink);
+  font: 600 14px/1.1 var(--hud-serif);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.hud-ribbon > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hud-ribbon > span {
+  color: var(--hud-red);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+/* Painted meters: an ink channel with a pigment fill. */
+.track,
+.xp-track {
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(101, 43, 32, 0.55);
+  background: rgba(78, 46, 24, 0.18);
+  box-shadow: inset 0 1px 1px rgba(58, 30, 14, 0.25);
+}
+.track > div,
+#xp-fill {
+  height: 100%;
+  width: 100%;
+  background-color: var(--hud-blue);
+  background-image: repeating-linear-gradient(
+    110deg,
+    rgba(255, 243, 195, 0.14) 0 2px,
+    transparent 2px 5px
+  );
+  transition: width 0.12s linear;
+}
+.health-track > div {
+  background-color: #b24d35;
+  background-image: linear-gradient(90deg, #c8623f, #9f432d);
+}
+.health-track > .low {
+  background-color: #7d1d12;
+  background-image: linear-gradient(90deg, #a8281a, #6a170f);
+  box-shadow: 0 0 6px rgba(168, 40, 26, 0.6);
+}
+.resolve-track > div {
+  background-color: var(--hud-blue);
+  background-image: linear-gradient(90deg, #4c7690, #2d4f66);
+}
+.pasture-track > div {
+  background-color: #8f9a5a;
+  background-image: linear-gradient(90deg, #a4ad66, #76834b);
+}
+.threat-track > div {
+  width: 0;
+  background-color: #7b3a2a;
+  background-image: linear-gradient(90deg, #9a4030, #66281f);
+}
+.track > .low {
+  background-color: #a8281a;
+  background-image: linear-gradient(90deg, #c23b2a, #8a1f13);
+}
+#xp-fill {
+  width: 0;
+  background-color: var(--hud-gold);
+  background-image: linear-gradient(90deg, #e2ad4a, #bf8426);
+}
+
+/* Shared brass glyphs sit in ink on parchment. */
+.game-hud .clan-mark {
+  display: block;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+.resource-icon,
+.command-icon,
+.dash-symbol,
+.hud-menu-button > span {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--hud-red-dark);
+  filter: drop-shadow(0 1px 0 rgba(255, 240, 200, 0.5));
+}
+
+/* ---------- Top left: the clan ledger, the bearing and the guide's note flow as one column ---------- */
+.ledger-column {
+  position: absolute;
+  left: var(--hud-gap);
+  top: var(--hud-gap);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 420px;
+}
+.resource-hud {
+  position: relative;
+  width: 100%;
+  padding: 11px 12px 8px;
+}
+.resource-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding-top: 4px;
+}
+.resource {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding-inline: 5px;
+  border-right: 1px solid rgba(101, 43, 32, 0.28);
+}
+.resource:last-child {
+  border-right: 0;
+}
+.resource-icon {
+  font-size: 20px;
+}
+.resource strong {
+  display: inline-block;
+  font: 600 20px/1 var(--hud-serif);
+  font-variant-numeric: tabular-nums;
+  color: var(--hud-ink);
+}
+.resource strong.danger {
+  color: var(--hud-red);
+}
+.economy-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 5px 0 0;
+  padding: 5px 0 0;
+  border-top: 1px solid rgba(101, 43, 32, 0.3);
+  font: 500 10.5px/1.4 var(--hud-sans);
+  color: var(--hud-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.economy-hud .danger {
+  color: var(--hud-red);
+  font-weight: 600;
+}
+.hud-disclosure {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid rgba(101, 43, 32, 0.55);
+  border-radius: 50%;
+  background: rgba(255, 243, 214, 0.8);
+  color: var(--hud-red-dark);
+  font: 600 10px/1 var(--hud-serif);
+}
+.resource-hud > .hud-disclosure {
+  right: -10px;
+  bottom: -10px;
+}
+.hud-disclosure::before {
+  content: '▾';
+}
+.hud-disclosure[aria-expanded='true']::before {
+  content: '▴';
+}
+.hud-disclosure:hover {
+  background: var(--hud-gold);
+}
+.clan-details {
+  display: grid;
+  gap: 3px;
+  margin: 7px 22px 0 0;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(101, 43, 32, 0.35);
+  font: 500 10.5px/1.4 var(--hud-sans);
+  color: var(--hud-ink-soft);
+}
+.clan-details > strong {
+  font: 600 13px/1.2 var(--hud-serif);
+  color: var(--hud-ink);
+}
+.clan-details b {
+  font-weight: 600;
+  color: var(--hud-ink);
+}
+.host-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* ---------- Top centre: the hour ---------- */
+.expedition-clock {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%);
+  width: max-content;
+  min-width: 150px;
+  padding: 5px 30px 7px;
+  text-align: center;
+  border: var(--hud-frame);
+  background: var(--hud-parchment);
+  box-shadow:
+    inset 0 0 0 2px rgba(201, 145, 52, 0.42),
+    0 3px 9px rgba(32, 20, 10, 0.4);
+  clip-path: polygon(6% 0, 94% 0, 100% 50%, 94% 100%, 6% 100%, 0 50%);
+}
+.expedition-clock strong {
+  display: block;
+  font: 600 30px/1 var(--hud-serif);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+  color: var(--hud-ink);
+}
+.expedition-clock > span {
+  display: block;
+  margin-top: 3px;
+  font: 600 8.5px/1.2 var(--hud-sans);
+  letter-spacing: 1.4px;
+  color: var(--hud-red-dark);
+}
+
+/* ---------- Top right: the book and the pause ---------- */
+.hud-menu {
+  position: absolute;
+  top: var(--hud-gap);
+  right: var(--hud-gap);
+  display: flex;
+  gap: 8px;
+}
+.hud-menu-button {
+  width: 46px;
+  height: 50px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 3px;
+  padding: 0;
+  border: var(--hud-frame);
+  background: var(--hud-parchment);
+  box-shadow:
+    inset 0 0 0 2px rgba(201, 145, 52, 0.42),
+    0 3px 9px rgba(32, 20, 10, 0.4);
+}
+.hud-menu-button > span {
+  font-size: 24px;
+}
+.hud-menu-button:hover {
+  background-color: var(--hud-gold);
+}
+
+/* ---------- The objective leaf ---------- */
+.objective-hud {
+  top: 90px;
+  right: var(--hud-gap);
+  width: 274px;
+  padding: 13px 13px 9px;
+}
+.objective-heading {
+  width: calc(100% + 16px);
+  max-width: none;
+  justify-content: space-between;
+  padding-inline: 18px;
+}
+.objective-heading strong {
+  flex: 1;
+  font: 600 12px/1.1 var(--hud-serif);
+  letter-spacing: 0.04em;
+  color: var(--hud-ink);
+}
+.objective-heading > span {
+  flex-shrink: 0;
+  font-size: 10px;
+}
+.objective-text {
+  margin: 2px 0 0;
+  padding-right: 18px;
+  font: 600 15px/1.3 var(--hud-serif);
+  color: var(--hud-ink);
+}
+.objective-details {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(101, 43, 32, 0.35);
+}
+.pressure-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 9px;
+  font: 600 8.5px/1.2 var(--hud-sans);
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--hud-ink-soft);
+}
+.pressure-row b {
+  margin-left: 3px;
+  font-weight: 600;
+  color: var(--hud-ink);
+  font-variant-numeric: tabular-nums;
+}
+.pressure-tracks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 5px;
+}
+.meter-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0 5px;
+  font: 600 8.5px/1.2 var(--hud-sans);
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--hud-ink-soft);
+}
+.meter-row b {
+  font-weight: 600;
+  color: var(--hud-ink);
+}
+.objective-hint {
+  margin: 8px 0 0;
+  font: 600 italic 12.5px/1.4 var(--hud-serif);
+  color: var(--hud-ink-soft);
+}
+.field-status {
+  margin: 5px 0 0;
+  padding-left: 11px;
+  text-indent: -11px;
+  font: 500 10.5px/1.4 var(--hud-sans);
+  color: var(--hud-ink-soft);
+}
+.field-status::before {
+  content: '❖ ';
+  color: var(--hud-gold);
+  font-size: 7px;
+  vertical-align: 2px;
+}
+.field-status:first-of-type,
+.objective-hint + .field-status {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px dashed rgba(101, 43, 32, 0.35);
+}
+.major-loss,
+.clan-warning {
+  margin: 8px 0 0;
+  padding: 6px 8px;
+  border: 1px solid rgba(154, 64, 48, 0.75);
+  border-left: 3px solid var(--hud-red);
+  background: rgba(154, 64, 48, 0.1);
+  color: var(--hud-red-dark);
+  font: 500 11px/1.4 var(--hud-sans);
+}
+
+/* Before the Blue Banner camp exists, the prologue is about the rider rather than an economy. */
+.game-hud.prologue-unestablished .resource-hud,
+.game-hud.prologue-unestablished .pressure-row,
+.game-hud.prologue-unestablished .pressure-tracks,
+.game-hud.prologue-unestablished #camp-pressure,
+.game-hud.prologue-unestablished #clan-losses,
+.game-hud.prologue-unestablished #encounter-status,
+.game-hud.prologue-unestablished #clan-warning,
+.game-hud.prologue-unestablished #clan-bearing,
+.game-hud.prologue-unestablished #objective-disclosure,
+.game-hud.prologue-unestablished .command-dock,
+.game-hud.prologue-unestablished .dock-rule {
+  display: none;
+}
+
+/* ---------- The guide's note ---------- */
+.field-guide {
+  position: relative;
+  width: 260px;
+  margin-top: 6px;
+  padding: 10px 12px 9px;
+  pointer-events: auto;
+}
+.field-guide .eyebrow {
+  margin: 0 0 3px;
+  font: 600 8.5px/1.2 var(--hud-sans);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--hud-red);
+}
+.guide-details > summary {
+  display: block;
+  position: relative;
+  padding-right: 18px;
+  cursor: pointer;
+  font: 600 17px/1.15 var(--hud-serif);
+  color: var(--hud-ink);
+}
+.guide-details > summary::after {
+  content: '▾';
+  position: absolute;
+  right: 2px;
+  color: var(--hud-red-dark);
+}
+.guide-details[open] > summary::after {
+  content: '▴';
+}
+.guide-details > summary::-webkit-details-marker {
+  display: none;
+}
+.guide-copy {
+  margin: 5px 0 6px;
+  font: 500 10.5px/1.45 var(--hud-sans);
+  color: var(--hud-ink-soft);
+}
+.guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 6px;
+}
+.guide-actions button {
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 1px solid rgba(154, 64, 48, 0.6);
+  background: transparent;
+  color: var(--hud-red-dark);
+  font: 600 11px/1.3 var(--hud-sans);
+}
+.guide-actions button:last-child {
+  color: var(--hud-ink-soft);
+  border-bottom-color: rgba(101, 43, 32, 0.4);
+}
+.guide-actions button:hover {
+  color: var(--hud-red);
+}
+
+/* Small ink notes without a frame. */
+.clan-bearing,
+.synergy {
+  position: relative;
+  padding: 3px 9px;
+  border: 1px solid rgba(101, 43, 32, 0.5);
+  background: rgba(246, 228, 191, 0.9);
+  color: var(--hud-red-dark);
+  font: 600 8.5px/1.3 var(--hud-sans);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.clan-bearing:empty {
+  display: none;
+}
+.synergy {
+  position: absolute;
+  left: var(--hud-gap);
+  bottom: 150px;
+  background: rgba(154, 64, 48, 0.92);
+  border-color: var(--hud-gold);
+  color: #f9e6bd;
+}
+
+/* ---------- Bottom left: the Khan ---------- */
+.khan-hud {
+  position: absolute;
+  left: var(--hud-gap);
+  bottom: var(--hud-gap);
+  width: 236px;
+}
+.tradition-hud {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 2px 10px;
+  width: 82%;
+  margin: 0 auto -2px;
+  padding: 4px 10px 5px;
+  border: 3px double rgba(101, 43, 32, 0.9);
+  border-bottom: 0;
+  background: linear-gradient(#f1d39e, #e3bb7c);
+  box-shadow: inset 0 0 0 2px rgba(211, 157, 61, 0.45);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.tradition-hud > span {
+  font: 600 10px/1.2 var(--hud-sans);
+  letter-spacing: 1px;
+  color: var(--hud-red-dark);
+}
+.tradition-hud > small {
+  font: 600 8px/1.2 var(--hud-sans);
+  letter-spacing: 0.8px;
+  color: var(--hud-ink-soft);
+  text-align: right;
+}
+.tradition-hud b {
+  font-weight: 600;
+  color: var(--hud-ink);
+}
+.xp-track {
+  grid-column: 1 / -1;
+  height: 4px;
+}
+.vitals-hud {
+  position: relative;
+  width: 100%;
+  padding: 10px 12px 9px;
+}
+.health-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 5px;
+  font: 600 11px/1.2 var(--hud-serif);
+  letter-spacing: 0.1em;
+  color: var(--hud-ink);
+}
+.health-heading b {
+  display: inline-block;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.clan-health {
+  margin-top: 9px;
+  font-size: 10px;
+  color: var(--hud-blue);
+}
+.resolve-track {
+  height: 5px;
+}
+.vital-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 8px;
+  margin-top: 9px;
+  font: 600 8px/1.3 var(--hud-sans);
+  letter-spacing: 0.7px;
+  color: var(--hud-ink-soft);
+}
+.vital-stats b {
+  font-weight: 600;
+  color: var(--hud-ink);
+}
+#spirit-energy {
+  flex: 1 0 100%;
+  padding-top: 5px;
+  border-top: 1px dashed rgba(53, 94, 119, 0.5);
+  color: var(--hud-blue);
+}
+.khan-succession {
+  display: grid;
+  gap: 2px;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px dashed rgba(101, 43, 32, 0.4);
+  font: 500 11px/1.35 var(--hud-sans);
+  color: var(--hud-red-dark);
+}
+.khan-succession strong {
+  font: 600 15px/1.2 var(--hud-serif);
+}
+.vitals-hud.choosing-khan {
+  border-color: var(--hud-red);
+}
+
+/* ---------- Bottom centre: the saddle bar ---------- */
+.action-dock {
+  left: 50%;
+  bottom: var(--hud-gap);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  padding: 6px;
+}
+.ability-dock {
+  display: grid;
+  grid-template-columns: repeat(4, 138px);
+  gap: 4px;
+}
+.ability-indicator {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border: 1px solid rgba(101, 43, 32, 0.5);
+  background: rgba(255, 243, 214, 0.55);
+}
+.ability-indicator kbd {
+  font-size: 10px;
+  padding: 2px 5px;
+}
+.ability-indicator span,
+.ability-indicator strong,
+.ability-indicator small {
+  min-width: 0;
+  display: block;
+}
+.ability-indicator strong {
+  white-space: normal;
+  font: 600 11.5px/1.05 var(--hud-serif);
+  color: var(--hud-ink);
+}
+.ability-indicator small {
+  margin-top: 1px;
+  font: 600 7.5px/1.2 var(--hud-sans);
+  letter-spacing: 0.6px;
+  color: var(--hud-ink-soft);
+}
+.ability-indicator.cooling {
+  opacity: 0.55;
+}
+.dock-rule {
+  width: 0;
+  border-left: 3px double rgba(101, 43, 32, 0.6);
+}
+.command-dock {
+  display: flex;
+  gap: 4px;
+}
+.command-button {
+  position: relative;
+  width: 92px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  padding: 5px 8px 6px;
+  border: 1px solid rgba(101, 43, 32, 0.5);
+  background: rgba(255, 243, 214, 0.55);
+  color: var(--hud-ink);
+  font: 600 11px/1.2 var(--hud-serif);
+  text-align: center;
+}
+.command-icon {
+  font-size: 24px;
+}
+.command-button > kbd {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+}
+.command-button:hover:not(:disabled) {
+  background: rgba(213, 155, 52, 0.4);
+  border-color: var(--hud-red);
+}
+.migrate-button {
+  border-color: rgba(154, 64, 48, 0.75);
+  background: rgba(213, 155, 52, 0.25);
+}
+.game-hud button:disabled {
+  opacity: 0.42;
+  filter: saturate(0.6);
+}
+
+/* ---------- Bottom right: the ride ---------- */
+.dash-button {
+  position: absolute;
+  right: var(--hud-gap);
+  bottom: var(--hud-gap);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 170px;
+  padding: 12px 14px 14px;
+  overflow: hidden;
+  text-align: left;
+  color: var(--hud-ink);
+}
+.dash-button::before,
+.dash-button::after {
+  display: none;
+}
+.dash-symbol {
+  font-size: 34px;
+}
+.dash-button strong {
+  display: block;
+  font: 600 15px/1.1 var(--hud-serif);
+  letter-spacing: 0.1em;
+}
+.dash-button small {
+  display: block;
+  margin-top: 4px;
+  font: 600 7.5px/1.2 var(--hud-sans);
+  letter-spacing: 0.6px;
+  color: var(--hud-ink-soft);
+}
+.dash-button:hover:not(:disabled) {
+  background-color: rgba(213, 155, 52, 0.45);
+}
+.dash-charge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--hud-gold);
+  transition: width 160ms linear;
+}
+.zoom-controls {
+  position: absolute;
+  right: var(--hud-gap);
+  bottom: 94px;
+  width: 170px;
+  height: 26px;
+  display: grid;
+  grid-template-columns: 1fr 1.6fr 1fr;
+  border: 1px solid rgba(101, 43, 32, 0.6);
+  background: rgba(246, 228, 191, 0.9);
+  box-shadow: 0 2px 5px rgba(32, 20, 10, 0.3);
+}
+.zoom-controls button {
+  padding: 0;
+  border: 0;
+  border-right: 1px solid rgba(101, 43, 32, 0.4);
+  background: transparent;
+  color: var(--hud-red-dark);
+  font: 600 16px/1 var(--hud-serif);
+}
+.zoom-controls button:last-child {
+  border-right: 0;
+}
+#zoom-reset {
+  font: 600 9px/1 var(--hud-sans);
+  letter-spacing: 0.6px;
+  color: var(--hud-ink);
+}
+.zoom-controls button:hover:not(:disabled) {
+  background: rgba(213, 155, 52, 0.45);
+}
+
+/* ---------- Chronicle toast ---------- */
+.chronicle-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 112px;
+  transform: translate(-50%, 8px);
+  max-width: 560px;
+  width: max-content;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 18px 10px 12px;
+  border: 3px double rgba(101, 43, 32, 0.9);
+  border-left: 5px solid var(--hud-red);
+  background: var(--hud-parchment);
+  box-shadow: 0 3px 9px rgba(32, 20, 10, 0.4);
+  opacity: 0;
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+}
+.chronicle-toast.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.chronicle-toast > span {
+  display: inline-flex;
+  color: var(--hud-red-dark);
+  font-size: 22px;
+}
+.chronicle-toast p {
+  font: 600 14px/1.4 var(--hud-serif);
+  color: var(--hud-ink);
+}
+.game-hud:has(.choosing-khan) .chronicle-toast {
+  visibility: hidden;
+}
+
+/* ---------- Succession ---------- */
+.successor-choice {
+  bottom: 118px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(430px, calc(100% - 24px));
+  padding: 16px 14px 12px;
+  pointer-events: auto;
+}
+.successor-choice > strong {
+  display: block;
+  font: 600 19px/1.15 var(--hud-serif);
+  color: var(--hud-ink);
+}
+.successor-choice p,
+.successor-choice > small {
+  display: block;
+  margin: 4px 0;
+  font: 500 11px/1.4 var(--hud-sans);
+  color: var(--hud-ink-soft);
+}
+.successor-choice > div {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.successor-choice button {
+  flex: 1;
+  padding: 8px 9px;
+  border: 1px solid rgba(101, 43, 32, 0.6);
+  background: rgba(255, 243, 214, 0.6);
+  color: var(--hud-ink);
+  font: 600 13px/1.2 var(--hud-serif);
+  text-align: left;
+}
+.successor-choice button small {
+  display: block;
+  margin-top: 4px;
+  font: 500 10.5px/1.35 var(--hud-sans);
+  color: var(--hud-ink-soft);
+}
+.successor-choice button[aria-pressed='true'] {
+  border-color: var(--hud-gold);
+  box-shadow:
+    inset 0 0 0 2px var(--hud-red),
+    0 0 0 1px var(--hud-gold);
+}
+
+/* ---------- Combat readability over the world ---------- */
+.danger-edge {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  grid-template-columns: 20px auto;
+  align-items: center;
+  max-width: 160px;
+  padding: 5px 9px;
+  border: 1px solid var(--hud-red-dark);
+  background: rgba(246, 228, 191, 0.95);
+  color: var(--hud-ink);
+  box-shadow: 0 2px 6px rgba(32, 20, 10, 0.4);
+}
+.danger-edge > span {
+  grid-row: span 2;
+  display: block;
+  color: var(--hud-red);
+  font-size: 18px;
+}
+.danger-edge strong {
+  font: 600 12px/1.2 var(--hud-serif);
+}
+.danger-edge small {
+  font: 600 9px/1.2 var(--hud-sans);
+  color: var(--hud-red-dark);
+  font-variant-numeric: tabular-nums;
+}
+.elite-marker {
+  position: absolute;
+  width: 80px;
+  transform: translate(-50%, -100%);
+  text-align: center;
+  color: var(--hud-ink);
+  font: 600 10px/1.2 var(--hud-sans);
+}
+.elite-marker strong {
+  padding: 2px 5px;
+  border: 1px solid var(--hud-red-dark);
+  background: rgba(246, 228, 191, 0.95);
+}
+.elite-marker > div {
+  height: 3px;
+  margin: 3px 0 0;
+  border: 1px solid rgba(101, 43, 32, 0.6);
+  background: rgba(78, 46, 24, 0.25);
+}
+.elite-marker i {
+  display: block;
+  height: 100%;
+  background: #b24d35;
+}
+
+/* ---------- Laptop widths ---------- */
+@media (max-width: 1400px) {
+  .game-hud {
+    --hud-gap: 18px;
+  }
+  .ledger-column {
+    width: 390px;
+  }
+  .objective-hud {
+    width: 272px;
+    top: 86px;
+  }
+  .field-guide {
+    width: 270px;
+  }
+  .khan-hud {
+    width: 218px;
+  }
+  .ability-dock {
+    grid-template-columns: repeat(4, 130px);
+  }
+  .command-button {
+    width: 86px;
+    font-size: 10.5px;
+  }
+  .dash-button {
+    width: 150px;
+  }
+  .zoom-controls {
+    width: 150px;
+  }
+}
+@media (max-width: 1100px) {
+  .ledger-column {
+    width: 284px;
+  }
+  .resource-icon {
+    font-size: 16px;
+  }
+  .resource strong {
+    font-size: 16px;
+  }
+  .resource {
+    gap: 3px;
+    padding-inline: 2px;
+  }
+  .objective-hud {
+    width: 238px;
+  }
+  .field-guide {
+    width: 238px;
+  }
+  .khan-hud {
+    width: 200px;
+    bottom: 104px;
+  }
+  .dash-button {
+    bottom: 104px;
+  }
+  .zoom-controls {
+    bottom: 172px;
+  }
+  .ability-dock {
+    grid-template-columns: repeat(4, 54px);
+  }
+  .ability-indicator {
+    justify-content: center;
+    padding: 6px 4px;
+  }
+  .ability-indicator span {
+    display: none;
+  }
+  .command-button {
+    width: 86px;
+  }
+  .chronicle-toast {
+    max-width: 400px;
+  }
+}
+@media (max-width: 850px) {
+  .ledger-column {
+    width: 270px;
+  }
+  .expedition-clock {
+    left: auto;
+    right: 130px;
+    transform: none;
+    min-width: 0;
+    padding: 4px 22px 6px;
+  }
+  .expedition-clock strong {
+    font-size: 24px;
+  }
+}
+@media (max-height: 720px) and (min-width: 601px) {
+  .resource-hud,
+  .objective-hud,
+  .field-guide,
+  .vitals-hud {
+    padding-top: 11px;
+    padding-bottom: 8px;
+  }
+  .guide-copy {
+    font-size: 11px;
+    line-height: 1.4;
+    margin: 4px 0 5px;
+  }
+  .objective-hud {
+    top: 80px;
+  }
+}
+
+/* ---------- Phones: a vertical ledger ---------- */
+@media (max-width: 600px) {
+  .game-hud {
+    --hud-gap: 10px;
+  }
+  .hud-surface::before,
+  .hud-surface::after {
+    display: none;
+  }
+  .ledger-column {
+    position: static;
+    display: contents;
+  }
+  .resource-hud {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    width: calc(100% - 20px);
+    padding: 9px 10px 7px;
+  }
+  .resource-hud .hud-ribbon {
+    display: none;
+  }
+  .resource-row {
+    padding-top: 0;
+  }
+  .resource {
+    gap: 4px;
+    padding-inline: 3px;
+  }
+  .resource-icon {
+    font-size: 18px;
+  }
+  .resource strong {
+    font-size: 17px;
+  }
+  .economy-hud {
+    margin-top: 6px;
+    padding-top: 5px;
+    font-size: 9.5px;
+  }
+  .expedition-clock {
+    left: 10px;
+    right: auto;
+    top: 84px;
+    width: 86px;
+    padding: 3px 12px 5px;
+  }
+  .expedition-clock strong {
+    font-size: 20px;
+  }
+  .expedition-clock > span {
+    font-size: 6.5px;
+    letter-spacing: 0.6px;
+  }
+  #developer-run {
+    display: none;
+  }
+  .hud-menu {
+    top: 82px;
+    gap: 6px;
+  }
+  .hud-menu-button {
+    width: 36px;
+    height: 38px;
+  }
+  .hud-menu-button > span {
+    font-size: 18px;
+  }
+  .objective-hud {
+    top: 158px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    padding: 12px 10px 8px;
+  }
+  .game-hud.prologue-unestablished .expedition-clock,
+  .game-hud.prologue-unestablished .hud-menu {
+    top: 10px;
+  }
+  .game-hud.prologue-unestablished .objective-hud {
+    top: 82px;
+  }
+  .objective-text {
+    font-size: 14px;
+  }
+  .objective-hint,
+  #camp-pressure,
+  #field-objective {
+    display: none;
+  }
+  .field-status {
+    font-size: 10px;
+  }
+  .clan-details {
+    position: absolute;
+    z-index: 3;
+    left: -4px;
+    right: -4px;
+    top: 100%;
+    margin: 0;
+    padding: 6px 10px 8px;
+    border: var(--hud-frame);
+    border-top: 0;
+    background: var(--hud-parchment);
+    box-shadow: 0 3px 9px rgba(32, 20, 10, 0.4);
+  }
+  .clan-bearing {
+    position: absolute;
+    top: 96px;
+    left: 104px;
+  }
+  .field-guide {
+    position: absolute;
+    top: 280px;
+    left: 10px;
+    width: calc(100% - 20px);
+    margin: 0;
+    padding: 10px 10px 8px;
+  }
+  .game-hud.prologue-unestablished .field-guide {
+    top: 180px;
+  }
+  .guide-details > summary {
+    font-size: 16px;
+  }
+  .guide-copy {
+    font-size: 11px;
+    line-height: 1.4;
+    margin: 4px 0 6px;
+  }
+  .khan-hud {
+    width: 176px;
+    bottom: 118px;
+  }
+  .tradition-hud {
+    width: 94%;
+    padding: 3px 8px 4px;
+  }
+  .vitals-hud {
+    padding: 9px 10px 7px;
+  }
+  .health-heading {
+    font-size: 10px;
+  }
+  .vital-stats {
+    font-size: 7px;
+  }
+  .action-dock {
+    left: 10px;
+    right: 10px;
+    transform: none;
+    flex-direction: column;
+    gap: 5px;
+    padding: 5px;
+  }
+  .ability-dock {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3px;
+  }
+  .ability-indicator {
+    justify-content: center;
+    padding: 5px 3px;
+  }
+  .ability-indicator span {
+    display: none;
+  }
+  .dock-rule {
+    display: none;
+  }
+  .command-dock {
+    gap: 3px;
+  }
+  .command-button {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    padding: 3px 6px 5px;
+    font-size: 10px;
+  }
+  .command-icon {
+    font-size: 20px;
+  }
+  .dash-button {
+    bottom: 118px;
+    width: 128px;
+    padding: 9px 10px 11px;
+    gap: 8px;
+  }
+  .dash-symbol {
+    font-size: 26px;
+  }
+  .dash-button strong {
+    font-size: 13px;
+  }
+  .zoom-controls {
+    bottom: 184px;
+    width: 128px;
+    height: 24px;
+  }
+  .successor-choice {
+    top: 280px;
+    bottom: auto;
+  }
+  .chronicle-toast {
+    bottom: 300px;
+    max-width: calc(100% - 40px);
+    padding: 8px 12px 9px 10px;
+    gap: 9px;
+  }
+  .chronicle-toast p {
+    font-size: 13px;
+  }
+  .synergy {
+    bottom: 300px;
+    font-size: 7px;
+  }
+}

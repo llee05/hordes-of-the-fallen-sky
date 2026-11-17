@@ -91,6 +91,7 @@ test('food forecasts remain readable beside guidance and objectives at supported
   test.setTimeout(process.env.CI ? 90000 : 60000);
   await openTitle(page);
   await startExpedition(page);
+  await page.getByRole('button', { name: 'Show clan details' }).click();
   for (const viewport of [
     { width: 1440, height: 1000 },
     { width: 1280, height: 800 },

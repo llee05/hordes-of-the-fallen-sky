@@ -133,7 +133,7 @@ time, food needed en route, food after arrival rewards or rescue costs, and shor
 before arrival. Estimates assume current households and improvements without future
 battle losses or purchases; risky routes remain your choice.
 
-For resources, combat, enemies, levels, and camp development, see [the game mechanics brief](docs/game-mechanics.md). Current camp rules and effects are in [the nomadic camp guide](docs/nomadic-camp.md); historical craft details and cultural sources remain in [the legacy camp catalog](docs/camp-upgrade-tree.md). See [the progression UI guide](docs/progression-ui.md) for extending camp management.
+For resources, combat, enemies, levels, and camp development, see [the game mechanics brief](docs/game-mechanics.md). Current camp rules and effects are in [the nomadic camp guide](docs/nomadic-camp.md); historical craft details and cultural sources remain in [the legacy camp catalog](docs/camp-upgrade-tree.md). See [the progression UI guide](docs/progression-ui.md) for extending camp management. The battlefield HUD layout and its visibility rules are in [the gameplay HUD guide](docs/gameplay-hud.md).
 
 ## Controls
 
@@ -206,6 +206,8 @@ src/game/state/campLife.ts      Workplaces, population-driven shelters, and visu
 public/art/                   Bundled painted PNGs and atlas frame metadata
 src/game/scenes/ArenaScene.ts  Arena coordinator
 src/ui/GameUI.ts               Full-window HUD, title/pause menus, focus and input
+src/ui/hudContent.ts           Battlefield HUD strings and command visibility rules
+src/hud.css                   Manuscript battlefield HUD leaves, ribbons and meters
 src/ui/menuContent.ts          Camp, route, chronicle, settings, and help panels
 src/ui/progressionTree.ts      Shared data-driven progression tree renderer
 src/ui/campContent.ts          Legacy camp branch and node rendering

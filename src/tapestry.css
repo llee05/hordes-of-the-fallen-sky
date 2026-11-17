@@ -29,131 +29,6 @@
   --brass-border: #9c7546;
 }
 
-.hud-surface,
-.command-dock,
-.hud-menu-button,
-.chronicle-toast {
-  background-color: var(--felt);
-  background-image: var(--cloth-texture);
-  background-size: 420px;
-  background-blend-mode: multiply;
-  border-color: #b99159;
-  box-shadow:
-    0 5px 12px #17252240,
-    inset 0 0 0 3px #111f2533,
-    inset 0 0 0 4px #d0b48136;
-}
-.hud-surface::before,
-.command-dock::before {
-  content: '';
-  position: absolute;
-  inset: 5px;
-  border: 1px dashed #c5b08455;
-  pointer-events: none;
-}
-.resource-hud,
-.objective-hud {
-  border-top: 4px solid var(--rust);
-}
-.resource div > span,
-.host-summary,
-.health-heading,
-.vital-stats,
-.pressure-row,
-.objective-heading > span,
-.objective-hint {
-  color: #d0c9af;
-}
-.resource strong {
-  color: #f9e8be;
-  font-variant-numeric: tabular-nums;
-}
-.resource-icon {
-  color: #e6ba76;
-  filter: drop-shadow(0 1px 1px #071e2b);
-}
-.host-summary {
-  border-top-style: dashed;
-  border-color: #d9b77755;
-}
-.expedition-clock strong {
-  font-variant-numeric: tabular-nums;
-  color: #ffedc3;
-}
-.expedition-clock > span {
-  color: #f0dba7;
-}
-.hud-menu-button {
-  border-radius: 3px 3px 10px 10px;
-}
-.hud-menu-button:hover,
-.dash-button:hover {
-  background-color: #315860;
-}
-.track,
-.xp-track {
-  background: #0e2328;
-  box-shadow: 0 1px #d4ba7c55;
-}
-.track > div,
-#xp-fill,
-.dash-charge {
-  background-image: repeating-linear-gradient(110deg, #fff3c31a 0 2px, transparent 2px 5px);
-  box-shadow: inset 0 1px #ffefb759;
-}
-.health-track > div {
-  background-color: #be9b57;
-  background-image: linear-gradient(90deg, #d47e43, #be9b57);
-}
-.health-track > .low {
-  background-color: #c84c36;
-  background-image: linear-gradient(90deg, #d34a32, #b23824);
-  box-shadow: 0 0 8px #d34a3288;
-}
-.resolve-track > div,
-#xp-fill {
-  background-color: #8fb8b1;
-  background-image: linear-gradient(90deg, #6ba198, #9bc6bf);
-}
-.vitals-hud {
-  border-left: 4px solid var(--rust);
-}
-.command-dock {
-  border-bottom: 4px solid var(--rust);
-}
-.command-button {
-  border-color: #caa36866;
-  background: #0d2a3233;
-  color: #f2e1bc;
-}
-.command-button:hover:not(:disabled) {
-  background: #b48e4a3b;
-  border-color: #e5c285;
-}
-.command-button > kbd,
-.hud-menu-button kbd {
-  border: 1px solid #d2b98666;
-  background: #071d253b;
-  border-radius: 2px;
-  padding: 2px 3px;
-  color: #efdfb9;
-}
-.migrate-button {
-  background: #af7f3e30;
-  border-color: #d4a354;
-}
-.chronicle-toast {
-  border: 1px solid #b48d54;
-  border-left: 4px solid var(--rust);
-}
-.chronicle-toast p {
-  color: #f2e2c2;
-}
-.synergy {
-  background: #7b3d2eef;
-  border-color: #deb46a;
-}
-
 .overlay.ready-screen {
   background: linear-gradient(90deg, #162d38a1, #1a353b52 42%, transparent 76%);
 }
@@ -1123,24 +998,9 @@
   flex-shrink: 0;
   pointer-events: none;
 }
-.resource-icon,
-.command-icon,
-.dash-symbol,
 .building-icon {
   display: inline-flex;
   flex-shrink: 0;
-}
-.resource-icon {
-  font-size: 26px;
-}
-.command-icon {
-  font-size: 30px;
-}
-.dash-symbol {
-  font-size: 38px;
-}
-.hud-menu-button span {
-  font-size: 25px;
 }
 .clan-seal {
   width: 100%;
@@ -1475,25 +1335,7 @@
 .control-table kbd {
   color: #5d5847;
 }
-
-@media (max-width: 1100px) {
-  .resource-icon {
-    font-size: 23px;
-  }
-}
 @media (max-width: 600px) {
-  .resource-icon {
-    font-size: 20px;
-  }
-  .command-icon {
-    font-size: 23px;
-  }
-  .dash-symbol {
-    font-size: 29px;
-  }
-  .hud-menu-button span {
-    font-size: 21px;
-  }
   .panel-title {
     gap: 10px;
   }
@@ -1656,103 +1498,6 @@
   }
   .audio-mix-controls label > span {
     font-size: 15px;
-  }
-}
-
-.field-status {
-  margin: 6px 0 0;
-  color: #e2cf9f;
-  font-size: 11px;
-  line-height: 1.4;
-}
-
-.successor-choice {
-  position: absolute;
-  bottom: 180px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(420px, calc(100% - 24px));
-  padding: 14px;
-  color: #e8d7b0;
-  pointer-events: auto;
-}
-.successor-choice > strong {
-  font:
-    18px Georgia,
-    serif;
-}
-.successor-choice p,
-.successor-choice > small {
-  font-size: 11px;
-  margin: 6px 0;
-}
-.successor-choice > div {
-  display: flex;
-  gap: 8px;
-}
-.successor-choice button {
-  flex: 1;
-  padding: 9px;
-  color: #f0dfb7;
-  background: #203c3d;
-  border: 1px solid #bd9c63;
-  text-align: left;
-}
-.successor-choice button small {
-  display: block;
-  margin-top: 4px;
-  font-size: 11px;
-}
-.successor-choice button[aria-pressed='true'] {
-  border-color: #eed8a0;
-  background: #4a513d;
-}
-.successor-choice button:focus-visible {
-  outline: 2px solid #f2dfae;
-  outline-offset: 3px;
-}
-
-.game-hud:has(.choosing-khan) .chronicle-toast {
-  visibility: hidden;
-}
-@media (min-width: 601px) and (max-width: 1100px) and (max-height: 680px) {
-  .successor-choice {
-    top: 140px;
-    bottom: auto;
-    width: clamp(160px, calc(100vw - 640px), 340px);
-    padding: 10px;
-  }
-}
-@media (min-width: 601px) and (max-width: 900px) and (max-height: 680px) {
-  .successor-choice > strong {
-    font-size: 14px;
-  }
-  .successor-choice > p {
-    display: none;
-  }
-  .successor-choice > div {
-    flex-direction: column;
-    margin-top: 5px;
-    gap: 4px;
-  }
-  .successor-choice button {
-    padding: 5px;
-    font-size: 11px;
-  }
-  .successor-choice button small,
-  .successor-choice > small {
-    font-size: 9px;
-    margin-top: 2px;
-  }
-}
-@media (max-width: 600px) {
-  .successor-choice {
-    top: 332px;
-    bottom: auto;
-  }
-  .vitals-hud.choosing-khan + .tradition-hud {
-    bottom: 250px;
-    translate: none;
   }
 }
 
