@@ -41,7 +41,7 @@ test(
       gem.value = 37;
       gem.attracted = true;
       window.__gloam.hooks.setTimers({
-        khanResources: { stamina: 37.5, sprinting: false, winded: false },
+        khanResources: { stamina: 37.5, classPower: 5, sprinting: false, winded: false },
       });
       window.__gloam.hooks.setTimers({ invulnerable: 0.4 });
     });
