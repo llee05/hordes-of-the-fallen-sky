@@ -203,7 +203,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
-  width: 500px;
+  width: 540px;
 }
 .resource-hud {
   position: relative;
@@ -335,7 +335,7 @@
   top: 13px;
   transform: translateX(-50%);
   width: max-content;
-  min-width: 188px;
+  min-width: 220px;
   padding: 7px 36px 8px;
   text-align: center;
   border: var(--hud-frame);
@@ -422,7 +422,7 @@
 .objective-hud {
   top: 94px;
   right: var(--hud-gap);
-  width: 310px;
+  width: 340px;
   min-height: 126px;
   padding: 14px 15px 48px;
 }
@@ -662,7 +662,7 @@
   position: absolute;
   left: var(--hud-gap);
   bottom: var(--hud-gap);
-  width: 236px;
+  width: 280px;
 }
 .tradition-hud {
   position: relative;
@@ -937,7 +937,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 5px;
-  width: 194px;
+  width: 220px;
   min-height: 78px;
   padding: 11px 15px 14px 90px;
   overflow: hidden;
@@ -989,7 +989,7 @@
   position: absolute;
   right: var(--hud-gap);
   bottom: 94px;
-  width: 194px;
+  width: 220px;
   height: 30px;
   display: grid;
   grid-template-columns: 1fr 1.6fr 1fr;
