@@ -91,4 +91,19 @@ describe('Arena CombatSystem with fake ArenaContext', () => {
     arena.context.visualSettings.effectDensity = 'minimal';
     expect(effectAmount(arena.context.visualSettings)).toBe(0);
   });
+
+  it('distinguishes poison spit while preserving the high-contrast override', () => {
+    const arena = createFakeArena();
+    const enemyDirector = new EnemyDirector(arena.context, arena.enemyDirectorHost);
+    const combat = new CombatSystem(arena.context, arena.host, enemyDirector, arena.clanDamage);
+    const wormDef = ALL_ENEMIES.find((enemy) => enemy.id === 'death-worm')!;
+    const worm = arena.enemies.create() as Enemy;
+    enemyDirector.initialize(worm, wormDef, arena.context.player.x + 300, arena.context.player.y);
+
+    const poison = combat.fireHostile(worm, Math.PI)!;
+    expect(poison.tintTopLeft).toBe(0x718c58);
+    poison.disableBody(true, true);
+    arena.context.visualSettings.projectileContrast = 'high';
+    expect(combat.fireHostile(worm, Math.PI)!.tintTopLeft).toBe(0xffc36b);
+  });
 });

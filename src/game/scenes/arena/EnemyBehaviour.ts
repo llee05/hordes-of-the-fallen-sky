@@ -395,9 +395,7 @@ export class EnemyBehaviour extends ArenaSystem {
     } else if (step.released === 'poison') {
       const angle = Math.atan2(aim.target.y - enemy.y, aim.target.x - enemy.x);
       const shot = this.combat.fireHostile(enemy, angle);
-      shot
-        ?.setTint(0x718c58)
-        .setVelocity(Math.cos(angle) * tuning.poisonSpeed, Math.sin(angle) * tuning.poisonSpeed);
+      shot?.setVelocity(Math.cos(angle) * tuning.poisonSpeed, Math.sin(angle) * tuning.poisonSpeed);
       if (shot) shot.damage *= tuning.poisonDamage;
       enemy.motion.attack();
     } else if (step.emerged && state.aim) {
