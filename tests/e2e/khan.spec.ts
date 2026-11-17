@@ -79,7 +79,6 @@ test(
     await expect
       .poll(() => page.evaluate(() => (window as any).__gloam.scene.run.clan.integrity))
       .toBeLessThan(100);
-    expect(await page.evaluate(() => (window as any).__gloam.scene.run.clan.momentum)).toBe(0);
     expect(await page.evaluate(() => (window as any).__gloam.scene.dashRemaining)).toBe(0);
     await page.keyboard.up('d');
     for (const viewport of [

@@ -166,8 +166,8 @@ test('Lancer exposes release-to-fire Impaling Strike progress and its four autho
   if (!canvas) throw new Error('Game canvas is unavailable');
   await page.mouse.move(canvas.x + canvas.width / 2 + 220, canvas.y + canvas.height / 2);
   await page.mouse.down({ button: 'right' });
-  await expect(page.locator('#momentum')).toContainText('IMPALING STRIKE');
-  await expect(page.locator('#momentum')).toContainText('%');
+  await expect(page.locator('#attack-charge')).toContainText('IMPALING STRIKE');
+  await expect(page.locator('#attack-charge')).toContainText('%');
   const volleys = await page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys);
   await page.waitForTimeout(300);
   expect(await page.evaluate(() => (window as any).__gloam.scene.run.combat.volleys)).toBe(volleys);
@@ -186,19 +186,4 @@ test('Lancer exposes release-to-fire Impaling Strike progress and its four autho
     await page.keyboard.press(key);
     await expect(page.locator(id)).not.toContainText('READY');
   }
-});
-
-test('guard riders fire at camp threats while the commander scouts away', async ({ page }) => {
-  await openTitle(page);
-  await startExpedition(page);
-  await page.evaluate(() => {
-    const scene = (window as any).__gloam.scene;
-    scene.player.setPosition(scene.camp.x + 850, scene.camp.y);
-    scene.spawnEnemy();
-    const enemy = scene.enemies.getChildren().find((item: any) => item.active);
-    enemy.setPosition(scene.camp.x + 150, scene.camp.y);
-    enemy.health = 1;
-    window.__gloam.hooks.setTimers({ attackTimer: 0 });
-  });
-  await expect(page.locator('#kills')).not.toHaveText('0');
 });

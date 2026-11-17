@@ -181,7 +181,6 @@ test('desktop loads offline, isolates Node, saves settings, toggles fullscreen, 
     await expect(page.locator('.tree-purchase')).toBeDisabled();
     await expect(page.locator('.node-purchase-status')).toContainText("Khan's Ger level 2");
     await page.screenshot({ path: 'test-results/native-camp-tree.png' });
-    await expect(page.locator('#riders')).toHaveText('4');
     await closeOverlayOrPause(page);
     await expect(page.getByRole('dialog')).toBeHidden();
     for (const size of [

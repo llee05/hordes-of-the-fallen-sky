@@ -31,7 +31,6 @@ const LIVE = [
   'areaThreats',
   'areaEffects',
   'joystick',
-  'riders',
   'packedGers',
   'hazards',
 ] as const;
@@ -101,7 +100,6 @@ const METHODS = [
   'closeCamp',
   'improveNomadicCamp',
   'chooseRoute',
-  'cycleFormation',
   'dash',
   'changeZoom',
 ] as const;

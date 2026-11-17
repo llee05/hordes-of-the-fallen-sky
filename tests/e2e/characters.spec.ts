@@ -18,7 +18,6 @@ test('mounted gaits and bow release animate without changing collision geometry'
   await page.keyboard.down('d');
   const samples: {
     frame: string;
-    rider: string;
     width: number;
     height: number;
     displayWidth: number;
@@ -37,7 +36,6 @@ test('mounted gaits and bow release animate without changing collision geometry'
             const crop = player.frame.data.spriteSourceSize;
             return {
               frame: player.frame.name,
-              rider: scene.riders[0].frame.name,
               width: player.body.width,
               height: player.body.height,
               displayWidth: player.displayWidth,
@@ -47,17 +45,13 @@ test('mounted gaits and bow release animate without changing collision geometry'
             };
           }),
         );
-        return (
-          new Set(samples.map((sample) => sample.frame)).size >= 3 &&
-          new Set(samples.map((sample) => sample.rider)).size >= 2
-        );
+        return new Set(samples.map((sample) => sample.frame)).size >= 3;
       },
       { timeout: 10000, intervals: [80, 120, 180] },
     )
     .toBe(true);
   await page.keyboard.up('d');
   expect(new Set(samples.map((sample) => sample.frame)).size).toBeGreaterThanOrEqual(3);
-  expect(new Set(samples.map((sample) => sample.rider)).size).toBeGreaterThanOrEqual(2);
   for (const sample of samples) {
     expect(sample).toMatchObject({ width: 20, height: 20, displayWidth: 62, anchor: 324 });
     expect(Math.abs(sample.centerX)).toBeLessThan(0.1);
