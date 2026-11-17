@@ -46,6 +46,7 @@ import {
   commandVisibility,
   encounterLine,
   fieldObjectiveLine,
+  hudContext,
   lossReport,
   stageLabels,
 } from './hudContent';
@@ -303,7 +304,9 @@ export class GameUI {
     (this.get('zoom-reset') as HTMLButtonElement).disabled = snapshot.run.phase !== 'playing';
     const { run, stamina, best, clanBearing } = snapshot;
     const prologueUnestablished = !!run.prologue && !run.prologue.campEstablished;
-    this.get('game-hud').classList.toggle('prologue-unestablished', prologueUnestablished);
+    const hud = this.get('game-hud');
+    hud.classList.toggle('prologue-unestablished', prologueUnestablished);
+    hud.dataset.context = hudContext(run);
     this.motion.setPlaying(run.phase === 'playing');
     const combatVisible = run.phase === 'playing';
     const warningMarkup = combatVisible
