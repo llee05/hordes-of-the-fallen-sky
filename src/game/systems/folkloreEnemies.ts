@@ -1,0 +1,94 @@
+import { GAME } from '../config';
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+export type FolkloreAttack = 'claw' | 'slam' | 'charge';
+export type FolklorePhase = 'approach' | 'windup' | 'attack' | 'recover';
+
+/** Saved, pooled attack state shared by the dedicated folklore enemies. */
+export interface FolkloreEnemyState {
+  phase: FolklorePhase;
+  attack?: FolkloreAttack;
+  remaining: number;
+  cooldown: number;
+  aim?: Point;
+  direction?: Point;
+  hit: boolean;
+}
+
+export interface FolkloreStep {
+  started?: FolkloreAttack;
+  released?: FolkloreAttack;
+}
+
+export function createFolkloreEnemyState(): FolkloreEnemyState {
+  return { phase: 'approach', remaining: 0, cooldown: 1.2, hit: false };
+}
+
+/**
+ * Advances the Almas' committed attack cycle. Movement, telegraphs and damage
+ * remain scene-owned; this pure clock makes the choices independently testable.
+ */
+export function advanceAlmas(
+  state: FolkloreEnemyState,
+  dt: number,
+  from: Point,
+  target: Point,
+  disabled = false,
+): FolkloreStep {
+  if (!Number.isFinite(dt) || dt <= 0) return {};
+  const tuning = GAME.tactics.almas;
+  state.cooldown = Math.max(0, state.cooldown - dt);
+  if (disabled) {
+    if (state.phase !== 'approach') {
+      state.phase = 'recover';
+      state.remaining = tuning.recovery;
+      state.hit = false;
+    }
+    return {};
+  }
+
+  state.remaining = Math.max(0, state.remaining - dt);
+  const distance = Math.hypot(target.x - from.x, target.y - from.y);
+  if (state.phase === 'approach' && state.cooldown <= 0 && distance <= tuning.chargeRange) {
+    const attack: FolkloreAttack =
+      distance <= tuning.clawRange ? 'claw' : distance <= tuning.slamRange ? 'slam' : 'charge';
+    state.phase = 'windup';
+    state.attack = attack;
+    state.remaining =
+      attack === 'claw'
+        ? tuning.clawWarning
+        : attack === 'slam'
+          ? tuning.slamWarning
+          : tuning.chargeWarning;
+    state.aim = { x: target.x, y: target.y };
+    const safeDistance = Math.max(1, distance);
+    state.direction = {
+      x: (target.x - from.x) / safeDistance,
+      y: (target.y - from.y) / safeDistance,
+    };
+    state.hit = false;
+    return { started: attack };
+  }
+  if (state.phase === 'windup' && state.remaining <= 0 && state.attack) {
+    const released = state.attack;
+    state.phase = released === 'charge' ? 'attack' : 'recover';
+    state.remaining = released === 'charge' ? tuning.chargeDuration : tuning.recovery;
+    state.cooldown = tuning.cooldown;
+    return { released };
+  }
+  if (state.phase === 'attack' && state.remaining <= 0) {
+    state.phase = 'recover';
+    state.remaining = tuning.recovery;
+  } else if (state.phase === 'recover' && state.remaining <= 0) {
+    state.phase = 'approach';
+    state.attack = undefined;
+    state.aim = undefined;
+    state.direction = undefined;
+    state.hit = false;
+  }
+  return {};
+}

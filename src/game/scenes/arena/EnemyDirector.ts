@@ -18,6 +18,7 @@ import { enemySpawnPosition } from '../../systems/CameraView';
 import { projectedEnemySpawnPosition } from '../../systems/EnemySpawning';
 import { ambientArrivalAngle } from '../../systems/authoredSites';
 import { createEnemyTactics } from '../../systems/enemyTactics';
+import { createFolkloreEnemyState } from '../../systems/folkloreEnemies';
 import type { EnemyDefinition } from '../../types';
 import type { ArenaContext } from './ArenaContext';
 import { captureBody } from './bodyArchive';
@@ -194,6 +195,7 @@ export class EnemyDirector {
     enemy.dangerTimer = definition.ability
       ? GAME.areaCombat.abilityEvery + (enemy.tacticalSlot % 7) * 0.15
       : GAME.tactics.seerEvery;
+    enemy.folklore = createFolkloreEnemyState();
     enemy.objectiveId = undefined;
     if (!isCharacterKind(definition.texture))
       throw new Error(`Missing character animation: ${definition.texture}`);
@@ -250,6 +252,7 @@ export class EnemyDirector {
                   objectiveId: e.objectiveId,
                   preparingAttack: e.preparingAttack,
                   tactics: e.tactics,
+                  folklore: e.folklore,
                 },
                 motion: e.motion.capture(),
               },

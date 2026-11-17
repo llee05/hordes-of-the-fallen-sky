@@ -11,6 +11,7 @@ import { isEnemyDisabled, statusSpeedMultiplier, tickEnemyStatus } from '../../s
 import { areaSurface, habitatPreference } from '../../systems/AreaHabitat';
 import { routeDue } from '../../systems/enemyRoutes';
 import { advanceCharge, createEnemyTactics, tacticalGoal } from '../../systems/enemyTactics';
+import { advanceAlmas, type FolkloreAttack } from '../../systems/folkloreEnemies';
 import type { FieldMarkers } from '../../systems/FieldMarkers';
 import type { EnemyDefinition } from '../../types';
 import type { ArenaContext } from './ArenaContext';
@@ -28,6 +29,8 @@ export interface EnemyBehaviourHost {
   /** Marks a seer's delayed danger circle, which the hazard step draws and resolves. */
   addSeerHazard(target: { x: number; y: number }, definition: EnemyDefinition): void;
   queueAreaThreat(kind: AreaThreatKind, point: { x: number; y: number }, owner?: string): boolean;
+  /** Applies a committed folklore attack to the living Khan. */
+  takeDamage(amount: number): void;
 }
 
 /** What one enemy is going for this frame, worked out once and shared by its steps. */
@@ -252,7 +255,7 @@ export class EnemyBehaviour extends ArenaSystem {
         enemy.tactics.remaining = GAME.tactics.chargeRecovery;
       }
       enemy.preparingAttack = false;
-    } else if (attackingCamp) {
+    } else if (attackingCamp && behavior !== 'almas') {
       // Hold outside the tents instead of walking (or charging) into their centre.
       enemy.setVelocity(0, 0);
       enemy.chargeTimer = 0;
@@ -265,7 +268,9 @@ export class EnemyBehaviour extends ArenaSystem {
         enemy.tacticalSlot,
         this.run.elapsed,
       );
-      if (behavior === 'charger') {
+      if (behavior === 'almas') {
+        this.steerAlmas(enemy, aim, speed, dt, warnings);
+      } else if (behavior === 'charger') {
         const state = enemy.tactics;
         const facing = state.aim ?? target;
         const angle = state.direction
@@ -322,6 +327,89 @@ export class EnemyBehaviour extends ArenaSystem {
     }
   }
 
+  /** Runs the Almas' claw, slam and charge cycle with static, ground-readable warnings. */
+  private steerAlmas(
+    enemy: Enemy,
+    aim: EnemyAim,
+    speed: number,
+    dt: number,
+    warnings: Phaser.GameObjects.Graphics,
+  ): void {
+    const tuning = GAME.tactics.almas;
+    const { target, attackingCamp } = aim;
+    const step = advanceAlmas(enemy.folklore, dt, enemy, target, isEnemyDisabled(enemy));
+    const state = enemy.folklore;
+    if (state.phase === 'windup') {
+      enemy.setVelocity(0, 0);
+      enemy.preparingAttack = true;
+      const progress = 1 - state.remaining / Math.max(0.01, this.almasWarning(state.attack));
+      if (state.attack === 'charge' && state.aim)
+        warnings
+          .lineStyle(4, 0xc66f55, 0.65 + progress * 0.2)
+          .lineBetween(enemy.x, enemy.y, state.aim.x, state.aim.y);
+      else
+        warnings
+          .fillStyle(0x8d503f, 0.1)
+          .fillCircle(enemy.x, enemy.y, state.attack === 'slam' ? tuning.slamRadius : 52)
+          .lineStyle(3, 0xd18a68, 0.8)
+          .strokeCircle(enemy.x, enemy.y, state.attack === 'slam' ? tuning.slamRadius : 52);
+    } else if (state.phase === 'attack' && state.attack === 'charge' && state.direction) {
+      enemy.setVelocity(
+        state.direction.x * speed * tuning.chargeSpeed,
+        state.direction.y * speed * tuning.chargeSpeed,
+      );
+      if (!state.hit && (attackingCamp || aim.playerDistance <= 58)) {
+        this.strikeAlmas(enemy, aim, tuning.chargeDamage, 58);
+        state.hit = true;
+        state.phase = 'recover';
+        state.remaining = tuning.recovery;
+      }
+    } else {
+      const waypoint = this.routeTo(
+        enemy,
+        aim,
+        () => this.landscape.navigation?.waypoint(enemy, target, 'heavy') ?? target,
+      );
+      this.physics.moveTo(
+        enemy,
+        waypoint.x,
+        waypoint.y,
+        speed * (state.phase === 'recover' ? 0.42 : 1),
+      );
+    }
+    if (step.released === 'claw') this.strikeAlmas(enemy, aim, tuning.clawDamage, 72);
+    if (step.released === 'slam') {
+      this.strikeAlmas(enemy, aim, tuning.slamDamage, tuning.slamRadius);
+      this.effects.ring(enemy.x, enemy.y, tuning.slamRadius, 0xb56f54);
+      this.effects.shake(120, 0.004);
+    }
+    if (step.released) enemy.motion.attack();
+  }
+
+  private almasWarning(attack?: FolkloreAttack): number {
+    const tuning = GAME.tactics.almas;
+    return attack === 'slam'
+      ? tuning.slamWarning
+      : attack === 'charge'
+        ? tuning.chargeWarning
+        : tuning.clawWarning;
+  }
+
+  /** Applies one committed Almas hit either to the Khan or the camp barrier. */
+  private strikeAlmas(enemy: Enemy, aim: EnemyAim, multiplier: number, radius: number): void {
+    const damage = enemy.definition.damage * multiplier;
+    if (aim.attackingCamp) {
+      this.clanDamage.damage(
+        damage * GAME.camp.enemyAttack.damageMultiplier,
+        'attack',
+        enemy.definition.title,
+        enemy,
+      );
+      const impact = this.host.campBarrier.hit(this.camp, enemy);
+      this.effects.burst(impact.x, impact.y - 12, 0xb56f54, 5);
+    } else if (aim.playerDistance <= radius) this.host.takeDamage(damage);
+  }
+
   /**
    * The waypoint the enemy steers toward. Terrain routes are re-planned when
    * `routeDue` says so; between refreshes the enemy keeps heading for the last one.
@@ -364,6 +452,7 @@ export class EnemyBehaviour extends ArenaSystem {
         enemy.attackTimer < 0.25) ||
       (attackingCamp && enemy.clanAttackTimer > 0 && enemy.clanAttackTimer < 0.2) ||
       (behavior === 'charger' && enemy.tactics.phase === 'windup') ||
+      (behavior === 'almas' && enemy.folklore.phase === 'windup') ||
       (!!enemy.definition.ability &&
         enemy.dangerTimer > 0 &&
         enemy.dangerTimer < 0.4 &&

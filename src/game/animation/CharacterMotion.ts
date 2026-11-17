@@ -11,6 +11,7 @@ const PROFILES = {
   earth: { sheet: 'creature', stride: 45, idleFps: 0, recovery: 0.25 },
   seer: { sheet: 'creature', stride: 50, idleFps: 2, recovery: 0.24 },
   skybreaker: { sheet: 'creature', stride: 65, idleFps: 0, recovery: 0.3 },
+  almas: { sheet: 'almas', stride: 42, idleFps: 0, recovery: 0.32 },
 } as const;
 
 export type CharacterKind = keyof typeof PROFILES;
@@ -23,6 +24,7 @@ export const MOTION_SHEETS = [
   'classes-directional',
   'classes-female',
   'classes-female-directional',
+  'almas',
 ] as const;
 export const CHARACTER_DIRECTIONS = ['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'] as const;
 export type CharacterDirection = (typeof CHARACTER_DIRECTIONS)[number];

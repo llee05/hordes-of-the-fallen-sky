@@ -8,6 +8,7 @@ import {
 import mountedSource from '/art/steppe-mounted-motion.json?raw';
 import clanSource from '/art/steppe-clan-motion.json?raw';
 import creatureSource from '/art/steppe-creature-motion.json?raw';
+import almasSource from '/art/steppe-almas-motion.json?raw';
 import { CHARACTER_CLASSES } from '../../src/shared/characterProfile';
 import classesSource from '/art/steppe-classes-motion.json?raw';
 import directionalClassesSource from '/art/steppe-classes-directional-motion.json?raw';
@@ -222,10 +223,16 @@ describe('character presentation clocks', () => {
 });
 
 it('gives every actor complete clips with a constant canvas and ground registration', () => {
+  const atlases = {
+    'steppe-mounted-motion': mounted,
+    'steppe-creature-motion': creatures,
+    'steppe-clan-motion': clan,
+    'steppe-almas-motion': JSON.parse(almasSource),
+  } as const;
   for (const kind of CHARACTER_KINDS) {
     const [sheet] = characterTexture(kind);
     const campActor = sheet.includes('clan');
-    const atlas = campActor ? clan : sheet.includes('mounted') ? mounted : creatures;
+    const atlas = atlases[sheet as keyof typeof atlases];
     const frames = atlas.frames as Record<string, (typeof mounted.frames)['player-move-0']>;
     for (const [action, count] of [
       ['move', 4],

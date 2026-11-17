@@ -270,13 +270,33 @@ export const AREA_ENEMIES: readonly EnemyDefinition[] = [
   native('orkhon-valley', 'reed-prowler', 'Reed prowler', 'prowler', 0xb9c6a3, 'shore'),
   native('orkhon-valley', 'silt-caller', 'Silt caller', 'caller', 0xb2c5b2, 'shore', 'mire', true),
 ];
-export const ALL_ENEMIES: readonly EnemyDefinition[] = [...ENEMIES, ...AREA_ENEMIES];
+/** Spawnable through development hooks and valid in saves, but absent from every live roster. */
+export const FOLKLORE_ENEMIES: readonly EnemyDefinition[] = [
+  {
+    id: 'almas',
+    title: 'Almas',
+    texture: 'almas',
+    navigation: 'heavy',
+    tacticalRole: 'bulwark',
+    armor: 0.3,
+    health: 240,
+    speed: 28,
+    damage: 20,
+    xp: 20,
+    unlockAt: Number.POSITIVE_INFINITY,
+    weight: 0,
+    scale: 3.4,
+    behavior: 'almas',
+  },
+];
+export const ENCOUNTER_ENEMIES: readonly EnemyDefinition[] = [...ENEMIES, ...AREA_ENEMIES];
+export const ALL_ENEMIES: readonly EnemyDefinition[] = [...ENCOUNTER_ENEMIES, ...FOLKLORE_ENEMIES];
 export function areaRoster(
   location: LocationId,
   score: number,
   localTime: number,
 ): EnemyDefinition[] {
-  return ALL_ENEMIES.filter((e) =>
+  return ENCOUNTER_ENEMIES.filter((e) =>
     e.home ? e.home === location && localTime >= (e.localUnlockAt ?? 0) : e.unlockAt <= score,
   );
 }

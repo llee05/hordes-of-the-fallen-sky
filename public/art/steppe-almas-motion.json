@@ -1,0 +1,135 @@
+{
+  "frames": {
+    "almas-move-0": {
+      "frame": {
+        "x": 26,
+        "y": 36,
+        "w": 204,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 26,
+        "y": 36,
+        "w": 204,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "almas-move-1": {
+      "frame": {
+        "x": 284,
+        "y": 36,
+        "w": 214,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 28,
+        "y": 36,
+        "w": 214,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "almas-move-2": {
+      "frame": {
+        "x": 547,
+        "y": 36,
+        "w": 197,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 35,
+        "y": 36,
+        "w": 197,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "almas-move-3": {
+      "frame": {
+        "x": 792,
+        "y": 36,
+        "w": 184,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 24,
+        "y": 36,
+        "w": 184,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "almas-attack-0": {
+      "frame": {
+        "x": 1049,
+        "y": 36,
+        "w": 202,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 25,
+        "y": 36,
+        "w": 202,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    },
+    "almas-attack-1": {
+      "frame": {
+        "x": 1292,
+        "y": 50,
+        "w": 232,
+        "h": 274
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 50,
+        "w": 232,
+        "h": 274
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 360
+      }
+    }
+  },
+  "meta": {
+    "app": "built-in imagegen + ImageMagick registration",
+    "version": "1.0",
+    "image": "steppe-almas-motion.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1536,
+      "h": 360
+    },
+    "scale": "1"
+  }
+}
