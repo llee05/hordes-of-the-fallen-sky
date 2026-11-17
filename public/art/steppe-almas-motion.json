@@ -2,17 +2,17 @@
   "frames": {
     "almas-move-0": {
       "frame": {
-        "x": 26,
+        "x": 25,
         "y": 36,
-        "w": 204,
+        "w": 205,
         "h": 288
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 26,
+        "x": 25,
         "y": 36,
-        "w": 204,
+        "w": 205,
         "h": 288
       },
       "sourceSize": {
@@ -22,7 +22,7 @@
     },
     "almas-move-1": {
       "frame": {
-        "x": 284,
+        "x": 277,
         "y": 36,
         "w": 214,
         "h": 288
@@ -30,7 +30,7 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 28,
+        "x": 21,
         "y": 36,
         "w": 214,
         "h": 288
@@ -42,17 +42,17 @@
     },
     "almas-move-2": {
       "frame": {
-        "x": 547,
+        "x": 540,
         "y": 36,
-        "w": 197,
+        "w": 199,
         "h": 288
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 35,
+        "x": 28,
         "y": 36,
-        "w": 197,
+        "w": 199,
         "h": 288
       },
       "sourceSize": {
@@ -62,7 +62,7 @@
     },
     "almas-move-3": {
       "frame": {
-        "x": 792,
+        "x": 804,
         "y": 36,
         "w": 184,
         "h": 288
@@ -70,7 +70,7 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 24,
+        "x": 36,
         "y": 36,
         "w": 184,
         "h": 288
@@ -82,18 +82,18 @@
     },
     "almas-attack-0": {
       "frame": {
-        "x": 1049,
-        "y": 36,
-        "w": 202,
-        "h": 288
+        "x": 1044,
+        "y": 48,
+        "w": 216,
+        "h": 276
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 25,
-        "y": 36,
-        "w": 202,
-        "h": 288
+        "x": 20,
+        "y": 48,
+        "w": 216,
+        "h": 276
       },
       "sourceSize": {
         "w": 256,
@@ -102,18 +102,18 @@
     },
     "almas-attack-1": {
       "frame": {
-        "x": 1292,
-        "y": 50,
-        "w": 232,
-        "h": 274
+        "x": 1298,
+        "y": 78,
+        "w": 220,
+        "h": 246
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 12,
-        "y": 50,
-        "w": 232,
-        "h": 274
+        "x": 18,
+        "y": 78,
+        "w": 220,
+        "h": 246
       },
       "sourceSize": {
         "w": 256,

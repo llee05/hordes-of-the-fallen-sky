@@ -3,17 +3,17 @@
     "death-worm-move-0": {
       "frame": {
         "x": 12,
-        "y": 133,
+        "y": 131,
         "w": 232,
-        "h": 191
+        "h": 193
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
         "x": 12,
-        "y": 133,
+        "y": 131,
         "w": 232,
-        "h": 191
+        "h": 193
       },
       "sourceSize": {
         "w": 256,
@@ -22,18 +22,18 @@
     },
     "death-worm-move-1": {
       "frame": {
-        "x": 279,
-        "y": 138,
-        "w": 214,
-        "h": 186
+        "x": 268,
+        "y": 120,
+        "w": 232,
+        "h": 204
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 23,
-        "y": 138,
-        "w": 214,
-        "h": 186
+        "x": 12,
+        "y": 120,
+        "w": 232,
+        "h": 204
       },
       "sourceSize": {
         "w": 256,
@@ -43,17 +43,17 @@
     "death-worm-move-2": {
       "frame": {
         "x": 524,
-        "y": 140,
+        "y": 141,
         "w": 232,
-        "h": 184
+        "h": 183
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
         "x": 12,
-        "y": 140,
+        "y": 141,
         "w": 232,
-        "h": 184
+        "h": 183
       },
       "sourceSize": {
         "w": 256,
@@ -63,17 +63,17 @@
     "death-worm-move-3": {
       "frame": {
         "x": 780,
-        "y": 131,
+        "y": 130,
         "w": 232,
-        "h": 193
+        "h": 194
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
         "x": 12,
-        "y": 131,
+        "y": 130,
         "w": 232,
-        "h": 193
+        "h": 194
       },
       "sourceSize": {
         "w": 256,
@@ -82,18 +82,18 @@
     },
     "death-worm-attack-0": {
       "frame": {
-        "x": 1045,
-        "y": 154,
-        "w": 183,
-        "h": 170
+        "x": 1048,
+        "y": 134,
+        "w": 207,
+        "h": 190
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 21,
-        "y": 154,
-        "w": 183,
-        "h": 170
+        "x": 24,
+        "y": 134,
+        "w": 207,
+        "h": 190
       },
       "sourceSize": {
         "w": 256,
@@ -102,18 +102,18 @@
     },
     "death-worm-attack-1": {
       "frame": {
-        "x": 1292,
-        "y": 175,
-        "w": 232,
-        "h": 149
+        "x": 1298,
+        "y": 201,
+        "w": 220,
+        "h": 122
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 12,
-        "y": 175,
-        "w": 232,
-        "h": 149
+        "x": 18,
+        "y": 202,
+        "w": 220,
+        "h": 122
       },
       "sourceSize": {
         "w": 256,
