@@ -323,7 +323,7 @@
   top: 3px;
   width: 74px;
   height: 54px;
-  background: url('/art/hud-cloud-scroll.webp') center / contain no-repeat;
+  background: url('/art/hud-cloud-flourish.png') center / contain no-repeat;
   opacity: 0.85;
   pointer-events: none;
 }
@@ -373,7 +373,7 @@
   right: -2px;
   bottom: 0;
   height: 4px;
-  background: url('/art/ui-braid.svg') repeat-x center / 40px 7px;
+  background: url('/art/hud-border-horizontal.png') repeat-x center / 40px 7px;
   opacity: 0.52;
   pointer-events: none;
 }
@@ -405,7 +405,7 @@
 .hud-menu-button:first-child > span {
   width: 27px;
   height: 27px;
-  background: url('/art/ui-icon-journal.png') center / contain no-repeat;
+  background: url('/art/hud-icon-journal.png') center / contain no-repeat;
 }
 
 .hud-menu-button:first-child > span .clan-mark {
@@ -485,7 +485,7 @@
   bottom: -16px;
   width: 79px;
   height: 57px;
-  background: url('/art/hud-cloud-scroll.webp') center / contain no-repeat;
+  background: url('/art/hud-cloud-flourish.png') center / contain no-repeat;
   opacity: 0.72;
 }
 
@@ -787,18 +787,7 @@
   max-width: calc(100% - 570px);
   padding: 9px 24px 10px;
   transform: translateX(-50%);
-  background-image:
-    url('/art/ui-plaque-left.png'), url('/art/ui-plaque-right.png'),
-    url('/art/ui-plaque-middle.png');
-  background-position:
-    left center,
-    right center,
-    center;
-  background-repeat: no-repeat;
-  background-size:
-    auto 100%,
-    auto 100%,
-    calc(100% - 78px) 100%;
+  background: url('/art/hud-panel-frame.png') center / 100% 100% no-repeat;
   filter: drop-shadow(0 3px 4px rgba(40, 24, 14, 0.42));
   transition: filter 180ms ease;
 }
@@ -810,7 +799,7 @@
   right: 40px;
   bottom: 7px;
   height: 5px;
-  background: url('/art/ui-braid.svg') repeat-x center / 40px 7px;
+  background: url('/art/hud-border-horizontal.png') repeat-x center / 40px 7px;
   opacity: 0.58;
   pointer-events: none;
 }
@@ -914,16 +903,16 @@
 }
 
 .ability-icon-q {
-  background-image: url('/art/ui-icon-bow.png');
+  background-image: url('/art/hud-icon-move.png');
 }
 .ability-icon-w {
-  background-image: url('/art/ui-icon-road.png');
+  background-image: url('/art/hud-icon-rally.png');
 }
 .ability-icon-e {
-  background-image: url('/art/ui-icon-hammer.png');
+  background-image: url('/art/hud-icon-gather.png');
 }
 .ability-icon-r {
-  background-image: url('/art/ui-icon-knot.png');
+  background-image: url('/art/hud-icon-trade.png');
 }
 
 .ability-indicator kbd {
@@ -994,10 +983,10 @@
 }
 
 #build .command-icon {
-  background-image: url('/art/ui-icon-ger.png');
+  background-image: url('/art/hud-icon-build.png');
 }
 #migrate .command-icon {
-  background-image: url('/art/ui-icon-banner.png');
+  background-image: url('/art/hud-icon-move.png');
 }
 .command-icon .clan-mark {
   opacity: 0;

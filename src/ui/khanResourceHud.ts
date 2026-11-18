@@ -5,7 +5,7 @@ export function gallopLabel(stamina: HudSnapshot['stamina'], khanActive: boolean
   if (!khanActive) return 'CHOOSING A KHAN';
   if (stamina.sprinting) return 'GALLOPING';
   if (stamina.winded) return 'WINDED';
-  return 'HOLD SPACE';
+  return 'READY';
 }
 
 /** The attack readout: the held heavy charge, marked WINDED when Breath caps or refuses it. */
